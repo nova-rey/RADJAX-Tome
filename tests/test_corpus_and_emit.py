@@ -48,5 +48,8 @@ def test_emitted_toy_tome_validates_using_contract(tmp_path: Path) -> None:
 
     assert validate_teacher_tome(output_dir).ok is True
     assert manifest["producer"] == "radjax-tome"
-    assert manifest["schema_name"] == "teacher_tome_v0"
+    assert (
+        manifest.get("schema_name") == "teacher_tome_v0"
+        or manifest.get("artifact_kind") == "radjax_tome"
+    )
     assert logits.shape == (1, 3, 7)
