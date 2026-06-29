@@ -12,3 +12,11 @@ behavior and does not yet implement the new `cover_page.json` Tome contract.
 Updated the pre-existing toy TeacherTome smoke emitter to validate against the
 current RADJAX-Contract dense Tome checks in CI. The migrated legacy
 TeacherTextbook builder still preserves its existing output format.
+
+## 2026-06-29 — Legacy Tome Builder A/B parity harness
+
+Added an A/B parity harness comparing the live `RADJAX-Tome` legacy
+TeacherTextbook builder against the archived `qrwkv-xla` builder. The harness
+covers deterministic fake/offline dense logits, top-k/tail, and cascaded soft
+label outputs. This phase verifies migration parity only; `cover_page.json` and
+new Contract-valid Tome emission remain deferred.
