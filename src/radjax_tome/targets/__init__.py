@@ -1,5 +1,10 @@
 """Legacy TeacherTargetStore support used by the migrated builder."""
 
+from radjax_tome.targets.compression import (
+    dense_logits_to_cascaded_soft_labels,
+    dense_logits_to_topk_tail,
+    write_compressed_target_store,
+)
 from radjax_tome.targets.consumption import (
     OfflineTargetBatch,
     TeacherTargetBatch,
@@ -30,6 +35,8 @@ __all__ = [
     "TargetStoreMetadata",
     "TeacherTargetBatch",
     "TeacherTargetStore",
+    "dense_logits_to_cascaded_soft_labels",
+    "dense_logits_to_topk_tail",
     "inspect_target_store",
     "iter_offline_target_batches",
     "iter_target_store_shard_ids",
@@ -40,4 +47,5 @@ __all__ = [
     "target_store_metadata_from_dict",
     "target_store_metadata_to_dict",
     "validate_target_store_metadata",
+    "write_compressed_target_store",
 ]

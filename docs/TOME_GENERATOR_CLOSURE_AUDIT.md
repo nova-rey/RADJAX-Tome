@@ -106,3 +106,8 @@ active-path evidence maps it to tracked active RADJAX-Tome code.
 ## Exact Next Recommendation
 
 Proceed to Spec 3 Contract-valid Tome emission.
+
+Spec 2.11 adds a command-level generation capability matrix at
+`docs/TOME_GENERATION_CAPABILITY_MATRIX.md` and
+`docs/TOME_GENERATION_CAPABILITY_MATRIX.json`. That matrix verifies active
+teacher-side generation separately from this closure accounting audit.

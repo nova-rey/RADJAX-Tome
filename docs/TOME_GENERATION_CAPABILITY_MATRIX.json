@@ -1,0 +1,211 @@
+{
+  "capabilities": [
+    {
+      "active_entrypoints": [
+        "scripts/export_teacher_targets.py",
+        "radjax_tome.targets.export.export_synthetic_teacher_targets"
+      ],
+      "blocks_spec3": false,
+      "capability_id": "dense_teacher_targets",
+      "description": "Generate dense/high-resolution teacher target store.",
+      "generation_command": "python scripts/export_teacher_targets.py --backend synthetic --out artifacts/tome_generation_capabilities/dense_teacher_targets/targets --num-examples 2 --sequence-length 3 --overwrite",
+      "limitations": [
+        "Default proof uses SyntheticTeacherBackend; real HF teacher export is classified separately."
+      ],
+      "old_repo_reference_paths": [
+        "scripts/build_teacher_textbook.py",
+        "src/qrwkv_xla/teacher_export/hf.py"
+      ],
+      "proof_artifacts": [
+        "artifacts/tome_generation_capabilities/dense_teacher_targets/targets",
+        "artifacts/tome_generation_capabilities/dense_teacher_targets/inspection.json"
+      ],
+      "status": "active_generation_supported_synthetic_only",
+      "tested_by": [
+        "tests/test_tome_generation_capabilities.py::test_dense_teacher_targets"
+      ],
+      "validation_command": "python scripts/inspect_targets.py artifacts/tome_generation_capabilities/dense_teacher_targets/targets --json"
+    },
+    {
+      "active_entrypoints": [
+        "radjax_tome.targets.compression.write_compressed_target_store"
+      ],
+      "blocks_spec3": false,
+      "capability_id": "topk_tail_targets",
+      "description": "Generate top-k/tail compressed teacher target store.",
+      "generation_command": "python scripts/prove_tome_generation_capabilities.py --work-dir artifacts/tome_generation_capabilities --matrix-json docs/TOME_GENERATION_CAPABILITY_MATRIX.json --report-md docs/TOME_GENERATION_CAPABILITY_MATRIX.md --overwrite",
+      "limitations": [
+        "Compression proof starts from deterministic synthetic dense logits."
+      ],
+      "old_repo_reference_paths": [
+        "docs/TOPK_TAIL_TEXTBOOK.md",
+        "tests/test_topk_tail_textbook.py"
+      ],
+      "proof_artifacts": [
+        "artifacts/tome_generation_capabilities/topk_tail_targets/targets",
+        "artifacts/tome_generation_capabilities/topk_tail_targets/inspection.json"
+      ],
+      "status": "active_generation_supported_synthetic_only",
+      "tested_by": [
+        "tests/test_tome_generation_capabilities.py::test_topk_tail_targets"
+      ],
+      "validation_command": "python scripts/inspect_targets.py artifacts/tome_generation_capabilities/topk_tail_targets/targets --json"
+    },
+    {
+      "active_entrypoints": [
+        "radjax_tome.targets.compression.write_compressed_target_store"
+      ],
+      "blocks_spec3": false,
+      "capability_id": "cascaded_bucket_targets",
+      "description": "Generate cascaded bucket compressed teacher target store.",
+      "generation_command": "python scripts/prove_tome_generation_capabilities.py --work-dir artifacts/tome_generation_capabilities --matrix-json docs/TOME_GENERATION_CAPABILITY_MATRIX.json --report-md docs/TOME_GENERATION_CAPABILITY_MATRIX.md --overwrite",
+      "limitations": [
+        "Bucket proof uses deterministic synthetic logits and probability bucket edges 1.0,0.1,0.0."
+      ],
+      "old_repo_reference_paths": [
+        "docs/CASCADED_SOFT_LABELS.md",
+        "tests/test_cascaded_soft_labels_textbook.py"
+      ],
+      "proof_artifacts": [
+        "artifacts/tome_generation_capabilities/cascaded_bucket_targets/targets",
+        "artifacts/tome_generation_capabilities/cascaded_bucket_targets/inspection.json"
+      ],
+      "status": "active_generation_supported_synthetic_only",
+      "tested_by": [
+        "tests/test_tome_generation_capabilities.py::test_cascaded_bucket_targets"
+      ],
+      "validation_command": "python scripts/inspect_targets.py artifacts/tome_generation_capabilities/cascaded_bucket_targets/targets --json"
+    },
+    {
+      "active_entrypoints": [
+        "radjax_tome.fingerprint.generation.build_minimal_fingerprint_artifact_from_target_store"
+      ],
+      "blocks_spec3": false,
+      "capability_id": "fingerprint_artifact_generation",
+      "description": "Generate a minimal behavioral fingerprint artifact from a target store.",
+      "generation_command": "python scripts/prove_tome_generation_capabilities.py --work-dir artifacts/tome_generation_capabilities --matrix-json docs/TOME_GENERATION_CAPABILITY_MATRIX.json --report-md docs/TOME_GENERATION_CAPABILITY_MATRIX.md --overwrite",
+      "limitations": [
+        "Validator status: pass; generated from synthetic target store."
+      ],
+      "old_repo_reference_paths": [
+        "scripts/build_fingerprint_artifact.py",
+        "src/qrwkv_xla/artifacts/fingerprint.py"
+      ],
+      "proof_artifacts": [
+        "artifacts/tome_generation_capabilities/fingerprint_artifact_generation/artifact",
+        "artifacts/tome_generation_capabilities/fingerprint_artifact_generation/inspection.json"
+      ],
+      "status": "active_generation_supported_synthetic_only",
+      "tested_by": [
+        "tests/test_tome_generation_capabilities.py::test_fingerprint_artifact_generation"
+      ],
+      "validation_command": "python scripts/validate_fingerprint_artifact.py artifacts/tome_generation_capabilities/fingerprint_artifact_generation/artifact"
+    },
+    {
+      "active_entrypoints": [
+        "radjax_tome.fingerprint.generation.generate_corridor_subset_receipt",
+        "radjax_tome.fingerprint.generation.generate_corridor_measurement_report"
+      ],
+      "blocks_spec3": false,
+      "capability_id": "corridor_subset_generation",
+      "description": "Generate producer-side corridor subset receipt and measurement report.",
+      "generation_command": "python scripts/prove_tome_generation_capabilities.py --work-dir artifacts/tome_generation_capabilities --matrix-json docs/TOME_GENERATION_CAPABILITY_MATRIX.json --report-md docs/TOME_GENERATION_CAPABILITY_MATRIX.md --overwrite",
+      "limitations": [
+        "Producer artifact receipt role: corridor_subset; Student runtime corridor scoring is out of scope."
+      ],
+      "old_repo_reference_paths": [
+        "scripts/run_corridor_measurement.py",
+        "src/qrwkv_xla/fingerprint/budgeted_artifact.py"
+      ],
+      "proof_artifacts": [
+        "artifacts/tome_generation_capabilities/corridor_subset_generation/budget_subset_receipt.json",
+        "artifacts/tome_generation_capabilities/corridor_subset_generation/corridor_measurement_report.json"
+      ],
+      "status": "active_generation_supported",
+      "tested_by": [
+        "tests/test_tome_generation_capabilities.py::test_corridor_subset_generation"
+      ],
+      "validation_command": "python -m pytest tests/test_tome_generation_capabilities.py::test_corridor_subset_generation"
+    },
+    {
+      "active_entrypoints": [
+        "radjax_tome.fingerprint.generation.generate_exemplar_reservoir"
+      ],
+      "blocks_spec3": false,
+      "capability_id": "exemplar_reservoir_generation",
+      "description": "Generate exemplar reservoir manifest and JSONL records.",
+      "generation_command": "python scripts/prove_tome_generation_capabilities.py --work-dir artifacts/tome_generation_capabilities --matrix-json docs/TOME_GENERATION_CAPABILITY_MATRIX.json --report-md docs/TOME_GENERATION_CAPABILITY_MATRIX.md --overwrite",
+      "limitations": [
+        "Generated 1 deterministic exemplar record; summary records=1."
+      ],
+      "old_repo_reference_paths": [
+        "scripts/run_exemplar_pass.py",
+        "src/qrwkv_xla/artifacts/fingerprint_exemplars.py"
+      ],
+      "proof_artifacts": [
+        "artifacts/tome_generation_capabilities/fingerprint_artifact_generation/artifact/exemplars",
+        "artifacts/tome_generation_capabilities/exemplar_reservoir_generation/summary.json"
+      ],
+      "status": "active_generation_supported_synthetic_only",
+      "tested_by": [
+        "tests/test_tome_generation_capabilities.py::test_exemplar_reservoir_generation"
+      ],
+      "validation_command": "python -m pytest tests/test_tome_generation_capabilities.py::test_exemplar_reservoir_generation"
+    },
+    {
+      "active_entrypoints": [
+        "radjax_tome.backends.hf_export.build_hf_export_metadata"
+      ],
+      "blocks_spec3": false,
+      "capability_id": "hf_local_teacher_export",
+      "description": "Validate HF/local-files-only teacher export metadata boundary.",
+      "generation_command": "python scripts/prove_tome_generation_capabilities.py --work-dir artifacts/tome_generation_capabilities --matrix-json docs/TOME_GENERATION_CAPABILITY_MATRIX.json --report-md docs/TOME_GENERATION_CAPABILITY_MATRIX.md --overwrite",
+      "limitations": [
+        "Default proof validates local-files-only HF metadata only; no optional torch/transformers run or model files are required.",
+        "Optional local HF proof requested: False."
+      ],
+      "old_repo_reference_paths": [
+        "src/qrwkv_xla/teacher_export/hf.py",
+        "tests/test_teacher_export_hf_backend.py"
+      ],
+      "proof_artifacts": [
+        "artifacts/tome_generation_capabilities/hf_local_teacher_export/hf_export_metadata.json"
+      ],
+      "status": "schema_validate_inspect_only",
+      "tested_by": [
+        "tests/test_tome_generation_capabilities.py::test_hf_local_teacher_export_metadata_only"
+      ],
+      "validation_command": "python -m pytest tests/test_tome_generation_capabilities.py::test_hf_local_teacher_export_metadata_only"
+    },
+    {
+      "active_entrypoints": [
+        "scripts/tokenize_corpus.py",
+        "radjax_tome.corpora.tokenize_jsonl_corpus"
+      ],
+      "blocks_spec3": false,
+      "capability_id": "prompt_corpus_tokenization",
+      "description": "Generate prompt corpus, manifest, tokenized corpus, and source hashes.",
+      "generation_command": "python scripts/tokenize_corpus.py artifacts/tome_generation_capabilities/prompt_corpus_tokenization/prompts.jsonl --out artifacts/tome_generation_capabilities/prompt_corpus_tokenization/tokenized --sequence-length 8 --overwrite",
+      "limitations": [
+        "Smoke tokenizer proof generated 2 tokenized sequences."
+      ],
+      "old_repo_reference_paths": [
+        "corpora/smoke_prompts.jsonl",
+        "scripts/create_prompt_manifest.py"
+      ],
+      "proof_artifacts": [
+        "artifacts/tome_generation_capabilities/prompt_corpus_tokenization/prompts.jsonl",
+        "artifacts/tome_generation_capabilities/prompt_corpus_tokenization/prompt_manifest.json",
+        "artifacts/tome_generation_capabilities/prompt_corpus_tokenization/tokenized"
+      ],
+      "status": "active_generation_supported",
+      "tested_by": [
+        "tests/test_tome_generation_capabilities.py::test_prompt_corpus_tokenization_generation"
+      ],
+      "validation_command": "python -m pytest tests/test_tome_generation_capabilities.py::test_prompt_corpus_tokenization_generation"
+    }
+  ],
+  "default_proof_mode": "ci_safe_no_network",
+  "kind": "radjax_tome_generation_capability_matrix",
+  "version": 1
+}

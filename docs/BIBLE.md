@@ -77,3 +77,12 @@ Resolved the adversarial closure audit concern around archived
 symbols against active `RADJAX-Tome` fingerprint artifact code. Replaced the
 giant committed closure audit JSON with a compact committed summary and kept
 full detailed closure output as an ignored generated artifact.
+
+## 2026-06-30 — Active Tome generation capability matrix
+
+Added a command-level capability matrix proving which teacher-side Tome artifact
+families `RADJAX-Tome` can actively generate versus merely represent, validate,
+or inspect. The matrix distinguishes dense/synthetic targets, compressed
+top-k/tail and cascaded bucket targets, fingerprint artifacts, corridor/exemplar
+producer artifacts, HF/local-files-only export metadata, and prompt/corpus
+source identity before proceeding to Contract-valid Tome emission.

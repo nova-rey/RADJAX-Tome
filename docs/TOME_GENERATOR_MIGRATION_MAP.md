@@ -48,6 +48,15 @@ exact active mappings:
 - `PACKED_TARGET_ARRAYS` -> `src/radjax_tome/fingerprint/artifacts.py:PACKED_TARGET_ARRAYS`
 - `ValidationResult` -> `src/radjax_tome/fingerprint/artifacts.py:FingerprintValidationResult`
 
+Spec 2.11 adds `docs/TOME_GENERATION_CAPABILITY_MATRIX.json` and
+`docs/TOME_GENERATION_CAPABILITY_MATRIX.md` as the active generation proof
+layer. The proof harness generates dense synthetic target stores, top-k/tail
+compressed stores, cascaded bucket stores, minimal fingerprint artifacts,
+corridor subset receipts, exemplar reservoirs, HF local-files-only metadata, and
+prompt/tokenization/source identity artifacts. The matrix has zero Spec 3
+blocking capability gaps; real HF teacher generation remains optional and
+metadata-only in the default no-network proof.
+
 ## Short-Term Roadmap
 
 - Spec 2.5 - Extraction completeness audit. DONE.
@@ -56,6 +65,7 @@ exact active mappings:
 - Spec 2.8 - Bulk producer migration with quarantine. DONE.
 - Spec 2.9 - Surgical split of quarantined mixed producer/student files. DONE.
 - Spec 2.10 - Audit closure, A/B expansion, waivers, and Spec 3 gate check. DONE.
+- Spec 2.11 - Active teacher-side generation capability matrix. DONE.
 - Spec 3 - Contract-valid Tome emission with cover_page.json may proceed after
   this gate; it is not implemented by this migration map.
 
