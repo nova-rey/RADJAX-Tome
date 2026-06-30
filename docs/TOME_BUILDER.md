@@ -65,6 +65,27 @@ python scripts/build_teacher_textbook.py \
 Install `.[teacher-hf]` and provide cached model files for local-files-only runs.
 Use `--allow-downloads` only when downloads are explicitly intended.
 
+## Producer-Core Target Tools
+
+Spec 2.7 restores the Tome-side producer target utilities around the legacy
+TeacherTargetStore format:
+
+```bash
+python scripts/export_teacher_targets.py \
+  --out artifacts/synthetic_targets \
+  --backend synthetic \
+  --num-examples 2 \
+  --sequence-length 8 \
+  --overwrite
+
+python scripts/inspect_targets.py artifacts/synthetic_targets --json
+python scripts/tokenize_corpus.py prompts.jsonl --out artifacts/tokenized --sequence-length 8
+python scripts/validate_producer_pipeline.py --target-store artifacts/synthetic_targets
+```
+
+These tools are CPU-only in their default smoke paths. HF tokenization remains an
+optional lazy dependency and real HF teacher export remains deferred.
+
 ## Deferred Work
 
 A later phase will adapt the builder to emit the new Contract-valid Tome format,

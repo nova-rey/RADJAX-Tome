@@ -7,13 +7,13 @@ Spec 3 is blocked. The extraction audit found a narrow TeacherTextbook migration
 | Metric | Count |
 | --- | ---: |
 | intentionally_omitted | 32 |
-| migrated | 22 |
-| missing | 317 |
-| missing_tests | 87 |
+| migrated | 37 |
+| missing | 301 |
+| missing_tests | 82 |
 | mixed_producer_consumer_files | 23 |
 | needs_human_review | 0 |
-| new_equivalent_tests | 2 |
-| partial | 1 |
+| new_equivalent_tests | 7 |
+| partial | 2 |
 | producer_cli_files | 43 |
 | producer_core_files | 18 |
 | producer_relevant_old_files | 372 |
@@ -23,8 +23,8 @@ Spec 3 is blocked. The extraction audit found a narrow TeacherTextbook migration
 ## Short-Term Roadmap
 
 - Spec 2.5 - Extraction completeness audit. DONE.
-- Spec 2.6 - Audit triage and producer migration map. THIS SPEC.
-- Spec 2.7 - Migrate highest-priority producer schemas/stores/validators/tests.
+- Spec 2.6 - Audit triage and producer migration map. DONE.
+- Spec 2.7 - Migrate highest-priority producer schemas/stores/validators/tests. THIS SPEC.
 - Spec 2.8 - Migrate real-teacher/HF/corpus/source-identity producer paths.
 - Spec 2.9 - Migrate behavioral fingerprint / corridor / exemplar producer artifact paths.
 - Spec 2.10 - Re-run extraction audit and A/B parity; reduce blockers to zero or explicit waivers.
@@ -49,12 +49,12 @@ Spec 3 is blocked. The extraction audit found a narrow TeacherTextbook migration
 | --- | ---: |
 | belongs_contract | 8 |
 | belongs_student | 14 |
-| duplicate_or_merged | 1 |
+| duplicate_or_merged | 2 |
 | migrate_tome_before_full_burn | 94 |
-| migrate_tome_deferred | 98 |
+| migrate_tome_deferred | 97 |
 | mixed_requires_split | 26 |
-| must_migrate_tome_before_spec3 | 54 |
-| needs_human_review | 23 |
+| must_migrate_tome_before_spec3 | 42 |
+| needs_human_review | 20 |
 
 ## High-Risk Blocker Summary
 
@@ -64,7 +64,7 @@ Spec 3 is blocked. The extraction audit found a narrow TeacherTextbook migration
 | belongs_student | 3 |
 | migrate_tome_before_full_burn | 41 |
 | mixed_requires_split | 22 |
-| must_migrate_tome_before_spec3 | 13 |
+| must_migrate_tome_before_spec3 | 3 |
 
 ## Missing Test Summary
 
@@ -72,8 +72,8 @@ Spec 3 is blocked. The extraction audit found a narrow TeacherTextbook migration
 | --- | ---: |
 | belongs_contract | 2 |
 | belongs_student | 7 |
-| defer | 28 |
-| must_port_before_spec3 | 19 |
+| defer | 26 |
+| must_port_before_spec3 | 16 |
 | must_port_with_associated_feature | 31 |
 
 ## Ordered Migration Chunks
@@ -146,9 +146,9 @@ Acceptance criteria:
 
 Passed: `False`
 
-- 13 high-risk Tome producer items must migrate before Spec 3
+- 3 high-risk Tome producer items must migrate before Spec 3
 - 22 high-risk mixed producer/student items need splits
-- 19 missing producer tests must port before Spec 3
+- 16 missing producer tests must port before Spec 3
 - legacy A/B parity must still pass after migration waves
 - extraction audit must rerun with no untriaged producer-core blockers
 
@@ -168,12 +168,10 @@ The generated local `migration_map.json` contains the complete table. The curren
 - `scripts/build_fingerprint_artifact.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/build_real_teacher_fingerprint_artifact.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/create_fake_targets.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
-- `scripts/export_teacher_targets.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`producer CLI surface`
 - `scripts/generate_multiscale_configs.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/inspect_fingerprint_artifact.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/inspect_fingerprint_exemplars.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/inspect_fingerprint_targets.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
-- `scripts/inspect_targets.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`producer CLI surface`
 - `scripts/plan_model_scale.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/resolve_qwen_policy.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/run_adaptive_corridor_pass.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
@@ -199,12 +197,10 @@ The generated local `migration_map.json` contains the complete table. The curren
 - `scripts/run_real_student_fingerprint_forward_smoke.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/run_real_teacher_fingerprint_training_rehearsal.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/run_two_cycle_experiment.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
-- `scripts/tokenize_corpus.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`producer CLI surface`
 - `scripts/tpu_distill_smoke.py` -> `belongs_student`; blocks_spec3=`False`; destination=`student training or evaluation workflow`
 - `scripts/train_student_smoke.py` -> `belongs_student`; blocks_spec3=`False`; destination=`student backend/runtime`
 - `scripts/validate_fingerprint_artifact.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `scripts/validate_local.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
-- `scripts/validate_pipeline.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`producer CLI surface`
 - `scripts/validate_student_artifact.py` -> `mixed_requires_split`; blocks_spec3=`True`; destination=`split producer artifact logic from consumer/runtime logic`
 - `scripts/write_fingerprint_provenance.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `src/qrwkv_xla/artifacts/fingerprint.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer fingerprint artifact surface`
@@ -229,17 +225,11 @@ The generated local `migration_map.json` contains the complete table. The curren
 - `src/qrwkv_xla/fingerprint/real_teacher.py` -> `mixed_requires_split`; blocks_spec3=`True`; destination=`split fingerprint producer artifacts from student training/eval`
 - `src/qrwkv_xla/fingerprint/trained_baseline.py` -> `mixed_requires_split`; blocks_spec3=`True`; destination=`split fingerprint producer artifacts from student training/eval`
 - `src/qrwkv_xla/fingerprint/training_rehearsal.py` -> `mixed_requires_split`; blocks_spec3=`True`; destination=`split fingerprint producer artifacts from student training/eval`
-- `src/qrwkv_xla/generation/tokenizer.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`RADJAX-Tome producer surface`
 - `src/qrwkv_xla/readiness/big_burn.py` -> `mixed_requires_split`; blocks_spec3=`True`; destination=`split burn/distillation orchestration into producer inputs vs student execution`
 - `src/qrwkv_xla/smoke/colab_tpu.py` -> `mixed_requires_split`; blocks_spec3=`True`; destination=`split producer artifact logic from consumer/runtime logic`
-- `src/qrwkv_xla/targets/consumption.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`teacher target store/export/validation surface`
-- `src/qrwkv_xla/targets/multishard.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`teacher target store/export/validation surface`
 - `src/qrwkv_xla/targets/real_teacher_consumption.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`teacher target store/export/validation surface`
 - `src/qrwkv_xla/teacher_export/hf.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`teacher backend/export producer surface`
-- `src/qrwkv_xla/teachers/backend.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`teacher backend/export producer surface`
-- `src/qrwkv_xla/teachers/emission.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`teacher backend/export producer surface`
 - `src/qrwkv_xla/teachers/hf_specimen_smoke.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`teacher backend/export producer surface`
-- `src/qrwkv_xla/teachers/synthetic.py` -> `must_migrate_tome_before_spec3`; blocks_spec3=`True`; destination=`teacher backend/export producer surface`
 - `src/qrwkv_xla/training/fingerprint_exemplar_loss.py` -> `mixed_requires_split`; blocks_spec3=`True`; destination=`split fingerprint producer artifacts from student training/eval`
 - `src/qrwkv_xla/training/fingerprint_reports.py` -> `mixed_requires_split`; blocks_spec3=`True`; destination=`split fingerprint producer artifacts from student training/eval`
 - `src/qrwkv_xla/training/fingerprint_smoke.py` -> `mixed_requires_split`; blocks_spec3=`True`; destination=`split fingerprint producer artifacts from student training/eval`

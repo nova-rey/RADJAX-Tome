@@ -37,3 +37,11 @@ archived `qrwkv-xla` producer files into RADJAX-Tome, RADJAX-Contract,
 RADJAX-Student, historical/deprecated, deferred, and human-review categories.
 Spec 3 remains blocked until high-risk producer gaps are migrated or explicitly
 waived.
+
+## 2026-06-30 — Producer-core target migration
+
+Migrated the highest-priority producer-core target loading, inspection,
+multi-shard smoke, synthetic target export, tokenizer, and corpus tokenization
+surface into RADJAX-Tome. The migration keeps JAX, Student runtime logic,
+Contract-valid Tome emission, and `cover_page.json` out of scope; Spec 3 remains
+blocked until the remaining producer/HF/fingerprint gaps are closed or waived.

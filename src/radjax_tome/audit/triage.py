@@ -494,9 +494,9 @@ def render_doc_summary(migration_map: MigrationMap) -> str:
         "## Short-Term Roadmap",
         "",
         "- Spec 2.5 - Extraction completeness audit. DONE.",
-        "- Spec 2.6 - Audit triage and producer migration map. THIS SPEC.",
+        "- Spec 2.6 - Audit triage and producer migration map. DONE.",
         "- Spec 2.7 - Migrate highest-priority producer "
-        "schemas/stores/validators/tests.",
+        "schemas/stores/validators/tests. THIS SPEC.",
         "- Spec 2.8 - Migrate real-teacher/HF/corpus/source-identity producer paths.",
         "- Spec 2.9 - Migrate behavioral fingerprint / corridor / exemplar "
         "producer artifact paths.",

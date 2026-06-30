@@ -105,9 +105,44 @@ OLD_TO_NEW_PATH_HINTS = (
     ),
     ("src/qrwkv_xla/targets/store.py", "src/radjax_tome/targets/store.py"),
     ("src/qrwkv_xla/targets/schema.py", "src/radjax_tome/targets/schema.py"),
+    (
+        "src/qrwkv_xla/targets/consumption.py",
+        "src/radjax_tome/targets/consumption.py",
+    ),
+    (
+        "src/qrwkv_xla/targets/multishard.py",
+        "src/radjax_tome/targets/multishard.py",
+    ),
+    (
+        "src/qrwkv_xla/generation/tokenizer.py",
+        "src/radjax_tome/corpora/tokenizer.py",
+    ),
+    (
+        "src/qrwkv_xla/teachers/backend.py",
+        "src/radjax_tome/backends/base.py",
+    ),
+    (
+        "src/qrwkv_xla/teachers/emission.py",
+        "src/radjax_tome/backends/emission.py",
+    ),
+    (
+        "src/qrwkv_xla/teachers/synthetic.py",
+        "src/radjax_tome/backends/synthetic.py",
+    ),
     ("src/qrwkv_xla/teachers/hf.py", "src/radjax_tome/backends/hf_causal_lm.py"),
     ("scripts/build_teacher_textbook.py", "scripts/build_teacher_textbook.py"),
     ("scripts/validate_teacher_textbook.py", "scripts/validate_teacher_textbook.py"),
+    ("scripts/export_teacher_targets.py", "scripts/export_teacher_targets.py"),
+    ("scripts/inspect_targets.py", "scripts/inspect_targets.py"),
+    ("scripts/tokenize_corpus.py", "scripts/tokenize_corpus.py"),
+    ("scripts/validate_pipeline.py", "scripts/validate_producer_pipeline.py"),
+    ("tests/test_multishard_target_store.py", "tests/test_target_core_migration.py"),
+    ("tests/test_offline_target_consumption.py", "tests/test_target_core_migration.py"),
+    ("tests/test_teacher_backend_emission.py", "tests/test_target_core_migration.py"),
+    ("tests/test_export_teacher_targets_cli.py", "tests/test_target_core_migration.py"),
+    ("tests/test_smoke_tokenizer.py", "tests/test_corpus_tokenization.py"),
+    ("tests/test_tokenize_corpus_script.py", "tests/test_corpus_tokenization.py"),
+    ("tests/test_tokenizer_registry.py", "tests/test_corpus_tokenization.py"),
 )
 
 HIGH_RISK_ROLES = {
