@@ -136,8 +136,7 @@ def test_unknown_sidecar_difference_fails(tmp_path: Path) -> None:
 
     assert result.status == "fail"
     assert any(
-        "emission_config.json/sequence_length" in blocker
-        for blocker in result.blockers
+        "emission_config.json/sequence_length" in blocker for blocker in result.blockers
     )
 
 
@@ -283,10 +282,7 @@ def _mutate_json(path: Path, updates: dict[str, object]) -> None:
 
 def _merge(payload: dict[str, object], updates: dict[str, object]) -> None:
     for key, value in updates.items():
-        if (
-            isinstance(value, dict)
-            and isinstance(payload.get(key), dict)
-        ):
+        if isinstance(value, dict) and isinstance(payload.get(key), dict):
             _merge(payload[key], value)  # type: ignore[arg-type]
         else:
             payload[key] = value

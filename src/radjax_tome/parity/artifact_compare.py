@@ -358,9 +358,7 @@ def _relative_files(root: Path) -> set[str]:
     if not root.is_dir():
         return set()
     return {
-        path.relative_to(root).as_posix()
-        for path in root.rglob("*")
-        if path.is_file()
+        path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()
     }
 
 

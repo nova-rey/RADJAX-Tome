@@ -181,9 +181,7 @@ def run_ab_parity(
         for case in fake_default_cases()
     )
     summary = AbParitySummary(
-        status="fail"
-        if any(case.status == "fail" for case in results)
-        else "pass",
+        status="fail" if any(case.status == "fail" for case in results) else "pass",
         case_set=case_set,
         old_repo=str(old_root),
         new_repo=str(new_root),
@@ -279,9 +277,7 @@ def _run_case(
         new_output_dir=str(new_output),
         sidecar_comparison=comparison.sidecar_comparison,
         shard_comparison=comparison.shard_comparison,
-        allowed_differences=[
-            item.to_dict() for item in comparison.allowed_differences
-        ],
+        allowed_differences=[item.to_dict() for item in comparison.allowed_differences],
         blockers=[*blockers, *comparison.blockers],
         warnings=[*warnings, *comparison.warnings],
     )
