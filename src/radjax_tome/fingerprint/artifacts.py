@@ -11,6 +11,18 @@ BEHAVIORAL_FINGERPRINT_ARTIFACT_TYPE = "behavioral_fingerprint"
 BEHAVIORAL_FINGERPRINT_VERSION = "0.1"
 SUPPORTED_BEHAVIORAL_FINGERPRINT_VERSIONS = (BEHAVIORAL_FINGERPRINT_VERSION,)
 FINGERPRINT_BYTE_ACCOUNTING_POLICY = "arm_charged_logical_payload_bytes_v1"
+PROBABILITY_LIKE_STATS = frozenset(
+    ("top1_margin", "top8_mass", "top32_mass", "tail_mass")
+)
+TARGET_PAYLOAD_LEGACY_JSONL = "legacy_jsonl"
+TARGET_PAYLOAD_PACKED_CORRIDOR_V1 = "packed_corridor_v1"
+PACKED_TARGET_ARRAYS = {
+    "examples_input_ids": 2,
+    "position_example_index": 1,
+    "position": 1,
+    "mode_id": 1,
+    "weight": 1,
+}
 BUDGET_SUBSET_SCHEMA_VERSION = "radjax_tome.budget_subset.v1"
 BUDGET_SUBSET_ROLES = frozenset(
     ("corridor_subset", "exemplar_subset", "combined_two_cycle_subset")

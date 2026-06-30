@@ -64,17 +64,16 @@ and explicit final gate checks remain later work.
 
 ## Spec 3 Gate Status
 
-Spec 3 remains blocked after the Spec 2.10 adversarial closure audit. The
-surgery ledger has no remaining quarantine entry marked as a Spec 3 blocker, but
-`docs/TOME_GENERATOR_CLOSURE_AUDIT.md` identifies unresolved active-equivalence
-evidence for `src/qrwkv_xla/artifacts/fingerprint.py` and five of its public
-symbols. The current extraction audit still counts quarantine references as
-equivalent or partial evidence, so active promotion must be interpreted from the
-closure audit, this ledger, and the active module/test set, not from quarantine
-path matches alone.
+Spec 3 is allowed after the Spec 2.10.1 adversarial closure audit rerun. The
+surgery ledger has no remaining quarantine entry marked as a Spec 3 blocker, and
+`docs/TOME_GENERATOR_CLOSURE_AUDIT.md` resolves the prior
+`src/qrwkv_xla/artifacts/fingerprint.py` active-equivalence concern by exact
+symbol mappings into `src/radjax_tome/fingerprint/artifacts.py`. The committed
+`docs/TOME_GENERATOR_CLOSURE_AUDIT.json` is a compact summary; the full detailed
+closure JSON is generated under `artifacts/tome_generator_closure_audit/` and is
+intentionally not committed.
 
 ## Next Step Recommendation
 
-Do not start `cover_page.json` work yet. Resolve or explicitly waive the
-fingerprint artifact closure blockers listed in
-`docs/TOME_GENERATOR_CLOSURE_AUDIT.md`, then rerun the closure audit.
+The closure gate is clear. Keep `cover_page.json` work scoped to the next Spec 3
+phase; this surgery document does not implement it.

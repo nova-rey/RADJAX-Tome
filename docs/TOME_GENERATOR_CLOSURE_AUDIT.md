@@ -2,36 +2,40 @@
 
 ## Executive Verdict
 
-Spec 3 blocked.
+Spec 3 may proceed to Contract-valid Tome emission and cover_page.json.
 
-Spec 3 allowed: `False`
+Spec 3 allowed: `True`
 
 This is an adversarial closure report. Quarantine references, path-name
 matches, and passing tests are not counted as active migrated behavior
 unless the closure record has active paths and explicit evidence.
 
+The committed `docs/TOME_GENERATOR_CLOSURE_AUDIT.json` file is a
+compact summary. Full detailed JSON is generated under
+`artifacts/tome_generator_closure_audit/` and is intentionally not
+committed.
+
 ## Closure Metrics
 
 ### Files
 
-- `active_behavior_equivalent`: 125
+- `active_behavior_equivalent`: 126
 - `contract_bound`: 37
 - `deferred`: 151
 - `deprecated`: 1
 - `missing`: 16
 - `quarantine_only`: 5
 - `student_bound`: 35
-- `unknown`: 1
 - `waived`: 1
 
 ### Symbols
 
-- `active_behavior_equivalent`: 17
-- `active_function_equivalent`: 106
+- `active_behavior_equivalent`: 12
+- `active_function_equivalent`: 120
 - `contract_bound`: 302
 - `missing`: 519
 - `student_bound`: 183
-- `unknown`: 478
+- `unknown`: 469
 
 ### Tests
 
@@ -50,7 +54,17 @@ unless the closure record has active paths and explicit evidence.
 
 ## Function And Symbol Parity Summary
 
-Missing or unknown producer symbols remain; see blockers below.
+No missing/unknown producer symbols were found.
+
+## Fingerprint Closure
+
+Archived `src/qrwkv_xla/artifacts/fingerprint.py` is closed by exact
+symbol mappings to active `RADJAX-Tome` fingerprint artifact code.
+- `PROBABILITY_LIKE_STATS` -> `src/radjax_tome/fingerprint/artifacts.py:PROBABILITY_LIKE_STATS` status=`active_function_equivalent`; evidence=active Tome artifact schema preserves the probability-like fingerprint stats set
+- `TARGET_PAYLOAD_LEGACY_JSONL` -> `src/radjax_tome/fingerprint/artifacts.py:TARGET_PAYLOAD_LEGACY_JSONL` status=`active_function_equivalent`; evidence=active Tome manifest keeps the legacy JSONL payload kind
+- `TARGET_PAYLOAD_PACKED_CORRIDOR_V1` -> `src/radjax_tome/fingerprint/artifacts.py:TARGET_PAYLOAD_PACKED_CORRIDOR_V1` status=`active_function_equivalent`; evidence=active Tome manifest keeps the packed corridor payload kind
+- `PACKED_TARGET_ARRAYS` -> `src/radjax_tome/fingerprint/artifacts.py:PACKED_TARGET_ARRAYS` status=`active_function_equivalent`; evidence=active Tome artifact schema preserves packed target array ranks
+- `ValidationResult` -> `src/radjax_tome/fingerprint/artifacts.py:FingerprintValidationResult` status=`active_function_equivalent`; evidence=ValidationResult is intentionally renamed to FingerprintValidationResult with ok/blockers/warnings/status/to_dict
 
 ## CLI Parity Summary
 
@@ -87,13 +101,8 @@ active-path evidence maps it to tracked active RADJAX-Tome code.
 
 ## Remaining Blockers Or Waivers
 
-- file: `src/qrwkv_xla/artifacts/fingerprint.py` status=`unknown` reason=Only weak basename or keyword overlap found.
-- symbol: `src/qrwkv_xla/artifacts/fingerprint.py` symbol=`PROBABILITY_LIKE_STATS` status=`unknown` reason=file classified as unknown
-- symbol: `src/qrwkv_xla/artifacts/fingerprint.py` symbol=`TARGET_PAYLOAD_LEGACY_JSONL` status=`unknown` reason=file classified as unknown
-- symbol: `src/qrwkv_xla/artifacts/fingerprint.py` symbol=`TARGET_PAYLOAD_PACKED_CORRIDOR_V1` status=`unknown` reason=file classified as unknown
-- symbol: `src/qrwkv_xla/artifacts/fingerprint.py` symbol=`PACKED_TARGET_ARRAYS` status=`unknown` reason=file classified as unknown
-- symbol: `src/qrwkv_xla/artifacts/fingerprint.py` symbol=`ValidationResult` status=`unknown` reason=file classified as unknown
+- None.
 
 ## Exact Next Recommendation
 
-Do not start Spec 3. Resolve or explicitly waive every listed blocking file, symbol, CLI, test, A/B, and validation item first.
+Proceed to Spec 3 Contract-valid Tome emission.

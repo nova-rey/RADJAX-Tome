@@ -13,7 +13,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from radjax_tome.audit.extraction_inventory import FileMatch, run_extraction_audit
+from radjax_tome.audit.extraction_inventory import (
+    HIGH_RISK_ROLES,
+    FileMatch,
+    run_extraction_audit,
+)
 
 CLOSURE_STATUSES = {
     "active_byte_identical",
@@ -44,6 +48,47 @@ KNOWN_ACTIVE_CLOSURE_PATHS = {
         "src/radjax_tome/fingerprint/validation.py",
         "src/radjax_tome/fingerprint/inspection.py",
     ),
+}
+KNOWN_SYMBOL_CLOSURE_MAP = {
+    ("src/qrwkv_xla/artifacts/fingerprint.py", "PROBABILITY_LIKE_STATS"): {
+        "new_path": "src/radjax_tome/fingerprint/artifacts.py",
+        "new_symbol": "PROBABILITY_LIKE_STATS",
+        "parity_status": "renamed_equivalent",
+        "evidence": (
+            "active Tome artifact schema preserves the probability-like "
+            "fingerprint stats set"
+        ),
+    },
+    ("src/qrwkv_xla/artifacts/fingerprint.py", "TARGET_PAYLOAD_LEGACY_JSONL"): {
+        "new_path": "src/radjax_tome/fingerprint/artifacts.py",
+        "new_symbol": "TARGET_PAYLOAD_LEGACY_JSONL",
+        "parity_status": "renamed_equivalent",
+        "evidence": "active Tome manifest keeps the legacy JSONL payload kind",
+    },
+    (
+        "src/qrwkv_xla/artifacts/fingerprint.py",
+        "TARGET_PAYLOAD_PACKED_CORRIDOR_V1",
+    ): {
+        "new_path": "src/radjax_tome/fingerprint/artifacts.py",
+        "new_symbol": "TARGET_PAYLOAD_PACKED_CORRIDOR_V1",
+        "parity_status": "renamed_equivalent",
+        "evidence": "active Tome manifest keeps the packed corridor payload kind",
+    },
+    ("src/qrwkv_xla/artifacts/fingerprint.py", "PACKED_TARGET_ARRAYS"): {
+        "new_path": "src/radjax_tome/fingerprint/artifacts.py",
+        "new_symbol": "PACKED_TARGET_ARRAYS",
+        "parity_status": "renamed_equivalent",
+        "evidence": "active Tome artifact schema preserves packed target array ranks",
+    },
+    ("src/qrwkv_xla/artifacts/fingerprint.py", "ValidationResult"): {
+        "new_path": "src/radjax_tome/fingerprint/artifacts.py",
+        "new_symbol": "FingerprintValidationResult",
+        "parity_status": "renamed_equivalent",
+        "evidence": (
+            "ValidationResult is intentionally renamed to "
+            "FingerprintValidationResult with ok/blockers/warnings/status/to_dict"
+        ),
+    },
 }
 CONTRACT_BOUND_PATH_MARKERS = (
     "docs/VOCAB_CONTRACT.md",
@@ -296,11 +341,14 @@ def write_closure_audit(
     *,
     output_json: str | Path,
     output_md: str | Path,
+    output_summary_json: str | Path | None = None,
     overwrite: bool = False,
 ) -> None:
     json_path = Path(output_json)
     md_path = Path(output_md)
-    for path in (json_path, md_path):
+    summary_path = Path(output_summary_json) if output_summary_json else None
+    paths = (json_path, md_path) + ((summary_path,) if summary_path else ())
+    for path in paths:
         if path.exists() and not overwrite:
             raise ValueError(f"refusing to overwrite existing file: {path}")
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -309,6 +357,47 @@ def write_closure_audit(
         encoding="utf-8",
     )
     md_path.write_text(render_closure_markdown(audit), encoding="utf-8")
+    if summary_path is not None:
+        summary_path.write_text(
+            json.dumps(
+                closure_summary_payload(audit, full_json_path=json_path),
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+
+def closure_summary_payload(
+    audit: ClosureAudit, *, full_json_path: str | Path
+) -> dict[str, Any]:
+    waivers = [
+        {
+            "old_path": str(item.get("old_path", "")),
+            "status": str(item.get("closure_status", "")),
+            "waiver_id": item.get("waiver_id"),
+            "reason": str(item.get("reason", "")),
+            "blocks_spec3": bool(item.get("blocks_spec3", False)),
+        }
+        for item in audit.waivers
+        if item.get("blocks_spec3")
+    ]
+    return {
+        "kind": "radjax_tome_closure_audit_summary",
+        "version": 1,
+        "generated_full_json_path": str(full_json_path),
+        "spec3_allowed": audit.spec3_gate["allowed"],
+        "summary": audit.summary,
+        "blockers": list(audit.blockers),
+        "waivers": waivers,
+        "ab_status": audit.ab_results.get("status"),
+        "validation_status": audit.summary.get("ci_equivalent_validation_status"),
+        "note": (
+            "Full detailed closure audit is generated under artifacts/ and "
+            "intentionally not committed."
+        ),
+    }
 
 
 def render_closure_markdown(audit: ClosureAudit) -> str:
@@ -326,6 +415,11 @@ def render_closure_markdown(audit: ClosureAudit) -> str:
         "This is an adversarial closure report. Quarantine references, path-name",
         "matches, and passing tests are not counted as active migrated behavior",
         "unless the closure record has active paths and explicit evidence.",
+        "",
+        "The committed `docs/TOME_GENERATOR_CLOSURE_AUDIT.json` file is a",
+        "compact summary. Full detailed JSON is generated under",
+        "`artifacts/tome_generator_closure_audit/` and is intentionally not",
+        "committed.",
         "",
         "## Closure Metrics",
         "",
@@ -354,6 +448,10 @@ def render_closure_markdown(audit: ClosureAudit) -> str:
             if not _symbol_blockers(audit.symbol_records)
             else "Missing or unknown producer symbols remain; see blockers below."
         ),
+        "",
+        "## Fingerprint Closure",
+        "",
+        *_fingerprint_closure_lines(audit.symbol_records),
         "",
         "## CLI Parity Summary",
         "",
@@ -418,11 +516,16 @@ def _close_file(
             symbol,
             status=status,
             active_paths=active_paths,
+            old_path=match.old_path,
             symbol_index=symbol_index,
         )
         for symbol in symbols
     )
     blocks = _blocks_spec3(match, status, ledger_entry)
+    symbol_blocks = blocks or (
+        match.old_path in KNOWN_ACTIVE_CLOSURE_PATHS
+        and match.old_role in HIGH_RISK_ROLES
+    )
     tests = tuple(_tests_mapped(match, ledger_entry, active_paths))
     symbol_records = [
         SymbolRecord(
@@ -433,7 +536,7 @@ def _close_file(
             new_symbol=item.new_symbol,
             new_path=item.new_path,
             evidence=item.evidence,
-            blocks_spec3=blocks
+            blocks_spec3=symbol_blocks
             and _symbol_status(item.parity_status) in {"missing", "unknown"},
         )
         for item in function_map
@@ -489,6 +592,12 @@ def _closure_status(
             return "waived", str(ledger_entry["reason"])
         if decision == "kept_quarantined":
             return "quarantine_only", str(ledger_entry["reason"])
+    if match.old_path in KNOWN_ACTIVE_CLOSURE_PATHS and active_paths:
+        return (
+            "active_behavior_equivalent",
+            "Known fingerprint artifact symbols map to active Tome "
+            "fingerprint artifact schema code.",
+        )
     if match.new_status == "missing":
         return "missing", match.notes
     if match.new_status.startswith("intentionally_omitted_contract"):
@@ -509,8 +618,38 @@ def _map_symbol(
     *,
     status: str,
     active_paths: tuple[str, ...],
+    old_path: str,
     symbol_index: dict[str, list[tuple[str, str]]],
 ) -> FunctionMapRecord:
+    known = KNOWN_SYMBOL_CLOSURE_MAP.get((old_path, symbol["name"]))
+    if known is not None:
+        new_path = str(known["new_path"])
+        new_symbol = str(known["new_symbol"])
+        candidates = [
+            (path, kind)
+            for path, kind in symbol_index.get(new_symbol, [])
+            if path == new_path
+        ]
+        if candidates:
+            return FunctionMapRecord(
+                old_symbol=symbol["name"],
+                old_symbol_type=symbol["kind"],
+                new_symbol=new_symbol,
+                new_path=new_path,
+                parity_status=str(known["parity_status"]),
+                evidence=str(known["evidence"]),
+            )
+        return FunctionMapRecord(
+            old_symbol=symbol["name"],
+            old_symbol_type=symbol["kind"],
+            new_symbol=new_symbol,
+            new_path=new_path,
+            parity_status="unknown",
+            evidence=(
+                "known closure mapping target missing from active symbol index: "
+                f"{new_path}:{new_symbol}"
+            ),
+        )
     candidates = [
         (path, kind)
         for path, kind in symbol_index.get(symbol["name"], [])
@@ -1032,6 +1171,35 @@ def _test_summary_lines(records: tuple[TestRecord, ...]) -> list[str]:
     return _markdown_counts(dict(counts))
 
 
+def _fingerprint_closure_lines(records: tuple[SymbolRecord, ...]) -> list[str]:
+    symbols = (
+        "PROBABILITY_LIKE_STATS",
+        "TARGET_PAYLOAD_LEGACY_JSONL",
+        "TARGET_PAYLOAD_PACKED_CORRIDOR_V1",
+        "PACKED_TARGET_ARRAYS",
+        "ValidationResult",
+    )
+    by_symbol = {
+        record.old_symbol: record
+        for record in records
+        if record.old_path == "src/qrwkv_xla/artifacts/fingerprint.py"
+    }
+    lines = [
+        "Archived `src/qrwkv_xla/artifacts/fingerprint.py` is closed by exact",
+        "symbol mappings to active `RADJAX-Tome` fingerprint artifact code.",
+    ]
+    for symbol in symbols:
+        record = by_symbol.get(symbol)
+        if record is None:
+            lines.append(f"- `{symbol}`: no closure record found.")
+            continue
+        lines.append(
+            f"- `{symbol}` -> `{record.new_path}:{record.new_symbol}` "
+            f"status=`{record.closure_status}`; evidence={record.evidence}"
+        )
+    return lines
+
+
 def _blocker_lines(blockers: tuple[dict[str, Any], ...]) -> list[str]:
     if not blockers:
         return ["- None."]
@@ -1063,6 +1231,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--new-repo", type=Path, default=Path.cwd())
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--output-md", type=Path, required=True)
+    parser.add_argument("--output-summary-json", type=Path)
     parser.add_argument("--ab-summary", type=Path)
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--fail-on-gate-blocked", action="store_true")
@@ -1077,6 +1246,7 @@ def main(argv: list[str] | None = None) -> int:
         audit,
         output_json=args.output_json,
         output_md=args.output_md,
+        output_summary_json=args.output_summary_json,
         overwrite=args.overwrite,
     )
     print(

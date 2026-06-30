@@ -6,8 +6,13 @@ from pathlib import Path
 from radjax_tome.fingerprint import (
     BEHAVIORAL_FINGERPRINT_ARTIFACT_TYPE,
     BEHAVIORAL_FINGERPRINT_VERSION,
+    PACKED_TARGET_ARRAYS,
+    PROBABILITY_LIKE_STATS,
+    TARGET_PAYLOAD_LEGACY_JSONL,
+    TARGET_PAYLOAD_PACKED_CORRIDOR_V1,
     FingerprintByteAccounting,
     FingerprintManifest,
+    FingerprintValidationResult,
     build_artifact_source_lineage,
     inspect_fingerprint_artifact,
     read_fingerprint_manifest,
@@ -101,3 +106,26 @@ def test_byte_accounting_and_source_lineage(tmp_path: Path) -> None:
     assert lineage.publication_grade_lineage
     assert lineage.artifact_manifest_sha256 is not None
     assert stable_hash({"a": 1}).startswith("sha256:")
+
+
+def test_archived_fingerprint_schema_symbols_are_active() -> None:
+    assert PROBABILITY_LIKE_STATS == frozenset(
+        {"top1_margin", "top8_mass", "top32_mass", "tail_mass"}
+    )
+    assert TARGET_PAYLOAD_LEGACY_JSONL == "legacy_jsonl"
+    assert TARGET_PAYLOAD_PACKED_CORRIDOR_V1 == "packed_corridor_v1"
+    assert PACKED_TARGET_ARRAYS == {
+        "examples_input_ids": 2,
+        "position_example_index": 1,
+        "position": 1,
+        "mode_id": 1,
+        "weight": 1,
+    }
+
+    result = FingerprintValidationResult(
+        ok=False,
+        blockers=("missing manifest.json",),
+        warnings=("unit warning",),
+    )
+    assert result.status == "fail"
+    assert result.to_dict()["blockers"] == ("missing manifest.json",)

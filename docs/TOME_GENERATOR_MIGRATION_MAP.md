@@ -2,7 +2,10 @@
 
 ## Summary
 
-Spec 3 is blocked. The extraction audit found a narrow TeacherTextbook migration, not a complete Tome Generator extraction.
+Spec 3 is allowed by the Spec 2.10.1 adversarial closure audit. The older
+extraction audit still records broad historical producer candidates, but the
+closure audit now has explicit active, Contract, Student, deferred, deprecated,
+or waived dispositions for the Spec 3 gate.
 
 | Metric | Count |
 | --- | ---: |
@@ -28,15 +31,22 @@ quarantine-backed paths: 3 `promoted`, 78 `split_promoted`, 5
 `kept_quarantined`, 32 `belongs_student`, 2 `belongs_contract`, 1 `deprecated`,
 151 `deferred`, and 1 `waived`.
 
-Spec 2.10 adds `docs/TOME_GENERATOR_CLOSURE_AUDIT.json` and
-`docs/TOME_GENERATOR_CLOSURE_AUDIT.md` as the adversarial closure layer. That
-audit compares 372 old producer-relevant files, 1605 public symbols, 48 old CLIs,
-and 92 old tests while distinguishing active behavior from quarantine evidence.
-It blocks Spec 3 on 6 exact closure blockers: the old
-`src/qrwkv_xla/artifacts/fingerprint.py` file and its unresolved public symbols
-`PROBABILITY_LIKE_STATS`, `TARGET_PAYLOAD_LEGACY_JSONL`,
-`TARGET_PAYLOAD_PACKED_CORRIDOR_V1`, `PACKED_TARGET_ARRAYS`, and
-`ValidationResult`.
+Spec 2.10.1 keeps `docs/TOME_GENERATOR_CLOSURE_AUDIT.json` as a compact
+committed summary and `docs/TOME_GENERATOR_CLOSURE_AUDIT.md` as the reviewable
+closure report. The full detailed JSON is generated at
+`artifacts/tome_generator_closure_audit/TOME_GENERATOR_CLOSURE_AUDIT.full.json`
+and is intentionally ignored. The audit compares 372 old producer-relevant
+files, 1605 public symbols, 48 old CLIs, and 92 old tests while distinguishing
+active behavior from quarantine evidence. It now has zero Spec 3 blockers.
+
+The previous `src/qrwkv_xla/artifacts/fingerprint.py` unknown is resolved by
+exact active mappings:
+
+- `PROBABILITY_LIKE_STATS` -> `src/radjax_tome/fingerprint/artifacts.py:PROBABILITY_LIKE_STATS`
+- `TARGET_PAYLOAD_LEGACY_JSONL` -> `src/radjax_tome/fingerprint/artifacts.py:TARGET_PAYLOAD_LEGACY_JSONL`
+- `TARGET_PAYLOAD_PACKED_CORRIDOR_V1` -> `src/radjax_tome/fingerprint/artifacts.py:TARGET_PAYLOAD_PACKED_CORRIDOR_V1`
+- `PACKED_TARGET_ARRAYS` -> `src/radjax_tome/fingerprint/artifacts.py:PACKED_TARGET_ARRAYS`
+- `ValidationResult` -> `src/radjax_tome/fingerprint/artifacts.py:FingerprintValidationResult`
 
 ## Short-Term Roadmap
 
@@ -46,14 +56,16 @@ It blocks Spec 3 on 6 exact closure blockers: the old
 - Spec 2.8 - Bulk producer migration with quarantine. DONE.
 - Spec 2.9 - Surgical split of quarantined mixed producer/student files. DONE.
 - Spec 2.10 - Audit closure, A/B expansion, waivers, and Spec 3 gate check. DONE.
-- Spec 3 - Contract-valid Tome emission with cover_page.json, only after the gate passes.
+- Spec 3 - Contract-valid Tome emission with cover_page.json may proceed after
+  this gate; it is not implemented by this migration map.
 
 Previous micro-migration roadmap:
 
 - Spec 2.8 - Migrate real-teacher/HF/corpus/source-identity producer paths.
 - Spec 2.9 - Migrate behavioral fingerprint / corridor / exemplar producer artifact paths.
 - Spec 2.10 - Re-run extraction audit and A/B parity; reduce blockers to zero or explicit waivers.
-- Spec 3 - Only then implement Contract-valid Tome emission with cover_page.json.
+- Spec 3 - Implement Contract-valid Tome emission with cover_page.json in the
+  next scoped phase.
 
 ## Bucket Definitions
 
@@ -161,7 +173,7 @@ Acceptance criteria:
 
 ## Spec 3 Gate
 
-Passed: `False`
+Passed: `True`
 
 - The regenerated audit still reports 45 high-risk producer items as quarantined
   or duplicate/merged path evidence, but the Spec 2.9 surgery ledger records no
@@ -169,8 +181,8 @@ Passed: `False`
 - legacy A/B parity passes for the fake-default case set
 - extraction audit must be interpreted in Spec 2.10 with active promotion
   separated from retained quarantine evidence
-- adversarial closure audit blocks on unresolved fingerprint artifact active
-  equivalence evidence
+- adversarial closure audit is clear after exact fingerprint artifact active
+  equivalence mappings for the old file and its five listed public symbols
 - Contract-valid `cover_page.json` Tome emission remains unimplemented
 
 ## Open Questions / Human Review

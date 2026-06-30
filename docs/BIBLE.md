@@ -69,3 +69,11 @@ Tome Generator files, functions, tests, docs, and artifacts against active
 `RADJAX-Tome`, quarantine references, and explicit Student/Contract/waiver
 dispositions. The audit distinguishes active migrated behavior from quarantine
 evidence before deciding whether Spec 3 cover-page work may resume.
+
+## 2026-06-30 — Fingerprint closure blocker resolution
+
+Resolved the adversarial closure audit concern around archived
+`src/qrwkv_xla/artifacts/fingerprint.py` by mapping its remaining producer
+symbols against active `RADJAX-Tome` fingerprint artifact code. Replaced the
+giant committed closure audit JSON with a compact committed summary and kept
+full detailed closure output as an ignored generated artifact.
