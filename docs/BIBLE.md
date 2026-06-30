@@ -20,3 +20,20 @@ TeacherTextbook builder against the archived `qrwkv-xla` builder. The harness
 covers deterministic fake/offline dense logits, top-k/tail, and cascaded soft
 label outputs. This phase verifies migration parity only; `cover_page.json` and
 new Contract-valid Tome emission remain deferred.
+
+## 2026-06-30 — Tome Generator extraction completeness audit
+
+Added an extraction audit for the archived `qrwkv-xla` producer-side/Tome-generator
+surface against the live `RADJAX-Tome` repo. The audit classifies relevant old
+files, symbols, tests, docs, and fixtures as migrated, partial, missing, or
+intentionally omitted before any Contract-valid `cover_page.json` emission work
+continues.
+
+## 2026-06-30 — Tome Generator migration map
+
+Locked the short-term roadmap after the extraction audit showed major producer-side
+migration gaps. Added triage tooling and a migration map that buckets missing
+archived `qrwkv-xla` producer files into RADJAX-Tome, RADJAX-Contract,
+RADJAX-Student, historical/deprecated, deferred, and human-review categories.
+Spec 3 remains blocked until high-risk producer gaps are migrated or explicitly
+waived.
