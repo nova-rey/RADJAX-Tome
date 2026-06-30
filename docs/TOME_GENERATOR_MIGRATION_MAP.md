@@ -7,33 +7,35 @@ Spec 3 is blocked. The extraction audit found a narrow TeacherTextbook migration
 | Metric | Count |
 | --- | ---: |
 | intentionally_omitted | 32 |
-| migrated | 44 |
+| migrated | 46 |
 | missing | 36 |
 | missing_tests | 9 |
 | mixed_producer_consumer_files | 23 |
 | needs_human_review | 0 |
 | new_equivalent_tests | 80 |
-| partial | 260 |
+| partial | 258 |
 | producer_cli_files | 43 |
 | producer_core_files | 18 |
 | producer_relevant_old_files | 372 |
 | producer_relevant_old_tests | 89 |
 | total_old_candidate_files | 384 |
 
-Note: quarantine `.txt` references are counted by the current audit as
-equivalent or partial path matches. They are accounting and surgery inputs, not
-active migrated behavior. In particular, `new_equivalent_tests` includes
-quarantined test references until the audit tool separates active tests from
-quarantine evidence.
+Note: the current audit still treats quarantine `.txt` references as path
+matches, so `partial`, `duplicate_or_merged`, and `new_equivalent_tests` include
+retained quarantine evidence. Active Spec 2.9 promotion status is recorded in
+`docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json`, which processed 273
+quarantine-backed paths: 3 `promoted`, 78 `split_promoted`, 5
+`kept_quarantined`, 32 `belongs_student`, 2 `belongs_contract`, 1 `deprecated`,
+151 `deferred`, and 1 `waived`.
 
 ## Short-Term Roadmap
 
 - Spec 2.5 - Extraction completeness audit. DONE.
 - Spec 2.6 - Audit triage and producer migration map. DONE.
 - Spec 2.7 - Migrate highest-priority producer schemas/stores/validators/tests. DONE.
-- Spec 2.8 - Bulk producer migration with quarantine. THIS SPEC.
-- Spec 2.9 - Surgical split of quarantined mixed producer/student files.
-- Spec 2.10 - Audit closure, A/B expansion, waivers, and Spec 3 gate check.
+- Spec 2.8 - Bulk producer migration with quarantine. DONE.
+- Spec 2.9 - Surgical split of quarantined mixed producer/student files. DONE.
+- Spec 2.10 - Audit closure, A/B expansion, waivers, and Spec 3 gate check. NEXT.
 - Spec 3 - Contract-valid Tome emission with cover_page.json, only after the gate passes.
 
 Previous micro-migration roadmap:
@@ -62,7 +64,7 @@ Previous micro-migration roadmap:
 | --- | ---: |
 | belongs_contract | 8 |
 | belongs_student | 14 |
-| duplicate_or_merged | 260 |
+| duplicate_or_merged | 258 |
 | migrate_tome_before_full_burn | 14 |
 
 ## High-Risk Blocker Summary
@@ -71,7 +73,7 @@ Previous micro-migration roadmap:
 | --- | ---: |
 | belongs_contract | 3 |
 | belongs_student | 3 |
-| duplicate_or_merged | 48 |
+| duplicate_or_merged | 46 |
 | migrate_tome_before_full_burn | 14 |
 
 ## Missing Test Summary
@@ -151,9 +153,13 @@ Acceptance criteria:
 
 Passed: `False`
 
-- 47 high-risk producer items are quarantined for Spec 2.9
+- The regenerated audit still reports 45 high-risk producer items as quarantined
+  or duplicate/merged path evidence, but the Spec 2.9 surgery ledger records no
+  remaining quarantine entry as a Spec 3 blocker.
 - legacy A/B parity must still pass after migration waves
-- extraction audit must rerun with no untriaged producer-core blockers
+- extraction audit must be interpreted in Spec 2.10 with active promotion
+  separated from retained quarantine evidence
+- Contract-valid `cover_page.json` Tome emission remains unimplemented
 
 ## Open Questions / Human Review
 
@@ -202,7 +208,7 @@ The generated local `migration_map.json` contains the complete table. The curren
 - `scripts/validate_student_artifact.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/scripts/validate_student_artifact.py.txt`
 - `scripts/write_fingerprint_provenance.py` -> `migrate_tome_before_full_burn`; blocks_spec3=`False`; destination=`producer CLI surface`
 - `src/qrwkv_xla/artifacts/fingerprint.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`src/radjax_tome/fingerprint/artifacts.py`
-- `src/qrwkv_xla/artifacts/fingerprint_exemplars.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/artifacts/fingerprint_exemplars.py.txt`
+- `src/qrwkv_xla/artifacts/fingerprint_exemplars.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/artifacts/fingerprint_exemplars.py.txt, src/radjax_tome/fingerprint/exemplars.py`
 - `src/qrwkv_xla/artifacts/student_artifact.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/artifacts/student_artifact.py.txt`
 - `src/qrwkv_xla/burn/first_serious_burn.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/burn/first_serious_burn.py.txt`
 - `src/qrwkv_xla/contracts/compatibility.py` -> `belongs_contract`; blocks_spec3=`False`; destination=`shared artifact/schema validation`
@@ -216,7 +222,6 @@ The generated local `migration_map.json` contains the complete table. The curren
 - `src/qrwkv_xla/fingerprint/capture.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/capture.py.txt`
 - `src/qrwkv_xla/fingerprint/exemplar_pass.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/exemplar_pass.py.txt`
 - `src/qrwkv_xla/fingerprint/held_out_evaluation.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/held_out_evaluation.py.txt`
-- `src/qrwkv_xla/fingerprint/provenance.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/provenance.py.txt`
 - `src/qrwkv_xla/fingerprint/quality_per_byte.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/quality_per_byte.py.txt`
 - `src/qrwkv_xla/fingerprint/radjax_crossover_backend.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/radjax_crossover_backend.py.txt`
 - `src/qrwkv_xla/fingerprint/real_teacher.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/real_teacher.py.txt`
@@ -226,7 +231,6 @@ The generated local `migration_map.json` contains the complete table. The curren
 - `src/qrwkv_xla/smoke/colab_tpu.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/smoke/colab_tpu.py.txt`
 - `src/qrwkv_xla/targets/real_teacher_consumption.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/targets/real_teacher_consumption.py.txt`
 - `src/qrwkv_xla/teacher_export/hf.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/teacher_export/hf.py.txt`
-- `src/qrwkv_xla/teachers/hf_specimen_smoke.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/teachers/hf_specimen_smoke.py.txt`
 - `src/qrwkv_xla/training/fingerprint_exemplar_loss.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/training/fingerprint_exemplar_loss.py.txt`
 - `src/qrwkv_xla/training/fingerprint_reports.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/training/fingerprint_reports.py.txt`
 - `src/qrwkv_xla/training/fingerprint_smoke.py` -> `duplicate_or_merged`; blocks_spec3=`False`; destination=`quarantine/qrwkv_xla/src/qrwkv_xla/training/fingerprint_smoke.py.txt`

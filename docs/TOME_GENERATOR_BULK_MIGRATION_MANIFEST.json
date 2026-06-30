@@ -5,6 +5,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_adamw_clipped_stub.yaml.txt",
     "old_path": "configs/distill_stage0_adamw_clipped_stub.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -13,6 +17,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_adamw_schedule_stub.yaml.txt",
     "old_path": "configs/distill_stage0_adamw_schedule_stub.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -21,6 +29,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_logits_stub.yaml.txt",
     "old_path": "configs/distill_stage0_logits_stub.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -29,6 +41,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_qwen_reference_colab_tpu_logits_smoke.yaml.txt",
     "old_path": "configs/distill_stage0_qwen_reference_colab_tpu_logits_smoke.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -37,6 +53,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_qwen_reference_colab_tpu_smoke.yaml.txt",
     "old_path": "configs/distill_stage0_qwen_reference_colab_tpu_smoke.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -45,6 +65,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_qwen_reference_p38_tiny_hf_tpu_smoke.yaml.txt",
     "old_path": "configs/distill_stage0_qwen_reference_p38_tiny_hf_tpu_smoke.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -53,6 +77,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_qwen_reference_tiny_hf.yaml.txt",
     "old_path": "configs/distill_stage0_qwen_reference_tiny_hf.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -61,6 +89,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_radlads_reference_stub.yaml.txt",
     "old_path": "configs/distill_stage0_radlads_reference_stub.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -69,6 +101,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_radlads_reference_tiny_hf.yaml.txt",
     "old_path": "configs/distill_stage0_radlads_reference_tiny_hf.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -77,6 +113,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_radlads_reference_tiny_hf_logits.yaml.txt",
     "old_path": "configs/distill_stage0_radlads_reference_tiny_hf_logits.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -85,6 +125,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage0_stub.yaml.txt",
     "old_path": "configs/distill_stage0_stub.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -101,6 +145,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/distill_stage1_attention_stub.yaml.txt",
     "old_path": "configs/distill_stage1_attention_stub.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -109,6 +157,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/eval_regression_smoke.yaml.txt",
     "old_path": "configs/eval_regression_smoke.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -117,6 +169,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/generation_smoke.yaml.txt",
     "old_path": "configs/generation_smoke.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -133,6 +189,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/lm_stage3_qwen_tokenizer_example.yaml.txt",
     "old_path": "configs/lm_stage3_qwen_tokenizer_example.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -141,6 +201,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/lm_stage3_smoke.yaml.txt",
     "old_path": "configs/lm_stage3_smoke.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -149,6 +213,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/lm_stage3_tokenized_smoke.yaml.txt",
     "old_path": "configs/lm_stage3_tokenized_smoke.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -157,6 +225,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_hf_tiny.yaml.txt",
     "old_path": "configs/teacher_export_hf_tiny.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -167,6 +245,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_hf_tiny_corpus.yaml.txt",
     "old_path": "configs/teacher_export_hf_tiny_corpus.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -177,6 +265,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_p38_tiny_hf_logits_smoke.yaml.txt",
     "old_path": "configs/teacher_export_p38_tiny_hf_logits_smoke.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -187,6 +285,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_qwen_attention_manual.yaml.txt",
     "old_path": "configs/teacher_export_qwen_attention_manual.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -197,6 +305,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_qwen_dryrun.yaml.txt",
     "old_path": "configs/teacher_export_qwen_dryrun.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -207,6 +325,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_qwen_dryrun_corpus.yaml.txt",
     "old_path": "configs/teacher_export_qwen_dryrun_corpus.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -217,6 +345,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_qwen_reference_colab_tpu_logits_smoke.yaml.txt",
     "old_path": "configs/teacher_export_qwen_reference_colab_tpu_logits_smoke.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -227,6 +365,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_qwen_small_manual.yaml.txt",
     "old_path": "configs/teacher_export_qwen_small_manual.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -237,6 +385,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_stub.yaml.txt",
     "old_path": "configs/teacher_export_stub.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -247,6 +405,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_stub_attention.yaml.txt",
     "old_path": "configs/teacher_export_stub_attention.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -257,6 +425,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_stub_logits.yaml.txt",
     "old_path": "configs/teacher_export_stub_logits.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -267,6 +445,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/configs/teacher_export_tiny_hf_smoke.yaml.txt",
     "old_path": "configs/teacher_export_tiny_hf_smoke.yaml",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -285,6 +473,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/corpora/eval_regression_prompts.jsonl.txt",
     "old_path": "corpora/eval_regression_prompts.jsonl",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -293,6 +485,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/corpora/eval_regression_prompts.manifest.json.txt",
     "old_path": "corpora/eval_regression_prompts.manifest.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -301,6 +497,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/corpora/hf_tiny_smoke_prompts.jsonl.txt",
     "old_path": "corpora/hf_tiny_smoke_prompts.jsonl",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -309,6 +509,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/corpora/smoke_prompts.jsonl.txt",
     "old_path": "corpora/smoke_prompts.jsonl",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -317,6 +521,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/corpora/smoke_prompts.manifest.json.txt",
     "old_path": "corpora/smoke_prompts.manifest.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -325,6 +533,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/ARCHITECTURE.md.txt",
     "old_path": "docs/ARCHITECTURE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -333,6 +545,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/ARCHIVAL_FREEZE.md.txt",
     "old_path": "docs/ARCHIVAL_FREEZE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -341,6 +557,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/ARTIFACT_FORMATS.md.txt",
     "old_path": "docs/ARTIFACT_FORMATS.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -349,6 +569,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/ATTENTION_MIXER_DISTILLATION.md.txt",
     "old_path": "docs/ATTENTION_MIXER_DISTILLATION.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -357,6 +581,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/BIG_BURN_READINESS_REPORT.md.txt",
     "old_path": "docs/BIG_BURN_READINESS_REPORT.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -365,6 +593,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/BUCKET_SHAPE_LOSS.md.txt",
     "old_path": "docs/BUCKET_SHAPE_LOSS.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -373,6 +605,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/CASCADED_SOFT_LABELS.md.txt",
     "old_path": "docs/CASCADED_SOFT_LABELS.md",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/builder/cascaded_soft_labels.py",
+      "src/radjax_tome/builder/teacher_textbook.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -383,6 +622,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/CI.md.txt",
     "old_path": "docs/CI.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -391,6 +634,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/COLAB_TPU_LOGITS_SMOKE.md.txt",
     "old_path": "docs/COLAB_TPU_LOGITS_SMOKE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -399,6 +646,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/COLAB_TPU_PLANNER_SMOKE.md.txt",
     "old_path": "docs/COLAB_TPU_PLANNER_SMOKE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -407,6 +658,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/COLAB_TPU_TINY_HF_SMOKE.md.txt",
     "old_path": "docs/COLAB_TPU_TINY_HF_SMOKE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -415,6 +670,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/DATA_PIPELINE.md.txt",
     "old_path": "docs/DATA_PIPELINE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -423,6 +682,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/DECISIONS.md.txt",
     "old_path": "docs/DECISIONS.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -431,6 +694,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/DEV_WORKFLOW.md.txt",
     "old_path": "docs/DEV_WORKFLOW.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -439,6 +706,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/DISTILLATION_RUNTIME.md.txt",
     "old_path": "docs/DISTILLATION_RUNTIME.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -447,6 +718,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/DISTRIBUTED_TPU_SHARDING.md.txt",
     "old_path": "docs/DISTRIBUTED_TPU_SHARDING.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -455,6 +730,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/EVALUATION_HARNESS.md.txt",
     "old_path": "docs/EVALUATION_HARNESS.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -463,6 +742,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/FINGERPRINT_NEXT_ARC_READINESS.md.txt",
     "old_path": "docs/FINGERPRINT_NEXT_ARC_READINESS.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -473,6 +756,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/FIRST_SERIOUS_COMPUTE_BURN.md.txt",
     "old_path": "docs/FIRST_SERIOUS_COMPUTE_BURN.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -481,6 +768,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/GENERATION_SMOKE.md.txt",
     "old_path": "docs/GENERATION_SMOKE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -489,6 +780,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/HF_COMPATIBLE_STUDENT_INTERFACE_REASSESSMENT.md.txt",
     "old_path": "docs/HF_COMPATIBLE_STUDENT_INTERFACE_REASSESSMENT.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -497,6 +792,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/HF_TEACHER_BACKEND.md.txt",
     "old_path": "docs/HF_TEACHER_BACKEND.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -505,6 +804,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/HF_TEACHER_EXPORT.md.txt",
     "old_path": "docs/HF_TEACHER_EXPORT.md",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -515,6 +824,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/HF_TEACHER_SPECIMEN_SMOKE.md.txt",
     "old_path": "docs/HF_TEACHER_SPECIMEN_SMOKE.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -525,6 +844,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/HF_TEACHER_SPECIMEN_SWAP_SMOKE.md.txt",
     "old_path": "docs/HF_TEACHER_SPECIMEN_SWAP_SMOKE.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -535,6 +864,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/KAGGLE_TPU_PLANNER_SMOKE.md.txt",
     "old_path": "docs/KAGGLE_TPU_PLANNER_SMOKE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -543,6 +876,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/LOGITS_DISTILLATION.md.txt",
     "old_path": "docs/LOGITS_DISTILLATION.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -551,6 +888,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/MINI_EVAL_HARNESS.md.txt",
     "old_path": "docs/MINI_EVAL_HARNESS.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -561,6 +902,14 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/MULTISHARD_TARGET_STORE.md.txt",
     "old_path": "docs/MULTISHARD_TARGET_STORE.md",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/targets/inspection.py",
+      "src/radjax_tome/targets/schema.py",
+      "src/radjax_tome/targets/store.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -571,6 +920,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/OFFLINE_TARGET_CONSUMPTION.md.txt",
     "old_path": "docs/OFFLINE_TARGET_CONSUMPTION.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -579,6 +932,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P117_1_ACTUAL_TRAIN_STEP_BURN.md.txt",
     "old_path": "docs/P117_1_ACTUAL_TRAIN_STEP_BURN.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -587,6 +944,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P117_TPU_RUNBOOK.md.txt",
     "old_path": "docs/P117_TPU_RUNBOOK.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -595,6 +956,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P118_BURN_RESULT_ANALYSIS.md.txt",
     "old_path": "docs/P118_BURN_RESULT_ANALYSIS.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -603,6 +968,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P123_CASCADE_MAIN_INTEGRATION_GATE.md.txt",
     "old_path": "docs/P123_CASCADE_MAIN_INTEGRATION_GATE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -611,6 +980,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P124_TOME_100_GENERATION_RESULT.md.txt",
     "old_path": "docs/P124_TOME_100_GENERATION_RESULT.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -619,6 +992,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P125_TPU_100_EXAMPLE_TRAINING_SMOKE_RESULT.md.txt",
     "old_path": "docs/P125_TPU_100_EXAMPLE_TRAINING_SMOKE_RESULT.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -627,6 +1004,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P128_DISTRIBUTED_EXAMPLE_SHARDING_PROOF.md.txt",
     "old_path": "docs/P128_DISTRIBUTED_EXAMPLE_SHARDING_PROOF.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -643,6 +1024,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P136_TINY_FINGERPRINT_TRAINING_SMOKE.md.txt",
     "old_path": "docs/P136_TINY_FINGERPRINT_TRAINING_SMOKE.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -653,6 +1038,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P137_EXEMPLAR_RESERVOIR_INTEGRATION.md.txt",
     "old_path": "docs/P137_EXEMPLAR_RESERVOIR_INTEGRATION.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -663,6 +1061,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P138_MIXED_CORRIDOR_EXEMPLAR_SMOKE.md.txt",
     "old_path": "docs/P138_MIXED_CORRIDOR_EXEMPLAR_SMOKE.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -673,6 +1084,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P140_REAL_STUDENT_FINGERPRINT_FORWARD_SMOKE.md.txt",
     "old_path": "docs/P140_REAL_STUDENT_FINGERPRINT_FORWARD_SMOKE.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -683,6 +1098,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P141_MAIN_RUNNER_FINGERPRINT_MODE.md.txt",
     "old_path": "docs/P141_MAIN_RUNNER_FINGERPRINT_MODE.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -693,6 +1112,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P142_INPUT_CONDITIONED_TINY_STUDENT_REHEARSAL.md.txt",
     "old_path": "docs/P142_INPUT_CONDITIONED_TINY_STUDENT_REHEARSAL.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -701,6 +1124,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P143_TEACHER_SIDE_FINGERPRINT_CAPTURE_SKELETON.md.txt",
     "old_path": "docs/P143_TEACHER_SIDE_FINGERPRINT_CAPTURE_SKELETON.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -711,6 +1147,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P144_TEACHER_CAPTURE_SYNTHETIC_FIXTURE_PARITY.md.txt",
     "old_path": "docs/P144_TEACHER_CAPTURE_SYNTHETIC_FIXTURE_PARITY.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -719,6 +1159,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P145_TINY_REAL_TEACHER_FINGERPRINT_CAPTURE.md.txt",
     "old_path": "docs/P145_TINY_REAL_TEACHER_FINGERPRINT_CAPTURE.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -729,6 +1182,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P146_REAL_STUDENT_TRAINING_REHEARSAL.md.txt",
     "old_path": "docs/P146_REAL_STUDENT_TRAINING_REHEARSAL.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -737,6 +1194,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P147_BASELINE_COMPARISON_HARNESS.md.txt",
     "old_path": "docs/P147_BASELINE_COMPARISON_HARNESS.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -745,6 +1206,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P148_FIRST_QUALITY_PER_BYTE_EXPERIMENT.md.txt",
     "old_path": "docs/P148_FIRST_QUALITY_PER_BYTE_EXPERIMENT.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -755,6 +1225,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P151_TRAINED_BASELINE_ARM.md.txt",
     "old_path": "docs/P151_TRAINED_BASELINE_ARM.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -771,6 +1245,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/P152_HELD_OUT_FINGERPRINT_EVALUATION.md.txt",
     "old_path": "docs/P152_HELD_OUT_FINGERPRINT_EVALUATION.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -781,6 +1259,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/PHASE_CHECKLIST.md.txt",
     "old_path": "docs/PHASE_CHECKLIST.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -789,6 +1271,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/PIPELINE_VALIDATION.md.txt",
     "old_path": "docs/PIPELINE_VALIDATION.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -797,6 +1283,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/PROMPT_CORPORA.md.txt",
     "old_path": "docs/PROMPT_CORPORA.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -805,6 +1295,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/QRWKV_BIBLE.md.txt",
     "old_path": "docs/QRWKV_BIBLE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -813,6 +1307,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/QRWKV_SNAPSHOT.yaml.txt",
     "old_path": "docs/QRWKV_SNAPSHOT.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -821,6 +1319,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/QWEN_EXPORT_POLICY.md.txt",
     "old_path": "docs/QWEN_EXPORT_POLICY.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -829,6 +1331,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/RADJAX_ARCHITECTURE.md.txt",
     "old_path": "docs/RADJAX_ARCHITECTURE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -837,6 +1343,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/RADLADS2_FLA_KVM_RESEARCH_INTAKE.md.txt",
     "old_path": "docs/RADLADS2_FLA_KVM_RESEARCH_INTAKE.md",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deprecated",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -847,6 +1357,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/REAL_TEACHER_OFFLINE_CONSUMPTION.md.txt",
     "old_path": "docs/REAL_TEACHER_OFFLINE_CONSUMPTION.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -857,6 +1380,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/REAL_TEACHER_OVERFIT_REHEARSAL.md.txt",
     "old_path": "docs/REAL_TEACHER_OVERFIT_REHEARSAL.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -867,6 +1394,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/REVISED_BURN_LAUNCH_PLAN.md.txt",
     "old_path": "docs/REVISED_BURN_LAUNCH_PLAN.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -875,6 +1406,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/RISK_REGISTER.md.txt",
     "old_path": "docs/RISK_REGISTER.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -883,6 +1418,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/RUN_TRACKING.md.txt",
     "old_path": "docs/RUN_TRACKING.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -891,6 +1430,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/SPARSE_TARGET_LOSS.md.txt",
     "old_path": "docs/SPARSE_TARGET_LOSS.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -899,6 +1442,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/STAGE3_CE_TRAINING.md.txt",
     "old_path": "docs/STAGE3_CE_TRAINING.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -915,6 +1462,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/TEACHER_BACKEND.md.txt",
     "old_path": "docs/TEACHER_BACKEND.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -931,6 +1482,14 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/TEACHER_TARGET_STORE.md.txt",
     "old_path": "docs/TEACHER_TARGET_STORE.md",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/targets/inspection.py",
+      "src/radjax_tome/targets/schema.py",
+      "src/radjax_tome/targets/store.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -941,6 +1500,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/TEACHER_TEXTBOOK_ARTIFACT.md.txt",
     "old_path": "docs/TEACHER_TEXTBOOK_ARTIFACT.md",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/builder/cascaded_soft_labels.py",
+      "src/radjax_tome/builder/teacher_textbook.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -951,6 +1517,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/TESTING_STRATEGY.md.txt",
     "old_path": "docs/TESTING_STRATEGY.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -959,6 +1529,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/TINY_DATASET_PIPELINE.md.txt",
     "old_path": "docs/TINY_DATASET_PIPELINE.md",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/corpora/prompts.py",
+      "src/radjax_tome/corpora/tokenization.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -969,6 +1546,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/TINY_OVERFIT_REHEARSAL.md.txt",
     "old_path": "docs/TINY_OVERFIT_REHEARSAL.md",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -979,6 +1560,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/TOKENIZERS.md.txt",
     "old_path": "docs/TOKENIZERS.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -987,6 +1572,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/TOPK_TAIL_TEXTBOOK.md.txt",
     "old_path": "docs/TOPK_TAIL_TEXTBOOK.md",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/builder/cascaded_soft_labels.py",
+      "src/radjax_tome/builder/teacher_textbook.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -997,6 +1589,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/TPU_SMOKE_GUIDE.md.txt",
     "old_path": "docs/TPU_SMOKE_GUIDE.md",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1013,6 +1609,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/examples/scale_plans/qwen_0_5b_on_colab_tpu_v3_hidden_only.yaml.txt",
     "old_path": "docs/examples/scale_plans/qwen_0_5b_on_colab_tpu_v3_hidden_only.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1021,6 +1621,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/examples/scale_plans/qwen_1_5b_on_grant_tpu_v5e_hidden_only.yaml.txt",
     "old_path": "docs/examples/scale_plans/qwen_1_5b_on_grant_tpu_v5e_hidden_only.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1029,6 +1633,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/examples/scale_plans/qwen_7b_stretch_big_budget_placeholder.yaml.txt",
     "old_path": "docs/examples/scale_plans/qwen_7b_stretch_big_budget_placeholder.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1037,6 +1645,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/examples/scale_plans/small_cpu_on_local_cpu_32gb.yaml.txt",
     "old_path": "docs/examples/scale_plans/small_cpu_on_local_cpu_32gb.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1045,6 +1657,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/examples/scale_plans/tiny_debug_on_local_cpu.yaml.txt",
     "old_path": "docs/examples/scale_plans/tiny_debug_on_local_cpu.yaml",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1053,6 +1669,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_4_1_1/radjax_backend_binding_receipt.json.txt",
     "old_path": "docs/validation/p156_4_1_1/radjax_backend_binding_receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1061,6 +1681,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_4_1_1/real_backend_byte_accounting_receipt.json.txt",
     "old_path": "docs/validation/p156_4_1_1/real_backend_byte_accounting_receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1069,6 +1693,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_4_1_1/real_backend_integration_smoke_report.json.txt",
     "old_path": "docs/validation/p156_4_1_1/real_backend_integration_smoke_report.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1077,6 +1705,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_4_2/strict_resource_accounting_receipt.json.txt",
     "old_path": "docs/validation/p156_4_2/strict_resource_accounting_receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1085,6 +1717,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_4_2_1/adaptive_full_cost_accounting_receipt.json.txt",
     "old_path": "docs/validation/p156_4_2_1/adaptive_full_cost_accounting_receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1093,6 +1729,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_4_2_1/cycle_one_resource_baseline_receipt.json.txt",
     "old_path": "docs/validation/p156_4_2_1/cycle_one_resource_baseline_receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1101,6 +1741,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_4_2_1/strict_resource_accounting_receipt.json.txt",
     "old_path": "docs/validation/p156_4_2_1/strict_resource_accounting_receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1109,6 +1753,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_2_1_bounded_memory_packed_capture/receipt.json.txt",
     "old_path": "docs/validation/p156_5_2_1_bounded_memory_packed_capture/receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1117,6 +1765,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_3_observability_launch_hygiene/receipt.json.txt",
     "old_path": "docs/validation/p156_5_3_observability_launch_hygiene/receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1125,6 +1777,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_4_microbatched_teacher_capture/receipt.json.txt",
     "old_path": "docs/validation/p156_5_4_microbatched_teacher_capture/receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1133,6 +1789,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_5_1_make_staged_capture_pipeline_real/receipt.json.txt",
     "old_path": "docs/validation/p156_5_5_1_make_staged_capture_pipeline_real/receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1141,6 +1801,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_5_topology_staged_capture/receipt.json.txt",
     "old_path": "docs/validation/p156_5_5_topology_staged_capture/receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1149,6 +1813,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_6_1_memory_scalable_gpu_compact_reduction/receipt.json.txt",
     "old_path": "docs/validation/p156_5_6_1_memory_scalable_gpu_compact_reduction/receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1157,6 +1825,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_6_gpu_compact_reduction_extended_batching/receipt.json.txt",
     "old_path": "docs/validation/p156_5_6_gpu_compact_reduction_extended_batching/receipt.json",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1165,6 +1837,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_preflight_compressed_exemplars/compressed_exemplar_consumer_receipt.json.txt",
     "old_path": "docs/validation/p156_5_preflight_compressed_exemplars/compressed_exemplar_consumer_receipt.json",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1175,6 +1860,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_preflight_compressed_exemplars/compressed_exemplar_smoke_receipt.json.txt",
     "old_path": "docs/validation/p156_5_preflight_compressed_exemplars/compressed_exemplar_smoke_receipt.json",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1185,6 +1883,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_preflight_compressed_exemplars/mac_1000_tranche_receipt.json.txt",
     "old_path": "docs/validation/p156_5_preflight_compressed_exemplars/mac_1000_tranche_receipt.json",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1195,6 +1906,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/docs/validation/p156_5_preflight_compressed_exemplars/summary.md.txt",
     "old_path": "docs/validation/p156_5_preflight_compressed_exemplars/summary.md",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1205,6 +1929,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/build_fingerprint_artifact.py.txt",
     "old_path": "scripts/build_fingerprint_artifact.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1215,6 +1952,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/build_real_teacher_fingerprint_artifact.py.txt",
     "old_path": "scripts/build_real_teacher_fingerprint_artifact.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1225,6 +1975,14 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/create_fake_targets.py.txt",
     "old_path": "scripts/create_fake_targets.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/targets/inspection.py",
+      "src/radjax_tome/targets/schema.py",
+      "src/radjax_tome/targets/store.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1235,6 +1993,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/create_prompt_manifest.py.txt",
     "old_path": "scripts/create_prompt_manifest.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/corpora/prompts.py",
+      "src/radjax_tome/corpora/tokenization.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1245,6 +2010,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/generate_multiscale_configs.py.txt",
     "old_path": "scripts/generate_multiscale_configs.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "kept_quarantined",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1265,6 +2034,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/inspect_fingerprint_exemplars.py.txt",
     "old_path": "scripts/inspect_fingerprint_exemplars.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1275,6 +2057,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/inspect_fingerprint_targets.py.txt",
     "old_path": "scripts/inspect_fingerprint_targets.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1295,6 +2090,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/plan_model_scale.py.txt",
     "old_path": "scripts/plan_model_scale.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "kept_quarantined",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1315,6 +2114,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_adaptive_corridor_pass.py.txt",
     "old_path": "scripts/run_adaptive_corridor_pass.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1325,6 +2137,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_corridor_aggressiveness_calibration.py.txt",
     "old_path": "scripts/run_corridor_aggressiveness_calibration.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1335,6 +2160,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_corridor_measurement.py.txt",
     "old_path": "scripts/run_corridor_measurement.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1353,6 +2191,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_exemplar_pass.py.txt",
     "old_path": "scripts/run_exemplar_pass.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1363,6 +2214,14 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_export_smoke.py.txt",
     "old_path": "scripts/run_export_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/targets/inspection.py",
+      "src/radjax_tome/targets/schema.py",
+      "src/radjax_tome/targets/store.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1373,6 +2232,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_fingerprint_arc2_report.py.txt",
     "old_path": "scripts/run_fingerprint_arc2_report.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1383,6 +2251,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_fingerprint_baseline_comparison.py.txt",
     "old_path": "scripts/run_fingerprint_baseline_comparison.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1393,6 +2270,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_fingerprint_held_out_evaluation.py.txt",
     "old_path": "scripts/run_fingerprint_held_out_evaluation.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1403,6 +2284,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_fingerprint_quality_per_byte_experiment.py.txt",
     "old_path": "scripts/run_fingerprint_quality_per_byte_experiment.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1413,6 +2303,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_fingerprint_smoke.py.txt",
     "old_path": "scripts/run_fingerprint_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1423,6 +2317,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_fingerprint_trained_baseline_comparison.py.txt",
     "old_path": "scripts/run_fingerprint_trained_baseline_comparison.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1433,6 +2336,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_first_serious_burn.py.txt",
     "old_path": "scripts/run_first_serious_burn.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1443,6 +2350,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_full_distillation_crossover.py.txt",
     "old_path": "scripts/run_full_distillation_crossover.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1453,6 +2364,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_hf_teacher_specimen_smoke.py.txt",
     "old_path": "scripts/run_hf_teacher_specimen_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1463,6 +2384,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_hf_teacher_specimen_swap_smoke.py.txt",
     "old_path": "scripts/run_hf_teacher_specimen_swap_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1473,6 +2404,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_mini_eval_harness.py.txt",
     "old_path": "scripts/run_mini_eval_harness.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1483,6 +2418,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_mode_plateau_controller_smoke.py.txt",
     "old_path": "scripts/run_mode_plateau_controller_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "kept_quarantined",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1493,6 +2432,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_multiscale_shape_dry_run.py.txt",
     "old_path": "scripts/run_multiscale_shape_dry_run.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "kept_quarantined",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1503,6 +2446,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_quality_per_byte_experiment.py.txt",
     "old_path": "scripts/run_quality_per_byte_experiment.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1513,6 +2465,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_real_student_fingerprint_forward_smoke.py.txt",
     "old_path": "scripts/run_real_student_fingerprint_forward_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1523,6 +2479,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_real_teacher_fingerprint_training_rehearsal.py.txt",
     "old_path": "scripts/run_real_teacher_fingerprint_training_rehearsal.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1533,6 +2493,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/run_two_cycle_experiment.py.txt",
     "old_path": "scripts/run_two_cycle_experiment.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1579,6 +2543,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/validate_local.py.txt",
     "old_path": "scripts/validate_local.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "kept_quarantined",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1589,6 +2557,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/validate_student_artifact.py.txt",
     "old_path": "scripts/validate_student_artifact.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1599,6 +2571,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/scripts/write_fingerprint_provenance.py.txt",
     "old_path": "scripts/write_fingerprint_provenance.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1619,6 +2604,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/artifacts/fingerprint_exemplars.py.txt",
     "old_path": "src/qrwkv_xla/artifacts/fingerprint_exemplars.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1629,6 +2627,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/artifacts/fingerprint_loader.py.txt",
     "old_path": "src/qrwkv_xla/artifacts/fingerprint_loader.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1649,6 +2660,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/artifacts/student_artifact.py.txt",
     "old_path": "src/qrwkv_xla/artifacts/student_artifact.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1659,6 +2674,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/burn/example_sharding.py.txt",
     "old_path": "src/qrwkv_xla/burn/example_sharding.py",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1667,6 +2686,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/burn/first_serious_burn.py.txt",
     "old_path": "src/qrwkv_xla/burn/first_serious_burn.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1693,6 +2716,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/data/tiny_dataset.py.txt",
     "old_path": "src/qrwkv_xla/data/tiny_dataset.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'duplicate_or_merged'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1701,6 +2728,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/data/tiny_dataset_pipeline.py.txt",
     "old_path": "src/qrwkv_xla/data/tiny_dataset_pipeline.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/corpora/prompts.py",
+      "src/radjax_tome/corpora/tokenization.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1711,6 +2745,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/distill/losses.py.txt",
     "old_path": "src/qrwkv_xla/distill/losses.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1721,6 +2759,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/distill/target_dispatch.py.txt",
     "old_path": "src/qrwkv_xla/distill/target_dispatch.py",
     "reason": "Inspected in Spec 2.7; file is target-loss dispatch for Student execution, not producer artifact generation.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "waived",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1729,6 +2771,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/eval/exported_student.py.txt",
     "old_path": "src/qrwkv_xla/eval/exported_student.py",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1737,6 +2783,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/eval/mini_eval.py.txt",
     "old_path": "src/qrwkv_xla/eval/mini_eval.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1747,6 +2797,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/arc_report.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/arc_report.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1757,6 +2816,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/baseline_comparison.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/baseline_comparison.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1767,6 +2835,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/budgeted_artifact.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/budgeted_artifact.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1777,6 +2858,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/capture.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/capture.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1787,6 +2881,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/exemplar_pass.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/exemplar_pass.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1797,6 +2904,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/held_out_evaluation.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/held_out_evaluation.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1807,6 +2918,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/provenance.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/provenance.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1817,6 +2932,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/quality_per_byte.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/quality_per_byte.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1827,6 +2951,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/radjax_crossover_backend.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/radjax_crossover_backend.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1837,6 +2965,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/real_teacher.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/real_teacher.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1847,6 +2988,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/trained_baseline.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/trained_baseline.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1857,6 +3007,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/fingerprint/training_rehearsal.py.txt",
     "old_path": "src/qrwkv_xla/fingerprint/training_rehearsal.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1867,6 +3021,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/lm/tokenized_corpus.py.txt",
     "old_path": "src/qrwkv_xla/lm/tokenized_corpus.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'duplicate_or_merged'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1885,6 +3043,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/readiness/big_burn.py.txt",
     "old_path": "src/qrwkv_xla/readiness/big_burn.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1895,6 +3057,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/smoke/colab_tpu.py.txt",
     "old_path": "src/qrwkv_xla/smoke/colab_tpu.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1905,6 +3071,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/targets/bundle.py.txt",
     "old_path": "src/qrwkv_xla/targets/bundle.py",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1913,6 +3083,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/targets/real_teacher_consumption.py.txt",
     "old_path": "src/qrwkv_xla/targets/real_teacher_consumption.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1923,6 +3106,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/teacher_export/hf.py.txt",
     "old_path": "src/qrwkv_xla/teacher_export/hf.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1933,6 +3126,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/teachers/hf_specimen_smoke.py.txt",
     "old_path": "src/qrwkv_xla/teachers/hf_specimen_smoke.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1943,6 +3140,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/training/fingerprint_exemplar_loss.py.txt",
     "old_path": "src/qrwkv_xla/training/fingerprint_exemplar_loss.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1953,6 +3154,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/training/fingerprint_reports.py.txt",
     "old_path": "src/qrwkv_xla/training/fingerprint_reports.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1963,6 +3173,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/training/fingerprint_smoke.py.txt",
     "old_path": "src/qrwkv_xla/training/fingerprint_smoke.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1973,6 +3187,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/training/real_teacher_overfit.py.txt",
     "old_path": "src/qrwkv_xla/training/real_teacher_overfit.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -1983,6 +3201,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/src/qrwkv_xla/training/tiny_overfit.py.txt",
     "old_path": "src/qrwkv_xla/training/tiny_overfit.py",
     "reason": "Producer-related support material retained or tracked for later migration; not needed before Spec 3.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -1991,6 +3213,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/fixtures/behavioral_fingerprint/v0_1_valid_tiny/targets/targets-00000.jsonl.txt",
     "old_path": "tests/fixtures/behavioral_fingerprint/v0_1_valid_tiny/targets/targets-00000.jsonl",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2001,6 +3227,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/fixtures/behavioral_fingerprint/v0_1_with_exemplars_tiny/exemplars/exemplars-00000.jsonl.txt",
     "old_path": "tests/fixtures/behavioral_fingerprint/v0_1_with_exemplars_tiny/exemplars/exemplars-00000.jsonl",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2011,6 +3250,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/fixtures/behavioral_fingerprint/v0_1_with_exemplars_tiny/manifest.json.txt",
     "old_path": "tests/fixtures/behavioral_fingerprint/v0_1_with_exemplars_tiny/manifest.json",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2021,6 +3273,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/fixtures/behavioral_fingerprint/v0_1_with_exemplars_tiny/targets/targets-00000.jsonl.txt",
     "old_path": "tests/fixtures/behavioral_fingerprint/v0_1_with_exemplars_tiny/targets/targets-00000.jsonl",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2031,6 +3296,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/fixtures/fingerprint_capture_real_teacher/tiny_texts.jsonl.txt",
     "old_path": "tests/fixtures/fingerprint_capture_real_teacher/tiny_texts.jsonl",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2041,6 +3319,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_aggressiveness_calibration.py.txt",
     "old_path": "tests/test_aggressiveness_calibration.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2049,6 +3331,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_budgeted_artifact.py.txt",
     "old_path": "tests/test_budgeted_artifact.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2057,6 +3343,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_cascaded_bucket_projection.py.txt",
     "old_path": "tests/test_cascaded_bucket_projection.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2065,6 +3355,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_cascaded_soft_labels_loss.py.txt",
     "old_path": "tests/test_cascaded_soft_labels_loss.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2075,6 +3369,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_cascaded_soft_labels_textbook.py.txt",
     "old_path": "tests/test_cascaded_soft_labels_textbook.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/builder/cascaded_soft_labels.py",
+      "src/radjax_tome/builder/teacher_textbook.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2085,6 +3386,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_cli_help.py.txt",
     "old_path": "tests/test_cli_help.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2093,6 +3398,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_colab_tpu_smoke_harness.py.txt",
     "old_path": "tests/test_colab_tpu_smoke_harness.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2101,6 +3410,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_compressed_fingerprint_exemplars.py.txt",
     "old_path": "tests/test_compressed_fingerprint_exemplars.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2111,6 +3433,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_controlled_quality_per_byte.py.txt",
     "old_path": "tests/test_controlled_quality_per_byte.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2121,6 +3452,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_corridor_measurement.py.txt",
     "old_path": "tests/test_corridor_measurement.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2131,6 +3475,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_distill_attention_mixer_integration.py.txt",
     "old_path": "tests/test_distill_attention_mixer_integration.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2139,6 +3487,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_distill_config.py.txt",
     "old_path": "tests/test_distill_config.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2147,6 +3499,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_eval_config.py.txt",
     "old_path": "tests/test_eval_config.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2155,6 +3511,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_exemplar_pass.py.txt",
     "old_path": "tests/test_exemplar_pass.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2165,6 +3534,14 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_export_teacher_targets_hf_cli.py.txt",
     "old_path": "tests/test_export_teacher_targets_hf_cli.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/targets/inspection.py",
+      "src/radjax_tome/targets/schema.py",
+      "src/radjax_tome/targets/store.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2175,6 +3552,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_baseline_comparison.py.txt",
     "old_path": "tests/test_fingerprint_baseline_comparison.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2185,6 +3571,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_capture.py.txt",
     "old_path": "tests/test_fingerprint_capture.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2195,6 +3594,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_capture_parity.py.txt",
     "old_path": "tests/test_fingerprint_capture_parity.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2205,6 +3617,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_exemplar_loss.py.txt",
     "old_path": "tests/test_fingerprint_exemplar_loss.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2215,6 +3631,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_exemplars.py.txt",
     "old_path": "tests/test_fingerprint_exemplars.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2225,6 +3654,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_held_out_evaluation.py.txt",
     "old_path": "tests/test_fingerprint_held_out_evaluation.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2235,6 +3668,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_loader.py.txt",
     "old_path": "tests/test_fingerprint_loader.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2245,6 +3691,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_mixed_smoke.py.txt",
     "old_path": "tests/test_fingerprint_mixed_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2255,6 +3705,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_quality_per_byte_experiment.py.txt",
     "old_path": "tests/test_fingerprint_quality_per_byte_experiment.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2265,6 +3724,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_reports.py.txt",
     "old_path": "tests/test_fingerprint_reports.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2275,6 +3743,15 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_trained_baseline.py.txt",
     "old_path": "tests/test_fingerprint_trained_baseline.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/reports/__init__.py",
+      "src/radjax_tome/reports/arc.py",
+      "src/radjax_tome/reports/baseline.py",
+      "src/radjax_tome/reports/fingerprint_quality.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2285,6 +3762,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_fingerprint_training_smoke.py.txt",
     "old_path": "tests/test_fingerprint_training_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2295,6 +3776,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_first_serious_burn.py.txt",
     "old_path": "tests/test_first_serious_burn.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2305,6 +3790,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_first_serious_burn_training.py.txt",
     "old_path": "tests/test_first_serious_burn_training.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2315,6 +3804,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_full_distillation_crossover.py.txt",
     "old_path": "tests/test_full_distillation_crossover.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2325,6 +3818,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_hf_teacher_backend.py.txt",
     "old_path": "tests/test_hf_teacher_backend.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2333,6 +3830,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_hf_teacher_specimen_smoke.py.txt",
     "old_path": "tests/test_hf_teacher_specimen_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2343,6 +3850,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_hf_teacher_specimen_smoke_optional.py.txt",
     "old_path": "tests/test_hf_teacher_specimen_smoke_optional.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2353,6 +3870,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_hf_teacher_specimen_swap_smoke.py.txt",
     "old_path": "tests/test_hf_teacher_specimen_swap_smoke.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2363,6 +3890,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_input_conditioned_fingerprint_rehearsal.py.txt",
     "old_path": "tests/test_input_conditioned_fingerprint_rehearsal.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2373,6 +3904,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_lm_config.py.txt",
     "old_path": "tests/test_lm_config.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2381,6 +3916,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_main_runner_fingerprint_corridor.py.txt",
     "old_path": "tests/test_main_runner_fingerprint_corridor.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/corridor.py",
+      "src/radjax_tome/fingerprint/exemplars.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/measurement.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2391,6 +3939,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_mini_eval_harness.py.txt",
     "old_path": "tests/test_mini_eval_harness.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2401,6 +3953,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_p117_preflight_scripts.py.txt",
     "old_path": "tests/test_p117_preflight_scripts.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2409,6 +3965,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_p126_first_serious_burn_contracts.py.txt",
     "old_path": "tests/test_p126_first_serious_burn_contracts.py",
     "reason": "Mixed producer/student behavior needs surgical split in Spec 2.9.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_contract",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2419,6 +3979,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_p128_burn_sharding_reports.py.txt",
     "old_path": "tests/test_p128_burn_sharding_reports.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2427,6 +3991,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_p129_sync_reports.py.txt",
     "old_path": "tests/test_p129_sync_reports.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2443,6 +4011,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_packed_fingerprint_targets.py.txt",
     "old_path": "tests/test_packed_fingerprint_targets.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2461,6 +4042,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_project_layout.py.txt",
     "old_path": "tests/test_project_layout.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2469,6 +4054,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_prompt_corpus.py.txt",
     "old_path": "tests/test_prompt_corpus.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/corpora/prompts.py",
+      "src/radjax_tome/corpora/tokenization.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2479,6 +4071,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_prompt_corpus_cli.py.txt",
     "old_path": "tests/test_prompt_corpus_cli.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/corpora/prompts.py",
+      "src/radjax_tome/corpora/tokenization.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2489,6 +4088,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_prompt_corpus_hash.py.txt",
     "old_path": "tests/test_prompt_corpus_hash.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/corpora/prompts.py",
+      "src/radjax_tome/corpora/tokenization.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2499,6 +4105,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_radjax_crossover_backend.py.txt",
     "old_path": "tests/test_radjax_crossover_backend.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2507,6 +4117,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_real_teacher_fingerprint_training_rehearsal.py.txt",
     "old_path": "tests/test_real_teacher_fingerprint_training_rehearsal.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2517,6 +4131,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_real_teacher_offline_consumption.py.txt",
     "old_path": "tests/test_real_teacher_offline_consumption.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2527,6 +4154,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_real_teacher_overfit_rehearsal.py.txt",
     "old_path": "tests/test_real_teacher_overfit_rehearsal.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2553,6 +4184,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_run_tracking.py.txt",
     "old_path": "tests/test_run_tracking.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2569,6 +4204,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_sparse_target_loss.py.txt",
     "old_path": "tests/test_sparse_target_loss.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2601,6 +4240,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_target_dispatch.py.txt",
     "old_path": "tests/test_target_dispatch.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2609,6 +4252,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_target_manifest.py.txt",
     "old_path": "tests/test_target_manifest.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_contract",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2619,6 +4266,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_teacher_export_hf_backend.py.txt",
     "old_path": "tests/test_teacher_export_hf_backend.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2629,6 +4286,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_teacher_export_hf_config.py.txt",
     "old_path": "tests/test_teacher_export_hf_config.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2639,6 +4306,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_teacher_export_prompt_corpus.py.txt",
     "old_path": "tests/test_teacher_export_prompt_corpus.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2649,6 +4326,16 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_teacher_export_qwen_config.py.txt",
     "old_path": "tests/test_teacher_export_qwen_config.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/backends/hf_export.py",
+      "src/radjax_tome/backends/hf_specimen.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2667,6 +4354,14 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_teacher_target_bundle.py.txt",
     "old_path": "tests/test_teacher_target_bundle.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/targets/inspection.py",
+      "src/radjax_tome/targets/schema.py",
+      "src/radjax_tome/targets/store.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2677,6 +4372,14 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_teacher_target_store.py.txt",
     "old_path": "tests/test_teacher_target_store.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/targets/inspection.py",
+      "src/radjax_tome/targets/schema.py",
+      "src/radjax_tome/targets/store.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2687,6 +4390,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_teacher_textbook_artifact.py.txt",
     "old_path": "tests/test_teacher_textbook_artifact.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/builder/cascaded_soft_labels.py",
+      "src/radjax_tome/builder/teacher_textbook.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2697,6 +4407,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_tiny_dataset_pipeline.py.txt",
     "old_path": "tests/test_tiny_dataset_pipeline.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/corpora/prompts.py",
+      "src/radjax_tome/corpora/tokenization.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2707,6 +4424,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_tiny_hf_tpu_smoke_harness.py.txt",
     "old_path": "tests/test_tiny_hf_tpu_smoke_harness.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   },
   {
@@ -2715,6 +4436,19 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_tiny_real_teacher_fingerprint_capture.py.txt",
     "old_path": "tests/test_tiny_real_teacher_fingerprint_capture.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/fingerprint/artifacts.py",
+      "src/radjax_tome/fingerprint/capture_summary.py",
+      "src/radjax_tome/fingerprint/inspection.py",
+      "src/radjax_tome/fingerprint/loader.py",
+      "src/radjax_tome/fingerprint/provenance.py",
+      "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "src/radjax_tome/fingerprint/summary.py",
+      "src/radjax_tome/fingerprint/validation.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "split_promoted",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2725,6 +4459,13 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_topk_tail_textbook.py.txt",
     "old_path": "tests/test_topk_tail_textbook.py",
     "reason": "Producer-relevant but too tangled or dependency-heavy for safe active migration in this bulk pass.",
+    "surgery_active_new_paths": [
+      "src/radjax_tome/builder/cascaded_soft_labels.py",
+      "src/radjax_tome/builder/teacher_textbook.py"
+    ],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2735,6 +4476,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_two_cycle_experiment.py.txt",
     "old_path": "tests/test_two_cycle_experiment.py",
     "reason": "Producer-relevant full-burn/fingerprint material retained as non-importable reference for later extraction.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "belongs_student",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": [
       "tests/test_quarantine_guardrails.py"
     ]
@@ -2745,6 +4490,10 @@
     "new_path_or_quarantine_path": "quarantine/qrwkv_xla/tests/test_validation_pipeline.py.txt",
     "old_path": "tests/test_validation_pipeline.py",
     "reason": "No active migration needed in Spec 2.8 for bucket 'needs_human_review'; tracked for closure.",
+    "surgery_active_new_paths": [],
+    "surgery_blocks_spec3_after_this_phase": false,
+    "surgery_decision": "deferred",
+    "surgery_ledger_path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
     "tests_ported_or_quarantined": []
   }
 ]

@@ -53,3 +53,11 @@ safe archived `qrwkv-xla` producer-side Tome Generator paths into `RADJAX-Tome`
 and quarantined mixed producer/student files for later surgery. This phase moves
 or accounts for the remaining producer-relevant gaps in bulk while keeping
 Student runtime, Contract ownership, and `cover_page.json` emission out of scope.
+
+## 2026-06-30 — Quarantine surgery pass
+
+Processed the Spec 2.8 quarantine manifest and promoted producer-side artifact
+schemas, readers, writers, validators, inspection helpers, and report structures
+into active `RADJAX-Tome` modules while leaving Student/runtime/training logic
+quarantined or out-of-scope. Added a surgery ledger so every quarantined old path
+has an explicit disposition before Spec 3 cover-page work resumes.

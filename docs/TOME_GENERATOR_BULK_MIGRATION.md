@@ -16,12 +16,22 @@ The following producer-safe surfaces moved into active RADJAX-Tome code:
 - Lightweight behavioral fingerprint artifact validation and inspection for
   producer artifact metadata, mode files, target shard counts, and exemplar shard
   references.
+- Spec 2.9 quarantine surgery promoted producer-side fingerprint schemas,
+  exemplar/corridor metadata, real-teacher capture summaries, provenance,
+  producer reports, and HF specimen/export boundaries from mixed archived files.
 
 These are implemented under:
 
 - `src/radjax_tome/corpora/prompts.py`
 - `src/radjax_tome/backends/qwen_policy.py`
 - `src/radjax_tome/fingerprint/artifacts.py`
+- `src/radjax_tome/fingerprint/exemplars.py`
+- `src/radjax_tome/fingerprint/corridor.py`
+- `src/radjax_tome/fingerprint/capture_summary.py`
+- `src/radjax_tome/fingerprint/provenance.py`
+- `src/radjax_tome/reports/`
+- `src/radjax_tome/backends/hf_export.py`
+- `src/radjax_tome/backends/hf_specimen.py`
 - `scripts/inspect_prompt_corpus.py`
 - `scripts/split_prompt_corpus.py`
 - `scripts/resolve_qwen_policy.py`
@@ -63,6 +73,27 @@ mean quarantined code is active migrated behavior, and `new_equivalent_tests`
 includes quarantined test references until the audit distinguishes active tests
 from quarantine inputs.
 
+Spec 2.9 adds a separate surgery ledger with active-promotion interpretation:
+
+| Decision | Count |
+| --- | ---: |
+| `promoted` | 3 |
+| `split_promoted` | 78 |
+| `kept_quarantined` | 5 |
+| `belongs_student` | 32 |
+| `belongs_contract` | 2 |
+| `deprecated` | 1 |
+| `deferred` | 151 |
+| `waived` | 1 |
+
+The ledger covers 273 quarantine-backed paths. It is the source of truth for
+whether a quarantined reference has active producer behavior, was split, or
+remains outside Tome ownership.
+The bulk manifest remains a list for existing tooling compatibility and now
+annotates quarantine-backed entries with `surgery_decision`,
+`surgery_active_new_paths`, `surgery_ledger_path`, and
+`surgery_blocks_spec3_after_this_phase`.
+
 ## Quarantine Strategy
 
 Producer-relevant files that contain Student training/eval/runtime coupling,
@@ -86,7 +117,7 @@ being copied into active code.
 
 ## Spec 3 Status
 
-Spec 3 remains blocked. This phase does not implement Contract-valid Tome
-emission, does not write `cover_page.json`, and does not claim the quarantined
-files are production-ready. Spec 2.9 must split quarantined mixed files, and Spec
-2.10 must rerun audit closure and waivers before the Spec 3 gate can pass.
+Spec 3 remains blocked. Spec 2.9 split the quarantined mixed files, but this
+repository still does not implement Contract-valid Tome emission or
+`cover_page.json`. Spec 2.10 must rerun audit closure and waivers before the Spec
+3 gate can pass.

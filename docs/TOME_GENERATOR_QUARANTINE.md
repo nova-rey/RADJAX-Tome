@@ -49,3 +49,23 @@ do not import quarantine modules, the manifest has reasons, and quarantined
 references are `.txt` files outside the package tree. It also verifies manifest
 quarantine references are tracked by git, not merely present in a local working
 tree.
+
+## Spec 2.9 Surgery Ledger
+
+Spec 2.9 adds `docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json` as the final
+disposition ledger for every quarantine-backed manifest path. The ledger covers
+273 retained `.txt` references:
+
+- `promoted`: 3
+- `split_promoted`: 78
+- `kept_quarantined`: 5
+- `belongs_student`: 32
+- `belongs_contract`: 2
+- `deprecated`: 1
+- `deferred`: 151
+- `waived`: 1
+
+Promoted and split-promoted entries point to active Tome modules under
+`src/radjax_tome/fingerprint/`, `src/radjax_tome/reports/`, and
+`src/radjax_tome/backends/`. The quarantine files remain retained source
+evidence and must still not be imported.

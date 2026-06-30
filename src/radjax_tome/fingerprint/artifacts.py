@@ -5,11 +5,16 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from radjax_tome.io.json import read_json_object
+from radjax_tome.io.json import read_json_object, write_json
 
 BEHAVIORAL_FINGERPRINT_ARTIFACT_TYPE = "behavioral_fingerprint"
 BEHAVIORAL_FINGERPRINT_VERSION = "0.1"
 SUPPORTED_BEHAVIORAL_FINGERPRINT_VERSIONS = (BEHAVIORAL_FINGERPRINT_VERSION,)
+FINGERPRINT_BYTE_ACCOUNTING_POLICY = "arm_charged_logical_payload_bytes_v1"
+BUDGET_SUBSET_SCHEMA_VERSION = "radjax_tome.budget_subset.v1"
+BUDGET_SUBSET_ROLES = frozenset(
+    ("corridor_subset", "exemplar_subset", "combined_two_cycle_subset")
+)
 
 
 @dataclass(frozen=True)
@@ -50,6 +55,145 @@ class FingerprintManifest:
             ),
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class FingerprintByteAccounting:
+    byte_accounting_policy: str = FINGERPRINT_BYTE_ACCOUNTING_POLICY
+    declared_byte_budget: int | None = None
+    physical_subset_bytes: int = 0
+    logical_payload_bytes_selected: int = 0
+    logical_payload_bytes_consumed: int | None = None
+    required_uncharged_scaffolding_bytes: int = 0
+    shared_metadata_bytes: int = 0
+    arm_charged_bytes: int = 0
+    corridor_charged_bytes: int = 0
+    exemplar_charged_bytes: int = 0
+    unused_budget_bytes: int | None = None
+    budget_ceiling_respected: bool = True
+    physical_file_counted_once: bool = True
+
+    @classmethod
+    def from_payload(cls, payload: dict[str, Any]) -> FingerprintByteAccounting:
+        return cls(
+            byte_accounting_policy=str(
+                payload.get(
+                    "byte_accounting_policy", FINGERPRINT_BYTE_ACCOUNTING_POLICY
+                )
+            ),
+            declared_byte_budget=_optional_non_negative_int(
+                payload.get("declared_byte_budget")
+            ),
+            physical_subset_bytes=_coerce_non_negative_int(
+                payload.get("physical_subset_bytes", 0),
+                "physical_subset_bytes",
+            ),
+            logical_payload_bytes_selected=_coerce_non_negative_int(
+                payload.get("logical_payload_bytes_selected", 0),
+                "logical_payload_bytes_selected",
+            ),
+            logical_payload_bytes_consumed=_optional_non_negative_int(
+                payload.get("logical_payload_bytes_consumed")
+            ),
+            required_uncharged_scaffolding_bytes=_coerce_non_negative_int(
+                payload.get("required_uncharged_scaffolding_bytes", 0),
+                "required_uncharged_scaffolding_bytes",
+            ),
+            shared_metadata_bytes=_coerce_non_negative_int(
+                payload.get("shared_metadata_bytes", 0),
+                "shared_metadata_bytes",
+            ),
+            arm_charged_bytes=_coerce_non_negative_int(
+                payload.get("arm_charged_bytes", 0),
+                "arm_charged_bytes",
+            ),
+            corridor_charged_bytes=_coerce_non_negative_int(
+                payload.get("corridor_charged_bytes", 0),
+                "corridor_charged_bytes",
+            ),
+            exemplar_charged_bytes=_coerce_non_negative_int(
+                payload.get("exemplar_charged_bytes", 0),
+                "exemplar_charged_bytes",
+            ),
+            unused_budget_bytes=_optional_non_negative_int(
+                payload.get("unused_budget_bytes")
+            ),
+            budget_ceiling_respected=bool(
+                payload.get("budget_ceiling_respected", True)
+            ),
+            physical_file_counted_once=bool(
+                payload.get("physical_file_counted_once", True)
+            ),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class FingerprintBudgetSubsetReceipt:
+    schema_version: str
+    subset_role: str
+    declared_byte_budget: int
+    selection_policy: str
+    selected_record_count: int
+    artifact_manifest_sha256: str
+    shard_hashes: dict[str, str] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_payload(cls, payload: dict[str, Any]) -> FingerprintBudgetSubsetReceipt:
+        subset_role = str(payload.get("subset_role", ""))
+        if subset_role not in BUDGET_SUBSET_ROLES:
+            raise ValueError(f"unsupported budget subset_role: {subset_role!r}")
+        return cls(
+            schema_version=str(
+                payload.get("schema_version", BUDGET_SUBSET_SCHEMA_VERSION)
+            ),
+            subset_role=subset_role,
+            declared_byte_budget=_coerce_non_negative_int(
+                payload.get("declared_byte_budget"), "declared_byte_budget"
+            ),
+            selection_policy=str(payload.get("selection_policy", "")),
+            selected_record_count=_coerce_non_negative_int(
+                payload.get("selected_record_count", 0),
+                "selected_record_count",
+            ),
+            artifact_manifest_sha256=str(payload.get("artifact_manifest_sha256", "")),
+            shard_hashes={
+                str(key): str(value)
+                for key, value in _mapping_or_empty(payload.get("shard_hashes")).items()
+            },
+            metadata={
+                str(key): value
+                for key, value in payload.items()
+                if key
+                not in {
+                    "schema_version",
+                    "subset_role",
+                    "declared_byte_budget",
+                    "selection_policy",
+                    "selected_record_count",
+                    "artifact_manifest_sha256",
+                    "shard_hashes",
+                }
+            },
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "subset_role": self.subset_role,
+            "declared_byte_budget": self.declared_byte_budget,
+            "selection_policy": self.selection_policy,
+            "selected_record_count": self.selected_record_count,
+            "artifact_manifest_sha256": self.artifact_manifest_sha256,
+            "shard_hashes": dict(self.shard_hashes),
+            **dict(self.metadata),
+        }
+
 
 @dataclass(frozen=True)
 class FingerprintValidationResult:
@@ -86,6 +230,74 @@ class FingerprintArtifactSummary:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+def read_fingerprint_manifest(path: str | Path) -> FingerprintManifest:
+    return FingerprintManifest.from_payload(read_json_object(_manifest_path(path)))
+
+
+def write_fingerprint_manifest(
+    path: str | Path, manifest: FingerprintManifest | dict[str, Any]
+) -> Path:
+    manifest_path = _manifest_path(path)
+    payload = (
+        manifest.to_dict()
+        if isinstance(manifest, FingerprintManifest)
+        else dict(manifest)
+    )
+    write_json(manifest_path, payload)
+    return manifest_path
+
+
+def read_fingerprint_byte_accounting(path: str | Path) -> FingerprintByteAccounting:
+    return FingerprintByteAccounting.from_payload(read_json_object(Path(path)))
+
+
+def write_fingerprint_byte_accounting(
+    path: str | Path, accounting: FingerprintByteAccounting | dict[str, Any]
+) -> Path:
+    output = Path(path)
+    payload = (
+        accounting.to_dict()
+        if isinstance(accounting, FingerprintByteAccounting)
+        else dict(accounting)
+    )
+    write_json(output, payload)
+    return output
+
+
+def validate_fingerprint_byte_accounting(
+    accounting: FingerprintByteAccounting | dict[str, Any],
+) -> FingerprintValidationResult:
+    try:
+        parsed = (
+            accounting
+            if isinstance(accounting, FingerprintByteAccounting)
+            else FingerprintByteAccounting.from_payload(accounting)
+        )
+    except ValueError as exc:
+        return _result(blockers=[str(exc)])
+    blockers: list[str] = []
+    if parsed.byte_accounting_policy != FINGERPRINT_BYTE_ACCOUNTING_POLICY:
+        blockers.append(
+            f"byte_accounting_policy must be {FINGERPRINT_BYTE_ACCOUNTING_POLICY!r}"
+        )
+    charged_sum = parsed.corridor_charged_bytes + parsed.exemplar_charged_bytes
+    if charged_sum != parsed.arm_charged_bytes:
+        blockers.append(
+            "corridor_charged_bytes + exemplar_charged_bytes must equal "
+            "arm_charged_bytes"
+        )
+    if (
+        parsed.declared_byte_budget is not None
+        and parsed.arm_charged_bytes > parsed.declared_byte_budget
+    ):
+        blockers.append("arm_charged_bytes exceeds declared_byte_budget")
+    if not parsed.physical_file_counted_once:
+        blockers.append("physical_file_counted_once must be true")
+    if not parsed.budget_ceiling_respected:
+        blockers.append("budget_ceiling_respected must be true")
+    return _result(blockers=blockers, metadata=parsed.to_dict())
 
 
 def validate_fingerprint_artifact(path: str | Path) -> FingerprintValidationResult:
@@ -285,6 +497,18 @@ def _non_negative_int(value: Any) -> int | None:
     return None
 
 
+def _optional_non_negative_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    return _coerce_non_negative_int(value, "value")
+
+
+def _coerce_non_negative_int(value: Any, name: str) -> int:
+    if isinstance(value, int) and value >= 0:
+        return value
+    raise ValueError(f"{name} must be a non-negative integer")
+
+
 def _positive_int(value: Any, name: str) -> int:
     if isinstance(value, int) and value > 0:
         return value
@@ -313,3 +537,10 @@ def _result(
         warnings=tuple(warnings or ()),
         metadata=dict(metadata or {}),
     )
+
+
+def _manifest_path(path: str | Path) -> Path:
+    candidate = Path(path)
+    if candidate.name == "manifest.json":
+        return candidate
+    return candidate / "manifest.json"
