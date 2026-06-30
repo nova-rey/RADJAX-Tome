@@ -45,3 +45,11 @@ multi-shard smoke, synthetic target export, tokenizer, and corpus tokenization
 surface into RADJAX-Tome. The migration keeps JAX, Student runtime logic,
 Contract-valid Tome emission, and `cover_page.json` out of scope; Spec 3 remains
 blocked until the remaining producer/HF/fingerprint gaps are closed or waived.
+
+## 2026-06-30 — Bulk producer migration with quarantine
+
+Switched from micro-migration to a bulk producer migration strategy. Migrated
+safe archived `qrwkv-xla` producer-side Tome Generator paths into `RADJAX-Tome`
+and quarantined mixed producer/student files for later surgery. This phase moves
+or accounts for the remaining producer-relevant gaps in bulk while keeping
+Student runtime, Contract ownership, and `cover_page.json` emission out of scope.

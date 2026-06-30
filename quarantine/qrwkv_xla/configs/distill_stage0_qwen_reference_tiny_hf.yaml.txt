@@ -1,0 +1,34 @@
+# Quarantined archived qrwkv-xla reference file.
+# Original path: configs/distill_stage0_qwen_reference_tiny_hf.yaml
+# Reason: Producer-related support material retained or tracked for later migration; not needed before Spec 3.
+# This file is non-importable reference material for RADJAX-Tome migration.
+
+distillation:
+  stage: 0
+  targets_dir: artifacts/teacher_targets/tiny_hf_smoke
+  student:
+    architecture: rwkv7_qwen_reference
+    vocab_size: 50257
+    hidden_size: null
+    num_layers: null
+    num_heads: 1
+    num_kv_heads: 1
+    emit_logits: true
+    tie_embeddings: false
+    emit_mixer_outputs: false
+  optimizer:
+    type: sgd
+    learning_rate: 0.001
+  training:
+    max_steps: 1
+    seed: 0
+  losses:
+    hidden_mse:
+      enabled: true
+      weight: 0.5
+    logits_kl:
+      enabled: true
+      weight: 0.5
+    attention_or_mixer:
+      enabled: false
+      weight: 0.0

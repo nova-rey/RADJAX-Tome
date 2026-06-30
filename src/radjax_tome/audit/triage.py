@@ -348,6 +348,13 @@ def compute_spec3_gate(
         for item in missing_tests
         if item.test_bucket == "must_port_before_spec3" and item.blocks_spec3
     )
+    quarantined = sum(
+        1
+        for item in triage_items
+        if item.why_high_risk
+        and item.bucket == "duplicate_or_merged"
+        and "quarantine/" in item.proposed_destination_path_or_area
+    )
     untriaged = sum(
         1
         for item in triage_items
@@ -362,6 +369,10 @@ def compute_spec3_gate(
         reasons.append(f"{mixed} high-risk mixed producer/student items need splits")
     if tests:
         reasons.append(f"{tests} missing producer tests must port before Spec 3")
+    if quarantined:
+        reasons.append(
+            f"{quarantined} high-risk producer items are quarantined for Spec 2.9"
+        )
     if untriaged:
         reasons.append(f"{untriaged} high-risk items remain untriaged")
     reasons.append("legacy A/B parity must still pass after migration waves")
@@ -369,7 +380,7 @@ def compute_spec3_gate(
         "extraction audit must rerun with no untriaged producer-core blockers"
     )
     return Spec3Gate(
-        passed=not (must or mixed or tests or untriaged),
+        passed=not (must or mixed or tests or quarantined or untriaged),
         high_risk_must_migrate_tome_before_spec3=must,
         high_risk_blocking_mixed_requires_split=mixed,
         missing_must_port_before_spec3_tests=tests,
@@ -496,7 +507,15 @@ def render_doc_summary(migration_map: MigrationMap) -> str:
         "- Spec 2.5 - Extraction completeness audit. DONE.",
         "- Spec 2.6 - Audit triage and producer migration map. DONE.",
         "- Spec 2.7 - Migrate highest-priority producer "
-        "schemas/stores/validators/tests. THIS SPEC.",
+        "schemas/stores/validators/tests. DONE.",
+        "- Spec 2.8 - Bulk producer migration with quarantine. THIS SPEC.",
+        "- Spec 2.9 - Surgical split of quarantined mixed producer/student files.",
+        "- Spec 2.10 - Audit closure, A/B expansion, waivers, and Spec 3 gate check.",
+        "- Spec 3 - Contract-valid Tome emission with cover_page.json, only after "
+        "the gate passes.",
+        "",
+        "Previous micro-migration roadmap:",
+        "",
         "- Spec 2.8 - Migrate real-teacher/HF/corpus/source-identity producer paths.",
         "- Spec 2.9 - Migrate behavioral fingerprint / corridor / exemplar "
         "producer artifact paths.",

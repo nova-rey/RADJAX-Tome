@@ -1,0 +1,3045 @@
+# Quarantined archived qrwkv-xla reference file.
+# Original path: docs/QRWKV_SNAPSHOT.yaml
+# Reason: Producer-related support material retained or tracked for later migration; not needed before Spec 3.
+# This file is non-importable reference material for RADJAX-Tome migration.
+
+project: QRWKV-XLA
+phase: 153.1
+current_phase: P153.1
+checkpoint: corridor_aggressiveness_profile_calibration
+run_tracking: local_opt_in_json_jsonl
+status: complete
+mission: >
+  Build a JAX/XLA-first RADLADS-style transformer-to-RWKV7 recurrent
+  conversion pipeline for TPU-first training.
+
+reference_repo:
+  name: nova-rey/radlads-TPU-adapter
+  role: reference_only
+  direct_port: false
+
+teacher:
+  family: qwen
+  primary_policy: latest_qwen3_open_weight_available_at_experiment_time
+  fallback_label: Qwen3.0
+
+teacher_export_paths:
+  config_relative:
+    - targets.prompt_file
+    - targets.prompt_corpus
+    - targets.tokenized_corpus
+    - runtime.output_dir
+    - runtime.qwen_policy_path
+  cli_overrides_relative_to: cwd
+
+student:
+  architecture: RWKV7-style recurrent student
+  framework: JAX
+  backends:
+    rwkv7_reference: placeholder_smoke_backend
+    rwkv7_radlads_reference: RADLADS-shaped JAX reference backend, not full RADLADS parity.
+    rwkv7_qwen_reference: Qwen/RADLADS-compatible slow JAX reference path with explicit P50 replay mode, not optimized kernel parity.
+  target_runtime:
+    - CPU debug
+    - TPU smoke
+    - TPU scale-up later
+
+hardware:
+  local: VM with no GPU
+  free_online:
+    - Kaggle TPU if available
+    - Colab TPU if available
+    - Modal/Lightning GPU optional sanity only
+
+workflow:
+  primary_agent: Nyx
+  sub_agent: Codex
+  spec_style: whole_implementation_spec
+  legacy_prompt_structure: A/B/C optional only if useful
+  lint_format: Ruff + Black-compatible
+  local_validation: Strategy A editable install, then scripts/validate_pipeline.py or scripts/validate_local.py
+  bible_policy: append_only
+
+current_goal: >
+  Calibrate the smallest reliable corridor-only force profile across matched
+  seeds using the P153 trajectory harness and explicit instability guards.
+
+current_arc: controlled_fingerprint_scaling_and_stronger_baselines
+
+post_pallas_status: burn_readiness_rehearsal_begun
+
+recommended_next:
+  - P154 standalone exemplar-pass runner
+
+arc_status:
+  real_teacher_rehearsal_and_burn_readiness: closed_pending_manual_burn
+  post_p112_research_alignment: active
+  burn_result_analysis: complete
+  integration_gate: complete
+  contract_unification_cascaded_burn_wiring: complete
+  distributed_example_sharding: complete
+  distributed_sync_audit: complete
+  distributed_gradient_sync: complete
+  distributed_artifact_hygiene: complete
+  behavioral_fingerprint_contract: complete
+  behavioral_fingerprint_loader: complete
+  behavioral_fingerprint_student_stats: complete
+  behavioral_fingerprint_corridor_loss: complete
+  behavioral_fingerprint_training_smoke: complete
+  behavioral_fingerprint_smoke_hygiene: complete
+  behavioral_fingerprint_exemplar_reservoir: complete
+  behavioral_fingerprint_mixed_smoke: complete
+  behavioral_fingerprint_diagnostics_reports_readiness: complete
+  real_student_fingerprint_forward_smoke: complete
+  main_runner_fingerprint_mode: complete
+  input_conditioned_tiny_student_rehearsal: complete
+  teacher_side_fingerprint_capture_skeleton: complete
+  teacher_capture_synthetic_fixture_parity: complete
+  tiny_real_teacher_fingerprint_capture: complete
+  real_student_fingerprint_training_rehearsal: complete
+  baseline_comparison_harness: complete
+  first_quality_per_byte_experiment: complete
+  arc2_report_go_no_go: complete
+  trained_baseline_arm: complete
+  held_out_fingerprint_evaluation: complete
+  checkpoint_lineage_binding: complete
+  corridor_pass_measurement_harness: complete
+  corridor_aggressiveness_profile_calibration: complete
+
+main_contains:
+  p117_1_actual_train_step_burn: true
+  p118_burn_result_analysis: true
+  p119_topk_tail_textbook_v0: true
+  p120_sparse_target_loss_consumption: true
+  p121_cascaded_soft_labels_v1_contract: true
+  p122_bucket_shape_loss: true
+  p124_tome_100_generation_result_docs: true
+  p125_tpu_100_example_training_smoke_result_docs: true
+  p126_dense_contract_unification: true
+  p126_cascaded_real_burn_wiring: true
+  p126_worker_process_observability: true
+  p128_example_sharding_utility: true
+  p128_real_burn_example_sharding: true
+  p128_local_global_sharding_reports: true
+  p129_sync_config: true
+  p129_parameter_fingerprints: true
+  p129_optimizer_state_fingerprints: true
+  p129_sync_reports: true
+  p129_readiness_gating: true
+  p130_gradient_allgather_mean: true
+  p130_global_loss_mean: true
+  p130_parameter_checksum_sync_verification: true
+  p130_stateless_optimizer_sync: true
+  p131_artifact_helpers: true
+  p131_process_0_canonical_writes: true
+  p131_per_process_burn_reports: true
+  p131_single_writer_checkpoint_verified: true
+  p131_artifact_hygiene_ready: true
+  p132_behavioral_fingerprint_schema: true
+  p132_fingerprint_validator_cli: true
+  p132_tiny_synthetic_fixture: true
+  p133_fingerprint_target_dataset: true
+  p133_numpy_batch_loader: true
+  p133_deterministic_shuffle: true
+  p133_fixed_shape_input_ids: true
+  p134_student_distribution_stats: true
+  p134_position_logit_selection: true
+  p134_natural_log_entropy: true
+  p134_probability_space_top1_margin: true
+  p135_corridor_loss: true
+  p135_squared_hinge_penalty: true
+  p135_inside_rate_diagnostics: true
+  p135_record_weights: true
+  p136_tiny_fingerprint_training_smoke: true
+  p136_fingerprint_metrics_emitted: true
+  p136_checkpoint_artifact_written: true
+  p136_1_smoke_metadata_explicit: true
+  p136_1_loss_non_increase_diagnostic_only: true
+  p136_1_train_batches_consumed_guard: true
+  p137_exemplar_reservoir_schema: true
+  p137_exemplar_validator: true
+  p137_exemplar_loader: true
+  p137_exemplar_kl_loss: true
+  p137_exemplar_inspect_cli: true
+  p138_mixed_smoke_config: true
+  p138_mixed_smoke_runner: true
+  p138_mixed_metrics_emitted: true
+  p138_mixed_checkpoint_artifact_written: true
+  p138_mixed_report_artifact_written: true
+  p138_weighted_corridor_exemplar_objective: true
+  p139_artifact_summary_helper: true
+  p139_artifact_summary_cli: true
+  p139_p139_report_schema_phase: true
+  p139_markdown_run_summaries: true
+  p139_canonical_metric_aliases: true
+  p139_report_validation_helper: true
+  p139_next_arc_readiness_note: true
+  p140_real_student_forward_smoke: true
+  p140_current_qrwkv_backend_integrated: true
+  p140_fingerprint_input_ids_forwarded: true
+  p140_p134_p135_metrics_from_real_logits: true
+  p140_main_runner_integrated: false
+  p140_teacher_required: false
+  p140_optimizer_steps_completed: 0
+  p141_main_runner_fingerprint_mode: true
+  p141_fingerprint_corridor_mode: true
+  p141_real_student_backend_integrated: true
+  p141_teacher_required: false
+  p141_exemplar_reservoir_enabled: false
+  p141_optimizer_checkpoint_plumbing: true
+  p142_input_conditioned_rehearsal: true
+  p142_input_conditioning_detected: true
+  p142_params_changed_diagnostic: true
+  p142_param_delta_norm_metric: true
+  p142_loss_non_increasing_required: false
+  p142_teacher_required: false
+  p143_teacher_side_capture_skeleton: true
+  p143_synthetic_logit_provider_capture: true
+  p143_stat_bands_v0_dynamic_modes: true
+  p143_max_modes_guard: true
+  p143_configurable_max_exemplars: true
+  p143_dense_probs_exemplar_writer: true
+  p143_capture_summary: true
+  p143_artifact_validates_with_p132: true
+  p143_loads_with_p133_p137: true
+  p143_consumable_by_p140: true
+  p143_real_hf_teacher_invocation: false
+  p144_known_stat_parity: true
+  p144_stat_band_mode_parity: true
+  p144_dynamic_mode_count_parity: true
+  p144_minmax_bounds_parity: true
+  p144_min_width_parity: true
+  p144_quantile_bounds: true
+  p144_exemplar_budget_parity: true
+  p144_stratified_exemplar_selection: true
+  p144_capture_summary_accuracy: true
+  p144_consumable_by_p141: true
+  p144_real_hf_teacher_invocation: false
+  p145_tiny_real_teacher_capture_path: true
+  p145_local_files_only_default: true
+  p145_tiny_text_fixture: true
+  p145_real_teacher_metadata: true
+  p145_capture_engine_phase_split: true
+  p145_artifact_validates_with_p132: true
+  p145_loads_with_p133_p137: true
+  p145_consumer_sanity_recorded: true
+  p145_quality_claims: false
+  p146_real_teacher_artifact_training_rehearsal: true
+  p146_main_runner_fingerprint_corridor_training: true
+  p146_real_student_backend_integrated: true
+  p146_params_changed: true
+  p146_checkpoint_loadable: true
+  p146_teacher_required_during_training: false
+  p146_local_cache_real_hf_integration_smoke: true
+  p146_quality_claims: false
+  p147_baseline_comparison_harness: true
+  p147_baseline_init_only_arm: true
+  p147_fingerprint_corridor_arm: true
+  p147_shared_controls_recorded: true
+  p147_artifact_budget_metrics: true
+  p147_claims_block: true
+  p147_quality_claims: false
+  p147_baseline_winner_declared: false
+  p147_quality_per_byte_claims: false
+  p148_quality_per_byte_experiment: true
+  p148_corridor_adherence_eval: true
+  p148_reference_delta_vs_init_only: true
+  p148_artifact_byte_denominator: true
+  p148_eval_split_train_artifact_reuse: true
+  p148_trained_baseline_available: false
+  p148_comparison_fairness: reference_only
+  p148_winner_declared: false
+  p148_general_quality_claims: false
+  p148_radlads_parity_claims: false
+  p148_scale_claims: false
+  p149_arc2_report_go_no_go: true
+  p149_recommendation: go_with_constraints
+  p149_required_evidence_flags: true
+  p149_open_gaps_recorded: true
+  p149_general_quality_claims: false
+  p149_trained_baseline_win_claims: false
+  p149_radlads_parity_claims: false
+  p149_scale_readiness_claims: false
+  p149_production_readiness_claims: false
+  p151_trained_causal_lm_baseline: true
+  p151_shared_initial_parameter_tree: true
+  p151_parameter_fingerprint_verified: true
+  p151_source_example_ids_matched: true
+  p151_optimizer_step_budget_matched: true
+  p151_batch_and_sequence_budget_matched: true
+  p151_fingerprint_corridor_main_runner: true
+  p151_teacher_required_during_training: false
+  p151_exemplar_training_enabled: false
+  p151_comparison_fairness: matched_training_budget
+  p151_winner_declared: false
+  p151_held_out_evaluation_available: false
+  p152_provenance_sidecar_contract: true
+  p152_id_and_token_split_proof: true
+  p152_checkpoint_contract_validation: true
+  p152_read_only_evaluation: true
+  p152_per_record_paired_metrics: true
+  p152_deterministic_bootstrap_ci: true
+  p152_predeclared_primary_metric: held_out_corridor_loss_total
+  p152_narrow_winner_scope: held_out_fingerprint_primary_metric_only
+  p152_general_quality_claims: false
+  p152_quality_per_byte_claims: false
+  p152_scale_claims: false
+  p152_radlads_parity_claims: false
+  p152_1_shared_provenance_helpers: true
+  p152_1_path_aware_parameter_fingerprint: true
+  p152_1_checkpoint_bundle_hashes: true
+  p152_1_p151_lineage_report: true
+  p152_1_exact_checkpoint_binding: true
+  p152_1_id_based_source_join: true
+  p152_1_legacy_join_default: disabled
+  p152_1_legacy_lineage_confidence: reduced
+  p152_1_checkpoint_lineage_receipt: true
+  p152_1_unused_eval_batch_flag_removed: true
+  p152_1_training_behavior_changed: false
+  p152_1_evaluation_math_changed: false
+  p153_corridor_only_runner: true
+  p153_step_zero_held_out_evaluation: true
+  p153_fixed_cadence_trajectory: true
+  p153_distance_to_corridor_metrics: true
+  p153_threshold_and_stable_entry: true
+  p153_fixed_and_stable_stopping: true
+  p153_periodic_checkpoints: true
+  p153_record_token_byte_accounting: true
+  p153_wall_clock_accounting: true
+  p153_publication_grade_lineage_gate: true
+  p153_exemplar_training_enabled: false
+  p153_general_quality_claims: false
+  p153_quality_per_byte_claims: false
+
+teacher_target_types:
+  - dense_logits
+  - topk_with_tail_v0
+  - cascaded_soft_labels_v1
+  - behavioral_fingerprint
+  - behavioral_fingerprint_exemplars_dense_probs
+  - behavioral_fingerprint_mixed_smoke
+  - behavioral_fingerprint_p139_report
+
+p117_1_invariants_preserved:
+  real_mode_zero_step_pass_allowed: false
+  max_steps_configurable: true
+  batch_size_configurable: true
+  textbook_reuse_configurable: true
+
+p130:
+  goal: distributed_gradient_sync_implementation
+  status: complete
+  auto_multi_process_sync_mode: gradient_pmean
+  gradient_sync_method: jax.experimental.multihost_utils.process_allgather_mean
+  gradient_sync_enabled_when_multi_process_sharded: true
+  global_loss_reduction: global_mean
+  parameter_sync_verification_method: collective_checksum_minmax
+  optimizer_state_kind: stateless_sgd
+  optimizer_state_sync_verification_method: stateless_sgd_no_state
+  distributed_training_ready_gate_added: true
+  checkpoint_single_writer_verified: false
+  checkpoint_hygiene_deferred_to: P131
+  model_quality_claimed: false
+  production_readiness_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  recommended_next: P131 checkpoint/export single-writer hygiene
+
+p131:
+  goal: single_writer_checkpoint_export_hygiene
+  status: complete
+  artifact_write_policy: process_0_canonical_with_per_process_diagnostics
+  canonical_process_index: 0
+  canonical_checkpoint_writer_process_index: 0
+  checkpoint_write_strategy: process_0_only
+  checkpoint_fingerprint_comparison_scope: canonical_process_0_only
+  checkpoint_fingerprint_match_meaning: single canonical checkpoint writer; no cross-process checkpoint file comparison required
+  canonical_artifacts_process_0_only:
+    - checkpoint.json
+    - burn_report.json
+    - readiness_report.json
+    - loss_trace.json
+    - launch_commands.md
+    - sync_global_report.json
+    - example_sharding_global_report.json
+  per_process_diagnostics:
+    - burn_report_process_<index>.json
+    - sync_report_process_<index>.json
+    - example_shard_process_<index>.json
+  artifact_hygiene_ready: true
+  single_writer_checkpoint_verified: true
+  per_process_diagnostics_preserved: true
+  distributed_training_ready_preserved_from_p130_when_predicates_pass: true
+  production_readiness_claimed: false
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  docs:
+    - docs/P131_SINGLE_WRITER_CHECKPOINT_EXPORT_HYGIENE.md
+  recommended_next: P131 TPU smoke on the small cascaded tome
+
+p132:
+  goal: behavioral_fingerprint_artifact_schema_validator
+  status: complete
+  artifact_type: behavioral_fingerprint
+  artifact_version: "0.1"
+  teacher_pure: true
+  sharded_from_day_one: true
+  fixed_shape_friendly_contract: true
+  manifest_file: manifest.json
+  modes_file: modes.json
+  target_shards: targets/*.jsonl
+  validator_api: qrwkv_xla.artifacts.validate_fingerprint_artifact
+  validator_cli: scripts/validate_fingerprint_artifact.py
+  valid_fixture: tests/fixtures/behavioral_fingerprint/v0_1_valid_tiny
+  validates:
+    - artifact_type_and_version
+    - teacher_vocab_and_sequence_metadata
+    - tracked_stats
+    - mode_ids_and_bounds
+    - shard_paths_and_record_counts
+    - jsonl_row_shape
+    - token_id_vocab_bounds
+    - row_bounds_inside_mode_bounds
+  generation_added: false
+  loader_added: false
+  student_training_changed: false
+  corridor_loss_added: false
+  exemplar_reservoir_added: false
+  production_readiness_claimed: false
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  docs:
+    - docs/P132_BEHAVIORAL_FINGERPRINT_ARTIFACT_SCHEMA.md
+  recommended_next: P133 fingerprint target loader
+
+p133:
+  goal: behavioral_fingerprint_target_loader
+  status: complete
+  depends_on: P132 behavioral fingerprint artifact schema validator
+  loader_api: qrwkv_xla.artifacts.load_fingerprint_targets
+  dataset_type: qrwkv_xla.artifacts.FingerprintTargetDataset
+  record_type: qrwkv_xla.artifacts.FingerprintTargetRecord
+  batch_type: qrwkv_xla.artifacts.FingerprintBatch
+  config_type: qrwkv_xla.artifacts.FingerprintLoaderConfig
+  batch_arrays: numpy
+  validates_by_default: true
+  manifest_order_loading: true
+  deterministic_shuffle_seeded: true
+  max_records_supported: true
+  drop_remainder_supported: true
+  fixed_shape_input_ids_required: true
+  hidden_padding_policy_added: false
+  inspect_cli: scripts/inspect_fingerprint_targets.py
+  jsonl_physical_line_sanity_test: true
+  generation_added: false
+  student_stats_added: false
+  corridor_loss_added: false
+  exemplar_reservoir_added: false
+  student_training_changed: false
+  production_readiness_claimed: false
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  docs:
+    - docs/P133_BEHAVIORAL_FINGERPRINT_TARGET_LOADER.md
+  recommended_next: P134 student distribution statistics
+
+p134:
+  goal: student_distribution_stats
+  status: complete
+  depends_on:
+    - P132 behavioral fingerprint artifact schema validator
+    - P133 behavioral fingerprint target loader
+  module: qrwkv_xla.training.fingerprint_stats
+  stats_type: qrwkv_xla.training.FingerprintDistributionStats
+  compute_api: qrwkv_xla.training.compute_fingerprint_distribution_stats
+  position_select_api: qrwkv_xla.training.select_position_logits
+  position_wrapper_api: qrwkv_xla.training.compute_fingerprint_distribution_stats_at_positions
+  input_logits_shape: "[batch, vocab]"
+  sequence_logits_shape: "[batch, seq, vocab]"
+  output_stat_shape: "[batch]"
+  entropy_units: natural_log
+  top1_margin_space: probability
+  top8_mass_definition: cumulative_probability_largest_8_tokens
+  top32_mass_definition: cumulative_probability_largest_32_tokens
+  tail_mass_definition: 1_minus_top32_mass
+  stable_softmax_log_softmax: true
+  topk_clamps_to_vocab_size: true
+  shape_value_errors: true
+  corridor_loss_added: false
+  bounds_comparison_added: false
+  student_training_changed: false
+  optimizer_changed: false
+  exemplar_reservoir_added: false
+  production_readiness_claimed: false
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  docs:
+    - docs/P134_STUDENT_DISTRIBUTION_STATS.md
+  recommended_next: P135 corridor loss
+
+p135:
+  goal: corridor_loss
+  status: complete
+  depends_on:
+    - P132 behavioral fingerprint artifact schema validator
+    - P133 behavioral fingerprint target loader
+    - P134 student distribution stats
+  module: qrwkv_xla.training.fingerprint_loss
+  config_type: qrwkv_xla.training.FingerprintCorridorLossConfig
+  output_type: qrwkv_xla.training.FingerprintCorridorLossOutput
+  penalty_api: qrwkv_xla.training.squared_hinge_bound_penalty
+  inside_api: qrwkv_xla.training.inside_bounds
+  loss_api: qrwkv_xla.training.compute_fingerprint_corridor_loss
+  penalty_kind: squared_hinge
+  bounds_inclusive: true
+  per_stat_weights: true
+  record_weights_optional: true
+  per_stat_losses: true
+  inside_rate_diagnostics: true
+  all_inside_rate: true
+  trainer_integration_added: false
+  optimizer_changed: false
+  checkpoint_changed: false
+  teacher_generation_added: false
+  exemplar_reservoir_added: false
+  production_readiness_claimed: false
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  docs:
+    - docs/P135_CORRIDOR_LOSS.md
+  recommended_next: P136 tiny fingerprint training smoke
+
+p136:
+  goal: tiny_fingerprint_training_smoke
+  status: complete
+  depends_on:
+    - P132 behavioral fingerprint artifact schema validator
+    - P133 behavioral fingerprint target loader
+    - P134 student distribution stats
+    - P135 corridor loss
+  module: qrwkv_xla.training.fingerprint_smoke
+  script: scripts/run_fingerprint_smoke.py
+  smoke_student: tiny_position_logit_head
+  consumes: qrwkv_xla.artifacts.FingerprintTargetDataset
+  computes_stats: true
+  computes_corridor_loss: true
+  optimizer_step: sgd
+  metrics_json_written: true
+  checkpoint_json_written: true
+  report_json_written: true
+  deterministic_seeded: true
+  teacher_required: false
+  hf_download_required: false
+  gpu_or_tpu_required: false
+  exemplar_reservoir_added: false
+  mixed_csl_fingerprint_training_added: false
+  production_readiness_claimed: false
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  docs:
+    - docs/P136_TINY_FINGERPRINT_TRAINING_SMOKE.md
+  recommended_next: P137 exemplar reservoir integration
+
+p136_1:
+  goal: fingerprint_smoke_robustness_cleanup
+  status: complete
+  depends_on: P136 tiny fingerprint training smoke
+  smoke_student_kind: tiny_position_logit_head
+  smoke_student_uses_input_ids: false
+  main_runner_integrated: false
+  teacher_required: false
+  exemplar_reservoir_enabled: false
+  artifact_kind: behavioral_fingerprint
+  training_path_kind: standalone_fingerprint_smoke
+  steps_semantics: optimizer_updates_requested
+  train_batches_consumed_reported: true
+  zero_optimizer_batch_guard: true
+  loss_non_increasing_required_for_pass: false
+  loss_non_increasing_reported: true
+  initial_loss_non_negative_required_for_pass: true
+  final_loss_non_negative_required_for_pass: true
+  loss_delta_reported: true
+  jsonl_physical_line_sanity_test: true
+  main_runner_integration_added: false
+  real_student_backend_integration_added: false
+  exemplar_reservoir_added: false
+  teacher_generation_added: false
+  production_readiness_claimed: false
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  docs:
+    - docs/P136_TINY_FINGERPRINT_TRAINING_SMOKE.md
+  recommended_next: P137 exemplar reservoir integration
+
+p137:
+  goal: exemplar_reservoir_integration
+  status: complete
+  depends_on:
+    - P132 behavioral fingerprint artifact schema validator
+    - P133 behavioral fingerprint target loader
+    - P134 student distribution stats
+    - P135 corridor loss
+    - P136 tiny fingerprint training smoke
+    - P136.1 fingerprint smoke robustness cleanup
+  manifest_extension: exemplar_reservoir
+  payload_type_supported: dense_probs
+  exemplar_loss_supported: kl
+  existing_artifacts_without_exemplars_valid: true
+  require_exemplars_loader_guard: true
+  validator_checks_exemplar_shards: true
+  validator_checks_dense_probabilities: true
+  fixture: tests/fixtures/behavioral_fingerprint/v0_1_with_exemplars_tiny
+  loader_api: qrwkv_xla.artifacts.load_fingerprint_exemplars
+  dataset_api: qrwkv_xla.artifacts.FingerprintExemplarDataset
+  batch_api: qrwkv_xla.artifacts.FingerprintExemplarBatch
+  inspect_cli: scripts/inspect_fingerprint_exemplars.py
+  loss_module: qrwkv_xla.training.fingerprint_exemplar_loss
+  loss_api: qrwkv_xla.training.compute_fingerprint_exemplar_loss
+  position_loss_api: qrwkv_xla.training.compute_fingerprint_exemplar_loss_at_positions
+  mixed_corridor_exemplar_training_added: false
+  main_runner_integration_added: false
+  teacher_generation_added: false
+  real_student_backend_training_added: false
+  csl_exemplar_compression_added: false
+  dynamic_topk_added: false
+  production_readiness_claimed: false
+  model_quality_claimed: false
+  gpu_or_tpu_burn_run: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  docs:
+    - docs/P137_EXEMPLAR_RESERVOIR_INTEGRATION.md
+  recommended_next: P138 mixed corridor plus exemplar smoke
+
+p138:
+  goal: mixed_corridor_exemplar_smoke
+  status: complete
+  depends_on:
+    - P132 behavioral fingerprint artifact schema validator
+    - P133 fingerprint target loader
+    - P134 student distribution stats
+    - P135 corridor loss
+    - P136 tiny fingerprint training smoke
+    - P136.1 fingerprint smoke robustness cleanup
+    - P137 exemplar reservoir integration
+  module: qrwkv_xla.training.fingerprint_smoke
+  config_api: qrwkv_xla.training.FingerprintMixedSmokeConfig
+  result_api: qrwkv_xla.training.FingerprintMixedSmokeResult
+  runner_api: qrwkv_xla.training.run_mixed_fingerprint_training_smoke
+  cli: scripts/run_fingerprint_smoke.py --mode mixed
+  fixture: tests/fixtures/behavioral_fingerprint/v0_1_with_exemplars_tiny
+  objective: weighted_corridor_loss_plus_exemplar_kl
+  corridor_loss_weight_non_negative: true
+  exemplar_loss_weight_non_negative: true
+  rejects_both_loss_weights_zero: true
+  consumes_corridor_batches: true
+  consumes_exemplar_batches: true
+  cycles_finite_batch_streams: true
+  zero_corridor_batch_guard: true
+  zero_exemplar_batch_guard: true
+  emits_mixed_metrics: true
+  emits_corridor_metrics: true
+  emits_exemplar_metrics: true
+  emits_batch_consumption_metrics: true
+  writes_metrics_json: true
+  writes_checkpoint_json: true
+  writes_report_json: true
+  smoke_student_kind: tiny_position_logit_head
+  smoke_student_uses_input_ids: false
+  training_path_kind: standalone_mixed_fingerprint_smoke
+  teacher_required: false
+  hf_download_required: false
+  gpu_or_tpu_required: false
+  main_runner_integrated: false
+  real_student_backend_integrated: false
+  mixed_loss_non_increasing_required_for_pass: false
+  mixed_loss_non_increasing_reported: true
+  branch_loss_deltas_reported: true
+  real_student_backend_training_added: false
+  teacher_generation_added: false
+  live_teacher_queries_added: false
+  csl_exemplar_payloads_added: false
+  dynamic_topk_added: false
+  production_readiness_claimed: false
+  model_quality_claimed: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  docs:
+    - docs/P138_MIXED_CORRIDOR_EXEMPLAR_SMOKE.md
+  recommended_next: P139 diagnostics, reports, and next-arc readiness notes
+
+p139:
+  goal: fingerprint_diagnostics_reports_readiness
+  status: complete
+  depends_on:
+    - P132 behavioral fingerprint artifact schema validator
+    - P133 fingerprint target loader
+    - P134 student distribution stats
+    - P135 corridor loss
+    - P136 tiny fingerprint training smoke
+    - P136.1 fingerprint smoke robustness cleanup
+    - P137 exemplar reservoir integration
+    - P138 mixed corridor plus exemplar smoke
+  artifact_summary_api: qrwkv_xla.artifacts.summarize_fingerprint_artifact
+  artifact_summary_cli: scripts/inspect_fingerprint_artifact.py
+  report_schema_phase: P139
+  report_types:
+    - corridor_only_smoke_report
+    - mixed_fingerprint_smoke_report
+  markdown_summary_file: fingerprint_run_summary.md
+  canonical_metric_aliases_added: true
+  report_validation_api: qrwkv_xla.training.validate_fingerprint_smoke_report
+  summary_render_api: qrwkv_xla.training.render_fingerprint_smoke_summary
+  corridor_smoke_training_behavior_changed: false
+  mixed_smoke_training_behavior_changed: false
+  real_student_backend_training_added: false
+  main_runner_integration_added: false
+  teacher_generation_added: false
+  teacher_side_fingerprint_capture_added: false
+  model_quality_claimed: false
+  production_readiness_claimed: false
+  gpu_or_tpu_burn_run: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  proves: CPU-safe standalone reporting over tiny synthetic fingerprint fixtures
+  does_not_prove:
+    - real QRWKV backend integration
+    - main distillation runner integration
+    - input-conditioned student learning
+    - teacher-side fingerprint generation
+    - model quality improvement
+    - artifact convergence
+    - storage or compute wins
+  docs:
+    - docs/P139_FINGERPRINT_DIAGNOSTICS_REPORTS_READINESS.md
+    - docs/FINGERPRINT_NEXT_ARC_READINESS.md
+  recommended_next: Real Student Integration and Teacher-Pure Capture
+
+p129:
+  goal: gradient_optimizer_sync_audit
+  status: complete
+  distributed_sync_config_added: true
+  current_update_path: local_only
+  gradient_sync_enabled: false
+  gradient_sync_verified: false
+  optimizer_state_kind: stateless_sgd_no_momentum
+  optimizer_state_sync_verified: false
+  parameter_sync_verified: false
+  checkpoint_fingerprint_match: false
+  loss_reduction: local_only
+  loss_is_global: false
+  distributed_training_ready: false
+  sync_reports_written: true
+  parameter_fingerprints_emitted: true
+  optimizer_state_fingerprints_emitted: true
+  checkpoint_fingerprint_emitted: true
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  recommended_next: P130 true distributed train-step collective implementation
+
+p128:
+  goal: distributed_example_sharding_proof
+  status: complete
+  default_multi_process_strategy: contiguous_by_process
+  single_process_strategy: single_process
+  round_robin_strategy_available: true
+  local_shard_report_written: true
+  global_sharding_report_written_by_process_zero: true
+  examples_available_global_reported: true
+  examples_available_local_reported: true
+  examples_consumed_local_reported: true
+  unique_examples_consumed_local_reported: true
+  deterministic_coverage_verification: true
+  deterministic_overlap_verification: true
+  distributed_example_sharding_verified_when_multi_process: true
+  distributed_training_ready: false
+  optimizer_synchronization_verified: false
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  recommended_next: P129 gradient/optimizer synchronization proof
+
+p126:
+  goal: contract_unification_cascaded_burn_wiring
+  status: complete
+  p124_result_documented: true
+  p125_result_documented: true
+  dense_logits_real_burn_accepted: true
+  full_logits_legacy_alias_preserved: true
+  cascaded_soft_labels_v1_real_burn_wired: true
+  cascaded_loss_dispatch: p122_sparse_cascaded_loss
+  bucket_shape_loss_default_weight: 0.0
+  student_logits_materialization: dense_full_vocab
+  cascaded_runtime_memory_savings_claimed: false
+  worker_id_source: jax.process_index
+  jax_process_observability_fields_added: true
+  example_id_diagnostics_added: true
+  sharding_strategy: single_process_or_unsharded
+  distributed_training_ready: false
+  distributed_sharding_verified: false
+  distributed_example_sharding_verified: false
+  full_burn_launched: false
+  model_quality_claimed: false
+  qwen_support_added: false
+  tokenizer_remapping_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  recommended_next:
+    - P127 TPU rerun of the 100-example cascaded real-burn smoke
+    - P128 distributed example-sharding proof
+
+p123:
+  goal: cascade_main_merge_integration_gate
+  burn_launched: false
+  training_behavior_changed: false
+  radjax_tome_extracted: false
+  model_quality_claimed: false
+  distributed_training_claimed: false
+  dense_path_preserved: true
+  topk_tail_v0_preserved: true
+  cascaded_soft_labels_v1_preserved: true
+  bucket_shape_loss_default_weight: 0.0
+  recommended_next:
+    - P124 100-example dense TPU smoke
+    - P125 radjax-tome repo extraction
+    - P126 cascaded target evaluation smoke
+
+p118:
+  goal: burn_result_analysis_next_arc_decision
+  implementation_changes: false
+  analyzed_phase: P117.1
+  source_run: p117_1_real_train_steps_v6e16_worker0
+  docs_added: true
+  compact_summary_added: true
+  real_burn_started: false
+  training_behavior_changed: false
+  cascade_branch_merged: false
+  model_quality_claim_added: false
+  distributed_training_claim_added: false
+  recommended_next:
+    - P117.2 100-example TPU data-shard smoke
+    - Merge/reconcile P119-P122 cascade branch after conflict and test review
+    - P123 cascaded target evaluation smoke
+
+p117_1:
+  goal: actual_configurable_train_step_burn
+  status: pass
+  device_backend: tpu
+  steps_requested: 8
+  steps_completed: 8
+  examples_consumed: 8
+  unique_examples_consumed: 8
+  reuse_count: 0
+  checkpoint_written: true
+  real_training_executed: true
+  claims_not_made:
+    - model_quality_proven
+    - distributed_training_ready
+    - real_qrwkv_architecture_training_proven
+  behavior_change_intended: true
+  max_steps_knob_added: true
+  batch_size_knob_added: true
+  allow_textbook_reuse_knob_added: true
+  teacher_textbook_cli_added: true
+  real_mode_zero_step_pass_removed: true
+  actual_train_steps_added: true
+  checkpoint_written: true
+  loss_trace_written: true
+  dense_teacher_textbook_path_preserved: true
+  long_training_default_added: false
+  quality_claim_added: false
+  qwen_or_gemma_scaleup_added: false
+  rosetta_integration_added: false
+  vocab_c_implemented: false
+  tokenizer_remapping_added: false
+  full_hf_native_wrapper_added: false
+  pallas_promoted: false
+  wkv_math_changed: false
+  recommended_next: P117.2 TPU Device Train-Step / Multi-Worker Execution Hardening
+
+p116_3:
+  goal: tpu_vm_bootstrap_p117_preflight_scripts
+  behavior_change_intended: false
+  bootstrap_tpu_vm_script_added: true
+  p117_preflight_script_added: true
+  p117_tpu_runbook_added: true
+  textbook_release_url: https://github.com/nova-rey/qrwkv-xla/releases/download/p117-textbook-smoke-v0/p117_teacher_textbook_tiny_gpt2_smoke.tar.gz
+  textbook_sha256: cbe355a415606012eae4fa856aee180b1b6dc83ee06b4fb70188d57f253d7f23
+  real_burn_started: false
+  training_added: false
+  tokenizer_remapping_added: false
+  remote_teacher_service_added: false
+  qwen_support_added: false
+  kvm_implemented: false
+  fla_dependency_added: false
+  vocab_c_implemented: false
+  recommended_next: P117 First Serious Compute Burn
+
+p116_2:
+  goal: real_hf_teacher_textbook_builder
+  behavior_change_intended: false
+  hf_teacher_textbook_builder_added: true
+  fake_teacher_mode_preserved: true
+  local_files_only_supported: true
+  allow_downloads_explicit: true
+  ci_requires_hf: false
+  ci_requires_internet: false
+  ci_requires_gpu: false
+  ci_requires_tpu: false
+  real_burn_started: false
+  training_added: false
+  tokenizer_remapping_added: false
+  remote_teacher_service_added: false
+  kvm_implemented: false
+  fla_dependency_added: false
+  vocab_c_implemented: false
+  recommended_next: P117 First Serious Compute Burn
+
+p116_1:
+  goal: teacher_textbook_builder_closure
+  behavior_change_intended: false
+  teacher_textbook_builder_added: true
+  fake_teacher_mode_added: true
+  real_hf_teacher_mode_required_for_ci: false
+  teacher_textbook_validation_reused: true
+  real_burn_started: false
+  training_added: false
+  tokenizer_remapping_added: false
+  remote_teacher_service_added: false
+  kvm_implemented: false
+  fla_dependency_added: false
+  vocab_c_implemented: false
+  recommended_next: P117 First Serious Compute Burn
+
+p116:
+  goal: teacher_textbook_student_artifact_contract_revised_burn_launch_plan
+  behavior_change_intended: false
+  teacher_textbook_contract_added: true
+  student_artifact_contract_added: true
+  revised_burn_launch_plan_added: true
+  teacher_textbook_validator_added: true
+  student_artifact_validator_added: true
+  selected_student_family: current_qrwkv_rwkv_family
+  selected_teacher_class: tiny_real_hf_causal_lm
+  preferred_teacher_model_id: sshleifer/tiny-gpt2
+  matched_vocab_required: true
+  hf_shaped_artifact_boundary_required: true
+  full_hf_native_required_for_p117: false
+  real_burn_started: false
+  training_added: false
+  tokenizer_remapping_added: false
+  remote_teacher_service_added: false
+  kvm_implemented: false
+  fla_dependency_added: false
+  vocab_c_implemented: false
+  recommended_next: P117 First Serious Compute Burn
+
+p115:
+  goal: architecture_similarity_first_burn_target_decision
+  behavior_change_intended: false
+  first_burn_target_decision_added: true
+  selected_student_family: current_qrwkv_rwkv_family
+  matched_vocab_required: true
+  reference_runtime_default: true
+  pallas_default_preserved: true
+  hf_shaped_artifact_boundary_required: true
+  full_hf_native_required_for_p117: false
+  kvm_implemented: false
+  fla_dependency_added: false
+  vocab_c_implemented: false
+  real_burn_started: false
+  training_added: false
+  tokenizer_remapping_added: false
+  recommended_next: P116 Revised Burn Config + Launch Plan
+
+p114:
+  goal: hf_compatible_student_interface_reassessment
+  behavior_change_intended: false
+  hf_student_interface_reassessment_added: true
+  full_hf_wrapper_added: false
+  transformers_dependency_added: false
+  pretrained_model_subclass_added: false
+  generation_added: false
+  lm_eval_added: false
+  real_burn_started: false
+  training_added: false
+  tokenizer_remapping_added: false
+  recommended_next: P115 Architecture Similarity / First Burn Target Decision
+
+p113:
+  goal: radlads2_fla_hfattnconv_kvm_research_intake
+  behavior_change_intended: false
+  research_intake_added: true
+  external_repos_vendored: false
+  fla_dependency_added: false
+  kvm_implemented: false
+  vocab_c_implemented: false
+  tier3_memory_implemented: false
+  real_burn_started: false
+  training_added: false
+  tokenizer_remapping_added: false
+  recommended_next: P114 HF-Compatible Student Interface Reassessment
+
+p112:
+  goal: first_serious_compute_burn_harness_dry_run_gate
+  behavior_change_intended: false
+  burn_harness_added: true
+  dry_run_added: true
+  real_burn_requires_explicit_confirmation: true
+  automatic_serious_burn_started: false
+  training_added_to_baseline_tests: false
+  benchmark_suite_added: false
+  qwen_specific_code_added: false
+  tokenizer_remapping_added: false
+  pjit_added: false
+  pallas_default_preserved: true
+  recommended_next: manual P112 dry-run review, then explicit serious burn command if accepted
+
+p111:
+  goal: big_burn_readiness_report
+  behavior_change_intended: false
+  readiness_report_added: true
+  burn_started: false
+  training_added: false
+  benchmark_suite_added: false
+  qwen_specific_code_added: false
+  tokenizer_remapping_added: false
+  pjit_added: false
+  pallas_default_preserved: true
+  baseline_requires_tpu: false
+  baseline_requires_gpu: false
+  baseline_requires_hf: false
+  recommended_next: P112 First Serious Compute Burn
+
+p110:
+  goal: mini_eval_harness_smoke
+  behavior_change_intended: false
+  mini_eval_harness_added: true
+  benchmark_suite_added: false
+  lm_eval_added: false
+  training_added: false
+  qwen_specific_code_added: false
+  tokenizer_remapping_added: false
+  baseline_requires_hf: false
+  baseline_requires_internet: false
+  baseline_requires_tpu: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P111 Big Burn Readiness Report
+
+p109:
+  goal: tpu_environment_hygiene_runtime_readiness
+  behavior_change_intended: false
+  runtime_environment_preflight_added: true
+  transparent_hugepages_detection_added: true
+  transparent_hugepages_enable_default: false
+  mutation_default: read_only
+  training_added: false
+  benchmarking_added: false
+  pjit_added: false
+  pallas_default_preserved: true
+  baseline_requires_tpu: false
+  baseline_requires_gpu: false
+  baseline_requires_jax: false
+  recommended_next: P110 Mini Eval Harness Smoke
+
+p108_1:
+  goal: resume_update_closure
+  behavior_change_intended: false
+  resume_after_load_update_proven: true
+  checkpoint_step_recorded: true
+  final_step_recorded: true
+  restored_state_exactness_checked: true
+  resumed_loss_finite: true
+  production_checkpointing_added: false
+  distributed_checkpointing_added: false
+  training_platform_added: false
+  new_export_format_added: false
+  qwen_specific_code_added: false
+  tokenizer_remapping_added: false
+  baseline_requires_hf: false
+  baseline_requires_internet: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P109 TPU Environment Hygiene / Runtime Readiness
+
+p108:
+  goal: checkpoint_resume_export_rehearsal
+  behavior_change_intended: false
+  checkpoint_resume_rehearsal_added: true
+  hf_safetensors_export_rehearsal_added: true
+  production_checkpointing_added: false
+  distributed_checkpointing_added: false
+  training_added: false
+  qwen_specific_code_added: false
+  tokenizer_remapping_added: false
+  baseline_requires_hf: false
+  baseline_requires_internet: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P109 TPU Environment Hygiene / Runtime Readiness
+
+p107:
+  goal: tiny_dataset_pipeline_smoke
+  behavior_change_intended: false
+  tiny_dataset_pipeline_added: true
+  large_dataset_pipeline_added: false
+  streaming_added: false
+  training_added: false
+  qwen_specific_code_added: false
+  tokenizer_remapping_added: false
+  baseline_requires_hf: false
+  baseline_requires_internet: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P108 Checkpoint / Resume / Export Rehearsal
+
+p106:
+  goal: multi_shard_target_store_smoke
+  behavior_change_intended: false
+  multi_shard_store_smoke_added: true
+  canonical_layout_preserved: true
+  dataset_pipeline_added: false
+  training_added: false
+  optimizer_added: false
+  qwen_specific_code_added: false
+  tokenizer_remapping_added: false
+  baseline_requires_hf: false
+  baseline_requires_internet: false
+  baseline_requires_gpu_or_tpu: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P107 Tiny Dataset Pipeline Smoke
+
+p105:
+  goal: second_teacher_specimen_swap_smoke
+  behavior_change_intended: false
+  multi_specimen_smoke_added: true
+  baseline_requires_transformers: false
+  baseline_requires_internet: false
+  baseline_requires_downloaded_model: false
+  baseline_requires_gpu_or_tpu: false
+  qwen_specific_code_added: false
+  gpt2_specific_architecture_added: false
+  student_consumption_added: false
+  training_added: false
+  optimizer_added: false
+  tokenizer_remapping_added: false
+  docs_sweep_completed: true
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P106 Multi-Shard TargetStore Smoke
+
+p104:
+  goal: tiny_hf_causal_lm_teacher_specimen_smoke
+  behavior_change_intended: false
+  optional_live_hf_specimen_added: true
+  default_specimen_model_id: hf-internal-testing/tiny-random-gpt2
+  baseline_requires_transformers: false
+  baseline_requires_internet: false
+  baseline_requires_downloaded_model: false
+  baseline_requires_gpu_or_tpu: false
+  qwen_specific_code_added: false
+  gpt2_specific_architecture_added: false
+  student_consumption_added: false
+  training_added: false
+  optimizer_added: false
+  tokenizer_remapping_added: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P105 Second Teacher-Specimen Swap Smoke
+
+p103:
+  goal: tiny_real_teacher_overfit_rehearsal
+  behavior_change_intended: false
+  real_teacher_style_targets_used: true
+  baseline_uses_fake_hf: true
+  hf_required_for_baseline_ci: false
+  internet_required: false
+  gpu_or_tpu_required: false
+  qwen_specific_code_added: false
+  tokenizer_remapping_added: false
+  training_kind: tiny_controlled_rehearsal
+  full_training_added: false
+  qrwkv_params_updated: false
+  compatibility_gate_required: true
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P104 Tiny HF Causal-LM Teacher Specimen Smoke
+
+p102:
+  goal: second_student_backend_smoke
+  behavior_change_intended: false
+  second_student_backend_added: true
+  second_student_backend_id: tiny_debug
+  production_second_architecture: false
+  registry_swappability_proven: true
+  qwen_specific_code_added: false
+  training_added: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P103 Tiny Real-Teacher Overfit Rehearsal
+
+current_modularity_arc_status:
+  teacher_backend_boundary: present
+  vocab_contract_boundary: present
+  student_backend_registry: present
+  second_student_backend_smoke: present
+  student_runtime_boundary: present
+
+p101:
+  goal: student_backend_registry_architecture_selection
+  behavior_change_intended: false
+  student_backend_registry_added: true
+  default_architecture: current_qrwkv
+  second_student_backend_added: false
+  architecture_id_selection_added: true
+  qwen_specific_code_added: false
+  training_added: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P102 Second StudentBackend Smoke
+
+p100:
+  goal: real_teacher_offline_consumption_smoke
+  behavior_change_intended: false
+  real_teacher_artifact_consumption_added: true
+  compatibility_gate_required: true
+  training_added: false
+  optimizer_added: false
+  qwen_specific_code_added: false
+  tokenizer_remapping_added: false
+  hf_required_for_baseline_ci: false
+  internet_required: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P101 StudentBackend Registry / Architecture Selection
+
+p99:
+  goal: teacher_student_compatibility_validator
+  behavior_change_intended: false
+  direct_logit_eligibility_added: true
+  tokenizer_remapping_added: false
+  vocab_adapter_added: false
+  real_teacher_consumption_added: false
+  training_added: false
+  qwen_specific_code_added: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P100 Real-Teacher Offline Consumption Smoke
+
+p98:
+  goal: generic_hf_teacher_backend_emission_smoke
+  behavior_change_intended: false
+  generic_hf_teacher_backend_added: true
+  qwen_specific_code_added: false
+  hf_required_for_baseline_ci: false
+  internet_required: false
+  student_consumption_added: false
+  tokenizer_remapping_added: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P99 Teacher/Student Compatibility Validator
+
+p97:
+  goal: token_vocab_contract_and_student_config_selection
+  behavior_change_intended: false
+  vocab_contract_added: true
+  student_config_selection_added: true
+  compatibility_validator_added: true
+  tokenizer_remapping_added: false
+  real_teacher_backend_added: false
+  qwen_required: false
+  student_architecture_registry_added: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P98 Generic HF TeacherBackend Emission Smoke
+
+p96:
+  goal: tiny_overfit_rehearsal
+  behavior_change_intended: false
+  live_teacher_required: false
+  hf_or_qwen_required: false
+  gpu_or_tpu_required: false
+  optimizer_scope: tiny_local_sgd
+  training_kind: tiny_controlled_rehearsal
+  update_strategy: tiny_trainable_logit_head
+  loss_movement_required: true
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P97 Token/Vocab Contract and Student Config Selection
+
+p95:
+  goal: offline_target_consumption_smoke
+  behavior_change_intended: false
+  live_teacher_required: false
+  training_performed: false
+  optimizer_added: false
+  target_consumption_added: true
+  loss_smoke_added: true
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P96 Tiny Overfit Rehearsal
+
+p94:
+  goal: tiny_teacher_backend_emission_smoke
+  behavior_change_intended: false
+  synthetic_teacher_backend_added: true
+  live_hf_teacher_added: false
+  qwen_required: false
+  trainer_refactor_added: false
+  target_consumption_added: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P95 Offline Target Consumption Smoke
+
+p93:
+  goal: teacher_target_store_scaffold
+  behavior_change_intended: false
+  live_teacher_backend_added: false
+  trainer_refactor_added: false
+  target_store_added: true
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  recommended_next: P94 Tiny TeacherBackend synthetic/tiny-HF emission smoke
+
+p92:
+  goal: student_runtime_split
+  behavior_change_intended: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  teacher_backend_added: false
+  target_store_added: false
+  trainer_refactor_started: false
+  recommended_next: P93 TeacherTargetStore scaffold
+
+p91:
+  goal: student_backend_protocol_extraction
+  behavior_change_intended: false
+  reference_default_preserved: true
+  pallas_opt_in_preserved: true
+  teacher_backend_added: false
+  target_store_added: false
+  trainer_refactor_started: false
+  recommended_next: P92 StudentRuntime split
+
+pallas_runway:
+  phase: P90
+  status: closed_after_real_tpu_smoke_pass
+  artifact_dir: artifacts/p90_pallas_runway_closure
+  real_tpu_smoke:
+    source_phase: P88/P89
+    status: pass
+    backend: tpu
+    device_kind: TPU v5 lite
+    jax_version: 0.7.2
+    jaxlib_version: 0.7.2
+    jit_lowering_ok: true
+    execution_ok: true
+    numeric_check_ok: true
+    max_abs_error: 0.0
+    pallas_interpret_mode: true
+  runtime_policy:
+    reference_default: true
+    pallas_opt_in: true
+  claims_not_made:
+    - production_pallas_ready
+    - training_ready
+    - throughput_proven
+    - full_model_quality_proven
+    - pallas_default_ready
+  recommended_next: post_pallas_architecture_planning
+
+checkpointing:
+  format: JSON manifest plus NPZ arrays
+  directory: checkpoints/
+  gitignored: true
+  orbax_required: false
+  optimizer_state: true
+
+hf_safetensors_export:
+  phase: P41
+  module: qrwkv_xla.export
+  export_script: scripts/export_student_hf_safetensors.py
+  smoke_script: scripts/run_export_smoke.py
+  smoke_artifact_dir: artifacts/p41_hf_safetensors_export_smoke
+  files:
+    - config.json
+    - model.safetensors
+    - qrwkv_xla_export.json
+    - weight_map.json
+    - export_smoke_report.json
+    - P41_EXPORT_SMOKE_REPORT.md
+  proves:
+    - tiny_checkpoint_export_reload_output_parity
+  does_not_prove:
+    - production_hf_model_class
+    - qwen_scale_export
+    - sharded_or_pjit_export
+    - lm_eval
+    - model_quality
+
+lm_eval_smoke:
+  phase: P42
+  mode: lm_eval_style_toy_harness
+  module: qrwkv_xla.eval.exported_student
+  smoke_script: scripts/run_lm_eval_smoke.py
+  p41_export_dir: artifacts/p41_hf_safetensors_export_smoke
+  toy_task: tests/fixtures/eval/p42_toy_continuations.jsonl
+  smoke_artifact_dir: artifacts/eval/p42_lm_eval_smoke
+  files:
+    - results.json
+    - P42_RESULTS.md
+    - p42_results_bundle.tar.gz
+  optional_extra: eval
+  official_lm_eval: deferred
+  proves:
+    - p41_export_loads_for_tiny_eval
+    - deterministic_continuation_loglikelihood_scoring
+    - finite_toy_metrics
+  does_not_prove:
+    - official_lm_eval_task_suite
+    - production_hf_model_class
+    - qwen_scale_evaluation
+    - model_quality
+
+wkv7_correctness_fixtures:
+  phase: P43
+  schema: qrwkv_xla.wkv7_correctness.v1
+  module: qrwkv_xla.kernels
+  fixture_script: scripts/generate_wkv7_correctness_fixtures.py
+  compare_script: scripts/compare_wkv7_correctness_fixtures.py
+  artifact_dir: artifacts/kernels/p43_wkv7_correctness
+  candidates:
+    reference: current slow JAX WKV7 recurrence/state core
+    pallas: unsupported placeholder
+  files:
+    - manifest.json
+    - P43_WKV7_FIXTURE_SUMMARY.md
+    - comparison_report.json
+    - P43_WKV7_COMPARISON_REPORT.md
+    - cases/*/inputs.npz
+    - cases/*/expected.npz
+  proves:
+    - deterministic_tiny_reference_core_fixtures
+    - full_scan_stepwise_equivalence
+    - reference_candidate_fixture_comparison
+  does_not_prove:
+    - optimized_pallas_kernel_correctness
+    - tpu_performance
+    - full_radlads_or_qwen_block_parity
+    - qwen_scale_execution
+
+streaming_data_pipeline:
+  phase: P44
+  mode: local_offline_streaming_data_dry_run
+  module: qrwkv_xla.data
+  build_script: scripts/build_streaming_data_dry_run.py
+  data_script: scripts/run_streaming_data_dry_run.py
+  trainer_script: scripts/run_streaming_trainer_dry_run.py
+  artifact_dir: artifacts/data/p44_streaming_dry_run
+  manifest: artifacts/data/p44_streaming_dry_run/manifest.json
+  batch_keys:
+    - input_ids
+    - labels
+    - attention_mask
+    - label_mask
+  files:
+    - manifest.json
+    - P44_DATASET_SUMMARY.md
+    - streaming_dry_run_report.json
+    - P44_STREAMING_DRY_RUN_REPORT.md
+    - resume_cursor.json
+    - trainer_dry_run_report.json
+    - P44_TRAINER_DRY_RUN_REPORT.md
+    - shards/*.npz
+  proves:
+    - manifest_backed_sharded_token_data
+    - chunked_streaming_iteration
+    - deterministic_order
+    - optional_seeded_shuffle
+    - resume_cursor_exact_integer_replay
+    - attention_and_loss_mask_validation
+    - padding_and_token_waste_accounting
+    - finite_cpu_local_token_accounting
+    - existing_trainer_batch_contract_ingestion
+  does_not_prove:
+    - full_scale_throughput
+    - real_training_quality
+    - cloud_or_distributed_ingest
+    - pjit_or_sharding
+    - pallas
+    - wandb
+    - qwen_scale_target_generation
+
+pjit_sharding_smoke:
+  phase: P46
+  mode: tiny_pjit_sharding_compile_smoke
+  module: qrwkv_xla.sharding
+  smoke_script: scripts/run_pjit_sharding_smoke.py
+  artifact_dir: artifacts/p46_pjit_sharding_smoke
+  policy: data_parallel_single_axis
+  files:
+    - pjit_sharding_smoke_report.json
+    - P46_RESULTS.md
+  records:
+    - backend
+    - platform
+    - device_count
+    - local_device_count
+    - device_kinds
+    - mesh_shape
+    - mesh_axis_names
+    - multi_device
+    - fallback_reason
+    - compile_api
+  proves:
+    - named_mesh_creation
+    - explicit_data_parallel_batch_sharding_annotation
+    - tiny_compile_forward_loss_path
+    - tiny_update_smoke
+    - finite_loss
+    - honest_single_device_fallback_reporting
+  does_not_prove:
+    - large_model_sharding
+    - throughput
+    - production_sharded_checkpointing
+    - multi_host_training
+    - full_distributed_optimizer_state_strategy
+    - pallas_wkv7_kernels
+    - qwen_scale_training
+
+experiment_tracking_smoke:
+  phase: P47
+  mode: local_source_of_truth_with_optional_wandb_adapter
+  module: qrwkv_xla.tracking
+  smoke_script: scripts/run_tracking_smoke.py
+  artifact_dir: artifacts/p47_experiment_tracking_smoke
+  default_tracking: local
+  optional_tracking:
+    - wandb-offline
+    - wandb-online
+  files:
+    - P47_RESULTS.md
+    - tracking_smoke_report.json
+    - local_run/run_metadata.json
+    - local_run/config.json
+    - local_run/metrics.jsonl
+    - local_run/summary.json
+    - local_run/artifacts_manifest.json
+    - local_run/files/*
+  records:
+    - phase
+    - created_at_utc
+    - repo_commit
+    - git_dirty
+    - python_version
+    - jax_metadata
+    - backend
+    - default_backend
+    - device_count
+    - local_device_count
+    - device_kinds
+    - device_platforms
+    - hostname
+    - command
+    - script_name
+    - tracking_mode
+    - artifact_root
+  required_metrics:
+    - train/loss
+    - train/loss_is_finite
+    - train/tokens_seen
+    - train/examples_seen
+    - step
+  proves:
+    - local_tracking_run_layout
+    - exact_config_capture
+    - finite_tiny_train_step_metrics
+    - artifact_manifest_with_size_and_sha256
+    - wandb_import_safety_until_requested
+  does_not_prove:
+    - real_qwen_training
+    - long_running_training
+    - multi_host_tracking
+    - required_wandb_credentials_or_network
+    - production_dashboarding
+    - sweeps_or_mlop_framework
+    - official_benchmark_reporting
+
+optimizers:
+  supported:
+    - sgd
+    - adam
+    - adamw
+  default: sgd
+  adamw_weight_decay: decoupled_all_param_leaves
+
+lr_schedules:
+  supported:
+    - constant
+    - warmup_cosine
+  default: constant
+  resume_step_source: checkpoint_global_step
+
+gradient_clipping:
+  type: global_norm
+  default_enabled: false
+  disabled_value: null
+  clip_epsilon_default: 0.000001
+  optimizer_moments_see: clipped_gradients
+
+stage3_ce:
+  mode: student_only
+  tokenizer: registry_default_smoke_optional_hf_qwen
+  prompt_source: prompt_corpus_jsonl
+  teacher_targets_required: false
+  loss: masked_next_token_cross_entropy
+  requires_emit_logits: true
+
+tokenizers:
+  default_backend: smoke
+  aliases:
+    qwen: hf
+  optional_backends:
+    - hf
+  optional_extra: teacher-hf
+  lm_config_forms:
+    - string
+    - mapping
+  metadata_used_for:
+    - eos_token_id
+    - pad_token_id
+    - vocab_size
+
+tracking:
+  format: run.json plus metrics.jsonl plus summary.json
+  directory: runs/
+  gitignored: true
+  enabled_by_default: false
+
+prompt_corpora:
+  format: jsonl_plus_manifest
+  directory: corpora/
+  hash: ordered_sha256
+  target_manifest_linkage: prompt_source
+
+logits_distillation:
+  student_emit_logits: optional
+  default_tie_embeddings: false
+  fake_logits_validation: true
+  tiny_hf_radlads_reference_logits_config: configs/distill_stage0_radlads_reference_tiny_hf_logits.yaml
+  tiny_hf_live_integration: opt_in_qrwkv_run_hf_integration
+  hidden_to_logits_resume: supported_with_fresh_lm_head
+
+radlads_gap_audit:
+  phase: P31
+  audit_doc: docs/RADLADS_RWKV7_GAP_AUDIT.md
+  current_backend_claim: RADLADS-shaped JAX reference backend, not full RADLADS parity.
+  current_state_shape: "[layers,batch,heads,head_size,head_size]"
+  proves:
+    - head-wise_matrix_state_shape
+    - scan_based_recurrence_smoke
+    - hidden_loss_plumbing
+    - logits_loss_plumbing
+    - checkpoint_resume_smoke
+  does_not_prove:
+    - full_radlads_parity
+    - qwen_block_parity
+    - rope_parity
+    - grouped_kv_parity
+    - shift_state_cache_parity
+    - parameter_mapping_compatibility
+    - kernel_readiness
+    - model_quality
+  recommended_p32_scope: math_completion_and_qwen_block_compatibility_before_kernel_work
+
+qwen_reference_backend:
+  phase: P32
+  backend: rwkv7_qwen_reference
+  claim: Qwen/RADLADS-compatible slow JAX reference path, not optimized kernel parity.
+  tiny_hf_distill_config: configs/distill_stage0_qwen_reference_tiny_hf.yaml
+  state_object:
+    - wkv_matrix_state
+    - shift_state
+    - next_position
+  implements:
+    - qwen_decoder_shell_rmsnorm_attention_residual_rmsnorm_mlp_residual
+    - slow_rope
+    - grouped_kv_equal_and_repeated_heads
+    - explicit_num_heads_num_kv_heads_head_size_validation
+    - full_sequence_vs_stepwise_output_and_state_equivalence
+    - nested_qwen_radlads_oriented_parameter_surface
+    - cpu_safe_jit_gradient_optimizer_and_distill_smokes
+  does_not_prove:
+    - optimized_kernel_parity
+    - full_radlads_numerical_parity
+    - radlads_checkpoint_compatibility
+    - model_quality
+    - tpu_or_pallas_readiness
+
+qwen_reference_fixtures:
+  phase: P33
+  script: scripts/generate_qwen_reference_fixtures.py
+  checked_in_dir: tests/fixtures/qwen_reference
+  smoke_artifact_dir: artifacts/p33_qwen_reference_fixtures
+  seed: 1234
+  dtype: float32
+  config:
+    vocab_size: 32
+    hidden_size: 8
+    num_layers: 2
+    num_heads: 2
+    num_kv_heads: 1
+    sequence_length: 5
+    batch_size: 2
+  records:
+    - full_sequence_hidden_outputs
+    - full_sequence_logits
+    - full_sequence_mixer_outputs
+    - full_sequence_final_wkv_matrix_state
+    - full_sequence_final_shift_state
+    - full_sequence_next_position
+    - stepwise_hidden_outputs
+    - stepwise_logits
+    - stepwise_mixer_outputs
+    - stepwise_final_wkv_matrix_state
+    - stepwise_final_shift_state
+    - stepwise_next_position
+    - payload_hashes
+    - equivalence_summary
+    - parameter_surface_hash
+  mask_cases:
+    - no_mask
+    - interior_mask
+    - prefix_left_padding
+  masked_token_behavior: documented_current_behavior_no_semantics_change
+  claim: local slow-reference fixture/caliper coverage only
+  does_not_prove:
+    - full_radlads_numerical_parity
+
+radlads_source_parity_bridge:
+  phase: P40
+  schema: radlads_source_parity.v1
+  checked_in_dir: tests/fixtures/radlads_source_parity
+  artifact_dir: artifacts/parity/radlads_source_bridge
+  import_script: scripts/import_radlads_source_fixtures.py
+  compare_script: scripts/compare_radlads_source_fixtures.py
+  parameter_map_script: scripts/map_radlads_parameter_surface.py
+  docs: docs/RADLADS_SOURCE_PARITY_BRIDGE.md
+  tiny_cases:
+    - tiny_no_mask
+    - tiny_attention_mask
+    - tiny_prefix_padding_or_left_padding
+  checked_in_payload_claim: unsupported_qrwkv_current_behavior_only_not_radlads_outputs
+  reports:
+    - parity_report.json
+    - P40_PARITY_REPORT.md
+    - parameter_surface_map.json
+    - P40_PARAMETER_SURFACE_MAP.md
+  source_checkout:
+    path: /home/nyx/.openclaw/workspace/_refs/RADLADS
+    branch: radlads
+    head: 1b362eb
+  unsupported_parameter_surfaces:
+    - low_rank_decay_w0_w1_w2
+    - low_rank_iclr_a0_a1_a2
+    - value_residual_mix_v0_v1_v2
+    - gate_variants_gate_or_g1_g2
+    - balance_state_terms_k_k_k_a_r_k
+    - optional_attention_group_norm_ln_x
+  does_not_prove:
+    - full_radlads_numerical_parity
+    - radlads_checkpoint_compatibility
+    - optimized_kernel_parity
+    - live_radlads_execution_in_ci
+    - radlads_pytorch_triton_cuda_parity
+    - tpu_or_pallas_readiness
+
+scale_planner:
+  phase: P34
+  package: src/qrwkv_xla/scale_planner
+  cli: scripts/plan_model_scale.py
+  docs: docs/SCALE_PLANNER.md
+  example_dir: docs/examples/scale_plans
+  status: planning_only_not_hardware_validated
+  model_profiles:
+    - tiny_debug
+    - p39_tiny_hf_qwen_rope_smoke
+    - small_cpu
+    - colab_tpu_smoke
+    - qwen_0_5b_candidate
+    - qwen_1_5b_candidate
+    - qwen_7b_stretch
+  hardware_profiles:
+    - local_cpu_16gb
+    - local_cpu_32gb
+    - local_cpu_64gb
+    - colab_tpu_v2_8
+    - colab_tpu_v3_8
+    - kaggle_tpu_v5e_8
+    - single_l4_24gb
+    - single_a100_40gb
+    - grant_tpu_v5e_8
+    - big_budget_tpu_placeholder
+  training_modes:
+    - smoke_hidden_sgd
+    - smoke_hidden_logits_sgd
+    - local_hidden_adamw
+    - tpu_hidden_bf16_adamw
+    - tpu_hidden_logits_bf16_adamw
+    - scale_hidden_only_bf16_adamw
+    - scale_sampled_logits_bf16_adamw_placeholder
+  estimates:
+    - qwen_reference_parameter_count
+    - weights
+    - gradients
+    - optimizer_state
+    - optimizer_moments
+    - fp32_master_weights
+    - activations_estimate
+    - wkv_recurrent_state
+    - shift_state
+    - teacher_hidden_targets_per_batch
+    - teacher_logits_targets_per_batch
+    - input_ids_and_masks
+    - checkpoint_size_estimate
+    - xla_overhead_reserve
+  fit_classifier: yes_le_60_percent_maybe_le_85_percent_no_above_85_percent
+  auto_mode:
+    - batch_reductions_only
+    - sequence_reductions_only
+    - optional_grad_accum_increase
+  optional_emit_distill_config: true
+  does_not_prove:
+    - hardware_validated_fit
+    - xla_peak_memory_accuracy
+    - pjit_or_model_sharding_support
+    - qwen_scale_training_readiness
+    - full_radlads_parity
+    - impossible_hardware_fit_cancellation
+
+parameter_compatibility_bridge:
+  phase: P35
+  status: not_implemented_in_this_repo_state
+  note: RADLADS checkpoint import/export compatibility remains future work and
+    is not proven by P36.
+
+colab_tpu_smoke:
+  phase: P36
+  status: manual_opt_in
+  config: configs/distill_stage0_qwen_reference_colab_tpu_smoke.yaml
+  harness: scripts/run_colab_tpu_smoke.py
+  docs: docs/COLAB_TPU_SMOKE.md
+  target_backend: tpu
+  student_architecture: rwkv7_qwen_reference
+  loss: hidden_mse_only
+  fake_targets: artifacts/teacher_targets/p36_colab_tpu_smoke
+  first_checkpoint: checkpoints/p36_tpu_qwen_reference_first
+  resume_checkpoint: checkpoints/p36_tpu_qwen_reference_resume
+  first_run_dir: runs/p36/p36_tpu_qwen_reference_first
+  resume_run_dir: runs/p36/p36_tpu_qwen_reference_resume
+  result_markdown: artifacts/p36_colab_tpu_smoke/P36_RESULTS.md
+  result_bundle: artifacts/p36_colab_tpu_smoke/p36_results_bundle.tar.gz
+  proves:
+    - jax_tpu_backend_selected
+    - tiny_jax_matmul_sanity
+    - fake_hidden_target_export
+    - one_step_hidden_distill
+    - checkpoint_resume_one_more_step
+    - finite_final_loss_and_hidden_mse
+    - checkpoint_step_progression_1_to_2
+  does_not_prove:
+    - qwen_scale_training
+    - model_quality
+    - logits_kl_on_tpu
+    - real_hf_teacher_export_on_tpu
+    - pjit_or_sharding
+    - multi_host_tpu
+    - pallas_or_optimized_wkv7_kernels
+    - radlads_checkpoint_compatibility
+
+colab_tpu_logits_smoke:
+  phase: P37
+  status: manual_opt_in
+  config: configs/distill_stage0_qwen_reference_colab_tpu_logits_smoke.yaml
+  teacher_export_config: configs/teacher_export_qwen_reference_colab_tpu_logits_smoke.yaml
+  harness: scripts/run_colab_tpu_logits_smoke.py
+  docs: docs/COLAB_TPU_LOGITS_SMOKE.md
+  target_backend: tpu
+  student_architecture: rwkv7_qwen_reference
+  loss: hidden_mse_plus_logits_kl
+  fake_targets: artifacts/teacher_targets/p37_colab_tpu_logits_smoke
+  first_checkpoint: checkpoints/p37_tpu_qwen_reference_logits_first
+  resume_checkpoint: checkpoints/p37_tpu_qwen_reference_logits_resume
+  first_run_dir: runs/p37/p37_tpu_qwen_reference_logits_first
+  resume_run_dir: runs/p37/p37_tpu_qwen_reference_logits_resume
+  result_markdown: artifacts/p37_colab_tpu_logits_smoke/P37_RESULTS.md
+  result_bundle: artifacts/p37_colab_tpu_logits_smoke/p37_results_bundle.tar.gz
+  proves:
+    - jax_tpu_backend_selected
+    - tiny_jax_matmul_sanity
+    - fake_logits_target_export
+    - target_manifest_and_shard_include_logits
+    - one_step_hidden_plus_logits_distill
+    - checkpoint_resume_one_more_step
+    - finite_final_loss_hidden_mse_and_logits_kl
+    - optimizer_step_progression_1_to_2
+  does_not_prove:
+    - qwen_scale_training
+    - model_quality
+    - real_hf_teacher_export_on_tpu
+    - pjit_or_sharding
+    - multi_host_tpu
+    - pallas_or_optimized_wkv7_kernels
+    - radlads_checkpoint_compatibility
+    - hf_student_export
+
+tiny_hf_tpu_smoke:
+  phase: P38
+  status: manual_opt_in
+  config: configs/distill_stage0_qwen_reference_p38_tiny_hf_tpu_smoke.yaml
+  teacher_export_config: configs/teacher_export_p38_tiny_hf_logits_smoke.yaml
+  harness: scripts/run_tiny_hf_tpu_smoke.py
+  docs: docs/COLAB_TPU_TINY_HF_SMOKE.md
+  target_backend: tpu
+  teacher_backend: hf
+  teacher_model_id: sshleifer/tiny-gpt2
+  student_architecture: rwkv7_qwen_reference
+  loss: hidden_mse_plus_logits_kl
+  real_hf_targets: artifacts/teacher_targets/p38_tiny_hf_logits_smoke
+  first_checkpoint: checkpoints/p38_tpu_qwen_reference_tiny_hf_first
+  resume_checkpoint: checkpoints/p38_tpu_qwen_reference_tiny_hf_resume
+  first_run_dir: runs/p38/p38_tpu_qwen_reference_tiny_hf_first
+  resume_run_dir: runs/p38/p38_tpu_qwen_reference_tiny_hf_resume
+  result_markdown: artifacts/p38_tiny_hf_tpu_smoke/P38_RESULTS.md
+  result_bundle: artifacts/p38_tiny_hf_tpu_smoke/p38_results_bundle.tar.gz
+  kaggle_protocol: docs/COLAB_TPU_TINY_HF_SMOKE.md
+  proves:
+    - jax_tpu_backend_selected
+    - tiny_jax_matmul_sanity
+    - real_tiny_hf_teacher_export
+    - required_target_arrays_input_attention_loss_hidden_logits
+    - target_shape_validation
+    - one_step_hidden_plus_logits_distill
+    - checkpoint_resume_one_more_step
+    - finite_loss_hidden_mse_and_logits_kl
+    - optimizer_checkpoint_step_progression_1_to_2
+  does_not_prove:
+    - qwen_scale_teacher_export
+    - qwen_scale_training
+    - model_quality
+    - pjit_or_sharding
+    - multi_host_tpu
+    - pallas_or_optimized_wkv7_kernels
+    - full_radlads_numerical_parity
+    - wandb_or_lm_eval
+    - hf_student_export
+
+planner_tpu_smoke:
+  phase: P39
+  status: manual_opt_in
+  model_profile: p39_tiny_hf_qwen_rope_smoke
+  hardware_profile: kaggle_tpu_v5e_8
+  training_mode: smoke_hidden_logits_sgd
+  scale_plan_yaml: artifacts/p39_planner_tpu_smoke/scale_plan.yaml
+  scale_plan_json: artifacts/p39_planner_tpu_smoke/scale_plan.json
+  generated_distill_config: artifacts/p39_planner_tpu_smoke/generated_distill.yaml
+  generated_teacher_export_config: artifacts/p39_planner_tpu_smoke/teacher_export.yaml
+  export_config_source: generated_not_reused_from_p38
+  harness: scripts/run_planner_tpu_smoke.py
+  docs:
+    colab: docs/COLAB_TPU_PLANNER_SMOKE.md
+    kaggle: docs/KAGGLE_TPU_PLANNER_SMOKE.md
+  target_backend: tpu
+  teacher_backend: hf
+  teacher_model_id: sshleifer/tiny-gpt2
+  student_architecture: rwkv7_qwen_reference
+  student_shape:
+    vocab_size: 50257
+    hidden_size: 2
+    num_layers: 2
+    num_heads: 1
+    num_kv_heads: 1
+    rope_valid_head_size: 2
+  loss: hidden_mse_plus_logits_kl
+  real_hf_targets: artifacts/teacher_targets/p39_tiny_hf_logits_smoke
+  first_checkpoint: checkpoints/p39_planner_tpu_smoke_first
+  resume_checkpoint: checkpoints/p39_planner_tpu_smoke_resume
+  first_run_dir: runs/p39/p39_planner_tpu_smoke_first
+  resume_run_dir: runs/p39/p39_planner_tpu_smoke_resume
+  result_markdown: artifacts/p39_planner_tpu_smoke/P39_RESULTS.md
+  result_bundle: artifacts/p39_planner_tpu_smoke/p39_results_bundle.tar.gz
+  proves:
+    - jax_tpu_backend_selected
+    - tiny_jax_matmul_sanity
+    - p39_planner_artifacts_generated
+    - tiny_plan_fit_yes_or_maybe
+    - real_tiny_hf_teacher_export
+    - required_target_arrays_input_attention_loss_hidden_logits
+    - one_step_hidden_plus_logits_distill
+    - checkpoint_resume_one_more_step
+    - finite_loss_hidden_mse_and_logits_kl
+    - optimizer_checkpoint_step_progression_1_to_2
+  does_not_prove:
+    - qwen_scale_teacher_export
+    - qwen_scale_training
+    - planner_fit_beyond_tiny_execution_path
+    - model_quality
+    - pjit_or_sharding
+    - multi_host_tpu
+    - pallas_or_optimized_wkv7_kernels
+    - wandb_or_lm_eval
+    - hf_student_export
+
+radlads_lora_rank_math_surface:
+  phase: P48
+  status: complete
+  backend: rwkv7_qwen_reference
+  docs:
+    - docs/RADLADS_LORA_RANK_MATH.md
+    - docs/RADLADS_LORA_RANK_MATH_AUDIT.md
+  smoke_script: scripts/run_radlads_lora_rank_math_smoke.py
+  artifact_dir: artifacts/p48_radlads_lora_rank_math
+  outputs:
+    - P48_RESULTS.md
+    - lora_rank_math_report.json
+    - P48_PARAMETER_SURFACE_MAP.md
+    - parameter_surface_map.json
+  config_flags:
+    - radlads_compatible_math
+    - radlads_low_rank_decay
+    - radlads_low_rank_iclr
+    - radlads_value_residual_mix
+    - radlads_balance_state_terms
+    - radlads_attention_group_norm
+    - radlads_balance_state
+  represented_surfaces:
+    - w0/w1/w2
+    - a0/a1/a2
+    - v0/v1/v2
+    - k_k/k_a/r_k
+    - ln_x.weight/bias
+  caveats:
+    - legacy_defaults_remain_off
+    - r_k_parameter_represented_but_inactive_source_line_commented_out
+
+radlads_tiny_numerical_parity_fixtures:
+  phase: P49
+  status: complete
+  backend: rwkv7_qwen_reference
+  docs:
+    - docs/RADLADS_NUMERICAL_PARITY_FIXTURES.md
+  scripts:
+    - scripts/generate_radlads_tiny_numerical_fixtures.py
+    - scripts/import_radlads_tiny_numerical_fixtures.py
+    - scripts/compare_radlads_tiny_numerical_fixtures.py
+  fixture_schema: radlads_tiny_numerical_parity.v1
+  report_schema: radlads_tiny_numerical_parity_report.v1
+  report_outputs:
+    - P49_RESULTS.md
+    - numerical_parity_report.json
+    - P49_SURFACE_COMPARISON.md
+    - surface_comparison.json
+  required_cases:
+    - tiny_no_mask
+    - tiny_attention_mask
+    - tiny_prefix_or_left_padding
+    - tiny_stepwise_state
+    - tiny_all_radlads_math_enabled
+  real_radlads_fixture_statuses:
+    - generated
+    - imported
+    - source_unavailable
+    - execution_failed
+  caveats:
+    - default_path_is_offline_safe_and_marks_missing_source
+    - live_radlads_execution_requires_QRWKV_XLA_RUN_RADLADS_LIVE_FIXTURES_1
+    - no_training_no_pallas_no_hf_model_class_no_checkpoint_import
+    - slow_reference_only
+    - no_full_radlads_numerical_parity_claim
+    - no_optimized_kernel_or_tpu_performance_claim
+
+radlads_parameter_replay_compatibility:
+  phase: P50
+  status: complete
+  docs: docs/RADLADS_PARAMETER_REPLAY_COMPATIBILITY.md
+  config: configs/parity/radlads_tiny_replay.yaml
+  script: scripts/replay_radlads_tiny_numerical_fixtures.py
+  parameter_import_module: src/qrwkv_xla/parity/radlads_parameter_import.py
+  replay_module: src/qrwkv_xla/parity/radlads_replay.py
+  input_manifest: artifacts/p49_radlads_numerical_parity/radlads_fixtures/manifest.json
+  input_parameters: artifacts/p49_radlads_numerical_parity/radlads_fixtures/radlads_parameters.npz
+  report_outputs:
+    - parameter_import_report.json
+    - replay_comparison_report.json
+    - P50_PARAMETER_IMPORT_REPORT.md
+    - P50_RESULTS.md
+    - P50_SURFACE_COMPARISON.md
+  import_statuses:
+    - mapped
+    - defaulted
+    - excluded
+    - unsupported
+    - shape_mismatch
+    - missing_required
+  replay_statuses:
+    - pass
+    - fail
+    - unsupported
+    - missing_source
+    - shape_mismatch
+    - dtype_mismatch
+    - non_finite
+    - not_replayed_due_to_import_failure
+  replay_surfaces:
+    - hidden_states
+    - logits
+    - wkv_matrix_state
+    - shift_state
+    - stepwise_hidden_states
+    - stepwise_logits
+    - stepwise_wkv_matrix_state
+    - stepwise_shift_state
+  source_backed_semantics:
+    gate_rank_type_2: sigmoid_xg_g1_then_matmul_g2
+    token_shift: commented_out_in_inspected_radlads_source
+    r_k: represented_but_excluded_because_source_residual_line_is_commented_out
+  caveats:
+    - explicit_replay_mode_only
+    - measured_fail_is_allowed_and_must_not_be_recast_as_pass
+    - unsupported_never_counts_as_pass
+    - no_pallas_no_tpu_perf_no_real_training_no_full_checkpoint_import_no_hf_model_class
+
+radlads_replay_nonfinite_diagnostics:
+  phase: P51
+  status: complete
+  docs:
+    - docs/RADLADS_REPLAY_NONFINITE_DIAGNOSTICS.md
+  scripts:
+    - scripts/diagnose_radlads_replay_nonfinite.py
+    - scripts/replay_radlads_tiny_numerical_fixtures.py
+  modules:
+    - src/qrwkv_xla/parity/radlads_replay_diagnostics.py
+    - src/qrwkv_xla/parity/radlads_replay.py
+  report_outputs:
+    - P51_DIAGNOSTIC_REPORT.md
+    - replay_diagnostics.json
+    - tensor_summaries.jsonl
+    - P51_PARAMETER_SANITY.md
+    - parameter_sanity_report.json
+    - P51_RESULTS.md
+    - replay_comparison_report.json
+    - P51_SURFACE_COMPARISON.md
+  diagnostics:
+    - first_nonfinite_detection
+    - parameter_sanity_reporting
+    - case_specific_replay_profiles
+  caveats:
+    - all_math_fixture_can_remain_nonfinite_if_source_payload_is_bad
+    - no_pallas_no_training_no_model_quality_claims
+
+generation_smoke:
+  tokenizer: dependency_free_utf8_byte_plus_one
+
+multiscale_model_dry_runs:
+  phase: P45
+  status: complete
+  artifact_dir: artifacts/scale/p45_multiscale_dry_run
+  docs: docs/MULTISCALE_MODEL_DRY_RUNS.md
+  config_script: scripts/generate_multiscale_configs.py
+  dry_run_script: scripts/run_multiscale_shape_dry_run.py
+  model_profiles:
+    - qrwkv_qwen_0_5b_candidate
+    - qrwkv_qwen_1_5b_candidate
+    - qrwkv_qwen_7b_stretch
+  hardware_profiles:
+    - local_cpu_debug
+    - kaggle_tpu_v5e_8
+    - colab_tpu_v2_or_v3
+    - grant_tpu_v5e_8
+    - grant_tpu_v5e_32
+    - grant_tpu_v5e_64
+  outputs:
+    - P45_RESULTS.md
+    - P45_SCALE_PLAN_REPORT.md
+    - scale_plan_report.json
+    - fit_matrix.json
+    - configs/*.yaml
+    - dry_runs/*/metadata_dry_run.json
+    - checkpoint_skeletons/*/checkpoint_manifest.json
+    - checkpoint_skeletons/*/model_config.yaml
+    - checkpoint_skeletons/*/checkpoint_metadata.json
+  safe_init_policy:
+    default: metadata_only
+    materialize_large_profiles: blocked_without_explicit_override
+  proves:
+    - config_generation
+    - planner_validation
+    - component_fit_reporting
+    - metadata_only_shape_dry_runs
+    - checkpoint_skeleton_write_and_readback
+  does_not_prove:
+    - real_training
+    - pjit_or_sharding
+    - distributed_execution
+    - pallas_kernels
+    - wandb
+    - measured_full_scale_memory
+    - qwen_teacher_target_generation
+    - one_device_7b_training
+  decoding: greedy_only_full_sequence_recompute
+  artifact_dir: eval_outputs/
+  gitignored: true
+  quality_claims: false
+
+evaluation_harness:
+  prompt_corpus: corpora/eval_regression_prompts.jsonl
+  config: configs/eval_regression_smoke.yaml
+  artifacts:
+    - eval.json
+    - generations.jsonl
+    - sanity.json
+    - comparison.json
+  strict_default: false
+  quality_claims: false
+
+radlads_clean_payload_loader:
+  phase: P54
+  status: complete
+  docs: docs/RADLADS_CLEAN_PARAMETER_LOADER.md
+  helper_module: src/qrwkv_xla/parity/radlads_clean_loader.py
+  export_script: scripts/export_radlads_clean_payload_outputs.py
+  compare_script: scripts/compare_radlads_qrwkv_head_to_head.py
+  artifact_dir: artifacts/p54_radlads_clean_payload_outputs
+  source_payload: P53/P52 deterministic_finite clean payload
+  reports:
+    - manifest.json
+    - load_report.json
+    - export_report.json
+  caveats:
+    - unsupported_live_boundary_leaves_are_reported_and_defaulted_deterministically
+    - gate_rank_shape_mismatches_are_classified_explicitly
+    - no_pallas_no_repo_vendoring_no_tolerance_loosening
+
+radlads_state_layout_parity:
+  phase: P55
+  status: in_progress
+  docs: docs/RADLADS_QRWKV_STATE_LAYOUT_PARITY.md
+  helper_module: src/qrwkv_xla/parity/radlads_state_layout.py
+  audit_script: scripts/audit_radlads_qrwkv_surface_layouts.py
+  candidate_script: scripts/analyze_radlads_qrwkv_layout_candidates.py
+  compare_script: scripts/compare_radlads_qrwkv_head_to_head.py
+  artifact_dir: artifacts/p55_state_layout_parity
+  source_payload: P54 confirmation outputs
+  reports:
+    - P55_RESULTS.md
+    - P55_SURFACE_COMPARISON.md
+    - head_to_head_comparison_report.json
+    - layout_audit/P55_SURFACE_LAYOUT_AUDIT.md
+    - layout_audit/surface_layout_audit.json
+    - layout_audit/P55_LAYOUT_CANDIDATES.md
+    - layout_audit/layout_candidate_report.json
+  caveats:
+    - diagnostic_first_no_pallas_no_tpu_optimization_no_training_claims
+    - hidden_states_convention_must_be_explicit
+    - wkv_matrix_state_layout_and_pre_post_convention_must_be_explicit
+
+
+radlads_wkv_state_residual_trace:
+  phase: P56
+  status: diagnostic_only
+  docs: docs/RADLADS_QRWKV_WKV_STATE_TRACE.md
+  helper_module: src/qrwkv_xla/parity/radlads_wkv_trace.py
+  trace_script: scripts/trace_radlads_qrwkv_wkv_update.py
+  trace_compare_script: scripts/compare_radlads_qrwkv_wkv_trace.py
+  candidate_script: scripts/analyze_wkv_update_order_candidates.py
+  artifact_dir: artifacts/p56_wkv_state_residual_trace
+  source_payload: P54 confirmation outputs
+  reports:
+    - P56_RESULTS.md
+    - wkv_state_residual_report.json
+    - trace_comparison/P56_WKV_TRACE_COMPARISON.md
+    - trace_comparison/wkv_trace_comparison_report.json
+    - trace_comparison/P56_UPDATE_ORDER_CANDIDATES.md
+    - trace_comparison/update_order_candidate_report.json
+    - final_comparison/P56_SURFACE_COMPARISON.md
+    - final_comparison/head_to_head_comparison_report.json
+  caveats:
+    - trace_first_not_math_fix
+    - first_divergent_stage_is_log_w
+    - wkv_state_after_is_compared_explicitly
+    - no_pallas_no_tpu_no_training_claims
+
+radlads_log_w_decay_parity:
+  phase: P57
+  status: diagnostic_only
+  docs: docs/RADLADS_LOG_W_DECAY_PARITY.md
+  helper_module: src/qrwkv_xla/parity/radlads_log_w_parity.py
+  compare_script: scripts/compare_radlads_qrwkv_log_w.py
+  artifact_dir: artifacts/p57_log_w_decay_parity
+  source_trace: artifacts/p56_wkv_state_residual_trace/wkv_trace_radlads.jsonl
+  default_manifest: artifacts/p54_confirmation/fixtures/manifest.json
+  reports:
+    - log_w_parity_report.json
+    - P57_LOG_W_PARITY.md
+    - log_w_values.npz
+    - P57_LOG_W_CANDIDATES.md
+    - log_w_candidate_report.json
+  candidate_axes:
+    - orientation
+    - sign
+    - activation
+    - base_term
+    - dtype
+    - axis
+  caveats:
+    - source_audit_caliper_only
+    - no_model_patch_in_p57
+    - no_tolerance_loosening
+    - no_pallas_no_tpu_no_training_claims
+
+radlads_log_w_decay_source_fix:
+  phase: P58
+  status: partial_success
+  docs: docs/RADLADS_LOG_W_DECAY_PARITY.md
+  helper_module: src/qrwkv_xla/parity/radlads_replay.py
+  compare_script: scripts/compare_radlads_qrwkv_log_w.py
+  artifact_dir: artifacts/p58_log_w_decay_fix
+  source_trace: artifacts/p56_wkv_state_residual_trace/wkv_trace_radlads.jsonl
+  default_manifest: artifacts/p54_confirmation/fixtures/manifest.json
+  reports:
+    - P58_RESULTS.md
+    - log_w_decay_fix_report.json
+    - P58_LOG_W_CANDIDATES.md
+    - log_w_candidate_report.json
+  caveats:
+    - source_backed_tiny_replay_fix
+    - no_pallas_no_tpu_no_training_claims
+    - wkv_matrix_state_still_unexplained
+
+radlads_wkv_state_provenance:
+  phase: P59
+  status: diagnostic_only
+  docs: docs/RADLADS_WKV_STATE_PROVENANCE.md
+  helper_module: src/qrwkv_xla/parity/radlads_wkv_state_provenance.py
+  trace_script: scripts/trace_radlads_qrwkv_wkv_state_provenance.py
+  compare_script: scripts/compare_radlads_qrwkv_wkv_state_provenance.py
+  artifact_dir: artifacts/p59_wkv_state_provenance
+  reports:
+    - wkv_state_provenance.jsonl
+    - wkv_state_provenance_report.json
+    - P59_WKV_STATE_PROVENANCE.md
+    - wkv_state_provenance_manifest.json
+  comparisons:
+    - initial_state
+    - initial_state_handoff
+    - token_carry
+    - full_vs_stepwise
+    - mask_behavior
+  caveats:
+    - diagnostic_only_no_recurrence_math_change
+    - no_tolerance_loosening
+    - p58_log_w_fix_preserved
+    - synthetic_ci_path_no_ignored_artifact_dependency
+
+real_radlads_qrwkv_wkv_state_provenance:
+  phase: P60
+  status: diagnostic_real_artifacts
+  docs: docs/RADLADS_WKV_STATE_PROVENANCE.md
+  run_script: scripts/run_real_radlads_qrwkv_wkv_state_provenance.py
+  compare_script: scripts/compare_real_radlads_qrwkv_wkv_state_provenance.py
+  artifact_dir: artifacts/p60_real_wkv_state_provenance
+  source_artifacts:
+    - artifacts/p54_confirmation/radlads_outputs
+    - artifacts/p54_confirmation/qrwkv_outputs
+    - artifacts/p58_log_w_decay_fix/post_fix_trace
+  reports:
+    - real_wkv_state_provenance_radlads.jsonl
+    - real_wkv_state_provenance_qrwkv.jsonl
+    - real_provenance_metadata.json
+    - p60_real_state_provenance_report.json
+    - P60_RESULTS.md
+    - TRACE_PROVENANCE.md
+    - comparison/P60_REAL_WKV_STATE_PROVENANCE.md
+    - comparison/p60_real_wkv_state_provenance_report.json
+  labels:
+    real_artifact_trace: true
+    synthetic_trace: false
+    self_comparison_trace: true
+    derived_from_cached_outputs: true
+    regenerated_live_outputs: false
+  caveats:
+    - strict_real_artifacts_fails_without_live_regeneration
+    - no_synthetic_fallback
+    - no_tolerance_loosening
+    - no_pallas_no_broad_math_rewrite
+    - first_real_comparison_divergence_is_wkv_matrix_state
+
+radlads_wkv_state_export_convention:
+  phase: P61
+  status: diagnostic_only
+  docs: docs/RADLADS_WKV_STATE_EXPORT_CONVENTION.md
+  helper_module: src/qrwkv_xla/parity/radlads_wkv_state_convention.py
+  inspect_script: scripts/inspect_radlads_qrwkv_wkv_state_slots.py
+  compare_script: scripts/compare_radlads_qrwkv_head_to_head_normalized_state.py
+  artifact_dir: artifacts/p61_wkv_state_export_convention
+  reports:
+    - wkv_state_slot_audit.json
+    - WKV_STATE_SLOT_AUDIT.md
+    - head_to_head_normalized_state_report.json
+    - P61_SURFACE_COMPARISON.md
+    - P61_RESULTS.md
+  caveats:
+    - slot_export_convention_does_not_explain_residual
+    - normalization_remains_as_is
+    - kernel_ready_no
+    - no_pallas_no_tolerance_loosening_no_broad_recurrence_rewrite
+
+radlads_wkv_update_residual_parity:
+  phase: P62
+  status: diagnostic_only
+  docs: docs/RADLADS_WKV_UPDATE_RESIDUAL_PARITY.md
+  helper_module: src/qrwkv_xla/parity/radlads_wkv_update_residual.py
+  trace_script: scripts/trace_radlads_qrwkv_wkv_update_residual.py
+  compare_script: scripts/compare_radlads_qrwkv_wkv_update_residual.py
+  artifact_dir: artifacts/p62_wkv_update_residual
+  source_artifacts:
+    - artifacts/p58_log_w_decay_fix/post_fix_trace/wkv_trace_radlads.jsonl
+    - artifacts/p58_log_w_decay_fix/post_fix_trace/wkv_trace_qrwkv.jsonl
+  reports:
+    - wkv_update_residual_radlads.jsonl
+    - wkv_update_residual_qrwkv.jsonl
+    - wkv_update_residual_comparison_report.json
+    - P62_WKV_UPDATE_RESIDUAL.md
+    - P62_RESULTS.md
+  findings:
+    status: fail
+    kernel_ready: no
+    first_divergent_stage: decayed_state
+    unavailable_rows: 84
+    first_radlads_reconstruction_residual_max_abs: 0.0005597441340796649
+  caveats:
+    - no_source_backed_fix_applied
+    - missing_stages_reported_explicitly
+    - no_synthetic_fallback_for_real_diagnosis
+    - p58_log_w_fix_preserved
+    - p61_slot_export_conclusion_preserved
+    - no_pallas_no_tolerance_loosening_no_broad_recurrence_rewrite
+
+radlads_wkv_composite_balance_hook:
+  phase: P64
+  status: diagnostic_only
+  docs: docs/RADLADS_WKV_COMPOSITE_BALANCE_HOOK.md
+  helper_module: src/qrwkv_xla/parity/radlads_wkv_live_update_hooks.py
+  locate_script: scripts/locate_radlads_qrwkv_wkv_composite_hook.py
+  extract_script: scripts/extract_radlads_qrwkv_wkv_composite_hook.py
+  compare_script: scripts/compare_radlads_qrwkv_wkv_composite_hook.py
+  artifact_dir: artifacts/p64_composite_balance_hook
+  labels:
+    - balance_state_matmul
+    - composite_balance_update_term
+    - composite_update_term
+  reports:
+    - composite_balance_hook_locator.json
+    - P64_COMPOSITE_BALANCE_HOOK_LOCATOR.md
+    - composite_balance_hook_extract.json
+    - composite_balance_hook_comparison.json
+    - P64_COMPOSITE_BALANCE_HOOK_RESULTS.md
+  caveats:
+    - diagnostic_only_no_recurrence_math_change
+    - no_pallas_no_tolerance_loosening_no_broad_rewrite
+    - p58_p61_p63_behavior_preserved
+    - local_source_tree_is_allowed_audit_target_when_external_radlads_unavailable
+
+radlads_wkv_balance_state_experiment:
+  phase: P65
+  status: experiment_surface
+  docs: docs/RADLADS_WKV_BALANCE_STATE_EXPERIMENT.md
+  helper_module: src/qrwkv_xla/parity/radlads_balance_state_experiment.py
+  experiment_script: scripts/run_balance_state_experiment.py
+  stability_script: scripts/run_balance_state_stability_smoke.py
+  artifact_dir: artifacts/p65_balance_state_experiment
+  experimental_switches:
+    - radlads_balance_state_terms
+    - radlads_balance_state
+  compared_surfaces:
+    - log_w
+    - logits
+    - hidden_states
+    - wkv_matrix_state
+    - shift_state
+    - first_divergent_stage
+    - finite_nan_nonfinite_counts
+    - state_norm_summaries
+  reports:
+    - P65_RESULTS.md
+    - balance_state_experiment_report.json
+    - DIFF_SUMMARY.md
+    - off/mode_report.json
+    - experimental/mode_report.json
+    - STABILITY_SMOKE.md
+    - stability/stability_report.json
+  caveats:
+    - default_off_behavior_preserved
+    - experimental_path_not_default
+    - p58_log_w_behavior_preserved
+    - p63_p64_behavior_preserved
+    - no_pallas_no_tolerance_loosening_no_broad_recurrence_rewrite
+
+radlads_balance_state_three_way_parity:
+  phase: P66
+  status: diagnostic_fail_keep_experimental_only
+  docs: docs/RADLADS_BALANCE_STATE_THREE_WAY_PARITY.md
+  helper_module: src/qrwkv_xla/parity/radlads_balance_state_three_way.py
+  script: scripts/run_balance_state_radlads_three_way.py
+  artifact_dir: artifacts/p66_balance_state_radlads_three_way
+  compared_sides:
+    - radlads
+    - qrwkv_off
+    - qrwkv_experimental
+  compared_surfaces:
+    - state_before
+    - decay_value
+    - decayed_state
+    - update_outer_product
+    - composite_balance_update_term
+    - state_after_from_full_source_formula
+    - residual_after_composite_term
+    - state_after
+  reports:
+    - three_way_parity_report.json
+    - radlads_update_boundary_trace.jsonl
+    - qrwkv_off_update_boundary_trace.jsonl
+    - qrwkv_experimental_update_boundary_trace.jsonl
+    - THREE_WAY_PARITY.md
+    - UPDATE_BOUNDARY_PARITY.md
+    - BALANCE_STATE_DECISION.md
+    - P66_RESULTS.md
+  recommendation: P67 promote/harden balance-state compatibility path
+  caveats:
+    - default_off_behavior_preserved
+    - experimental_path_not_default
+    - p58_log_w_behavior_preserved
+    - strict_real_artifacts_no_synthetic_fallback
+    - no_pallas_no_tolerance_loosening_no_broad_recurrence_rewrite
+
+radlads_same_run_update_ingredients:
+  phase: P67
+  status: diagnostic_only
+  docs: docs/QRWKV_BIBLE.md
+  helper_module: src/qrwkv_xla/parity/radlads_same_run_update_ingredients.py
+  trace_script: scripts/run_same_run_update_ingredient_trace.py
+  compare_script: scripts/compare_same_run_update_ingredients.py
+  artifact_dir: artifacts/p67_same_run_update_ingredients
+  compared_sides:
+    - radlads
+    - qrwkv_off
+    - qrwkv_experimental
+  dependency_order:
+    - pre_attention_norm
+    - k_head_split
+    - v_head_split
+    - v_first
+    - mixed_value
+    - iclr_update_rate
+    - k_k
+    - k_a
+    - low_rank_decay
+    - decay_applied_weights
+    - wkv_state_before
+    - wkv_decay_applied
+    - wkv_update_outer_or_term
+    - balance_state_term
+    - composite_update_term
+    - wkv_state_after
+    - state_after_exported
+  reports:
+    - same_run_update_ingredients_radlads.jsonl
+    - same_run_update_ingredients_qrwkv_off.jsonl
+    - same_run_update_ingredients_qrwkv_experimental.jsonl
+    - same_run_update_ingredients_metadata.json
+    - same_run_update_ingredients_report.json
+    - P67_SAME_RUN_UPDATE_INGREDIENTS.md
+    - UPDATE_INGREDIENT_AVAILABILITY.md
+    - FIRST_DIFFERING_INGREDIENT.md
+    - SAME_RUN_LINEAGE.md
+    - P67_RESULTS.md
+  caveats:
+    - same_run_lineage_required_in_strict_mode
+    - unavailable_stages_reported_explicitly
+    - reconstructed_values_not_labeled_live
+    - first_difference_uses_dependency_order
+    - default_off_behavior_preserved
+    - experimental_path_not_default
+    - no_pallas_no_tolerance_loosening_no_recurrence_math_change
+
+radlads_live_same_run_update_trace:
+  phase: P80
+  status: fixture_lineage_harness_repair
+  docs: docs/RADLADS_SAME_RUN_UPDATE_INGREDIENT_TRACE.md
+  helper_module: src/qrwkv_xla/parity/radlads_live_same_run_trace.py
+  trace_script: scripts/run_live_same_run_update_trace.py
+  artifact_dir: artifacts/p68_live_same_run_trace
+  compared_sides:
+    - radlads
+    - qrwkv_off
+    - qrwkv_experimental
+  reports:
+    - P68_RESULTS.md
+    - live_same_run_trace_metadata.json
+    - live_trace_radlads.jsonl
+    - live_trace_qrwkv_off.jsonl
+    - live_trace_qrwkv_experimental.jsonl
+    - live_trace_combined.jsonl
+    - live_same_run_update_ingredients_report.json
+    - LIVE_SAME_RUN_VALIDITY.md
+    - STAGE_AVAILABILITY_MATRIX.md
+    - FIRST_DIFFERING_INGREDIENT.md
+    - P68_DECISION.md
+    - P70_RADLADS_HOOK_NOTE.md
+    - P71_BALANCE_PREP_HOOK_NOTE.md
+    - P71_FIX_NOTE.md
+    - P72_KK_KA_HOOK_NOTE.md
+    - P73_BALANCE_STATE_LANE_MAP.md
+    - balance_state_lane_map.json
+    - P73_FIX_NOTE.md
+    - P74_DIRECT_BALANCE_LANE_REPORT.md
+    - direct_balance_lane_comparison.json
+    - P74_FIX_NOTE.md
+    - P75_RESIDUAL_IMPACT_GATE.md
+    - residual_impact_gate.json
+    - P75_KERNEL_READINESS_DECISION.md
+    - P75_BLOCKER_REPORT.md
+    - P75_FIX_NOTE.md
+    - P76_STATE_EXPORT_IMPORT_REPORT.md
+    - state_export_import_residual.json
+    - P77_FULL_VS_STEPWISE_REPORT.md
+    - full_vs_stepwise_residual.json
+    - P78_LOGITS_OUTPUT_REPORT.md
+    - logits_output_residual.json
+    - P79_BROADER_FIXTURE_VALIDATION_REPORT.md
+    - broader_fixture_residual_matrix.json
+    - broader_fixture_residual_matrix.md
+    - P79_FIX_NOTE.md
+    - P80_FIXTURE_LINEAGE_REPAIR_REPORT.md
+    - fixture_lineage_resolution.json
+    - P80_FIX_NOTE.md
+  recommendation: P81 Pallas prototype behind known-caveat flag
+  kernel_ready: yes
+  kernel_ready_reason: all_required_gates_pass
+  same_run_valid: true
+  lane_mixed_comparison_valid: false
+  unavailable_minimum_stages: 0
+  live_rows_captured:
+    radlads: 640
+    radlads_terms: 340
+    radlads_direct: 300
+    qrwkv_off: 340
+    qrwkv_off_terms: 340
+    qrwkv_experimental: 300
+    qrwkv_experimental_direct: 300
+  first_overall_non_applicable_stage: k_a
+  first_comparable_differing_stage: null
+  first_divergent_stage: wkv_decay_applied
+  p75_gate:
+    lane_comparisons_valid: true
+    residuals_lane_aware: true
+    required_output_gates:
+      state_after: pass
+      exported_state: pass
+      full_vs_stepwise: pass
+      logits_output: pass
+    next_phase: P79 broader fixture residual-impact validation
+  p76_state_export_import:
+    status: pass
+    schema: qrwkv_xla.p76_state_export_import_residual.v1
+    export_semantics: reference_state_slots
+    export_path: qrwkv_xla.parity.radlads_wkv_state_convention.export_reference_state_object
+    import_path: qrwkv_xla.parity.radlads_wkv_state_convention.import_reference_state_object
+    fair_lane_pairs:
+      balance_state_terms: pass
+      direct_balance_state: pass
+  p77_full_vs_stepwise:
+    status: pass
+    schema: qrwkv_xla.p77_full_vs_stepwise_residual.v1
+    full_path: RWKV7QwenReferenceStudent.apply_with_state
+    stepwise_path: RWKV7QwenReferenceStudent.step
+    fair_lane_pairs:
+      balance_state_terms: pass
+      direct_balance_state: pass
+    next_phase: P78 targeted logits/output residual fix
+  p78_logits_output:
+    status: pass
+    schema: qrwkv_xla.p78_logits_output_residual.v1
+    hidden_path: pass
+    output_path: unavailable
+    logits_path: pass
+    true_logits_available: true
+    selected_token_logits_available: true
+    fair_lane_pairs:
+      balance_state_terms: pass
+      direct_balance_state: pass
+    next_phase: P79 broader fixture residual-impact validation
+  p79_broader_fixture_residual_matrix:
+    schema: qrwkv_xla.p79_broader_fixture_residual_matrix.v1
+    all_expected_cases_present: true
+    all_expected_cases_pass: true
+    active_expected_cases:
+      - tiny_no_mask
+      - tiny_attention_mask
+      - tiny_stepwise_state
+      - tiny_prefix_or_left_padding
+      - tiny_all_radlads_math_enabled
+    accepted_aliases:
+      tiny_prefix_padding_or_left_padding: tiny_prefix_or_left_padding
+    passed_cases:
+      - tiny_no_mask
+      - tiny_attention_mask
+      - tiny_stepwise_state
+      - tiny_prefix_or_left_padding
+      - tiny_all_radlads_math_enabled
+    alias_cases:
+      tiny_prefix_padding_or_left_padding:
+        canonical_case: tiny_prefix_or_left_padding
+        resolved_case: tiny_prefix_or_left_padding
+        resolution: alias
+    remaining_missing_cases: []
+    required_output_gates:
+      state_after: pass_for_active_and_alias_cases
+      exported_state: pass_for_active_and_alias_cases
+      full_vs_stepwise: pass_for_active_and_alias_cases
+      logits_output: pass_for_active_and_alias_cases
+    next_phase: P81 Pallas prototype behind known-caveat flag
+  p80_fixture_lineage_resolution:
+    schema: qrwkv_xla.p80_fixture_lineage_resolution.v1
+    missing_expected_case: tiny_prefix_padding_or_left_padding
+    resolution: alias
+    canonical_case: tiny_prefix_or_left_padding
+    remaining_missing_cases: []
+    kernel_ready: yes
+    kernel_ready_scope: covered_fixture_family
+  first_divergent_capture_kind: unavailable
+  balance_state_lane_map:
+    radlads: balance_state_terms
+    radlads_terms: balance_state_terms
+    radlads_direct: direct_balance_state
+    qrwkv_off: balance_state_terms
+    qrwkv_off_terms: balance_state_terms
+    qrwkv_experimental: direct_balance_state
+    qrwkv_experimental_direct: direct_balance_state
+  k_k_available:
+    radlads: true
+    qrwkv_off: true
+    qrwkv_experimental: false
+  k_a_available:
+    radlads: true
+    qrwkv_off: true
+    qrwkv_experimental: false
+  math_conclusion_valid: true
+  direct_balance_state_lane_valid: true
+  direct_balance_state_first_differing_stage: null
+  direct_balance_state_math_conclusion_valid: true
+  balance_state_terms_lane_valid: true
+  balance_state_terms_first_differing_stage: null
+  balance_state_terms_math_conclusion_valid: true
+  caveats:
+    - strict_live_required
+    - old_p66_p67_rows_not_source_truth
+    - unavailable_critical_stages_invalidate_math_conclusion
+    - decay_log_w_precondition_required
+    - default_off_behavior_preserved
+    - no_pallas_no_tolerance_loosening_no_recurrence_math_change
+    - qrwkv_experimental_balance_state_true_does_not_compute_k_k_or_k_a
+  p69_hook_completion:
+    collector_api: src/qrwkv_xla/parity/radlads_live_same_run_trace.py::LiveTraceCollector
+    minimum_stage_names:
+      pre_attention_norm: pre_attention_norm
+      k_head_split: raw_k
+      v_head_split: raw_v
+      low_rank_decay: decay_log_w
+      decay_applied_weights: decay_value
+      wkv_state_before: prev_state
+      wkv_update_outer_or_term: vk
+      wkv_state_after: state_after_live
+    reports_live_row_counts: true
+    preserves_source_stage_name: true
+    qrwkv_capture_path: existing RWKV7QwenReferenceStudent diagnostics
+    radlads_capture_path: imported RADLADS replay profile through live diagnostics
+  p70_hook_completion:
+    radlads_minimum_stages_live: true
+    unavailable_minimum_stages: 0
+    artifact_dir_preserved: artifacts/p68_live_same_run_trace
+    no_recurrence_math_change: true
+    no_pallas: true
+  p71_balance_prep_trace:
+    stretch_stages:
+      - v_first
+      - mixed_value
+      - iclr_update_rate
+      - k_k
+      - k_a
+      - kk
+      - k_for_update
+      - v_for_update
+      - ab
+      - balance_state_term
+      - composite_update_term
+    exact_reconstruction_allowed_only_for:
+      - balance_state_term
+      - composite_update_term
+    first_remaining_gap: k_k
+    no_fake_rows: true
+  p72_k_k_k_a_hook_completion:
+    radlads_k_k_k_a_live: true
+    qrwkv_off_k_k_k_a_live: true
+    qrwkv_experimental_k_k_k_a_live: false
+    qrwkv_experimental_unavailable_reason: not_active_in_fixture_path
+    source_semantics_note: artifacts/p68_live_same_run_trace/P72_KK_KA_HOOK_NOTE.md
+    no_fake_rows: true
+    no_exact_reconstruction_for_k_k_or_k_a: true
+    no_default_balance_state_promotion: true
+  p73_balance_state_lane_mapping:
+    classifier: classify_balance_state_lane
+    radlads_lane: balance_state_terms
+    qrwkv_off_lane: balance_state_terms
+    qrwkv_experimental_lane: direct_balance_state
+    direct_lane_k_k_k_a_reason: not_active_in_lane
+    direct_lane_k_k_k_a_capture_kind: not_applicable
+    lane_map_report: artifacts/p68_live_same_run_trace/P73_BALANCE_STATE_LANE_MAP.md
+    lane_map_json: artifacts/p68_live_same_run_trace/balance_state_lane_map.json
+    no_recurrence_math_change: true
+    no_default_balance_state_promotion: true
+  p74_direct_balance_state_lane:
+    implementation_shape: side_plus_lane_key
+    radlads_direct_generated: true
+    radlads_direct_config:
+      radlads_balance_state: true
+    lane_aware_keys: true
+    direct_lane_k_k_k_a_capture_kind: not_applicable
+    direct_lane_report: artifacts/p68_live_same_run_trace/P74_DIRECT_BALANCE_LANE_REPORT.md
+    direct_lane_json: artifacts/p68_live_same_run_trace/direct_balance_lane_comparison.json
+    no_recurrence_math_change: true
+    no_default_balance_state_promotion: true
+
+p83_reference_vs_pallas_parity_gate:
+  phase: P83
+  status: complete
+  checkpoint: reference_vs_pallas_parity_gate
+  module: qrwkv_xla.students.pallas_wkv
+  runtime_selector_default: reference
+  pallas_runtime: opt_in_probe_only
+  parity_scope: tiny_one_step_wkv_update
+  formula: state * decay[..., None, :] + k[..., :, None] * v[..., None, :]
+  probe_schema: qrwkv_xla.p83_pallas_wkv_parity_probe.v1
+  report_artifacts:
+    - artifacts/p68_live_same_run_trace/P83_PALLAS_REFERENCE_PARITY_REPORT.md
+    - artifacts/p68_live_same_run_trace/pallas_reference_parity_probe.json
+    - artifacts/p68_live_same_run_trace/P81_PALLAS_PROTOTYPE_REPORT.md
+    - artifacts/p68_live_same_run_trace/P82_PALLAS_RUNTIME_SCAFFOLD_COMPLETION_REPORT.md
+    - artifacts/p68_live_same_run_trace/pallas_runtime_probe.json
+  records:
+    - parity_status
+    - shape_match
+    - finite
+    - max_abs_error
+    - max_rel_error
+    - atol
+    - rtol
+    - kernel_parity_claimed
+  kernel_parity_claimed_rule: true_only_when_tiny_parity_status_pass
+  pallas_requested_reference_trace_contamination: false
+  reference_trace_capture_skipped_for_pallas_request: true
+  recommended_next_phase_on_pass: P84 broader Pallas WKV shape/dtype parity
+  does_not_prove:
+    - broad_wkv_kernel_readiness
+    - pallas_default_promotion
+    - tpu_throughput
+    - real_training_quality
+
+p84_pallas_shape_dtype_parity:
+  phase: P84
+  status: complete
+  checkpoint: broader_pallas_wkv_shape_dtype_parity
+  module: qrwkv_xla.students.pallas_wkv
+  runtime_selector_default: reference
+  pallas_runtime: opt_in_probe_only
+  parity_scope: broader_one_step_wkv_shape_dtype
+  formula: state * decay[..., None, :] + k[..., :, None] * v[..., None, :]
+  matrix_schema: qrwkv_xla.p84_pallas_shape_dtype_parity_matrix.v1
+  required_float32_cases:
+    - float32_b1_h1_d2
+    - float32_b1_h2_d2
+    - float32_b2_h1_d2
+    - float32_b1_h1_d4
+    - float32_b2_h2_d4
+  optional_bfloat16_cases:
+    - bfloat16_b1_h1_d2
+    - bfloat16_b2_h2_d4
+  report_artifacts:
+    - artifacts/p68_live_same_run_trace/P84_PALLAS_SHAPE_DTYPE_PARITY_REPORT.md
+    - artifacts/p68_live_same_run_trace/pallas_shape_dtype_parity_matrix.json
+    - artifacts/p68_live_same_run_trace/P83_PALLAS_REFERENCE_PARITY_REPORT.md
+    - artifacts/p68_live_same_run_trace/pallas_reference_parity_probe.json
+    - artifacts/p68_live_same_run_trace/pallas_runtime_probe.json
+  kernel_parity_claimed_rule: true_only_when_all_required_cases_pass
+  pallas_requested_reference_trace_contamination: false
+  reference_trace_capture_skipped_for_pallas_request: true
+  recommended_next_phase_on_pass: P85 sequence/scan-style Pallas WKV parity
+  does_not_prove:
+    - sequence_scan_wkv_parity
+    - fixture_family_pallas_integration
+    - pallas_default_promotion
+    - tpu_throughput
+    - real_training_quality
+
+p85_pallas_sequence_parity:
+  phase: P85
+  status: complete
+  checkpoint: short_sequence_pallas_wkv_parity
+  module: qrwkv_xla.students.pallas_wkv
+  runtime_selector_default: reference
+  pallas_runtime: opt_in_probe_only
+  parity_scope: short_sequence_repeated_one_step_wkv
+  sequence_method: repeated_one_step_pallas
+  one_step_formula: state * decay[..., None, :] + k[..., :, None] * v[..., None, :]
+  matrix_schema: qrwkv_xla.p85_pallas_sequence_parity_matrix.v1
+  required_float32_cases:
+    - float32_b1_h1_d2_t2
+    - float32_b1_h1_d2_t4
+    - float32_b1_h2_d2_t4
+    - float32_b2_h2_d4_t4
+  optional_bfloat16_cases:
+    - bfloat16_b1_h1_d2_t4
+    - bfloat16_b2_h2_d4_t4
+  report_artifacts:
+    - artifacts/p68_live_same_run_trace/P85_PALLAS_SEQUENCE_PARITY_REPORT.md
+    - artifacts/p68_live_same_run_trace/pallas_sequence_parity_matrix.json
+    - artifacts/p68_live_same_run_trace/P84_PALLAS_SHAPE_DTYPE_PARITY_REPORT.md
+    - artifacts/p68_live_same_run_trace/pallas_shape_dtype_parity_matrix.json
+  kernel_parity_claimed_rule: true_only_when_all_required_sequence_cases_pass
+  pallas_requested_reference_trace_contamination: false
+  reference_trace_capture_skipped_for_pallas_request: true
+  recommended_next_phase_on_pass: P86 fused/scan Pallas WKV kernel scaffold
+  does_not_prove:
+    - fused_sequence_kernel_ready
+    - fixture_family_pallas_integration
+    - production_pallas_ready
+    - pallas_default_promotion
+    - tpu_throughput
+    - real_training_quality
+
+p86_pallas_fused_sequence_scaffold:
+  phase: P86
+  status: complete
+  checkpoint: fused_scan_pallas_wkv_sequence_scaffold
+  module: qrwkv_xla.students.pallas_wkv
+  runtime_selector_default: reference
+  pallas_runtime: opt_in_probe_only
+  parity_scope: fused_or_scan_style_wkv_sequence
+  sequence_method: jax_scan_pallas_step_scaffold
+  fused_sequence_kernel_status: scan_scaffold_pass
+  one_step_formula: state * decay[..., None, :] + k[..., :, None] * v[..., None, :]
+  matrix_schema: qrwkv_xla.p86_pallas_fused_sequence_parity_matrix.v1
+  required_float32_cases:
+    - float32_b1_h1_d2_t2
+    - float32_b1_h1_d2_t4
+    - float32_b1_h2_d2_t4
+    - float32_b2_h2_d4_t4
+  optional_bfloat16_cases:
+    - bfloat16_b1_h1_d2_t4
+    - bfloat16_b2_h2_d4_t4
+  report_artifacts:
+    - artifacts/p68_live_same_run_trace/P86_PALLAS_FUSED_SEQUENCE_SCAFFOLD_REPORT.md
+    - artifacts/p68_live_same_run_trace/pallas_fused_sequence_parity_matrix.json
+    - artifacts/p68_live_same_run_trace/P85_PALLAS_SEQUENCE_PARITY_REPORT.md
+    - artifacts/p68_live_same_run_trace/pallas_sequence_parity_matrix.json
+  kernel_parity_claimed_rule: true_only_when_all_required_fused_sequence_cases_pass
+  p85_repeated_step_matrix_preserved: true
+  pallas_requested_reference_trace_contamination: false
+  reference_trace_capture_skipped_for_pallas_request: true
+  recommended_next_phase_on_pass: P87 fixture-family opt-in Pallas runtime integration
+  does_not_prove:
+    - fixture_family_pallas_integration
+    - full_model_pallas_reference_parity
+    - production_pallas_ready
+    - pallas_default_promotion
+    - tpu_throughput
+    - real_training_quality
+
+p87_pallas_fixture_family_integration:
+  phase: P87
+  status: complete
+  checkpoint: pallas_fixture_family_opt_in_integration
+  module: qrwkv_xla.kernels.pallas_fixture_integration
+  runtime_selector_default: reference
+  pallas_runtime: opt_in_fixture_family_candidate
+  parity_scope: covered_fixture_family_opt_in_pallas_runtime
+  matrix_schema: qrwkv_xla.p87_pallas_fixture_family_integration_matrix.v1
+  fixture_set: tiny_wkv7_correctness
+  cases_total: 6
+  pallas_candidate_status: pass
+  report_artifacts:
+    - artifacts/p87_pallas_fixture_family_integration/P87_PALLAS_FIXTURE_FAMILY_INTEGRATION_REPORT.md
+    - artifacts/p87_pallas_fixture_family_integration/pallas_fixture_family_integration_matrix.json
+  runtime_default_preserved: true
+  pallas_opt_in_preserved: true
+  reference_contamination_detected: false
+  fixture_alias_behavior_preserved: true
+  reference_trace_capture_skipped_for_pallas_request: true
+  recommended_next_phase_on_pass: P88 TPU compile/performance smoke
+  does_not_prove:
+    - production_pallas_ready
+    - full_model_pallas_reference_parity
+    - pallas_default_promotion
+    - tpu_throughput
+    - training_readiness
+    - model_quality
+
+p88_tpu_compile_smoke:
+  phase: P88
+  status: unavailable_on_local_cpu
+  checkpoint: pallas_tpu_compile_smoke_harness
+  script: scripts/run_pallas_tpu_smoke.py
+  docs: docs/P88_TPU_COMPILE_PERFORMANCE_SMOKE.md
+  report_artifacts:
+    - artifacts/p88_tpu_compile_smoke/pallas_tpu_compile_smoke.json
+    - artifacts/p88_tpu_compile_smoke/P88_TPU_COMPILE_PERFORMANCE_SMOKE_REPORT.md
+  local_status: unavailable
+  local_reason: no_tpu_devices_detected
+  default_runtime_preserved: true
+  pallas_opt_in_preserved: true
+  claims_not_made:
+    - production_pallas_ready
+    - training_ready
+    - throughput_proven
+    - full_model_quality_proven
+    - pallas_default_ready

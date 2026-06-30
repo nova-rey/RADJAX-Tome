@@ -1,0 +1,3200 @@
+# Quarantined archived qrwkv-xla reference file.
+# Original path: docs/QRWKV_BIBLE.md
+# Reason: Producer-related support material retained or tracked for later migration; not needed before Spec 3.
+# This file is non-importable reference material for RADJAX-Tome migration.
+
+# QRWKV-XLA Bible
+
+This file is append-only. New phases and decisions should be appended below rather than rewriting earlier history.
+
+## Phase 0 / Prompt A — Project Birth
+
+QRWKV-XLA begins as a JAX/XLA-first reimplementation of the RADLADS-style recurrent conversion idea.
+
+The existing RADLADS repository remains the reference implementation and design ancestor, but this project is not a port. The original repo includes GPU-oriented dependencies and CUDA/Triton paths, so QRWKV-XLA will be built with XLA and TPU constraints as first-class design requirements.
+
+Initial target:
+- Teacher: Qwen3.latest policy, with Qwen3.0 fallback
+- Student: RWKV7-style recurrent architecture
+- Runtime: CPU debug first, TPU smoke second, TPU scale later
+- Workflow: Nova design/specs, Nyx/Codex implementation
+
+## Phase 0.5 — Foundation Normalization and Contracts
+
+The initial scaffold existed but needed normalization into valid, readable
+multiline files. This pass updates the workflow model from A/B/C prompts to Nyx
+as the primary implementation agent with Codex as a sub-agent, then adds the
+first config and target artifact contract layer.
+
+## Phase 1 — Target Artifact Store Foundation
+
+This phase adds the first durable data contract between future PyTorch/Hugging
+Face teacher extraction and future JAX/XLA student training. The project can
+now create fake teacher target bundles, write and read manifest JSON, validate
+NPZ shards, inspect bundle metadata, and test the artifact store without
+requiring GPU, TPU, PyTorch, JAX, or network access.
+
+## Phase 2 — Teacher Exporter Interface + Fake Export Pipeline
+
+This phase adds the exporter-shaped side of the pipeline. QRWKV-XLA now has a
+teacher export configuration schema, export request/result contracts, a
+TeacherExporter protocol, a deterministic fake exporter, and a CLI entrypoint
+that writes valid target bundles through the artifact store. Real
+Qwen/PyTorch/Hugging Face loading remains intentionally deferred.
+
+## Phase 2.5 — Editable Install Validation and CI Stabilization
+
+This stabilization phase keeps the P2 behavior intact while standardizing how
+the repository is validated. QRWKV-XLA now treats `python -m pip install -e ".[dev]"`
+as the blessed development setup, with scripts and tests importing the installed
+package instead of using `PYTHONPATH=src` or script-local path patching.
+
+Local validation mirrors the core CI commands through `scripts/validate_local.py`
+without installing dependencies. CI runs the same validation sequence on
+Python 3.11 and 3.12. Fake teacher export artifacts remain generated local state
+under the gitignored `artifacts/` directory.
+
+## Phase 4 — RWKV7 Reference Recurrent Core
+
+This phase adds `rwkv7_reference` as the first RWKV7-style recurrent core for
+the JAX student path. It is an XLA-friendly recurrent reference implementation
+for shape contracts, masking behavior, JIT compatibility, gradient flow, and
+student smoke training. It is not the final optimized RWKV7 kernel.
+
+The validation path now includes both the tiny student smoke command and the
+`rwkv7_reference` smoke command after fake teacher target export and inspection.
+This preserves the smallest trainer test double while adding recurrent
+reference coverage for Phase 4.
+
+## Phase 5 — Distillation Stage Runtime
+
+This phase adds the first configured distillation runtime while keeping the
+dependency boundary CPU-only and JAX-first. Stage YAML now loads into typed
+dataclasses, losses are registered and composed with explicit weights, and the
+existing smoke training path accepts a distillation objective rather than being
+replaced by a separate trainer.
+
+The runnable stage performs hidden-state MSE distillation over target bundles,
+records metric history summaries, and exposes `scripts/run_distill_stage.py`
+for local and CI smoke validation. Logits KL is present as opt-in plumbing with
+clear validation, but actual student logits remain deferred until a student
+head is added.
+
+## Phase 6 — XLA Discipline and TPU Smoke Readiness
+
+This phase prepares QRWKV-XLA for real TPU smoke testing without requiring TPU
+in CI. The project now has JAX runtime inspection, XLA/static-shape smoke
+helpers, TPU-ready distillation smoke scripts, and documentation for running
+the repo on Kaggle/Colab-style TPU environments. TPU hard-fail behavior is
+opt-in through `--require-tpu`.
+
+## Phase 7 — Optional Hugging Face Teacher Export Backend
+
+This phase adds a real teacher-export backend boundary without changing the
+default validation surface. PyTorch and Hugging Face Transformers remain
+optional through the `teacher-hf` extra; the fake exporter remains the default
+for CI and local validation. The HF backend lazily imports its dependencies,
+uses fixed-length prompt tokenization, exports hidden states and optional logits
+through the existing target bundle writer, and records model-derived hidden
+shape metadata in the manifest.
+
+Qwen smoke execution, network-dependent model downloads, GPU assumptions, and
+generated `artifacts/` outputs remain outside default validation.
+
+## Phase 8 — Offline Qwen Policy Prep
+
+This phase adds a local Qwen policy resolver and dry-run export preparation
+layer above the optional HF exporter. `Qwen3.latest` is treated as a local YAML
+label, not a web lookup, and the default policy intentionally leaves concrete
+Qwen model ids unresolved.
+
+Default validation now checks policy parsing and Qwen dry-run behavior without
+installing `teacher-hf`, importing torch/transformers, loading a model, writing
+a Qwen bundle, or touching the network. Real Qwen export remains manual-only.
+
+## Phase 9 — Canonical Pipeline Validation Harness
+
+This phase adds `qrwkv_xla.validation.pipeline` and
+`scripts/validate_pipeline.py` as the canonical end-to-end validation surface.
+The default command remains CPU-safe, offline, and available under `.[dev]`: it
+prints environment/runtime info, runs CPU and TPU-safe smokes, checks unresolved
+Qwen policy dry-runs, exports and inspects fake targets, smokes both
+`tiny_student` and `rwkv7_reference`, runs the distillation stage, and runs the
+TPU-ready distillation smoke without requiring TPU.
+
+Optional tiny HF validation is available only through `--include-hf`. Hard TPU
+validation is available only through `--require-tpu`. CI and
+`scripts/validate_local.py` use the default pipeline path and do not imply
+either optional mode.
+
+## Phase 10 — Checkpoint/Resume + Staged Continuation
+
+This phase adds local checkpointing for distillation stages using a JSON
+manifest plus NumPy NPZ parameter archive. Checkpoints are written only under
+the gitignored `checkpoints/` directory and remain CPU-safe and offline by
+default.
+
+The distill runner can now save a final checkpoint and resume from an existing
+checkpoint. Resume validates the student architecture plus `vocab_size`,
+`hidden_size`, and `num_layers` before training. On resume, `max_steps` means
+additional steps for the current invocation, so a checkpoint at step N resumed
+with M steps ends at N + M.
+
+Orbax remains deferred. The current requirement is inspectable single-process
+staged continuation for hidden-state distillation. A richer checkpoint manager
+can be revisited after optimizer state, multi-device training, and release
+artifact requirements are concrete.
+
+The staged plan is hidden-only continuation first, followed later by a logits
+continuation phase once students emit logits and logits targets are enabled.
+## P11 - Local Run Tracking
+
+P11 adds opt-in local run tracking for distillation runs. Tracking writes
+`run.json`, `metrics.jsonl`, and `summary.json` under `runs/<run_id>/`; when no
+checkpoint output is configured, the final checkpoint defaults to
+`runs/<run_id>/checkpoints/final`. The feature is disabled by default and uses
+only durable local files.
+
+The canonical CLI flags are `--track-run`, `--run-root`, `--run-name`,
+repeatable `--run-tag`, repeatable `--run-note`, and `--run-overwrite`.
+Metadata capture for git and JAX runtime state is best effort and must not make
+training fail when unavailable.
+
+## P12 - Prompt Corpora
+
+P12 adds file-based prompt corpora as JSONL, one object per line, with canonical
+split labels `train`, `validation`, `test`, and `unspecified`. Corpus manifests
+record ordered SHA-256 hashes, record counts, split counts, and tag counts.
+Splitting is deterministic by seed and assigns at least one validation example
+for small multi-record corpora when validation is requested.
+
+Teacher export now accepts `targets.prompt_corpus` with optional split, tag, and
+limit filters. Inline/file prompts remain supported, but corpus prompts are
+mutually exclusive with those sources. Target manifests record prompt
+provenance metadata without storing full prompt texts.
+
+Default validation inspects the smoke corpus, creates its manifest, and dry-runs
+the Qwen corpus config without importing Hugging Face modules or requiring
+`teacher-hf`. The HF corpus export remains opt-in through `--include-hf`.
+
+## Phase 13 — Student LM Head and Logits KL Continuation
+
+This phase gives QRWKV-XLA students an optional LM head so they can emit logits
+in addition to hidden states. The distillation runtime can train with logits KL
+when teacher logits are available, enabling a staged path from hidden-only
+alignment into output-behavior distillation. Fake logits smoke configs keep the
+default validation path CPU-only and network-free.
+
+## Phase 14 — Generation Smoke and Tiny Evaluation Harness
+
+This phase adds the first inference-facing path. QRWKV-XLA can now load a
+logits-capable student checkpoint, encode smoke prompts with a dependency-free
+tokenizer, run short greedy generation, and write generation artifacts. This is
+a wiring and sanity check rather than a model-quality benchmark.
+
+## Phase 15 — Evaluation Harness and Fixed Regression Prompts
+
+This phase adds the first repeatable generation evaluation layer. QRWKV-XLA can
+evaluate logits-capable checkpoints on fixed prompt corpora, write generation
+snapshots, run simple sanity checks, and compare snapshots across checkpoints or
+runs. These checks are regression and wiring tools rather than model-quality
+benchmarks.
+
+## Phase 16 — Adam and AdamW Optimizers
+
+This phase adds an internal optimizer package with SGD, Adam, and AdamW. SGD
+remains the default smoke path. Adam uses standard bias-corrected moments, and
+AdamW uses decoupled weight decay applied to parameter leaves rather than as
+gradient L2 regularization.
+
+Distillation configs and CLI flags can select the optimizer and hyperparameters.
+Checkpoints now persist optimizer config and optimizer state in the existing
+JSON + NPZ format so Adam/AdamW resumes continue their moment slots. Default CI
+stays CPU-only, offline, and dependency-light.
+
+## Phase 17 — Learning Rate Scheduling
+
+This phase adds learning rate schedules to the distillation runtime. QRWKV-XLA
+now supports constant and warmup-cosine schedules, uses resume-aware global step
+counting, records scheduled learning rates in metrics, and stores schedule
+metadata in checkpoints and tracked runs.
+
+## Phase 18 — Gradient Clipping
+
+This phase adds simple global gradient norm clipping to the distillation train
+step. The runner computes pre-clip norm, applies an optional global scale before
+the optimizer update, and logs post-clip norm, scale, clipped flag, and max norm
+per step. Checkpoints and tracked runs record gradient config metadata, and the
+validation pipeline includes a clipped AdamW smoke while preserving unclipped
+paths.
+
+## Phase 19 — Stage 3 Cross-Entropy Fine-Tuning
+
+This phase adds the student-only Stage 3 language-model path. The `qrwkv_xla.lm`
+package reads prompt corpora, tokenizes with `SmokeTokenizer`, builds static
+next-token batches, and trains logits-capable students with masked CE. It does
+not require teacher hidden states, teacher logits, or target bundles.
+
+Stage 3 reuses the existing optimizer, learning-rate schedule, gradient
+clipping, simple checkpoint, and local tracking layers. Checkpoints record
+`next_token_ce` loss metadata and prompt-corpus provenance while keeping the
+default validation path CPU-only, offline, and dependency-light.
+## Phase 20 — Stage 1 Attention/Mixer Target Distillation
+
+This phase implements the missing Stage 1 conversion path. QRWKV-XLA can now
+export attention/mixer target vectors, expose recurrent student mixer outputs,
+and train them with layerwise MSE before hidden-state, logits, or Stage 3 CE
+training. The default validation path uses fake attention targets, while real
+HF/Qwen attention capture remains manual-only.
+
+## Phase 21 — Multi-Device TPU Sharding Smoke
+
+This phase adds QRWKV-XLA’s first multi-device training path. Parameters and
+optimizer state are replicated across devices, batches are sharded across the
+leading axis, gradients and metrics are averaged with `pmean`, and checkpoints
+are saved from unreplicated state. The goal is data-parallel smoke validation,
+not full model-parallel scaling.
+
+## Phase 22 — Real Qwen Tokenizer Integration
+
+This phase adds a tokenizer abstraction and registry while preserving
+`SmokeTokenizer` as the default offline and CI-safe backend. `smoke` remains the
+dependency-free byte tokenizer; `hf` is an optional Hugging Face tokenizer
+wrapper loaded only when requested; `qwen` is a registry alias for `hf`.
+
+Stage 3 LM data loading now goes through the registry. LM configs accept either
+`tokenizer: smoke` or a mapping with backend, tokenizer ID, vocab, EOS, PAD,
+revision, and trust-remote-code fields. The LM runner uses tokenizer metadata
+for EOS appending, padding masks, and student vocab compatibility validation.
+Real HF tokenizer coverage is env-gated and skipped by default so the baseline
+test path stays CPU-only, offline, and dependency-light.
+
+## Phase 23 — Real Tokenized Data Pipeline
+
+This phase adds the first reusable tokenized-corpus artifact for Stage 3 CE
+training. Prompt JSONL can now be tokenized once into `manifest.json` plus
+`shards/*.npz`, with deterministic concat-pack semantics, tokenizer provenance,
+per-shard hashes, and static Stage 3 arrays (`input_ids`, `labels`,
+`attention_mask`, `loss_mask`).
+
+The Stage 3 LM path now accepts either raw prompt JSONL or a tokenized corpus
+artifact without making HF, network access, GPU, or TPU mandatory. Default CI
+stays on the offline `SmokeTokenizer` path while the validation pipeline gains a
+small tokenized-corpus smoke.
+
+## Phase 24 — RWKV7 Math Parity Audit
+
+This phase audits the current `rwkv7_reference` student against the local
+RADLADS RWKV7 reference checkout. The result is explicit: the current JAX
+student is a simplified placeholder, not RADLADS math parity. It keeps a
+scalar-channel `[B, H]` recurrent state and simple sigmoid decay, while RADLADS
+uses head-wise matrix WKV state, `exp(-exp(.))` decay semantics, `a`/`b`
+in-context state updates, normalized key terms, Qwen projection structure,
+RoPE, and cache semantics.
+
+P24 therefore preserves the existing CPU-only smoke role instead of pretending
+checkpoint compatibility exists. The layer now exposes an optional initial
+state and returned final state so local recurrence invariants can be tested.
+A pure NumPy harness mirrors the current placeholder recurrence, and focused
+tests cover all-at-once vs token-by-token state equivalence, batched vs
+unbatched equivalence, eager vs JIT equivalence, finite gradients, and a tiny
+optimizer-step no-NaN check.
+
+## Phase 25 — Tiny Real Teacher Target Export Proof
+
+This phase hardens the teacher target export artifact path. The fake exporter
+remains the default offline test double, while the HF exporter can produce
+target bundles from prompt text, prompt corpora, or tokenized corpus artifacts
+without making torch or transformers part of the student training path.
+
+Target bundle shards now carry `input_ids`, `attention_mask`, and `loss_mask`
+as required arrays, plus optional hidden states, logits, and attention targets.
+Manifests record per-shard relative paths, deterministic ordered SHA-256
+hashes, example counts, array names, prompt/tokenized-corpus provenance, and HF
+model provenance including revision, dtype, trust-remote-code, and
+local-files-only. Bundle loading validates the manifest, shard shapes,
+sequence length, hashes, array names, and example counts before returning
+arrays to consumers.
+
+## Phase 26 — Tiny Real Teacher-to-Student Distillation Proof
+
+This phase connects the P25 teacher target bundle artifact to the existing JAX
+student distillation runner. The proof remains tiny, CPU-safe, and offline by
+default: fake teacher targets are exported through the normal target-bundle
+writer, then `scripts/run_distill_stage.py` trains a student with hidden-state
+MSE, writes metrics, writes a checkpoint, reloads that checkpoint, and resumes
+for another step.
+
+The target-training path now carries `loss_mask` from target bundles into JAX
+batches and uses it for token-level hidden-state MSE, logits KL, and
+attention/mixer MSE averaging. `attention_mask` remains the model input mask,
+while `loss_mask` controls which target positions contribute to averaged
+distillation losses.
+
+The HF teacher exporter now resolves `teacher.device: auto` to `cuda`, `mps`, or
+`cpu` before moving the model or encoded batches. The default remains `cpu`, and
+real HF execution stays optional and env-gated so CI does not require torch,
+transformers, network access, CUDA, or MPS.
+
+Tiny local proof commands:
+
+```bash
+python scripts/export_teacher_targets.py --config configs/teacher_export_stub.yaml
+python scripts/run_distill_stage.py --config configs/distill_stage0_stub.yaml --targets artifacts/teacher_targets/fake_export --student-architecture tiny_student --max-steps 1 --checkpoint-out checkpoints/p26_tiny_first --checkpoint-overwrite --track-run --run-root runs/p26 --run-name p26_tiny_first --run-overwrite
+python scripts/run_distill_stage.py --config configs/distill_stage0_stub.yaml --targets artifacts/teacher_targets/fake_export --student-architecture tiny_student --max-steps 1 --resume-from checkpoints/p26_tiny_first --checkpoint-out checkpoints/p26_tiny_resume --checkpoint-overwrite --track-run --run-root runs/p26 --run-name p26_tiny_resume --run-overwrite
+```
+
+## Phase 27 — RADLADS-Aligned JAX RWKV7 Reference Math
+
+This phase adds `rwkv7_radlads_reference` as a separate student backend. It is
+not a replacement for `rwkv7_reference`: the older backend remains the stable
+tiny smoke placeholder, while the new backend is a slow, scan-based JAX
+reference for the RADLADS RWKV7 recurrence shape.
+
+The new backend is CPU-first and deliberately slow. It uses a head-wise matrix
+recurrent state with shape `[B, H, N, N]`, simple JAX projections, and a
+`jax.lax.scan` recurrence that tracks the broad RADLADS update pattern: decay,
+outer-product value/key injection, in-context update terms, and recurrent-state
+readout through receptance/query-like projections. Padding masks zero the value
+stream while still running the recurrence update, matching the RADLADS
+left-padding behavior more closely than freezing state on masked tokens.
+
+The implementation is still explicitly partial. It does **not** claim full
+RADLADS parity, Qwen block parity, RoPE parity, Triton kernel parity, grouped
+KV parity, or checkpoint weight compatibility. Those gaps are recorded in
+`docs/RWKV7_REFERENCE_AUDIT.md` so later kernel work can optimize against an
+honest reference instead of a vague placeholder.
+
+Tiny local proof command:
+
+```bash
+python scripts/run_distill_stage.py --config configs/distill_stage0_radlads_reference_stub.yaml --targets artifacts/teacher_targets/fake_export --max-steps 1 --learning-rate 0.01
+```
+
+## Phase 28 — RADLADS Reference Backend Validation + Teacher Export Path Cleanup
+
+This phase validates `rwkv7_radlads_reference` through the actual distillation
+trainer checkpoint boundary: the trainer writes a JSON + NPZ checkpoint, resumes
+from it, preserves the global step, and records the RADLADS backend student
+config. This is a RADLADS-shaped JAX reference backend, not full RADLADS parity.
+The older `rwkv7_reference` placeholder backend remains unchanged and continues
+to serve its smoke/offline role.
+
+Teacher export config path handling is now consistent. Relative config paths
+for prompt files, prompt corpora, tokenized corpora, Qwen policy files, and
+`runtime.output_dir` resolve relative to the YAML file that declares them.
+Command-line overrides such as `--out`, `--prompt-file`, `--prompt-corpus`,
+`--tokenized-corpus`, and `--qwen-policy` keep normal CLI semantics and remain
+relative to the current working directory unless absolute paths are provided.
+
+The proof is intentionally narrow: no TPU, pjit, Pallas, kernel, quality,
+checkpoint parity, or numerical parity claim is added.
+
+## Phase 29 — Tiny HF Teacher Export to RADLADS Reference Resume Smoke
+
+This phase adds a checked-in tiny real-HF teacher smoke path using
+`sshleifer/tiny-gpt2`, `corpora/hf_tiny_smoke_prompts.jsonl`, and
+`configs/teacher_export_tiny_hf_smoke.yaml`. The export config is CPU-oriented,
+uses config-relative paths, and writes under
+`artifacts/teacher_targets/tiny_hf_smoke` when run from the repository root.
+
+The paired distill config is
+`configs/distill_stage0_radlads_reference_tiny_hf.yaml`. It selects
+`rwkv7_radlads_reference` with tiny-GPT2-compatible dimensions inferred from
+the target bundle: hidden size 2, two layers, one head, and vocab size 50257.
+The smoke is hidden-MSE only. The HF target bundle includes logits so the real
+target key contract is visible, but `logits_kl` is disabled and the student is
+configured with `emit_logits: false`, so logits are explicitly not consumed.
+
+Default tests remain offline-safe. They use fake/minimal HF-shaped fixtures to
+check config loading, target keys, tiny dimensions, checkpoint save, resume,
+and finite resumed loss. The live HF export-to-distill proof is still opt-in
+behind `QRWKV_RUN_HF_INTEGRATION=1` and optional `teacher-hf` dependencies.
+This remains a RADLADS-shaped JAX reference backend, not full RADLADS parity.
+
+## P30 — Real HF Target Loss Hardening + Checked-In Smoke
+
+This phase keeps the P29 hidden-only path intact and adds
+`configs/distill_stage0_radlads_reference_tiny_hf_logits.yaml` for the tiny HF
+target bundle. The new config selects `rwkv7_radlads_reference` with
+`emit_logits: true` and enables a combined hidden-MSE plus `logits_kl` loss, so
+teacher logits from `sshleifer/tiny-gpt2` can be consumed by the RADLADS-shaped
+reference student in the opt-in live smoke.
+
+Default validation remains offline-safe. Focused tests cover logits config
+parsing, hidden-only config parsing, clear failure when logits KL is requested
+without teacher logits, `loss_mask` handling for logits KL, and a tiny fake
+logits run through `rwkv7_radlads_reference`. The real HF export-to-logits
+distill-to-resume path is still gated by `QRWKV_RUN_HF_INTEGRATION=1` and the
+optional HF dependencies.
+
+P30 proves target-loss plumbing with tiny real HF targets; it does not prove model quality or RADLADS parity. `rwkv7_radlads_reference` remains a RADLADS-shaped JAX reference backend, not full RADLADS parity.
+
+## Phase 31 — RADLADS RWKV7 Gap Audit
+
+This phase is an audit and planning checkpoint. It inspects the current
+QRWKV-XLA `rwkv7_radlads_reference` backend, the older `rwkv7_reference`
+placeholder, the distillation and target-bundle plumbing, and the local
+RADLADS RWKV7Qwen2 source files.
+
+The audit result is blunt: QRWKV-XLA has useful recurrence-shaped JAX plumbing,
+but it does not yet have RADLADS model parity. The current backend carries
+head-wise matrix state shaped `[layers,batch,heads,head_size,head_size]`,
+projects `wr/ww/wk/wv/wa/wb/wg/wo` plus `time_bias`, applies RADLADS-style
+decay and matrix-state update shape, and proves hidden/logit loss plumbing. It
+does not implement the Qwen decoder block shell, RoPE, grouped KV heads,
+shift-state cache, RADLADS LoRA-rank parameterization, parameter mapping, or
+numerical comparison against RADLADS PyTorch/Triton/CUDA outputs.
+
+The wording remains: RADLADS-shaped JAX reference backend, not full RADLADS
+parity.
+
+The recommended P32 scope is math-completion and Qwen block compatibility before
+kernel work: add a slow JAX block-compatible target with RMSNorm, RWKV7
+attention, residuals, MLP, RoPE, grouped KV shape semantics, KV plus shift state
+contract, and RADLADS-named parameter mapping stubs. Pallas, TPU kernels,
+`pjit`, sharding, export hardening, and quality work remain deferred until the
+slow reference can catch math and cache regressions.
+
+## Phase 32 — Qwen-Compatible RADLADS Slow Reference Backend
+
+This phase adds `rwkv7_qwen_reference`, a selectable backend separate from
+`rwkv7_radlads_reference` and the older `rwkv7_reference` placeholder. The
+required scope statement is: Qwen/RADLADS-compatible slow JAX reference path,
+not optimized kernel parity.
+
+The new backend implements the highest-priority block-compatibility pieces in
+small CPU-safe JAX code: a Qwen decoder shell
+input -> RMSNorm -> RWKV/time-mix/reference attention -> residual -> RMSNorm
+-> MLP -> residual, slow deterministic RoPE, grouped KV head expansion,
+validated `num_heads`/`num_kv_heads`/`head_size`, explicit pytree state with
+`wkv_matrix_state`, `shift_state`, and `next_position`, and a nested parameter
+surface using Qwen/RADLADS-oriented names.
+
+The tiny config `configs/distill_stage0_qwen_reference_tiny_hf.yaml` targets
+`artifacts/teacher_targets/tiny_hf_smoke` with hidden-only loss and tiny-GPT2
+dimensions inferred from the target bundle. Default behavior remains
+offline-safe; live HF tests are not made mandatory.
+
+P32 establishes the reference target that later Pallas/XLA kernels must match.
+It does not add optimized kernels, and it does not claim full RADLADS numerical
+parity, checkpoint compatibility, TPU readiness, export compatibility, large
+training readiness, or model quality.
+
+## Phase 33 — Tiny Qwen Reference Parity Fixture Harness
+
+This phase adds deterministic tiny fixtures for `rwkv7_qwen_reference` without
+changing backend semantics. The generator is
+`scripts/generate_qwen_reference_fixtures.py`; the checked-in bundle is
+`tests/fixtures/qwen_reference/`, and the same script can write local smoke
+artifacts under `artifacts/p33_qwen_reference_fixtures`.
+
+The fixture config is deliberately small: vocab size 32, hidden size 8, two
+layers, two attention heads, one KV head, batch size 2, sequence length 5, seed
+1234, `float32`, logits enabled, and mixer outputs enabled. Each case records
+full-sequence hidden outputs, logits, mixer outputs, final KV matrix state,
+shift state, and `next_position`, plus the matching stepwise outputs/logits and
+final state. The manifest records backend/config/seed/dtype/shapes, payload
+hashes, parameter-surface hashes, and full-vs-step max absolute/relative
+errors.
+
+The mask fixtures cover no mask, interior masks, and a prefix/left-padding
+shape case. P33 documents current masked-token behavior instead of changing it:
+masked tokens zero the value stream, attention output, and MLP output for that
+token, while recurrence decay/update from previous matrix state still runs,
+`shift_state` updates to the token representation, and `next_position` advances
+through masked positions. The prefix/left-padding case is a shape/current
+behavior fixture, not a claim of separate left-padding position semantics.
+
+P33 also adds `docs/RWKV7_QWEN_REFERENCE_PARAM_SURFACE.md`, which snapshots the
+tiny flattened parameter paths and shapes. This is local fixture/caliper work,
+not RADLADS PyTorch/Triton/CUDA parity, not checkpoint compatibility, and not
+kernel readiness.
+
+## Phase 34 — Model Scale Planner and Config Generator
+
+This phase adds `qrwkv_xla.scale_planner`, a conservative planning package for
+estimating QRWKV-XLA model scale before attempting larger training runs. It adds
+validated dataclass profiles for model shapes, hardware budgets, and training
+modes; built-in profiles cover tiny debug shapes, CPU/local probes, Colab TPU
+smokes, approximate Qwen-scale candidates, local CPUs, single GPUs, TPU
+placeholders, and hidden/logits distillation modes.
+
+The planner estimates the current `rwkv7_qwen_reference` parameter surface:
+token embeddings, Qwen/RADLADS-oriented attention projections, time parameters,
+RMSNorm weights, gated MLP weights, and optional LM head parameters. Memory is
+reported by component: weights, gradients, optimizer moments, optional fp32
+master weights, activations, recurrent WKV/shift state, hidden targets,
+full-vocab logits targets, input ids/masks, checkpoint reference size, and
+overhead reserve. The full-logits target component is explicit and warns when
+it dominates.
+
+The CLI is `scripts/plan_model_scale.py`. It prints a readable summary and can
+write YAML or JSON plans. Auto mode tries conservative batch and sequence
+reductions without changing architecture, and may recommend disabling logits KL
+when full-vocab logits targets dominate memory. It also emits a planning-only
+distill config skeleton marked as not hardware validated.
+
+P34 is not TPU profiling, not pjit/model sharding, not a Qwen-scale training
+run, not model export, and not a RADLADS parity claim. Fit classes are
+conservative estimates using roughly 60% for `yes`, 85% for `maybe`, and above
+85% for `no`.
+
+## Phase 35 — Parameter Compatibility Bridge Status
+
+No P35 implementation is present in this repo state. The RADLADS checkpoint
+import/export compatibility bridge remains future work. P36 must not be read as
+evidence of RADLADS checkpoint compatibility; it only exercises the native
+QRWKV-XLA checkpoint/resume path for a tiny reference student.
+
+## Phase 36 — Colab TPU Smoke Harness Hardening
+
+This phase adds a manual, opt-in Colab TPU smoke harness for the tiny
+hidden-only `rwkv7_qwen_reference` path. The checked-in config is
+`configs/distill_stage0_qwen_reference_colab_tpu_smoke.yaml`, and the launcher
+is `scripts/run_colab_tpu_smoke.py`.
+
+The harness prints Python, JAX, backend, device, and git metadata; requires the
+JAX default backend to be TPU; runs a tiny JAX matmul; exports deterministic
+fake hidden teacher targets; runs one distill step to
+`checkpoints/p36_tpu_qwen_reference_first`; then resumes for one more step to
+`checkpoints/p36_tpu_qwen_reference_resume`. It normalizes run artifacts to
+stable paths under `runs/p36/`, validates required checkpoint/run files,
+validates finite `final_loss` and `final_hidden_mse`, and checks checkpoint
+step progression from 1 to 2.
+
+Successful manual runs write
+`artifacts/p36_colab_tpu_smoke/P36_RESULTS.md` and
+`artifacts/p36_colab_tpu_smoke/p36_results_bundle.tar.gz`. The Colab copy/paste
+flow and known warnings live in `docs/COLAB_TPU_SMOKE.md`.
+
+P36 remains deliberately narrow. It does not add Pallas/WKV7 optimized kernels,
+`pjit`, sharding, multi-host TPU support, real Qwen-scale training, real HF
+teacher export on TPU, logits KL on TPU, quality evaluation, WandB, or HF
+student export. Normal local and CI validation stays CPU-only.
+
+## Phase 37 — Colab TPU Logits-KL Smoke Harness
+
+This phase adds a second manual, opt-in Colab TPU smoke harness for the tiny
+`rwkv7_qwen_reference` path with logits enabled. The hidden-only P36 command
+remains unchanged as `python scripts/run_colab_tpu_smoke.py`; P37 adds
+`scripts/run_colab_tpu_logits_smoke.py`.
+
+The checked-in distill config is
+`configs/distill_stage0_qwen_reference_colab_tpu_logits_smoke.yaml`. It points
+at deterministic fake logits-bearing targets under
+`artifacts/teacher_targets/p37_colab_tpu_logits_smoke`, sets
+`student.emit_logits: true`, and enables both `hidden_mse` and `logits_kl`.
+The companion fake teacher export config is
+`configs/teacher_export_qwen_reference_colab_tpu_logits_smoke.yaml`.
+
+The shared Colab TPU smoke helpers now validate the TPU backend message,
+required target logits in the manifest and shard, required checkpoint/run
+artifacts, finite `loss`, `hidden_mse`, and `logits_kl`, and optimizer step
+progression from 1 to 2 across checkpoint resume. Successful manual runs write
+`artifacts/p37_colab_tpu_logits_smoke/P37_RESULTS.md` and
+`artifacts/p37_colab_tpu_logits_smoke/p37_results_bundle.tar.gz`.
+
+P37 remains deliberately narrow. It does not add real Qwen-scale training, real
+HF teacher export on TPU, Pallas/WKV7 optimized kernels, `pjit`, sharding,
+multi-host TPU training, quality evaluation, WandB, HF student export, or
+RADLADS parameter import/export compatibility.
+
+## Phase 38 — Real Tiny HF Teacher Targets to TPU Distill Smoke
+
+This phase adds a third manual, opt-in TPU smoke. P38 keeps the P36 hidden-only
+and P37 fake-logits commands unchanged, and adds
+`scripts/run_tiny_hf_tpu_smoke.py`.
+
+The checked-in HF export config is
+`configs/teacher_export_p38_tiny_hf_logits_smoke.yaml`. It uses the existing
+HF teacher exporter path with `sshleifer/tiny-gpt2`, `include_logits: true`,
+sequence length 8, and stable output directory
+`artifacts/teacher_targets/p38_tiny_hf_logits_smoke`. The distill config is
+`configs/distill_stage0_qwen_reference_p38_tiny_hf_tpu_smoke.yaml`; it uses the
+tiny `rwkv7_qwen_reference` student with logits enabled and combines
+`hidden_mse` plus `logits_kl`.
+
+The shared Colab TPU smoke helpers now support fake-target P36/P37 specs and
+the real-HF P38 spec. P38 exports the HF target bundle, validates that the
+manifest and first shard contain `input_ids`, `attention_mask`, `loss_mask`,
+`hidden_states`, and `logits`, checks basic target dimensions against the
+manifest, runs one TPU distill step, resumes for one more step, and validates
+finite `loss`, `hidden_mse`, `logits_kl`, and optimizer/checkpoint progression
+from 1 to 2. Successful manual runs write
+`artifacts/p38_tiny_hf_tpu_smoke/P38_RESULTS.md` and
+`artifacts/p38_tiny_hf_tpu_smoke/p38_results_bundle.tar.gz`.
+
+P38 is documented for both Colab and Kaggle TPU sessions in
+`docs/COLAB_TPU_TINY_HF_SMOKE.md`. It remains deliberately narrow: no
+Qwen-scale teacher export or training, no multi-host TPU or `pjit` sharding, no
+Pallas/WKV7 optimized kernels, no model-quality claim, no WandB or lm-eval, no
+HF student export, and no full RADLADS numerical parity claim.
+
+## Phase 39 — Planner-Generated Tiny HF TPU Smoke
+
+This phase connects the scale planner to the real tiny HF TPU smoke path. It
+adds the RoPE-valid planner profile `p39_tiny_hf_qwen_rope_smoke`, shaped for
+`sshleifer/tiny-gpt2` targets and the current `rwkv7_qwen_reference` backend:
+vocab size 50257, hidden size 2, two layers, one query head, one KV head, and
+head size 2. It also adds the `kaggle_tpu_v5e_8` hardware profile as an
+aggregate TPU v5e planning budget.
+
+The generated planner outputs live under
+`artifacts/p39_planner_tpu_smoke/`: `scale_plan.yaml`, `scale_plan.json`,
+`generated_distill.yaml`, and `teacher_export.yaml`. The teacher export config
+is generated for P39 rather than reused from P38; it still uses the same real
+tiny HF model family, `sshleifer/tiny-gpt2`, and writes targets to
+`artifacts/teacher_targets/p39_tiny_hf_logits_smoke`.
+
+The manual launcher is `scripts/run_planner_tpu_smoke.py`. It prints runtime
+metadata, requires the existing exact TPU backend check, runs a tiny JAX
+matmul, regenerates the P39 planner artifacts, validates that the tiny plan fit
+is `yes` or `maybe`, exports real HF targets with hidden states and logits,
+validates required target keys, runs one TPU distill step, resumes for one more
+step, validates finite `loss`, `hidden_mse`, and `logits_kl`, and checks
+optimizer/checkpoint step progression from 1 to 2. Successful manual runs write
+`artifacts/p39_planner_tpu_smoke/P39_RESULTS.md` and
+`artifacts/p39_planner_tpu_smoke/p39_results_bundle.tar.gz`.
+
+P39 is documented in `docs/COLAB_TPU_PLANNER_SMOKE.md` and
+`docs/KAGGLE_TPU_PLANNER_SMOKE.md`. Planner fit remains planning-only except
+for the tiny validated execution path. P39 does not add Qwen-scale or long
+training, pjit/sharding/multi-host TPU, Pallas kernels, lm-eval, WandB, or HF
+student export.
+
+## Phase 40 — RADLADS Source Parity Fixture Bridge
+
+This phase starts the explicit RADLADS source parity track. It does not claim
+full numerical equivalence. Instead, it adds a canonical fixture schema,
+checked-in deterministic tiny cases, import/report tooling, and an honest
+parameter-surface map so later work can measure what is comparable and what is
+still unsupported.
+
+The canonical checked-in fixture set lives under
+`tests/fixtures/radlads_source_parity`. Those payloads are intentionally marked
+`unsupported`: they record QRWKV-XLA current behavior only and are not
+fabricated RADLADS outputs. Real source-produced fixtures can be copied into the
+same schema with `scripts/import_radlads_source_fixtures.py`, while
+`scripts/compare_radlads_source_fixtures.py` and
+`scripts/map_radlads_parameter_surface.py` write reports under
+`artifacts/parity/radlads_source_bridge/`.
+
+The three tiny cases are `tiny_no_mask`, `tiny_attention_mask`, and
+`tiny_prefix_padding_or_left_padding`. The left-padding/prefix case remains an
+explicitly unsupported/current-behavior-only bridge point until a fair
+source-to-QRWKV comparison is available.
+
+The initial parameter map records direct Qwen/RADLADS-to-QRWKV role matches for
+embedding, RMSNorm, Q/K/V/O projections, MLP, and LM head surfaces, and marks
+known gaps such as `w0/w1/w2`, `a0/a1/a2`, `v0/v1/v2`, gate variants,
+`k_k`/`k_a`/`r_k`, and optional `ln_x` as unsupported. P40 therefore makes
+RADLADS compatibility measurable without overclaiming live source parity,
+training quality, kernel correctness, checkpoint compatibility, or optimized
+Pallas/WKV behavior.
+
+## Phase 41 — QRWKV-XLA Checkpoint to HF/Safetensors Export Smoke
+
+This phase adds a bounded HF-style safetensors export smoke for QRWKV-XLA
+student checkpoints. The new `qrwkv_xla.export` package can export an existing
+JSON + NPZ checkpoint to a directory containing `config.json`,
+`model.safetensors`, `qrwkv_xla_export.json`, and `weight_map.json`, then reload
+that directory back into QRWKV-XLA helper objects.
+
+The CLI entrypoints are `scripts/export_student_hf_safetensors.py` for direct
+checkpoint export and `scripts/run_export_smoke.py` for the end-to-end smoke.
+The smoke creates a deterministic tiny logits-capable checkpoint under its
+artifact directory, exports it, reloads it, compares hidden states and logits on
+a fixed CPU batch, and writes `export_smoke_report.json` plus
+`P41_EXPORT_SMOKE_REPORT.md`.
+
+The export helper lazy-imports `safetensors`; if unavailable, it fails with the
+explicit install message documented in `docs/HF_SAFETENSORS_EXPORT.md`. P41 is
+intentionally narrow: it proves only tiny local checkpoint export/reload parity.
+It does not add a production Hugging Face model class, Qwen-scale export,
+sharded or `pjit` export, `lm_eval`, Pallas/WKV optimized kernels, or model
+quality claims.
+
+## Phase 42 — QRWKV-XLA lm_eval Toy Exported-Student Integration
+
+This phase adds a bounded lm_eval-style smoke around the P41 exported-student
+artifact path. The new `qrwkv_xla.eval.exported_student` adapter loads a P41
+HF/safetensors export with `load_hf_safetensors_export`, runs logits-capable
+student inference locally, and scores deterministic continuation
+loglikelihoods from tiny token-id fixtures under `tests/fixtures/eval/`.
+
+The smoke entrypoint is `scripts/run_lm_eval_smoke.py`. It uses the implemented
+P41 export path `artifacts/p41_hf_safetensors_export_smoke`; if that directory
+does not exist, it generates it through the P41 smoke, while partial exports
+fail with explicit missing-file errors. Successful runs write
+`artifacts/eval/p42_lm_eval_smoke/results.json`,
+`artifacts/eval/p42_lm_eval_smoke/P42_RESULTS.md`, and
+`artifacts/eval/p42_lm_eval_smoke/p42_results_bundle.tar.gz`.
+
+P42 deliberately delivers an lm_eval-style toy harness rather than official
+`lm_eval` execution. The optional `eval` extra records the dependency path for
+manual future integration, but the default smoke does not import official
+`lm_eval`, does not touch the network, and does not run large task suites. This
+phase makes no benchmark, Qwen-scale, production HF model class, training,
+pjit/sharding, Pallas/WKV kernel, or model-quality claim.
+
+## Phase 43 — QRWKV-XLA WKV7 / Pallas Correctness Fixture Harness
+
+This phase adds the deterministic correctness cage for future optimized WKV7
+kernel work. The new `qrwkv_xla.kernels` package generates tiny offline fixtures
+for the extracted WKV7 recurrence/state core, records manifest metadata and
+hashes, compares candidate implementations against the saved expected outputs
+and next-state tensors, and reports explicit statuses for pass/fail,
+unsupported, missing fixture payloads, shape/dtype mismatches, non-finite
+values, and candidate execution errors.
+
+The canonical artifact directory is `artifacts/kernels/p43_wkv7_correctness`.
+It contains `manifest.json`, `P43_WKV7_FIXTURE_SUMMARY.md`,
+`comparison_report.json`, `P43_WKV7_COMPARISON_REPORT.md`, and per-case
+`inputs.npz` / `expected.npz` payloads. The fixture set covers six deterministic
+cases including no-mask, masked, prefix-padding/reset-style, explicit non-zero
+state, stepwise-vs-full-scan, and extreme-but-finite decay scenarios.
+
+P43 proves only correctness-harness plumbing for the recurrence core. It does
+not implement an optimized Pallas kernel, does not benchmark TPU performance,
+does not prove full RADLADS numerical parity, and does not claim training or
+model-quality improvements. Its job is to provide the gate future WKV7 kernels
+must pass before speed work is trusted.
+
+## Phase 44 — QRWKV-XLA Streaming Data Pipeline Dry-Run
+
+This phase adds a larger/local/offline streaming data pipeline dry-run. The new
+`qrwkv_xla.data` package defines a manifest-backed streaming dataset, shard
+metadata with tokenized-corpus provenance, a bounded batch iterator,
+deterministic order, optional shuffle plus seed, resume cursors, and explicit
+attention/loss-mask validation.
+
+The default builder intentionally reuses the existing tokenized corpus surface:
+`scripts/build_streaming_data_dry_run.py` writes deterministic synthetic prompts,
+packs them with `qrwkv_xla.lm.tokenized_corpus`, then converts the validated
+shards into a root artifact set under `artifacts/data/p44_streaming_dry_run/`
+with `manifest.json`, `shards/*.npz`, and `P44_DATASET_SUMMARY.md`. Streaming
+batches keep the same keys expected by LM/trainer code: `input_ids`, `labels`,
+`attention_mask`, and `label_mask`.
+
+`scripts/run_streaming_data_dry_run.py` writes
+`streaming_dry_run_report.json`, `P44_STREAMING_DRY_RUN_REPORT.md`, and
+`resume_cursor.json` with token availability, consumption,
+padding/discard accounting, exact integer post-resume replay checks,
+deterministic replay status, mask validation status, approximate tokens per
+second, and peak memory when the platform exposes it.
+`scripts/run_streaming_trainer_dry_run.py` runs a tiny CPU-only train-step
+ingestion check over streaming batches using the existing trainer batch
+contract and writes `trainer_dry_run_report.json` plus
+`P44_TRAINER_DRY_RUN_REPORT.md`.
+
+P44 is not a real training phase. It proves larger/streaming dry-run plumbing
+only. It does not prove full-scale throughput, real training quality, cloud or
+distributed ingest, `pjit`/sharding, Pallas, WandB, or Qwen0.5B-scale target
+generation.
+
+## Phase 45 — QRWKV-XLA Multi-Scale Model Config Dry-Runs
+
+This phase adds a bounded multi-scale planning and metadata dry-run surface for
+explicit QRWKV student profiles: `qrwkv_qwen_0_5b_candidate`,
+`qrwkv_qwen_1_5b_candidate`, and `qrwkv_qwen_7b_stretch`. The hardware matrix
+covers local CPU debug, Colab/Kaggle TPU planning profiles, and grant TPU v5e
+8/32/64-device planning slices.
+
+`scripts/generate_multiscale_configs.py` writes the planning artifacts under
+`artifacts/scale/p45_multiscale_dry_run`: `scale_plan_report.json`,
+`fit_matrix.json`, `P45_SCALE_PLAN_REPORT.md`, `P45_RESULTS.md`, and
+`configs/*.yaml`. The fit matrix records component estimates for parameter
+memory, optimizer memory, activation/sequence memory, hidden/logits target
+memory, checkpoint memory, overhead reserve, and total memory, with explicit
+fit classification and memory interpretation.
+
+`scripts/run_multiscale_shape_dry_run.py` consumes the scale plan and keeps the
+default path metadata-only. It writes one `metadata_dry_run.json` per profile,
+plus a checkpoint skeleton bundle per profile containing
+`checkpoint_manifest.json`, `model_config.yaml`, and
+`checkpoint_metadata.json`. The dry-run validates model shapes, parameter bands,
+safe init policy, and checkpoint skeleton readback without allocating full large
+model arrays.
+
+P45 is not a real training phase. It does not implement or prove pjit/sharding,
+distributed execution, Pallas kernels, WandB, full-scale measured memory,
+Qwen0.5B teacher target generation, official benchmarks, or one-device 7B
+training.
+
+## Phase 46 — Tiny pjit / Sharding Compile Smoke
+
+This phase adds the first explicit sharding-aware compile entrypoint for
+QRWKV-XLA. The new `qrwkv_xla.sharding` package creates a named JAX mesh,
+records backend/platform/device metadata, exposes a minimal
+`data_parallel_single_axis` policy, and runs a tiny forward/loss/update smoke
+through either `jax.jit(..., in_shardings=..., out_shardings=...)` or
+`jax.experimental.pjit.pjit` when requested.
+
+The canonical artifact directory is `artifacts/p46_pjit_sharding_smoke`. The
+smoke writes `P46_RESULTS.md` and `pjit_sharding_smoke_report.json` with
+created-at time, compile API, policy, batch/sequence shape, finite loss,
+step/update status, mesh metadata, honest single-device fallback details, and
+explicit limitations.
+
+P46 proves tiny sharding compile plumbing only. It does not prove large-model
+sharding, real training throughput, production sharded checkpointing,
+0.5B/1.5B/7B training feasibility, or multi-device TPU behavior unless a real
+multi-device TPU run is performed later.
+
+## Phase 47 — Experiment Tracking / WandB Smoke
+
+This phase extends the existing `qrwkv_xla.tracking` package rather than
+creating a separate tracking system. The new surface adds an experiment tracker
+protocol/config, a local experiment tracker, an optional WandB adapter, report
+helpers, and a deterministic tiny tracking smoke.
+
+The canonical local output is `artifacts/p47_experiment_tracking_smoke/`.
+It contains `P47_RESULTS.md`, `tracking_smoke_report.json`, and
+`local_run/` files for `run_metadata.json`, `config.json`, `metrics.jsonl`,
+`summary.json`, `artifacts_manifest.json`, and copied/logged artifacts under
+`files/`. The local tracker is the source of truth. WandB is imported only when
+`wandb-offline` or `wandb-online` is requested.
+
+The smoke records phase, UTC creation time, repo commit, git dirty
+classification, Python/JAX metadata, backend/default backend, device counts,
+device kinds/platforms, hostname when available, command/script name, tracking
+mode, and artifact root. It writes the exact smoke config and required metrics:
+`train/loss`, `train/loss_is_finite`, `train/tokens_seen`,
+`train/examples_seen`, and `step`.
+
+P47 does not require WandB credentials or network access for normal development
+or CI. It does not prove real Qwen0.5B training, long-running training,
+multi-host tracking, production dashboard design, sweeps/MLOps, model quality,
+or official benchmark reporting.
+
+## Phase 48 — RADLADS LoRA Rank Math Surface
+
+P48 completes a bounded slow-reference math-surface pass for the
+`rwkv7_qwen_reference` backend. It adds explicit config gates for low-rank
+RADLADS decay, low-rank ICLR, value residual mixing, balance-state terms,
+attention head group norm, and an overall `radlads_compatible_math` mode. The
+legacy/default path remains disabled for these branches unless the new flags are
+selected.
+
+The new represented parameter leaves are `w0/w1/w2`, `a0/a1/a2`, `v0/v1/v2`,
+`k_k/k_a/r_k`, and `ln_x.weight/bias`. The implemented formulas are sourced
+from `/home/nyx/.openclaw/workspace/_refs/RADLADS/rwkv7qwen2/modeling_rwkv7qwen2.py`:
+low-rank decay uses `w0 + (tanh(xw @ w1) @ w2).float()`, low-rank ICLR uses
+`sigmoid(a0 + (xa @ a1) @ a2)`, later layers can mix values against layer-0
+`v_first`, balance-state terms use the source `kk/k/k_a/k_k` branches, and
+optional attention group norm uses `eps=head_dim * 1e-5`.
+
+`r_k` is represented honestly as a parameter surface only. The inspected
+RADLADS source has the residual line using `r_k` commented out, so P48 does not
+activate that math or claim it as active parity.
+
+The canonical smoke command is:
+
+```bash
+python scripts/run_radlads_lora_rank_math_smoke.py
+```
+
+The canonical artifact directory is `artifacts/p48_radlads_lora_rank_math/` and
+contains `P48_RESULTS.md`, `lora_rank_math_report.json`,
+`P48_PARAMETER_SURFACE_MAP.md`, and `parameter_surface_map.json`.
+
+P48 remains CPU/offline slow-reference work. It does not prove full RADLADS
+numerical parity, fitted checkpoint conversion, Pallas or optimized WKV kernels,
+TPU performance, Qwen-scale execution, or model quality.
+
+## Phase 49 — RADLADS Tiny Numerical Parity Fixtures
+
+P49 adds bounded infrastructure for tiny real RADLADS numerical fixtures. The
+new module `qrwkv_xla.parity.radlads_numerical_fixtures` defines
+`radlads_tiny_numerical_parity.v1` manifests, validates NPZ payloads, imports
+canonical fixture directories, compares declared arrays, and writes JSON plus
+Markdown reports: `P49_RESULTS.md`, `numerical_parity_report.json`,
+`P49_SURFACE_COMPARISON.md`, and `surface_comparison.json`. The companion
+`radlads_parameter_mapping` module records
+minimal mapping statuses: `mapped_exact`, `mapped_renamed`, `shape_mismatch`,
+`missing_in_qrwkv`, `missing_in_radlads`, `unsupported`, and
+`source_not_found`.
+
+The required tiny cases are `tiny_no_mask`, `tiny_attention_mask`,
+`tiny_prefix_or_left_padding`, `tiny_stepwise_state`, and
+`tiny_all_radlads_math_enabled`. Reports distinguish per-case `pass`, `fail`,
+`unsupported`, `missing_source`, and `fail_known_difference`, and summarize as
+`pass`, `pass_with_known_differences`, `fail`, or `source_unavailable`.
+
+The scripts are:
+
+```bash
+python scripts/import_radlads_tiny_numerical_fixtures.py
+python scripts/generate_radlads_tiny_numerical_fixtures.py
+python scripts/compare_radlads_tiny_numerical_fixtures.py
+```
+
+Live RADLADS execution is optional and gated by
+`QRWKV_XLA_RUN_RADLADS_LIVE_FIXTURES=1` (the older `QRWKV_RUN_RADLADS_LIVE=1`
+alias still works).
+The generator probes the actual local RADLADS checkout at
+`/home/nyx/.openclaw/workspace/_refs/RADLADS`. If live execution is unavailable
+or fails, P49 records `source_unavailable` or `execution_failed`; it does not
+fabricate RADLADS arrays from QRWKV-XLA.
+
+P49 remains tiny fixture infrastructure only. It does not add training,
+checkpoint import, Pallas or optimized WKV kernels, a Hugging Face model class,
+Qwen-scale execution, or large-scale RADLADS parity claims.
+
+## Phase 50 — RADLADS Parameter Replay Compatibility
+
+P50 adds an explicit bounded replay path for the real tiny P49 RADLADS
+parameter payload. The new importer loads
+`artifacts/p49_radlads_numerical_parity/radlads_fixtures/radlads_parameters.npz`,
+normalizes RADLADS parameter names/shapes, maps values into
+`rwkv7_qwen_reference`, and reports mapped, defaulted, excluded, unsupported,
+shape-mismatch, and missing-required surfaces. QRWKV-only surfaces such as
+`a_proj.weight`, `b_proj.weight`, `g_proj.weight`, `w_proj.weight`, `time_mix`,
+`time_bias`, and `lm_head.bias` are reported and deterministically defaulted
+rather than left as random replay inputs.
+
+The slow reference now has explicit replay-gated support for q/k/v projection
+biases and the audited RADLADS `gate_rank_type == 2` expression
+`sigmoid(xg @ g1) @ g2`. The inspected RADLADS token-shift parameters and `r_k`
+residual contribution remain commented out in the local source path, so P50
+does not invent those semantics.
+
+`scripts/replay_radlads_tiny_numerical_fixtures.py` writes P50 import and replay
+reports for the P49 hidden, logits, WKV matrix state, shift state, and stepwise
+surfaces. Failing numerical comparisons are acceptable and expected at this
+stage; unsupported or missing surfaces never count as passes. P50 does not add
+Pallas, TPU performance work, real training, full checkpoint import, or a
+Hugging Face model class.
+
+## Phase 51 — RADLADS Replay Non-Finite Diagnosis and Stabilization
+
+P51 adds diagnosis-first replay tooling for the real P49 RADLADS tiny fixtures.
+The new diagnostics path summarizes replay tensors, detects the first
+non-finite tensor in replay order, writes parameter sanity reports for the
+shared RADLADS payload, and records which replay stages were instrumented.
+
+The key source-backed fix is replay-profile selection: P50 forced the
+all-math RADLADS path for every fixture, but P49 generated four of the five
+real cases with `all_radlads_math=False`. P51 now replays those simple cases
+with the matching non-all-math profile, preserving q/k/v bias import while
+avoiding inactive low-rank paths that were poisoning replay with suspicious
+source parameters. The explicit all-math fixture remains diagnostic and may
+still fail if the source payload itself is non-finite.
+
+P51 does not add Pallas, full RADLADS parity claims, throughput claims,
+training claims, or model-quality claims.
+
+## Phase 53 — RADLADS vs QRWKV Comparable Output Fixture Parity
+
+P53 adds a bounded head-to-head fixture path for live RADLADS outputs versus
+QRWKV-XLA replay outputs. The clean parameter payload is generated through the
+existing P52 `deterministic_finite` path with seed `5353`; QRWKV uses the
+existing P50/P52 replay importer, and RADLADS is attempted only through the
+local live source runtime.
+
+The new scripts are:
+
+```bash
+python scripts/generate_radlads_qrwkv_head_to_head_fixtures.py
+python scripts/compare_radlads_qrwkv_head_to_head.py
+```
+
+Artifacts are written under `artifacts/p53_radlads_qrwkv_head_to_head/`,
+including `manifest.json`, `head_to_head_comparison_report.json`, and
+`P53_HEAD_TO_HEAD_REPORT.md`. Reports preserve mapped/defaulted/missing/
+unsupported/shape-mismatch parameter buckets and per-case/per-surface shape,
+dtype, finite flags, error metrics, and reasons.
+
+If live RADLADS cannot load or execute the clean payload, P53 records the exact
+blocker and marks comparisons unsupported. It does not fabricate RADLADS
+outputs from QRWKV behavior.
+
+P53 does not add Pallas, TPU optimization, real training, Qwen-scale export,
+HF `PreTrainedModel` support, multi-host sharding, or tolerance loosening.
+
+## Phase 54 — RADLADS Clean Payload Loading and Export
+
+P54 adds a clean payload loader for the tiny deterministic_finite RADLADS
+parameter archive used by P53. The new loader classifies live RADLADS boundary
+surfaces explicitly, keeps the 16 unsupported leaves and 4 gate shape
+mismatches visible in the report, and applies only deterministic safe defaults
+with parity-risk caveats instead of random initialization.
+
+P54 also adds a standalone exporter for clean RADLADS outputs and output
+manifests so the head-to-head comparison can consume precomputed RADLADS and
+QRWKV outputs when they are available. The comparison path remains honest when
+either side is missing and continues to avoid touching the RADLADS repo
+contents.
+
+P54 does not add Pallas, tolerance loosening, RADLADS repo vendoring, or any
+claim of full RADLADS parity.
+
+P54 implementation note: the local clean loader now loads the tiny deterministic
+payload successfully, adapts the four gate surfaces with deterministic rank
+truncation, excludes 34 payload-only surfaces as not needed for the tiny case,
+and leaves no missing-required leaves in the live path.
+
+## Phase 55 — RADLADS State/Layout Parity Diagnostics
+
+P55 separates the remaining parity issue into two honest pieces: hidden_states
+convention mismatch and a small but finite wkv_matrix_state residual. It adds
+surface layout audit reports, non-mutating candidate-transform analysis, and a
+clearer stepwise classification so non-stepwise cases are marked not_applicable
+instead of vaguely missing_source.
+
+P55 does not implement Pallas. It does not prove training throughput or model
+quality. It only diagnoses and, where possible, fixes tiny local CPU
+state/layout parity.
+
+
+## 2026-05-13 — Weekly distillation
+- P56 adds a trace-first WKV residual pass after P55. The first divergent stage is `log_w`, the WKV state-after trace row is now explicit, and update-order candidate analysis says `as_is` is still best while the residual remains finite.
+- P56 is diagnostic-only: no recurrence math fix landed, logits and shift_state stay green, and Pallas remains blocked until the WKV matrix-state residual is explained.
+
+## Phase 57 — RADLADS log_w Decay Parity Caliper
+
+P57 narrows the P56 first-divergence result to a dedicated `log_w` source audit.
+It loads RADLADS `log_w` rows from JSONL trace artifacts, captures QRWKV
+`log_w` from a current model run through diagnostics, compares the surfaces, and
+evaluates candidate formula calipers for orientation, sign, activation,
+base-term, dtype, and axis handling.
+
+Artifacts live under `artifacts/p57_log_w_decay_parity/`:
+`log_w_parity_report.json`, `P57_LOG_W_PARITY.md`, `log_w_values.npz`,
+`P57_LOG_W_CANDIDATES.md`, and `log_w_candidate_report.json`.
+
+P57 is diagnostic-only. It does not patch model math, loosen tolerances, claim
+broader RADLADS parity, or unblock Pallas by itself.
+
+Observed run metrics:
+- log_w first mismatch: `tiny_no_mask / L0 / H0 / T0` with max abs error `0.003779083490371704`
+- trace rerun first divergent stage: `log_w`
+- head-to-head summary: `attempted_comparisons=40`, `pass=12`, `fail=12`, `not_applicable=16`
+- best passing surface stays `tiny_no_mask:logits`; `hidden_states` and `wkv_matrix_state` remain the main failures
+
+## Phase 58 — RADLADS log_w / Decay Source-Backed Fix
+
+P58 applies the tiny-replay source-backed fix for the RADLADS-vs-QRWKV
+`log_w` / decay divergence identified by P56 and instrumented by P57. It keeps
+the low-rank decay path active on `tiny_no_mask`, matches the inspected
+RADLADS source formula, reruns the log_w caliper, and confirms the first WKV
+trace divergence moves downstream.
+
+P58 does not implement Pallas. It does not prove training throughput or model
+quality. It only proves tiny local CPU log_w/decay parity status, and Pallas
+remains blocked until WKV matrix-state parity is credible.
+
+## Phase 59 — RADLADS WKV State Provenance
+
+P59 adds a provenance-tracing layer for WKV state handoff. It records
+initial-state equivalence, explicit-versus-implicit initial-state handoff,
+token carry between `step` calls, full-sequence versus stepwise state/output
+equivalence, and masked-token state deltas through the existing QRWKV student
+state APIs.
+
+The new artifacts live under `artifacts/p59_wkv_state_provenance/` when the
+trace script is run locally. The module and scripts are diagnostic-only:
+`src/qrwkv_xla/parity/radlads_wkv_state_provenance.py`,
+`scripts/trace_radlads_qrwkv_wkv_state_provenance.py`, and
+`scripts/compare_radlads_qrwkv_wkv_state_provenance.py`.
+
+P59 does not rewrite recurrence math, widen tolerances, alter the P58 `log_w`
+fix, implement Pallas, or claim broader RADLADS parity.
+
+## Phase 60 — Real RADLADS/QRWKV WKV State Provenance
+
+P60 converts the P59 provenance layer from synthetic QRWKV-only diagnostics to
+paired real tiny artifacts. The runner derives rows from cached
+`artifacts/p54_confirmation` RADLADS/QRWKV outputs and the P58 post-fix WKV
+trace, then writes explicit provenance labels for real-vs-synthetic and
+cached-vs-regenerated status.
+
+Artifacts live under `artifacts/p60_real_wkv_state_provenance/`:
+`real_wkv_state_provenance_radlads.jsonl`,
+`real_wkv_state_provenance_qrwkv.jsonl`,
+`real_provenance_metadata.json`, `p60_real_state_provenance_report.json`,
+`P60_RESULTS.md`, `TRACE_PROVENANCE.md`, case reports, hidden-state dependency
+reporting, and `comparison/p60_real_wkv_state_provenance_report.json`.
+
+P60 does not add Pallas, broaden the recurrence math rewrite, widen
+tolerances, or synthesize missing RADLADS traces. Strict real-artifact mode
+fails when only cached-derived outputs are available. The real comparison
+still fails deterministically at `tiny_attention_mask /
+initial_state_handoff / wkv_matrix_state`.
+
+## Phase 61 — WKV Matrix-State Export Convention Audit
+
+P61 audits the RADLADS-vs-QRWKV WKV matrix-state export and slot convention
+after P60 narrowed the remaining real-artifact residual to handoff/export-style
+comparisons. It identifies whether the remaining mismatch comes from the wrong
+slot, pre/post-update convention, full-vs-stepwise export, cached artifact
+semantics, or true recurrence math. It may apply only a minimal
+source-backed comparison/export normalization and does not implement Pallas.
+
+## Phase 62 — QRWKV-XLA WKV Update-Term / State-After Residual Parity
+
+P62 adds a diagnostic trace layer for the remaining WKV update-term and
+state-after residual after P58 fixed `log_w` parity and P61 preserved the
+`as_is` slot/export conclusion. It normalizes the existing paired post-P58 WKV
+trace artifacts into explicit stages: `state_before`, `decay_value`,
+`decayed_state`, `k_for_update`, `v_for_update`, `update_outer_product`,
+`update_term`, `state_after`, `state_after_for_next_token`, and
+`state_after_exported`.
+
+Artifacts live under `artifacts/p62_wkv_update_residual/`:
+`wkv_update_residual_radlads.jsonl`, `wkv_update_residual_qrwkv.jsonl`,
+`wkv_update_residual_comparison_report.json`, `P62_WKV_UPDATE_RESIDUAL.md`,
+`wkv_update_residual_values.npz`, `wkv_update_residual_manifest.json`, and
+`P62_RESULTS.md`.
+
+Current P62 status is diagnostic failure with `kernel_ready: no`. The report
+finds `decayed_state` as the first unavailable/divergent comparison stage,
+counts `32` passing rows, `40` failing rows, and `84` unavailable rows, and
+records the first RADLADS reconstruction residual at `tiny_no_mask / L0 / H0 /
+T1` with max abs error `0.0005597441340796649` when reconstructing only
+`decayed_state + update_outer_product`. That reconstruction deliberately omits
+the uncaptured composite balance-state matmul term.
+
+No source-backed fix is applied in P62. The next phase should capture
+source-backed RADLADS and QRWKV `update_term` and `decayed_state` rows in the
+live recurrence hooks, including the balance-state matmul term, before any
+numeric correction.
+
+## Phase 63 — WKV Live Update Hooks
+
+P63 completes the live WKV update-hook surface after P62 narrowed the residual
+to decayed_state/update_term/state_after but still lacked a source-backed
+composite balance-state intermediate. It exposes or explicitly labels live vs
+reconstructed rows for decayed_state, update_outer_product,
+balance_state_matmul/composite_update_term, update_term, and state_after on
+real paired RADLADS-vs-QRWKV artifacts. It does not implement Pallas and only
+allows instrumentation/comparison fixes unless a separate source-backed
+recurrence-fix phase is opened.
+
+P63 keeps the recurrence semantics untouched unless a tiny source-backed
+instrumentation bug is proven.
+
+## Phase 64 — WKV Composite Balance-State Hook
+
+P64 narrows the P63 live-hook surface to the balance-state WKV addend and the
+composite update labels around it. The helper now recognizes
+`composite_balance_update_term` alongside `balance_state_matmul` and
+`composite_update_term`, with source aliases for live rows and labeled
+diagnostic reconstruction where adjacent captured rows are sufficient.
+
+Artifacts default to `artifacts/p64_composite_balance_hook/` and are produced
+by `scripts/locate_radlads_qrwkv_wkv_composite_hook.py`,
+`scripts/extract_radlads_qrwkv_wkv_composite_hook.py`, and
+`scripts/compare_radlads_qrwkv_wkv_composite_hook.py`. If an external RADLADS
+checkout is unavailable, the locator uses the local source tree as the
+RADLADS-equivalent audit target and records that choice explicitly.
+
+P64 preserves P58/P61/P63 behavior. It does not change recurrence math, add
+Pallas, loosen tolerances, or broaden the update-residual diagnosis beyond the
+composite/balance-state WKV hook extraction and comparison.
+
+## Phase 65 — Balance-State Experiment Surface
+
+P65 adds a small explicit experiment/stability surface for the existing
+RADLADS balance-state compatibility path in
+`RWKV7QwenReferenceConfig`. It treats `radlads_balance_state_terms` and
+`radlads_balance_state` as opt-in experimental flags, compares off vs
+experimental mode on tiny fixture inputs, and writes compact local reports.
+
+Artifacts default to `artifacts/p65_balance_state_experiment/` and are
+produced by `scripts/run_balance_state_experiment.py` and
+`scripts/run_balance_state_stability_smoke.py`. The reports compare `log_w`,
+`logits`, `hidden_states`, `wkv_matrix_state`, `shift_state`, finite/NaN
+counts, state summaries, mode status, and the first divergent diagnostic stage.
+
+P65 preserves default/off behavior, P58 `log_w` parity behavior, and existing
+P63/P64 hook behavior. It does not promote the experimental path to default,
+add Pallas, loosen tolerances, or rewrite recurrence math beyond wiring the
+existing source-backed path behind the existing flags.
+
+## Phase 66 — Balance-State Experimental vs RADLADS Three-Way Parity
+
+P66 adds a comparison-first three-way update-boundary report for RADLADS,
+QRWKV off mode, and QRWKV experimental balance-state mode. The helper
+`src/qrwkv_xla/parity/radlads_balance_state_three_way.py` compares the existing
+P64 RADLADS hook trace against the checked-in P65 off/experimental mode
+artifacts and records the update-boundary result without changing recurrence
+semantics.
+
+Artifacts live under `artifacts/p66_balance_state_radlads_three_way/` and are
+produced by `scripts/run_balance_state_radlads_three_way.py`. The artifact set
+includes `three_way_parity_report.json`, three raw JSONL update-boundary
+traces, `THREE_WAY_PARITY.md`, `UPDATE_BOUNDARY_PARITY.md`,
+`BALANCE_STATE_DECISION.md`, and `P66_RESULTS.md`.
+
+The decision report now recommends `P67 promote/harden balance-state
+compatibility path`. P66 preserves default/off behavior and P58 `log_w`
+behavior, uses strict real-artifact provenance, and does not add Pallas,
+tolerance loosening, recurrence rewrites, default promotion, synthetic
+fallback, or model-quality claims.
+
+## Phase 67 — Same-Run WKV Update Ingredients
+
+P67 adds a same-run ingredient trace for the WKV update path. The helper
+`src/qrwkv_xla/parity/radlads_same_run_update_ingredients.py` normalizes
+existing RADLADS, QRWKV off, and QRWKV experimental trace rows into a fixed
+dependency order from pre-attention inputs through decay, update, balance-state,
+composite term, and final WKV state surfaces.
+
+Artifacts default to `artifacts/p67_same_run_update_ingredients/` and are
+produced by `scripts/run_same_run_update_ingredient_trace.py` and
+`scripts/compare_same_run_update_ingredients.py`. The artifact set includes
+three JSONL ingredient traces, `same_run_update_ingredients_metadata.json`,
+`same_run_update_ingredients_report.json`,
+`P67_SAME_RUN_UPDATE_INGREDIENTS.md`,
+`UPDATE_INGREDIENT_AVAILABILITY.md`, `FIRST_DIFFERING_INGREDIENT.md`,
+`SAME_RUN_LINEAGE.md`, and `P67_RESULTS.md`.
+
+P67 is instrumentation/reporting only. It rejects mixed same-run lineage in
+strict mode, emits unavailable ingredient rows instead of omitting missing
+surfaces, preserves reconstructed capture labels, and selects the first
+differing ingredient by dependency order. It does not change recurrence math,
+add Pallas, loosen tolerances, promote experimental balance-state mode, or edit
+RADLADS upstream.
+
+P67 does not implement Pallas.
+P67 does not prove training throughput.
+P67 does not prove model quality.
+P67 does not promote experimental balance_state mode by default.
+P67 only establishes a same-run ingredient-level RADLADS-vs-QRWKV comparison
+on tiny/local fixtures.
+
+## Phase 68 — Live Same-Run Update Ingredient Trace
+
+P68 adds strict-live same-run trace generation in
+`src/qrwkv_xla/parity/radlads_live_same_run_trace.py` with runner
+`scripts/run_live_same_run_update_trace.py`. It computes one
+`same_run_group_id` per invocation, records deterministic fixture and parameter
+ids, and emits dependency-ordered live trace rows for RADLADS, QRWKV off, and
+QRWKV experimental outputs.
+
+Artifacts default to `artifacts/p68_live_same_run_trace/` and include the
+three live JSONL traces, optional combined JSONL, metadata, validity,
+availability, first-difference, decision, results, and fix-note reports. P68
+does not normalize P66/P67 rows as source truth. Missing true live RADLADS
+update-ingredient hooks are represented as unavailable rows, making the report
+invalid for math conclusions and recommending only P69 targeted live RADLADS
+trace hook completion.
+
+P68 preserves existing math and defaults. It does not add Pallas, loosen
+tolerances, promote experimental balance-state mode, recommend math fixes while
+strict-live validation fails, or edit RADLADS upstream.
+
+## Phase 69 — Live Update-Ingredient Hook Completion
+
+P69 extends the P68 strict-live harness instead of replacing it. The helper now
+has a `LiveTraceCollector` that observes and copies live arrays, preserves
+`source_stage_name`, and normalizes the minimum WKV update ingredients to P68
+stage names: `raw_k`, `raw_v`, `decay_log_w`, `decay_value`, `prev_state`,
+`vk`, and `state_after_live`.
+
+The runner attempts QRWKV off and experimental live captures from the existing
+Qwen reference diagnostic path and records `live_rows_captured_*`, minimum-stage
+availability, unavailable minimum stages, and off/experimental config deltas.
+Only balance-state related off/experimental config differences are allowed.
+
+In the regenerated workspace artifacts, QRWKV off and experimental capture
+minimum live rows through the project virtualenv, while RADLADS live hooks
+remain unavailable. The reports are still invalid for math conclusions because
+RADLADS rows are explicit `missing_live_hook:radlads:<stage>` rows, and the
+decision report recommends `P70 targeted live RADLADS pre_attention/k/v hook
+completion`.
+
+## Phase 70 — Live RADLADS Hook Completion
+
+P70 targets the remaining missing side of the live same-run WKV update trace:
+RADLADS. P69 added `LiveTraceCollector` and QRWKV off/experimental live capture
+attempts, but RADLADS rows remained explicit `missing_live_hook` placeholders.
+P70 wires RADLADS-side observe-only capture for the minimum decisive stages:
+`pre_attention_norm`, k/v head split, `low_rank_decay`,
+`decay_applied_weights`, `wkv_state_before`, `wkv_update_outer_or_term`, and
+`wkv_state_after`.
+
+The P70 path reuses the imported RADLADS replay parameters and the same
+same-run IDs as the QRWKV off/experimental captures. Regenerated artifacts
+remain under `artifacts/p68_live_same_run_trace/` and include
+`P70_RADLADS_HOOK_NOTE.md`. P70 does not change recurrence math, implement
+Pallas, loosen tolerances, alter dtype policy, change deterministic fixture
+values, or promote experimental `balance_state` behavior.
+
+## Phase 71 — Live Balance-Prep Ingredient Hook Completion
+
+P71 extends the validated P70 live same-run trace beyond the minimum WKV update
+stages into balance-prep/update-prep ingredients. It targets `v_first`,
+`mixed_value`, `iclr_update_rate`, `k_k`, `k_a`, `kk`, `k_for_update`,
+`v_for_update`, `ab`, `balance_state_term`, and `composite_update_term`.
+
+The strict-live harness now distinguishes minimum-stage validity from stretch
+availability and full math-conclusion validity. It preserves P70 minimum-stage
+capture on RADLADS, QRWKV off, and QRWKV experimental sides, keeps same-run
+fixture/parameter identity checks, and only labels `balance_state_term` and
+`composite_update_term` as exact reconstructions when their same-side live
+ingredients are present in the same run/context.
+
+The regenerated `artifacts/p68_live_same_run_trace/` reports
+`same_run_valid=True`, zero unavailable minimum stages, and 240 live rows per
+side. The first remaining P71 gap is unavailable stretch stage `k_k`, so the
+decision is `P72 targeted live missing-stage hook completion`.
+
+P71 includes a local observe-only diagnostic capture fix in
+`RWKV7QwenReferenceStudent._attention`: `mixed_value`, `kk`,
+`k_for_update`, `v_for_update`, `ab`, and projection-path
+`iclr_update_rate` are emitted under their P71 ingredient names. It does not
+change recurrence math, dtype policy, tolerances, Pallas/kernel code, real
+training behavior, RADLADS upstream/vendor code, or default balance-state
+promotion.
+
+## Phase 72 — Targeted Live k_k / k_a Hook Completion
+
+P72 completes the targeted live trace hook work for `k_k` and `k_a` where the source path computes those factors. The source expressions live in `RWKV7QwenReferenceStudent._attention`: `params["k_k"]` feeds `kk = _l2_normalize(k * k_k[None, :, :])`, and `params["k_a"]` feeds `k = k * (1.0 + (a - 1.0) * k_a[None, :, :])` when balance-state terms are enabled and `radlads_balance_state` is false.
+
+The regenerated `artifacts/p68_live_same_run_trace/` reports `same_run_valid=True`, `mixed_artifact_lineage_used=False`, `synthetic_fallback_used=False`, zero unavailable minimum stages, 272 live rows for RADLADS, 272 live rows for QRWKV off, and 240 live rows for QRWKV experimental. RADLADS and QRWKV off now show `k_k` and `k_a` as `live_captured`; QRWKV experimental keeps explicit `not_active_in_fixture_path` unavailable rows because `radlads_balance_state=True` bypasses those factors and computes `kk` directly from `k`.
+
+P72 adds `P72_KK_KA_HOOK_NOTE.md` and updates the decision to `P73 targeted source mapping clarification for k_k/k_a`. It does not fabricate `k_k`/`k_a`, exact-reconstruct those stages, loosen tolerances, change dtype policy, rewrite recurrence, add Pallas/kernel work, edit or vendor RADLADS upstream code, or promote experimental balance-state behavior by default.
+
+## Phase 73 — Balance-State Lane Mapping
+
+P73 clarifies the source mapping and comparison lanes for `k_k`/`k_a` after
+P72. P72 showed that RADLADS and QRWKV off live-capture `k_k`/`k_a` in the
+`balance_state_terms` lane, while QRWKV experimental with
+`radlads_balance_state=True` bypasses those factors and computes `kk` directly
+from `k`.
+
+P73 adds explicit lane classification to
+`src/qrwkv_xla/parity/radlads_live_same_run_trace.py`, writes
+`balance_state_lane` on trace rows, emits
+`P73_BALANCE_STATE_LANE_MAP.md` plus `balance_state_lane_map.json`, and marks
+direct-lane `k_k`/`k_a` as `not_applicable` with `not_active_in_lane` reasons
+instead of treating them as ordinary missing hooks. First-difference and
+decision reports now distinguish mixed-lane non-applicable stages from
+like-lane comparable differences.
+
+The expected lane map is RADLADS `balance_state_terms`, QRWKV off
+`balance_state_terms`, and QRWKV experimental `direct_balance_state`. Because
+there is not yet a RADLADS direct-balance lane, P73 recommends
+`P74 generate RADLADS direct-balance-state lane` when the balance-state-terms
+lane is otherwise valid. P73 does not change recurrence math, loosen
+tolerances, change dtype policy, implement Pallas, edit RADLADS upstream/vendor
+code, or promote experimental `balance_state` behavior by default.
+
+## Phase 74 — RADLADS Direct Balance-State Lane Generation
+
+P74 generates the missing RADLADS direct-balance-state lane identified by P73.
+P73 showed that RADLADS and QRWKV off occupied the `balance_state_terms` lane
+while QRWKV experimental occupied `direct_balance_state`, making mixed-lane
+comparison invalid for math conclusions.
+
+P74 adds a second RADLADS capture with `radlads_balance_state=True` while
+preserving the existing RADLADS `balance_state_terms` capture. Trace row keys
+are lane-aware through `balance_state_lane`, so RADLADS terms and RADLADS
+direct rows for the same case/layer/token/head/stage both survive comparison
+maps. Direct-lane `k_k` and `k_a` rows remain `not_applicable`; they are not
+fabricated and do not invalidate direct-lane comparison.
+
+The regenerated `artifacts/p68_live_same_run_trace/` reports
+`same_run_valid=True`, `mixed_artifact_lineage_used=False`,
+`synthetic_fallback_used=False`, 272 RADLADS terms live rows, 240 RADLADS
+direct live rows, 272 QRWKV off terms live rows, and 240 QRWKV experimental
+direct live rows. Both lane comparisons are valid with no first comparable
+differing stage, and the recommendation is
+`P75 residual-impact / kernel-readiness gate`; `kernel_ready` remains `no`.
+
+P74 adds `P74_DIRECT_BALANCE_LANE_REPORT.md`,
+`direct_balance_lane_comparison.json`, and `P74_FIX_NOTE.md`. It does not
+change recurrence math, balance-prep math, dtype policy, tolerances, Pallas
+code, RADLADS upstream/vendor code, fixture values, or default experimental
+`balance_state` behavior.
+
+## Phase 75 — Residual-Impact / Kernel-Readiness Gate
+
+P75 adds a residual-impact and kernel-readiness gate after P74 generated the
+missing RADLADS direct-balance-state lane and both terms/direct lane
+comparisons reported no first comparable differing stage. P75 preserves the
+lane-aligned comparison structure: RADLADS terms are compared only with QRWKV
+off terms, and RADLADS direct is compared only with QRWKV experimental direct.
+
+The new gate writes `P75_RESIDUAL_IMPACT_GATE.md`,
+`residual_impact_gate.json`, and `P75_KERNEL_READINESS_DECISION.md` under
+`artifacts/p68_live_same_run_trace/`. Residuals are measured per lane for
+state/update/export-adjacent stages with explicit tolerance policy, and
+state_after, exported_state, full_vs_stepwise, and logits/output readiness
+evidence is reported as pass, fail, unavailable, or not_applicable with exact
+reasons.
+
+P75 does not change recurrence math, balance math, tolerances, dtype policy,
+Pallas/kernel code, RADLADS upstream/vendor code, deterministic fixture values,
+hidden-state layout, or default experimental `balance_state` behavior. It
+keeps `kernel_ready=no` whenever required readiness evidence is missing or any
+gate is blocking, and recommends exactly one P76 next phase.
+
+## Phase 76 — State Export / Import Residual Evidence
+
+P76 closes the P75 `exported_state` blocker without changing recurrence math.
+The current state export path is an observe-only local helper around the
+returned `RWKV7QwenReferenceState` object: it exports `wkv_matrix_state`,
+`shift_state`, and `next_position` as reference state slots, then imports the
+same payload through the matching helper for round-trip evidence.
+
+The live same-run trace now records `state_after_exported` rows with
+`capture_kind=exported_state`, lane-aware keys, and explicit `export_path` /
+`import_path` metadata. P76 compares live state vs exported state intra-side
+for RADLADS terms, QRWKV off terms, RADLADS direct, and QRWKV experimental
+direct, then compares exported states only on the fair P74 lane pairs:
+RADLADS terms vs QRWKV off terms, and RADLADS direct vs QRWKV experimental
+direct.
+
+The regenerated `artifacts/p68_live_same_run_trace/` adds
+`P76_STATE_EXPORT_IMPORT_REPORT.md` and
+`state_export_import_residual.json`. The P75 gate now reports
+`exported_state=pass`; `kernel_ready` remains `no` because
+`full_vs_stepwise` and `logits_output` are still unavailable. The exact next
+phase is `P77 targeted full-vs-stepwise residual fix`.
+
+P76 does not implement Pallas, TPU optimization, real training, Qwen-scale
+teacher export, HF `PreTrainedModel`, `lm_eval`, recurrence math changes,
+balance-state math changes, parameter mapping changes, dtype policy changes,
+tolerance changes, fixture value changes, RADLADS upstream/vendor changes, or
+default promotion of experimental `balance_state`.
+
+## Phase 77 — Full-vs-Stepwise Residual Evidence
+
+P77 closes the P75/P76 `full_vs_stepwise` evidence gap without changing
+recurrence math. The live same-run trace harness now reruns the same fixture and
+same imported parameters through the full-sequence
+`RWKV7QwenReferenceStudent.apply_with_state` path and the token-by-token
+`RWKV7QwenReferenceStudent.step` path. Stepwise state carry is explicit:
+`student.init_state(batch_size)` seeds the run, each token returns the next
+`RWKV7QwenReferenceState`, and that returned state is passed to the next token.
+
+The evidence is lane-aware and preserves the P74/P75/P76 fair pairs:
+RADLADS terms vs QRWKV off terms, and RADLADS direct vs QRWKV experimental
+direct. P77 compares final recurrent `wkv_matrix_state` and the exported
+`wkv_matrix_state` slot for RADLADS terms, QRWKV off terms, RADLADS direct, and
+QRWKV experimental direct. It writes
+`P77_FULL_VS_STEPWISE_REPORT.md` and `full_vs_stepwise_residual.json` under
+`artifacts/p68_live_same_run_trace/`.
+
+The regenerated P77 artifacts report `state_after=pass`,
+`exported_state=pass`, and `full_vs_stepwise=pass`. `kernel_ready` remains
+`no` because logits/output evidence is still unavailable, and the next phase is
+`P78 targeted logits/output residual fix`.
+
+P77 does not implement Pallas, TPU optimization, real training, Qwen-scale
+teacher export, HF `PreTrainedModel`, `lm_eval`, recurrence math changes,
+balance-state math changes, parameter mapping changes, dtype policy changes,
+tolerance changes, fixture value changes, RADLADS upstream/vendor changes, or
+default promotion of experimental `balance_state`.
+
+## Phase 78 — Targeted Logits / Output Residual Evidence
+
+P78 extends the P77 full-vs-stepwise evidence path to hidden/output/logits
+surfaces without changing recurrence math. Fresh live runs now capture
+full-sequence and token-step output rows from `RWKV7QwenReferenceStudent` for
+each P74 fair lane surface: RADLADS terms, QRWKV off terms, RADLADS direct, and
+QRWKV experimental direct.
+
+Output semantics are explicit. `post_block_hidden_output` is returned hidden
+state evidence, not logits. `final_lm_head_logits` and `selected_token_logits`
+are only true logits when `StudentOutput.logits` is present; otherwise the
+logits path is marked unavailable with the exact reason instead of copying or
+renaming hidden states.
+
+The regenerated `artifacts/p68_live_same_run_trace/` adds
+`P78_LOGITS_OUTPUT_REPORT.md` and `logits_output_residual.json`, and refreshes
+the P75 gate artifacts. In the P78 run, available hidden/output and true
+LM-head logits pass across both fair lane pairs, with selected-token logits
+reported separately from full-vocab logits. The P75 gate now reports
+`state_after=pass`, `exported_state=pass`, `full_vs_stepwise=pass`, and
+`logits_output=pass`; `kernel_ready=yes` for the tiny same-run fixture evidence,
+and the next phase is `P79 broader fixture residual-impact validation`.
+
+P78 does not implement Pallas, TPU optimization, real training, Qwen-scale
+teacher export, HF `PreTrainedModel`, `lm_eval`, recurrence math changes,
+balance-state math changes, parameter mapping changes, dtype policy changes,
+tolerance changes, fixture value changes, RADLADS upstream/vendor changes, or
+default promotion of experimental `balance_state`.
+
+## Phase 79 — Broader Fixture Residual-Impact Validation
+
+P79 expands the P78 same-run readiness result across the existing fixture
+family without changing recurrence math. The live same-run runner can now write
+`broader_fixture_residual_matrix.json`,
+`broader_fixture_residual_matrix.md`, and
+`P79_BROADER_FIXTURE_VALIDATION_REPORT.md` under
+`artifacts/p68_live_same_run_trace/`.
+
+The regenerated matrix preserves the fair lane pairs: RADLADS terms vs QRWKV
+off terms, and RADLADS direct vs QRWKV experimental direct. The discovered
+cases `tiny_no_mask`, `tiny_attention_mask`, `tiny_stepwise_state`,
+`tiny_prefix_or_left_padding`, and `tiny_all_radlads_math_enabled` pass
+`state_after`, `exported_state`, `full_vs_stepwise`, and `logits_output` with
+`kernel_ready_for_case=yes`.
+
+The expected alias `tiny_prefix_padding_or_left_padding` is not present in the
+fixture manifest, so P79 reports it as unavailable with
+`fixture_case_not_found` instead of renaming or faking evidence. The overall
+recommendation is `P80 targeted fixture lineage/harness repair`.
+
+P79 does not implement Pallas, TPU optimization, real training, Qwen-scale
+teacher export, HF `PreTrainedModel`, `lm_eval`, recurrence math changes,
+balance-state math changes, parameter mapping changes, dtype policy changes,
+tolerance changes, fixture value changes, RADLADS upstream/vendor changes, or
+default promotion of experimental `balance_state`.
+
+## Phase 80 — Fixture Lineage / Harness Repair
+
+P80 repairs the P79 fixture expectation model without changing fixture tensors
+or recurrence math. The broader fixture report now distinguishes active
+expected cases, accepted aliases, deprecated cases, optional cases, and
+remaining missing cases. Matrix rows include `requested_case`,
+`canonical_case`, `resolved_case`, and `resolution` so alias lineage is visible
+instead of hidden in a flat case list.
+
+Repository evidence supports treating historical
+`tiny_prefix_padding_or_left_padding` as an accepted alias for canonical
+`tiny_prefix_or_left_padding`: the historical P40/P65 artifacts use the longer
+name with `attention_mask.kind=prefix_or_left_padding`, while the current P54
+QRWKV/RADLADS manifests and live fixture manifest use the shorter name for the
+same mask family. The alias row is marked `resolution=alias` and
+`resolved_by_alias=True`; it points to the canonical case evidence and does not
+create duplicate fixture-run evidence.
+
+The regenerated `artifacts/p68_live_same_run_trace/` now includes
+`P80_FIXTURE_LINEAGE_REPAIR_REPORT.md`,
+`fixture_lineage_resolution.json`, and `P80_FIX_NOTE.md`. The P79 broader
+matrix reports all active expected cases passing, the alias resolved, no
+remaining missing cases, `kernel_ready=yes`, and
+`recommended_next_phase=P81 Pallas prototype behind known-caveat flag`.
+
+P80 does not implement Pallas, TPU optimization, real training, Qwen-scale
+teacher export, HF `PreTrainedModel`, `lm_eval`, recurrence math changes,
+balance-state math changes, parameter remapping changes, tolerance changes,
+dtype-policy changes, fixture value changes, RADLADS upstream/vendor changes,
+or default promotion of experimental `balance_state`.
+
+## Phase 81 — Opt-In Pallas Runtime Prototype Scaffold
+
+P81 begins Pallas work after P80 resolved the broader fixture alias lineage and
+preserved `kernel_ready=yes` for the covered fixture family. P81 adds a runtime
+selector with `reference` as the default and `pallas` as an explicit opt-in
+path. The selector is exposed through `RWKV7QwenReferenceConfig.wkv_runtime`
+and `scripts/run_live_same_run_update_trace.py --wkv-runtime`.
+
+The reference path remains the source of truth. Default calls and explicit
+`wkv_runtime=reference` calls use the existing slow JAX recurrence. Explicit
+`wkv_runtime=pallas` requests fail closed through an unavailable prototype
+status; they do not silently fall back to reference. The live trace report now
+writes `P81_PALLAS_PROTOTYPE_REPORT.md`, `pallas_runtime_probe.json`,
+`P81_FIX_NOTE.md`, and, while the Pallas runtime is scaffold-only,
+`P81_BLOCKER_REPORT.md`.
+
+P81 does not claim Pallas/reference parity. The probe records
+`kernel_parity_claimed=false`, `prototype_status=unavailable`, and recommends
+`P82 targeted Pallas runtime scaffold completion` until a real Pallas WKV path
+is implemented and compared.
+
+P81 does not promote Pallas as default, prove real training throughput, prove
+model quality, promote experimental `balance_state`, change recurrence math,
+change balance math, loosen tolerances, change dtype policy, edit fixture
+tensors, vendor RADLADS source, or change RADLADS upstream code.
+
+## Phase 82 — Real Opt-In Pallas Runtime Probe
+
+P82 fixes the scaffold-only P81 outcome by clarifying Pallas runtime semantics
+and adding a real Pallas execution probe path. P81 added a runtime selector but
+did not implement a Pallas runtime and could still generate reference-style
+traces while Pallas was requested. P82 prevents ambiguous reference-trace
+contamination under Pallas requests.
+
+The new `qrwkv_xla.students.pallas_wkv` module exposes Pallas availability and
+a minimal one-step WKV-ish Pallas probe. The probe uses `jax.experimental.pallas`
+to execute:
+
+```text
+new_state = state * decay[..., None, :] + k[..., :, None] * v[..., None, :]
+```
+
+over tiny `[1, 1, 2, 2]` / `[1, 1, 2]` inputs, records the shape contract, and
+checks finite output. It is an execution probe, not a production WKV kernel and
+not a reference-vs-Pallas parity gate.
+
+When `--wkv-runtime pallas` is requested, `run_live_same_run_trace()` now runs
+the Pallas probe and returns a P82 probe-only report before reference live trace
+capture. The generated report records
+`pallas_requested_reference_trace_contamination=false` and
+`reference_trace_capture_skipped=true`. If the minimal probe executes, P82
+recommends `P83 reference-vs-Pallas parity gate`; if it cannot execute, the
+report names the exact dependency/backend or shape/layout follow-up.
+
+P82 does not promote Pallas as default, prove Pallas/reference parity, prove
+real training throughput, prove model quality, promote experimental
+`balance_state`, change recurrence math, change balance math, loosen
+tolerances, change dtype policy, edit fixture tensors, vendor RADLADS source,
+or change RADLADS upstream code.
+
+## Phase 83 — Reference-vs-Pallas Parity Gate
+
+P83 turns the tiny P82 Pallas execution probe into an explicit
+reference-vs-Pallas parity gate for the one-step update:
+
+```text
+new_state = state * decay[..., None, :] + k[..., :, None] * v[..., None, :]
+```
+
+The `qrwkv_xla.students.pallas_wkv` module now exposes
+`reference_wkv_update()`, `pallas_wkv_update()`, and
+`run_pallas_wkv_parity_probe()`. The probe compares the interpreted Pallas
+kernel against the reference formula on tiny `[1, 1, 2, 2]` / `[1, 1, 2]`
+inputs, records shape/finite status plus max absolute and relative error, and
+sets `kernel_parity_claimed=true` only when `parity_status=pass`.
+
+Pallas-requested live trace runs remain probe-only and still skip reference
+trace capture, preserving
+`pallas_requested_reference_trace_contamination=false` and
+`reference_trace_capture_skipped=true`. The artifact directory now writes
+`P83_PALLAS_REFERENCE_PARITY_REPORT.md` and
+`pallas_reference_parity_probe.json` while preserving the P81/P82 compatibility
+report files.
+
+P83 does not promote Pallas as default, claim broad WKV kernel readiness, prove
+training throughput, prove model quality, promote experimental `balance_state`,
+change recurrence math, change balance math, loosen tolerances, change dtype
+policy, edit fixture tensors, vendor RADLADS source, or change RADLADS
+upstream code.
+
+## Phase 84 — Broader Pallas WKV Shape/Dtype Parity
+
+P84 broadens the P83 one-step parity gate across a small deterministic
+shape/dtype matrix while keeping Pallas opt-in and probe-only. The scoped
+formula remains:
+
+```text
+new_state = state * decay[..., None, :] + k[..., :, None] * v[..., None, :]
+```
+
+The new `run_pallas_wkv_shape_dtype_parity_matrix()` runner covers required
+float32 cases across B/H/D combinations `(1,1,2)`, `(1,2,2)`, `(2,1,2)`,
+`(1,1,4)`, and `(2,2,4)`, plus optional bfloat16 cases. Each row records
+shapes, dtype, finite status, shape match, max absolute and relative error, and
+the explicit tolerance used. Optional bfloat16 cases may pass or report
+unavailable with a reason; they are not silently promoted.
+
+Pallas-requested live trace runs still skip regular reference trace capture and
+now write `P84_PALLAS_SHAPE_DTYPE_PARITY_REPORT.md` plus
+`pallas_shape_dtype_parity_matrix.json`, while preserving the P83/P82/P81
+compatibility artifacts. The P81 compatibility report no longer says parity was
+not claimed when a later P83/P84 artifact has claimed scoped parity.
+
+P84 recommends `P85 sequence/scan-style Pallas WKV parity` when all required
+matrix cases pass. It does not promote Pallas as default, prove sequence/scan
+parity, integrate Pallas into fixture-family runs, claim TPU throughput, prove
+model quality, change recurrence math, change balance math, loosen tolerances,
+change dtype policy, edit fixture tensors, vendor RADLADS source, or change
+RADLADS upstream code.
+
+## Phase 85 — Short-Sequence Pallas WKV Parity
+
+P85 extends the P84 broader one-step Pallas WKV parity matrix into short
+deterministic sequence parity. It compares a trusted reference loop against
+repeated Pallas one-step updates over small B/H/D/T cases:
+
+```text
+state_t+1 = state_t * decay_t[..., None, :] + k_t[..., :, None] * v_t[..., None, :]
+```
+
+The new sequence helpers expose a reference loop and a repeated Pallas loop.
+The sequence matrix records final-state and per-step-state shapes, finite
+status, final max absolute/relative errors, and worst per-step
+absolute/relative errors. P85 claims scoped parity only when all required
+float32 sequence cases pass; optional bfloat16 cases may pass or explicitly
+report unavailable with a reason.
+
+Pallas-requested live trace runs remain probe-only and now emit
+`P85_PALLAS_SEQUENCE_PARITY_REPORT.md` plus
+`pallas_sequence_parity_matrix.json`, while preserving P84/P83/P82/P81
+compatibility artifacts. P85 recommends
+`P86 fused/scan Pallas WKV kernel scaffold` when the short-sequence repeated
+one-step gate passes.
+
+P85 does not promote Pallas as default, implement a fused production sequence
+kernel, prove fixture-family/full-model parity, prove throughput, prove model
+quality, change reference recurrence math, change balance math, loosen
+tolerances, change dtype policy, edit fixture tensors, vendor RADLADS source,
+or promote experimental `balance_state`.
+
+## Phase 86 — Fused/Scan-Style Pallas WKV Sequence Scaffold
+
+P86 adds the first fused/scan-style Pallas WKV sequence scaffold after P85
+proved short-sequence repeated one-step parity. The scaffold is explicitly
+labeled `jax_scan_pallas_step_scaffold`: it uses `jax.lax.scan` over the
+interpreted one-step Pallas WKV update and compares the result against the
+trusted reference sequence loop over small deterministic B/H/D/T cases.
+
+The P86 matrix records sequence method, fused scaffold status, final-state and
+per-step-state shape checks, finite checks, max absolute/relative final-state
+errors, and worst per-step absolute/relative errors. It preserves the P85
+repeated-step matrix inside the P86 artifact and claims scoped parity only when
+all required fused/scan-style cases pass.
+
+Pallas-requested live trace runs remain probe-only and now emit
+`P86_PALLAS_FUSED_SEQUENCE_SCAFFOLD_REPORT.md` plus
+`pallas_fused_sequence_parity_matrix.json`, while preserving P85/P84/P83/P82/P81
+compatibility artifacts. P86 recommends
+`P87 fixture-family opt-in Pallas runtime integration` when the fused/scan-style
+required cases pass.
+
+P86 does not promote Pallas as default, prove fixture-family/full-model parity,
+prove throughput, prove model quality, change reference recurrence math, change
+balance math, loosen tolerances, change dtype policy, edit fixture tensors,
+vendor RADLADS source, or promote experimental `balance_state`.
+
+## Phase 87 — Fixture-Family Opt-In Pallas Runtime Integration
+
+P87 moves the opt-in Pallas WKV path from isolated P86 scaffold probes into the
+existing tiny WKV7 fixture-family correctness harness. The reference runtime
+remains the default, and Pallas remains an explicit candidate/runtime request.
+
+The P87 integration replaces the previous `candidate=pallas` unsupported
+placeholder in the P43 WKV7 fixture comparator with a narrow Pallas-backed
+fixture candidate for the existing recurrence/state fixture surface. It reports
+pass, fail, skipped, and unsupported cases through a dedicated P87 matrix while
+preserving P80 fixture alias behavior and avoiding reference trace
+contamination for Pallas-requested evidence.
+
+P87 writes `P87_PALLAS_FIXTURE_FAMILY_INTEGRATION_REPORT.md` and
+`pallas_fixture_family_integration_matrix.json` under
+`artifacts/p87_pallas_fixture_family_integration/`. When all covered fixture
+family cases pass, the recommended next phase is
+`P88 TPU compile/performance smoke`.
+
+P87 does not promote Pallas as default, prove production Pallas readiness, prove
+full-model parity, prove TPU readiness, prove throughput, prove training
+readiness, prove model quality, change recurrence math, loosen tolerances, edit
+fixture tensors, vendor RADLADS source, or promote experimental `balance_state`.
+
+## Phase 88 — TPU Compile / Performance Smoke Harness
+
+P88 adds a tiny Pallas TPU compile/execution smoke harness at
+`scripts/run_pallas_tpu_smoke.py`. The harness inspects JAX/JAXLIB versions,
+backend, devices, TPU availability, Pallas import status, and the QRWKV-XLA
+Pallas runtime import path. On TPU it attempts a tiny JIT/lowering/compile and
+execution path for the current opt-in Pallas WKV sequence scaffold and compares
+against the trusted tiny reference check.
+
+On CPU-only machines, P88 reports `status=unavailable` with
+`reason=no_tpu_devices_detected` and exits successfully unless `--require-tpu`
+is passed. This keeps normal CI CPU-safe while giving a human a concrete TPU
+notebook/VM command to run.
+
+P88 writes `artifacts/p88_tpu_compile_smoke/pallas_tpu_compile_smoke.json` and
+`P88_TPU_COMPILE_PERFORMANCE_SMOKE_REPORT.md`. The local committed report is
+honestly unavailable because no TPU was detected.
+
+P88 does not promote Pallas as default, prove production readiness, prove
+training readiness, prove throughput, prove full-model quality, change
+recurrence math, loosen tolerances, edit fixture tensors, or start Radjax
+extraction.
+
+## Phase 90 — Record Real TPU Smoke Pass and Close Pallas Runway
+
+P88 added the TPU compile/execution smoke harness, and the first real TPU run
+exposed a tracing-boundary bug: `DynamicJaxprTracer has no attribute
+block_until_ready`. P89 fixed that boundary by moving readiness blocking outside
+the jitted/lowered smoke function.
+
+After P89, the human reran the smoke on an actual TPU v5 lite runtime. The
+recorded result passed with JAX/JAXLIB 0.7.2, `default_backend=tpu`,
+`jit_lowering_ok=true`, `execution_ok=true`, `numeric_check_ok=true`, and
+`max_abs_error=0.0`. The committed P90 closure artifact preserves that exact
+P88/P89 smoke result under
+`artifacts/p90_pallas_runway_closure/p90_real_tpu_smoke_pass.json`.
+
+This proves only that the tiny Pallas WKV smoke path can initialize on TPU,
+lower/JIT, execute, and pass its numeric check. It does not prove production
+Pallas readiness, training readiness, throughput, full-model quality, or Pallas
+default readiness. `pallas_interpret_mode` remains true.
+
+Runtime policy is unchanged: `reference` remains the default WKV runtime and
+`pallas` remains explicit opt-in. P90 closes the Pallas feasibility runway
+enough to pivot toward post-Pallas/Radjax architecture extraction planning,
+likely starting with StudentBackend protocol extraction or equivalent
+Radjax-layer planning.
+
+## Phase 91 - StudentBackend Protocol Extraction
+
+P91 begins the post-Pallas Radjax-shaped extraction. The phase introduces
+`StudentBackend` as a stable wrapper protocol around the validated QRWKV
+student core, plus `CurrentQRWKVStudentBackend` as the concrete adapter for the
+current implementation.
+
+The wrapper delegates to existing QRWKV student behavior instead of duplicating
+recurrence math. It routes parameter initialization to `init_params`, state
+initialization to `init_state`, full-sequence execution to `apply_with_state`
+when available, token execution to `step` when available, state export/import
+to the existing P76 reference-state convention helpers, and logits access to
+the existing `StudentOutput.logits` surface.
+
+No recurrence math, WKV update equations, fixture tensors, runtime semantics,
+teacher export behavior, checkpoint format, trainer flow, or Pallas behavior
+changed. `reference` remains the default WKV runtime and `pallas` remains
+explicit opt-in. P91 does not add TeacherBackend, TeacherTargetStore, or the
+P92 StudentRuntime split.
+
+## Phase 92 - StudentRuntime Split
+
+P92 introduced the `StudentRuntime` boundary as the second post-Pallas
+Radjax-shaped extraction layer. `StudentBackend` remains the architecture-facing
+wrapper around the validated QRWKV student core, while `StudentRuntime`
+represents how the student WKV path executes.
+
+The new runtime wrappers are `ReferenceJaxStudentRuntime` and
+`PallasStudentRuntime`. The runtime selector maps default/`reference` requests
+to the reference JAX runtime and maps explicit `pallas` requests to the Pallas
+runtime wrapper. `CurrentQRWKVStudentBackend.from_config()` now accepts this
+runtime boundary and passes the selected existing `WKVRuntime` value into the
+current Qwen reference student config.
+
+No recurrence math, WKV update equations, fixture tensors, tolerances, Pallas
+semantics, trainer behavior, TeacherBackend, or TeacherTargetStore behavior
+changed. `reference` remains the default runtime and `pallas` remains opt-in.
+P92 does not start P93.
+
+## Phase 93 - TeacherTargetStore Scaffold
+
+P93 introduced `TeacherTargetStore` as the first teacher-side artifact boundary
+in the post-Pallas Radjax-shaped extraction. The phase defines a versioned
+`metadata.json` contract plus local `.npz` shards for tiny stored teacher
+targets.
+
+The P93 store can create, open, write, read, list, and validate tiny synthetic
+logits-style target artifacts. Validation covers metadata schema/store version,
+target type, vocabulary and sequence dimensions, shard count, total example
+count, required arrays, shapes, and logits dtype.
+
+No live TeacherBackend, Hugging Face/Qwen loading, external model API,
+trainer/loss refactor, target consumption training, StudentBackend behavior
+change, StudentRuntime behavior change, recurrence math change, runtime
+semantic change, fixture tensor edit, tolerance change, or Pallas promotion was
+introduced. P93 does not start P94.
+
+## Phase 94 - Tiny TeacherBackend Emission Smoke
+
+P94 introduced a minimal `TeacherBackend` boundary and deterministic
+`SyntheticTeacherBackend`. This is the first teacher-side emission smoke in the
+post-Pallas Radjax-shaped extraction.
+
+The synthetic backend emits tiny deterministic `input_ids`, `attention_mask`,
+and `logits` arrays into the P93 `TeacherTargetStore` layout:
+`metadata.json` plus `shards/shard-00000.npz`. The emission helper validates the
+store and returns a readable artifact.
+
+No live Hugging Face/Qwen teacher, model download, external API, trainer/loss
+refactor, target consumption, training, StudentBackend behavior change,
+StudentRuntime behavior change, recurrence math change, runtime semantic
+change, fixture tensor edit, tolerance change, TPU/GPU requirement, or Pallas
+promotion was introduced. P94 does not start P95.
+
+## Phase 95 - Offline Target Consumption Smoke
+
+P95 introduced the first student-side offline target consumption boundary for
+the P93/P94 teacher target artifact path.
+
+`OfflineTargetBatch` and `load_offline_target_batch()` load a validated
+`TeacherTargetStore` shard into `input_ids`, `attention_mask`, and
+`teacher_logits` arrays. `mse_logits_loss()` computes a scalar logits MSE and
+fails clearly when student and teacher logits shapes differ.
+
+The smoke uses the deterministic `SyntheticTeacherBackend` to create the store
+and the real `CurrentQRWKVStudentBackend` with `emit_logits=True` to produce
+student logits of the same vocabulary shape. This proves offline stored targets
+can reach the current student logits/loss surface without requiring a live
+teacher process.
+
+No optimizer, training loop, gradient update, live Hugging Face/Qwen teacher,
+external API, trainer refactor, recurrence math change, runtime semantic
+change, fixture tensor edit, tolerance change, TPU/GPU requirement, or Pallas
+promotion was introduced. P95 does not start P96.
+
+## Phase 96 - Tiny Overfit Rehearsal
+
+P96 introduced a tiny overfit rehearsal for the offline target path. Stored
+synthetic teacher targets can now drive a deterministic CPU-friendly
+loss/update loop, and the rehearsal verifies finite loss movement.
+
+The update strategy is the documented `tiny_trainable_logit_head` fallback: a
+small trainable logit head with row, position, token, and vocabulary biases,
+optimized by local SGD against the P95 logits MSE. This proves the offline
+artifact/loss/update loop can move loss, but it does not prove full QRWKV
+student training readiness.
+
+No live Hugging Face/Qwen teacher, large training run, trainer refactor,
+recurrence math change, runtime semantic change, fixture tensor edit, tolerance
+change, GPU/TPU requirement, distributed training, or Pallas promotion was
+introduced. P96 does not start P97.
+
+## Phase 97 - Token/Vocab Contract and Student Config Selection
+
+P97 introduced `VocabContract` and student config selection from that contract.
+Teacher and target metadata can now declare a tokenizer/vocab contract, and
+student configs can be instantiated with matching vocab-dependent dimensions.
+
+Synthetic contracts with vocab sizes 8 and 16 prove compatible configs can be
+born from different contracts. Initialized student token embeddings, LM-head
+parameters, and logits match the selected vocab size. Contract mismatches fail
+clearly for vocab size, tokenizer id, and tokenizer hash differences.
+
+No real Hugging Face/Qwen teacher, tokenizer remapping, cross-vocab adapter,
+training, optimizer loop, recurrence math change, runtime semantic change,
+fixture tensor edit, tolerance change, student architecture registry, or Pallas
+promotion was introduced. P97 does not start P98.
+
+## Phase 98 - Generic HF TeacherBackend Emission Smoke
+
+P98 introduced a generic `HFTeacherBackend` emission smoke. The backend can
+extract tokenizer/vocab metadata into `VocabContract`-shaped target metadata
+and emit full-logits `TeacherTargetStore` artifacts through a generic HF-style
+interface.
+
+Baseline tests use fakes and mocks so HF dependencies, internet, Qwen, GPU/TPU,
+student consumption, tokenizer remapping, and training are not required. The
+backend is configurable by `model_id`, lazy-loads optional HF dependencies only
+when used, and keeps `local_files_only=True` by default.
+
+No Qwen-specific code, student consumption path, tokenizer remapping,
+cross-vocab adapter, training, optimizer loop, recurrence math change, runtime
+semantic change, fixture tensor edit, tolerance change, StudentBackend behavior
+change, or Pallas promotion was introduced. P98 does not start P99.
+
+## Phase 99 - Teacher/Student Compatibility Validator
+
+P99 introduced the Teacher/Student Compatibility Validator. Direct-logit
+eligibility now requires matching teacher and student vocab contracts, with
+explicit compatible, incompatible, and unsupported results.
+
+Synthetic tests prove matching contracts pass, mismatched tokenizer, vocab,
+hash, and special-token cases fail clearly, and unsupported target or loss modes
+are reported without adding tokenizer remapping, adapters, real teacher
+consumption, training, or runtime changes.
+
+No tokenizer remapping, vocab adapter, hidden-state projection, real HF artifact
+student consumption, training, optimizer loop, Qwen-specific code, recurrence
+math change, StudentBackend behavior change, StudentRuntime behavior change,
+fixture tensor edit, tolerance change, or Pallas promotion was introduced. P99
+does not start P100.
+
+## Phase 100 - Real-Teacher Offline Consumption Smoke
+
+P100 introduced real-teacher offline consumption smoke. A generic
+`HFTeacherBackend`-style artifact can now pass the teacher/student
+compatibility gate, instantiate a compatible student config from its vocab
+contract, load through offline target consumption, and produce a finite
+student-side loss.
+
+Baseline tests use fake/mock HF paths, so transformers, internet, Qwen, GPU/TPU,
+training, optimizer updates, tokenizer remapping, and runtime changes are not
+required. The smoke blocks mismatched student contracts before loading the
+batch or computing loss.
+
+No training, optimizer loop, Qwen-specific code, tokenizer remapping,
+cross-vocab adapter, hidden-state projection, recurrence math change,
+StudentBackend behavior change, StudentRuntime behavior change, fixture tensor
+edit, tolerance change, or Pallas promotion was introduced. P100 does not start
+P101.
+
+## Phase 101 - StudentBackend Registry / Architecture Selection
+
+P101 introduced the StudentBackend registry and architecture selection layer.
+The current QRWKV backend is now selected through an explicit `architecture_id`
+path while preserving vocab-contract-based config selection and runtime
+separation.
+
+The first registered architecture id is `current_qrwkv`, which maps to the
+existing `CurrentQRWKVStudentBackend`. Reference remains the default runtime,
+and Pallas remains opt-in through the separate runtime argument.
+
+No second backend, training, optimizer loop, Qwen-specific code, tokenizer
+remapping, recurrence math change, runtime semantic change, CurrentQRWKV
+behavior rewrite, fixture tensor edit, tolerance change, or Pallas promotion was
+introduced. P101 does not start P102.
+
+## Phase 102 - Second StudentBackend Smoke
+
+P102 closed the current modularity arc by adding a tiny/debug second
+`StudentBackend`. The registry can now select `current_qrwkv` or `tiny_debug`
+by `architecture_id` while preserving vocab-contract selection and runtime
+separation.
+
+`TinyDebugStudentBackend` proves the student architecture socket is not welded
+to `CurrentQRWKVStudentBackend`, but it is not a production model. It emits
+deterministic finite logits shaped by the `VocabContract`, round-trips minimal
+state, and can participate in a compatibility-gated finite loss smoke.
+
+No training, optimizer loop, Qwen-specific code, tokenizer remapping,
+recurrence math change, runtime semantic change, CurrentQRWKV behavior change,
+fixture tensor edit, tolerance change, or Pallas promotion was introduced. P102
+does not start P103.
+
+## Phase 103 - Tiny Real-Teacher Overfit Rehearsal
+
+P103 began the Real-Teacher Rehearsal and Burn Readiness arc. A generic
+`HFTeacherBackend`-style artifact can now drive a tiny compatibility-gated
+overfit/update rehearsal with finite downward loss movement.
+
+The rehearsal extracts the artifact `VocabContract`, selects a compatible
+student through the registry, requires the P99 compatibility gate before
+loading or updating, loads the P95 offline target batch, and updates only a
+tiny trainable logit head over frozen student logits.
+
+Baseline tests use fake/mock HF paths, so transformers, internet, Qwen,
+GPU/TPU, large training, tokenizer remapping, recurrence math changes, runtime
+semantic changes, and Pallas promotion are not required. P103 does not prove
+full QRWKV parameter training or model quality. The phase also refreshed stale
+StudentBackend registry docs to list both `current_qrwkv` and `tiny_debug`.
+
+## Phase 104 - Tiny HF Causal-LM Teacher Specimen Smoke
+
+P104 added a tiny HF causal-LM teacher specimen smoke for the generic
+`HFTeacherBackend`. The smoke is optional/cache-local and can emit a real
+`full_logits` `TeacherTargetStore` artifact with tokenizer and vocab metadata
+when optional dependencies and local model files are available.
+
+The model id is configurable, defaults to a tiny HF testing specimen, and is
+not a special architecture path. Missing `transformers` or local model cache is
+reported as `unavailable`; downloads are opt-in only.
+
+Baseline tests do not require transformers, internet, downloaded models, Qwen,
+GPU/TPU, student consumption, training, tokenizer remapping, recurrence math
+changes, or runtime changes. The phase also kept StudentBackend registry docs
+explicit about both `current_qrwkv` and `tiny_debug`.
+
+## Phase 105 - Second Teacher-Specimen Swap Smoke
+
+P105 added a second teacher-specimen swap smoke. Two
+`HFTeacherBackend`-style specimens can now run through the same generic
+specimen/report path with distinct model id, tokenizer id, and vocab metadata,
+proving the path is model-id/configuration driven rather than hard-coded to one
+tiny model.
+
+Baseline tests use fake/mock HF specimens, so transformers, internet,
+downloaded models, Qwen, GPU/TPU, student consumption, training, tokenizer
+remapping, recurrence math changes, and runtime changes are not required. P105
+also performed a bounded docs sweep to remove stale roadmap/README references
+from the P97-P104 pivot.
+
+## Phase 106 - Multi-Shard TargetStore Smoke
+
+P106 added a Multi-Shard TargetStore smoke. `TeacherTargetStore` artifacts can
+now validate and iterate multiple shard files in deterministic order, and a
+tiny per-shard consumption/loss smoke verifies finite losses across shards.
+
+The canonical `metadata.json` plus `shards/shard-XXXXX.npz` layout remains
+unchanged. Missing shards, extra shards, missing expected shard ids, and bad
+shapes fail clearly in validation.
+
+No dataset pipeline, training, optimizer loop, Qwen-specific code, tokenizer
+remapping, recurrence math change, runtime semantic change, fixture tensor
+edit, tolerance change, or Pallas promotion was introduced. P106 does not start
+P107.
+
+## Phase 107 - Tiny Dataset Pipeline Smoke
+
+P107 added a tiny deterministic dataset pipeline smoke. In-memory
+`TinyTextExample` records are batched deterministically, emitted through a fake
+HFTeacherBackend-style tokenizer/model path, stored as one `TeacherTargetStore`
+shard per batch, validated through the P106 multi-shard helpers, loaded through
+the P95 offline target path, and checked for finite per-shard/aggregate loss.
+
+Baseline tests use fake in-process HF objects, so transformers, internet,
+downloaded models, Qwen, GPU/TPU, large dataset pipeline work, streaming,
+training, tokenizer remapping, recurrence math changes, runtime changes, and
+Pallas promotion are not required.
+
+P107 does not add production data ingestion, streaming, training, optimizer
+loops, Qwen-specific paths, tokenizer remapping, fixture edits, tolerance
+changes, WKV math changes, or runtime semantic changes. P107 recommends P108
+Checkpoint / Resume / Export Rehearsal next.
+
+## Phase 108 - Checkpoint / Resume / Export Rehearsal
+
+P108 added a tiny checkpoint/resume/export rehearsal. A local `tiny_student`
+checkpoint is saved through the existing simple checkpoint format, reloaded,
+output-compared against the original parameters, exported through the existing
+HF/safetensors interchange path when the optional dependency is present,
+reloaded, and output-compared again.
+
+If `safetensors` is unavailable, the rehearsal reports export `unavailable`
+after the checkpoint/resume portion passes. Baseline tests do not require real
+HF models, internet, Qwen, GPU/TPU, dataset streaming, production training,
+tokenizer remapping, recurrence math changes, runtime changes, or Pallas
+promotion.
+
+P108 does not add production checkpointing, distributed checkpointing,
+production Hugging Face export, training loops, optimizer changes,
+Qwen-specific paths, tokenizer remapping, fixture edits, tolerance changes, WKV
+math changes, or runtime semantic changes. P108 recommends P109 TPU
+Environment Hygiene / Runtime Readiness next.
+
+## Phase 108.1 - Resume Update Closure
+
+P108.1 closed the P108 resume-update gap. A tiny deterministic update state can
+now save after initial update steps, reload exactly through the existing simple
+checkpoint format, resume for at least one more update step, and report finite
+resumed loss with correct step advancement.
+
+The result records initial loss, checkpoint loss, resumed loss, checkpoint
+step, final step, exact restored-state status, resumed-loss finiteness, update
+path, and claims not made.
+
+No production checkpointing, distributed checkpointing, new export format,
+large training, Qwen-specific code, tokenizer remapping, recurrence math
+change, runtime semantic change, fixture edit, tolerance change, or Pallas
+promotion was introduced. P108.1 keeps P109 TPU Environment Hygiene / Runtime
+Readiness as the next phase.
+
+## Phase 109 - TPU Environment Hygiene / Runtime Readiness
+
+P109 added a read-only runtime environment preflight. The preflight reports
+Python, JAX, JAXLIB, default backend, visible JAX devices, TPU device
+detection, and transparent hugepage status in a JSON-serializable report.
+
+Transparent hugepages are detected from
+`/sys/kernel/mm/transparent_hugepage/enabled` when available. The report
+classifies the status as enabled, disabled, unavailable, or unknown and includes
+the human enable command. The CLI is read-only by default and never runs `sudo`
+automatically; mutation is attempted only when explicitly requested.
+
+Baseline tests use fake sysfs/JAX surfaces, so TPU, GPU, internet, model
+downloads, successful JAX import, training, benchmarking, pjit, sharding, and
+Pallas promotion are not required.
+
+No model behavior, production training, performance benchmark, pjit/sharding,
+Qwen-specific code, tokenizer remapping, recurrence math change, WKV equation
+change, fixture edit, tolerance change, StudentRuntime semantic change,
+StudentBackend behavior change, or Pallas default change was introduced. P109
+recommends P110 Mini Eval Harness Smoke next.
+
+## Phase 110 - Mini Eval Harness Smoke
+
+P110 added a Mini Eval Harness smoke. Tiny target artifacts can now be
+evaluated through a compatibility-gated registry-selected student backend path,
+producing finite MSE/count metrics and an inspectable JSON report.
+
+The harness reuses existing `TeacherTargetStore` validation, P106 multi-shard
+iteration, P95 offline target batches, P99 direct-logit compatibility checks,
+and the P101 student backend registry. It records mean MSE logits loss, finite
+loss status, shard/example/token/element counts, selected architecture/runtime,
+target metadata, and a toy top-1 agreement metric.
+
+No benchmark suite, lm_eval integration, model-quality claim, training,
+optimizer loop, real benchmark dataset, Qwen-specific code, tokenizer
+remapping, recurrence math change, WKV equation change, runtime semantic
+change, fixture edit, tolerance change, StudentBackend behavior change,
+StudentRuntime behavior change, or Pallas promotion was introduced. P110
+recommends P111 Big Burn Readiness Report next.
+
+## Phase 111 - Big Burn Readiness Report
+
+P111 added a Big Burn Readiness Report. The report aggregates readiness
+evidence across core correctness, teacher backend/specimen paths, vocab
+compatibility, multi-shard target stores, tiny dataset pipeline,
+checkpoint/resume/export, runtime environment preflight, mini eval harness,
+student backend registry, second backend smoke, and Pallas opt-in status.
+
+It produces pass/warn/fail status, blockers, warnings, claims not made, and a
+recommended next action without starting training or the serious compute burn.
+
+No benchmarking suite, lm_eval integration, pjit/sharding, Qwen-specific code,
+tokenizer remapping, recurrence math change, WKV equation change, fixture
+tensor edit, tolerance change, checkpoint format change, TeacherTargetStore
+layout change, StudentRuntime semantic change, StudentBackend behavior change,
+or Pallas promotion was introduced. P111 recommends P112 First Serious Compute
+Burn next.
+
+## Phase 112 - First Serious Compute Burn Harness / Dry-Run Gate
+
+P112 added the First Serious Compute Burn harness / dry-run gate. The harness
+reads a burn configuration, runs a cheap deterministic dry-run, integrates
+readiness/preflight/checkpoint/eval-style evidence, writes reports and launch
+commands, and blocks real burn mode unless an explicit confirmation flag is
+provided.
+
+No serious compute burn is launched automatically, and baseline tests do not
+require TPU/GPU/HF/internet.
+
+No benchmark suite, lm_eval integration, pjit/sharding, Qwen-specific code,
+tokenizer remapping, recurrence math change, WKV equation change, checkpoint
+format change, TeacherTargetStore layout change, runtime semantic change,
+StudentBackend behavior change, StudentRuntime behavior change, fixture tensor
+edit, tolerance change, or Pallas promotion was introduced. The Real-Teacher
+Rehearsal and Burn Readiness arc is closed pending manual serious burn
+execution and review.
+
+## Phase 113 - RADLADS2 / FLA / hfattnconv / KVM Research Intake
+
+P113 began the post-P112 research alignment arc. It ingested the
+RADLADS2/FLA/hfattnconv/KVM context and documented how the new evidence affects
+the first serious burn strategy.
+
+The P112 launchpad remains valid, but real burn execution is deferred until the
+research intake, HF compatibility reassessment, architecture-similarity
+decision, and revised burn config are complete.
+
+The intake treats FLA/hybrid-distillation as design reference rather than a
+dependency, KVM as a future StudentBackend candidate, Vocab C as a separate
+cross-vocab research track, and 3Tier as future memory-scaffold work outside
+the immediate burn path.
+
+No external repo was vendored. No model behavior, training, real burn,
+tokenizer remapping, FLA dependency, KVM implementation, Vocab C
+implementation, 3Tier implementation, recurrence math change, WKV equation
+change, checkpoint format change, TeacherTargetStore layout change, runtime
+semantic change, StudentBackend behavior change, StudentRuntime behavior
+change, fixture tensor edit, tolerance change, or Pallas promotion was
+introduced.
+
+## Phase 114 - HF-Compatible Student Interface Reassessment
+
+P114 added the HF-Compatible Student Interface Reassessment. The phase defines
+HF compatibility as layered levels from stable artifact layout through loader,
+forward, generation, eval, and full HF-native integration.
+
+It recommends pulling stable HF-style student artifact/config expectations into
+near-term planning without blocking P117 on full Hugging Face integration. P116
+revised burn config should include an HF-style artifact/export expectation,
+while full generation, lm_eval, and `PreTrainedModel`-style integration remain
+future work.
+
+P114 also advanced stale current-phase references in README and
+QRWKV_SNAPSHOT from the prior post-P112 phase to P114.
+
+No full HF wrapper, transformers dependency, PreTrainedModel subclass,
+generation, lm_eval integration, training, real burn, tokenizer remapping,
+Qwen-specific code, GPT-2-specific assumptions, FLA dependency, KVM
+implementation, recurrence math change, WKV equation change, checkpoint format
+change, TeacherTargetStore layout change, runtime semantic change,
+StudentBackend behavior change, StudentRuntime behavior change, fixture tensor
+edit, tolerance change, or Pallas promotion was introduced.
+
+## Phase 115 - Architecture Similarity / First Burn Target Decision
+
+P115 added the First Burn Target Decision. The first serious compute burn target
+is the existing `current_qrwkv` / RWKV-family student path under a matched vocab
+contract, reference runtime by default, Pallas opt-in only, and an HF-shaped
+Level 0/1 artifact and loader boundary.
+
+The decision keeps `tiny_debug` as a deterministic control/backend smoke only,
+defers KVM to a future StudentBackend/research track, treats FLA/hybrid work as
+future design reference rather than immediate dependency, and rejects Vocab C /
+cross-vocab work for P117. P116 should turn this doctrine into the revised burn
+config and launch plan.
+
+P117 success may claim only architecture-family-specific evidence for the
+selected matched-vocab QRWKV/RWKV-family target. It must not claim KVM
+viability, FLA parity, Vocab C success, full HF-native compatibility,
+generation quality, benchmark quality, production Pallas readiness, or universal
+recurrent architecture success.
+
+No training, real burn, tokenizer remapping, vocab mapping, KVM implementation,
+FLA dependency, Vocab C implementation, full HF wrapper, transformers
+dependency, Qwen- or GPT-2-specific hard-coding, recurrence math change, WKV
+equation change, checkpoint format change, TeacherTargetStore layout change,
+runtime semantic change, StudentBackend behavior change, StudentRuntime
+behavior change, fixture tensor edit, tolerance change, or Pallas promotion was
+introduced.
+
+## Phase 116 - TeacherTextbook + StudentArtifact Contract / Revised Burn Launch Plan
+
+P116 added the TeacherTextbook + StudentArtifact Contract / Revised Burn Launch
+Plan. The first serious burn is now specified as a two-box workflow: a validated
+TeacherTextbook input artifact produced from a tiny real HF causal-LM teacher,
+and an HF-shaped Level 0/1 StudentArtifact output produced by the
+`current_qrwkv` / RWKV-family student burn.
+
+TeacherTextbook wraps the existing `TeacherTargetStore` layout with a vocab
+contract, teacher manifest, emission config, and validation report. StudentArtifact
+contains student config, matched vocab contract, runtime metadata,
+checkpoint/params, burn/eval/export reports, and validation report. P116 added
+small CPU-only validators and CLI gates for both artifacts.
+
+TeacherTextbook generation follows teacher hardware requirements and can run
+independently of the TPU/JAX student burn; TPU is not required for textbook
+generation. P116 prefers `sshleifer/tiny-gpt2` as the P117 lab-specimen teacher
+unless replaced by a documented repo convention. GPT-2 is used only as a tiny
+real HF causal-LM specimen, not as a student architecture assumption.
+
+P117 remains matched-vocab only, reference-runtime default, Pallas opt-in, and
+claim-bounded to architecture-family-specific evidence. The P112 harness remains
+guarded, and real mode still requires explicit human confirmation.
+
+No real burn, training, remote teacher service, tokenizer remapping, vocab
+mapping, full HF-native wrapper, transformers required dependency, KVM
+implementation, FLA dependency, Vocab C implementation, recurrence math change,
+WKV equation change, checkpoint format incompatibility, TeacherTargetStore
+layout change, StudentRuntime semantic change, StudentBackend behavior change,
+fixture tensor edit, tolerance change, or Pallas promotion was introduced.
+
+## Phase 116.1 - TeacherTextbook Builder Closure
+
+P116.1 closed the TeacherTextbook builder gap left by P116. It added the
+`scripts/build_teacher_textbook.py` factory button with a deterministic fake
+teacher mode that can produce a valid TeacherTextbook artifact without
+TPU/GPU/Hugging Face/internet and pass the existing TeacherTextbook validator.
+
+The builder turns JSONL or built-in tiny text examples into canonical
+`TeacherTargetStore`-style shards plus vocab contract, teacher manifest,
+emission config, and validation report. It preserves input order, respects
+`max_examples`, supports final partial batches, rejects empty text, and writes
+deterministic `input_ids`, `attention_mask`, and `logits` arrays.
+
+Optional real-HF teacher mode remains guarded and is not required for CI. P116.1
+does not make the fake teacher a model-quality claim.
+
+No real burn, training, remote teacher service, tokenizer remapping, vocab
+mapping, full HF-native wrapper, transformers required dependency, FLA
+dependency, KVM implementation, Vocab C implementation, recurrence math change,
+WKV equation change, checkpoint format incompatibility, TeacherTargetStore
+layout change, StudentRuntime semantic change, StudentBackend behavior change,
+fixture tensor edit, tolerance change, or Pallas promotion was introduced.
+
+## Phase 116.2 - Real HF TeacherTextbook Builder
+
+P116.2 closed the real-HF TeacherTextbook builder gap. The
+`scripts/build_teacher_textbook.py --teacher-mode hf` path now lazily loads a
+tiny HF causal-LM teacher, tokenizes JSONL examples, runs teacher forward passes
+under inference mode, emits `logits`, `input_ids`, and `attention_mask` into
+canonical TeacherTextbook shards, writes vocab contract, teacher manifest,
+emission config, and validation report, and reuses the existing TeacherTextbook
+validator.
+
+HF mode is guarded by `--local-files-only` and explicit `--allow-downloads`
+behavior. CI remains fake/mocked and requires no HF model download, internet,
+GPU, TPU, Qwen, real burn, or training. This enables a real tiny-HF
+TeacherTextbook, such as `sshleifer/tiny-gpt2`, to be built before P117 when
+dependencies and model files are available.
+
+No real burn, training, remote teacher service, Qwen support, tokenizer
+remapping, vocab mapping, full HF-native wrapper, transformers required
+dependency, FLA dependency, KVM implementation, Vocab C implementation,
+recurrence math change, WKV equation change, checkpoint format incompatibility,
+TeacherTargetStore layout change, StudentRuntime semantic change,
+StudentBackend behavior change, fixture tensor edit, tolerance change, or
+Pallas promotion was introduced.
+
+## Phase 116.3 - TPU VM Bootstrap + P117 Preflight Scripts
+
+P116.3 added human-run TPU VM bootstrap and P117 preflight scripts. The
+bootstrap script prepares a fresh Linux/TPU VM repo environment, creates or
+reuses `.venv`, installs baseline dependencies, and prints Python, NumPy,
+torch, JAX/JAXLIB, and JAX device diagnostics.
+
+The preflight script downloads the released
+`p117_teacher_textbook_tiny_gpt2_smoke.tar.gz` TeacherTextbook from GitHub
+Releases, verifies SHA256
+`cbe355a415606012eae4fa856aee180b1b6dc83ee06b4fb70188d57f253d7f23`, extracts
+and validates it, runs the big burn readiness report, runs the first serious
+burn harness in `dry_run` mode, packages preflight reports, and prints a manual
+real-burn command without executing it.
+
+P116.3 also added `docs/P117_TPU_RUNBOOK.md` with TPU VM creation, queued
+resource, SSH, stop/start/delete, and troubleshooting notes. The released mini
+textbook proves handoff and ingestion only; it is not large enough to train a
+useful model.
+
+No real burn, training, remote teacher service, Qwen support, tokenizer
+remapping, vocab mapping, full HF-native wrapper, KVM implementation, FLA
+dependency, Vocab C implementation, recurrence math change, WKV equation
+change, checkpoint format incompatibility, TeacherTargetStore layout change,
+StudentRuntime semantic change, StudentBackend behavior change, fixture tensor
+edit, tolerance change, or Pallas promotion was introduced.
+
+## Phase 117.1 - Actual Configurable Train-Step Burn
+
+P117 proved TPU allocation, multi-worker launch, environment setup,
+TeacherTextbook validation, readiness, and real-mode harness launch, but it did
+not execute training: `steps_completed=0`. P117.1 adds actual configurable
+train-step execution to the serious burn harness.
+
+The harness now accepts explicit `max_steps`, `batch_size`, and
+`allow_textbook_reuse` knobs plus a `--teacher-textbook` path. Confirmed real
+mode loads dense TeacherTextbook shards, computes finite dense distillation loss
+through a small trainable logits path, performs optimizer updates, writes
+`loss_trace.json`, writes `checkpoint.json`, and reports example/reuse counts.
+
+Real mode may no longer pass with zero completed training steps. This phase
+does not make model quality claims and does not require Qwen/Gemma, Rosetta,
+Vocab C, tokenizer remapping, full HF integration, WKV math changes, or Pallas
+promotion.
+
+## Phase 118 - Burn Result Analysis
+
+P118 analyzed the successful P117.1 actual train-step hardware smoke. P117.1
+completed 8/8 real-mode training steps against the 8-example dense
+TeacherTextbook with `batch_size=1`, no textbook reuse,
+`checkpoint_written=true`, `checkpoint_nonzero=true`,
+`real_training_executed=true`, `blockers=[]`, `warnings=[]`, and
+`device_backend=tpu`. The archived worker-0 report listed 16 TPU devices across
+4 JAX processes on the v6e-16 allocation.
+
+P118 records this as a TPU-backed train-step smoke pass, not a model-quality
+result and not proof of true sharded/distributed training or real QRWKV
+architecture training. P118 recommends a 100-example TPU smoke/data-shard proof
+and a separate cascade-branch merge/evaluation path.
+
+No new burn, training behavior, model architecture, Rosetta/Vocab C, tokenizer
+remapping, Qwen/Gemma scale-up, Pallas default promotion, or cascade
+implementation changes were introduced by P118.
+
+## Phase 123 - Cascade/Main Integration Gate
+
+P123 reconciled the P119-P122 compressed/cascaded target branch with main after
+P117.1/P118. Main now contains the actual configurable train-step burn harness
+and burn analysis alongside the TopK+Tail v0 target printer/validator, sparse
+target consumption, Cascaded Soft Labels v1 bucketed artifact contract, and
+optional Bucket Shape Loss.
+
+P123 was an integration gate, not a burn or new training experiment. It
+preserved `dense_logits`, `topk_with_tail_v0`, and
+`cascaded_soft_labels_v1` target paths and preserved the P117.1 invariant that
+real mode cannot pass with zero completed training steps.
+
+P123 did not launch training, make model-quality claims, prove distributed
+training, extract `radjax-tome`, add Rosetta/Vocab C/tokenizer remapping, add
+Qwen/Gemma scale-up, or change WKV/runtime math.
+
+## Phase 124 - 100-Example Tome Generation Result
+
+P124 produced 100-example dense and `cascaded_soft_labels_v1` TeacherTextbook
+artifacts from WikiText-103 using `sshleifer/tiny-gpt2`. Both artifacts
+validated successfully: the dense artifact was approximately `1.2G`, and the
+cascaded artifact was approximately `13M`.
+
+P124 is an artifact-generation and validation result. It does not prove model
+quality, production training readiness, distributed training readiness, Qwen
+support, tokenizer remapping, or large-scale performance.
+
+## Phase 125 - TPU 100-Example Training Smoke Result
+
+P125 attempted the 100-example TPU consumption path on a v6e-16 slice with 4
+JAX processes and 16 TPU devices observed. The cascaded path was uploaded but
+rejected by the P117.1 dense-only real-burn loader. The canonical
+`dense_logits` dense path was also rejected until metadata was patched to the
+legacy `full_logits` name.
+
+The patched dense salvage run completed 25/25 confirmed real TPU train steps
+with batch size 4, 100 examples consumed, no reuse, finite loss trace,
+non-empty checkpoint, and no blockers/warnings. It is a TPU train-step smoke,
+not a quality claim.
+
+P125 exposed weak distributed observability: multiple per-worker reports
+reported `worker_id: "0"`, and each appeared to consume the full 100-example
+set. Distributed example sharding was not proven and must not be claimed from
+P125.
+
+## Phase 126 - Contract Unification + Cascaded Burn Wiring
+
+P126 closes the P124/P125 contract gaps in the guarded burn harness. Real mode
+now accepts canonical `dense_logits` directly, preserves legacy `full_logits`,
+and reports `teacher_target_type_legacy_alias` for dense artifacts. Real mode
+also detects `cascaded_soft_labels_v1`, loads it through the target consumption
+abstraction, and dispatches to the P122 sparse/cascaded loss path with
+`bucket_shape_loss_weight=0.0` by default.
+The tiny burn trainer still materializes dense full-vocab student logits, so
+P126 does not claim cascaded runtime memory savings.
+
+Burn reports now include JAX process/device observability fields, derive
+`worker_id` from `jax.process_index()`, record example-id diagnostics, and
+explicitly keep `distributed_training_ready`,
+`distributed_sharding_verified`, and
+`distributed_example_sharding_verified` false.
+
+P126 did not launch a full burn, prove model quality, prove distributed
+training, change WKV math, promote Pallas, add tokenizer remapping, or add Qwen
+scale-up support.
+
+## Phase 128 - Distributed Example Sharding Proof
+
+P127 verified that the P126 cascaded real-burn path executes on TPU with 4 JAX
+processes and 16 TPU devices, but it still reported unsharded example
+consumption. P128 isolates the next proof: deterministic example assignment
+only.
+
+P128 adds pure contiguous and round-robin example-sharding utilities. The real
+burn harness now defaults to `contiguous_by_process` when
+`jax.process_count() > 1`, slices dense and cascaded TeacherTextbook arrays to
+the local process shard, writes per-process shard reports, and has process 0
+write a deterministic global coverage/overlap report. Burn reports now
+distinguish global and local example counts and expose local shard min/max/sample
+diagnostics.
+
+P128 may claim deterministic distributed example sharding when
+`distributed_example_sharding_verified=true`. It does not prove optimizer
+synchronization, synchronized global batch semantics, full distributed training
+correctness, model quality, WKV/Pallas changes, tokenizer remapping, or Qwen
+scale-up support. P129 remains reserved for gradient/optimizer synchronization
+proof.
+
+## Phase 129 - Gradient / Optimizer Synchronization Audit
+
+P129 audits whether the P128 sharded real-burn path is synchronizing gradients
+and optimizer/update state across JAX processes. The answer is no for the
+current minimal burn train step: each process computes local loss and local
+gradients on its shard, then applies a local stateless-SGD update outside a
+JAX named-axis collective context.
+
+P129 adds explicit `distributed_sync` configuration, parameter fingerprints,
+stateless optimizer fingerprints, checkpoint byte fingerprints, per-process
+sync reports, process-0 audit metadata, local/global batch fields, loss
+semantics fields, and distributed-training readiness gating. The report now
+explains that `loss_reduction=local_only`, `loss_is_global=false`,
+`gradient_sync_enabled=false`, `parameter_sync_verified=false`, and
+`distributed_training_ready=false`.
+
+P129 does not claim gradient synchronization, optimizer synchronization,
+matching final parameter fingerprints across processes, global batch semantics,
+single-writer checkpoint safety, model quality, Pallas default readiness,
+Qwen/tokenizer remapping, or WKV/runtime math changes. A future phase must move
+the train step into a valid JAX collective context and compare per-process
+fingerprints before distributed training readiness can be claimed.
+
+## Phase 130 - True Distributed Gradient Synchronization
+
+P130 implements synchronized gradient/update behavior for the minimal
+first-serious-burn trainer. For verified multi-process sharded burns,
+`distributed_sync=auto` resolves to `gradient_pmean`; explicit `none` preserves
+local-only behavior, and explicit `gradient_pmean` blocks unless distributed
+example sharding is verified.
+
+The current burn train state remains intentionally small: `vocab_bias`,
+`token_scale`, and stateless SGD with fixed learning rate. P130 gathers each
+gradient leaf across JAX processes with
+`jax.experimental.multihost_utils.process_allgather`, averages the gathered
+gradients, globally averages the scalar loss, and applies the same averaged
+update on each process. Final parameter sync is verified with a collective
+checksum min/max check. Optimizer sync is explicit because the optimizer has no
+state.
+
+P130 may set `distributed_training_ready=true` only when example sharding,
+collective communication, gradient sync, parameter checksum sync, stateless
+optimizer sync, global loss semantics, and `jax.process_count() > 1` are all
+verified. Checkpoint fingerprint matching remains reported separately, and
+single-writer checkpoint/export hygiene is deferred to P131.
+
+P130 does not claim model quality, production readiness, large-scale
+performance, Qwen/tokenizer remapping, Pallas default readiness, or WKV/runtime
+math changes.
+
+## Phase 131 - Single-Writer Checkpoint and Export Hygiene
+
+P131 closes the output-layer caveat left by P130. The guarded burn harness now
+uses a process-aware artifact policy:
+`process_0_canonical_with_per_process_diagnostics`. Canonical artifacts such
+as `checkpoint.json`, `burn_report.json`, generated `readiness_report.json`,
+`loss_trace.json`, `launch_commands.md`, `sync_global_report.json`, and
+`example_sharding_global_report.json` are process-0 writes only.
+
+Per-process diagnostics are preserved under process-index-specific filenames:
+`burn_report_process_<index>.json`, `sync_report_process_<index>.json`, and
+`example_shard_process_<index>.json`. Burn reports now identify whether they
+are canonical or per-process, record the canonical writer process, list
+expected per-process burn report paths, and expose the canonical checkpoint
+path and fingerprint.
+
+Checkpoint fingerprint reporting now uses `checkpoint_write_strategy:
+process_0_only` and `checkpoint_fingerprint_comparison_scope:
+canonical_process_0_only`. `checkpoint_fingerprint_match=true` means the
+single canonical checkpoint writer was verified; it is not an independent
+N-way checkpoint byte comparison.
+
+P131 may claim `artifact_hygiene_ready=true` and
+`single_writer_checkpoint_verified=true` for the burn harness artifact layer.
+It preserves P130 distributed training readiness when the P130 predicates pass.
+It does not claim model quality, production training readiness, large-scale
+performance, Qwen/tokenizer remapping, Pallas default readiness, or WKV/runtime
+math changes.
+
+## Phase 132 - Behavioral Fingerprint Artifact Schema + Validator
+
+P132 introduces the first teacher-pure `behavioral_fingerprint` artifact
+contract at version `0.1`. The artifact uses a human-inspectable
+`manifest.json`, `modes.json`, and sharded JSONL target rows under `targets/`.
+It is designed as a structural contract for later fixed-shape JAX/XLA loading,
+not as a training path.
+
+The P132 validator checks artifact type/version, teacher and sequence metadata,
+tracked stats, mode id uniqueness, mode bounds, target shard existence, JSONL
+row shape, token id vocabulary bounds, row bounds inside mode bounds, shard
+record counts, and total `sequence.target_positions` when present. The repo
+now includes a tiny synthetic valid fixture at
+`tests/fixtures/behavioral_fingerprint/v0_1_valid_tiny` and a CLI:
+`scripts/validate_fingerprint_artifact.py`.
+
+P132 does not implement teacher-side fingerprint generation, a fingerprint
+target loader, student distribution statistics, corridor loss, exemplar
+reservoirs, live teacher calls, student-aware repair, or training changes. It
+does not claim model quality, production training readiness, Qwen/tokenizer
+remapping, Pallas default readiness, or WKV/runtime math changes.
+
+## Phase 133 - Behavioral Fingerprint Target Loader
+
+P133 adds the first consumer-facing bridge for P132 behavioral fingerprint
+artifacts. The new loader validates artifacts by default, loads target shards in
+manifest order, represents rows as `FingerprintTargetRecord`, and batches them
+as NumPy-backed `FingerprintBatch` objects with fixed shapes for future JAX/XLA
+training code.
+
+The loader supports deterministic seeded shuffling, `max_records`, and
+`drop_remainder`. It intentionally rejects variable-length `input_ids` at the
+loader boundary because P132 did not define a pad token or padding policy. The
+tiny P132 fixture now uses exactly `sequence.max_seq_len` token slots per JSONL
+row, and tests assert one JSON object per physical line.
+
+P133 also adds `scripts/inspect_fingerprint_targets.py` for quick batch-shape
+inspection. It does not implement student distribution statistics, corridor
+loss, exemplar reservoirs, teacher fingerprint generation, or any training
+objective changes. It does not claim model quality, production training
+readiness, Qwen/tokenizer remapping, Pallas default readiness, or WKV/runtime
+math changes.
+
+## Phase 134 - Student Distribution Stats
+
+P134 adds the pure student-side statistic layer needed before corridor loss.
+The new `qrwkv_xla.training.fingerprint_stats` module computes behavioral
+fingerprint statistics from `[batch, vocab]` logits using stable softmax and
+log-softmax. It returns natural-log entropy, probability-space top-1 margin,
+top-8 mass, top-32 mass, and tail mass defined as `1.0 - top32_mass`.
+
+P134 also adds JAX-friendly target-position selection from `[batch, seq, vocab]`
+logits using `[batch]` positions, plus a convenience wrapper that selects
+positions before computing stats. Top-k mass clamps to vocabulary size when the
+vocabulary is smaller than 8 or 32, and non-jitted shape misuse raises clear
+`ValueError`s.
+
+P134 does not compare stats to fingerprint bounds, implement corridor loss,
+modify training objectives, change optimizers, add exemplar reservoirs, or
+generate teacher fingerprints. It does not claim model quality, production
+training readiness, Qwen/tokenizer remapping, Pallas default readiness, or
+WKV/runtime math changes.
+
+## Phase 135 - Corridor Loss
+
+P135 adds the first judgment layer for behavioral fingerprint distillation. The
+new `qrwkv_xla.training.fingerprint_loss` module compares P134 student
+distribution statistics against P133 fingerprint batch bounds with simple
+squared-hinge penalties. Bounds are inclusive, so exact-boundary values are
+inside the corridor and receive zero penalty.
+
+The loss utilities support non-negative per-stat weights, optional
+`FingerprintBatch.weight` record weighting, scalar total and per-stat losses,
+per-stat inside rates, `all_inside_rate`, and `mean_weight`. Per-stat losses
+include config weights, so setting a stat weight to zero reports that stat loss
+as zero.
+
+P135 does not wire the loss into any trainer, optimizer, checkpoint path, burn
+harness, or CLI training flow. It does not implement exemplar reservoirs,
+teacher fingerprint generation, mode-classifier losses, Qwen/tokenizer
+remapping, Pallas promotion, or WKV/runtime math changes.
+
+## Phase 136 - Tiny Fingerprint Training Smoke
+
+P136 wires the P132-P135 behavioral fingerprint stack into its first tiny
+training smoke. The new `qrwkv_xla.training.fingerprint_smoke` path loads a
+P133 `FingerprintTargetDataset`, applies a deterministic trainable
+position-logit head, selects target-position logits, computes P134 student
+distribution statistics, computes P135 corridor loss, performs SGD updates, and
+writes metrics, checkpoint, and report JSON artifacts.
+
+The smoke has a CLI at `scripts/run_fingerprint_smoke.py` and is CPU-only. It
+requires no teacher backend, no Hugging Face download, no internet, no GPU, and
+no TPU. The smoke is designed to verify wiring and finite metrics, not model
+quality.
+
+P136 does not add exemplar reservoirs, mixed CSL/fingerprint batches, real
+teacher fingerprint generation, dynamic top-k, quality benchmarks, Qwen/tokenizer
+remapping, Pallas promotion, or WKV/runtime math changes.
+
+## Phase 136.1 - Fingerprint Smoke Robustness Cleanup
+
+P136.1 tightens the P136 smoke without expanding its research scope. Reports
+now explicitly identify the smoke path as a standalone
+`tiny_position_logit_head`, record that it does not use `input_ids`, does not
+integrate the main runner, does not require a teacher, and does not enable an
+exemplar reservoir.
+
+The smoke now treats `steps` as requested optimizer updates and cycles the tiny
+finite batch stream until that count completes. It reports
+`train_batches_consumed` and refuses to pass when no optimizer batch is
+available. Loss non-increase is now diagnostic only through
+`loss_non_increasing` and `loss_delta`; pass/fail is based on completed updates,
+nonzero batch consumption, finite losses/metrics, and non-negative initial and
+final losses.
+
+P136.1 does not add real student-backend integration, main staged-runner
+integration, exemplar reservoirs, mixed CSL/fingerprint batches, teacher
+generation, Qwen/tokenizer remapping, Pallas promotion, or WKV/runtime math
+changes.
+
+## Phase 137 - Exemplar Reservoir Integration
+
+P137 adds the optional landmark path for behavioral fingerprint artifacts. The
+`behavioral_fingerprint` manifest may now include an `exemplar_reservoir` block
+with `enabled`, `payload_type: dense_probs`, `loss: kl`, `num_records`, and
+shard metadata. Existing artifacts without the block remain valid.
+
+The validator checks exemplar shard existence, physical JSONL counts, required
+record fields, fixed-length `input_ids`, positions inside the sequence, token
+ids inside vocabulary, dense teacher probability length and normalization,
+finite non-negative weights, known optional `mode_id`, finite optional
+interestingness scores, and string reason codes.
+
+P137 adds `FingerprintExemplarDataset`, `FingerprintExemplarBatch`,
+`load_fingerprint_exemplars`, and `scripts/inspect_fingerprint_exemplars.py`.
+The loader preserves manifest order by default, supports deterministic shuffle,
+`max_records`, and `drop_remainder`, and uses `-1` as the missing `mode_id`
+sentinel in batches.
+
+P137 also adds `qrwkv_xla.training.fingerprint_exemplar_loss`, including direct
+`[batch, vocab]` KL loss and a selected-position wrapper for
+`[batch, seq, vocab]` logits. The loss is standalone and is not mixed with the
+P135 corridor objective in this phase.
+
+P137 does not add mixed corridor + exemplar training, main runner integration,
+teacher generation, real student-backend training, CSL/cascaded exemplar
+compression, dynamic top-k, learned critics, TPU/GPU burns, quality claims,
+Pallas promotion, or WKV/runtime math changes.
+
+## Phase 138 - Mixed Corridor + Exemplar Smoke
+
+P138 adds the first standalone mixed behavioral fingerprint smoke. The new
+`run_mixed_fingerprint_training_smoke` path loads P133 corridor batches and
+P137 exemplar batches from the same artifact, cycles both finite batch streams,
+and applies the existing tiny `tiny_position_logit_head` model.
+
+Each optimizer step computes P134 distribution stats over corridor
+target-position logits, feeds those stats to the P135 corridor loss, computes
+P137 dense exemplar KL over exemplar target-position logits, and combines the
+two branches as:
+
+```text
+mixed_loss =
+    corridor_loss_weight * corridor_loss
+  + exemplar_loss_weight * exemplar_kl_loss
+```
+
+Loss weights must be non-negative, and both weights cannot be zero. P138 emits
+mixed, corridor, exemplar, and batch-consumption metrics, including
+`fingerprint/mixed_loss_total`, branch loss totals, exemplar KL/cross-entropy/
+teacher entropy, corridor inside rates, and consumed corridor/exemplar batch
+counts.
+
+The existing `scripts/run_fingerprint_smoke.py` keeps corridor-only behavior by
+default and adds `--mode mixed` for the P138 path. The mixed report identifies
+`training_path_kind: standalone_mixed_fingerprint_smoke`,
+`exemplar_reservoir_enabled: true`, `teacher_required: false`,
+`main_runner_integrated: false`, and `real_student_backend_integrated: false`.
+It requires no Hugging Face download, internet, GPU, or TPU.
+
+Pass/fail requires completed requested optimizer steps, nonzero consumed
+corridor and exemplar batches, finite mixed losses/metrics, and non-negative
+initial/final mixed losses. `mixed_loss_non_increasing` and branch deltas are
+diagnostic only.
+
+P138 does not add real student-backend training, main runner integration,
+teacher generation, live teacher queries, CSL/cascaded exemplar payloads,
+dynamic top-k, learned critics, TPU/GPU burns, quality claims, production
+readiness, Pallas promotion, or WKV/runtime math changes.
+
+## Phase 139 - Fingerprint Diagnostics, Reports, and Readiness
+
+P139 closes the first behavioral fingerprint implementation arc without adding
+new training behavior. It adds `summarize_fingerprint_artifact`, a simple
+`scripts/inspect_fingerprint_artifact.py` CLI, P139-shaped smoke reports,
+Markdown run summaries, report validation helpers, and canonical metric aliases.
+
+Corridor-only and mixed smoke reports now carry `report_schema_phase: P139`,
+explicit report types, artifact summaries, corridor target summaries, seed and
+learning-rate metadata, no-teacher/no-accelerator flags, limitation flags, and
+nested loss/metric sections. Mixed reports additionally include exemplar
+reservoir summary, loss weights, mixed loss diagnostics, and exemplar metrics.
+
+Both smoke modes write `fingerprint_run_summary.md` beside the JSON report. The
+summary is generated from the report and calls out the training path, tiny
+position-logit smoke model, optimizer steps, batch consumption, loss deltas,
+corridor inside rates, exemplar KL when present, and limitations.
+
+P139 adds canonical metric aliases such as `fingerprint/corridor/loss_total`,
+`fingerprint/corridor/inside_all_rate`, `fingerprint/exemplar/kl_loss`, and
+`fingerprint/mixed/loss_total` while preserving existing internal smoke keys.
+
+P139 proves that the tiny standalone fingerprint miniature is inspectable and
+reportable. It does not prove real QRWKV backend integration, main distillation
+runner integration, input-conditioned student learning, teacher-side
+fingerprint generation, quality improvement, artifact convergence,
+storage/compute wins, TPU/GPU behavior, Pallas readiness, or production
+training readiness. The next documented gap is real student integration and
+teacher-pure capture in `docs/FINGERPRINT_NEXT_ARC_READINESS.md`.
+
+## Phase 140 - Real Student Fingerprint Forward Smoke
+
+P140 opens the next behavioral fingerprint arc by replacing the tiny
+position-logit smoke head with the actual registered QRWKV student backend for
+a forward-only check. `run_real_student_fingerprint_forward_smoke` loads a
+validated fingerprint corridor artifact, derives a `VocabContract`, instantiates
+`CurrentQRWKVStudentBackend` through `create_student_backend(current_qrwkv)`,
+and forwards the artifact `input_ids` through `backend.forward_full`.
+
+The smoke requires finite rank-3 logits shaped `[batch, seq, vocab]`, validates
+student/artifact vocab compatibility, rejects out-of-range target positions
+before JAX selection, computes P134 distribution stats at target positions, and
+feeds those stats to the P135 corridor loss. It emits
+`fingerprint/real_student_forward/logits_*` metrics alongside the canonical
+`fingerprint/corridor/...` metric aliases.
+
+P140 reports `training_path_kind:
+real_student_fingerprint_forward_smoke`, `smoke_student_kind:
+real_student_backend`, `smoke_student_uses_input_ids: true`,
+`real_student_backend_integrated: true`, `main_runner_integrated: false`,
+`teacher_required: false`, `hf_required: false`, `accelerator_required: false`,
+and `optimizer_steps_completed: 0`. The dedicated CLI is
+`scripts/run_real_student_fingerprint_forward_smoke.py`.
+
+P140 does not add optimizer steps, checkpoint training semantics, main staged
+runner integration, teacher-side fingerprint capture, Hugging Face teacher
+calls, TPU/GPU requirements, Pallas promotion, or quality claims. The next
+target is P141 main-runner fingerprint mode.
+
+## Phase 141 - Main Runner Fingerprint Mode
+
+P141 adds `fingerprint_corridor` as a main `run_distill_stage` mode. The
+teacher-target path remains unchanged; fingerprint mode branches before
+`TargetBundleDataset` is opened, so it does not require a teacher target bundle
+or teacher backend.
+
+The P141 path validates a behavioral fingerprint artifact, loads P133 corridor
+batches, builds a `VocabContract`, instantiates `current_qrwkv` through the
+student backend registry, forwards `batch.input_ids` through
+`backend.forward_full`, computes P134 distribution stats at target positions,
+computes P135 corridor loss, and applies the existing optimizer update and
+gradient clipping machinery through `TrainState`.
+
+P141 writes normal checkpoint artifacts with the existing checkpoint writer.
+When `fingerprint.output_dir` or CLI `--output-dir` is provided, it also writes
+`metrics.json`, `fingerprint_corridor_report.json`, and
+`fingerprint_run_summary.md`. The report identifies `phase: P141`,
+`distill_mode: fingerprint_corridor`, `training_path_kind:
+main_runner_fingerprint_corridor`, `real_student_backend_integrated: true`,
+`main_runner_integrated: true`, `teacher_required: false`, and
+`exemplar_reservoir_enabled: false`.
+
+The mode emits normal runner loss/learning-rate/optimizer/gradient metrics plus
+canonical `fingerprint/corridor/...` metrics and
+`fingerprint/runner/optimizer_steps_completed`,
+`fingerprint/runner/batches_consumed`, and
+`fingerprint/runner/artifact_num_records`. For this mode, `train/loss` equals
+`fingerprint/corridor/loss_total`.
+
+P141 does not add exemplar reservoir training, mixed objectives, teacher-side
+fingerprint capture, TOME generation, real teacher artifacts, quality
+comparisons, TPU/GPU burns, Pallas promotion, or production-readiness claims.
+The next target is P142 input-conditioned tiny student rehearsal.
+
+## Phase 142 - Input-Conditioned Tiny Student Rehearsal
+
+P142 keeps the P141 `fingerprint_corridor` mode and adds rehearsal evidence
+rather than another training path. A new
+`fingerprint.input_conditioned_rehearsal` flag marks runs that should report as
+`phase: P142`.
+
+The runner now measures whether the registered student backend produces
+different logits for two distinct fingerprint `input_ids` rows before training.
+It also compares initial and final student parameter trees and reports
+`params_changed` plus `param_delta_norm`. These diagnostics are emitted under
+`fingerprint/rehearsal/...` and are included in the P142 report and Markdown
+summary.
+
+P142 pass status for fingerprint mode requires completed optimizer steps,
+nonzero batch consumption, finite/non-negative loss, finite metrics, detected
+input conditioning, and changed parameters. Loss non-increase is still only
+diagnostic and is reported with `loss_non_increasing_required: false`.
+
+The existing P137/P140 tiny fixture is sufficient for this rehearsal because
+`current_qrwkv` emits distinct logits for distinct synthetic input sequences at
+initialization. P142 writes the same normal runner checkpoint artifacts as
+P141, and checkpoints remain loadable through the existing checkpoint helper.
+
+P142 does not add teacher-side fingerprint capture, exemplar reservoir training,
+mixed objectives, TOME generation, real teacher artifacts, baseline comparison,
+quality claims, TPU/GPU burns, Pallas promotion, or production-readiness claims.
+The next target is P143 teacher-side fingerprint capture skeleton.
+
+## Phase 143 - Teacher-Side Fingerprint Capture Skeleton
+
+P143 starts the producer side of the Real Student Integration + Teacher-Pure
+Dynamic Capture arc. It adds `qrwkv_xla.fingerprint.capture`, a synthetic
+logit-provider capture API, and `scripts/build_fingerprint_artifact.py`.
+
+The capture skeleton consumes `FingerprintCaptureExample` records containing
+fixed-length `input_ids` and `[seq, vocab]` teacher-like logits. It reuses the
+P134 distribution-stat math, assigns dynamic `stat_bands_v0` modes from
+observed `(entropy_bin, top1_margin_bin, top32_mass_bin)` combinations, and
+turns per-mode min/max aggregates into corridor bounds. If observed modes
+exceed `max_modes`, capture raises a clear error.
+
+Exemplar reservoir size is configurable through `max_exemplars`; P143 does not
+hardcode 1,000 exemplars. The implemented P143 policy is deterministic global
+top-k by `entropy + tail_mass - top1_margin`, with reason codes such as
+`high_entropy`, `high_tail_mass`, `low_margin`, and `mode_representative`.
+
+The writer emits `manifest.json`, `modes.json`,
+`targets/targets-00000.jsonl`, optional
+`exemplars/exemplars-00000.jsonl`, and required `capture_summary.json`. The
+artifact validates through the existing P132 validator, loads through the P133
+corridor target loader and P137 exemplar loader, and is consumable by the P140
+real-student forward smoke.
+
+P143 does not invoke a real HF teacher, wire TOME/textbook generation, train a
+student, add advanced clustering, claim semantic mode quality, prove artifact
+convergence, compare baselines, or make quality-per-byte claims. The next
+targets are P144 controlled synthetic/fixture parity and P145 tiny real teacher
+fingerprint capture.
+
+## Phase 144 - Teacher Capture Synthetic Fixture Parity
+
+P144 calibrates the P143 capture skeleton with known synthetic probability
+fixtures. Tests convert hand-authored distributions to logits with
+`log(probs)` and verify expected P134 stats, `stat_bands_v0` mode keys, dynamic
+mode counts, per-mode record counts, corridor bounds, exemplar selection, and
+capture summary fields.
+
+P144 adds optional quantile corridor bounds through
+`FingerprintCorridorBoundsConfig(method="quantile", lower_quantile=...,
+upper_quantile=...)`. Min/max remains the default, and quantile bounds use
+NumPy quantiles over the small in-memory capture records.
+
+P144 also adds optional deterministic `stratified_interestingness_v0` exemplar
+selection. It attempts to retain `per_mode_min` high-interest records from each
+observed mode when the `max_exemplars` budget allows, then fills remaining slots
+by global interestingness. The existing `top_interestingness_v0` policy remains
+supported.
+
+The P144 compatibility tests verify emitted artifacts validate through P132,
+load through P133 and P137, summarize through the P139 artifact summary helper,
+and can run one tiny P141 `fingerprint_corridor` step with the real registered
+student backend.
+
+P144 does not call real HF teachers, integrate TOME/textbook generation, add
+streaming quantile sketches, perform student quality experiments, run
+accelerator burns, or claim quality-per-byte gains. The next target is P145
+tiny real teacher fingerprint capture.
+
+## Phase 145 - Tiny Real Teacher Fingerprint Capture
+
+P145 adds the first tiny real-teacher fingerprint capture path. The new
+`qrwkv_xla.fingerprint.real_teacher` wrapper uses `HFTeacherBackend` to tokenize
+local text prompts, emit `[batch, sequence, vocab]` causal-LM logits, convert
+them into `FingerprintCaptureExample` records, and run the P143/P144 capture
+pipeline.
+
+The dedicated script is `scripts/build_real_teacher_fingerprint_artifact.py`.
+It defaults to local-files-only operation and fails clearly when the tiny HF
+teacher is not cached. Tests use deterministic fake-HF backends for CI and an
+optional local-cache CLI smoke for `sshleifer/tiny-gpt2`.
+
+P145 summaries identify `phase: P145`, `run_kind:
+tiny_real_teacher_capture`, and `capture_engine:
+teacher_side_capture_skeleton_v0`. They record real teacher metadata, examples
+processed, tokens processed, fixed-position target count, dynamic modes,
+records per mode, bounds method, exemplar policy, max exemplars, retained
+exemplars, artifact validation, loader status, and consumer sanity.
+
+Consumer sanity follows a best-effort hierarchy: P141 one-step
+`fingerprint_corridor`, P140 forward smoke, or loader-only fallback with an
+explicit reason when the teacher vocabulary is too large for cheap CPU student
+instantiation. The artifact vocabulary is never silently remapped or shrunk.
+
+P145 does not prove real-scale teacher capture, TOME/textbook integration,
+artifact convergence, student quality improvement, baseline comparison,
+quality-per-byte gain, or production capture performance. The next target is
+P146 real student training rehearsal from a tiny real-teacher fingerprint
+artifact.
+
+## Phase 146 — Real Student Fingerprint Training Rehearsal
+
+P146 connects the tiny real-teacher fingerprint producer to the real registered
+student training consumer. It adds a P146 wrapper and CLI that either reuse an
+existing P145 behavioral fingerprint artifact or build one from a locally cached
+tiny HF teacher, then run the main `fingerprint_corridor` path through
+`run_distill_stage`.
+
+The rehearsal validates the artifact, trains `current_qrwkv`, verifies optimizer
+steps, parameter movement, finite loss diagnostics, and loadable checkpoint
+artifacts, and writes `p146_rehearsal_report.json` plus
+`p146_rehearsal_summary.md`. The report records the central contract:
+`teacher_real: true` for artifact construction and
+`teacher_required_during_training: false` for student training.
+
+This remains an integration rehearsal. It does not claim quality improvement,
+baseline parity, quality-per-byte efficiency, large-scale capture readiness, or
+accelerator burn readiness.
+
+## Phase 147 — Baseline Comparison Harness
+
+P147 adds the first tiny scoreboard harness for the behavioral fingerprint arc.
+It can reuse an existing P145/P146 behavioral fingerprint artifact or build one
+from a locally cached tiny HF teacher, then record two comparable arms:
+`baseline_init_only` and `fingerprint_corridor`.
+
+The baseline arm initializes the same registered student backend/config and
+writes a zero-step checkpoint. The fingerprint arm runs through the existing
+P141/P146 `fingerprint_corridor` path. The harness writes
+`p147_comparison_report.json` and `p147_comparison_summary.md` with shared
+controls, artifact budget metrics, arm diagnostics, and an explicit claims block
+that keeps quality, winner, and quality-per-byte claims false.
+
+P147 is scoreboard infrastructure only. It does not claim that fingerprint
+training improves the student or that any quality-per-byte result has been
+shown.
+
+## Phase 148 — First Quality-Per-Byte Experiment
+
+P148 puts the first tiny number on the P147 scoreboard. It reuses the baseline
+comparison harness, loads the init-only reference checkpoint and trained
+fingerprint corridor checkpoint, evaluates both against the fingerprint
+corridor artifact with the existing P133/P134/P135 path, and records
+corridor-adherence deltas per fingerprint artifact byte.
+
+The experiment writes `p148_quality_per_byte_report.json` and
+`p148_quality_per_byte_summary.md`. It records the artifact byte denominator,
+target/exemplar/mode counts, per-arm corridor adherence metrics, and
+`reference_delta_vs_init_only` quality-per-byte proxy values.
+
+The baseline remains init-only, so P148 labels the comparison as
+`reference_only` with `trained_baseline_available: false`. It does not declare
+a winner, a general quality result, RADLADS parity, scale readiness, or a broad
+quality-per-byte advantage.
+
+## Phase 149 — Arc 2 Report / Go-No-Go
+
+P149 closes the real student integration and teacher-pure capture arc with a
+deterministic report generator. It reads `docs/QRWKV_SNAPSHOT.yaml`, verifies
+the required P140-P148 evidence flags, and writes `p149_arc2_report.json` plus
+`p149_arc2_summary.md`.
+
+When the required evidence is present, the recommendation is
+`go_with_constraints`: proceed to larger controlled fingerprint experiments,
+but only with a trained non-fingerprint baseline, held-out evaluation, fixed
+teacher/corpus/student budgets, and explicit artifact byte accounting.
+
+P149 does not claim general quality improvement, a trained-baseline win,
+RADLADS parity, scale readiness, production readiness, or Pallas default
+readiness. It records those as blocked claims and keeps the open gaps visible
+for the next arc.
+
+## Phase 151 — Trained Baseline Arm
+
+P151 creates the first fair trained comparator for Cycle 1 fingerprint
+corridor training. The conventional arm predicts next source tokens with
+padding-aware causal-LM cross entropy. The corridor arm remains teacher-free
+during training and uses no exemplars.
+
+Both arms start from one serialized shared parameter tree and must report the
+same initial SHA-256 parameter fingerprint. Student backend/config, source IDs,
+optimizer, schedule, requested steps, completed steps, batch size, and sequence
+length are fairness gates rather than descriptive metadata.
+
+P151 writes canonical per-arm checkpoints and metrics plus
+`trained_baseline_comparison_report.json`, `trained_baseline_metrics.json`, and
+`trained_baseline_summary.md`. Raw LM and corridor losses are not comparable
+quality metrics. No winner, held-out, general-quality, quality-per-byte, scale,
+or RADLADS parity claim is made. P152 supplies the held-out evaluation gate.
+
+## Phase 152 — Held-Out Fingerprint Evaluation
+
+P152 makes training/evaluation separation machine-verifiable. Each artifact
+receives a deterministic provenance sidecar covering source-file bytes,
+ordered IDs, ordered source-text hashes, tokenized inputs, capture config,
+teacher identity, split identity, and the artifact manifest. Training and
+held-out IDs, source texts, and exact token sequences must be disjoint.
+
+The evaluator loads the two P151 checkpoints as immutable inputs, verifies the
+P151 fairness report and student/checkpoint contracts, evaluates records in one
+fixed order, and confirms parameter and checkpoint hashes are unchanged. It
+writes aggregate and per-record corridor metrics, paired deltas, deterministic
+bootstrap confidence intervals, optional dense-teacher distribution metrics,
+runtime measurements, provenance, validation reports, and an evaluation
+receipt.
+
+The primary metric is predeclared as held-out corridor loss with lower values
+preferred. A confidence interval spanning zero forces `inconclusive`. Any
+winner is scoped only to this held-out fingerprint set and metric. P152 makes
+no general-quality, quality-per-byte, scale, downstream benchmark, or RADLADS
+parity claim. P153 measures corridor-pass process efficiency.
+
+## Phase 152.1 — Checkpoint Lineage Binding
+
+P152.1 binds the P151 report, shared initialization, baseline checkpoint,
+fingerprint checkpoint, training artifact, source-example set, student
+contract, and matched step budget into one deterministic lineage chain.
+
+Checkpoint identity uses separate SHA-256 hashes for `checkpoint.json` and
+`params.npz` plus a canonical bundle hash. Parameter fingerprints use sorted
+tree paths, shapes, dtypes, and raw values. P152 recomputes these fields and
+writes `checkpoint_lineage_validation.json` before any held-out score or winner
+logic. A mismatch fails closed.
+
+Source provenance now joins JSONL rows to artifact examples by explicit
+`example_id`, preserving artifact order after the join. Missing or duplicate
+IDs fail. Positional legacy mode is disabled by default; explicit opt-in lowers
+lineage confidence and prevents publication-grade lineage claims.
+
+Hash binding proves artifact identity and attribution, not semantic correctness
+or model quality. P152.1 changes no training objective, evaluation metric,
+bootstrap rule, corridor definition, model architecture, or broad claim scope.
+
+## Phase 153 — Corridor-Pass Measurement Harness
+
+P153 makes the intended fast Cycle 1 behavior measurable. A corridor-only
+runner evaluates the dedicated held-out artifact before training, at a fixed
+optimizer cadence, and at final or stable-entry stop. The same record order is
+used at every point.
+
+Trajectory points carry training and held-out loss, all inside rates, raw and
+normalized per-stat distances, aggregate distance quantiles, gradients,
+parameter delta, learning rate, records, tokens, logical artifact bytes, and
+elapsed time. Separate receipts record strict/threshold/stable entry, stopping,
+physical and logical artifact accounting, wall-clock categories, and
+publication-grade lineage.
+
+Fixed-step mode is the default. Stable-entry mode requires the predeclared
+threshold for consecutive evaluations and never starts exemplar training.
+P153 measures corridor process efficiency only; it makes no final-quality,
+quality-per-byte, scale, or RADLADS claim. P154 owns the standalone exemplar
+pass.
+
+## Phase 153.1 — Corridor Aggressiveness Profile Calibration
+
+P153.1 preserves the corridor-only Cycle 1 boundary and executes the P153
+fixed-step harness for four explicit presets and aligned seeds. Resolved
+configuration and override provenance are artifacts, not hidden runner state.
+The comparison holds architecture, backend, initialization procedure, data,
+batching, budget, cadence, optimizer family, and seed set fixed.
+
+Profile evidence includes stable entry, exit after entry, rebound, trajectory
+variance, clipping, gradient spikes, parameter movement, resources, timing,
+and safety aborts. Deterministic bootstrap summaries and paired-seed deltas
+support a validity-first, reliability-first, minimum-sufficient-force choice.
+One seed is smoke evidence; three complete seeds per profile are the minimum
+publication-grade matrix. P153.1 does not run exemplars or establish final
+quality, quality-per-byte, scale, or RADLADS parity.
+
+## 2026-06-29 — Archival freeze
+
+The QRWKV-XLA / RADJAX monorepo is frozen as historical source material after
+pipeline verification and validation reached the split point. Active
+development moved to `RADJAX-Contract`, `RADJAX-Tome`, and `RADJAX-Student`.
+New implementation work should happen in those split repositories, not here.

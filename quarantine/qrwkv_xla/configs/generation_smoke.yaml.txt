@@ -1,0 +1,13 @@
+# Quarantined archived qrwkv-xla reference file.
+# Original path: configs/generation_smoke.yaml
+# Reason: Producer-related support material retained or tracked for later migration; not needed before Spec 3.
+# This file is non-importable reference material for RADJAX-Tome migration.
+
+generation:
+  prompt_corpus: corpora/smoke_prompts.jsonl
+  prompt_split: validation
+  prompt_tags: ["smoke"]
+  prompt_limit: 2
+  max_new_tokens: 8
+  output_dir: eval_outputs/generation_smoke
+  tokenizer: smoke

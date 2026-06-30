@@ -77,3 +77,10 @@ Spec 3 remains blocked. This migration does not emit `cover_page.json`, does not
 write the new RADJAX-Contract Tome artifact shape, does not migrate Student
 training/runtime logic, and does not make JAX, torch, Transformers, CUDA, TPU, or
 network access mandatory.
+
+## Spec 2.8 Bulk Follow-Up
+
+Spec 2.8 adds an explicit bulk manifest and quarantine layer on top of this core
+migration. Safe prompt-corpus, Qwen policy, and lightweight fingerprint artifact
+inspection paths moved into active code. Mixed burn/fingerprint/student-eval
+paths were copied as non-importable quarantine references for Spec 2.9 surgery.

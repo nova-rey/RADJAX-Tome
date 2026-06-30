@@ -682,6 +682,9 @@ def _hinted_new_path(
     translated = old_path.replace("src/qrwkv_xla/", "src/radjax_tome/")
     if translated in new_by_path:
         matches.append(new_by_path[translated])
+    quarantine_txt = f"quarantine/qrwkv_xla/{old_path}.txt"
+    if quarantine_txt in new_by_path:
+        matches.append(new_by_path[quarantine_txt])
     return matches
 
 
