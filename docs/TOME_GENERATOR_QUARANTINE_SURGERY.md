@@ -64,13 +64,17 @@ and explicit final gate checks remain later work.
 
 ## Spec 3 Gate Status
 
-Spec 3 remains blocked pending the audit-closure phase. The current audit still
-counts quarantine references as equivalent or partial evidence, so active
-promotion must be interpreted from this ledger and the active module/test set,
-not from quarantine path matches alone.
+Spec 3 remains blocked after the Spec 2.10 adversarial closure audit. The
+surgery ledger has no remaining quarantine entry marked as a Spec 3 blocker, but
+`docs/TOME_GENERATOR_CLOSURE_AUDIT.md` identifies unresolved active-equivalence
+evidence for `src/qrwkv_xla/artifacts/fingerprint.py` and five of its public
+symbols. The current extraction audit still counts quarantine references as
+equivalent or partial evidence, so active promotion must be interpreted from the
+closure audit, this ledger, and the active module/test set, not from quarantine
+path matches alone.
 
 ## Next Step Recommendation
 
-Proceed to Spec 2.10 audit closure: rerun extraction audit and A/B parity,
-separate active migrations from retained quarantine evidence in the gate
-interpretation, and only then decide whether cover-page work can resume.
+Do not start `cover_page.json` work yet. Resolve or explicitly waive the
+fingerprint artifact closure blockers listed in
+`docs/TOME_GENERATOR_CLOSURE_AUDIT.md`, then rerun the closure audit.

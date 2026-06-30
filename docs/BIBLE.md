@@ -61,3 +61,11 @@ schemas, readers, writers, validators, inspection helpers, and report structures
 into active `RADJAX-Tome` modules while leaving Student/runtime/training logic
 quarantined or out-of-scope. Added a surgery ledger so every quarantined old path
 has an explicit disposition before Spec 3 cover-page work resumes.
+
+## 2026-06-30 — Adversarial Tome Generator closure audit
+
+Added an adversarial closure audit comparing archived `qrwkv-xla` producer-side
+Tome Generator files, functions, tests, docs, and artifacts against active
+`RADJAX-Tome`, quarantine references, and explicit Student/Contract/waiver
+dispositions. The audit distinguishes active migrated behavior from quarantine
+evidence before deciding whether Spec 3 cover-page work may resume.

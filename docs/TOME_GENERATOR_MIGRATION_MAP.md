@@ -28,6 +28,16 @@ quarantine-backed paths: 3 `promoted`, 78 `split_promoted`, 5
 `kept_quarantined`, 32 `belongs_student`, 2 `belongs_contract`, 1 `deprecated`,
 151 `deferred`, and 1 `waived`.
 
+Spec 2.10 adds `docs/TOME_GENERATOR_CLOSURE_AUDIT.json` and
+`docs/TOME_GENERATOR_CLOSURE_AUDIT.md` as the adversarial closure layer. That
+audit compares 372 old producer-relevant files, 1605 public symbols, 48 old CLIs,
+and 92 old tests while distinguishing active behavior from quarantine evidence.
+It blocks Spec 3 on 6 exact closure blockers: the old
+`src/qrwkv_xla/artifacts/fingerprint.py` file and its unresolved public symbols
+`PROBABILITY_LIKE_STATS`, `TARGET_PAYLOAD_LEGACY_JSONL`,
+`TARGET_PAYLOAD_PACKED_CORRIDOR_V1`, `PACKED_TARGET_ARRAYS`, and
+`ValidationResult`.
+
 ## Short-Term Roadmap
 
 - Spec 2.5 - Extraction completeness audit. DONE.
@@ -35,7 +45,7 @@ quarantine-backed paths: 3 `promoted`, 78 `split_promoted`, 5
 - Spec 2.7 - Migrate highest-priority producer schemas/stores/validators/tests. DONE.
 - Spec 2.8 - Bulk producer migration with quarantine. DONE.
 - Spec 2.9 - Surgical split of quarantined mixed producer/student files. DONE.
-- Spec 2.10 - Audit closure, A/B expansion, waivers, and Spec 3 gate check. NEXT.
+- Spec 2.10 - Audit closure, A/B expansion, waivers, and Spec 3 gate check. DONE.
 - Spec 3 - Contract-valid Tome emission with cover_page.json, only after the gate passes.
 
 Previous micro-migration roadmap:
@@ -156,9 +166,11 @@ Passed: `False`
 - The regenerated audit still reports 45 high-risk producer items as quarantined
   or duplicate/merged path evidence, but the Spec 2.9 surgery ledger records no
   remaining quarantine entry as a Spec 3 blocker.
-- legacy A/B parity must still pass after migration waves
+- legacy A/B parity passes for the fake-default case set
 - extraction audit must be interpreted in Spec 2.10 with active promotion
   separated from retained quarantine evidence
+- adversarial closure audit blocks on unresolved fingerprint artifact active
+  equivalence evidence
 - Contract-valid `cover_page.json` Tome emission remains unimplemented
 
 ## Open Questions / Human Review
