@@ -58,6 +58,11 @@ After rerunning extraction audit and triage against the archived repo:
 The generated Spec 3 gate remains blocked because 47 high-risk producer items
 are still quarantined for Spec 2.9 surgery.
 
+These counts include quarantine references as accounting evidence. They do not
+mean quarantined code is active migrated behavior, and `new_equivalent_tests`
+includes quarantined test references until the audit distinguishes active tests
+from quarantine inputs.
+
 ## Quarantine Strategy
 
 Producer-relevant files that contain Student training/eval/runtime coupling,
@@ -67,6 +72,10 @@ as non-importable `.txt` references under `quarantine/qrwkv_xla/`.
 Quarantine is intentionally not under `src/radjax_tome`, is not exported from any
 public API, and is covered by guardrail tests. These files are evidence and raw
 material for Spec 2.9 surgery, not runtime code.
+
+Every manifest-referenced quarantine file must be tracked by git. The guardrail
+tests check both local existence and `git ls-files` tracking so clean CI clones
+match local migration accounting.
 
 ## Ownership Boundaries
 

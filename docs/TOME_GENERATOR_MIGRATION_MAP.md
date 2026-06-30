@@ -20,6 +20,12 @@ Spec 3 is blocked. The extraction audit found a narrow TeacherTextbook migration
 | producer_relevant_old_tests | 89 |
 | total_old_candidate_files | 384 |
 
+Note: quarantine `.txt` references are counted by the current audit as
+equivalent or partial path matches. They are accounting and surgery inputs, not
+active migrated behavior. In particular, `new_equivalent_tests` includes
+quarantined test references until the audit tool separates active tests from
+quarantine evidence.
+
 ## Short-Term Roadmap
 
 - Spec 2.5 - Extraction completeness audit. DONE.

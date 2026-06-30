@@ -7,3 +7,8 @@ build/
 dist/
 *.egg-info/
 artifacts/
+
+# Quarantine is tracked reference material. Keep it visible even when archived
+# paths contain directories named "artifacts".
+!quarantine/
+!quarantine/**

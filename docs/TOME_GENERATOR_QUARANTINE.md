@@ -14,6 +14,10 @@ Each file has a short header with the original path and the quarantine reason.
 The original source is stored as text so Python import discovery, package
 exports, and normal tests do not execute it.
 
+Quarantine files are tracked reference material even when the archived path
+contains a directory named `artifacts`. The repository `.gitignore` keeps runtime
+`artifacts/` outputs ignored while explicitly unignoring `quarantine/**`.
+
 ## Rules
 
 - Quarantine is reference material only.
@@ -42,4 +46,6 @@ The detailed list lives in
 
 `tests/test_quarantine_guardrails.py` verifies that normal `radjax_tome` imports
 do not import quarantine modules, the manifest has reasons, and quarantined
-references are `.txt` files outside the package tree.
+references are `.txt` files outside the package tree. It also verifies manifest
+quarantine references are tracked by git, not merely present in a local working
+tree.

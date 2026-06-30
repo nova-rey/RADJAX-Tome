@@ -1,10 +1,24 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
 import radjax_tome
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _is_git_tracked(path: Path) -> bool:
+    result = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", str(path)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode == 0
 
 
 def test_normal_import_does_not_import_quarantine_modules() -> None:
@@ -32,8 +46,10 @@ def test_bulk_manifest_covers_quarantine_reasons() -> None:
         assert item["reason"]
         if item["classification"] == "quarantine_for_surgery":
             path = Path(item["new_path_or_quarantine_path"])
+            assert str(path).startswith("quarantine/")
             assert path.is_file()
             assert path.suffix == ".txt"
+            assert _is_git_tracked(path)
 
 
 def test_quarantine_is_non_importable_reference_material() -> None:
