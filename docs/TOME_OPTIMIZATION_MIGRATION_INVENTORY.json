@@ -1,0 +1,166 @@
+{
+  "active_repo": "nova-rey/RADJAX-Tome",
+  "desired_runtime_modes": [
+    {
+      "id": "cpu_only",
+      "label": "CPU-only",
+      "notes": "Reference implementation target for offline deterministic generation before optimized runtime paths.",
+      "status": "planned"
+    },
+    {
+      "id": "cpu_gpu",
+      "label": "CPU + GPU",
+      "notes": "Future optional runtime mode for compact on-device reduction using a backend abstraction, not a direct copy of CUDA/MPS assumptions.",
+      "status": "historical_reference_exists"
+    },
+    {
+      "id": "cpu_tpu",
+      "label": "CPU + TPU",
+      "notes": "Future runtime mode requiring a non-CUDA-shaped abstraction; no TPU implementation exists in RADJAX-Tome.",
+      "status": "new_design_required"
+    }
+  ],
+  "historical_commit": "6c21171bf76d341b476128d929d58469d4d06f18",
+  "historical_components": [
+    {
+      "historical_paths": [
+        "scripts/build_real_teacher_fingerprint_artifact.py"
+      ],
+      "id": "build_real_teacher_fingerprint_artifact_cli",
+      "migration_status": "reference_only",
+      "notes": "Historical CLI shape only; RADJAX-Tome public CLI should remain backend-neutral.",
+      "recommended_destination": "future radjax_tome.cli/backend orchestration entrypoint",
+      "summary": "Command-line driver for real-teacher fingerprint/TOME generation."
+    },
+    {
+      "historical_paths": [
+        "src/qrwkv_xla/fingerprint/real_teacher.py"
+      ],
+      "id": "real_teacher_capture_orchestrator",
+      "migration_status": "future_backend_arc",
+      "notes": "Useful staged CPU pipeline reference: source corpus to prompt batches to prefetch/tokenization to inference/reduction to ordered artifact commit.",
+      "recommended_destination": "future radjax_tome teacher runtime orchestration",
+      "summary": "Coordinated staged CPU pipeline for prompt preparation, teacher execution, compact reduction, and writer commits."
+    },
+    {
+      "historical_paths": [
+        "src/qrwkv_xla/fingerprint/topology.py"
+      ],
+      "id": "capture_topology_resolver",
+      "migration_status": "not_migrated",
+      "notes": "Should be redesigned around RADJAX-Tome artifact contracts and runtime metadata.",
+      "recommended_destination": "future radjax_tome backend runtime topology module",
+      "summary": "Resolved runtime topology and capture settings for optimized generation."
+    },
+    {
+      "historical_paths": [
+        "src/qrwkv_xla/teachers/hf.py"
+      ],
+      "id": "hf_teacher_backend",
+      "migration_status": "partially_represented",
+      "notes": "RADJAX-Tome has HF metadata/specimen boundaries, but not the optimized runtime backend from the historical stack.",
+      "recommended_destination": "future radjax_tome.backends runtime-mode interface",
+      "summary": "Historical Hugging Face teacher execution boundary for real model inference."
+    },
+    {
+      "historical_paths": [
+        "src/qrwkv_xla/fingerprint/real_teacher.py",
+        "src/qrwkv_xla/fingerprint/capture.py"
+      ],
+      "id": "gpu_compact_reducer",
+      "migration_status": "future_backend_arc",
+      "notes": "Reference for reducing full-vocabulary logits into compact statistics on device before host transfer.",
+      "recommended_destination": "future CPU + GPU reduction-policy implementation",
+      "summary": "CUDA/MPS-style compact reduction path for real-teacher logits."
+    },
+    {
+      "historical_paths": [
+        "src/qrwkv_xla/fingerprint/real_teacher.py"
+      ],
+      "id": "chunked_gpu_vocab_reducer",
+      "migration_status": "future_backend_arc",
+      "notes": "memory-scalability fix over the vocabulary axis; not an automatic throughput guarantee.",
+      "recommended_destination": "future CPU + GPU chunked reduction-policy implementation",
+      "summary": "Chunked GPU vocabulary reduction that avoids full-vocab temporary workspaces."
+    },
+    {
+      "historical_paths": [
+        "src/qrwkv_xla/fingerprint/capture.py"
+      ],
+      "id": "fingerprint_capture_writer",
+      "migration_status": "partially_represented",
+      "notes": "RADJAX-Tome has active fingerprint artifact writers; optimized capture writer behavior should target future cover-page and bundle contracts.",
+      "recommended_destination": "radjax_tome.fingerprint plus future Tome writer integration",
+      "summary": "Artifact writing boundary for fingerprint capture outputs."
+    },
+    {
+      "historical_paths": [
+        "src/qrwkv_xla/artifacts/cascaded_soft_labels.py"
+      ],
+      "id": "cascaded_soft_label_settings",
+      "migration_status": "partially_represented",
+      "notes": "RADJAX-Tome already has cascaded target support; dynamic top-k and runtime reduction policy should be added later.",
+      "recommended_destination": "radjax_tome.targets and future dynamic top-k policy",
+      "summary": "Compression settings and soft-label policy reference for compact target artifacts."
+    }
+  ],
+  "historical_repo": "nova-rey/qrwkv-xla",
+  "kind": "radjax_tome_optimization_migration_inventory",
+  "migration_recommendations": [
+    "Implement cover page v1 before optimized generator machinery targets Tome artifacts.",
+    "Implement bundle container after the unpacked artifact contract is stable.",
+    "Define backend runtime modes before porting CUDA-specific optimizations.",
+    "Rebuild CPU-only generation as the reference runtime before optional acceleration paths.",
+    "Port GPU compact and chunked vocabulary reduction only behind an explicit CPU + GPU runtime mode.",
+    "Design CPU + TPU as a separate runtime mode with non-CUDA-shaped execution and reduction boundaries.",
+    "Wait on dynamic top-k until metadata and reduction policy surfaces exist."
+  ],
+  "non_goals": [
+    "Do not implement cover_page.json in Spec 3.0.",
+    "Do not implement the Tome bundle container in Spec 3.0.",
+    "Do not implement CPU/GPU/TPU runtime modes in Spec 3.0.",
+    "Do not implement dynamic top-k in Spec 3.0.",
+    "Do not copy historical QRWKV-XLA optimization code wholesale.",
+    "Do not add torch, transformers, jax, CUDA, MPS, or TPU requirements.",
+    "Do not claim TPU implementation already exists."
+  ],
+  "roadmap_arcs": [
+    {
+      "id": "3.0",
+      "label": "Optimization Handoff Inventory and Roadmap Lock",
+      "notes": "Bookmark historical optimization context and lock implementation ordering.",
+      "status": "historical_reference_exists"
+    },
+    {
+      "id": "3.1",
+      "label": "Cover Page v1 for unpacked Tome directory",
+      "notes": "Define the unpacked artifact contract before optimized writers target it.",
+      "status": "planned"
+    },
+    {
+      "id": "3.2",
+      "label": "Tome Bundle Container v1",
+      "notes": "Package the artifact after the unpacked contract is stable.",
+      "status": "planned"
+    },
+    {
+      "id": "3.3",
+      "label": "Teacher Backend Runtime Modes: CPU, CPU+GPU, CPU+TPU",
+      "notes": "Define runtime abstraction before porting CUDA-specific optimizations.",
+      "status": "new_design_required"
+    },
+    {
+      "id": "3.4",
+      "label": "Dynamic Top-K Compression Policy",
+      "notes": "Wait for artifact metadata and backend reduction policy surfaces.",
+      "status": "planned"
+    },
+    {
+      "id": "3.5",
+      "label": "Final CLI Polish / Optional TUI",
+      "notes": "Optional polish after functional readiness.",
+      "status": "planned"
+    }
+  ],
+  "version": 1
+}
