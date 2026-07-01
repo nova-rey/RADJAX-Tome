@@ -2,9 +2,6 @@ from __future__ import annotations
 
 import ast
 import json
-import os
-import subprocess
-import sys
 from pathlib import Path
 
 from radjax_tome.capabilities import (
@@ -13,12 +10,9 @@ from radjax_tome.capabilities import (
 )
 from radjax_tome.reports.rendering import markdown_table, status_line
 from radjax_tome.reports.writers import write_json_report, write_markdown_report
+from tests.helpers.subprocess import run_cli, run_repo_python, run_script
 
 ROOT = Path(__file__).resolve().parents[1]
-SUBPROCESS_ENV = {
-    **os.environ,
-    "PYTHONPATH": str(ROOT / "src"),
-}
 
 
 def test_write_json_report_is_deterministic_with_trailing_newline(
@@ -71,23 +65,16 @@ def test_capability_proof_function_runs_from_src(tmp_path: Path) -> None:
 
 
 def test_capability_proof_script_still_runs(tmp_path: Path) -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "scripts/prove_tome_generation_capabilities.py",
-            "--work-dir",
-            str(tmp_path / "script-capabilities"),
-            "--matrix-json",
-            str(tmp_path / "script-capabilities" / "matrix.json"),
-            "--report-md",
-            str(tmp_path / "script-capabilities" / "report.md"),
-            "--overwrite",
-        ],
-        cwd=ROOT,
-        env=SUBPROCESS_ENV,
-        text=True,
-        capture_output=True,
-        check=False,
+    result = run_script(
+        ROOT,
+        "scripts/prove_tome_generation_capabilities.py",
+        "--work-dir",
+        str(tmp_path / "script-capabilities"),
+        "--matrix-json",
+        str(tmp_path / "script-capabilities" / "matrix.json"),
+        "--report-md",
+        str(tmp_path / "script-capabilities" / "report.md"),
+        "--overwrite",
     )
 
     assert result.returncode == 0, result.stderr
@@ -103,21 +90,12 @@ def test_capability_proof_script_still_runs(tmp_path: Path) -> None:
 
 
 def test_public_cli_prove_capabilities_uses_src_proof(tmp_path: Path) -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "radjax_tome.cli.main",
-            "prove-capabilities",
-            "--work-dir",
-            str(tmp_path / "cli-capabilities"),
-            "--overwrite",
-        ],
-        cwd=ROOT,
-        env=SUBPROCESS_ENV,
-        text=True,
-        capture_output=True,
-        check=False,
+    result = run_cli(
+        ROOT,
+        "prove-capabilities",
+        "--work-dir",
+        str(tmp_path / "cli-capabilities"),
+        "--overwrite",
     )
 
     assert result.returncode == 0, result.stderr
@@ -150,14 +128,7 @@ def test_help_does_not_import_heavy_optional_dependencies_after_refactor() -> No
         "raise SystemExit(1 if code or bad else 0)"
     )
 
-    result = subprocess.run(
-        [sys.executable, "-c", script],
-        cwd=ROOT,
-        env=SUBPROCESS_ENV,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    result = run_repo_python(ROOT, "-c", script)
 
     assert result.returncode == 0, result.stderr
 

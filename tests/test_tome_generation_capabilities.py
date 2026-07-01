@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 import json
-import subprocess
-import sys
 from pathlib import Path
 
 from radjax_tome.fingerprint import (
-    build_minimal_fingerprint_artifact_from_target_store,
     generate_corridor_measurement_report,
     generate_corridor_subset_receipt,
     generate_exemplar_reservoir,
@@ -14,10 +11,13 @@ from radjax_tome.fingerprint import (
     validate_fingerprint_artifact,
 )
 from radjax_tome.targets import inspect_target_store, write_compressed_target_store
-from radjax_tome.targets.export import export_synthetic_teacher_targets
+from tests.helpers.fixtures import (
+    build_minimal_fingerprint_artifact,
+    build_minimal_target_store,
+)
+from tests.helpers.subprocess import run_script
 
 ROOT = Path(__file__).resolve().parents[1]
-SUBPROCESS_ENV = {"PYTHONPATH": str(ROOT / "src")}
 REQUIRED_CAPABILITIES = {
     "dense_teacher_targets",
     "topk_tail_targets",
@@ -31,12 +31,7 @@ REQUIRED_CAPABILITIES = {
 
 
 def test_dense_teacher_targets(tmp_path: Path) -> None:
-    store = export_synthetic_teacher_targets(
-        tmp_path / "dense",
-        num_examples=2,
-        sequence_length=3,
-        vocab_size=8,
-    )
+    store = build_minimal_target_store(tmp_path)
 
     summary = inspect_target_store(store.root)
 
@@ -45,12 +40,7 @@ def test_dense_teacher_targets(tmp_path: Path) -> None:
 
 
 def test_topk_tail_targets(tmp_path: Path) -> None:
-    dense = export_synthetic_teacher_targets(
-        tmp_path / "dense",
-        num_examples=2,
-        sequence_length=3,
-        vocab_size=8,
-    )
+    dense = build_minimal_target_store(tmp_path)
     topk = write_compressed_target_store(
         dense,
         tmp_path / "topk",
@@ -73,12 +63,7 @@ def test_topk_tail_targets(tmp_path: Path) -> None:
 
 
 def test_cascaded_bucket_targets(tmp_path: Path) -> None:
-    dense = export_synthetic_teacher_targets(
-        tmp_path / "dense",
-        num_examples=2,
-        sequence_length=3,
-        vocab_size=8,
-    )
+    dense = build_minimal_target_store(tmp_path)
     cascaded = write_compressed_target_store(
         dense,
         tmp_path / "cascaded",
@@ -99,17 +84,7 @@ def test_cascaded_bucket_targets(tmp_path: Path) -> None:
 
 
 def test_fingerprint_artifact_generation(tmp_path: Path) -> None:
-    dense = export_synthetic_teacher_targets(
-        tmp_path / "dense",
-        num_examples=2,
-        sequence_length=3,
-        vocab_size=8,
-    )
-
-    artifact = build_minimal_fingerprint_artifact_from_target_store(
-        dense,
-        tmp_path / "fingerprint",
-    )
+    artifact = build_minimal_fingerprint_artifact(tmp_path)
     validation = validate_fingerprint_artifact(artifact)
 
     assert validation.ok
@@ -120,16 +95,7 @@ def test_fingerprint_artifact_generation(tmp_path: Path) -> None:
 
 
 def test_corridor_subset_generation(tmp_path: Path) -> None:
-    dense = export_synthetic_teacher_targets(
-        tmp_path / "dense",
-        num_examples=2,
-        sequence_length=3,
-        vocab_size=8,
-    )
-    artifact = build_minimal_fingerprint_artifact_from_target_store(
-        dense,
-        tmp_path / "fingerprint",
-    )
+    artifact = build_minimal_fingerprint_artifact(tmp_path)
 
     receipt = generate_corridor_subset_receipt(
         artifact,
@@ -146,16 +112,7 @@ def test_corridor_subset_generation(tmp_path: Path) -> None:
 
 
 def test_exemplar_reservoir_generation(tmp_path: Path) -> None:
-    dense = export_synthetic_teacher_targets(
-        tmp_path / "dense",
-        num_examples=2,
-        sequence_length=3,
-        vocab_size=8,
-    )
-    artifact = build_minimal_fingerprint_artifact_from_target_store(
-        dense,
-        tmp_path / "fingerprint",
-    )
+    artifact = build_minimal_fingerprint_artifact(tmp_path)
 
     manifest = generate_exemplar_reservoir(
         artifact,
@@ -173,23 +130,16 @@ def test_capability_harness_writes_matrix_and_report(tmp_path: Path) -> None:
     matrix_json = tmp_path / "matrix.json"
     report_md = tmp_path / "matrix.md"
 
-    result = subprocess.run(
-        [
-            sys.executable,
-            str(script),
-            "--work-dir",
-            str(tmp_path / "artifacts"),
-            "--matrix-json",
-            str(matrix_json),
-            "--report-md",
-            str(report_md),
-            "--overwrite",
-        ],
-        cwd=ROOT,
-        env=SUBPROCESS_ENV,
-        text=True,
-        capture_output=True,
-        check=False,
+    result = run_script(
+        ROOT,
+        str(script),
+        "--work-dir",
+        str(tmp_path / "artifacts"),
+        "--matrix-json",
+        str(matrix_json),
+        "--report-md",
+        str(report_md),
+        "--overwrite",
     )
 
     assert result.returncode == 0, result.stderr

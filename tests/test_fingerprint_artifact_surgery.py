@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from radjax_tome.fingerprint import (
@@ -26,18 +25,19 @@ from radjax_tome.fingerprint.provenance import (
     build_artifact_source_lineage,
     stable_hash,
 )
+from tests.helpers.fixtures import write_json, write_jsonl
 
 
 def _minimal_artifact(root: Path) -> Path:
     artifact = root / "fingerprint"
     artifact.mkdir()
-    (artifact / "modes.json").write_text(
-        json.dumps({"modes": [{"mode_id": 0, "top1_margin": 0.2}]}) + "\n",
-        encoding="utf-8",
+    write_json(
+        artifact / "modes.json",
+        {"modes": [{"mode_id": 0, "top1_margin": 0.2}]},
     )
-    (artifact / "targets-00000.jsonl").write_text(
-        json.dumps({"example_id": "ex-1", "input_ids": [1, 2, 3], "mode_id": 0}) + "\n",
-        encoding="utf-8",
+    write_jsonl(
+        artifact / "targets-00000.jsonl",
+        ({"example_id": "ex-1", "input_ids": [1, 2, 3], "mode_id": 0},),
     )
     write_fingerprint_manifest(
         artifact,
@@ -101,10 +101,7 @@ def test_byte_accounting_and_source_lineage(tmp_path: Path) -> None:
     assert validate_fingerprint_byte_accounting(accounting).ok
 
     source = tmp_path / "source.jsonl"
-    source.write_text(
-        json.dumps({"example_id": "ex-1", "text": "hello"}) + "\n",
-        encoding="utf-8",
-    )
+    write_jsonl(source, ({"example_id": "ex-1", "text": "hello"},))
     lineage = build_artifact_source_lineage(artifact, source)
     assert lineage.source_join_kind == "example_id"
     assert lineage.publication_grade_lineage
