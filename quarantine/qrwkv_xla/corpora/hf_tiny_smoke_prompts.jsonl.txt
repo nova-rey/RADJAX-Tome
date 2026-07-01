@@ -1,7 +1,0 @@
-# Quarantined archived qrwkv-xla reference file.
-# Original path: corpora/hf_tiny_smoke_prompts.jsonl
-# Reason: Producer-related support material retained or tracked for later migration; not needed before Spec 3.
-# This file is non-importable reference material for RADJAX-Tome migration.
-
-{"id":"hf-tiny-smoke-000","text":"QRWKV tiny HF teacher smoke.","split":"train","tags":["hf-tiny-smoke","p29"]}
-{"id":"hf-tiny-smoke-001","text":"A small teacher target bundle trains one step.","split":"train","tags":["hf-tiny-smoke","p29"]}

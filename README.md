@@ -41,3 +41,9 @@ python scripts/validate_teacher_textbook.py \
 
 PyTorch and Transformers are optional `teacher-hf` extras. They are not required
 for default install or tests.
+
+Historical migration/audit artifacts are archived on:
+- `archive/tome-migration-audit`
+- `archive/tome-large-docs`
+
+See `docs/TOME_ARCHIVE_POINTERS.md`.

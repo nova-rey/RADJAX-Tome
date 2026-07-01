@@ -1,0 +1,233 @@
+{
+  "schema_version": "radjax_tome.mainline_hygiene_ledger.v1",
+  "generated_at": "2026-07-01T00:00:00Z",
+  "summary": {
+    "status": "complete",
+    "archive_branches": [
+      "archive/tome-migration-audit",
+      "archive/tome-large-docs"
+    ],
+    "quarantine_files_removed_from_main": 274,
+    "generated_reports_removed_from_main": 12,
+    "historical_audit_tools_removed_from_main": 6,
+    "historical_tests_removed_from_main": 5
+  },
+  "entries": [
+    {
+      "path": "quarantine/",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "quarantine_reference",
+      "reason": "Historical qrwkv_xla reference tree used only for migration accounting; not runtime code.",
+      "replacement_or_pointer": "archive/tome-migration-audit:quarantine/"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_BULK_MIGRATION.md",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "historical_artifact",
+      "reason": "Bulk migration phase report is historical split evidence.",
+      "replacement_or_pointer": "docs/TOME_ARCHIVE_POINTERS.md"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_BULK_MIGRATION_MANIFEST.json",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "large_generated_doc",
+      "reason": "Full migration manifest is oversized forensic payload.",
+      "replacement_or_pointer": "archive/tome-large-docs:docs/TOME_GENERATOR_BULK_MIGRATION_MANIFEST.json"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_CLOSURE_AUDIT.json",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "forensic_audit_payload",
+      "reason": "Closure audit output belongs with historical migration evidence.",
+      "replacement_or_pointer": "archive/tome-migration-audit:docs/TOME_GENERATOR_CLOSURE_AUDIT.json"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_CLOSURE_AUDIT.md",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "historical_artifact",
+      "reason": "Closure review report is historical split evidence.",
+      "replacement_or_pointer": "archive/tome-migration-audit:docs/TOME_GENERATOR_CLOSURE_AUDIT.md"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_CORE_MIGRATION.md",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "historical_artifact",
+      "reason": "Core migration report is historical split evidence.",
+      "replacement_or_pointer": "archive/tome-migration-audit:docs/TOME_GENERATOR_CORE_MIGRATION.md"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_EXTRACTION_AUDIT.md",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "historical_artifact",
+      "reason": "Extraction audit report targets the old qrwkv_xla split phase.",
+      "replacement_or_pointer": "archive/tome-migration-audit:docs/TOME_GENERATOR_EXTRACTION_AUDIT.md"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_MIGRATION_MAP.md",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "historical_artifact",
+      "reason": "Migration map is superseded by the archive pointer and hygiene ledger.",
+      "replacement_or_pointer": "docs/TOME_ARCHIVE_POINTERS.md"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_QUARANTINE.md",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "historical_artifact",
+      "reason": "Quarantine policy doc belongs with the archived quarantine tree.",
+      "replacement_or_pointer": "archive/tome-migration-audit:docs/TOME_GENERATOR_QUARANTINE.md"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY.md",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "historical_artifact",
+      "reason": "Quarantine surgery report is historical migration evidence.",
+      "replacement_or_pointer": "archive/tome-migration-audit:docs/TOME_GENERATOR_QUARANTINE_SURGERY.md"
+    },
+    {
+      "path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
+      "main_action": "removed_from_main",
+      "archive_branch": "both",
+      "classification": "forensic_audit_payload",
+      "reason": "Full quarantine surgery ledger is oversized forensic payload.",
+      "replacement_or_pointer": "archive/tome-large-docs:docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json"
+    },
+    {
+      "path": "docs/TOME_REFACTOR_AUDIT.json",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-large-docs",
+      "classification": "large_generated_doc",
+      "reason": "Full generated refactor audit JSON is bulky report output.",
+      "replacement_or_pointer": "archive/tome-large-docs:docs/TOME_REFACTOR_AUDIT.json"
+    },
+    {
+      "path": "docs/TOME_REFACTOR_AUDIT.md",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-large-docs",
+      "classification": "historical_artifact",
+      "reason": "Generated refactor audit report is preserved on the large-docs archive.",
+      "replacement_or_pointer": "archive/tome-large-docs:docs/TOME_REFACTOR_AUDIT.md"
+    },
+    {
+      "path": "scripts/audit_tome_generator_extraction.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "One-time extraction audit script targets the old qrwkv_xla repository.",
+      "replacement_or_pointer": "archive/tome-migration-audit:scripts/audit_tome_generator_extraction.py"
+    },
+    {
+      "path": "scripts/triage_tome_generator_audit.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "One-time migration triage script is no longer active mainline tooling.",
+      "replacement_or_pointer": "archive/tome-migration-audit:scripts/triage_tome_generator_audit.py"
+    },
+    {
+      "path": "scripts/audit_tome_generator_closure.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "Closure audit script was specific to the migration closure phase.",
+      "replacement_or_pointer": "archive/tome-migration-audit:scripts/audit_tome_generator_closure.py"
+    },
+    {
+      "path": "src/radjax_tome/audit/extraction_inventory.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "Extraction inventory engine is old migration audit machinery.",
+      "replacement_or_pointer": "archive/tome-migration-audit:src/radjax_tome/audit/extraction_inventory.py"
+    },
+    {
+      "path": "src/radjax_tome/audit/triage.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "Triage engine is old migration audit machinery.",
+      "replacement_or_pointer": "archive/tome-migration-audit:src/radjax_tome/audit/triage.py"
+    },
+    {
+      "path": "src/radjax_tome/audit/closure.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "Closure audit engine is old migration audit machinery.",
+      "replacement_or_pointer": "archive/tome-migration-audit:src/radjax_tome/audit/closure.py"
+    },
+    {
+      "path": "tests/test_quarantine_guardrails.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "Replaced because it asserted quarantine exists on main.",
+      "replacement_or_pointer": "tests/test_mainline_archive_hygiene.py"
+    },
+    {
+      "path": "tests/test_quarantine_surgery_ledger.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "Replaced because it asserted archived quarantine ledgers remain on main.",
+      "replacement_or_pointer": "tests/test_mainline_archive_hygiene.py"
+    },
+    {
+      "path": "tests/test_tome_generator_extraction_audit.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "Covered old extraction audit tooling now archived.",
+      "replacement_or_pointer": "archive/tome-migration-audit:tests/test_tome_generator_extraction_audit.py"
+    },
+    {
+      "path": "tests/test_tome_generator_audit_triage.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "Covered old migration triage tooling now archived.",
+      "replacement_or_pointer": "archive/tome-migration-audit:tests/test_tome_generator_audit_triage.py"
+    },
+    {
+      "path": "tests/test_tome_generator_closure_audit.py",
+      "main_action": "removed_from_main",
+      "archive_branch": "archive/tome-migration-audit",
+      "classification": "historical_artifact",
+      "reason": "Covered old closure audit tooling now archived.",
+      "replacement_or_pointer": "archive/tome-migration-audit:tests/test_tome_generator_closure_audit.py"
+    },
+    {
+      "path": "docs/TOME_GENERATION_CAPABILITY_MATRIX.json",
+      "main_action": "kept_on_main",
+      "archive_branch": "none",
+      "classification": "active_doc",
+      "reason": "Current capability proof remains useful mainline regression evidence.",
+      "replacement_or_pointer": "scripts/prove_tome_generation_capabilities.py"
+    },
+    {
+      "path": "scripts/prove_tome_generation_capabilities.py",
+      "main_action": "kept_on_main",
+      "archive_branch": "none",
+      "classification": "active_runtime_code",
+      "reason": "Current generation capability proof remains active validation tooling.",
+      "replacement_or_pointer": "artifacts/spec_2_14_capabilities/"
+    },
+    {
+      "path": "scripts/audit_tome_refactor_surface.py",
+      "main_action": "kept_on_main",
+      "archive_branch": "none",
+      "classification": "active_runtime_code",
+      "reason": "Compact refactor audit remains useful for the cleanup arc.",
+      "replacement_or_pointer": "src/radjax_tome/audit/refactor_surface.py"
+    }
+  ]
+}
