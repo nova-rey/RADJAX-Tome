@@ -2,25 +2,29 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from radjax_tome.fingerprint import (
-    CorridorMeasurementRecord,
-    CorridorMeasurementReport,
-    FingerprintExemplarManifest,
-    FingerprintExemplarRecord,
-    FingerprintExemplarShard,
+from radjax_tome.fingerprint.capture_summary import (
     RealTeacherCaptureSummary,
     SourceCorpusReference,
     TeacherIdentity,
-    read_corridor_measurement_report,
-    read_fingerprint_exemplar_records,
     read_real_teacher_capture_summary,
-    validate_corridor_measurement_report,
-    validate_fingerprint_exemplar_records,
     validate_real_teacher_capture_summary,
+    write_real_teacher_capture_summary,
+)
+from radjax_tome.fingerprint.corridor import (
+    CorridorMeasurementRecord,
+    CorridorMeasurementReport,
+    read_corridor_measurement_report,
+    validate_corridor_measurement_report,
     write_corridor_measurement_report,
+)
+from radjax_tome.fingerprint.exemplars import (
+    FingerprintExemplarManifest,
+    FingerprintExemplarRecord,
+    FingerprintExemplarShard,
+    read_fingerprint_exemplar_records,
+    validate_fingerprint_exemplar_records,
     write_fingerprint_exemplar_manifest,
     write_fingerprint_exemplar_records,
-    write_real_teacher_capture_summary,
 )
 
 

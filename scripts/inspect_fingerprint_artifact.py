@@ -5,7 +5,7 @@ import argparse
 import json
 import sys
 
-from radjax_tome.fingerprint import summarize_fingerprint_artifact
+from radjax_tome.fingerprint.artifacts import summarize_fingerprint_artifact
 
 
 def main() -> int:

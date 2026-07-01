@@ -4,6 +4,10 @@ import json
 from pathlib import Path
 
 from radjax_tome.fingerprint import (
+    inspect_fingerprint_artifact,
+    validate_fingerprint_artifact,
+)
+from radjax_tome.fingerprint.artifacts import (
     BEHAVIORAL_FINGERPRINT_ARTIFACT_TYPE,
     BEHAVIORAL_FINGERPRINT_VERSION,
     PACKED_TARGET_ARRAYS,
@@ -13,14 +17,14 @@ from radjax_tome.fingerprint import (
     FingerprintByteAccounting,
     FingerprintManifest,
     FingerprintValidationResult,
-    build_artifact_source_lineage,
-    inspect_fingerprint_artifact,
     read_fingerprint_manifest,
-    stable_hash,
     summarize_fingerprint_artifact,
-    validate_fingerprint_artifact,
     validate_fingerprint_byte_accounting,
     write_fingerprint_manifest,
+)
+from radjax_tome.fingerprint.provenance import (
+    build_artifact_source_lineage,
+    stable_hash,
 )
 
 

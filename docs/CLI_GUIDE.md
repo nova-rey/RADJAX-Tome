@@ -45,6 +45,8 @@ existing automation.
 targeted inspection workflows. They remain available, but they are not all
 equally user-facing.
 
+For fingerprint API imports, see `docs/FINGERPRINT_API.md`.
+
 | Script | Classification | Use when |
 |---|---|---|
 | `scripts/build_teacher_textbook.py` | recommended wrapper / legacy-compatible | You need the current TeacherTextbook builder directly. |
