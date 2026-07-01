@@ -36,6 +36,11 @@ python -m radjax_tome.cli.main prove-capabilities \
   --overwrite
 ```
 
+`prove-capabilities` is a public diagnostic command backed by reusable library
+code under `radjax_tome.capabilities`. The legacy-compatible
+`scripts/prove_tome_generation_capabilities.py` wrapper remains available for
+existing automation.
+
 `scripts/` contains lower-level utilities used by tests, development, and
 targeted inspection workflows. They remain available, but they are not all
 equally user-facing.

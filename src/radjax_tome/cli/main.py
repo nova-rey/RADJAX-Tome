@@ -183,37 +183,18 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
 
 
 def _cmd_prove_capabilities(args: argparse.Namespace) -> int:
-    script = _repo_root() / "scripts" / "prove_tome_generation_capabilities.py"
-    if not script.is_file():
-        print(
-            "Capability proof script is unavailable in this installation.",
-            file=sys.stderr,
-        )
-        return 2
+    from radjax_tome.capabilities import prove_tome_generation_capabilities
+
     matrix_json = args.matrix_json or args.work_dir / "matrix.json"
     report_md = args.report_md or args.work_dir / "report.md"
-    spec = importlib.util.spec_from_file_location(
-        "radjax_tome_capability_proof",
-        script,
+    result = prove_tome_generation_capabilities(
+        work_dir=args.work_dir,
+        matrix_json=matrix_json,
+        report_md=report_md,
+        overwrite=args.overwrite,
     )
-    if spec is None or spec.loader is None:
-        print(f"Unable to load capability proof script: {script}", file=sys.stderr)
-        return 2
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return int(
-        module.main(
-            [
-                "--work-dir",
-                str(args.work_dir),
-                "--matrix-json",
-                str(matrix_json),
-                "--report-md",
-                str(report_md),
-                *(["--overwrite"] if args.overwrite else []),
-            ]
-        )
-    )
+    print(result.status_line())
+    return result.exit_code
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:
@@ -232,10 +213,6 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     print("recommended=radjax-tome validate --path ARTIFACT")
     print("recommended=radjax-tome inspect --path ARTIFACT")
     return 0
-
-
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[3]
 
 
 if __name__ == "__main__":

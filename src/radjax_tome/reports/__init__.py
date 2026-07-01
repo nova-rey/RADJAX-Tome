@@ -24,6 +24,8 @@ from radjax_tome.reports.fingerprint_quality import (
     render_fingerprint_quality_summary,
     write_fingerprint_quality_report,
 )
+from radjax_tome.reports.rendering import markdown_table, status_line
+from radjax_tome.reports.writers import write_json_report, write_markdown_report
 
 __all__ = [
     "BaselineArmReport",
@@ -41,7 +43,11 @@ __all__ = [
     "render_fingerprint_arc_summary",
     "render_fingerprint_baseline_summary",
     "render_fingerprint_quality_summary",
+    "markdown_table",
+    "status_line",
     "write_fingerprint_arc_report",
     "write_fingerprint_baseline_report",
     "write_fingerprint_quality_report",
+    "write_json_report",
+    "write_markdown_report",
 ]
