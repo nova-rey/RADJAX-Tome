@@ -86,13 +86,18 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | Unit | Title | Status |
 |---|---|---|
 | 3.3F1 | GPU Torch Backend Detection + Dense Debug Smoke | complete once the gpu_torch dense smoke path lands |
-| 3.3F2 | GPU Top-K/Tail Compact Reducer | planned |
+| 3.3F2 | GPU Top-K/Tail Compact Reducer | complete once the gpu_torch top-k/tail reducer lands |
 | 3.3F3 | GPU Cascaded Soft-Label Reducer | planned |
 | 3.3F4 | Chunked Vocab Reduction + Memory Metadata | planned |
 | 3.3F5 | GPU Runtime Fallback / Error Hardening | planned |
 
 Spec 3.3F1 adds `gpu_torch` as a CUDA/MPS-detecting dense debug backend. It
 does not implement compact GPU reduction or public builder migration.
+
+Spec 3.3F2 adds the first compact GPU reducer: `gpu_torch` computes
+`topk_with_tail_v0` on CUDA or MPS and transfers compact payload arrays back to
+host. It does not complete cascaded reduction, chunked vocab reduction, or
+public builder migration.
 
 3.3G adds TPU/JAX shape without CUDA assumptions.
 

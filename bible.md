@@ -116,3 +116,15 @@ back to host and metadata records that the path is unoptimized, debug-oriented,
 and not using compact reduction. `topk_with_tail_v0`,
 `cascaded_soft_labels_v1`, and `corridor_exemplar_v1` remain future GPU
 reduction work, with historical QRWKV-XLA code only as migration reference.
+
+## 2026-07-01 — Spec 3.3F2 GPU Top-K / Tail Compact Reducer
+
+Spec 3.3F2 adds the first real `gpu_torch` compact reducer:
+`topk_with_tail_v0`. The backend keeps HF Torch logits on the selected CUDA or
+MPS device, computes top-k probabilities, log-probabilities, top mass, tail
+mass, and teacher entropy as Torch tensors, then transfers only the compact
+payload arrays back to host as a compact payload.
+
+The `dense_logits` debug path still transfers full logits to host and remains
+unoptimized. This spec does not implement cascaded GPU reduction, chunked vocab
+reduction, public builder migration, or TPU/JAX support.

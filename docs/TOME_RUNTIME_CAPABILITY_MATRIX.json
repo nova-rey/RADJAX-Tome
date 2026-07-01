@@ -126,17 +126,17 @@
     },
     {
       "backend_family": "gpu_torch",
-      "implemented_now": false,
-      "notes": "Historical QRWKV-XLA compact GPU reduction exists as migration reference; active RADJAX-Tome does not claim it yet.",
-      "optimized": false,
+      "implemented_now": true,
+      "notes": "Spec 3.3F2 gpu_torch computes GPU compact top-k/tail reduction on CUDA or MPS and transfers only compact payload arrays back to host.",
+      "optimized": true,
       "runtime_mode": "cpu_gpu",
-      "status": "historical_reference_exists",
+      "status": "optimized",
       "target_policy": "topk_with_tail_v0"
     },
     {
       "backend_family": "gpu_torch",
       "implemented_now": false,
-      "notes": "Historical QRWKV-XLA compact GPU reduction can guide future cascaded soft-label migration.",
+      "notes": "Historical QRWKV-XLA compact GPU reduction can guide future cascaded soft-label migration; active gpu_torch cascaded support is planned for Spec 3.3F3.",
       "optimized": false,
       "runtime_mode": "cpu_gpu",
       "status": "historical_reference_exists",
@@ -220,12 +220,12 @@
     "metadata_implementation_required_now": false
   },
   "non_goals": [
-    "Do not migrate the public builder to hf_torch or gpu_torch in Spec 3.3F1.",
-    "Do not claim staged mode is performance optimized in Spec 3.3F1.",
-    "Do not claim HF Torch GPU compact reduction is implemented in Spec 3.3F1.",
+    "Do not migrate the public builder to hf_torch or gpu_torch in Spec 3.3F2.",
+    "Do not claim staged mode is performance optimized in Spec 3.3F2.",
+    "Do not claim HF Torch GPU cascaded or chunked-vocab reduction is implemented in Spec 3.3F2.",
     "Do not silently fall back to CPU when gpu_torch is explicitly requested.",
-    "Do not implement TPU/JAX backend code in Spec 3.3F1.",
-    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3F1."
+    "Do not implement TPU/JAX backend code in Spec 3.3F2.",
+    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3F2."
   ],
   "orchestration": {
     "default_mode": "auto",

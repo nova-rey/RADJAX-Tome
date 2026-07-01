@@ -14,6 +14,15 @@ from radjax_tome.backends.base import (
 )
 from radjax_tome.backends.hf_torch import _effective_tokenizer_id
 
+_SUPPORTED_EMISSION_POLICIES = {
+    "dense_logits",
+    "topk_with_tail_v0",
+}
+_CAPABILITY_STATUS = {
+    "dense_logits": "supported_debug",
+    "topk_with_tail_v0": "optimized",
+}
+
 
 @dataclass(frozen=True)
 class TorchAcceleratorDetection:
@@ -39,9 +48,10 @@ class GPUTorchTeacherEmissionBackend:
             )
         if config.runtime_mode != "cpu_gpu":
             raise ValueError("gpu_torch supports only runtime_mode='cpu_gpu'")
-        if config.target_policy != "dense_logits":
+        if config.target_policy not in _SUPPORTED_EMISSION_POLICIES:
             raise ValueError(
-                "gpu_torch Spec 3.3F1 supports only target_policy='dense_logits'"
+                "gpu_torch supports dense_logits and topk_with_tail_v0; "
+                f"{config.target_policy!r} is not implemented yet"
             )
         if config.sequence_length <= 0:
             raise ValueError("sequence_length must be > 0")
@@ -49,6 +59,8 @@ class GPUTorchTeacherEmissionBackend:
             raise ValueError("batch_size must be > 0")
         if config.vocab_size <= 0:
             raise ValueError("vocab_size must be > 0")
+        if config.top_k <= 0:
+            raise ValueError("top_k must be > 0")
         self.config = config
         self._torch: Any | None = None
         self._tokenizer: Any | None = None
@@ -89,13 +101,13 @@ class GPUTorchTeacherEmissionBackend:
                 backend_family=self.backend_family,
                 runtime_mode="cpu_gpu",
                 target_policy="topk_with_tail_v0",
-                status="historical_reference_exists",
-                optimized=False,
-                implemented_now=False,
+                status="optimized",
+                optimized=True,
+                implemented_now=True,
                 notes=(
-                    "Historical QRWKV-XLA compact GPU reduction exists as "
-                    "migration reference; active gpu_torch top-k/tail "
-                    "reduction starts in a later 3.3F spec."
+                    "Spec 3.3F2 gpu_torch computes top-k plus tail compact "
+                    "reduction on the selected CUDA or MPS accelerator and "
+                    "transfers only compact payload arrays back to host."
                 ),
             ),
             BackendCapability(
@@ -108,7 +120,7 @@ class GPUTorchTeacherEmissionBackend:
                 implemented_now=False,
                 notes=(
                     "Historical QRWKV-XLA compact GPU reduction can guide "
-                    "future cascaded soft-label migration; Spec 3.3F1 does "
+                    "future cascaded soft-label migration; Spec 3.3F2 does "
                     "not implement this reduction."
                 ),
             ),
@@ -144,22 +156,32 @@ class GPUTorchTeacherEmissionBackend:
                 input_ids=input_ids_tensor,
                 attention_mask=attention_mask_tensor,
             )
-        logits = output.logits.detach().to("cpu").numpy().astype(np.float32)
         input_ids = input_ids_tensor.detach().to("cpu").numpy().astype(np.int32)
         attention_mask = (
             attention_mask_tensor.detach().to("cpu").numpy().astype(np.int32)
         )
+        logits = output.logits
         effective_vocab_size = int(logits.shape[-1])
+        estimated_dense_logits_dtype = _logits_dtype_name(logits)
+        if self.config.target_policy == "dense_logits":
+            dense_logits = logits.detach().to("cpu").numpy().astype(np.float32)
+            payload = {"logits": dense_logits}
+        else:
+            payload = _compact_payload_to_numpy(
+                _gpu_topk_tail_reduce(torch, logits, top_k=self.config.top_k)
+            )
         return TeacherEmissionResult(
             backend_id=self.backend_id,
             runtime_mode="cpu_gpu",
-            target_policy="dense_logits",
+            target_policy=self.config.target_policy,
             input_ids=input_ids,
             attention_mask=attention_mask,
-            payload={"logits": logits},
+            payload=payload,
             metadata=self.metadata(
                 actual_batch_size=len(batch.texts),
                 effective_vocab_size=effective_vocab_size,
+                compact_payload=payload,
+                estimated_dense_logits_dtype=estimated_dense_logits_dtype,
             ),
         )
 
@@ -168,6 +190,8 @@ class GPUTorchTeacherEmissionBackend:
         *,
         actual_batch_size: int | None = None,
         effective_vocab_size: int | None = None,
+        compact_payload: dict[str, np.ndarray] | None = None,
+        estimated_dense_logits_dtype: str = "float32",
     ) -> dict[str, object]:
         device = self._device or detect_torch_accelerator()
         tokenizer_id = _effective_tokenizer_id(self.config)
@@ -179,31 +203,31 @@ class GPUTorchTeacherEmissionBackend:
             if effective_vocab_size is None
             else effective_vocab_size
         )
-        return {
+        actual_batch = (
+            self.config.batch_size if actual_batch_size is None else actual_batch_size
+        )
+        dense_debug_path = self.config.target_policy == "dense_logits"
+        metadata: dict[str, object] = {
             "requested_runtime_mode": self.config.runtime_mode,
             "effective_runtime_mode": "cpu_gpu",
             "requested_target_policy": self.config.target_policy,
-            "effective_target_policy": "dense_logits",
+            "effective_target_policy": self.config.target_policy,
             "backend_id": self.backend_id,
             "backend_family": self.backend_family,
             "runtime_kind": "gpu_torch",
             "device_kind": device.device_kind,
             "torch_device": device.device,
-            "capability_status": "supported_debug",
-            "optimized_path_used": False,
-            "dense_debug_path": True,
-            "dense_logits_transferred_to_host": True,
-            "compact_reduction_used": False,
-            "gpu_compact_reduction_implemented": False,
+            "capability_status": _CAPABILITY_STATUS[self.config.target_policy],
+            "optimized_path_used": not dense_debug_path,
+            "dense_debug_path": dense_debug_path,
+            "dense_logits_transferred_to_host": dense_debug_path,
+            "compact_reduction_used": not dense_debug_path,
+            "gpu_compact_reduction_implemented": not dense_debug_path,
             "fallback_used": False,
             "model_id": self.config.model_id,
             "tokenizer_id": tokenizer_id,
             "configured_batch_size": self.config.batch_size,
-            "actual_batch_size": (
-                self.config.batch_size
-                if actual_batch_size is None
-                else actual_batch_size
-            ),
+            "actual_batch_size": actual_batch,
             "sequence_length": self.config.sequence_length,
             "configured_vocab_size": self.config.vocab_size,
             "effective_vocab_size": effective_vocab,
@@ -213,6 +237,41 @@ class GPUTorchTeacherEmissionBackend:
             "cuda_available": device.cuda_available,
             "mps_available": device.mps_available,
         }
+        if self.config.target_policy == "topk_with_tail_v0":
+            effective_top_k = min(self.config.top_k, effective_vocab)
+            compact_payload = compact_payload or {}
+            compact_fields = (
+                "top_token_ids",
+                "top_log_probs",
+                "top_probs",
+                "top_mass",
+                "tail_mass",
+                "teacher_entropy",
+            )
+            metadata.update(
+                {
+                    "requested_top_k": self.config.top_k,
+                    "effective_top_k": effective_top_k,
+                    "gpu_reduction_mode": "compact_topk_tail",
+                    "compact_payload_fields": list(compact_fields),
+                    "compact_payload_arrays": [
+                        field for field in compact_fields if field in compact_payload
+                    ],
+                    "compact_bytes_transferred_to_host": sum(
+                        int(compact_payload[field].nbytes)
+                        for field in compact_fields
+                        if field in compact_payload
+                    ),
+                    "estimated_dense_logits_bytes": _estimate_dense_logits_bytes(
+                        actual_batch_size=actual_batch,
+                        sequence_length=self.config.sequence_length,
+                        effective_vocab_size=effective_vocab,
+                        dtype_name=estimated_dense_logits_dtype,
+                    ),
+                    "estimated_dense_logits_dtype": estimated_dense_logits_dtype,
+                }
+            )
+        return metadata
 
     def close(self) -> None:
         self._model = None
@@ -349,3 +408,82 @@ def _safe_is_available(namespace: Any) -> bool:
         return bool(is_available())
     except Exception:
         return False
+
+
+def _gpu_topk_tail_reduce(
+    torch: Any,
+    logits: Any,
+    *,
+    top_k: int,
+) -> dict[str, Any]:
+    effective_top_k = min(top_k, int(logits.shape[-1]))
+    log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+    probs = torch.exp(log_probs)
+    top_log_probs, top_token_ids = torch.topk(
+        log_probs,
+        k=effective_top_k,
+        dim=-1,
+    )
+    top_probs = torch.exp(top_log_probs)
+    top_mass = torch.sum(top_probs, dim=-1)
+    tail_mass = torch.clamp(1.0 - top_mass, min=0.0, max=1.0)
+    teacher_entropy = -torch.sum(probs * log_probs, dim=-1)
+    return {
+        "top_token_ids": top_token_ids,
+        "top_log_probs": top_log_probs,
+        "top_probs": top_probs,
+        "top_mass": top_mass,
+        "tail_mass": tail_mass,
+        "teacher_entropy": teacher_entropy,
+    }
+
+
+def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
+    return {
+        "top_token_ids": _tensor_to_numpy(payload["top_token_ids"], np.int32),
+        "top_log_probs": _tensor_to_numpy(payload["top_log_probs"], np.float32),
+        "top_probs": _tensor_to_numpy(payload["top_probs"], np.float32),
+        "top_mass": _tensor_to_numpy(payload["top_mass"], np.float32),
+        "tail_mass": _tensor_to_numpy(payload["tail_mass"], np.float32),
+        "teacher_entropy": _tensor_to_numpy(
+            payload["teacher_entropy"],
+            np.float32,
+        ),
+    }
+
+
+def _tensor_to_numpy(tensor: Any, dtype: type[np.generic]) -> np.ndarray:
+    return tensor.detach().to("cpu").numpy().astype(dtype)
+
+
+def _estimate_dense_logits_bytes(
+    *,
+    actual_batch_size: int,
+    sequence_length: int,
+    effective_vocab_size: int,
+    dtype_name: str,
+) -> int:
+    return (
+        actual_batch_size
+        * sequence_length
+        * effective_vocab_size
+        * _dtype_nbytes(dtype_name)
+    )
+
+
+def _logits_dtype_name(logits: Any) -> str:
+    dtype = getattr(logits, "dtype", None)
+    if dtype is None:
+        return "float32"
+    name = str(dtype)
+    if name.startswith("torch."):
+        name = name.removeprefix("torch.")
+    return name
+
+
+def _dtype_nbytes(dtype_name: str) -> int:
+    normalized = dtype_name.removeprefix("torch.")
+    try:
+        return int(np.dtype(normalized).itemsize)
+    except TypeError:
+        return 4
