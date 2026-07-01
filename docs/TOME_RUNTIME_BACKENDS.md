@@ -56,6 +56,29 @@ The default registered backend is `fake_numpy`. It proves the contract wall for
 `dense_logits` on `cpu` with `supported_debug` status and deterministic NumPy
 arrays. It does not replace the current fake TeacherTextbook builder.
 
+## CPU Reference Backend
+
+Spec 3.3C adds `cpu_reference` as the first real backend-contract
+implementation. It is serial/reference, not optimized. It emits deterministic
+CPU payloads for `dense_logits`, `topk_with_tail_v0`, and
+`cascaded_soft_labels_v1`.
+
+The CPU reference backend does not migrate the public builder. It does not
+implement staged CPU orchestration. It does not implement HF, GPU, or TPU
+runtime backends.
+
+Payload summary:
+
+- `dense_logits`: `logits`
+- `topk_with_tail_v0`: `top_token_ids`, `top_log_probs`, `top_probs`,
+  `top_mass`, `tail_mass`, `teacher_entropy`
+- `cascaded_soft_labels_v1`: the top-k/tail fields plus `bucket_masses`
+
+The cascaded reference reducer removes top-k tokens, sorts the remaining tail
+probabilities descending, partitions them into fixed contiguous buckets, and
+sums probability mass per bucket. This is a correctness baseline for payload
+shape and mass accounting, not a performance path.
+
 ## Runtime Modes
 
 `cpu` means CPU-side orchestration plus CPU teacher execution and reduction. It

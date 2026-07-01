@@ -57,3 +57,14 @@ The default registered proof backend is `fake_numpy`, which emits deterministic
 `dense_logits` through the new contract. There is no builder migration yet: the
 active public builder behavior, HF path, GPU optimization, TPU support, target
 shards, `cover_page.json`, and `.rtome` bundle behavior remain unchanged.
+
+## 2026-07-01 — Spec 3.3C CPU Reference Backend
+
+Spec 3.3C adds the CPU reference backend, `cpu_reference`, as the serial/reference
+correctness baseline behind the backend contract. It emits deterministic
+payloads for `dense_logits`, `topk_with_tail_v0`, and
+`cascaded_soft_labels_v1` without adding heavy runtime dependencies.
+
+There is no public builder migration, no staged orchestration, and no GPU/TPU
+implementation in this spec. The backend is intentionally boring: it exists so
+future accelerated runtimes have a deterministic CPU target to compare against.

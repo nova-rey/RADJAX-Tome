@@ -8,6 +8,7 @@ import pytest
 
 from radjax_tome.backends import (
     BackendCapability,
+    CPUReferenceTeacherEmissionBackend,
     FakeNumpyTeacherEmissionBackend,
     TeacherBackendConfig,
     TeacherBatchInput,
@@ -28,6 +29,7 @@ for name in ("torch", "transformers", "jax"):
 importlib.import_module("radjax_tome.backends")
 importlib.import_module("radjax_tome.backends.registry")
 importlib.import_module("radjax_tome.backends.fake")
+importlib.import_module("radjax_tome.backends.cpu")
 
 loaded = sorted(
     name for name in ("torch", "transformers", "jax") if name in sys.modules
@@ -54,6 +56,8 @@ def test_backend_config_and_batch_input_construct() -> None:
         sequence_length=4,
         batch_size=2,
         vocab_size=7,
+        top_k=3,
+        num_buckets=2,
         local_files_only=True,
         allow_downloads=False,
         fallback_policy="error",
@@ -65,6 +69,8 @@ def test_backend_config_and_batch_input_construct() -> None:
 
     assert config.backend_id == "fake_numpy"
     assert config.sequence_length == 4
+    assert config.top_k == 3
+    assert config.num_buckets == 2
     assert batch.example_ids == ("ex-1", "ex-2")
     assert batch.texts == ("alpha", "beta")
 
@@ -115,15 +121,21 @@ def test_fake_backend_created_through_registry_emits_deterministic_logits() -> N
     assert first.metadata["fallback_used"] is False
 
 
-def test_registry_lists_fake_backend_capabilities() -> None:
+def test_registry_lists_default_backend_capabilities() -> None:
     capabilities = list_backend_capabilities()
     fake_capabilities = [
         capability
         for capability in capabilities
         if capability.backend_id == "fake_numpy"
     ]
+    cpu_capabilities = [
+        capability
+        for capability in capabilities
+        if capability.backend_id == "cpu_reference"
+    ]
 
     assert len(fake_capabilities) == 1
+    assert len(cpu_capabilities) == 4
     capability = fake_capabilities[0]
     assert capability.backend_family == "fake_numpy"
     assert capability.runtime_mode == "cpu"
@@ -132,11 +144,17 @@ def test_registry_lists_fake_backend_capabilities() -> None:
     assert capability.implemented_now
     assert not capability.optimized
     assert "Spec 3.3B fake backend proves" in capability.notes
+    assert [capability.backend_id for capability in capabilities] == sorted(
+        capability.backend_id for capability in capabilities
+    )
 
 
 def test_duplicate_and_unknown_backend_ids_fail_clearly() -> None:
     with pytest.raises(ValueError, match="already registered"):
         register_backend(FakeNumpyTeacherEmissionBackend)
+
+    with pytest.raises(ValueError, match="already registered"):
+        register_backend(CPUReferenceTeacherEmissionBackend)
 
     with pytest.raises(ValueError, match="unknown teacher backend"):
         create_backend(TeacherBackendConfig(backend_id="missing_backend"))

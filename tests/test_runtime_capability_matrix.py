@@ -151,3 +151,40 @@ def test_runtime_capability_matrix_reflects_contract_skeleton_only() -> None:
         for capability in capabilities
         if capability["backend_family"] in {"hf_torch", "gpu_torch", "jax_tpu"}
     )
+
+
+def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
+    matrix = json.loads(
+        (ROOT / "docs" / "TOME_RUNTIME_CAPABILITY_MATRIX.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    capabilities = {
+        (capability["backend_family"], capability["target_policy"]): capability
+        for capability in matrix["capabilities"]
+    }
+
+    dense = capabilities[("cpu_reference", "dense_logits")]
+    topk = capabilities[("cpu_reference", "topk_with_tail_v0")]
+    cascaded = capabilities[("cpu_reference", "cascaded_soft_labels_v1")]
+    corridor = capabilities[("cpu_reference", "corridor_exemplar_v1")]
+
+    assert dense["implemented_now"]
+    assert dense["status"] == "supported_debug"
+    assert not dense["optimized"]
+    assert topk["implemented_now"]
+    assert topk["status"] == "supported"
+    assert not topk["optimized"]
+    assert cascaded["implemented_now"]
+    assert cascaded["status"] == "supported"
+    assert not cascaded["optimized"]
+    assert not corridor["implemented_now"]
+    assert corridor["status"] == "planned"
+    assert not corridor["optimized"]
+    assert "public builder has not migrated" in dense["notes"]
+
+    assert not any(
+        capability["implemented_now"]
+        for capability in matrix["capabilities"]
+        if capability["runtime_mode"] in {"cpu_gpu", "cpu_tpu"}
+    )

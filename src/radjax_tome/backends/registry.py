@@ -7,6 +7,7 @@ from radjax_tome.backends.base import (
     TeacherBackendConfig,
     TeacherEmissionBackend,
 )
+from radjax_tome.backends.cpu import CPUReferenceTeacherEmissionBackend
 from radjax_tome.backends.fake import FakeNumpyTeacherEmissionBackend
 
 BackendFactory = Callable[[TeacherBackendConfig], TeacherEmissionBackend]
@@ -42,3 +43,4 @@ def list_backend_capabilities() -> tuple[BackendCapability, ...]:
 
 
 register_backend(FakeNumpyTeacherEmissionBackend)
+register_backend(CPUReferenceTeacherEmissionBackend)
