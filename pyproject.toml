@@ -24,6 +24,9 @@ dev = [
   "ruff>=0.6",
 ]
 
+[project.scripts]
+radjax-tome = "radjax_tome.cli.main:main"
+
 [tool.setuptools]
 package-dir = { "" = "src" }
 

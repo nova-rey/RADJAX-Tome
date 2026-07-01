@@ -7,6 +7,35 @@ manifests.
 It emits portable artifacts validated by RADJAX-Contract. It does not train
 student models.
 
+## Recommended CLI
+
+Start with the public CLI:
+
+```bash
+python -m radjax_tome.cli.main build \
+  --output artifacts/cli_happy_path_fake_tome \
+  --teacher-mode fake \
+  --max-examples 2 \
+  --sequence-length 8 \
+  --overwrite
+
+python -m radjax_tome.cli.main validate \
+  --path artifacts/cli_happy_path_fake_tome
+
+python -m radjax_tome.cli.main inspect \
+  --path artifacts/cli_happy_path_fake_tome
+```
+
+Installed console entry point:
+
+```bash
+radjax-tome build --output artifacts/cli_happy_path_fake_tome --teacher-mode fake --max-examples 2 --sequence-length 8 --overwrite
+radjax-tome validate --path artifacts/cli_happy_path_fake_tome
+radjax-tome inspect --path artifacts/cli_happy_path_fake_tome
+```
+
+For advanced/dev scripts, see `docs/CLI_GUIDE.md`.
+
 RADJAX-Tome now owns the migrated legacy Tome Builder / TeacherTextbook builder
 from the historical `qrwkv-xla` repo. The migrated builder preserves the legacy
 TeacherTextbook layout for now:
