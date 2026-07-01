@@ -91,3 +91,14 @@ resolution.
 This does not migrate the public builder, port HF/GPU/TPU runtimes, or claim
 that staged mode is performance optimized. It creates the scheduling lane for
 future backend work.
+
+## 2026-07-01 — Spec 3.3E HF Torch Backend Behind The Contract
+
+Spec 3.3E adds `hf_torch` as an HF Torch backend implementing
+`TeacherEmissionBackend`. It keeps torch/transformers imports lazy and is CPU
+runtime first. When optional local HF dependencies and model files are
+available, it can emit `dense_logits`, `topk_with_tail_v0`, and
+`cascaded_soft_labels_v1` through the backend contract.
+
+This does not implement GPU compact optimization, CUDA/MPS acceleration,
+TPU/JAX, or public builder migration.

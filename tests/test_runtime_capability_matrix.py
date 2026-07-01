@@ -225,3 +225,42 @@ def test_runtime_capability_matrix_documents_orchestration() -> None:
         for capability in matrix["capabilities"]
         if capability["runtime_mode"] in {"cpu_gpu", "cpu_tpu"}
     )
+
+
+def test_runtime_capability_matrix_reflects_hf_torch_backend_contract() -> None:
+    matrix = json.loads(
+        (ROOT / "docs" / "TOME_RUNTIME_CAPABILITY_MATRIX.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    capabilities = {
+        (capability["backend_family"], capability["target_policy"]): capability
+        for capability in matrix["capabilities"]
+    }
+
+    dense = capabilities[("hf_torch", "dense_logits")]
+    topk = capabilities[("hf_torch", "topk_with_tail_v0")]
+    cascaded = capabilities[("hf_torch", "cascaded_soft_labels_v1")]
+    corridor = capabilities[("hf_torch", "corridor_exemplar_v1")]
+
+    assert dense["implemented_now"]
+    assert dense["status"] == "supported_debug"
+    assert not dense["optimized"]
+    assert (
+        "Spec 3.3E HF Torch backend emits real causal-LM dense logits"
+        in (dense["notes"])
+    )
+    assert topk["implemented_now"]
+    assert topk["status"] == "supported"
+    assert not topk["optimized"]
+    assert cascaded["implemented_now"]
+    assert cascaded["status"] == "supported"
+    assert not cascaded["optimized"]
+    assert not corridor["implemented_now"]
+    assert corridor["status"] == "planned"
+    assert not corridor["optimized"]
+    assert not any(
+        capability["implemented_now"]
+        for capability in matrix["capabilities"]
+        if capability["runtime_mode"] in {"cpu_gpu", "cpu_tpu"}
+    )

@@ -40,6 +40,7 @@ from radjax_tome.backends.hf_specimen import (
     validate_hf_teacher_specimen_config,
     write_hf_teacher_specimen_report,
 )
+from radjax_tome.backends.hf_torch import HFTorchTeacherEmissionBackend
 from radjax_tome.backends.orchestration import (
     BackendBatchEnvelope,
     BackendRunConfig,
@@ -77,6 +78,7 @@ __all__ = [
     "HFTeacherSpecimenConfig",
     "HFTeacherSpecimenSmokeResult",
     "HFTeacherSpecimenSwapReport",
+    "HFTorchTeacherEmissionBackend",
     "QwenPolicyEntry",
     "QwenPolicyMap",
     "QwenResolution",

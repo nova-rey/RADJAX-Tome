@@ -82,7 +82,7 @@
     {
       "backend_family": "hf_torch",
       "implemented_now": true,
-      "notes": "Current optional HF teacher mode can emit dense logits when optional torch and transformers dependencies and local model files are available.",
+      "notes": "Spec 3.3E HF Torch backend emits real causal-LM dense logits through the backend contract when optional local HF dependencies and model files are available. The public builder has not migrated to this backend.",
       "optimized": false,
       "runtime_mode": "cpu",
       "status": "supported_debug",
@@ -91,19 +91,19 @@
     {
       "backend_family": "hf_torch",
       "implemented_now": true,
-      "notes": "Current optional HF teacher mode can write top-k plus tail targets through the existing builder path, but not through the future runtime backend contract yet.",
+      "notes": "Spec 3.3E HF Torch backend emits top-k plus tail payloads by CPU-reducing real HF logits through the backend contract.",
       "optimized": false,
       "runtime_mode": "cpu",
-      "status": "supported_debug",
+      "status": "supported",
       "target_policy": "topk_with_tail_v0"
     },
     {
       "backend_family": "hf_torch",
       "implemented_now": true,
-      "notes": "Current optional HF teacher mode can write cascaded soft-label targets through the existing builder path, but not through the future runtime backend contract yet.",
+      "notes": "Spec 3.3E HF Torch backend emits cascaded soft-label payloads by CPU-reducing real HF logits through the backend contract.",
       "optimized": false,
       "runtime_mode": "cpu",
-      "status": "supported_debug",
+      "status": "supported",
       "target_policy": "cascaded_soft_labels_v1"
     },
     {
@@ -220,11 +220,12 @@
     "metadata_implementation_required_now": false
   },
   "non_goals": [
-    "Do not migrate the public builder to the backend orchestrator in Spec 3.3D.",
-    "Do not claim staged mode is performance optimized in Spec 3.3D.",
-    "Do not port historical CUDA/GPU compact reduction in Spec 3.3D.",
-    "Do not implement TPU/JAX backend code in Spec 3.3D.",
-    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3D."
+    "Do not migrate the public builder to hf_torch in Spec 3.3E.",
+    "Do not claim staged mode is performance optimized in Spec 3.3E.",
+    "Do not claim HF Torch GPU compact reduction is implemented in Spec 3.3E.",
+    "Do not claim CUDA/MPS acceleration in Spec 3.3E.",
+    "Do not implement TPU/JAX backend code in Spec 3.3E.",
+    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3E."
   ],
   "orchestration": {
     "default_mode": "auto",

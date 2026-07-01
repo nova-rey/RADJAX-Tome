@@ -30,3 +30,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3D" in text
     assert "auto / serial / staged" in text
     assert "backend batch runner" in text
+    assert "3.3E" in text
+    assert "hf_torch" in text
+    assert "lazy" in text

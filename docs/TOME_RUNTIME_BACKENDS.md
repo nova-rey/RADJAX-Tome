@@ -114,6 +114,21 @@ Backend emission metadata describes backend behavior. Run-level orchestration
 metadata describes how the CPU front end scheduled batches. The public builder
 has not migrated to the runner yet.
 
+## HF Torch Backend
+
+Spec 3.3E adds `hf_torch` behind the `TeacherEmissionBackend` contract. It is
+CPU-runtime-first and loads `torch` and `transformers` lazily, only when model
+availability or emission is requested.
+
+`hf_torch` supports real HF causal LM emission for `dense_logits`,
+`topk_with_tail_v0`, and `cascaded_soft_labels_v1`. Dense logits are returned as
+NumPy arrays. Compact payloads are CPU reductions from real HF logits, not GPU
+compact reduction.
+
+The backend does not claim CUDA, MPS, TPU, or optimized accelerator behavior.
+`gpu_torch` remains future work, and the public builder has not migrated to
+`hf_torch` by default.
+
 ## Runtime Modes
 
 `cpu` means CPU-side orchestration plus CPU teacher execution and reduction. It
