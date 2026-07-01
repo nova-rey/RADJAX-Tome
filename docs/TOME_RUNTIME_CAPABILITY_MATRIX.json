@@ -117,11 +117,11 @@
     },
     {
       "backend_family": "gpu_torch",
-      "implemented_now": false,
-      "notes": "GPU dense logits are planned for debug/reference use only after the backend contract exists.",
+      "implemented_now": true,
+      "notes": "Spec 3.3F1 gpu_torch emits dense debug HF logits on an available CUDA or MPS Torch accelerator. This path is not optimized and transfers dense logits back to host.",
       "optimized": false,
       "runtime_mode": "cpu_gpu",
-      "status": "planned",
+      "status": "supported_debug",
       "target_policy": "dense_logits"
     },
     {
@@ -220,12 +220,12 @@
     "metadata_implementation_required_now": false
   },
   "non_goals": [
-    "Do not migrate the public builder to hf_torch in Spec 3.3E.",
-    "Do not claim staged mode is performance optimized in Spec 3.3E.",
-    "Do not claim HF Torch GPU compact reduction is implemented in Spec 3.3E.",
-    "Do not claim CUDA/MPS acceleration in Spec 3.3E.",
-    "Do not implement TPU/JAX backend code in Spec 3.3E.",
-    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3E."
+    "Do not migrate the public builder to hf_torch or gpu_torch in Spec 3.3F1.",
+    "Do not claim staged mode is performance optimized in Spec 3.3F1.",
+    "Do not claim HF Torch GPU compact reduction is implemented in Spec 3.3F1.",
+    "Do not silently fall back to CPU when gpu_torch is explicitly requested.",
+    "Do not implement TPU/JAX backend code in Spec 3.3F1.",
+    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3F1."
   ],
   "orchestration": {
     "default_mode": "auto",

@@ -102,3 +102,17 @@ available, it can emit `dense_logits`, `topk_with_tail_v0`, and
 
 This does not implement GPU compact optimization, CUDA/MPS acceleration,
 TPU/JAX, or public builder migration.
+
+## 2026-07-01 — Spec 3.3F1 GPU Torch Detection And Dense Debug Smoke
+
+Spec 3.3F1 starts the GPU Torch sub-roadmap by adding `gpu_torch` as a
+`TeacherEmissionBackend` with `runtime_mode=cpu_gpu`. It lazily detects Torch
+accelerators in CUDA-then-MPS order, loads HF Torch dependencies only when
+availability or emission is requested, and can emit `dense_logits` as a debug
+smoke path on an available accelerator.
+
+This is deliberately not the compact GPU reducer. Dense logits are transferred
+back to host and metadata records that the path is unoptimized, debug-oriented,
+and not using compact reduction. `topk_with_tail_v0`,
+`cascaded_soft_labels_v1`, and `corridor_exemplar_v1` remain future GPU
+reduction work, with historical QRWKV-XLA code only as migration reference.

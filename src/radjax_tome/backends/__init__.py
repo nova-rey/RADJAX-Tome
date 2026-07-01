@@ -20,6 +20,12 @@ from radjax_tome.backends.fake import (
     FakeNumpyTeacherEmissionBackend,
     FakeTeacherBackend,
 )
+from radjax_tome.backends.gpu_torch import (
+    GPUTorchTeacherEmissionBackend,
+    TorchAcceleratorDetection,
+    check_gpu_torch_backend_available,
+    detect_torch_accelerator,
+)
 from radjax_tome.backends.hf_export import (
     HFTeacherExportConfig,
     HFTeacherExportMetadata,
@@ -73,6 +79,7 @@ __all__ = [
     "FakeNumpyTeacherEmissionBackend",
     "FakeTeacherBackend",
     "DEFAULT_HF_SPECIMEN_MODEL_ID",
+    "GPUTorchTeacherEmissionBackend",
     "HFTeacherExportConfig",
     "HFTeacherExportMetadata",
     "HFTeacherSpecimenConfig",
@@ -92,10 +99,13 @@ __all__ = [
     "TeacherEmissionBackend",
     "TeacherEmissionResult",
     "TeacherTargetEmitter",
+    "TorchAcceleratorDetection",
     "build_hf_export_metadata",
     "build_hf_teacher_specimen_dry_run",
     "build_hf_teacher_specimen_swap_report",
+    "check_gpu_torch_backend_available",
     "create_backend",
+    "detect_torch_accelerator",
     "emit_teacher_target_store",
     "list_backend_capabilities",
     "load_qwen_policy",

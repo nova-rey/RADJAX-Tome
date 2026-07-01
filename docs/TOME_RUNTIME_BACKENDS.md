@@ -126,8 +126,26 @@ NumPy arrays. Compact payloads are CPU reductions from real HF logits, not GPU
 compact reduction.
 
 The backend does not claim CUDA, MPS, TPU, or optimized accelerator behavior.
-`gpu_torch` remains future work, and the public builder has not migrated to
-`hf_torch` by default.
+The public builder has not migrated to `hf_torch` by default.
+
+## GPU Torch Backend
+
+Spec 3.3F1 adds `gpu_torch` behind the `TeacherEmissionBackend` contract. It is
+an accelerator-shaped debug backend with `runtime_mode=cpu_gpu` and lazy
+`torch`/`transformers` imports.
+
+`gpu_torch` detects Torch accelerator devices in deterministic order: CUDA
+first, then MPS. Explicit `gpu_torch` requests fail clearly when neither device
+is available; they do not silently route to CPU or `hf_torch`.
+
+Spec 3.3F1 implements only `dense_logits` as `supported_debug`. The path loads
+an HF causal-LM model/tokenizer lazily, runs inference on the selected
+accelerator, moves dense logits back to host as NumPy payloads, and records
+metadata that says the dense debug path and host transfer were used.
+
+`topk_with_tail_v0`, `cascaded_soft_labels_v1`, and `corridor_exemplar_v1`
+remain historical-reference/future GPU compact-reduction work. The public
+builder has not migrated to `gpu_torch`.
 
 ## Runtime Modes
 
@@ -135,8 +153,9 @@ The backend does not claim CUDA, MPS, TPU, or optimized accelerator behavior.
 is the universal correctness and reference path.
 
 `cpu_gpu` means CPU-side orchestration plus GPU-backed teacher execution and/or
-GPU-backed reduction. This is the future high-throughput path for HF Torch
-CUDA/MPS-style acceleration.
+GPU-backed reduction. Spec 3.3F1 implements only a dense debug/smoke HF Torch
+path on CUDA or MPS; high-throughput compact GPU reduction remains future 3.3F
+work.
 
 `cpu_tpu` means CPU-side orchestration plus TPU/JAX/XLA-backed teacher
 execution and/or TPU-backed reduction. This is a future backend family; no

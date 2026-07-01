@@ -51,7 +51,7 @@ Spec 3.3 is split into runtime/backend roadmap units:
 | 3.3C.1 | CPU Corridor / Exemplar Reference Policy | complete once the capability correction lands |
 | 3.3D | CPU Orchestration Modes: auto / serial / staged | complete once the backend batch runner lands |
 | 3.3E | HF Torch Backend Behind the Contract | complete once the HF Torch contract backend lands |
-| 3.3F | GPU Compact Reduction Migration | planned |
+| 3.3F | GPU Compact Reduction Migration | in progress through sub-roadmap |
 | 3.3G | TPU/JAX Backend Skeleton | planned |
 | 3.3H | Runtime Metadata + CLI/Doctor Polish | planned |
 
@@ -80,6 +80,19 @@ Spec 3.3E adds CPU-runtime-first `hf_torch` behind the backend contract; 3.3F is
 where GPU compact reduction begins.
 
 3.3F ports GPU compact/chunked reduction after the contract exists.
+
+Spec 3.3F is split into smaller GPU Torch migration units:
+
+| Unit | Title | Status |
+|---|---|---|
+| 3.3F1 | GPU Torch Backend Detection + Dense Debug Smoke | complete once the gpu_torch dense smoke path lands |
+| 3.3F2 | GPU Top-K/Tail Compact Reducer | planned |
+| 3.3F3 | GPU Cascaded Soft-Label Reducer | planned |
+| 3.3F4 | Chunked Vocab Reduction + Memory Metadata | planned |
+| 3.3F5 | GPU Runtime Fallback / Error Hardening | planned |
+
+Spec 3.3F1 adds `gpu_torch` as a CUDA/MPS-detecting dense debug backend. It
+does not implement compact GPU reduction or public builder migration.
 
 3.3G adds TPU/JAX shape without CUDA assumptions.
 

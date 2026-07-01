@@ -9,6 +9,7 @@ from radjax_tome.backends.base import (
 )
 from radjax_tome.backends.cpu import CPUReferenceTeacherEmissionBackend
 from radjax_tome.backends.fake import FakeNumpyTeacherEmissionBackend
+from radjax_tome.backends.gpu_torch import GPUTorchTeacherEmissionBackend
 from radjax_tome.backends.hf_torch import HFTorchTeacherEmissionBackend
 
 BackendFactory = Callable[[TeacherBackendConfig], TeacherEmissionBackend]
@@ -37,7 +38,11 @@ def create_backend(config: TeacherBackendConfig) -> TeacherEmissionBackend:
 def list_backend_capabilities() -> tuple[BackendCapability, ...]:
     capabilities: list[BackendCapability] = []
     for backend_id in sorted(_BACKEND_FACTORIES):
-        backend = create_backend(TeacherBackendConfig(backend_id=backend_id))
+        factory = _BACKEND_FACTORIES[backend_id]
+        runtime_mode = getattr(factory, "runtime_mode", "cpu")
+        backend = create_backend(
+            TeacherBackendConfig(backend_id=backend_id, runtime_mode=runtime_mode)
+        )
         capabilities.extend(backend.capabilities())
         backend.close()
     return tuple(capabilities)
@@ -46,3 +51,4 @@ def list_backend_capabilities() -> tuple[BackendCapability, ...]:
 register_backend(FakeNumpyTeacherEmissionBackend)
 register_backend(CPUReferenceTeacherEmissionBackend)
 register_backend(HFTorchTeacherEmissionBackend)
+register_backend(GPUTorchTeacherEmissionBackend)

@@ -33,3 +33,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3E" in text
     assert "hf_torch" in text
     assert "lazy" in text
+    assert "3.3F1" in text
+    assert "gpu_torch" in text
+    assert "CUDA-then-MPS" in text

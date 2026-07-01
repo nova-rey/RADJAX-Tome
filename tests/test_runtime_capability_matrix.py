@@ -153,7 +153,13 @@ def test_runtime_capability_matrix_reflects_contract_skeleton_only() -> None:
     assert not any(
         capability["implemented_now"]
         for capability in capabilities
-        if capability["runtime_mode"] in {"cpu_gpu", "cpu_tpu"}
+        if capability["runtime_mode"] == "cpu_tpu"
+    )
+    assert not any(
+        capability["implemented_now"]
+        for capability in capabilities
+        if capability["backend_family"] == "gpu_torch"
+        and capability["target_policy"] != "dense_logits"
     )
     assert not any(
         "Spec 3.3B" in capability["notes"]
@@ -199,7 +205,13 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     assert not any(
         capability["implemented_now"]
         for capability in matrix["capabilities"]
-        if capability["runtime_mode"] in {"cpu_gpu", "cpu_tpu"}
+        if capability["runtime_mode"] == "cpu_tpu"
+    )
+    assert not any(
+        capability["implemented_now"]
+        for capability in matrix["capabilities"]
+        if capability["backend_family"] == "gpu_torch"
+        and capability["target_policy"] != "dense_logits"
     )
 
 
@@ -223,7 +235,13 @@ def test_runtime_capability_matrix_documents_orchestration() -> None:
     assert not any(
         capability["implemented_now"]
         for capability in matrix["capabilities"]
-        if capability["runtime_mode"] in {"cpu_gpu", "cpu_tpu"}
+        if capability["runtime_mode"] == "cpu_tpu"
+    )
+    assert not any(
+        capability["implemented_now"]
+        for capability in matrix["capabilities"]
+        if capability["backend_family"] == "gpu_torch"
+        and capability["target_policy"] != "dense_logits"
     )
 
 
@@ -262,5 +280,44 @@ def test_runtime_capability_matrix_reflects_hf_torch_backend_contract() -> None:
     assert not any(
         capability["implemented_now"]
         for capability in matrix["capabilities"]
-        if capability["runtime_mode"] in {"cpu_gpu", "cpu_tpu"}
+        if capability["runtime_mode"] == "cpu_tpu"
     )
+    assert not any(
+        capability["implemented_now"]
+        for capability in matrix["capabilities"]
+        if capability["backend_family"] == "gpu_torch"
+        and capability["target_policy"] != "dense_logits"
+    )
+
+
+def test_runtime_capability_matrix_reflects_gpu_torch_dense_debug_smoke() -> None:
+    matrix = json.loads(
+        (ROOT / "docs" / "TOME_RUNTIME_CAPABILITY_MATRIX.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    capabilities = {
+        (capability["backend_family"], capability["target_policy"]): capability
+        for capability in matrix["capabilities"]
+    }
+
+    dense = capabilities[("gpu_torch", "dense_logits")]
+    topk = capabilities[("gpu_torch", "topk_with_tail_v0")]
+    cascaded = capabilities[("gpu_torch", "cascaded_soft_labels_v1")]
+    corridor = capabilities[("gpu_torch", "corridor_exemplar_v1")]
+
+    assert dense["runtime_mode"] == "cpu_gpu"
+    assert dense["implemented_now"]
+    assert dense["status"] == "supported_debug"
+    assert not dense["optimized"]
+    assert "Spec 3.3F1 gpu_torch emits dense debug HF logits" in dense["notes"]
+    assert "transfers dense logits back to host" in dense["notes"]
+    for compact in (topk, cascaded, corridor):
+        assert compact["runtime_mode"] == "cpu_gpu"
+        assert compact["status"] == "historical_reference_exists"
+        assert not compact["implemented_now"]
+        assert not compact["optimized"]
+
+    non_goals = " ".join(matrix["non_goals"])
+    assert "Do not silently fall back to CPU" in non_goals
+    assert "Spec 3.3F1" in non_goals
