@@ -28,6 +28,9 @@ radjax-tome inspect --path artifacts/cli_happy_path_fake_tome
 Fake mode is CPU-only, offline, and does not require PyTorch, Transformers, JAX,
 or network access.
 
+Builds now write an unpacked Tome `cover_page.json`; `validate` checks it when
+present, and `inspect` prints its summary fields. See `docs/TOME_COVER_PAGE.md`.
+
 For advanced diagnostics:
 
 ```bash

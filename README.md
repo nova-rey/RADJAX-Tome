@@ -37,10 +37,11 @@ radjax-tome inspect --path artifacts/cli_happy_path_fake_tome
 For advanced/dev scripts, see `docs/CLI_GUIDE.md`.
 
 RADJAX-Tome now owns the migrated legacy Tome Builder / TeacherTextbook builder
-from the historical `qrwkv-xla` repo. The migrated builder preserves the legacy
-TeacherTextbook layout for now:
+from the historical `qrwkv-xla` repo. The migrated builder preserves existing
+TeacherTextbook sidecars and now adds an unpacked Tome cover page:
 
 ```text
+cover_page.json
 metadata.json
 vocab_contract.json
 teacher_manifest.json
@@ -49,8 +50,8 @@ validation_report.json
 shards/shard-00000.npz
 ```
 
-The new `cover_page.json` Tome contract is intentionally deferred to a later
-phase.
+`cover_page.json` is the unpacked Tome front door added in Spec 3.1. See
+`docs/TOME_COVER_PAGE.md`.
 
 Fake/offline smoke:
 

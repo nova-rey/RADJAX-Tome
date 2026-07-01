@@ -47,11 +47,16 @@ def test_public_cli_fake_build_validate_and_inspect(tmp_path: Path) -> None:
     validate = run_cli(ROOT, "validate", "--path", str(output))
     assert validate.returncode == 0, validate.stderr
     assert "status=pass" in validate.stdout
+    assert "cover_page_status=pass" in validate.stdout
 
     inspect = run_cli(ROOT, "inspect", "--path", str(output))
     assert inspect.returncode == 0, inspect.stderr
     assert f"path={output}" in inspect.stdout
     assert "artifact_type=teacher_textbook" in inspect.stdout
+    assert "tome_artifact_kind=radjax_tome" in inspect.stdout
+    assert "cover_page_version=1" in inspect.stdout
+    assert "tome_version=1" in inspect.stdout
+    assert "layout=unpacked_directory" in inspect.stdout
     assert "target_type=dense_logits" in inspect.stdout
     assert "num_examples=2" in inspect.stdout
     assert "shard_count=1" in inspect.stdout

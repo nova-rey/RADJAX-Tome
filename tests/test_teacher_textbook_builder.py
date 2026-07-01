@@ -37,7 +37,7 @@ def test_fake_builder_creates_valid_legacy_teacher_textbook(tmp_path: Path) -> N
     assert (output / "emission_config.json").is_file()
     assert (output / "validation_report.json").is_file()
     assert (output / "shards" / "shard-00000.npz").is_file()
-    assert not (output / "cover_page.json").exists()
+    assert (output / "cover_page.json").is_file()
     assert validate_teacher_textbook(output).status == "pass"
 
 

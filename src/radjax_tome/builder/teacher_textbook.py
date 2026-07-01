@@ -18,6 +18,7 @@ from radjax_tome.targets.schema import (
     TargetStoreMetadata,
 )
 from radjax_tome.targets.store import TeacherTargetStore
+from radjax_tome.tome import write_cover_page
 
 TEACHER_TEXTBOOK_VERSION = 0
 
@@ -224,6 +225,7 @@ def build_fake_teacher_textbook(
         raise ValueError(
             "built TeacherTextbook failed validation: " + "; ".join(report.blockers)
         )
+    write_cover_page(config.output_dir)
     return validate_teacher_textbook(config.output_dir)
 
 
@@ -319,6 +321,7 @@ def build_hf_teacher_textbook(
         raise ValueError(
             "built HF TeacherTextbook failed validation: " + "; ".join(report.blockers)
         )
+    write_cover_page(config.output_dir)
     return validate_teacher_textbook(config.output_dir)
 
 

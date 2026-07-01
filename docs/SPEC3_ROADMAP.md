@@ -8,7 +8,7 @@ are roadmap arcs, not necessarily single-shot implementation specs.
 | Arc | Title | Status |
 |---|---|---|
 | 3.0 | Optimization Handoff Inventory and Roadmap Lock | complete when this document and inventory land |
-| 3.1 | Cover Page v1 for unpacked Tome directory | planned |
+| 3.1 | Cover Page v1 for unpacked Tome directory | complete once cover-page generation and validation land |
 | 3.2 | Tome Bundle Container v1 | planned |
 | 3.3 | Teacher Backend Runtime Modes: CPU, CPU+GPU, CPU+TPU | planned |
 | 3.4 | Dynamic Top-K Compression Policy | planned |
@@ -31,6 +31,6 @@ CUDA-specific optimizations. Dynamic top-k should wait until artifact metadata
 and backend reduction policy surfaces exist. TUI is optional polish after
 functional readiness.
 
-The immediate next implementation target is 3.1, because optimized generation
-should write into a contract-shaped artifact instead of forcing the contract to
-follow an optimization-specific layout later.
+Spec 3.1 adds `cover_page.json` for unpacked Tome directories so optimized
+generation can target a contract-shaped artifact instead of forcing the contract
+to follow an optimization-specific layout later.

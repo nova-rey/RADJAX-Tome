@@ -152,6 +152,8 @@ def _cmd_validate(args: argparse.Namespace) -> int:
         validate_teacher_textbook,
         write_teacher_textbook_validation_report,
     )
+    from radjax_tome.tome import COVER_PAGE_FILENAME, validate_tome_cover_page
+    from radjax_tome.tome.cover_page import write_cover_page
 
     report = validate_teacher_textbook(args.path)
     if args.write_report:
@@ -159,20 +161,43 @@ def _cmd_validate(args: argparse.Namespace) -> int:
             report,
             args.path / "validation_report.json",
         )
+        if (args.path / COVER_PAGE_FILENAME).is_file():
+            write_cover_page(args.path)
+    cover_report = None
+    if (args.path / COVER_PAGE_FILENAME).is_file():
+        cover_report = validate_tome_cover_page(args.path)
     print(
         f"status={report.status} blockers={len(report.blockers)} "
         f"warnings={len(report.warnings)} path={args.path}"
     )
-    return 0 if report.status == "pass" else 1
+    if cover_report is not None:
+        print(
+            f"cover_page_status={cover_report.status} "
+            f"cover_page_blockers={len(cover_report.blockers)}"
+        )
+    if report.status != "pass":
+        return 1
+    if cover_report is not None and cover_report.status != "pass":
+        return 1
+    return 0
 
 
 def _cmd_inspect(args: argparse.Namespace) -> int:
+    from radjax_tome.io.json import read_json_object
     from radjax_tome.targets import inspect_target_store
+    from radjax_tome.tome import COVER_PAGE_FILENAME
 
     summary = inspect_target_store(args.path)
+    cover_page_path = args.path / COVER_PAGE_FILENAME
+    cover_page = read_json_object(cover_page_path) if cover_page_path.is_file() else {}
     print("RADJAX-Tome artifact summary")
     print(f"path={args.path}")
     print("artifact_type=teacher_textbook")
+    if cover_page:
+        print(f"tome_artifact_kind={cover_page['artifact_kind']}")
+        print(f"cover_page_version={cover_page['cover_page_version']}")
+        print(f"tome_version={cover_page['tome_version']}")
+        print(f"layout={cover_page['layout']}")
     print(f"target_type={summary['target_type']}")
     print(f"model_id={summary['model_id']}")
     print(f"vocab_size={summary['vocab_size']}")
