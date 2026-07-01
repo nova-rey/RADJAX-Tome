@@ -23,6 +23,18 @@ def test_spec3_roadmap_exists_and_locks_ordering() -> None:
     assert "Cover page defines the artifact contract" in text
     assert "Backend runtime abstraction should exist before porting" in text
     assert "Dynamic top-k should wait" in text
+    assert "3.3A" in text
+    assert "Runtime Mode Capability Model" in text
+    assert "3.3H" in text
+    assert "Runtime Metadata + CLI/Doctor Polish" in text
+    assert "3.3A defines vocabulary" in text
+    assert "3.3B defines the internal backend contract wall" in text
+    assert "3.3C establishes the CPU correctness baseline" in text
+    assert "3.3D adds CPU orchestration and staged execution" in text
+    assert "3.3E moves current HF Torch behavior behind the contract" in text
+    assert "3.3F ports GPU compact/chunked reduction" in text
+    assert "3.3G adds TPU/JAX shape without CUDA assumptions" in text
+    assert "3.3H exposes backend status through CLI/doctor polish" in text
 
 
 def test_optimization_handoff_doc_preserves_runtime_context() -> None:

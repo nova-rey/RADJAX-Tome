@@ -1,0 +1,249 @@
+{
+  "backend_families": [
+    "fake_numpy",
+    "cpu_reference",
+    "hf_torch",
+    "gpu_torch",
+    "jax_tpu"
+  ],
+  "capabilities": [
+    {
+      "backend_family": "fake_numpy",
+      "implemented_now": true,
+      "notes": "Active fake teacher mode can emit deterministic dense logits for smoke and reference tests.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "supported_debug",
+      "target_policy": "dense_logits"
+    },
+    {
+      "backend_family": "fake_numpy",
+      "implemented_now": true,
+      "notes": "Active fake teacher mode can write top-k plus tail targets through the current NumPy builder path.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "supported_debug",
+      "target_policy": "topk_with_tail_v0"
+    },
+    {
+      "backend_family": "fake_numpy",
+      "implemented_now": true,
+      "notes": "Active fake teacher mode can write cascaded soft-label targets through the current NumPy builder path.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "supported_debug",
+      "target_policy": "cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "fake_numpy",
+      "implemented_now": false,
+      "notes": "Fake corridor/exemplar generation exists elsewhere as synthetic proof work, but not as a runtime backend target policy.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "planned",
+      "target_policy": "corridor_exemplar_v1"
+    },
+    {
+      "backend_family": "cpu_reference",
+      "implemented_now": false,
+      "notes": "Spec 3.3C will establish the CPU reference backend behind the future contract.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "planned",
+      "target_policy": "dense_logits"
+    },
+    {
+      "backend_family": "cpu_reference",
+      "implemented_now": false,
+      "notes": "CPU reference top-k plus tail support is planned behind the future backend contract.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "planned",
+      "target_policy": "topk_with_tail_v0"
+    },
+    {
+      "backend_family": "cpu_reference",
+      "implemented_now": false,
+      "notes": "CPU reference cascaded soft-label support is planned behind the future backend contract.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "planned",
+      "target_policy": "cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "cpu_reference",
+      "implemented_now": false,
+      "notes": "CPU reference corridor/exemplar support is planned behind the future backend contract.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "planned",
+      "target_policy": "corridor_exemplar_v1"
+    },
+    {
+      "backend_family": "hf_torch",
+      "implemented_now": true,
+      "notes": "Current optional HF teacher mode can emit dense logits when optional torch and transformers dependencies and local model files are available.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "supported_debug",
+      "target_policy": "dense_logits"
+    },
+    {
+      "backend_family": "hf_torch",
+      "implemented_now": true,
+      "notes": "Current optional HF teacher mode can write top-k plus tail targets through the existing builder path, but not through the future runtime backend contract yet.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "supported_debug",
+      "target_policy": "topk_with_tail_v0"
+    },
+    {
+      "backend_family": "hf_torch",
+      "implemented_now": true,
+      "notes": "Current optional HF teacher mode can write cascaded soft-label targets through the existing builder path, but not through the future runtime backend contract yet.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "supported_debug",
+      "target_policy": "cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "hf_torch",
+      "implemented_now": false,
+      "notes": "HF Torch corridor/exemplar target policy is planned after the backend contract exists.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "planned",
+      "target_policy": "corridor_exemplar_v1"
+    },
+    {
+      "backend_family": "gpu_torch",
+      "implemented_now": false,
+      "notes": "GPU dense logits are planned for debug/reference use only after the backend contract exists.",
+      "optimized": false,
+      "runtime_mode": "cpu_gpu",
+      "status": "planned",
+      "target_policy": "dense_logits"
+    },
+    {
+      "backend_family": "gpu_torch",
+      "implemented_now": false,
+      "notes": "Historical QRWKV-XLA compact GPU reduction exists as migration reference; active RADJAX-Tome does not claim it yet.",
+      "optimized": false,
+      "runtime_mode": "cpu_gpu",
+      "status": "historical_reference_exists",
+      "target_policy": "topk_with_tail_v0"
+    },
+    {
+      "backend_family": "gpu_torch",
+      "implemented_now": false,
+      "notes": "Historical QRWKV-XLA compact GPU reduction can guide future cascaded soft-label migration.",
+      "optimized": false,
+      "runtime_mode": "cpu_gpu",
+      "status": "historical_reference_exists",
+      "target_policy": "cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "gpu_torch",
+      "implemented_now": false,
+      "notes": "Historical QRWKV-XLA optimization work can guide future corridor/exemplar acceleration, but active support is not implemented.",
+      "optimized": false,
+      "runtime_mode": "cpu_gpu",
+      "status": "historical_reference_exists",
+      "target_policy": "corridor_exemplar_v1"
+    },
+    {
+      "backend_family": "jax_tpu",
+      "implemented_now": false,
+      "notes": "TPU dense logits are planned for debug/reference shape only; no active TPU implementation exists.",
+      "optimized": false,
+      "runtime_mode": "cpu_tpu",
+      "status": "planned",
+      "target_policy": "dense_logits"
+    },
+    {
+      "backend_family": "jax_tpu",
+      "implemented_now": false,
+      "notes": "TPU top-k plus tail support is planned and must be designed without CUDA assumptions.",
+      "optimized": false,
+      "runtime_mode": "cpu_tpu",
+      "status": "planned",
+      "target_policy": "topk_with_tail_v0"
+    },
+    {
+      "backend_family": "jax_tpu",
+      "implemented_now": false,
+      "notes": "TPU cascaded soft-label support is planned and must be designed around JAX/XLA constraints.",
+      "optimized": false,
+      "runtime_mode": "cpu_tpu",
+      "status": "planned",
+      "target_policy": "cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "jax_tpu",
+      "implemented_now": false,
+      "notes": "TPU corridor/exemplar support is planned as a future backend family, not active implementation.",
+      "optimized": false,
+      "runtime_mode": "cpu_tpu",
+      "status": "planned",
+      "target_policy": "corridor_exemplar_v1"
+    }
+  ],
+  "cpu_orchestration_modes": [
+    "auto",
+    "serial",
+    "staged"
+  ],
+  "fallback_policy": {
+    "auto_runtime_may_choose_supported_fallback": true,
+    "explicit_unsupported_request_should_fail": true,
+    "fallback_must_be_recorded_in_metadata": true,
+    "silent_accelerator_to_cpu_fallback_allowed": false
+  },
+  "kind": "radjax_tome_runtime_capability_matrix",
+  "metadata_policy": {
+    "future_fields": [
+      "requested_runtime_mode",
+      "effective_runtime_mode",
+      "requested_cpu_orchestration_mode",
+      "effective_cpu_orchestration_mode",
+      "requested_backend_family",
+      "effective_backend_family",
+      "requested_target_policy",
+      "effective_target_policy",
+      "fallback_used",
+      "fallback_reason",
+      "optimized_path_used",
+      "runtime_kind",
+      "device_kind",
+      "capability_status"
+    ],
+    "metadata_implementation_required_now": false
+  },
+  "non_goals": [
+    "Do not implement the backend protocol in Spec 3.3A.",
+    "Do not migrate fake or HF builder code behind a backend interface in Spec 3.3A.",
+    "Do not port historical CUDA/GPU compact reduction in Spec 3.3A.",
+    "Do not implement TPU/JAX backend code in Spec 3.3A.",
+    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3A."
+  ],
+  "runtime_modes": [
+    "cpu",
+    "cpu_gpu",
+    "cpu_tpu"
+  ],
+  "support_statuses": [
+    "unsupported",
+    "planned",
+    "supported",
+    "supported_debug",
+    "optimized",
+    "historical_reference_exists"
+  ],
+  "target_policies": [
+    "dense_logits",
+    "topk_with_tail_v0",
+    "cascaded_soft_labels_v1",
+    "corridor_exemplar_v1"
+  ],
+  "version": 1
+}

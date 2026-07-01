@@ -31,3 +31,16 @@ The bundle is packaging only: it keeps `cover_page.json` at archive root, packs
 the cover-page-listed files, validates hashes and sizes without extraction, and
 does not impose a compression requirement. Dynamic top-k and backend runtime
 optimization remain future Spec 3 arcs.
+
+## 2026-07-01 — Spec 3.3A Runtime Mode Capability Model
+
+Spec 3.3A defines the runtime mode capability model before backend migration:
+`cpu`, `cpu_gpu`, and `cpu_tpu` runtime modes; `auto / serial / staged` CPU
+orchestration modes; target policies for `dense_logits`, `topk_with_tail_v0`,
+`cascaded_soft_labels_v1`, and `corridor_exemplar_v1`; and a deterministic
+runtime capability matrix.
+
+This is intentionally vocabulary, documentation, and inventory only. It does
+not implement the backend contract, migrate the active builders, port GPU
+optimization, add TPU support, change target shards, change `cover_page.json`,
+or change `.rtome` bundles.
