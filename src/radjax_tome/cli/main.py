@@ -12,6 +12,8 @@ Recommended commands:
   build
   validate
   inspect
+  pack
+  unpack
   prove-capabilities
 """
 
@@ -76,6 +78,29 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     inspect.add_argument("--path", type=Path, required=True)
     inspect.set_defaults(func=_cmd_inspect)
+
+    pack = subparsers.add_parser(
+        "pack",
+        help="Pack an unpacked Tome directory into a deterministic .rtome bundle.",
+        description=(
+            "Pack an unpacked Tome directory into bundle v1: a deterministic "
+            "stdlib tar archive with cover_page.json at archive root."
+        ),
+    )
+    pack.add_argument("--input", type=Path, required=True)
+    pack.add_argument("--output", type=Path, required=True)
+    pack.add_argument("--overwrite", action="store_true")
+    pack.set_defaults(func=_cmd_pack)
+
+    unpack = subparsers.add_parser(
+        "unpack",
+        help="Unpack a deterministic .rtome bundle into a directory.",
+        description="Safely unpack a Tome bundle v1 deterministic tar archive.",
+    )
+    unpack.add_argument("--input", type=Path, required=True)
+    unpack.add_argument("--output", type=Path, required=True)
+    unpack.add_argument("--overwrite", action="store_true")
+    unpack.set_defaults(func=_cmd_unpack)
 
     prove = subparsers.add_parser(
         "prove-capabilities",
@@ -152,8 +177,25 @@ def _cmd_validate(args: argparse.Namespace) -> int:
         validate_teacher_textbook,
         write_teacher_textbook_validation_report,
     )
-    from radjax_tome.tome import COVER_PAGE_FILENAME, validate_tome_cover_page
+    from radjax_tome.tome import (
+        COVER_PAGE_FILENAME,
+        validate_tome_bundle,
+        validate_tome_cover_page,
+    )
     from radjax_tome.tome.cover_page import write_cover_page
+
+    if args.path.is_file():
+        report = validate_tome_bundle(args.path)
+        print(
+            f"status={report.status} blockers={len(report.blockers)} "
+            f"warnings={len(report.warnings)} path={args.path}"
+        )
+        print(
+            f"bundle_format_ok={report.format_ok} "
+            f"bundle_cover_page_ok={report.cover_page_ok} "
+            f"bundle_contents_ok={report.contents_ok}"
+        )
+        return 0 if report.status == "pass" else 1
 
     report = validate_teacher_textbook(args.path)
     if args.write_report:
@@ -185,7 +227,23 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 def _cmd_inspect(args: argparse.Namespace) -> int:
     from radjax_tome.io.json import read_json_object
     from radjax_tome.targets import inspect_target_store
-    from radjax_tome.tome import COVER_PAGE_FILENAME
+    from radjax_tome.tome import COVER_PAGE_FILENAME, inspect_tome_bundle
+
+    if args.path.is_file():
+        summary = inspect_tome_bundle(args.path)
+        print("RADJAX-Tome bundle summary")
+        print(f"path={args.path}")
+        print(f"bundle_path={summary['bundle_path']}")
+        print(f"tome_artifact_kind={summary['artifact_kind']}")
+        print(f"cover_page_version={summary['cover_page_version']}")
+        print(f"tome_version={summary['tome_version']}")
+        print(f"layout={summary['layout']}")
+        print(f"target_type={summary['target_type']}")
+        print(f"num_examples={summary['num_examples']}")
+        print(f"shard_count={summary['shard_count']}")
+        print(f"content_count={summary['content_count']}")
+        print(f"compression={summary['compression']}")
+        return 0
 
     summary = inspect_target_store(args.path)
     cover_page_path = args.path / COVER_PAGE_FILENAME
@@ -204,6 +262,30 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
     print(f"sequence_length={summary['sequence_length']}")
     print(f"num_examples={summary['num_examples']}")
     print(f"shard_count={summary['shard_count']}")
+    return 0
+
+
+def _cmd_pack(args: argparse.Namespace) -> int:
+    from radjax_tome.tome import pack_tome_bundle
+
+    output = pack_tome_bundle(
+        args.input,
+        args.output,
+        overwrite=args.overwrite,
+    )
+    print(f"status=pass bundle={output}")
+    return 0
+
+
+def _cmd_unpack(args: argparse.Namespace) -> int:
+    from radjax_tome.tome import unpack_tome_bundle
+
+    output = unpack_tome_bundle(
+        args.input,
+        args.output,
+        overwrite=args.overwrite,
+    )
+    print(f"status=pass output={output}")
     return 0
 
 

@@ -20,9 +20,8 @@ artifact/
     shard-00000.npz
 ```
 
-This is not a bundle or container. There is no `.rtome`, tarball, zip, zstd, or
-other compression layer in Spec 3.1. Compression and bundling come later in
-Spec 3.2.
+Spec 3.1 introduced this unpacked layout. Spec 3.2 adds `.rtome` as a
+deterministic tar packaging layer around the same cover-page-described files.
 
 ## Minimal Example
 

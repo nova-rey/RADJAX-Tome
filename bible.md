@@ -20,3 +20,14 @@ Spec 3.1 implements the first unpacked Tome directory front door:
 TeacherTextbook sidecars, public validation checks it when present, and inspect
 prints cover-page summary fields. This does not implement the Spec 3.2 bundle
 container, compression layer, dynamic top-k, or CPU/GPU/TPU runtime modes.
+
+## 2026-07-01 — Spec 3.2 Tome Bundle Container
+
+Spec 3.2 adds `.rtome` as a deterministic tar bundle for moving and storing an
+unpacked Tome directory as one file. The public CLI now supports `pack`,
+bundle-aware `inspect`, bundle-aware `validate`, and safe `unpack`.
+
+The bundle is packaging only: it keeps `cover_page.json` at archive root, packs
+the cover-page-listed files, validates hashes and sizes without extraction, and
+does not impose a compression requirement. Dynamic top-k and backend runtime
+optimization remain future Spec 3 arcs.

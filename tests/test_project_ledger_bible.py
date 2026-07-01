@@ -13,3 +13,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.0" in text
     assert "3.1" in text
     assert "cover_page.json" in text
+    assert "3.2" in text
+    assert ".rtome" in text
+    assert "deterministic tar" in text

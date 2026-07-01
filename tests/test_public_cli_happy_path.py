@@ -13,12 +13,19 @@ def test_public_cli_top_level_help() -> None:
     assert result.returncode == 0
     assert "RADJAX-Tome produces teacher-side distillation artifacts." in result.stdout
     assert "Recommended commands:" in result.stdout
-    for command in ("build", "validate", "inspect", "prove-capabilities"):
+    for command in (
+        "build",
+        "validate",
+        "inspect",
+        "pack",
+        "unpack",
+        "prove-capabilities",
+    ):
         assert command in result.stdout
 
 
 def test_public_cli_command_help() -> None:
-    for command in ("build", "validate", "inspect"):
+    for command in ("build", "validate", "inspect", "pack", "unpack"):
         result = run_cli(ROOT, command, "--help")
 
         assert result.returncode == 0

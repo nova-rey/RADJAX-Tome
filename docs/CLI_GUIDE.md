@@ -31,6 +31,10 @@ or network access.
 Builds now write an unpacked Tome `cover_page.json`; `validate` checks it when
 present, and `inspect` prints its summary fields. See `docs/TOME_COVER_PAGE.md`.
 
+Use `pack` and `unpack` for deterministic `.rtome` bundle v1 archives. Bundle
+validation and inspection work through the same `validate --path` and
+`inspect --path` commands. See `docs/TOME_BUNDLE.md`.
+
 For advanced diagnostics:
 
 ```bash

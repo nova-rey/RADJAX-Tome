@@ -9,7 +9,7 @@ are roadmap arcs, not necessarily single-shot implementation specs.
 |---|---|---|
 | 3.0 | Optimization Handoff Inventory and Roadmap Lock | complete when this document and inventory land |
 | 3.1 | Cover Page v1 for unpacked Tome directory | complete once cover-page generation and validation land |
-| 3.2 | Tome Bundle Container v1 | planned |
+| 3.2 | Tome Bundle Container v1 | complete once deterministic .rtome pack/inspect/validate/unpack land |
 | 3.3 | Teacher Backend Runtime Modes: CPU, CPU+GPU, CPU+TPU | planned |
 | 3.4 | Dynamic Top-K Compression Policy | planned |
 | 3.5 | Final CLI Polish / Optional TUI | planned |
@@ -34,3 +34,7 @@ functional readiness.
 Spec 3.1 adds `cover_page.json` for unpacked Tome directories so optimized
 generation can target a contract-shaped artifact instead of forcing the contract
 to follow an optimization-specific layout later.
+
+Spec 3.2 adds `.rtome` bundle v1 as a deterministic tar packaging layer around
+the cover-page-described files. It is packaging, not a new semantic compression
+policy.

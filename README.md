@@ -53,6 +53,9 @@ shards/shard-00000.npz
 `cover_page.json` is the unpacked Tome front door added in Spec 3.1. See
 `docs/TOME_COVER_PAGE.md`.
 
+Portable `.rtome` bundles are deterministic tar archives added in Spec 3.2. See
+`docs/TOME_BUNDLE.md`.
+
 Fake/offline smoke:
 
 ```bash
