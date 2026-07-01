@@ -92,6 +92,28 @@ from deterministic CPU logits, summarizes confidence and entropy per batch, and
 selects exemplar positions with the stable
 `deterministic_high_entropy_top_n_v1` policy.
 
+## CPU Orchestration Runner
+
+Spec 3.3D adds a backend batch runner above backend emission. The runner
+accepts ordered `BackendBatchEnvelope` values, calls a
+`TeacherEmissionBackend`, and returns ordered results plus run-level metadata.
+
+`serial` is the correctness/debug path. It processes one batch at a time and
+sorts results by `sequence_id` before returning.
+
+`staged` is a deterministic pipeline-shaped path, not yet a performance claim.
+It records staged orchestration metadata while preserving output order. It does
+not port historical queue, prefetch, or ordered-commit machinery.
+
+`auto` chooses `serial` for tiny workloads and `staged` otherwise. The current
+heuristic uses batch count first, then total example count, and records an
+`auto_reason` such as `tiny_batch_count`, `tiny_example_count`, or
+`normal_workload`.
+
+Backend emission metadata describes backend behavior. Run-level orchestration
+metadata describes how the CPU front end scheduled batches. The public builder
+has not migrated to the runner yet.
+
 ## Runtime Modes
 
 `cpu` means CPU-side orchestration plus CPU teacher execution and reduction. It

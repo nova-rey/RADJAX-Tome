@@ -27,3 +27,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "cpu_reference" in text
     assert "3.3C.1" in text
     assert "corridor_exemplar_v1" in text
+    assert "3.3D" in text
+    assert "auto / serial / staged" in text
+    assert "backend batch runner" in text

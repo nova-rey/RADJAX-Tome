@@ -71,6 +71,15 @@ def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
     assert TARGET_POLICIES <= set(matrix["target_policies"])
     assert SUPPORT_STATUSES <= set(matrix["support_statuses"])
     assert BACKEND_FAMILIES <= set(matrix["backend_families"])
+    assert matrix["orchestration"]["implemented_now"]
+    assert matrix["orchestration"]["default_mode"] == "auto"
+    assert set(matrix["orchestration"]["supported_modes"]) == {
+        "auto",
+        "serial",
+        "staged",
+    }
+    assert not matrix["orchestration"]["staged_is_performance_optimized"]
+    assert "public builder" in " ".join(matrix["non_goals"])
 
 
 def test_runtime_capability_matrix_does_not_overclaim_accelerators() -> None:
@@ -187,6 +196,30 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     )
     assert "public builder has not migrated" in dense["notes"]
 
+    assert not any(
+        capability["implemented_now"]
+        for capability in matrix["capabilities"]
+        if capability["runtime_mode"] in {"cpu_gpu", "cpu_tpu"}
+    )
+
+
+def test_runtime_capability_matrix_documents_orchestration() -> None:
+    matrix = json.loads(
+        (ROOT / "docs" / "TOME_RUNTIME_CAPABILITY_MATRIX.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    orchestration = matrix["orchestration"]
+
+    assert orchestration["implemented_now"]
+    assert orchestration["supported_modes"] == ["serial", "staged", "auto"]
+    assert orchestration["default_mode"] == "auto"
+    assert orchestration["staged_is_performance_optimized"] is False
+    assert "pipeline-shaped" in orchestration["notes"]
+    assert "historical optimizer port" in orchestration["notes"]
+    non_goals = " ".join(matrix["non_goals"])
+    assert "public builder" in non_goals
+    assert "performance optimized" in non_goals
     assert not any(
         capability["implemented_now"]
         for capability in matrix["capabilities"]

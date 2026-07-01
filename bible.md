@@ -79,3 +79,15 @@ deterministic corridor summaries and high-entropy exemplar selections.
 This is a capability matrix correction and CPU reference implementation only:
 there is no builder migration, no staged orchestration, and no GPU/TPU
 implementation.
+
+## 2026-07-01 — Spec 3.3D CPU Orchestration Modes
+
+Spec 3.3D adds CPU orchestration modes for backend emission:
+`auto / serial / staged`. The new backend batch runner preserves deterministic
+ordering by `sequence_id` and records run-level metadata for requested/effective
+orchestration mode, batch counts, example counts, sequence ranges, and auto
+resolution.
+
+This does not migrate the public builder, port HF/GPU/TPU runtimes, or claim
+that staged mode is performance optimized. It creates the scheduling lane for
+future backend work.

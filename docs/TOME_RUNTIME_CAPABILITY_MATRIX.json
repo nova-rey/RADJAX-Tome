@@ -220,12 +220,23 @@
     "metadata_implementation_required_now": false
   },
   "non_goals": [
-    "Do not migrate fake or HF builder code behind the backend contract in Spec 3.3B.",
-    "Do not port historical CUDA/GPU compact reduction in Spec 3.3B.",
-    "Do not implement TPU/JAX backend code in Spec 3.3B.",
-    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3B.",
-    "Do not change public build semantics in Spec 3.3B."
+    "Do not migrate the public builder to the backend orchestrator in Spec 3.3D.",
+    "Do not claim staged mode is performance optimized in Spec 3.3D.",
+    "Do not port historical CUDA/GPU compact reduction in Spec 3.3D.",
+    "Do not implement TPU/JAX backend code in Spec 3.3D.",
+    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3D."
   ],
+  "orchestration": {
+    "default_mode": "auto",
+    "implemented_now": true,
+    "notes": "Spec 3.3D adds deterministic CPU-side backend batch orchestration. Staged is pipeline-shaped but not yet a historical optimizer port.",
+    "staged_is_performance_optimized": false,
+    "supported_modes": [
+      "serial",
+      "staged",
+      "auto"
+    ]
+  },
   "runtime_modes": [
     "cpu",
     "cpu_gpu",

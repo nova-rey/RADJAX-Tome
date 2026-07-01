@@ -49,7 +49,7 @@ Spec 3.3 is split into runtime/backend roadmap units:
 | 3.3B | Backend Contract + Registry Skeleton | complete |
 | 3.3C | CPU Reference Backend | complete once the CPU reference backend lands |
 | 3.3C.1 | CPU Corridor / Exemplar Reference Policy | complete once the capability correction lands |
-| 3.3D | CPU Orchestration Modes: auto / serial / staged | planned |
+| 3.3D | CPU Orchestration Modes: auto / serial / staged | complete once the backend batch runner lands |
 | 3.3E | HF Torch Backend Behind the Contract | planned |
 | 3.3F | GPU Compact Reduction Migration | planned |
 | 3.3G | TPU/JAX Backend Skeleton | planned |
@@ -70,6 +70,9 @@ Spec 3.3C.1 corrects `cpu_reference` corridor/exemplar support as a
 CPU-supported serial/reference path.
 
 3.3D adds CPU orchestration and staged execution.
+
+Spec 3.3D adds deterministic backend batch orchestration for `auto`, `serial`,
+and `staged`; staged is not yet a historical optimizer port.
 
 3.3E moves current HF Torch behavior behind the contract.
 
