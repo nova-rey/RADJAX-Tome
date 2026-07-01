@@ -29,6 +29,33 @@ Runtime backend responsibilities:
 - runtime-specific memory and transfer policy
 - runtime diagnostics
 
+## Backend Contract Skeleton
+
+Spec 3.3B introduces the contract skeleton only. The active public builder has not migrated to this backend contract yet.
+
+The skeleton is intentionally small:
+
+- `TeacherBackendConfig` carries backend ID, runtime mode, CPU orchestration
+  mode, target policy, model/tokenizer IDs, shape settings, local-files policy,
+  and fallback policy.
+- `TeacherBatchInput` carries batch example IDs and texts.
+- `TeacherEmissionResult` returns backend-neutral `input_ids`,
+  `attention_mask`, payload arrays, and JSON-ish runtime metadata.
+- `BackendCapability` records backend ID, backend family, runtime mode, target
+  policy, support status, optimization status, implementation status, and
+  notes.
+- `TeacherEmissionBackend` exposes `capabilities()`, `emit_batch(...)`,
+  `metadata()`, and `close()`.
+
+The registry provides deterministic `register_backend(...)`,
+`create_backend(...)`, and `list_backend_capabilities()` helpers. Duplicate
+backend IDs fail clearly, unknown backend IDs fail clearly, and the registry
+does not import torch, transformers, jax, CUDA, MPS, or TPU dependencies.
+
+The default registered backend is `fake_numpy`. It proves the contract wall for
+`dense_logits` on `cpu` with `supported_debug` status and deterministic NumPy
+arrays. It does not replace the current fake TeacherTextbook builder.
+
 ## Runtime Modes
 
 `cpu` means CPU-side orchestration plus CPU teacher execution and reduction. It

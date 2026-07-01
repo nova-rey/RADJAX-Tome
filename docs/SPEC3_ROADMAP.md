@@ -43,20 +43,22 @@ policy.
 
 Spec 3.3 is split into runtime/backend roadmap units:
 
-| Unit | Title |
-|---|---|
-| 3.3A | Runtime Mode Capability Model |
-| 3.3B | Backend Contract + Registry Skeleton |
-| 3.3C | CPU Reference Backend |
-| 3.3D | CPU Orchestration Modes: auto / serial / staged |
-| 3.3E | HF Torch Backend Behind the Contract |
-| 3.3F | GPU Compact Reduction Migration |
-| 3.3G | TPU/JAX Backend Skeleton |
-| 3.3H | Runtime Metadata + CLI/Doctor Polish |
+| Unit | Title | Status |
+|---|---|---|
+| 3.3A | Runtime Mode Capability Model | complete |
+| 3.3B | Backend Contract + Registry Skeleton | complete once the contract skeleton lands |
+| 3.3C | CPU Reference Backend | planned |
+| 3.3D | CPU Orchestration Modes: auto / serial / staged | planned |
+| 3.3E | HF Torch Backend Behind the Contract | planned |
+| 3.3F | GPU Compact Reduction Migration | planned |
+| 3.3G | TPU/JAX Backend Skeleton | planned |
+| 3.3H | Runtime Metadata + CLI/Doctor Polish | planned |
 
 3.3A defines vocabulary.
 
 3.3B defines the internal backend contract wall.
+
+Spec 3.3B adds the backend contract and registry skeleton only. It does not complete CPU/GPU/TPU runtime implementation or migrate the public builder.
 
 3.3C establishes the CPU correctness baseline.
 

@@ -44,3 +44,16 @@ This is intentionally vocabulary, documentation, and inventory only. It does
 not implement the backend contract, migrate the active builders, port GPU
 optimization, add TPU support, change target shards, change `cover_page.json`,
 or change `.rtome` bundles.
+
+## 2026-07-01 — Spec 3.3B Backend Contract And Registry Skeleton
+
+Spec 3.3B adds the backend contract and registry skeleton for future
+teacher-side Tome target emission backends. The new contract vocabulary includes
+`TeacherBackendConfig`, `TeacherBatchInput`, `TeacherEmissionResult`, and
+`BackendCapability`, with a deterministic registry for creating backends and
+listing capabilities.
+
+The default registered proof backend is `fake_numpy`, which emits deterministic
+`dense_logits` through the new contract. There is no builder migration yet: the
+active public builder behavior, HF path, GPU optimization, TPU support, target
+shards, `cover_page.json`, and `.rtome` bundle behavior remain unchanged.

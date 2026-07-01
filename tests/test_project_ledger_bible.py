@@ -19,3 +19,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3A" in text
     assert "runtime mode" in text
     assert "capability matrix" in text
+    assert "3.3B" in text
+    assert "backend contract" in text
+    assert "fake_numpy" in text

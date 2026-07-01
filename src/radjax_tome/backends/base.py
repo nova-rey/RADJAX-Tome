@@ -1,11 +1,86 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Protocol
+from dataclasses import dataclass, field
+from typing import Any, Literal, Protocol
 
 import numpy as np
 
 from radjax_tome.targets import TargetStoreMetadata
+
+RuntimeMode = Literal["cpu", "cpu_gpu", "cpu_tpu"]
+CpuOrchestrationMode = Literal["auto", "serial", "staged"]
+TargetPolicy = Literal[
+    "dense_logits",
+    "topk_with_tail_v0",
+    "cascaded_soft_labels_v1",
+    "corridor_exemplar_v1",
+]
+SupportStatus = Literal[
+    "unsupported",
+    "planned",
+    "supported",
+    "supported_debug",
+    "optimized",
+    "historical_reference_exists",
+]
+FallbackPolicy = Literal["error", "auto"]
+
+
+@dataclass(frozen=True)
+class TeacherBackendConfig:
+    backend_id: str
+    runtime_mode: RuntimeMode = "cpu"
+    cpu_orchestration_mode: CpuOrchestrationMode = "auto"
+    target_policy: TargetPolicy = "dense_logits"
+    model_id: str = "fake-deterministic-teacher"
+    tokenizer_id: str = "fake-deterministic-tokenizer"
+    sequence_length: int = 8
+    batch_size: int = 1
+    vocab_size: int = 32
+    local_files_only: bool = True
+    allow_downloads: bool = False
+    fallback_policy: FallbackPolicy = "error"
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class TeacherBatchInput:
+    example_ids: tuple[str, ...]
+    texts: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "example_ids", tuple(self.example_ids))
+        object.__setattr__(self, "texts", tuple(self.texts))
+        if len(self.example_ids) != len(self.texts):
+            raise ValueError("example_ids and texts must have the same length")
+
+
+@dataclass(frozen=True)
+class TeacherEmissionResult:
+    backend_id: str
+    runtime_mode: RuntimeMode
+    target_policy: TargetPolicy
+    input_ids: Any
+    attention_mask: Any
+    payload: Mapping[str, Any]
+    metadata: Mapping[str, object]
+
+
+@dataclass(frozen=True)
+class BackendCapability:
+    backend_id: str
+    backend_family: str
+    runtime_mode: RuntimeMode
+    target_policy: TargetPolicy
+    status: SupportStatus
+    optimized: bool
+    implemented_now: bool
+    notes: str
+
+    def __post_init__(self) -> None:
+        if self.optimized and not self.implemented_now:
+            raise ValueError("optimized capabilities must also be implemented_now")
 
 
 class TeacherBackend(Protocol):
@@ -32,3 +107,17 @@ class TeacherTargetEmitter(Protocol):
         num_examples: int,
         sequence_length: int,
     ) -> Mapping[str, np.ndarray]: ...
+
+
+class TeacherEmissionBackend(Protocol):
+    backend_id: str
+    backend_family: str
+    runtime_mode: RuntimeMode
+
+    def capabilities(self) -> tuple[BackendCapability, ...]: ...
+
+    def emit_batch(self, batch: TeacherBatchInput) -> TeacherEmissionResult: ...
+
+    def close(self) -> None: ...
+
+    def metadata(self) -> dict[str, object]: ...

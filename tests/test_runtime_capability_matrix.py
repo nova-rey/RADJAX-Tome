@@ -118,3 +118,36 @@ def test_runtime_capability_matrix_does_not_overclaim_accelerators() -> None:
     assert fallback["auto_runtime_may_choose_supported_fallback"]
     assert fallback["fallback_must_be_recorded_in_metadata"]
     assert not fallback["silent_accelerator_to_cpu_fallback_allowed"]
+
+
+def test_runtime_capability_matrix_reflects_contract_skeleton_only() -> None:
+    matrix = json.loads(
+        (ROOT / "docs" / "TOME_RUNTIME_CAPABILITY_MATRIX.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    capabilities = matrix["capabilities"]
+    fake_dense = [
+        capability
+        for capability in capabilities
+        if capability["backend_family"] == "fake_numpy"
+        and capability["target_policy"] == "dense_logits"
+    ]
+    assert len(fake_dense) == 1
+    assert fake_dense[0]["implemented_now"]
+    assert fake_dense[0]["status"] == "supported_debug"
+    assert (
+        "Spec 3.3B fake backend proves the backend contract" in fake_dense[0]["notes"]
+    )
+    assert "public builder has not migrated" in fake_dense[0]["notes"]
+
+    assert not any(
+        capability["implemented_now"]
+        for capability in capabilities
+        if capability["runtime_mode"] in {"cpu_gpu", "cpu_tpu"}
+    )
+    assert not any(
+        "Spec 3.3B" in capability["notes"]
+        for capability in capabilities
+        if capability["backend_family"] in {"hf_torch", "gpu_torch", "jax_tpu"}
+    )

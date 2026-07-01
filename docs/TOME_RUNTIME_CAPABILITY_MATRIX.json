@@ -10,7 +10,7 @@
     {
       "backend_family": "fake_numpy",
       "implemented_now": true,
-      "notes": "Active fake teacher mode can emit deterministic dense logits for smoke and reference tests.",
+      "notes": "Spec 3.3B fake backend proves the backend contract for dense_logits. The active public builder has not migrated to this backend contract yet.",
       "optimized": false,
       "runtime_mode": "cpu",
       "status": "supported_debug",
@@ -220,11 +220,11 @@
     "metadata_implementation_required_now": false
   },
   "non_goals": [
-    "Do not implement the backend protocol in Spec 3.3A.",
-    "Do not migrate fake or HF builder code behind a backend interface in Spec 3.3A.",
-    "Do not port historical CUDA/GPU compact reduction in Spec 3.3A.",
-    "Do not implement TPU/JAX backend code in Spec 3.3A.",
-    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3A."
+    "Do not migrate fake or HF builder code behind the backend contract in Spec 3.3B.",
+    "Do not port historical CUDA/GPU compact reduction in Spec 3.3B.",
+    "Do not implement TPU/JAX backend code in Spec 3.3B.",
+    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3B.",
+    "Do not change public build semantics in Spec 3.3B."
   ],
   "runtime_modes": [
     "cpu",

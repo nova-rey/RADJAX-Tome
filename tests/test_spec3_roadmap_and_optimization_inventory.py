@@ -27,8 +27,10 @@ def test_spec3_roadmap_exists_and_locks_ordering() -> None:
     assert "Runtime Mode Capability Model" in text
     assert "3.3H" in text
     assert "Runtime Metadata + CLI/Doctor Polish" in text
+    assert "3.3B | Backend Contract + Registry Skeleton | complete" in text
     assert "3.3A defines vocabulary" in text
     assert "3.3B defines the internal backend contract wall" in text
+    assert "does not complete CPU/GPU/TPU runtime implementation" in text
     assert "3.3C establishes the CPU correctness baseline" in text
     assert "3.3D adds CPU orchestration and staged execution" in text
     assert "3.3E moves current HF Torch behavior behind the contract" in text
