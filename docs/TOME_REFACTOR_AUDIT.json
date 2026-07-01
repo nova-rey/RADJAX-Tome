@@ -1,0 +1,3944 @@
+{
+  "api_findings": [
+    {
+      "evidence": "src/radjax_tome/__init__.py exports 4 names.",
+      "exports": [
+        "FakeTeacherBackend",
+        "TeacherTextbookBuildConfig",
+        "build_teacher_textbook",
+        "emit_toy_teacher_tome"
+      ],
+      "files": [
+        "src/radjax_tome/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/audit/__init__.py exports 12 names.",
+      "exports": [
+        "AuditReport",
+        "ClosureAudit",
+        "FileInventoryItem",
+        "MigrationMap",
+        "build_migration_map",
+        "emit_doc_summary",
+        "has_untriaged_high_risk",
+        "run_closure_audit",
+        "run_extraction_audit",
+        "write_audit_reports",
+        "write_closure_audit",
+        "write_migration_map"
+      ],
+      "files": [
+        "src/radjax_tome/audit/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/backends/__init__.py exports 27 names.",
+      "exports": [
+        "FakeTeacherBackend",
+        "DEFAULT_HF_SPECIMEN_MODEL_ID",
+        "HFTeacherExportConfig",
+        "HFTeacherExportMetadata",
+        "HFTeacherSpecimenConfig",
+        "HFTeacherSpecimenSmokeResult",
+        "HFTeacherSpecimenSwapReport",
+        "QwenPolicyEntry",
+        "QwenPolicyMap",
+        "QwenResolution",
+        "SyntheticTeacherBackend",
+        "TeacherBackend",
+        "TeacherTargetEmitter",
+        "build_hf_export_metadata",
+        "build_hf_teacher_specimen_dry_run",
+        "build_hf_teacher_specimen_swap_report",
+        "emit_teacher_target_store",
+        "load_qwen_policy",
+        "read_hf_export_metadata",
+        "read_hf_teacher_specimen_report",
+        "resolve_qwen_policy",
+        "resolve_qwen_policy_map",
+        "run_hf_teacher_specimen_smoke",
+        "validate_hf_export_config",
+        "validate_hf_teacher_specimen_config",
+        "write_hf_export_metadata",
+        "write_hf_teacher_specimen_report"
+      ],
+      "files": [
+        "src/radjax_tome/backends/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/builder/__init__.py exports 10 names.",
+      "exports": [
+        "TEACHER_TEXTBOOK_VERSION",
+        "TeacherTextbookBuildConfig",
+        "TeacherTextbookValidationReport",
+        "TinyTextExample",
+        "build_fake_teacher_textbook",
+        "build_hf_teacher_textbook",
+        "build_teacher_textbook",
+        "load_text_examples",
+        "validate_teacher_textbook",
+        "write_teacher_textbook_validation_report"
+      ],
+      "files": [
+        "src/radjax_tome/builder/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/cli/__init__.py exports 0 names.",
+      "exports": [],
+      "files": [
+        "src/radjax_tome/cli/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/corpora/__init__.py exports 23 names.",
+      "exports": [
+        "SmokeTokenizer",
+        "PromptCorpus",
+        "PromptCorpusManifest",
+        "PromptRecord",
+        "TokenizedCorpusManifest",
+        "TokenizerConfig",
+        "TokenizerLoadError",
+        "TokenizerMetadata",
+        "assign_prompt_splits",
+        "available_tokenizer_backends",
+        "build_prompt_corpus_manifest",
+        "compute_prompt_corpus_hash",
+        "create_tokenizer",
+        "filter_prompt_corpus",
+        "hash_prompt_records",
+        "load_jsonl_corpus",
+        "normalize_tokenizer_config",
+        "read_prompt_corpus",
+        "split_corpus",
+        "tokenize_jsonl_corpus",
+        "validate_prompt_corpus",
+        "write_prompt_corpus",
+        "write_prompt_corpus_manifest"
+      ],
+      "files": [
+        "src/radjax_tome/corpora/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/emit/__init__.py exports 1 names.",
+      "exports": [
+        "emit_toy_teacher_tome"
+      ],
+      "files": [
+        "src/radjax_tome/emit/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/fingerprint/__init__.py exports 63 names.",
+      "exports": [
+        "BEHAVIORAL_FINGERPRINT_ARTIFACT_TYPE",
+        "BEHAVIORAL_FINGERPRINT_VERSION",
+        "BUDGET_SUBSET_SCHEMA_VERSION",
+        "FINGERPRINT_BYTE_ACCOUNTING_POLICY",
+        "PACKED_TARGET_ARRAYS",
+        "PROBABILITY_LIKE_STATS",
+        "TARGET_PAYLOAD_LEGACY_JSONL",
+        "TARGET_PAYLOAD_PACKED_CORRIDOR_V1",
+        "AggressivenessCalibrationProfile",
+        "AggressivenessCalibrationReport",
+        "CorridorMeasurementRecord",
+        "CorridorMeasurementReport",
+        "FingerprintArtifactSummary",
+        "FingerprintBudgetSubsetReceipt",
+        "FingerprintByteAccounting",
+        "FingerprintExemplarManifest",
+        "FingerprintExemplarRecord",
+        "FingerprintExemplarReservoirSummary",
+        "FingerprintExemplarShard",
+        "FingerprintExemplarValidationResult",
+        "FingerprintManifest",
+        "FingerprintValidationResult",
+        "LoadedFingerprintArtifact",
+        "RealTeacherCaptureSummary",
+        "SourceCorpusReference",
+        "SourceLineageRecord",
+        "SourceTextRecord",
+        "TeacherIdentity",
+        "build_minimal_fingerprint_artifact_from_target_store",
+        "build_artifact_source_lineage",
+        "build_source_lineage",
+        "file_sha256",
+        "generate_corridor_measurement_report",
+        "generate_corridor_subset_receipt",
+        "generate_exemplar_reservoir",
+        "inspect_fingerprint_artifact",
+        "inspect_fingerprint_exemplars",
+        "join_sources_by_example_id",
+        "load_fingerprint_artifact",
+        "read_aggressiveness_calibration_report",
+        "read_corridor_measurement_report",
+        "read_fingerprint_byte_accounting",
+        "read_fingerprint_exemplar_manifest",
+        "read_fingerprint_exemplar_records",
+        "read_fingerprint_manifest",
+        "read_real_teacher_capture_summary",
+        "read_source_text_records",
+        "stable_hash",
+        "summarize_exemplar_reservoir",
+        "summarize_fingerprint_artifact",
+        "validate_fingerprint_artifact",
+        "validate_fingerprint_byte_accounting",
+        "validate_fingerprint_exemplar_records",
+        "validate_corridor_measurement_report",
+        "validate_real_teacher_capture_summary",
+        "write_aggressiveness_calibration_report",
+        "write_corridor_measurement_report",
+        "write_fingerprint_byte_accounting",
+        "write_fingerprint_exemplar_manifest",
+        "write_fingerprint_exemplar_records",
+        "write_fingerprint_manifest",
+        "write_real_teacher_capture_summary",
+        "write_source_lineage"
+      ],
+      "files": [
+        "src/radjax_tome/fingerprint/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Split or document the package import surface by role.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/io/__init__.py exports 4 names.",
+      "exports": [
+        "int_value",
+        "read_json_object",
+        "require_fields",
+        "write_json"
+      ],
+      "files": [
+        "src/radjax_tome/io/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/parity/__init__.py exports 5 names.",
+      "exports": [
+        "AbParityCase",
+        "AbParitySummary",
+        "ArtifactComparison",
+        "compare_teacher_textbook_artifacts",
+        "run_ab_parity"
+      ],
+      "files": [
+        "src/radjax_tome/parity/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/provenance/__init__.py exports 1 names.",
+      "exports": [
+        "sha256_file"
+      ],
+      "files": [
+        "src/radjax_tome/provenance/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/reports/__init__.py exports 18 names.",
+      "exports": [
+        "BaselineArmReport",
+        "FingerprintArcReport",
+        "FingerprintArtifactByteBudget",
+        "FingerprintBaselineComparisonReport",
+        "FingerprintQualityPerByteReport",
+        "QualityPerByteDelta",
+        "REQUIRED_ARC2_FLAGS",
+        "build_fingerprint_arc_report",
+        "build_quality_per_byte_delta",
+        "read_fingerprint_arc_report",
+        "read_fingerprint_baseline_report",
+        "read_fingerprint_quality_report",
+        "render_fingerprint_arc_summary",
+        "render_fingerprint_baseline_summary",
+        "render_fingerprint_quality_summary",
+        "write_fingerprint_arc_report",
+        "write_fingerprint_baseline_report",
+        "write_fingerprint_quality_report"
+      ],
+      "files": [
+        "src/radjax_tome/reports/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    },
+    {
+      "evidence": "src/radjax_tome/targets/__init__.py exports 19 names.",
+      "exports": [
+        "OfflineTargetBatch",
+        "TEACHER_TARGET_STORE_SCHEMA_VERSION",
+        "TEACHER_TARGET_STORE_VERSION",
+        "TargetStoreMetadata",
+        "TeacherTargetBatch",
+        "TeacherTargetStore",
+        "dense_logits_to_cascaded_soft_labels",
+        "dense_logits_to_topk_tail",
+        "inspect_target_store",
+        "iter_offline_target_batches",
+        "iter_target_store_shard_ids",
+        "iter_teacher_target_batches",
+        "load_offline_target_batch",
+        "load_teacher_target_batch",
+        "run_multishard_target_store_smoke",
+        "target_store_metadata_from_dict",
+        "target_store_metadata_to_dict",
+        "validate_target_store_metadata",
+        "write_compressed_target_store"
+      ],
+      "files": [
+        "src/radjax_tome/targets/__init__.py"
+      ],
+      "heavy_import_leak": false,
+      "kind": "api_surface",
+      "recommendation": "Keep explicit exports but group by domain.",
+      "severity": "low"
+    }
+  ],
+  "boundary_findings": [
+    {
+      "evidence": "src/radjax_tome/audit/closure.py spans CLI/scripts, I/O helpers, audit tooling, fingerprint artifacts, reporting, teacher backend.",
+      "files": [
+        "src/radjax_tome/audit/closure.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "Audit modules mix collection, policy, markdown, and JSON shaping.",
+      "files": [
+        "src/radjax_tome/audit/closure.py"
+      ],
+      "kind": "audit_module_swollen",
+      "recommendation": "Extract reusable report rendering and policy tables.",
+      "severity": "high"
+    },
+    {
+      "evidence": "src/radjax_tome/audit/extraction_inventory.py spans I/O helpers, audit tooling, fingerprint artifacts, reporting, target compression, target store/schema.",
+      "files": [
+        "src/radjax_tome/audit/extraction_inventory.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "Audit modules mix collection, policy, markdown, and JSON shaping.",
+      "files": [
+        "src/radjax_tome/audit/extraction_inventory.py"
+      ],
+      "kind": "audit_module_swollen",
+      "recommendation": "Extract reusable report rendering and policy tables.",
+      "severity": "high"
+    },
+    {
+      "evidence": "src/radjax_tome/audit/refactor_surface.py spans CLI/scripts, I/O helpers, audit tooling, fingerprint artifacts, reporting, target compression, target store/schema, teacher backend.",
+      "files": [
+        "src/radjax_tome/audit/refactor_surface.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "Audit modules mix collection, policy, markdown, and JSON shaping.",
+      "files": [
+        "src/radjax_tome/audit/refactor_surface.py"
+      ],
+      "kind": "audit_module_swollen",
+      "recommendation": "Extract reusable report rendering and policy tables.",
+      "severity": "high"
+    },
+    {
+      "evidence": "src/radjax_tome/audit/triage.py spans I/O helpers, audit tooling, fingerprint artifacts, reporting, target compression.",
+      "files": [
+        "src/radjax_tome/audit/triage.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "Audit modules mix collection, policy, markdown, and JSON shaping.",
+      "files": [
+        "src/radjax_tome/audit/triage.py"
+      ],
+      "kind": "audit_module_swollen",
+      "recommendation": "Extract reusable report rendering and policy tables.",
+      "severity": "high"
+    },
+    {
+      "evidence": "src/radjax_tome/backends/base.py spans target store/schema, teacher backend.",
+      "files": [
+        "src/radjax_tome/backends/base.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/backends/emission.py spans target store/schema, teacher backend.",
+      "files": [
+        "src/radjax_tome/backends/emission.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/backends/synthetic.py spans target store/schema, teacher backend.",
+      "files": [
+        "src/radjax_tome/backends/synthetic.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/builder/teacher_textbook.py spans other, target compression, target store/schema, teacher backend.",
+      "files": [
+        "src/radjax_tome/builder/teacher_textbook.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/cli/build_teacher_tome.py spans CLI/scripts, other.",
+      "files": [
+        "src/radjax_tome/cli/build_teacher_tome.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/corpora/prompts.py spans I/O helpers, corpus/tokenization.",
+      "files": [
+        "src/radjax_tome/corpora/prompts.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/corpora/tokenization.py spans I/O helpers, corpus/tokenization.",
+      "files": [
+        "src/radjax_tome/corpora/tokenization.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/corpora/tokenizer.py spans corpus/tokenization, teacher backend.",
+      "files": [
+        "src/radjax_tome/corpora/tokenizer.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/emit/teacher_tome.py spans fingerprint artifacts, other.",
+      "files": [
+        "src/radjax_tome/emit/teacher_tome.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/fingerprint/generation.py spans I/O helpers, fingerprint artifacts, target store/schema.",
+      "files": [
+        "src/radjax_tome/fingerprint/generation.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/fingerprint/provenance.py spans I/O helpers, fingerprint artifacts.",
+      "files": [
+        "src/radjax_tome/fingerprint/provenance.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/parity/runner.py spans I/O helpers, other, target compression.",
+      "files": [
+        "src/radjax_tome/parity/runner.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/provenance/hashes.py spans I/O helpers, provenance/hash utilities.",
+      "files": [
+        "src/radjax_tome/provenance/hashes.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/reports/__init__.py spans fingerprint artifacts, reporting.",
+      "files": [
+        "src/radjax_tome/reports/__init__.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/reports/arc.py spans fingerprint artifacts, reporting.",
+      "files": [
+        "src/radjax_tome/reports/arc.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/reports/baseline.py spans fingerprint artifacts, reporting.",
+      "files": [
+        "src/radjax_tome/reports/baseline.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "src/radjax_tome/targets/__init__.py spans target compression, target store/schema.",
+      "files": [
+        "src/radjax_tome/targets/__init__.py"
+      ],
+      "kind": "mixed_responsibility",
+      "recommendation": "Split only if the secondary responsibility is real behavior, not glue.",
+      "severity": "medium"
+    }
+  ],
+  "checklist": [
+    {
+      "category": "modularity",
+      "evidence": "src/radjax_tome/audit/closure.py spans CLI/scripts, I/O helpers, audit tooling, fingerprint artifacts, reporting, teacher backend. | Audit modules mix collection, policy, markdown, and JSON shaping. | src/radjax_tome/audit/extraction_inventory.py spans I/O helpers, audit tooling, fingerprint artifacts, reporting, target compression, target store/schema. | Audit modules mix collection, policy, markdown, and JSON shaping. | src/radjax_tome/audit/refactor_surface.py spans CLI/scripts, I/O helpers, audit tooling, fingerprint artifacts, reporting, target compression, target store/schema, teacher backend.",
+      "expected_benefit": "Less migration debt and clearer future change paths.",
+      "files": [
+        "src/radjax_tome/audit/closure.py",
+        "src/radjax_tome/audit/extraction_inventory.py",
+        "src/radjax_tome/audit/refactor_surface.py"
+      ],
+      "id": "RTA-001",
+      "must_preserve": [
+        "audit outputs remain deterministic",
+        "Spec 3 gate semantics"
+      ],
+      "problem": "src/radjax_tome/audit/closure.py spans CLI/scripts, I/O helpers, audit tooling, fingerprint artifacts, reporting, teacher backend.",
+      "recommended_change": "Split only if the secondary responsibility is real behavior, not glue.",
+      "risk": "Low if schemas, commands, and test intent are preserved.",
+      "severity": "high",
+      "suggested_spec": "2.14",
+      "title": "Shrink swollen audit modules without deleting audit coverage"
+    },
+    {
+      "category": "duplication",
+      "evidence": "JSON report writing is repeated across scripts and audit modules. | CLI smoke tests repeat subprocess environment setup. | Markdown tables are hand-rendered in multiple report generators.",
+      "expected_benefit": "Less migration debt and clearer future change paths.",
+      "files": [
+        "docs/TOME_GENERATION_CAPABILITY_MATRIX.md",
+        "scripts/prove_tome_generation_capabilities.py",
+        "src/radjax_tome/audit/closure.py",
+        "src/radjax_tome/audit/extraction_inventory.py",
+        "src/radjax_tome/audit/refactor_surface.py",
+        "src/radjax_tome/audit/triage.py",
+        "src/radjax_tome/corpora/prompts.py",
+        "src/radjax_tome/corpora/tokenization.py",
+        "src/radjax_tome/fingerprint/generation.py",
+        "src/radjax_tome/fingerprint/provenance.py",
+        "src/radjax_tome/parity/runner.py",
+        "tests/test_bulk_migration.py",
+        "tests/test_corpus_tokenization.py",
+        "tests/test_quarantine_guardrails.py",
+        "tests/test_quarantine_surgery_ledger.py",
+        "tests/test_target_core_migration.py"
+      ],
+      "id": "RTA-002",
+      "must_preserve": [
+        "existing report schemas",
+        "compact committed docs"
+      ],
+      "problem": "JSON report writing is repeated across scripts and audit modules.",
+      "recommended_change": "Extract a tiny JSON report writer or standardize on io/json.py.",
+      "risk": "Low if schemas, commands, and test intent are preserved.",
+      "severity": "medium",
+      "suggested_spec": "2.14",
+      "title": "Standardize JSON and Markdown report rendering"
+    },
+    {
+      "category": "script_thinness",
+      "evidence": "scripts/prove_tome_generation_capabilities.py has 504 lines and 6 functions.",
+      "expected_benefit": "Less migration debt and clearer future change paths.",
+      "files": [
+        "scripts/prove_tome_generation_capabilities.py"
+      ],
+      "id": "RTA-003",
+      "must_preserve": [
+        "CLI behavior and exit codes",
+        "no new heavy dependencies"
+      ],
+      "problem": "scripts/prove_tome_generation_capabilities.py has 504 lines and 6 functions.",
+      "recommended_change": "Move reusable business logic into src and keep CLI thin.",
+      "risk": "Low if schemas, commands, and test intent are preserved.",
+      "severity": "medium",
+      "suggested_spec": "2.15",
+      "title": "Move reusable script logic into src modules"
+    },
+    {
+      "category": "api",
+      "evidence": "src/radjax_tome/fingerprint/__init__.py exports 63 names.",
+      "expected_benefit": "Less migration debt and clearer future change paths.",
+      "files": [
+        "src/radjax_tome/fingerprint/__init__.py"
+      ],
+      "id": "RTA-004",
+      "must_preserve": [
+        "stable public imports",
+        "optional dependency isolation"
+      ],
+      "problem": "src/radjax_tome/fingerprint/__init__.py exports 63 names.",
+      "recommended_change": "Split or document the package import surface by role.",
+      "risk": "Low if schemas, commands, and test intent are preserved.",
+      "severity": "low",
+      "suggested_spec": "later",
+      "title": "Trim broad package export surfaces"
+    },
+    {
+      "category": "tests",
+      "evidence": "tests/test_ab_parity_compare.py is fixture-heavy: 288 lines, 1 write_text calls. | tests/test_tome_generation_capabilities.py is fixture-heavy: 216 lines, 0 write_text calls. | tests/test_tome_generator_audit_triage.py is fixture-heavy: 241 lines, 1 write_text calls. | tests/test_tome_generator_closure_audit.py is fixture-heavy: 281 lines, 12 write_text calls. | tests/test_tome_generator_extraction_audit.py is fixture-heavy: 226 lines, 1 write_text calls.",
+      "expected_benefit": "Less migration debt and clearer future change paths.",
+      "files": [
+        "tests/test_ab_parity_compare.py",
+        "tests/test_tome_generation_capabilities.py",
+        "tests/test_tome_generator_audit_triage.py",
+        "tests/test_tome_generator_closure_audit.py",
+        "tests/test_tome_generator_extraction_audit.py"
+      ],
+      "id": "RTA-005",
+      "must_preserve": [
+        "coverage intent",
+        "CLI regression checks"
+      ],
+      "problem": "tests/test_ab_parity_compare.py is fixture-heavy: 288 lines, 1 write_text calls.",
+      "recommended_change": "Extract fixture builders and assert less implementation detail.",
+      "risk": "Low if schemas, commands, and test intent are preserved.",
+      "severity": "medium",
+      "suggested_spec": "2.15",
+      "title": "Consolidate heavy test fixture construction"
+    },
+    {
+      "category": "docs",
+      "evidence": "docs/TOME_GENERATOR_BULK_MIGRATION_MANIFEST.json has 4499 lines. | docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json has 4508 lines.",
+      "expected_benefit": "Less migration debt and clearer future change paths.",
+      "files": [
+        "docs/TOME_GENERATOR_BULK_MIGRATION_MANIFEST.json",
+        "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json"
+      ],
+      "id": "RTA-006",
+      "must_preserve": [
+        "historical audit traceability",
+        "human-readable summaries"
+      ],
+      "problem": "docs/TOME_GENERATOR_BULK_MIGRATION_MANIFEST.json has 4499 lines.",
+      "recommended_change": "Move full generated payload to artifacts or compact it.",
+      "risk": "Low if schemas, commands, and test intent are preserved.",
+      "severity": "medium",
+      "suggested_spec": "later",
+      "title": "Keep generated docs compact by default"
+    }
+  ],
+  "commit": "0837d9ffdc586d2de2597db968813a7bb78362a4",
+  "doc_findings": [
+    {
+      "evidence": "docs/TOME_GENERATOR_BULK_MIGRATION_MANIFEST.json has 4499 lines.",
+      "files": [
+        "docs/TOME_GENERATOR_BULK_MIGRATION_MANIFEST.json"
+      ],
+      "kind": "large_docs_json",
+      "recommendation": "Move full generated payload to artifacts or compact it.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "docs/TOME_GENERATOR_MIGRATION_MAP.md has 271 lines.",
+      "files": [
+        "docs/TOME_GENERATOR_MIGRATION_MAP.md"
+      ],
+      "kind": "long_historical_doc",
+      "recommendation": "Preserve if it is project history; otherwise add a summary top section.",
+      "severity": "low"
+    },
+    {
+      "evidence": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json has 4508 lines.",
+      "files": [
+        "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json"
+      ],
+      "kind": "large_docs_json",
+      "recommendation": "Keep only if the ledger is required as compact history.",
+      "severity": "medium"
+    }
+  ],
+  "duplication_findings": [
+    {
+      "evidence": "JSON report writing is repeated across scripts and audit modules.",
+      "files": [
+        "src/radjax_tome/audit/closure.py",
+        "src/radjax_tome/audit/extraction_inventory.py",
+        "src/radjax_tome/audit/refactor_surface.py",
+        "src/radjax_tome/audit/triage.py",
+        "src/radjax_tome/corpora/prompts.py",
+        "src/radjax_tome/corpora/tokenization.py",
+        "src/radjax_tome/fingerprint/generation.py",
+        "src/radjax_tome/fingerprint/provenance.py"
+      ],
+      "kind": "duplicate_json_report_writers",
+      "recommendation": "Extract a tiny JSON report writer or standardize on io/json.py.",
+      "severity": "medium"
+    },
+    {
+      "evidence": "CLI smoke tests repeat subprocess environment setup.",
+      "files": [
+        "src/radjax_tome/audit/closure.py",
+        "src/radjax_tome/audit/refactor_surface.py",
+        "src/radjax_tome/parity/runner.py",
+        "tests/test_bulk_migration.py",
+        "tests/test_corpus_tokenization.py",
+        "tests/test_quarantine_guardrails.py",
+        "tests/test_quarantine_surgery_ledger.py",
+        "tests/test_target_core_migration.py"
+      ],
+      "kind": "subprocess_test_duplication",
+      "recommendation": "Use a shared test helper for PYTHONPATH and subprocess assertions.",
+      "severity": "low"
+    },
+    {
+      "evidence": "Markdown tables are hand-rendered in multiple report generators.",
+      "files": [
+        "src/radjax_tome/audit/refactor_surface.py",
+        "scripts/prove_tome_generation_capabilities.py",
+        "docs/TOME_GENERATION_CAPABILITY_MATRIX.md"
+      ],
+      "kind": "markdown_renderer_duplication",
+      "recommendation": "Extract boring table rendering helpers under audit/report utilities.",
+      "severity": "medium"
+    }
+  ],
+  "file_metrics": [
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 12,
+      "mixed_purpose": false,
+      "nonblank_line_count": 10,
+      "path": "src/radjax_tome/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 33,
+      "mixed_purpose": false,
+      "nonblank_line_count": 32,
+      "path": "src/radjax_tome/audit/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "audit tooling",
+      "secondary_responsibilities": [
+        "audit tooling"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 6,
+      "complexity": 178,
+      "function_count": 44,
+      "import_count": 15,
+      "kind": "py",
+      "largest_class": "ClosureAudit",
+      "largest_class_lines": 25,
+      "largest_function": "run_closure_audit",
+      "largest_function_lines": 112,
+      "line_count": 1262,
+      "mixed_purpose": true,
+      "nonblank_line_count": 1160,
+      "path": "src/radjax_tome/audit/closure.py",
+      "recommended_action": "split or extract focused helpers",
+      "responsibility": "audit tooling",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers",
+        "audit tooling",
+        "fingerprint artifacts",
+        "reporting",
+        "teacher backend"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 3,
+      "complexity": 103,
+      "function_count": 32,
+      "import_count": 7,
+      "kind": "py",
+      "largest_class": "AuditReport",
+      "largest_class_lines": 37,
+      "largest_function": "_status_for_match",
+      "largest_function_lines": 67,
+      "line_count": 763,
+      "mixed_purpose": true,
+      "nonblank_line_count": 685,
+      "path": "src/radjax_tome/audit/extraction_inventory.py",
+      "recommended_action": "split or extract focused helpers",
+      "responsibility": "audit tooling",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "audit tooling",
+        "fingerprint artifacts",
+        "reporting",
+        "target compression",
+        "target store/schema"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 1,
+      "complexity": 128,
+      "function_count": 33,
+      "import_count": 8,
+      "kind": "py",
+      "largest_class": "RefactorAudit",
+      "largest_class_lines": 19,
+      "largest_function": "render_markdown",
+      "largest_function_lines": 101,
+      "line_count": 1023,
+      "mixed_purpose": true,
+      "nonblank_line_count": 954,
+      "path": "src/radjax_tome/audit/refactor_surface.py",
+      "recommended_action": "split or extract focused helpers",
+      "responsibility": "audit tooling",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers",
+        "audit tooling",
+        "fingerprint artifacts",
+        "reporting",
+        "target compression",
+        "target store/schema",
+        "teacher backend"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 4,
+      "complexity": 108,
+      "function_count": 30,
+      "import_count": 7,
+      "kind": "py",
+      "largest_class": "MigrationMap",
+      "largest_class_lines": 27,
+      "largest_function": "render_doc_summary",
+      "largest_function_lines": 106,
+      "line_count": 933,
+      "mixed_purpose": true,
+      "nonblank_line_count": 865,
+      "path": "src/radjax_tome/audit/triage.py",
+      "recommended_action": "split or extract focused helpers",
+      "responsibility": "audit tooling",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "audit tooling",
+        "fingerprint artifacts",
+        "reporting",
+        "target compression"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 7,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 64,
+      "mixed_purpose": false,
+      "nonblank_line_count": 62,
+      "path": "src/radjax_tome/backends/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "teacher backend",
+      "secondary_responsibilities": [
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 2,
+      "complexity": 0,
+      "function_count": 3,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "TeacherTargetEmitter",
+      "largest_class_lines": 16,
+      "largest_function": "build_metadata",
+      "largest_function_lines": 6,
+      "line_count": 34,
+      "mixed_purpose": true,
+      "nonblank_line_count": 24,
+      "path": "src/radjax_tome/backends/base.py",
+      "recommended_action": "keep",
+      "responsibility": "teacher backend",
+      "secondary_responsibilities": [
+        "target store/schema",
+        "teacher backend"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 1,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "emit_teacher_target_store",
+      "largest_function_lines": 20,
+      "line_count": 28,
+      "mixed_purpose": true,
+      "nonblank_line_count": 24,
+      "path": "src/radjax_tome/backends/emission.py",
+      "recommended_action": "keep",
+      "responsibility": "teacher backend",
+      "secondary_responsibilities": [
+        "target store/schema",
+        "teacher backend"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 1,
+      "complexity": 0,
+      "function_count": 1,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": "FakeTeacherBackend",
+      "largest_class_lines": 8,
+      "largest_function": "emit_logits",
+      "largest_function_lines": 4,
+      "line_count": 16,
+      "mixed_purpose": false,
+      "nonblank_line_count": 11,
+      "path": "src/radjax_tome/backends/fake.py",
+      "recommended_action": "keep",
+      "responsibility": "teacher backend",
+      "secondary_responsibilities": [
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 2,
+      "function_count": 1,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "load_hf_causal_lm_classes",
+      "largest_function_lines": 17,
+      "line_count": 23,
+      "mixed_purpose": false,
+      "nonblank_line_count": 20,
+      "path": "src/radjax_tome/backends/hf_causal_lm.py",
+      "recommended_action": "keep",
+      "responsibility": "teacher backend",
+      "secondary_responsibilities": [
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 2,
+      "complexity": 14,
+      "function_count": 9,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "HFTeacherExportConfig",
+      "largest_class_lines": 83,
+      "largest_function": "from_payload",
+      "largest_function_lines": 56,
+      "line_count": 227,
+      "mixed_purpose": false,
+      "nonblank_line_count": 207,
+      "path": "src/radjax_tome/backends/hf_export.py",
+      "recommended_action": "keep",
+      "responsibility": "teacher backend",
+      "secondary_responsibilities": [
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 3,
+      "complexity": 24,
+      "function_count": 13,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": "HFTeacherSpecimenSmokeResult",
+      "largest_class_lines": 74,
+      "largest_function": "run_hf_teacher_specimen_smoke",
+      "largest_function_lines": 51,
+      "line_count": 311,
+      "mixed_purpose": false,
+      "nonblank_line_count": 280,
+      "path": "src/radjax_tome/backends/hf_specimen.py",
+      "recommended_action": "review for module shrink",
+      "responsibility": "teacher backend",
+      "secondary_responsibilities": [
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 3,
+      "complexity": 27,
+      "function_count": 8,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "QwenPolicyEntry",
+      "largest_class_lines": 10,
+      "largest_function": "load_qwen_policy",
+      "largest_function_lines": 39,
+      "line_count": 188,
+      "mixed_purpose": false,
+      "nonblank_line_count": 159,
+      "path": "src/radjax_tome/backends/qwen_policy.py",
+      "recommended_action": "keep",
+      "responsibility": "teacher backend",
+      "secondary_responsibilities": [
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 1,
+      "complexity": 2,
+      "function_count": 3,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "SyntheticTeacherBackend",
+      "largest_class_lines": 59,
+      "largest_function": "build_metadata",
+      "largest_function_lines": 25,
+      "line_count": 83,
+      "mixed_purpose": true,
+      "nonblank_line_count": 72,
+      "path": "src/radjax_tome/backends/synthetic.py",
+      "recommended_action": "keep",
+      "responsibility": "teacher backend",
+      "secondary_responsibilities": [
+        "target store/schema",
+        "teacher backend"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 27,
+      "mixed_purpose": false,
+      "nonblank_line_count": 25,
+      "path": "src/radjax_tome/builder/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 1,
+      "complexity": 14,
+      "function_count": 2,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": "CascadedSoftLabelEncoding",
+      "largest_class_lines": 9,
+      "largest_function": "encode_cascaded_soft_labels",
+      "largest_function_lines": 47,
+      "line_count": 86,
+      "mixed_purpose": false,
+      "nonblank_line_count": 77,
+      "path": "src/radjax_tome/builder/cascaded_soft_labels.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 3,
+      "mixed_purpose": false,
+      "nonblank_line_count": 2,
+      "path": "src/radjax_tome/builder/config.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 3,
+      "mixed_purpose": false,
+      "nonblank_line_count": 2,
+      "path": "src/radjax_tome/builder/records.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 3,
+      "complexity": 113,
+      "function_count": 35,
+      "import_count": 13,
+      "kind": "py",
+      "largest_class": "TeacherTextbookValidationReport",
+      "largest_class_lines": 30,
+      "largest_function": "validate_teacher_textbook",
+      "largest_function_lines": 157,
+      "line_count": 1200,
+      "mixed_purpose": true,
+      "nonblank_line_count": 1104,
+      "path": "src/radjax_tome/builder/teacher_textbook.py",
+      "recommended_action": "split or extract focused helpers",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other",
+        "target compression",
+        "target store/schema",
+        "teacher backend"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 11,
+      "mixed_purpose": false,
+      "nonblank_line_count": 10,
+      "path": "src/radjax_tome/builder/validation.py",
+      "recommended_action": "keep",
+      "responsibility": "I/O helpers",
+      "secondary_responsibilities": [
+        "I/O helpers"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 0,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 1,
+      "mixed_purpose": false,
+      "nonblank_line_count": 1,
+      "path": "src/radjax_tome/cli/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 1,
+      "function_count": 1,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 17,
+      "line_count": 31,
+      "mixed_purpose": true,
+      "nonblank_line_count": 24,
+      "path": "src/radjax_tome/cli/build_teacher_tome.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "other"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 57,
+      "mixed_purpose": false,
+      "nonblank_line_count": 55,
+      "path": "src/radjax_tome/corpora/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "corpus/tokenization",
+      "secondary_responsibilities": [
+        "corpus/tokenization"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 4,
+      "function_count": 1,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "load_jsonl_corpus",
+      "largest_function_lines": 18,
+      "line_count": 24,
+      "mixed_purpose": false,
+      "nonblank_line_count": 21,
+      "path": "src/radjax_tome/corpora/loaders.py",
+      "recommended_action": "keep",
+      "responsibility": "corpus/tokenization",
+      "secondary_responsibilities": [
+        "corpus/tokenization"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 3,
+      "complexity": 62,
+      "function_count": 14,
+      "import_count": 7,
+      "kind": "py",
+      "largest_class": "PromptCorpusManifest",
+      "largest_class_lines": 11,
+      "largest_function": "assign_prompt_splits",
+      "largest_function_lines": 47,
+      "line_count": 334,
+      "mixed_purpose": true,
+      "nonblank_line_count": 294,
+      "path": "src/radjax_tome/corpora/prompts.py",
+      "recommended_action": "review for module shrink",
+      "responsibility": "corpus/tokenization",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "corpus/tokenization"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 2,
+      "function_count": 1,
+      "import_count": 2,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "split_corpus",
+      "largest_function_lines": 21,
+      "line_count": 26,
+      "mixed_purpose": false,
+      "nonblank_line_count": 23,
+      "path": "src/radjax_tome/corpora/splitters.py",
+      "recommended_action": "keep",
+      "responsibility": "corpus/tokenization",
+      "secondary_responsibilities": [
+        "corpus/tokenization"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 1,
+      "complexity": 6,
+      "function_count": 2,
+      "import_count": 9,
+      "kind": "py",
+      "largest_class": "TokenizedCorpusManifest",
+      "largest_class_lines": 12,
+      "largest_function": "tokenize_jsonl_corpus",
+      "largest_function_lines": 50,
+      "line_count": 79,
+      "mixed_purpose": true,
+      "nonblank_line_count": 71,
+      "path": "src/radjax_tome/corpora/tokenization.py",
+      "recommended_action": "keep",
+      "responsibility": "corpus/tokenization",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "corpus/tokenization"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 6,
+      "complexity": 30,
+      "function_count": 21,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "HFTokenizer",
+      "largest_class_lines": 56,
+      "largest_function": "__init__",
+      "largest_function_lines": 40,
+      "line_count": 250,
+      "mixed_purpose": true,
+      "nonblank_line_count": 200,
+      "path": "src/radjax_tome/corpora/tokenizer.py",
+      "recommended_action": "keep",
+      "responsibility": "corpus/tokenization",
+      "secondary_responsibilities": [
+        "corpus/tokenization",
+        "teacher backend"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 5,
+      "mixed_purpose": false,
+      "nonblank_line_count": 3,
+      "path": "src/radjax_tome/emit/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 8,
+      "function_count": 4,
+      "import_count": 11,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "_build_cover_page",
+      "largest_function_lines": 46,
+      "line_count": 177,
+      "mixed_purpose": true,
+      "nonblank_line_count": 164,
+      "path": "src/radjax_tome/emit/teacher_tome.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "fingerprint artifacts",
+        "other"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 8,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 147,
+      "mixed_purpose": false,
+      "nonblank_line_count": 145,
+      "path": "src/radjax_tome/fingerprint/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 5,
+      "complexity": 60,
+      "function_count": 28,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": "FingerprintByteAccounting",
+      "largest_class_lines": 70,
+      "largest_function": "validate_fingerprint_artifact",
+      "largest_function_lines": 80,
+      "line_count": 558,
+      "mixed_purpose": false,
+      "nonblank_line_count": 491,
+      "path": "src/radjax_tome/fingerprint/artifacts.py",
+      "recommended_action": "split or extract focused helpers",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 3,
+      "complexity": 17,
+      "function_count": 12,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "RealTeacherCaptureSummary",
+      "largest_class_lines": 96,
+      "largest_function": "from_payload",
+      "largest_function_lines": 51,
+      "line_count": 254,
+      "mixed_purpose": false,
+      "nonblank_line_count": 228,
+      "path": "src/radjax_tome/fingerprint/capture_summary.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 4,
+      "complexity": 27,
+      "function_count": 16,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "CorridorMeasurementReport",
+      "largest_class_lines": 49,
+      "largest_function": "validate_corridor_measurement_report",
+      "largest_function_lines": 31,
+      "line_count": 250,
+      "mixed_purpose": false,
+      "nonblank_line_count": 215,
+      "path": "src/radjax_tome/fingerprint/corridor.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 5,
+      "complexity": 39,
+      "function_count": 22,
+      "import_count": 7,
+      "kind": "py",
+      "largest_class": "FingerprintExemplarRecord",
+      "largest_class_lines": 57,
+      "largest_function": "validate_fingerprint_exemplar_records",
+      "largest_function_lines": 49,
+      "line_count": 361,
+      "mixed_purpose": false,
+      "nonblank_line_count": 312,
+      "path": "src/radjax_tome/fingerprint/exemplars.py",
+      "recommended_action": "review for module shrink",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 12,
+      "function_count": 6,
+      "import_count": 9,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "build_minimal_fingerprint_artifact_from_target_store",
+      "largest_function_lines": 99,
+      "line_count": 270,
+      "mixed_purpose": true,
+      "nonblank_line_count": 256,
+      "path": "src/radjax_tome/fingerprint/generation.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "fingerprint artifacts",
+        "target store/schema"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 2,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "inspect_fingerprint_artifact",
+      "largest_function_lines": 2,
+      "line_count": 23,
+      "mixed_purpose": false,
+      "nonblank_line_count": 15,
+      "path": "src/radjax_tome/fingerprint/inspection.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 1,
+      "complexity": 5,
+      "function_count": 2,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "LoadedFingerprintArtifact",
+      "largest_class_lines": 8,
+      "largest_function": "load_fingerprint_artifact",
+      "largest_function_lines": 29,
+      "line_count": 62,
+      "mixed_purpose": false,
+      "nonblank_line_count": 53,
+      "path": "src/radjax_tome/fingerprint/loader.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 2,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 25,
+      "mixed_purpose": false,
+      "nonblank_line_count": 23,
+      "path": "src/radjax_tome/fingerprint/measurement.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 2,
+      "complexity": 29,
+      "function_count": 11,
+      "import_count": 8,
+      "kind": "py",
+      "largest_class": "SourceLineageRecord",
+      "largest_class_lines": 21,
+      "largest_function": "join_sources_by_example_id",
+      "largest_function_lines": 59,
+      "line_count": 234,
+      "mixed_purpose": true,
+      "nonblank_line_count": 208,
+      "path": "src/radjax_tome/fingerprint/provenance.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "fingerprint artifacts"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 2,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 19,
+      "mixed_purpose": false,
+      "nonblank_line_count": 17,
+      "path": "src/radjax_tome/fingerprint/real_teacher_artifacts.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 2,
+      "function_count": 1,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "build_fingerprint_summary_payload",
+      "largest_function_lines": 11,
+      "line_count": 38,
+      "mixed_purpose": false,
+      "nonblank_line_count": 32,
+      "path": "src/radjax_tome/fingerprint/summary.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 1,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "validate_fingerprint_artifact_path",
+      "largest_function_lines": 2,
+      "line_count": 21,
+      "mixed_purpose": false,
+      "nonblank_line_count": 15,
+      "path": "src/radjax_tome/fingerprint/validation.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 5,
+      "mixed_purpose": false,
+      "nonblank_line_count": 3,
+      "path": "src/radjax_tome/io/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "I/O helpers",
+      "secondary_responsibilities": [
+        "I/O helpers"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 2,
+      "function_count": 2,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "read_npz",
+      "largest_function_lines": 5,
+      "line_count": 18,
+      "mixed_purpose": false,
+      "nonblank_line_count": 12,
+      "path": "src/radjax_tome/io/arrays.py",
+      "recommended_action": "keep",
+      "responsibility": "I/O helpers",
+      "secondary_responsibilities": [
+        "I/O helpers"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 5,
+      "function_count": 4,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "require_fields",
+      "largest_function_lines": 11,
+      "line_count": 44,
+      "mixed_purpose": false,
+      "nonblank_line_count": 35,
+      "path": "src/radjax_tome/io/json.py",
+      "recommended_action": "keep",
+      "responsibility": "I/O helpers",
+      "secondary_responsibilities": [
+        "I/O helpers"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 4,
+      "function_count": 2,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "read_jsonl_objects",
+      "largest_function_lines": 12,
+      "line_count": 27,
+      "mixed_purpose": false,
+      "nonblank_line_count": 22,
+      "path": "src/radjax_tome/io/jsonl.py",
+      "recommended_action": "keep",
+      "responsibility": "I/O helpers",
+      "secondary_responsibilities": [
+        "I/O helpers"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 2,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 13,
+      "mixed_purpose": false,
+      "nonblank_line_count": 12,
+      "path": "src/radjax_tome/parity/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 3,
+      "complexity": 44,
+      "function_count": 14,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": "ArtifactComparison",
+      "largest_class_lines": 14,
+      "largest_function": "_compare_array",
+      "largest_function_lines": 76,
+      "line_count": 386,
+      "mixed_purpose": false,
+      "nonblank_line_count": 349,
+      "path": "src/radjax_tome/parity/artifact_compare.py",
+      "recommended_action": "review for module shrink",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "other"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 3,
+      "complexity": 25,
+      "function_count": 16,
+      "import_count": 10,
+      "kind": "py",
+      "largest_class": "AbParitySummary",
+      "largest_class_lines": 17,
+      "largest_function": "_run_case",
+      "largest_function_lines": 90,
+      "line_count": 470,
+      "mixed_purpose": true,
+      "nonblank_line_count": 429,
+      "path": "src/radjax_tome/parity/runner.py",
+      "recommended_action": "review for module shrink",
+      "responsibility": "other",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "other",
+        "target compression"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 5,
+      "mixed_purpose": false,
+      "nonblank_line_count": 3,
+      "path": "src/radjax_tome/provenance/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "provenance/hash utilities",
+      "secondary_responsibilities": [
+        "provenance/hash utilities"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 1,
+      "function_count": 2,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "sha256_file",
+      "largest_function_lines": 6,
+      "line_count": 19,
+      "mixed_purpose": true,
+      "nonblank_line_count": 14,
+      "path": "src/radjax_tome/provenance/hashes.py",
+      "recommended_action": "keep",
+      "responsibility": "provenance/hash utilities",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "provenance/hash utilities"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 47,
+      "mixed_purpose": true,
+      "nonblank_line_count": 45,
+      "path": "src/radjax_tome/reports/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "reporting",
+      "secondary_responsibilities": [
+        "fingerprint artifacts",
+        "reporting"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 1,
+      "complexity": 10,
+      "function_count": 9,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "FingerprintArcReport",
+      "largest_class_lines": 65,
+      "largest_function": "build_fingerprint_arc_report",
+      "largest_function_lines": 40,
+      "line_count": 208,
+      "mixed_purpose": true,
+      "nonblank_line_count": 187,
+      "path": "src/radjax_tome/reports/arc.py",
+      "recommended_action": "keep",
+      "responsibility": "reporting",
+      "secondary_responsibilities": [
+        "fingerprint artifacts",
+        "reporting"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 2,
+      "complexity": 11,
+      "function_count": 9,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "BaselineArmReport",
+      "largest_class_lines": 52,
+      "largest_function": "from_payload",
+      "largest_function_lines": 35,
+      "line_count": 159,
+      "mixed_purpose": true,
+      "nonblank_line_count": 139,
+      "path": "src/radjax_tome/reports/baseline.py",
+      "recommended_action": "keep",
+      "responsibility": "reporting",
+      "secondary_responsibilities": [
+        "fingerprint artifacts",
+        "reporting"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 3,
+      "complexity": 9,
+      "function_count": 13,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "FingerprintArtifactByteBudget",
+      "largest_class_lines": 76,
+      "largest_function": "from_payload",
+      "largest_function_lines": 57,
+      "line_count": 262,
+      "mixed_purpose": false,
+      "nonblank_line_count": 233,
+      "path": "src/radjax_tome/reports/fingerprint_quality.py",
+      "recommended_action": "keep",
+      "responsibility": "fingerprint artifacts",
+      "secondary_responsibilities": [
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 0,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 51,
+      "mixed_purpose": true,
+      "nonblank_line_count": 49,
+      "path": "src/radjax_tome/targets/__init__.py",
+      "recommended_action": "keep",
+      "responsibility": "target store/schema",
+      "secondary_responsibilities": [
+        "target compression",
+        "target store/schema"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 16,
+      "function_count": 5,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "dense_logits_to_cascaded_soft_labels",
+      "largest_function_lines": 53,
+      "line_count": 195,
+      "mixed_purpose": true,
+      "nonblank_line_count": 182,
+      "path": "src/radjax_tome/targets/compression.py",
+      "recommended_action": "keep",
+      "responsibility": "target compression",
+      "secondary_responsibilities": [
+        "target compression",
+        "target store/schema"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 2,
+      "complexity": 32,
+      "function_count": 5,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": "TeacherTargetBatch",
+      "largest_class_lines": 14,
+      "largest_function": "_load_compressed_target_batch",
+      "largest_function_lines": 78,
+      "line_count": 222,
+      "mixed_purpose": true,
+      "nonblank_line_count": 201,
+      "path": "src/radjax_tome/targets/consumption.py",
+      "recommended_action": "keep",
+      "responsibility": "target store/schema",
+      "secondary_responsibilities": [
+        "target compression",
+        "target store/schema"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "export_synthetic_teacher_targets",
+      "largest_function_lines": 16,
+      "line_count": 25,
+      "mixed_purpose": false,
+      "nonblank_line_count": 21,
+      "path": "src/radjax_tome/targets/export.py",
+      "recommended_action": "keep",
+      "responsibility": "target store/schema",
+      "secondary_responsibilities": [
+        "target store/schema"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 3,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "inspect_target_store",
+      "largest_function_lines": 36,
+      "line_count": 46,
+      "mixed_purpose": false,
+      "nonblank_line_count": 41,
+      "path": "src/radjax_tome/targets/inspection.py",
+      "recommended_action": "keep",
+      "responsibility": "target store/schema",
+      "secondary_responsibilities": [
+        "target store/schema"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 1,
+      "complexity": 5,
+      "function_count": 6,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": "MultiShardTargetStoreSmokeResult",
+      "largest_class_lines": 10,
+      "largest_function": "run_multishard_target_store_smoke",
+      "largest_function_lines": 14,
+      "line_count": 78,
+      "mixed_purpose": false,
+      "nonblank_line_count": 61,
+      "path": "src/radjax_tome/targets/multishard.py",
+      "recommended_action": "keep",
+      "responsibility": "target store/schema",
+      "secondary_responsibilities": [
+        "target store/schema"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 1,
+      "complexity": 16,
+      "function_count": 5,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": "TargetStoreMetadata",
+      "largest_class_lines": 18,
+      "largest_function": "validate_target_store_metadata",
+      "largest_function_lines": 36,
+      "line_count": 130,
+      "mixed_purpose": true,
+      "nonblank_line_count": 116,
+      "path": "src/radjax_tome/targets/schema.py",
+      "recommended_action": "keep",
+      "responsibility": "target store/schema",
+      "secondary_responsibilities": [
+        "target compression",
+        "target store/schema"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 1,
+      "complexity": 89,
+      "function_count": 16,
+      "import_count": 7,
+      "kind": "py",
+      "largest_class": "TeacherTargetStore",
+      "largest_class_lines": 133,
+      "largest_function": "_validate_topk_tail_arrays",
+      "largest_function_lines": 94,
+      "line_count": 400,
+      "mixed_purpose": true,
+      "nonblank_line_count": 367,
+      "path": "src/radjax_tome/targets/store.py",
+      "recommended_action": "review for module shrink",
+      "responsibility": "target store/schema",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "target compression",
+        "target store/schema"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 2,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 38,
+      "line_count": 52,
+      "mixed_purpose": false,
+      "nonblank_line_count": 45,
+      "path": "scripts/ab_compare_teacher_textbook.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 1,
+      "function_count": 0,
+      "import_count": 2,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 7,
+      "mixed_purpose": true,
+      "nonblank_line_count": 5,
+      "path": "scripts/audit_tome_generator_closure.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "audit tooling"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 7,
+      "function_count": 1,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 38,
+      "line_count": 51,
+      "mixed_purpose": true,
+      "nonblank_line_count": 42,
+      "path": "scripts/audit_tome_generator_extraction.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "audit tooling"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 2,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 19,
+      "line_count": 40,
+      "mixed_purpose": true,
+      "nonblank_line_count": 33,
+      "path": "scripts/audit_tome_refactor_surface.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "audit tooling"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 8,
+      "function_count": 1,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 93,
+      "line_count": 106,
+      "mixed_purpose": true,
+      "nonblank_line_count": 98,
+      "path": "scripts/build_teacher_textbook.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "target compression"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 1,
+      "function_count": 0,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": null,
+      "largest_function_lines": 0,
+      "line_count": 5,
+      "mixed_purpose": false,
+      "nonblank_line_count": 4,
+      "path": "scripts/build_teacher_tome.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 3,
+      "function_count": 1,
+      "import_count": 7,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 32,
+      "line_count": 52,
+      "mixed_purpose": true,
+      "nonblank_line_count": 45,
+      "path": "scripts/export_teacher_targets.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 4,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 21,
+      "line_count": 35,
+      "mixed_purpose": true,
+      "nonblank_line_count": 27,
+      "path": "scripts/inspect_fingerprint_artifact.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers",
+        "fingerprint artifacts"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 7,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 49,
+      "line_count": 67,
+      "mixed_purpose": true,
+      "nonblank_line_count": 59,
+      "path": "scripts/inspect_prompt_corpus.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 4,
+      "function_count": 1,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 25,
+      "line_count": 44,
+      "mixed_purpose": true,
+      "nonblank_line_count": 37,
+      "path": "scripts/inspect_targets.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 15,
+      "function_count": 6,
+      "import_count": 12,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "prove_capabilities",
+      "largest_function_lines": 269,
+      "line_count": 504,
+      "mixed_purpose": true,
+      "nonblank_line_count": 477,
+      "path": "scripts/prove_tome_generation_capabilities.py",
+      "recommended_action": "split or extract focused helpers",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers",
+        "fingerprint artifacts",
+        "target compression",
+        "teacher backend"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 4,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 39,
+      "line_count": 53,
+      "mixed_purpose": true,
+      "nonblank_line_count": 45,
+      "path": "scripts/resolve_qwen_policy.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 2,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 40,
+      "line_count": 58,
+      "mixed_purpose": false,
+      "nonblank_line_count": 50,
+      "path": "scripts/split_prompt_corpus.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 4,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 53,
+      "line_count": 75,
+      "mixed_purpose": false,
+      "nonblank_line_count": 68,
+      "path": "scripts/tokenize_corpus.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 5,
+      "function_count": 1,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 29,
+      "line_count": 47,
+      "mixed_purpose": true,
+      "nonblank_line_count": 38,
+      "path": "scripts/triage_tome_generator_audit.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "audit tooling"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 4,
+      "function_count": 1,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 18,
+      "line_count": 31,
+      "mixed_purpose": true,
+      "nonblank_line_count": 24,
+      "path": "scripts/validate_fingerprint_artifact.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers",
+        "fingerprint artifacts"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 10,
+      "function_count": 1,
+      "import_count": 7,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 34,
+      "line_count": 54,
+      "mixed_purpose": true,
+      "nonblank_line_count": 47,
+      "path": "scripts/validate_producer_pipeline.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 2,
+      "function_count": 1,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "main",
+      "largest_function_lines": 21,
+      "line_count": 37,
+      "mixed_purpose": false,
+      "nonblank_line_count": 30,
+      "path": "scripts/validate_teacher_textbook.py",
+      "recommended_action": "keep",
+      "responsibility": "CLI/scripts",
+      "secondary_responsibilities": [
+        "CLI/scripts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 16,
+      "function_count": 16,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "_artifact",
+      "largest_function_lines": 109,
+      "line_count": 288,
+      "mixed_purpose": true,
+      "nonblank_line_count": 233,
+      "path": "tests/test_ab_parity_compare.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "target compression",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 1,
+      "function_count": 1,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_ab_parity_integration_with_archived_repo_when_configured",
+      "largest_function_lines": 16,
+      "line_count": 26,
+      "mixed_purpose": false,
+      "nonblank_line_count": 19,
+      "path": "tests/test_ab_parity_runner.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "tests"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 3,
+      "import_count": 9,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_fingerprint_artifact_validation_and_inspection",
+      "largest_function_lines": 50,
+      "line_count": 154,
+      "mixed_purpose": true,
+      "nonblank_line_count": 138,
+      "path": "tests/test_bulk_migration.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "fingerprint artifacts",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 4,
+      "function_count": 3,
+      "import_count": 8,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_emitted_toy_tome_validates_using_contract",
+      "largest_function_lines": 18,
+      "line_count": 55,
+      "mixed_purpose": true,
+      "nonblank_line_count": 42,
+      "path": "tests/test_corpus_and_emit.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 1,
+      "complexity": 4,
+      "function_count": 9,
+      "import_count": 9,
+      "kind": "py",
+      "largest_class": "_FakeHFTokenizer",
+      "largest_class_lines": 17,
+      "largest_function": "test_hf_tokenizer_backend_can_be_mocked",
+      "largest_function_lines": 45,
+      "line_count": 183,
+      "mixed_purpose": true,
+      "nonblank_line_count": 152,
+      "path": "tests/test_corpus_tokenization.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "teacher backend",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 1,
+      "import_count": 2,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_fake_backend_emits_deterministic_toy_logits",
+      "largest_function_lines": 9,
+      "line_count": 14,
+      "mixed_purpose": false,
+      "nonblank_line_count": 9,
+      "path": "tests/test_fake_backend.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "tests"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 5,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "_minimal_artifact",
+      "largest_function_lines": 29,
+      "line_count": 131,
+      "mixed_purpose": true,
+      "nonblank_line_count": 112,
+      "path": "tests/test_fingerprint_artifact_surgery.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "fingerprint artifacts",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 3,
+      "import_count": 3,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_exemplar_manifest_records_round_trip_and_validate",
+      "largest_function_lines": 39,
+      "line_count": 123,
+      "mixed_purpose": true,
+      "nonblank_line_count": 110,
+      "path": "tests/test_fingerprint_exemplars_surgery.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "fingerprint artifacts",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 1,
+      "function_count": 3,
+      "import_count": 4,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_baseline_report_summary_round_trip",
+      "largest_function_lines": 31,
+      "line_count": 97,
+      "mixed_purpose": true,
+      "nonblank_line_count": 86,
+      "path": "tests/test_fingerprint_reports_surgery.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "fingerprint artifacts",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 1,
+      "function_count": 3,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_hf_export_metadata_round_trip",
+      "largest_function_lines": 22,
+      "line_count": 86,
+      "mixed_purpose": true,
+      "nonblank_line_count": 73,
+      "path": "tests/test_hf_specimen_surgery.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "teacher backend",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 1,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_package_imports",
+      "largest_function_lines": 4,
+      "line_count": 4,
+      "mixed_purpose": false,
+      "nonblank_line_count": 3,
+      "path": "tests/test_import.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "tests"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 3,
+      "function_count": 1,
+      "import_count": 1,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_tome_does_not_import_student",
+      "largest_function_lines": 19,
+      "line_count": 22,
+      "mixed_purpose": false,
+      "nonblank_line_count": 19,
+      "path": "tests/test_import_boundaries.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "tests"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 5,
+      "function_count": 4,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_bulk_manifest_covers_quarantine_reasons",
+      "largest_function_lines": 23,
+      "line_count": 60,
+      "mixed_purpose": false,
+      "nonblank_line_count": 49,
+      "path": "tests/test_quarantine_guardrails.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "tests"
+      ],
+      "single_purpose": true
+    },
+    {
+      "class_count": 0,
+      "complexity": 19,
+      "function_count": 6,
+      "import_count": 5,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_ledger_entries_have_dispositions_and_tracked_outputs",
+      "largest_function_lines": 26,
+      "line_count": 99,
+      "mixed_purpose": true,
+      "nonblank_line_count": 84,
+      "path": "tests/test_quarantine_surgery_ledger.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "teacher backend",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 7,
+      "import_count": 10,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_export_and_inspect_target_clis",
+      "largest_function_lines": 39,
+      "line_count": 165,
+      "mixed_purpose": true,
+      "nonblank_line_count": 137,
+      "path": "tests/test_target_core_migration.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "target store/schema",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 1,
+      "function_count": 6,
+      "import_count": 8,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_teacher_textbook_cli_smoke",
+      "largest_function_lines": 46,
+      "line_count": 143,
+      "mixed_purpose": true,
+      "nonblank_line_count": 121,
+      "path": "tests/test_teacher_textbook_builder.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "teacher backend",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 3,
+      "function_count": 8,
+      "import_count": 8,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_capability_harness_writes_matrix_and_report",
+      "largest_function_lines": 36,
+      "line_count": 216,
+      "mixed_purpose": true,
+      "nonblank_line_count": 183,
+      "path": "tests/test_tome_generation_capabilities.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "fingerprint artifacts",
+        "target compression",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 0,
+      "function_count": 16,
+      "import_count": 7,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_fail_on_untriaged_high_risk_behavior",
+      "largest_function_lines": 51,
+      "line_count": 241,
+      "mixed_purpose": true,
+      "nonblank_line_count": 190,
+      "path": "tests/test_tome_generator_audit_triage.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "I/O helpers",
+        "audit tooling",
+        "fingerprint artifacts",
+        "reporting",
+        "target compression",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 12,
+      "function_count": 9,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "_write_fingerprint_repo_pair",
+      "largest_function_lines": 83,
+      "line_count": 281,
+      "mixed_purpose": true,
+      "nonblank_line_count": 239,
+      "path": "tests/test_tome_generator_closure_audit.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "CLI/scripts",
+        "I/O helpers",
+        "audit tooling",
+        "fingerprint artifacts",
+        "reporting",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 6,
+      "function_count": 15,
+      "import_count": 9,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_script_runs_against_synthetic_repos",
+      "largest_function_lines": 35,
+      "line_count": 226,
+      "mixed_purpose": true,
+      "nonblank_line_count": 171,
+      "path": "tests/test_tome_generator_extraction_audit.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "fingerprint artifacts",
+        "reporting",
+        "target store/schema",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "class_count": 0,
+      "complexity": 10,
+      "function_count": 10,
+      "import_count": 6,
+      "kind": "py",
+      "largest_class": null,
+      "largest_class_lines": 0,
+      "largest_function": "test_refactor_audit_script_runs",
+      "largest_function_lines": 27,
+      "line_count": 170,
+      "mixed_purpose": true,
+      "nonblank_line_count": 137,
+      "path": "tests/test_tome_refactor_audit.py",
+      "recommended_action": "keep",
+      "responsibility": "tests",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "reporting",
+        "teacher backend",
+        "tests"
+      ],
+      "single_purpose": false
+    },
+    {
+      "kind": "md",
+      "line_count": 8,
+      "mixed_purpose": false,
+      "nonblank_line_count": 5,
+      "path": "docs/ARCHITECTURE.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 88,
+      "mixed_purpose": false,
+      "nonblank_line_count": 66,
+      "path": "docs/BIBLE.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "docs",
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 6,
+      "mixed_purpose": false,
+      "nonblank_line_count": 4,
+      "path": "docs/CORPUS_SPLITS.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 6,
+      "mixed_purpose": false,
+      "nonblank_line_count": 4,
+      "path": "docs/HF_TEACHER_OPTIONAL.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 11,
+      "mixed_purpose": false,
+      "nonblank_line_count": 6,
+      "path": "docs/IMPORT_BOUNDARIES.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs",
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 7,
+      "mixed_purpose": false,
+      "nonblank_line_count": 5,
+      "path": "docs/ROADMAP.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 7,
+      "mixed_purpose": false,
+      "nonblank_line_count": 4,
+      "path": "docs/TEACHER_BACKENDS.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs",
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 10,
+      "mixed_purpose": false,
+      "nonblank_line_count": 6,
+      "path": "docs/TOME_ARTIFACTS.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 93,
+      "mixed_purpose": false,
+      "nonblank_line_count": 71,
+      "path": "docs/TOME_BUILDER.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs",
+        "target compression",
+        "target store/schema",
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 76,
+      "mixed_purpose": false,
+      "nonblank_line_count": 57,
+      "path": "docs/TOME_BUILDER_AB_PARITY.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs",
+        "target compression"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "json",
+      "line_count": 211,
+      "mixed_purpose": false,
+      "nonblank_line_count": 211,
+      "path": "docs/TOME_GENERATION_CAPABILITY_MATRIX.json",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs",
+        "fingerprint artifacts",
+        "target compression",
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 35,
+      "mixed_purpose": false,
+      "nonblank_line_count": 24,
+      "path": "docs/TOME_GENERATION_CAPABILITY_MATRIX.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs",
+        "fingerprint artifacts",
+        "target compression",
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 123,
+      "mixed_purpose": false,
+      "nonblank_line_count": 97,
+      "path": "docs/TOME_GENERATOR_BULK_MIGRATION.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "docs",
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "json",
+      "line_count": 4499,
+      "mixed_purpose": false,
+      "nonblank_line_count": 4499,
+      "path": "docs/TOME_GENERATOR_BULK_MIGRATION_MANIFEST.json",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs",
+        "fingerprint artifacts",
+        "target compression"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "json",
+      "line_count": 48,
+      "mixed_purpose": false,
+      "nonblank_line_count": 48,
+      "path": "docs/TOME_GENERATOR_CLOSURE_AUDIT.json",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "docs"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 113,
+      "mixed_purpose": false,
+      "nonblank_line_count": 82,
+      "path": "docs/TOME_GENERATOR_CLOSURE_AUDIT.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "docs",
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 86,
+      "mixed_purpose": false,
+      "nonblank_line_count": 72,
+      "path": "docs/TOME_GENERATOR_CORE_MIGRATION.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "docs",
+        "fingerprint artifacts",
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 146,
+      "mixed_purpose": false,
+      "nonblank_line_count": 117,
+      "path": "docs/TOME_GENERATOR_EXTRACTION_AUDIT.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "docs",
+        "fingerprint artifacts",
+        "target compression"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 271,
+      "mixed_purpose": false,
+      "nonblank_line_count": 222,
+      "path": "docs/TOME_GENERATOR_MIGRATION_MAP.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "docs",
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 71,
+      "mixed_purpose": false,
+      "nonblank_line_count": 55,
+      "path": "docs/TOME_GENERATOR_QUARANTINE.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "docs",
+        "fingerprint artifacts"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "md",
+      "line_count": 79,
+      "mixed_purpose": false,
+      "nonblank_line_count": 62,
+      "path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY.md",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "docs",
+        "fingerprint artifacts",
+        "teacher backend"
+      ],
+      "single_purpose": true
+    },
+    {
+      "kind": "json",
+      "line_count": 4508,
+      "mixed_purpose": false,
+      "nonblank_line_count": 4508,
+      "path": "docs/TOME_GENERATOR_QUARANTINE_SURGERY_LEDGER.json",
+      "recommended_action": "keep",
+      "responsibility": "docs",
+      "secondary_responsibilities": [
+        "audit tooling",
+        "docs",
+        "fingerprint artifacts",
+        "target compression"
+      ],
+      "single_purpose": true
+    }
+  ],
+  "generated_at": "2026-07-01T00:00:00Z",
+  "optional_dependency_imports": [
+    {
+      "classification": "allowed_optional",
+      "evidence": "src/radjax_tome/corpora/tokenizer.py:103 imports transformers",
+      "import": "transformers",
+      "line": 103,
+      "path": "src/radjax_tome/corpora/tokenizer.py"
+    }
+  ],
+  "repo": "RADJAX-Tome",
+  "schema_version": "refactor_audit_v1",
+  "scorecard": [
+    {
+      "category": "core package organization",
+      "evidence": "Package layout is coherent, but audit and generation helpers need pruning.",
+      "score": 3
+    },
+    {
+      "category": "teacher backend boundary",
+      "evidence": "HF optional code is isolated behind backend modules.",
+      "score": 4
+    },
+    {
+      "category": "target store boundary",
+      "evidence": "Store/schema/inspection/compression are separated cleanly.",
+      "score": 4
+    },
+    {
+      "category": "compression boundary",
+      "evidence": "Compression is now a focused NumPy-only module.",
+      "score": 4
+    },
+    {
+      "category": "fingerprint boundary",
+      "evidence": "Artifact schemas and generation are separate, but package exports are broad.",
+      "score": 3
+    },
+    {
+      "category": "script thinness",
+      "evidence": "1 scripts are large enough to review for business logic.",
+      "score": 3
+    },
+    {
+      "category": "test maintainability",
+      "evidence": "Coverage is strong, but fixture-heavy tests repeat setup.",
+      "score": 3
+    },
+    {
+      "category": "optional dependency isolation",
+      "evidence": "0 suspicious heavy dependency imports found.",
+      "score": 5
+    },
+    {
+      "category": "Contract separation",
+      "evidence": "No active Contract repo edits or qrwkv_xla runtime imports are required.",
+      "score": 5
+    },
+    {
+      "category": "documentation hygiene",
+      "evidence": "2 generated or JSON docs need compactness review.",
+      "score": 2
+    },
+    {
+      "category": "future extensibility",
+      "evidence": "5 high/medium cleanup items should shape next specs.",
+      "score": 2
+    }
+  ],
+  "script_findings": [
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/ab_compare_teacher_textbook.py has 52 lines and 1 functions.",
+      "files": [
+        "scripts/ab_compare_teacher_textbook.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 52,
+      "radjax_imports": [
+        "radjax_tome.parity.runner"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/audit_tome_generator_closure.py has 7 lines and 0 functions.",
+      "files": [
+        "scripts/audit_tome_generator_closure.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 7,
+      "radjax_imports": [
+        "radjax_tome.audit.closure"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/audit_tome_generator_extraction.py has 51 lines and 1 functions.",
+      "files": [
+        "scripts/audit_tome_generator_extraction.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 51,
+      "radjax_imports": [
+        "radjax_tome.audit"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/audit_tome_refactor_surface.py has 40 lines and 1 functions.",
+      "files": [
+        "scripts/audit_tome_refactor_surface.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 40,
+      "radjax_imports": [
+        "radjax_tome.audit.refactor_surface"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/build_teacher_textbook.py has 106 lines and 1 functions.",
+      "files": [
+        "scripts/build_teacher_textbook.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 106,
+      "radjax_imports": [
+        "radjax_tome.builder"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/build_teacher_tome.py has 5 lines and 0 functions.",
+      "files": [
+        "scripts/build_teacher_tome.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 5,
+      "radjax_imports": [
+        "radjax_tome.cli.build_teacher_tome"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/export_teacher_targets.py has 52 lines and 1 functions.",
+      "files": [
+        "scripts/export_teacher_targets.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 52,
+      "radjax_imports": [
+        "radjax_tome.targets.export",
+        "radjax_tome.targets.inspection"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/inspect_fingerprint_artifact.py has 35 lines and 1 functions.",
+      "files": [
+        "scripts/inspect_fingerprint_artifact.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 35,
+      "radjax_imports": [
+        "radjax_tome.fingerprint"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/inspect_prompt_corpus.py has 67 lines and 1 functions.",
+      "files": [
+        "scripts/inspect_prompt_corpus.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 67,
+      "radjax_imports": [
+        "radjax_tome.corpora"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/inspect_targets.py has 44 lines and 1 functions.",
+      "files": [
+        "scripts/inspect_targets.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 44,
+      "radjax_imports": [
+        "radjax_tome.targets"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": false,
+      "evidence": "scripts/prove_tome_generation_capabilities.py has 504 lines and 6 functions.",
+      "files": [
+        "scripts/prove_tome_generation_capabilities.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 504,
+      "radjax_imports": [
+        "radjax_tome.backends.hf_export",
+        "radjax_tome.corpora",
+        "radjax_tome.fingerprint",
+        "radjax_tome.targets",
+        "radjax_tome.targets.export"
+      ],
+      "recommendation": "Move reusable business logic into src and keep CLI thin.",
+      "severity": "medium"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/resolve_qwen_policy.py has 53 lines and 1 functions.",
+      "files": [
+        "scripts/resolve_qwen_policy.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 53,
+      "radjax_imports": [
+        "radjax_tome.backends"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/split_prompt_corpus.py has 58 lines and 1 functions.",
+      "files": [
+        "scripts/split_prompt_corpus.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 58,
+      "radjax_imports": [
+        "radjax_tome.corpora"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/tokenize_corpus.py has 75 lines and 1 functions.",
+      "files": [
+        "scripts/tokenize_corpus.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 75,
+      "radjax_imports": [
+        "radjax_tome.corpora"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/triage_tome_generator_audit.py has 47 lines and 1 functions.",
+      "files": [
+        "scripts/triage_tome_generator_audit.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 47,
+      "radjax_imports": [
+        "radjax_tome.audit"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/validate_fingerprint_artifact.py has 31 lines and 1 functions.",
+      "files": [
+        "scripts/validate_fingerprint_artifact.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 31,
+      "radjax_imports": [
+        "radjax_tome.fingerprint"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/validate_producer_pipeline.py has 54 lines and 1 functions.",
+      "files": [
+        "scripts/validate_producer_pipeline.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 54,
+      "radjax_imports": [
+        "radjax_tome.builder",
+        "radjax_tome.targets"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    },
+    {
+      "delegates_appropriately": true,
+      "evidence": "scripts/validate_teacher_textbook.py has 37 lines and 1 functions.",
+      "files": [
+        "scripts/validate_teacher_textbook.py"
+      ],
+      "kind": "script_thinness",
+      "loc": 37,
+      "radjax_imports": [
+        "radjax_tome.builder"
+      ],
+      "recommendation": "Keep as thin CLI.",
+      "severity": "low"
+    }
+  ],
+  "summary": {
+    "blocker_count": 0,
+    "high_count": 1,
+    "low_count": 1,
+    "medium_count": 4,
+    "nice_to_have_count": 0,
+    "spec3_blocked": false,
+    "status": "complete"
+  },
+  "test_findings": [
+    {
+      "evidence": "tests/test_ab_parity_compare.py is fixture-heavy: 288 lines, 1 write_text calls.",
+      "files": [
+        "tests/test_ab_parity_compare.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Extract fixture builders and assert less implementation detail.",
+      "severity": "medium",
+      "test_category": "brittle"
+    },
+    {
+      "evidence": "tests/test_ab_parity_runner.py has focused assertions.",
+      "files": [
+        "tests/test_ab_parity_runner.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep.",
+      "severity": "low",
+      "test_category": "high_value"
+    },
+    {
+      "evidence": "tests/test_bulk_migration.py exercises CLI behavior through subprocess.",
+      "files": [
+        "tests/test_bulk_migration.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep, but share subprocess helpers.",
+      "severity": "low",
+      "test_category": "medium_value"
+    },
+    {
+      "evidence": "tests/test_corpus_and_emit.py has focused assertions.",
+      "files": [
+        "tests/test_corpus_and_emit.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep.",
+      "severity": "low",
+      "test_category": "high_value"
+    },
+    {
+      "evidence": "tests/test_corpus_tokenization.py exercises CLI behavior through subprocess.",
+      "files": [
+        "tests/test_corpus_tokenization.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep, but share subprocess helpers.",
+      "severity": "low",
+      "test_category": "medium_value"
+    },
+    {
+      "evidence": "tests/test_fake_backend.py has focused assertions.",
+      "files": [
+        "tests/test_fake_backend.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep.",
+      "severity": "low",
+      "test_category": "high_value"
+    },
+    {
+      "evidence": "tests/test_fingerprint_artifact_surgery.py has focused assertions.",
+      "files": [
+        "tests/test_fingerprint_artifact_surgery.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep.",
+      "severity": "low",
+      "test_category": "high_value"
+    },
+    {
+      "evidence": "tests/test_fingerprint_exemplars_surgery.py has focused assertions.",
+      "files": [
+        "tests/test_fingerprint_exemplars_surgery.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep.",
+      "severity": "low",
+      "test_category": "high_value"
+    },
+    {
+      "evidence": "tests/test_fingerprint_reports_surgery.py has focused assertions.",
+      "files": [
+        "tests/test_fingerprint_reports_surgery.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep.",
+      "severity": "low",
+      "test_category": "high_value"
+    },
+    {
+      "evidence": "tests/test_hf_specimen_surgery.py has focused assertions.",
+      "files": [
+        "tests/test_hf_specimen_surgery.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep optional/local marker; do not add network CI.",
+      "severity": "low",
+      "test_category": "needs_optional_real_smoke"
+    },
+    {
+      "evidence": "tests/test_import.py has focused assertions.",
+      "files": [
+        "tests/test_import.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep.",
+      "severity": "low",
+      "test_category": "high_value"
+    },
+    {
+      "evidence": "tests/test_import_boundaries.py has focused assertions.",
+      "files": [
+        "tests/test_import_boundaries.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep.",
+      "severity": "low",
+      "test_category": "high_value"
+    },
+    {
+      "evidence": "tests/test_quarantine_guardrails.py exercises CLI behavior through subprocess.",
+      "files": [
+        "tests/test_quarantine_guardrails.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep, but share subprocess helpers.",
+      "severity": "low",
+      "test_category": "medium_value"
+    },
+    {
+      "evidence": "tests/test_quarantine_surgery_ledger.py exercises CLI behavior through subprocess.",
+      "files": [
+        "tests/test_quarantine_surgery_ledger.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep, but share subprocess helpers.",
+      "severity": "low",
+      "test_category": "medium_value"
+    },
+    {
+      "evidence": "tests/test_target_core_migration.py exercises CLI behavior through subprocess.",
+      "files": [
+        "tests/test_target_core_migration.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep, but share subprocess helpers.",
+      "severity": "low",
+      "test_category": "medium_value"
+    },
+    {
+      "evidence": "tests/test_teacher_textbook_builder.py exercises CLI behavior through subprocess.",
+      "files": [
+        "tests/test_teacher_textbook_builder.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep, but share subprocess helpers.",
+      "severity": "low",
+      "test_category": "medium_value"
+    },
+    {
+      "evidence": "tests/test_tome_generation_capabilities.py is fixture-heavy: 216 lines, 0 write_text calls.",
+      "files": [
+        "tests/test_tome_generation_capabilities.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Extract fixture builders and assert less implementation detail.",
+      "severity": "medium",
+      "test_category": "brittle"
+    },
+    {
+      "evidence": "tests/test_tome_generator_audit_triage.py is fixture-heavy: 241 lines, 1 write_text calls.",
+      "files": [
+        "tests/test_tome_generator_audit_triage.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Extract fixture builders and assert less implementation detail.",
+      "severity": "medium",
+      "test_category": "brittle"
+    },
+    {
+      "evidence": "tests/test_tome_generator_closure_audit.py is fixture-heavy: 281 lines, 12 write_text calls.",
+      "files": [
+        "tests/test_tome_generator_closure_audit.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Extract fixture builders and assert less implementation detail.",
+      "severity": "medium",
+      "test_category": "brittle"
+    },
+    {
+      "evidence": "tests/test_tome_generator_extraction_audit.py is fixture-heavy: 226 lines, 1 write_text calls.",
+      "files": [
+        "tests/test_tome_generator_extraction_audit.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Extract fixture builders and assert less implementation detail.",
+      "severity": "medium",
+      "test_category": "brittle"
+    },
+    {
+      "evidence": "tests/test_tome_refactor_audit.py exercises CLI behavior through subprocess.",
+      "files": [
+        "tests/test_tome_refactor_audit.py"
+      ],
+      "kind": "test_quality",
+      "recommendation": "Keep, but share subprocess helpers.",
+      "severity": "low",
+      "test_category": "medium_value"
+    }
+  ]
+}
