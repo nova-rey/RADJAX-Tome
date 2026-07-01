@@ -60,12 +60,17 @@ arrays. It does not replace the current fake TeacherTextbook builder.
 
 Spec 3.3C adds `cpu_reference` as the first real backend-contract
 implementation. It is serial/reference, not optimized. It emits deterministic
-CPU payloads for `dense_logits`, `topk_with_tail_v0`, and
-`cascaded_soft_labels_v1`.
+CPU payloads for `dense_logits`, `topk_with_tail_v0`,
+`cascaded_soft_labels_v1`, and `corridor_exemplar_v1`.
 
 The CPU reference backend does not migrate the public builder. It does not
 implement staged CPU orchestration. It does not implement HF, GPU, or TPU
 runtime backends.
+
+Corridor/exemplar is CPU-supported as a serial/reference path. GPU/TPU are
+future acceleration paths, not exclusive ownership paths. This CPU
+corridor/exemplar implementation is a deterministic reference path for
+backend-contract correctness. It is not a claim of optimized historical parity.
 
 Payload summary:
 
@@ -73,11 +78,19 @@ Payload summary:
 - `topk_with_tail_v0`: `top_token_ids`, `top_log_probs`, `top_probs`,
   `top_mass`, `tail_mass`, `teacher_entropy`
 - `cascaded_soft_labels_v1`: the top-k/tail fields plus `bucket_masses`
+- `corridor_exemplar_v1`: `corridor_records`, `corridor_summary`,
+  `exemplar_records`, `exemplar_summary`, corridor token/entropy/confidence
+  arrays, and deterministic high-entropy exemplar selections
 
 The cascaded reference reducer removes top-k tokens, sorts the remaining tail
 probabilities descending, partitions them into fixed contiguous buckets, and
 sums probability mass per bucket. This is a correctness baseline for payload
 shape and mass accounting, not a performance path.
+
+The corridor/exemplar reference reducer derives token-level behavior scores
+from deterministic CPU logits, summarizes confidence and entropy per batch, and
+selects exemplar positions with the stable
+`deterministic_high_entropy_top_n_v1` policy.
 
 ## Runtime Modes
 

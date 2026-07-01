@@ -178,9 +178,13 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     assert cascaded["implemented_now"]
     assert cascaded["status"] == "supported"
     assert not cascaded["optimized"]
-    assert not corridor["implemented_now"]
-    assert corridor["status"] == "planned"
+    assert corridor["implemented_now"]
+    assert corridor["status"] == "supported"
     assert not corridor["optimized"]
+    assert (
+        "Spec 3.3C.1 adds serial/reference CPU corridor/exemplar support"
+        in (corridor["notes"])
+    )
     assert "public builder has not migrated" in dense["notes"]
 
     assert not any(

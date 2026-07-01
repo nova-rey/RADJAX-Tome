@@ -14,12 +14,13 @@ _SUPPORTED_EMISSION_POLICIES = {
     "dense_logits",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
+    "corridor_exemplar_v1",
 }
 _CAPABILITY_STATUS: dict[TargetPolicy, str] = {
     "dense_logits": "supported_debug",
     "topk_with_tail_v0": "supported",
     "cascaded_soft_labels_v1": "supported",
-    "corridor_exemplar_v1": "planned",
+    "corridor_exemplar_v1": "supported",
 }
 
 
@@ -39,7 +40,7 @@ class CPUReferenceTeacherEmissionBackend:
         if config.target_policy not in _SUPPORTED_EMISSION_POLICIES:
             raise ValueError(
                 "cpu_reference supports dense_logits, topk_with_tail_v0, "
-                "and cascaded_soft_labels_v1"
+                "cascaded_soft_labels_v1, and corridor_exemplar_v1"
             )
         if config.sequence_length <= 0:
             raise ValueError("sequence_length must be > 0")
@@ -51,6 +52,8 @@ class CPUReferenceTeacherEmissionBackend:
             raise ValueError("top_k must be > 0")
         if config.num_buckets <= 0:
             raise ValueError("num_buckets must be > 0")
+        if config.exemplar_top_n <= 0:
+            raise ValueError("exemplar_top_n must be > 0")
         self.config = config
 
     def capabilities(self) -> tuple[BackendCapability, ...]:
@@ -99,12 +102,12 @@ class CPUReferenceTeacherEmissionBackend:
                 backend_family=self.backend_family,
                 runtime_mode="cpu",
                 target_policy="corridor_exemplar_v1",
-                status="planned",
+                status="supported",
                 optimized=False,
-                implemented_now=False,
+                implemented_now=True,
                 notes=(
-                    "CPU reference corridor/exemplar support remains planned; "
-                    "Spec 3.3C does not implement this behavioral path."
+                    "Spec 3.3C.1 adds serial/reference CPU corridor/exemplar "
+                    "support through the backend contract."
                 ),
             ),
         )
@@ -170,6 +173,22 @@ class CPUReferenceTeacherEmissionBackend:
                     "bucket_policy": "contiguous_descending_tail_probability_mass",
                 }
             )
+        if self.config.target_policy == "corridor_exemplar_v1":
+            effective_exemplar_top_n = min(
+                self.config.exemplar_top_n,
+                self.config.sequence_length,
+            )
+            metadata.update(
+                {
+                    "corridor_policy": "deterministic_reference_corridor_v1",
+                    "exemplar_selection_policy": (
+                        "deterministic_high_entropy_top_n_v1"
+                    ),
+                    "requested_exemplar_top_n": self.config.exemplar_top_n,
+                    "effective_exemplar_top_n": effective_exemplar_top_n,
+                    "exemplar_records": effective_exemplar_top_n,
+                }
+            )
         return metadata
 
     def close(self) -> None:
@@ -190,6 +209,12 @@ class CPUReferenceTeacherEmissionBackend:
                     num_buckets=self.config.num_buckets,
                 ),
             }
+        if self.config.target_policy == "corridor_exemplar_v1":
+            return _corridor_exemplar_payload(
+                logits,
+                top_k=self.config.top_k,
+                exemplar_top_n=self.config.exemplar_top_n,
+            )
         raise ValueError(f"unsupported target_policy: {self.config.target_policy}")
 
 
@@ -273,6 +298,72 @@ def _tail_bucket_masses(
                     dtype=np.float32,
                 )
     return bucket_masses
+
+
+def _corridor_exemplar_payload(
+    logits: np.ndarray,
+    *,
+    top_k: int,
+    exemplar_top_n: int,
+) -> dict[str, object]:
+    topk = _dense_logits_to_topk_tail(logits, top_k=top_k)
+    effective_exemplar_top_n = min(exemplar_top_n, logits.shape[1])
+    entropy = topk["teacher_entropy"]
+    confidence = np.max(topk["top_probs"], axis=-1).astype(np.float32)
+    exemplar_positions = np.argsort(
+        -entropy,
+        axis=-1,
+        kind="stable",
+    )[..., :effective_exemplar_top_n].astype(np.int32)
+    selection_mask = np.zeros(entropy.shape, dtype=np.int32)
+    np.put_along_axis(selection_mask, exemplar_positions, 1, axis=-1)
+    exemplar_scores = np.take_along_axis(
+        entropy,
+        exemplar_positions,
+        axis=-1,
+    ).astype(np.float32)
+    top_ids = topk["top_token_ids"][..., 0].astype(np.int32)
+    top_probs = topk["top_probs"][..., 0].astype(np.float32)
+    lengths = np.full((logits.shape[0],), logits.shape[1], dtype=np.int32)
+    corridor_records = {
+        "policy": "deterministic_reference_corridor_v1",
+        "record_count": int(logits.shape[0]),
+        "fields": (
+            "corridor_top_token_ids",
+            "corridor_top_probs",
+            "corridor_teacher_entropy",
+            "corridor_confidence",
+        ),
+    }
+    exemplar_records = {
+        "policy": "deterministic_high_entropy_top_n_v1",
+        "record_count": int(logits.shape[0] * effective_exemplar_top_n),
+        "positions_per_example": int(effective_exemplar_top_n),
+    }
+    return {
+        "corridor_records": corridor_records,
+        "corridor_summary": {
+            "record_count": int(logits.shape[0]),
+            "mean_confidence": float(np.mean(confidence, dtype=np.float32)),
+            "mean_entropy": float(np.mean(entropy, dtype=np.float32)),
+            "sequence_length": int(logits.shape[1]),
+        },
+        "exemplar_records": exemplar_records,
+        "exemplar_summary": {
+            "selection_policy": "deterministic_high_entropy_top_n_v1",
+            "record_count": int(logits.shape[0] * effective_exemplar_top_n),
+            "positions_per_example": int(effective_exemplar_top_n),
+        },
+        "mode_records": np.zeros((logits.shape[0],), dtype=np.int32),
+        "corridor_top_token_ids": top_ids,
+        "corridor_top_probs": top_probs,
+        "corridor_teacher_entropy": entropy,
+        "corridor_confidence": confidence,
+        "corridor_lengths": lengths,
+        "exemplar_positions": exemplar_positions,
+        "exemplar_scores": exemplar_scores,
+        "exemplar_selection_mask": selection_mask,
+    }
 
 
 def _softmax(logits: np.ndarray) -> np.ndarray:

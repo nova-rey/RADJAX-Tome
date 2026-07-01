@@ -40,6 +40,7 @@ class TeacherBackendConfig:
     vocab_size: int = 32
     top_k: int = 8
     num_buckets: int = 4
+    exemplar_top_n: int = 1
     local_files_only: bool = True
     allow_downloads: bool = False
     fallback_policy: FallbackPolicy = "error"

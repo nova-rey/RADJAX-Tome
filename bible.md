@@ -68,3 +68,14 @@ payloads for `dense_logits`, `topk_with_tail_v0`, and
 There is no public builder migration, no staged orchestration, and no GPU/TPU
 implementation in this spec. The backend is intentionally boring: it exists so
 future accelerated runtimes have a deterministic CPU target to compare against.
+
+## 2026-07-01 — Spec 3.3C.1 CPU Corridor / Exemplar Reference Policy
+
+Spec 3.3C.1 corrects the `cpu_reference` capability model for
+`corridor_exemplar_v1`. Corridor/exemplar generation is now represented as a
+CPU-supported serial/reference path through the backend contract, with
+deterministic corridor summaries and high-entropy exemplar selections.
+
+This is a capability matrix correction and CPU reference implementation only:
+there is no builder migration, no staged orchestration, and no GPU/TPU
+implementation.

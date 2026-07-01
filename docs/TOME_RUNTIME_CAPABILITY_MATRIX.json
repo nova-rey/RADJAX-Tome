@@ -72,11 +72,11 @@
     },
     {
       "backend_family": "cpu_reference",
-      "implemented_now": false,
-      "notes": "CPU reference corridor/exemplar support remains planned; Spec 3.3C does not implement this behavioral path.",
+      "implemented_now": true,
+      "notes": "Spec 3.3C.1 adds serial/reference CPU corridor/exemplar support through the backend contract.",
       "optimized": false,
       "runtime_mode": "cpu",
-      "status": "planned",
+      "status": "supported",
       "target_policy": "corridor_exemplar_v1"
     },
     {

@@ -30,6 +30,7 @@ def _config(**overrides: object) -> TeacherBackendConfig:
         "vocab_size": 11,
         "top_k": 4,
         "num_buckets": 3,
+        "exemplar_top_n": 2,
     }
     payload.update(overrides)
     return TeacherBackendConfig(**payload)
@@ -146,6 +147,78 @@ def test_cascaded_payload_shapes_and_bucket_mass_accounting() -> None:
     )
 
 
+def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
+    backend = create_backend(
+        _config(target_policy="corridor_exemplar_v1", exemplar_top_n=2)
+    )
+
+    first = backend.emit_batch(_batch())
+    second = backend.emit_batch(_batch())
+    payload = first.payload
+
+    assert first.target_policy == "corridor_exemplar_v1"
+    assert {
+        "corridor_records",
+        "corridor_summary",
+        "exemplar_records",
+        "exemplar_summary",
+        "mode_records",
+        "corridor_top_token_ids",
+        "corridor_top_probs",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+        "corridor_lengths",
+        "exemplar_positions",
+        "exemplar_scores",
+        "exemplar_selection_mask",
+    } <= set(payload)
+    assert payload["corridor_records"]["record_count"] == 2
+    assert payload["corridor_summary"]["record_count"] == 2
+    assert payload["exemplar_records"]["record_count"] == 4
+    assert payload["exemplar_summary"]["positions_per_example"] == 2
+    assert payload["corridor_top_token_ids"].shape == (2, 5)
+    assert payload["corridor_top_probs"].shape == (2, 5)
+    assert payload["corridor_teacher_entropy"].shape == (2, 5)
+    assert payload["corridor_confidence"].shape == (2, 5)
+    assert payload["corridor_lengths"].shape == (2,)
+    assert payload["exemplar_positions"].shape == (2, 2)
+    assert payload["exemplar_scores"].shape == (2, 2)
+    assert payload["exemplar_selection_mask"].shape == (2, 5)
+    assert np.count_nonzero(payload["exemplar_selection_mask"]) == 4
+    assert np.isfinite(payload["corridor_top_probs"]).all()
+    assert np.isfinite(payload["corridor_teacher_entropy"]).all()
+    assert np.isfinite(payload["exemplar_scores"]).all()
+
+    for key in (
+        "mode_records",
+        "corridor_top_token_ids",
+        "corridor_top_probs",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+        "corridor_lengths",
+        "exemplar_positions",
+        "exemplar_scores",
+        "exemplar_selection_mask",
+    ):
+        np.testing.assert_array_equal(first.payload[key], second.payload[key])
+    assert first.payload["corridor_records"] == second.payload["corridor_records"]
+    assert first.payload["corridor_summary"] == second.payload["corridor_summary"]
+    assert first.payload["exemplar_records"] == second.payload["exemplar_records"]
+    assert first.payload["exemplar_summary"] == second.payload["exemplar_summary"]
+
+    assert first.metadata["effective_runtime_mode"] == "cpu"
+    assert first.metadata["effective_cpu_orchestration_mode"] == "serial"
+    assert first.metadata["optimized_path_used"] is False
+    assert first.metadata["fallback_used"] is False
+    assert first.metadata["capability_status"] == "supported"
+    assert first.metadata["corridor_policy"] == "deterministic_reference_corridor_v1"
+    assert (
+        first.metadata["exemplar_selection_policy"]
+        == "deterministic_high_entropy_top_n_v1"
+    )
+    assert first.metadata["exemplar_records"] == 2
+
+
 def test_cpu_reference_metadata_records_requested_and_effective_values() -> None:
     backend = create_backend(
         _config(
@@ -183,6 +256,7 @@ def test_cpu_reference_metadata_records_requested_and_effective_values() -> None
         ("vocab_size", 0, "vocab_size"),
         ("top_k", 0, "top_k"),
         ("num_buckets", 0, "num_buckets"),
+        ("exemplar_top_n", 0, "exemplar_top_n"),
     ),
 )
 def test_invalid_cpu_reference_config_values_fail_clearly(
@@ -198,6 +272,16 @@ def test_invalid_cpu_reference_config_values_fail_clearly(
             create_backend(config)
 
 
-def test_unsupported_target_policy_fails_clearly() -> None:
-    with pytest.raises(ValueError, match="supports dense_logits"):
-        create_backend(_config(target_policy="corridor_exemplar_v1"))
+def test_cpu_reference_capabilities_mark_corridor_exemplar_supported() -> None:
+    capabilities = {
+        capability.target_policy: capability
+        for capability in create_backend(_config()).capabilities()
+    }
+
+    corridor = capabilities["corridor_exemplar_v1"]
+    assert corridor.status == "supported"
+    assert corridor.implemented_now
+    assert not corridor.optimized
+    assert "Spec 3.3C.1 adds serial/reference CPU corridor/exemplar support" in (
+        corridor.notes
+    )
