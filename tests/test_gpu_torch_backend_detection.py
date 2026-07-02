@@ -79,7 +79,7 @@ def test_gpu_torch_registered_with_compact_capabilities() -> None:
         if capability.backend_id == "gpu_torch"
     ]
 
-    assert len(capabilities) == 4
+    assert len(capabilities) == 5
     assert {capability.runtime_mode for capability in capabilities} == {"cpu_gpu"}
     statuses = {
         capability.target_policy: capability.status for capability in capabilities
@@ -100,6 +100,9 @@ def test_gpu_torch_registered_with_compact_capabilities() -> None:
     assert statuses["cascaded_soft_labels_v1"] == "optimized"
     assert implemented["cascaded_soft_labels_v1"]
     assert optimized["cascaded_soft_labels_v1"]
+    assert statuses["dynamic_cascaded_soft_labels_v1"] == "planned"
+    assert not implemented["dynamic_cascaded_soft_labels_v1"]
+    assert not optimized["dynamic_cascaded_soft_labels_v1"]
     assert statuses["corridor_exemplar_v1"] == "historical_reference_exists"
     assert not implemented["corridor_exemplar_v1"]
     assert not optimized["corridor_exemplar_v1"]
@@ -142,9 +145,15 @@ def test_gpu_torch_accepts_f3_supported_policies(target_policy: str) -> None:
     assert backend.config.target_policy == target_policy
 
 
-def test_gpu_torch_rejects_unimplemented_compact_policies() -> None:
+@pytest.mark.parametrize(
+    "target_policy",
+    ("corridor_exemplar_v1", "dynamic_cascaded_soft_labels_v1"),
+)
+def test_gpu_torch_rejects_unimplemented_compact_policies(
+    target_policy: str,
+) -> None:
     with pytest.raises(TeacherBackendUnsupportedPolicyError, match="not implemented"):
-        GPUTorchTeacherEmissionBackend(_config(target_policy="corridor_exemplar_v1"))
+        GPUTorchTeacherEmissionBackend(_config(target_policy=target_policy))
 
 
 def test_detect_torch_accelerator_reports_missing_torch(monkeypatch) -> None:

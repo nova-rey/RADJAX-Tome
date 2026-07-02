@@ -31,6 +31,10 @@ def _config(**overrides: object) -> TeacherBackendConfig:
         "top_k": 4,
         "num_buckets": 3,
         "exemplar_top_n": 2,
+        "dynamic_top_k_min": 2,
+        "dynamic_top_k_max": 5,
+        "dynamic_mass_threshold": 0.75,
+        "dynamic_top_k_policy": "mass_threshold_v1",
     }
     payload.update(overrides)
     return TeacherBackendConfig(**payload)
@@ -147,6 +151,135 @@ def test_cascaded_payload_shapes_and_bucket_mass_accounting() -> None:
     )
 
 
+def test_dynamic_cascaded_payload_shapes_mask_and_mass_accounting() -> None:
+    backend = create_backend(
+        _config(
+            target_policy="dynamic_cascaded_soft_labels_v1",
+            dynamic_top_k_min=2,
+            dynamic_top_k_max=5,
+            dynamic_mass_threshold=0.75,
+            num_buckets=3,
+        )
+    )
+
+    result = backend.emit_batch(_batch())
+    payload = result.payload
+
+    assert {
+        "top_token_ids",
+        "top_log_probs",
+        "top_probs",
+        "top_selection_mask",
+        "effective_top_k",
+        "top_mass",
+        "tail_mass",
+        "bucket_masses",
+        "teacher_entropy",
+    } <= set(payload)
+    assert payload["top_token_ids"].shape == (2, 5, 5)
+    assert payload["top_log_probs"].shape == (2, 5, 5)
+    assert payload["top_probs"].shape == (2, 5, 5)
+    assert payload["top_selection_mask"].shape == (2, 5, 5)
+    assert payload["top_selection_mask"].dtype == np.bool_
+    assert payload["effective_top_k"].shape == (2, 5)
+    assert np.issubdtype(payload["effective_top_k"].dtype, np.integer)
+    assert payload["top_mass"].shape == (2, 5)
+    assert payload["tail_mass"].shape == (2, 5)
+    assert payload["bucket_masses"].shape == (2, 5, 3)
+    assert payload["teacher_entropy"].shape == (2, 5)
+    assert np.isfinite(payload["teacher_entropy"]).all()
+
+    mask = payload["top_selection_mask"]
+    np.testing.assert_array_equal(
+        payload["effective_top_k"],
+        np.sum(mask, axis=-1).astype(np.int32),
+    )
+    assert int(np.min(payload["effective_top_k"])) >= 2
+    assert int(np.max(payload["effective_top_k"])) <= 5
+    assert (payload["top_token_ids"][~mask] == 0).all()
+    assert (payload["top_probs"][~mask] == 0.0).all()
+    assert (payload["top_log_probs"][~mask] == 0.0).all()
+    np.testing.assert_allclose(
+        np.sum(payload["bucket_masses"], axis=-1),
+        payload["tail_mass"],
+        rtol=1e-6,
+        atol=1e-6,
+    )
+    np.testing.assert_allclose(
+        payload["top_mass"] + payload["tail_mass"],
+        1.0,
+        rtol=1e-6,
+        atol=1e-6,
+    )
+
+    not_max_clamped = payload["effective_top_k"] < 5
+    assert (payload["top_mass"][not_max_clamped] >= 0.75).all()
+    below_threshold = payload["top_mass"] < 0.75
+    assert (payload["effective_top_k"][below_threshold] == 5).all()
+
+    metadata = result.metadata
+    assert metadata["capability_status"] == "supported"
+    assert metadata["dynamic_top_k_policy"] == "mass_threshold_v1"
+    assert metadata["dynamic_top_k_min_configured"] == 2
+    assert metadata["dynamic_top_k_max_configured"] == 5
+    assert metadata["dynamic_top_k_min_effective"] == 2
+    assert metadata["dynamic_top_k_max_effective"] == 5
+    assert metadata["dynamic_mass_threshold"] == 0.75
+    assert metadata["num_buckets"] == 3
+    assert metadata["bucket_policy"] == "contiguous_descending_tail_probability_mass"
+    assert metadata["padding_policy"] == "pad_to_dynamic_top_k_max_effective"
+    assert metadata["selection_mask_field"] == "top_selection_mask"
+    assert "must be ignored" in metadata["masked_slot_policy"]
+    assert metadata["top_selection_mask_semantics"] == (
+        "true means explicit selected token"
+    )
+    assert metadata["effective_top_k_min_observed"] == int(
+        np.min(payload["effective_top_k"])
+    )
+    assert metadata["effective_top_k_max_observed"] == int(
+        np.max(payload["effective_top_k"])
+    )
+    assert metadata["effective_top_k_mean_observed"] == pytest.approx(
+        float(np.mean(payload["effective_top_k"], dtype=np.float32))
+    )
+
+
+def test_dynamic_cascaded_min_k_is_honored_when_threshold_is_low() -> None:
+    backend = create_backend(
+        _config(
+            target_policy="dynamic_cascaded_soft_labels_v1",
+            dynamic_top_k_min=3,
+            dynamic_top_k_max=5,
+            dynamic_mass_threshold=0.01,
+        )
+    )
+
+    payload = backend.emit_batch(_batch()).payload
+
+    assert (payload["effective_top_k"] >= 3).all()
+    assert (payload["effective_top_k"] == 3).any()
+
+
+def test_dynamic_cascaded_max_k_clamps_to_vocab_size() -> None:
+    backend = create_backend(
+        _config(
+            target_policy="dynamic_cascaded_soft_labels_v1",
+            vocab_size=4,
+            dynamic_top_k_min=2,
+            dynamic_top_k_max=99,
+            dynamic_mass_threshold=1.0,
+        )
+    )
+
+    result = backend.emit_batch(_batch())
+
+    assert result.payload["top_token_ids"].shape == (2, 5, 4)
+    assert (result.payload["effective_top_k"] == 4).all()
+    assert result.metadata["dynamic_top_k_max_configured"] == 99
+    assert result.metadata["dynamic_top_k_max_effective"] == 4
+    assert result.metadata["dynamic_top_k_min_effective"] == 2
+
+
 def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
     backend = create_backend(
         _config(target_policy="corridor_exemplar_v1", exemplar_top_n=2)
@@ -257,6 +390,11 @@ def test_cpu_reference_metadata_records_requested_and_effective_values() -> None
         ("top_k", 0, "top_k"),
         ("num_buckets", 0, "num_buckets"),
         ("exemplar_top_n", 0, "exemplar_top_n"),
+        ("dynamic_top_k_min", 0, "dynamic_top_k_min"),
+        ("dynamic_top_k_max", 1, "dynamic_top_k_max"),
+        ("dynamic_mass_threshold", 0.0, "dynamic_mass_threshold"),
+        ("dynamic_mass_threshold", 1.1, "dynamic_mass_threshold"),
+        ("dynamic_top_k_policy", "unknown", "dynamic_top_k_policy"),
     ),
 )
 def test_invalid_cpu_reference_config_values_fail_clearly(
@@ -285,3 +423,17 @@ def test_cpu_reference_capabilities_mark_corridor_exemplar_supported() -> None:
     assert "Spec 3.3C.1 adds serial/reference CPU corridor/exemplar support" in (
         corridor.notes
     )
+
+
+def test_cpu_reference_capabilities_mark_dynamic_cascaded_supported() -> None:
+    capabilities = {
+        capability.target_policy: capability
+        for capability in create_backend(_config()).capabilities()
+    }
+
+    dynamic = capabilities["dynamic_cascaded_soft_labels_v1"]
+    assert dynamic.status == "supported"
+    assert dynamic.implemented_now
+    assert not dynamic.optimized
+    assert "Spec 3.3F6" in dynamic.notes
+    assert "dynamic top-k explicit head plus bucketed-tail" in dynamic.notes

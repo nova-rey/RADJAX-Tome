@@ -61,7 +61,8 @@ arrays. It does not replace the current fake TeacherTextbook builder.
 Spec 3.3C adds `cpu_reference` as the first real backend-contract
 implementation. It is serial/reference, not optimized. It emits deterministic
 CPU payloads for `dense_logits`, `topk_with_tail_v0`,
-`cascaded_soft_labels_v1`, and `corridor_exemplar_v1`.
+`cascaded_soft_labels_v1`, `dynamic_cascaded_soft_labels_v1`, and
+`corridor_exemplar_v1`.
 
 The CPU reference backend does not migrate the public builder. It does not
 implement staged CPU orchestration. It does not implement HF, GPU, or TPU
@@ -78,6 +79,8 @@ Payload summary:
 - `topk_with_tail_v0`: `top_token_ids`, `top_log_probs`, `top_probs`,
   `top_mass`, `tail_mass`, `teacher_entropy`
 - `cascaded_soft_labels_v1`: the top-k/tail fields plus `bucket_masses`
+- `dynamic_cascaded_soft_labels_v1`: dynamic top-k explicit head arrays,
+  `top_selection_mask`, `effective_top_k`, and bucketed tail masses
 - `corridor_exemplar_v1`: `corridor_records`, `corridor_summary`,
   `exemplar_records`, `exemplar_summary`, corridor token/entropy/confidence
   arrays, and deterministic high-entropy exemplar selections
@@ -87,10 +90,25 @@ probabilities descending, partitions them into fixed contiguous buckets, and
 sums probability mass per bucket. This is a correctness baseline for payload
 shape and mass accounting, not a performance path.
 
+Spec 3.3F6 adds the CPU reference and contract shape for
+`dynamic_cascaded_soft_labels_v1`. It is dynamic top-k explicit head plus
+bucketed tail, not simple dynamic top-k with one tail mass. The payload is
+fixed and padded to the effective dynamic max K. `top_selection_mask` is
+authoritative: masked top slots have token ID 0, probability 0.0, and log
+probability 0.0, and consumers must ignore them. The CPU reference records
+`effective_top_k`, threshold/min/max metadata, bucket metadata, and observed
+effective-k statistics.
+
 The corridor/exemplar reference reducer derives token-level behavior scores
 from deterministic CPU logits, summarizes confidence and entropy per batch, and
 selects exemplar positions with the stable
 `deterministic_high_entropy_top_n_v1` policy.
+
+Future corridor/exemplar schema work may consume
+`dynamic_cascaded_soft_labels_v1` as an exemplar source policy, using fields
+such as `effective_top_k`, `top_selection_mask`, `top_mass`, `tail_mass`,
+`bucket_masses`, and `teacher_entropy`. Spec 3.3F6 documents that path but does
+not implement corridor/exemplar production schema.
 
 ## CPU Orchestration Runner
 
@@ -124,6 +142,10 @@ availability or emission is requested.
 `topk_with_tail_v0`, and `cascaded_soft_labels_v1`. Dense logits are returned as
 NumPy arrays. Compact payloads are CPU reductions from real HF logits, not GPU
 compact reduction.
+
+`hf_torch` lists `dynamic_cascaded_soft_labels_v1` as planned after the Spec
+3.3F6 CPU reference contract shape. It does not emit dynamic cascaded payloads
+in F6.
 
 The backend does not claim CUDA, MPS, TPU, or optimized accelerator behavior.
 The public builder has not migrated to `hf_torch` by default.
@@ -186,6 +208,10 @@ orchestrator signal only: a higher-level runner may choose another backend
 later, but `gpu_torch` itself does not call `hf_torch` or `cpu_reference` and
 does not emit CPU results for an explicit `cpu_gpu` request.
 
+Spec 3.3F6 defines `dynamic_cascaded_soft_labels_v1` in the CPU reference
+backend only. `gpu_torch` lists this target policy as planned/unimplemented;
+future Spec 3.3F7 will add the optimized GPU dynamic cascaded reducer.
+
 `corridor_exemplar_v1` remains historical-reference/future GPU work. Runtime
 fallback/error hardening is in place for implemented `gpu_torch` policies. The
 public builder has not migrated to `gpu_torch`.
@@ -193,7 +219,8 @@ public builder has not migrated to `gpu_torch`.
 ## Runtime Modes
 
 `cpu` means CPU-side orchestration plus CPU teacher execution and reduction. It
-is the universal correctness and reference path.
+is the universal correctness and reference path. Spec 3.3F6 adds CPU reference
+support for dynamic cascaded soft labels.
 
 `cpu_gpu` means CPU-side orchestration plus GPU-backed teacher execution and/or
 GPU-backed reduction. Spec 3.3F1 implements a dense debug/smoke HF Torch path
@@ -202,7 +229,9 @@ Spec 3.3F3 adds compact cascaded soft-label reduction on the accelerator.
 Spec 3.3F4 adds optional vocab chunking and memory/workspace metadata for
 compact reducers. Spec 3.3F4.1 corrects cascaded chunking metadata so exact
 bucket construction does not overclaim effective chunked workspace. Spec 3.3F5
-adds structured diagnostics and no-silent-CPU-fallback error hardening.
+adds structured diagnostics and no-silent-CPU-fallback error hardening. Spec
+3.3F6 defines the dynamic cascaded CPU contract shape only; GPU support remains
+future Spec 3.3F7 work.
 
 `cpu_tpu` means CPU-side orchestration plus TPU/JAX/XLA-backed teacher
 execution and/or TPU-backed reduction. This is a future backend family; no
@@ -226,12 +255,18 @@ for reference, debug, and very small corpora. Dense logits are not the main
 optimization target for large Tome generation.
 
 `topk_with_tail_v0` stores fixed top-k probabilities plus tail mass. CPU
-reference support is planned, and GPU/TPU optimized reduction should target
-this compact format before trying to make dense logits fast at scale.
+reference support exists, and GPU/TPU optimized reduction should target this
+compact format before trying to make dense logits fast at scale.
 
 `cascaded_soft_labels_v1` stores cascaded bucket soft-labels. CPU reference
-support is planned, and accelerator work should optimize compact reduction for
-this representation rather than assume dense output is the final payload.
+support exists, and accelerator work should optimize compact reduction for this
+representation rather than assume dense output is the final payload.
+
+`dynamic_cascaded_soft_labels_v1` stores a dynamic top-k explicit head plus
+bucketed tail. It is not simple dynamic top-k with one tail mass. It uses
+padded explicit-head arrays, `top_selection_mask` to identify selected slots,
+`effective_top_k` per position, and the same contiguous descending
+tail-probability bucket policy as fixed cascaded soft labels.
 
 `corridor_exemplar_v1` is the behavioral corridor plus exemplar-oriented target
 family. It may map to multiple artifact substructures later. GPU and TPU

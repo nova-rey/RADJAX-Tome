@@ -22,6 +22,7 @@ _CAPABILITY_STATUS: dict[TargetPolicy, str] = {
     "dense_logits": "supported_debug",
     "topk_with_tail_v0": "supported",
     "cascaded_soft_labels_v1": "supported",
+    "dynamic_cascaded_soft_labels_v1": "planned",
     "corridor_exemplar_v1": "planned",
 }
 _DEFAULT_FAKE_TOKENIZER_ID = "fake-deterministic-tokenizer"
@@ -123,6 +124,19 @@ class HFTorchTeacherEmissionBackend:
                 notes=(
                     "HF Torch corridor/exemplar support remains planned; "
                     "Spec 3.3E does not implement this behavioral pass."
+                ),
+            ),
+            BackendCapability(
+                backend_id=self.backend_id,
+                backend_family=self.backend_family,
+                runtime_mode="cpu",
+                target_policy="dynamic_cascaded_soft_labels_v1",
+                status="planned",
+                optimized=False,
+                implemented_now=False,
+                notes=(
+                    "HF Torch dynamic cascaded soft-label support is planned "
+                    "after the Spec 3.3F6 CPU reference contract shape."
                 ),
             ),
         )

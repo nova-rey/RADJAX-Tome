@@ -76,11 +76,12 @@ def test_hf_torch_registered_and_capabilities_are_import_safe() -> None:
         if capability.backend_id == "hf_torch"
     ]
 
-    assert len(capabilities) == 4
+    assert len(capabilities) == 5
     assert {capability.target_policy for capability in capabilities} == {
         "dense_logits",
         "topk_with_tail_v0",
         "cascaded_soft_labels_v1",
+        "dynamic_cascaded_soft_labels_v1",
         "corridor_exemplar_v1",
     }
     assert not any(capability.optimized for capability in capabilities)
@@ -91,7 +92,13 @@ def test_hf_torch_registered_and_capabilities_are_import_safe() -> None:
     assert statuses["dense_logits"] == "supported_debug"
     assert statuses["topk_with_tail_v0"] == "supported"
     assert statuses["cascaded_soft_labels_v1"] == "supported"
+    assert statuses["dynamic_cascaded_soft_labels_v1"] == "planned"
     assert statuses["corridor_exemplar_v1"] == "planned"
+    implemented = {
+        capability.target_policy: capability.implemented_now
+        for capability in capabilities
+    }
+    assert not implemented["dynamic_cascaded_soft_labels_v1"]
 
 
 def test_hf_torch_backend_constructs_without_loading_optional_deps() -> None:

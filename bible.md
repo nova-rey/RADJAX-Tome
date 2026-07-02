@@ -179,3 +179,18 @@ backend-local path to `hf_torch` or `cpu_reference`. Device transfer, model
 forward, reduction, and compact host-transfer failures are wrapped with
 accelerator context. This does not migrate the public builder, add TPU/JAX, or
 implement GPU corridor/exemplar acceleration.
+
+## 2026-07-02 — Spec 3.3F6 Dynamic Cascaded CPU Reference Contract
+
+Spec 3.3F6 adds `dynamic_cascaded_soft_labels_v1` as a CPU reference contract
+shape. The payload is dynamic top-k explicit head plus bucketed tail, with
+`top_selection_mask` marking selected head slots and `effective_top_k`
+recording the per-position selected count.
+
+The selection policy is `mass_threshold_v1`: choose enough sorted probability
+mass to meet the configured threshold, bounded by configured dynamic min/max K,
+then bucket the non-selected tail. This creates the reference oracle for future
+`gpu_torch` F7 dynamic cascaded optimization and gives future
+corridor/exemplar schema work a possible exemplar source policy. It does not
+migrate the public builder, add TPU/JAX, or implement corridor/exemplar
+production schema.

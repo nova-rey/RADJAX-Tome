@@ -14,6 +14,7 @@ TargetPolicy = Literal[
     "dense_logits",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
+    "dynamic_cascaded_soft_labels_v1",
     "corridor_exemplar_v1",
 ]
 SupportStatus = Literal[
@@ -41,6 +42,10 @@ class TeacherBackendConfig:
     top_k: int = 8
     num_buckets: int = 4
     exemplar_top_n: int = 1
+    dynamic_top_k_min: int = 1
+    dynamic_top_k_max: int = 32
+    dynamic_mass_threshold: float = 0.95
+    dynamic_top_k_policy: str = "mass_threshold_v1"
     gpu_vocab_chunk_size: int | None = None
     gpu_enable_vocab_chunking: bool = False
     local_files_only: bool = True

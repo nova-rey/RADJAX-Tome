@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from typing import get_args
 
 import numpy as np
 import pytest
@@ -10,6 +11,7 @@ from radjax_tome.backends import (
     BackendCapability,
     CPUReferenceTeacherEmissionBackend,
     FakeNumpyTeacherEmissionBackend,
+    TargetPolicy,
     TeacherBackendConfig,
     TeacherBatchInput,
     create_backend,
@@ -58,6 +60,10 @@ def test_backend_config_and_batch_input_construct() -> None:
         vocab_size=7,
         top_k=3,
         num_buckets=2,
+        dynamic_top_k_min=1,
+        dynamic_top_k_max=4,
+        dynamic_mass_threshold=0.9,
+        dynamic_top_k_policy="mass_threshold_v1",
         local_files_only=True,
         allow_downloads=False,
         fallback_policy="error",
@@ -71,8 +77,16 @@ def test_backend_config_and_batch_input_construct() -> None:
     assert config.sequence_length == 4
     assert config.top_k == 3
     assert config.num_buckets == 2
+    assert config.dynamic_top_k_min == 1
+    assert config.dynamic_top_k_max == 4
+    assert config.dynamic_mass_threshold == 0.9
+    assert config.dynamic_top_k_policy == "mass_threshold_v1"
     assert batch.example_ids == ("ex-1", "ex-2")
     assert batch.texts == ("alpha", "beta")
+
+
+def test_target_policy_vocabulary_includes_dynamic_cascaded() -> None:
+    assert "dynamic_cascaded_soft_labels_v1" in get_args(TargetPolicy)
 
 
 def test_batch_input_rejects_mismatched_lengths() -> None:
@@ -135,7 +149,7 @@ def test_registry_lists_default_backend_capabilities() -> None:
     ]
 
     assert len(fake_capabilities) == 1
-    assert len(cpu_capabilities) == 4
+    assert len(cpu_capabilities) == 5
     capability = fake_capabilities[0]
     assert capability.backend_family == "fake_numpy"
     assert capability.runtime_mode == "cpu"

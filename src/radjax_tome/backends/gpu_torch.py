@@ -48,6 +48,7 @@ _CAPABILITY_STATUS = {
     "dense_logits": "supported_debug",
     "topk_with_tail_v0": "optimized",
     "cascaded_soft_labels_v1": "optimized",
+    "dynamic_cascaded_soft_labels_v1": "planned",
 }
 _DEFAULT_GPU_VOCAB_CHUNK_SIZE = 8192
 _REDUCER_WORKSPACE_FACTOR = 3
@@ -159,6 +160,20 @@ class GPUTorchTeacherEmissionBackend:
                     "Historical QRWKV-XLA optimization work can guide future "
                     "corridor/exemplar acceleration; active gpu_torch support "
                     "is not implemented."
+                ),
+            ),
+            BackendCapability(
+                backend_id=self.backend_id,
+                backend_family=self.backend_family,
+                runtime_mode="cpu_gpu",
+                target_policy="dynamic_cascaded_soft_labels_v1",
+                status="planned",
+                optimized=False,
+                implemented_now=False,
+                notes=(
+                    "Spec 3.3F6 defines the CPU reference contract shape for "
+                    "dynamic cascaded soft labels. Future Spec 3.3F7 will add "
+                    "the optimized gpu_torch reducer."
                 ),
             ),
         )

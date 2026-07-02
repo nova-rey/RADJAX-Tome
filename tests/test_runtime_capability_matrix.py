@@ -15,6 +15,7 @@ TARGET_POLICIES = {
     "dense_logits",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
+    "dynamic_cascaded_soft_labels_v1",
     "corridor_exemplar_v1",
 }
 SUPPORT_STATUSES = {
@@ -58,6 +59,10 @@ def test_runtime_backend_doc_defines_architecture_vocabulary() -> None:
     assert "fallback_policy=auto" in text
     assert "orchestrator signal only" in text
     assert "does not emit CPU results for an explicit `cpu_gpu` request" in text
+    assert "dynamic_cascaded_soft_labels_v1" in text
+    assert "dynamic top-k explicit head" in text
+    assert "bucketed tail" in text
+    assert "Future corridor/exemplar schema" in text
 
 
 def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
@@ -187,6 +192,7 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     dense = capabilities[("cpu_reference", "dense_logits")]
     topk = capabilities[("cpu_reference", "topk_with_tail_v0")]
     cascaded = capabilities[("cpu_reference", "cascaded_soft_labels_v1")]
+    dynamic = capabilities[("cpu_reference", "dynamic_cascaded_soft_labels_v1")]
     corridor = capabilities[("cpu_reference", "corridor_exemplar_v1")]
 
     assert dense["implemented_now"]
@@ -198,6 +204,11 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     assert cascaded["implemented_now"]
     assert cascaded["status"] == "supported"
     assert not cascaded["optimized"]
+    assert dynamic["implemented_now"]
+    assert dynamic["status"] == "supported"
+    assert not dynamic["optimized"]
+    assert "Spec 3.3F6" in dynamic["notes"]
+    assert "dynamic top-k explicit head plus bucketed tail" in dynamic["notes"]
     assert corridor["implemented_now"]
     assert corridor["status"] == "supported"
     assert not corridor["optimized"]
@@ -266,6 +277,7 @@ def test_runtime_capability_matrix_reflects_hf_torch_backend_contract() -> None:
     dense = capabilities[("hf_torch", "dense_logits")]
     topk = capabilities[("hf_torch", "topk_with_tail_v0")]
     cascaded = capabilities[("hf_torch", "cascaded_soft_labels_v1")]
+    dynamic = capabilities[("hf_torch", "dynamic_cascaded_soft_labels_v1")]
     corridor = capabilities[("hf_torch", "corridor_exemplar_v1")]
 
     assert dense["implemented_now"]
@@ -281,6 +293,10 @@ def test_runtime_capability_matrix_reflects_hf_torch_backend_contract() -> None:
     assert cascaded["implemented_now"]
     assert cascaded["status"] == "supported"
     assert not cascaded["optimized"]
+    assert not dynamic["implemented_now"]
+    assert dynamic["status"] == "planned"
+    assert not dynamic["optimized"]
+    assert "Spec 3.3F6" in dynamic["notes"]
     assert not corridor["implemented_now"]
     assert corridor["status"] == "planned"
     assert not corridor["optimized"]
@@ -312,6 +328,7 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     dense = capabilities[("gpu_torch", "dense_logits")]
     topk = capabilities[("gpu_torch", "topk_with_tail_v0")]
     cascaded = capabilities[("gpu_torch", "cascaded_soft_labels_v1")]
+    dynamic = capabilities[("gpu_torch", "dynamic_cascaded_soft_labels_v1")]
     corridor = capabilities[("gpu_torch", "corridor_exemplar_v1")]
 
     assert dense["runtime_mode"] == "cpu_gpu"
@@ -343,6 +360,11 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "full probability workspace" in cascaded["notes"]
     assert "shared probability workspace reuse" in cascaded["notes"]
     assert "structured runtime diagnostics" in cascaded["notes"]
+    assert dynamic["runtime_mode"] == "cpu_gpu"
+    assert dynamic["status"] == "planned"
+    assert not dynamic["implemented_now"]
+    assert not dynamic["optimized"]
+    assert "Spec 3.3F7" in dynamic["notes"]
     assert corridor["runtime_mode"] == "cpu_gpu"
     assert corridor["status"] == "historical_reference_exists"
     assert not corridor["implemented_now"]
@@ -350,6 +372,6 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals
-    assert "Spec 3.3F5" in non_goals
+    assert "Spec 3.3F6" in non_goals
     assert "backend-local CPU fallback" in non_goals
     assert "measured peak GPU memory" in non_goals

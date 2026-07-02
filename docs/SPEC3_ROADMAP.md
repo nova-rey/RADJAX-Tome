@@ -91,6 +91,12 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | 3.3F4 | Chunked Vocab Reduction + Memory Metadata | complete once chunking metadata lands |
 | 3.3F4.1 | Cascaded Chunking Metadata Truth Fix | complete once cascaded chunking overclaim is fixed |
 | 3.3F5 | GPU Runtime Fallback / Error Hardening | complete once diagnostics and fallback hardening land |
+| 3.3F6 | Dynamic Cascaded Soft Labels CPU Reference + Contract Shape | complete once the CPU reference contract shape lands |
+| 3.3F7 | GPU Dynamic Cascaded Soft Labels Reducer | planned |
+| 3.3F8 | Corridor/Exemplar Production Schema Lock | planned |
+| 3.3F9 | GPU Corridor/Exemplar Acceleration | planned |
+| 3.3F10 | GPU Builder Integration Gate | planned |
+| 3.3F11 | GPU Runtime Final Polish / Doctor Metadata | planned |
 
 Spec 3.3F1 adds `gpu_torch` as a CUDA/MPS-detecting dense debug backend. It
 does not implement compact GPU reduction or public builder migration.
@@ -116,9 +122,18 @@ effective chunked workspace because it requires a full probability workspace.
 
 Spec 3.3F5 hardens `gpu_torch` runtime failures with structured diagnostics,
 clear missing dependency/accelerator/model-load reasons, wrapped device failure
-context, and no backend-local CPU fallback. The 3.3F arc is complete enough to
-move to 3.3G TPU/JAX backend skeleton work or 3.3H runtime metadata and
-CLI/doctor polish.
+context, and no backend-local CPU fallback.
+
+Spec 3.3F6 adds `dynamic_cascaded_soft_labels_v1` as a CPU reference contract:
+dynamic top-k explicit head plus bucketed tail, with padded mask-driven payload
+shape. It does not add GPU support; Spec 3.3F7 owns the optimized GPU dynamic
+cascaded reducer.
+
+The official post-F5 path finishes meaningful `gpu_torch` optimization before
+TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F8
+corridor/exemplar production schema lock, F9 GPU corridor/exemplar
+acceleration, F10 GPU builder integration gate, F11 runtime final polish and
+doctor metadata, then 3.3G TPU/JAX backend skeleton.
 
 3.3G adds TPU/JAX shape without CUDA assumptions.
 

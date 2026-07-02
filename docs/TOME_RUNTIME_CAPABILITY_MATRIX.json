@@ -37,6 +37,15 @@
     {
       "backend_family": "fake_numpy",
       "implemented_now": false,
+      "notes": "Fake dynamic cascaded soft-label backend emission is not implemented in Spec 3.3F6; the CPU reference backend owns the contract shape.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "planned",
+      "target_policy": "dynamic_cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "fake_numpy",
+      "implemented_now": false,
       "notes": "Fake corridor/exemplar generation exists elsewhere as synthetic proof work, but not as a runtime backend target policy.",
       "optimized": false,
       "runtime_mode": "cpu",
@@ -69,6 +78,15 @@
       "runtime_mode": "cpu",
       "status": "supported",
       "target_policy": "cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "cpu_reference",
+      "implemented_now": true,
+      "notes": "Spec 3.3F6 CPU reference backend emits dynamic top-k explicit head plus bucketed tail payloads with padded mask-driven shape.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "supported",
+      "target_policy": "dynamic_cascaded_soft_labels_v1"
     },
     {
       "backend_family": "cpu_reference",
@@ -109,6 +127,15 @@
     {
       "backend_family": "hf_torch",
       "implemented_now": false,
+      "notes": "HF Torch dynamic cascaded soft-label support is planned after the Spec 3.3F6 CPU reference contract shape.",
+      "optimized": false,
+      "runtime_mode": "cpu",
+      "status": "planned",
+      "target_policy": "dynamic_cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "hf_torch",
+      "implemented_now": false,
       "notes": "HF Torch corridor/exemplar target policy is planned after the backend contract exists.",
       "optimized": false,
       "runtime_mode": "cpu",
@@ -145,6 +172,15 @@
     {
       "backend_family": "gpu_torch",
       "implemented_now": false,
+      "notes": "Spec 3.3F6 defines the CPU reference contract shape for dynamic cascaded soft labels. Future Spec 3.3F7 will add the optimized gpu_torch reducer.",
+      "optimized": false,
+      "runtime_mode": "cpu_gpu",
+      "status": "planned",
+      "target_policy": "dynamic_cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "gpu_torch",
+      "implemented_now": false,
       "notes": "Historical QRWKV-XLA optimization work can guide future corridor/exemplar acceleration, but active support is not implemented.",
       "optimized": false,
       "runtime_mode": "cpu_gpu",
@@ -177,6 +213,15 @@
       "runtime_mode": "cpu_tpu",
       "status": "planned",
       "target_policy": "cascaded_soft_labels_v1"
+    },
+    {
+      "backend_family": "jax_tpu",
+      "implemented_now": false,
+      "notes": "TPU dynamic cascaded soft-label support is planned after CPU/GPU contract and reducer work; no active TPU implementation exists.",
+      "optimized": false,
+      "runtime_mode": "cpu_tpu",
+      "status": "planned",
+      "target_policy": "dynamic_cascaded_soft_labels_v1"
     },
     {
       "backend_family": "jax_tpu",
@@ -220,14 +265,15 @@
     "metadata_implementation_required_now": false
   },
   "non_goals": [
-    "Do not migrate the public builder to hf_torch or gpu_torch in Spec 3.3F5.",
-    "Do not claim staged mode is performance optimized in Spec 3.3F5.",
-    "Do not claim measured peak GPU memory or OOM recovery in Spec 3.3F5.",
+    "Do not migrate the public builder to hf_torch or gpu_torch in Spec 3.3F6.",
+    "Do not claim staged mode is performance optimized in Spec 3.3F6.",
+    "Do not claim measured peak GPU memory or OOM recovery in Spec 3.3F6.",
     "Do not silently fall back to CPU when gpu_torch is explicitly requested.",
     "Do not implement backend-local CPU fallback when gpu_torch fallback_policy is auto.",
-    "Do not implement GPU corridor/exemplar acceleration in Spec 3.3F5.",
-    "Do not implement TPU/JAX backend code in Spec 3.3F5.",
-    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3F5."
+    "Do not implement gpu_torch dynamic cascaded reduction until Spec 3.3F7.",
+    "Do not implement corridor/exemplar production schema or GPU corridor/exemplar acceleration in Spec 3.3F6.",
+    "Do not implement TPU/JAX backend code in Spec 3.3F6.",
+    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3F6."
   ],
   "orchestration": {
     "default_mode": "auto",
@@ -257,6 +303,7 @@
     "dense_logits",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
+    "dynamic_cascaded_soft_labels_v1",
     "corridor_exemplar_v1"
   ],
   "version": 1
