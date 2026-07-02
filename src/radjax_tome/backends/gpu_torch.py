@@ -14,6 +14,31 @@ from radjax_tome.backends.base import (
 )
 from radjax_tome.backends.hf_torch import _effective_tokenizer_id
 
+
+class TeacherBackendError(RuntimeError):
+    """Base error for runtime backend failures."""
+
+
+class TeacherBackendDependencyError(TeacherBackendError):
+    """Raised when an optional backend dependency is unavailable."""
+
+
+class TeacherBackendUnavailableError(TeacherBackendError):
+    """Raised when a backend cannot run in the requested runtime."""
+
+
+class TeacherBackendModelLoadError(TeacherBackendError):
+    """Raised when a configured local model/tokenizer cannot be loaded."""
+
+
+class TeacherBackendDeviceError(TeacherBackendError):
+    """Raised when device transfer, forward, or reduction work fails."""
+
+
+class TeacherBackendUnsupportedPolicyError(TeacherBackendError):
+    """Raised when a backend target policy is not implemented."""
+
+
 _SUPPORTED_EMISSION_POLICIES = {
     "dense_logits",
     "topk_with_tail_v0",
@@ -54,31 +79,7 @@ class GPUTorchTeacherEmissionBackend:
     runtime_mode = "cpu_gpu"
 
     def __init__(self, config: TeacherBackendConfig) -> None:
-        if config.backend_id != self.backend_id:
-            raise ValueError(
-                f"gpu_torch requires backend_id={self.backend_id!r}, "
-                f"got {config.backend_id!r}"
-            )
-        if config.runtime_mode != "cpu_gpu":
-            raise ValueError("gpu_torch supports only runtime_mode='cpu_gpu'")
-        if config.target_policy not in _SUPPORTED_EMISSION_POLICIES:
-            raise ValueError(
-                "gpu_torch supports dense_logits, topk_with_tail_v0, "
-                "and cascaded_soft_labels_v1; "
-                f"{config.target_policy!r} is not implemented yet"
-            )
-        if config.sequence_length <= 0:
-            raise ValueError("sequence_length must be > 0")
-        if config.batch_size <= 0:
-            raise ValueError("batch_size must be > 0")
-        if config.vocab_size <= 0:
-            raise ValueError("vocab_size must be > 0")
-        if config.top_k <= 0:
-            raise ValueError("top_k must be > 0")
-        if config.num_buckets <= 0:
-            raise ValueError("num_buckets must be > 0")
-        if config.gpu_vocab_chunk_size is not None and config.gpu_vocab_chunk_size <= 0:
-            raise ValueError("gpu_vocab_chunk_size must be None or > 0")
+        _validate_gpu_torch_config(config)
         self.config = config
         self._torch: Any | None = None
         self._tokenizer: Any | None = None
@@ -87,12 +88,11 @@ class GPUTorchTeacherEmissionBackend:
 
     @classmethod
     def available(cls, config: TeacherBackendConfig) -> bool:
-        try:
-            backend = cls(config)
-            backend._load_model_and_tokenizer()
-        except Exception:
-            return False
-        return True
+        return bool(cls.diagnostics(config)["can_emit"])
+
+    @classmethod
+    def diagnostics(cls, config: TeacherBackendConfig) -> dict[str, object]:
+        return diagnose_gpu_torch_backend(config)
 
     @classmethod
     def detect_device(cls) -> TorchAcceleratorDetection:
@@ -172,43 +172,75 @@ class GPUTorchTeacherEmissionBackend:
             max_length=self.config.sequence_length,
             return_tensors="pt",
         )
-        input_ids_tensor = encoded["input_ids"].to(device.device)
-        attention_mask_tensor = encoded["attention_mask"].to(device.device)
-        with torch.no_grad():
-            output = model(
-                input_ids=input_ids_tensor,
-                attention_mask=attention_mask_tensor,
+        try:
+            input_ids_tensor = encoded["input_ids"].to(device.device)
+            attention_mask_tensor = encoded["attention_mask"].to(device.device)
+        except Exception as exc:
+            raise _wrap_device_error(
+                "input tensor transfer to device", exc, device
+            ) from exc
+        try:
+            with torch.no_grad():
+                output = model(
+                    input_ids=input_ids_tensor,
+                    attention_mask=attention_mask_tensor,
+                )
+        except Exception as exc:
+            raise _wrap_device_error("model forward", exc, device) from exc
+        try:
+            input_ids = input_ids_tensor.detach().to("cpu").numpy().astype(np.int32)
+            attention_mask = (
+                attention_mask_tensor.detach().to("cpu").numpy().astype(np.int32)
             )
-        input_ids = input_ids_tensor.detach().to("cpu").numpy().astype(np.int32)
-        attention_mask = (
-            attention_mask_tensor.detach().to("cpu").numpy().astype(np.int32)
-        )
+        except Exception as exc:
+            raise _wrap_device_error(
+                "input tensor transfer to CPU", exc, device
+            ) from exc
         logits = output.logits
         effective_vocab_size = int(logits.shape[-1])
         estimated_dense_logits_dtype = _logits_dtype_name(logits)
         chunking_plan = _vocab_chunking_plan(self.config, self.config.target_policy)
         if self.config.target_policy == "dense_logits":
-            dense_logits = logits.detach().to("cpu").numpy().astype(np.float32)
+            try:
+                dense_logits = logits.detach().to("cpu").numpy().astype(np.float32)
+            except Exception as exc:
+                raise _wrap_device_error(
+                    "dense logits transfer to CPU", exc, device
+                ) from exc
             payload = {"logits": dense_logits}
         elif self.config.target_policy == "cascaded_soft_labels_v1":
-            payload = _compact_payload_to_numpy(
-                _gpu_cascaded_reduce(
+            try:
+                compact_payload = _gpu_cascaded_reduce(
                     torch,
                     logits,
                     top_k=self.config.top_k,
                     num_buckets=self.config.num_buckets,
                     vocab_chunk_size=chunking_plan.effective_size,
                 )
-            )
+            except Exception as exc:
+                raise _wrap_device_error("compact reduction", exc, device) from exc
+            try:
+                payload = _compact_payload_to_numpy(compact_payload)
+            except Exception as exc:
+                raise _wrap_device_error(
+                    "compact tensor transfer to CPU", exc, device
+                ) from exc
         else:
-            payload = _compact_payload_to_numpy(
-                _gpu_topk_tail_reduce(
+            try:
+                compact_payload = _gpu_topk_tail_reduce(
                     torch,
                     logits,
                     top_k=self.config.top_k,
                     vocab_chunk_size=chunking_plan.effective_size,
                 )
-            )
+            except Exception as exc:
+                raise _wrap_device_error("compact reduction", exc, device) from exc
+            try:
+                payload = _compact_payload_to_numpy(compact_payload)
+            except Exception as exc:
+                raise _wrap_device_error(
+                    "compact tensor transfer to CPU", exc, device
+                ) from exc
         return TeacherEmissionResult(
             backend_id=self.backend_id,
             runtime_mode="cpu_gpu",
@@ -268,6 +300,12 @@ class GPUTorchTeacherEmissionBackend:
             "compact_reduction_used": not dense_debug_path,
             "gpu_compact_reduction_implemented": not dense_debug_path,
             "fallback_used": False,
+            "fallback_policy": self.config.fallback_policy,
+            "fallback_allowed": self.config.fallback_policy == "auto",
+            "fallback_handled_by": "none",
+            "diagnostic_status": "ok",
+            "failure_stage": "none",
+            "failure_reason": None,
             "model_id": self.config.model_id,
             "tokenizer_id": tokenizer_id,
             "configured_batch_size": self.config.batch_size,
@@ -366,28 +404,19 @@ class GPUTorchTeacherEmissionBackend:
         device = detect_torch_accelerator()
         if not device.available:
             if device.reason == "missing torch":
-                raise RuntimeError(
-                    "gpu_torch backend requires optional dependency torch. "
-                    "Install the teacher-hf extra to use torch/transformers "
-                    "emission."
-                )
-            raise RuntimeError(
-                "gpu_torch requires runtime_mode='cpu_gpu' with an available "
-                "cuda or mps Torch accelerator; no CPU fallback is used."
+                raise TeacherBackendDependencyError(_missing_torch_message())
+            raise TeacherBackendUnavailableError(
+                _no_accelerator_message(self.config.fallback_policy)
             )
         try:
             torch = import_module("torch")
         except ImportError as exc:
-            raise RuntimeError(
-                "gpu_torch backend requires optional dependency torch. "
-                "Install the teacher-hf extra to use torch/transformers emission."
-            ) from exc
+            raise TeacherBackendDependencyError(_missing_torch_message()) from exc
         try:
             transformers = import_module("transformers")
         except ImportError as exc:
-            raise RuntimeError(
-                "gpu_torch backend requires optional dependency transformers. "
-                "Install the teacher-hf extra to use torch/transformers emission."
+            raise TeacherBackendDependencyError(
+                _missing_transformers_message()
             ) from exc
         tokenizer_id = _effective_tokenizer_id(self.config)
         local_files_only = (
@@ -403,11 +432,12 @@ class GPUTorchTeacherEmissionBackend:
                 local_files_only=local_files_only,
             )
         except Exception as exc:
-            raise RuntimeError(
-                "gpu_torch backend could not load local torch/transformers "
-                f"model or tokenizer for model_id={self.config.model_id!r}. "
-                "Install the teacher-hf extra and provide local model files, or "
-                "set allow_downloads only in an explicitly network-enabled run."
+            raise TeacherBackendModelLoadError(
+                _model_load_message(
+                    self.config,
+                    tokenizer_id=tokenizer_id,
+                    local_files_only=local_files_only,
+                )
             ) from exc
         if getattr(tokenizer, "pad_token_id", None) is None:
             eos_token = getattr(tokenizer, "eos_token", None)
@@ -416,7 +446,10 @@ class GPUTorchTeacherEmissionBackend:
                 tokenizer.pad_token = eos_token
         model.eval()
         if hasattr(model, "to"):
-            model = model.to(device.device)
+            try:
+                model = model.to(device.device)
+            except Exception as exc:
+                raise _wrap_device_error("model.to(device)", exc, device) from exc
         self._torch = torch
         self._tokenizer = tokenizer
         self._model = model
@@ -426,6 +459,304 @@ class GPUTorchTeacherEmissionBackend:
 
 def check_gpu_torch_backend_available(config: TeacherBackendConfig) -> bool:
     return GPUTorchTeacherEmissionBackend.available(config)
+
+
+def diagnose_gpu_torch_backend(config: TeacherBackendConfig) -> dict[str, object]:
+    tokenizer_id = _effective_tokenizer_id(config)
+    local_files_only = config.local_files_only or not config.allow_downloads
+    diagnostics = _base_diagnostics(
+        config,
+        tokenizer_id=tokenizer_id,
+        local_files_only=local_files_only,
+    )
+    try:
+        _validate_gpu_torch_config(config)
+    except TeacherBackendUnsupportedPolicyError as exc:
+        diagnostics.update(
+            {
+                "can_emit": False,
+                "failure_stage": "unsupported_target",
+                "failure_reason": str(exc),
+            }
+        )
+        return diagnostics
+    except ValueError as exc:
+        diagnostics.update(
+            {
+                "can_emit": False,
+                "failure_stage": "invalid_config",
+                "failure_reason": str(exc),
+            }
+        )
+        return diagnostics
+
+    device = detect_torch_accelerator()
+    diagnostics.update(_device_diagnostics(device))
+    if not device.available:
+        if device.reason == "missing torch":
+            diagnostics.update(
+                {
+                    "dependency_status": "missing_torch",
+                    "torch_available": False,
+                    "can_emit": False,
+                    "failure_stage": "missing_dependency",
+                    "failure_reason": _failure_reason(
+                        _missing_torch_message(),
+                        config.fallback_policy,
+                    ),
+                }
+            )
+            return diagnostics
+        diagnostics.update(
+            {
+                "can_emit": False,
+                "failure_stage": "no_accelerator",
+                "failure_reason": _failure_reason(
+                    _no_accelerator_message(config.fallback_policy),
+                    config.fallback_policy,
+                ),
+            }
+        )
+        return diagnostics
+
+    try:
+        import_module("torch")
+    except ImportError:
+        diagnostics.update(
+            {
+                "dependency_status": "missing_torch",
+                "torch_available": False,
+                "can_emit": False,
+                "failure_stage": "missing_dependency",
+                "failure_reason": _failure_reason(
+                    _missing_torch_message(),
+                    config.fallback_policy,
+                ),
+            }
+        )
+        return diagnostics
+    diagnostics["torch_available"] = True
+
+    try:
+        transformers = import_module("transformers")
+    except ImportError:
+        diagnostics.update(
+            {
+                "dependency_status": "missing_transformers",
+                "transformers_available": False,
+                "can_emit": False,
+                "failure_stage": "missing_dependency",
+                "failure_reason": _failure_reason(
+                    _missing_transformers_message(),
+                    config.fallback_policy,
+                ),
+            }
+        )
+        return diagnostics
+    diagnostics.update(
+        {
+            "dependency_status": "ok",
+            "transformers_available": True,
+        }
+    )
+
+    try:
+        transformers.AutoTokenizer.from_pretrained(
+            tokenizer_id,
+            local_files_only=local_files_only,
+        )
+        diagnostics["tokenizer_available"] = True
+        transformers.AutoModelForCausalLM.from_pretrained(
+            config.model_id,
+            local_files_only=local_files_only,
+        )
+        diagnostics["model_available"] = True
+    except Exception:
+        diagnostics.update(
+            {
+                "can_emit": False,
+                "failure_stage": "model_load",
+                "failure_reason": _failure_reason(
+                    _model_load_message(
+                        config,
+                        tokenizer_id=tokenizer_id,
+                        local_files_only=local_files_only,
+                    ),
+                    config.fallback_policy,
+                ),
+            }
+        )
+        return diagnostics
+
+    diagnostics.update(
+        {
+            "can_emit": True,
+            "failure_stage": "none",
+            "failure_reason": None,
+        }
+    )
+    return diagnostics
+
+
+def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
+    if config.backend_id != GPUTorchTeacherEmissionBackend.backend_id:
+        raise ValueError(
+            f"gpu_torch requires backend_id="
+            f"{GPUTorchTeacherEmissionBackend.backend_id!r}, "
+            f"got {config.backend_id!r}"
+        )
+    if config.runtime_mode != "cpu_gpu":
+        raise ValueError("gpu_torch supports only runtime_mode='cpu_gpu'")
+    if config.target_policy not in _SUPPORTED_EMISSION_POLICIES:
+        raise TeacherBackendUnsupportedPolicyError(
+            "gpu_torch target_policy "
+            f"{config.target_policy!r} is not implemented; supported policies "
+            "are dense_logits, topk_with_tail_v0, and cascaded_soft_labels_v1"
+        )
+    if config.sequence_length <= 0:
+        raise ValueError("sequence_length must be > 0")
+    if config.batch_size <= 0:
+        raise ValueError("batch_size must be > 0")
+    if config.vocab_size <= 0:
+        raise ValueError("vocab_size must be > 0")
+    if config.top_k <= 0:
+        raise ValueError("top_k must be > 0")
+    if config.num_buckets <= 0:
+        raise ValueError("num_buckets must be > 0")
+    if config.gpu_vocab_chunk_size is not None and config.gpu_vocab_chunk_size <= 0:
+        raise ValueError("gpu_vocab_chunk_size must be None or > 0")
+
+
+def _base_diagnostics(
+    config: TeacherBackendConfig,
+    *,
+    tokenizer_id: str,
+    local_files_only: bool,
+) -> dict[str, object]:
+    chunk_fields = _diagnostic_chunking_fields(config)
+    return {
+        "backend_id": "gpu_torch",
+        "runtime_mode": config.runtime_mode,
+        "target_policy": config.target_policy,
+        "dependency_status": "unknown",
+        "torch_available": False,
+        "transformers_available": False,
+        "accelerator_available": False,
+        "device_kind": "unavailable",
+        "torch_device": None,
+        "cuda_available": False,
+        "mps_available": False,
+        "model_available": False,
+        "tokenizer_available": False,
+        "model_id": config.model_id,
+        "tokenizer_id": tokenizer_id,
+        "local_files_only": local_files_only,
+        "allow_downloads": config.allow_downloads,
+        "can_emit": False,
+        "failure_reason": None,
+        "failure_stage": "none",
+        "fallback_policy": config.fallback_policy,
+        "fallback_used": False,
+        "fallback_allowed": config.fallback_policy == "auto",
+        "fallback_handled_by": "none",
+        **chunk_fields,
+    }
+
+
+def _device_diagnostics(device: TorchAcceleratorDetection) -> dict[str, object]:
+    return {
+        "torch_available": device.reason != "missing torch",
+        "accelerator_available": device.available,
+        "device_kind": device.device_kind,
+        "torch_device": device.device,
+        "cuda_available": device.cuda_available,
+        "mps_available": device.mps_available,
+        "torch_version": device.torch_version,
+    }
+
+
+def _diagnostic_chunking_fields(
+    config: TeacherBackendConfig,
+) -> dict[str, object]:
+    if config.target_policy in _SUPPORTED_EMISSION_POLICIES and (
+        config.gpu_vocab_chunk_size is None or config.gpu_vocab_chunk_size > 0
+    ):
+        chunking_plan = _vocab_chunking_plan(config, config.target_policy)
+        effective_size = chunking_plan.effective_size
+        used = chunking_plan.used
+    else:
+        effective_size = None
+        used = False
+    return {
+        "gpu_enable_vocab_chunking": config.gpu_enable_vocab_chunking,
+        "gpu_vocab_chunk_size_requested": config.gpu_vocab_chunk_size,
+        "gpu_vocab_chunk_size_effective": effective_size,
+        "vocab_chunking_used": used,
+    }
+
+
+def _missing_torch_message() -> str:
+    return (
+        "gpu_torch backend requires optional dependency torch. Install the "
+        "teacher-hf extra to use torch/transformers emission."
+    )
+
+
+def _missing_transformers_message() -> str:
+    return (
+        "gpu_torch backend requires optional dependency transformers. Install "
+        "the teacher-hf extra to use torch/transformers emission."
+    )
+
+
+def _no_accelerator_message(fallback_policy: str) -> str:
+    message = (
+        "gpu_torch requires runtime_mode='cpu_gpu' with an available cuda or "
+        "mps Torch accelerator; no CPU fallback is used."
+    )
+    if fallback_policy == "auto":
+        message += " fallback_policy='auto' must be handled by an orchestrator."
+    return message
+
+
+def _model_load_message(
+    config: TeacherBackendConfig,
+    *,
+    tokenizer_id: str,
+    local_files_only: bool,
+) -> str:
+    return (
+        "gpu_torch backend could not load torch/transformers model or tokenizer "
+        f"for model_id={config.model_id!r}, tokenizer_id={tokenizer_id!r}, "
+        f"local_files_only={local_files_only!r}, "
+        f"allow_downloads={config.allow_downloads!r}. Install the teacher-hf "
+        "extra and provide local model files, or set allow_downloads only in "
+        "an explicitly network-enabled run."
+    )
+
+
+def _failure_reason(message: str, fallback_policy: str) -> str:
+    if fallback_policy != "auto":
+        return message
+    return f"{message} Orchestrator fallback is required; gpu_torch did not fall back."
+
+
+def _wrap_device_error(
+    stage: str,
+    exc: Exception,
+    device: TorchAcceleratorDetection,
+) -> TeacherBackendDeviceError:
+    message = (
+        f"gpu_torch {stage} failed on device_kind={device.device_kind!r}, "
+        f"torch_device={device.device!r}: out of memory or device failure; "
+        "no CPU fallback is used."
+    )
+    original = str(exc).lower()
+    if device.device_kind == "mps" and (
+        "unsupported" in original or "not implemented" in original
+    ):
+        message += " mps unsupported operation."
+    return TeacherBackendDeviceError(message)
 
 
 def detect_torch_accelerator() -> TorchAcceleratorDetection:

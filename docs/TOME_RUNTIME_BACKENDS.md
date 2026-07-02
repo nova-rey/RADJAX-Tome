@@ -174,9 +174,21 @@ because exact bucket construction reconstructs a full probability workspace on
 device. It does not transfer full dense logits to host, but it also does not
 claim chunk-sized reducer workspace.
 
+Spec 3.3F5 adds runtime diagnostics and error hardening. `gpu_torch`
+diagnostics report missing `torch`, missing `transformers`, no CUDA/MPS
+accelerator, missing local model/tokenizer files, unsupported target policies,
+and invalid config without requiring network downloads. Successful emissions
+record `fallback_used=false`, `fallback_policy`, `failure_stage=none`, and
+`failure_reason=null`.
+
+`gpu_torch` never silently falls back to CPU. `fallback_policy=auto` is an
+orchestrator signal only: a higher-level runner may choose another backend
+later, but `gpu_torch` itself does not call `hf_torch` or `cpu_reference` and
+does not emit CPU results for an explicit `cpu_gpu` request.
+
 `corridor_exemplar_v1` remains historical-reference/future GPU work. Runtime
-fallback/error hardening remains future Spec 3.3F5 work. The public builder has
-not migrated to `gpu_torch`.
+fallback/error hardening is in place for implemented `gpu_torch` policies. The
+public builder has not migrated to `gpu_torch`.
 
 ## Runtime Modes
 
@@ -188,9 +200,9 @@ GPU-backed reduction. Spec 3.3F1 implements a dense debug/smoke HF Torch path
 on CUDA or MPS. Spec 3.3F2 adds compact top-k/tail reduction on the accelerator.
 Spec 3.3F3 adds compact cascaded soft-label reduction on the accelerator.
 Spec 3.3F4 adds optional vocab chunking and memory/workspace metadata for
-compact reducers. Runtime fallback/error hardening remains future 3.3F work.
-Spec 3.3F4.1 corrects cascaded chunking metadata so exact bucket construction
-does not overclaim effective chunked workspace.
+compact reducers. Spec 3.3F4.1 corrects cascaded chunking metadata so exact
+bucket construction does not overclaim effective chunked workspace. Spec 3.3F5
+adds structured diagnostics and no-silent-CPU-fallback error hardening.
 
 `cpu_tpu` means CPU-side orchestration plus TPU/JAX/XLA-backed teacher
 execution and/or TPU-backed reduction. This is a future backend family; no
@@ -250,6 +262,9 @@ behavior.
 Explicit runtime requests for unsupported or unimplemented combinations should
 fail. Auto runtime may choose a supported fallback. Fallback must be recorded in
 metadata when implemented. There must be no silent accelerator-to-CPU fallback.
+For `gpu_torch`, `fallback_policy=auto` does not authorize backend-local CPU
+emission; orchestrator fallback must happen outside `gpu_torch` and be recorded
+there.
 
 ## Metadata Policy
 

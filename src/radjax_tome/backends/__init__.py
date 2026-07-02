@@ -25,6 +25,7 @@ from radjax_tome.backends.gpu_torch import (
     TorchAcceleratorDetection,
     check_gpu_torch_backend_available,
     detect_torch_accelerator,
+    diagnose_gpu_torch_backend,
 )
 from radjax_tome.backends.hf_export import (
     HFTeacherExportConfig,
@@ -105,6 +106,7 @@ __all__ = [
     "build_hf_teacher_specimen_swap_report",
     "check_gpu_torch_backend_available",
     "create_backend",
+    "diagnose_gpu_torch_backend",
     "detect_torch_accelerator",
     "emit_teacher_target_store",
     "list_backend_capabilities",

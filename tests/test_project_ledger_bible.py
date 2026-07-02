@@ -48,3 +48,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3F4.1" in text
     assert "exact_bucket_policy_requires_full_probability_workspace" in text
     assert "metadata truth" in text
+    assert "3.3F5" in text
+    assert "runtime diagnostics" in text
+    assert "no silent CPU fallback" in text

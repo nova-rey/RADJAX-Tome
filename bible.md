@@ -165,3 +165,17 @@ current exact `bucket_masses` path needs a full probability workspace on device.
 
 Top-k chunking remains effective. This metadata truth fix does not migrate the
 public builder, add TPU/JAX support, or change target artifacts.
+
+## 2026-07-02 — Spec 3.3F5 GPU Runtime Fallback / Error Hardening
+
+Spec 3.3F5 hardens `gpu_torch` runtime diagnostics and fallback behavior.
+Diagnostics now report missing `torch`, missing `transformers`, no CUDA/MPS
+accelerator, missing local model/tokenizer files, unsupported targets, and
+invalid chunk config without requiring network downloads.
+
+Explicit `gpu_torch` / `cpu_gpu` execution still has no silent CPU fallback.
+`fallback_policy=auto` is recorded as an orchestrator-level signal, not a
+backend-local path to `hf_torch` or `cpu_reference`. Device transfer, model
+forward, reduction, and compact host-transfer failures are wrapped with
+accelerator context. This does not migrate the public builder, add TPU/JAX, or
+implement GPU corridor/exemplar acceleration.

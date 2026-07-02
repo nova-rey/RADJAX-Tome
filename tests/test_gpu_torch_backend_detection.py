@@ -20,6 +20,7 @@ from radjax_tome.backends import (
     detect_torch_accelerator,
     list_backend_capabilities,
 )
+from radjax_tome.backends.gpu_torch import TeacherBackendUnsupportedPolicyError
 
 
 def _config(**overrides: object) -> TeacherBackendConfig:
@@ -118,10 +119,16 @@ def test_gpu_torch_rejects_non_gpu_runtime_modes(runtime_mode: str) -> None:
         GPUTorchTeacherEmissionBackend(_config(runtime_mode=runtime_mode))
 
 
-def test_gpu_torch_rejects_invalid_vocab_chunk_size() -> None:
+@pytest.mark.parametrize("gpu_vocab_chunk_size", (0, -1))
+def test_gpu_torch_rejects_invalid_vocab_chunk_size(
+    gpu_vocab_chunk_size: int,
+) -> None:
     with pytest.raises(ValueError, match="gpu_vocab_chunk_size"):
         GPUTorchTeacherEmissionBackend(
-            _config(gpu_enable_vocab_chunking=True, gpu_vocab_chunk_size=0)
+            _config(
+                gpu_enable_vocab_chunking=True,
+                gpu_vocab_chunk_size=gpu_vocab_chunk_size,
+            )
         )
 
 
@@ -136,7 +143,7 @@ def test_gpu_torch_accepts_f3_supported_policies(target_policy: str) -> None:
 
 
 def test_gpu_torch_rejects_unimplemented_compact_policies() -> None:
-    with pytest.raises(ValueError, match="not implemented"):
+    with pytest.raises(TeacherBackendUnsupportedPolicyError, match="not implemented"):
         GPUTorchTeacherEmissionBackend(_config(target_policy="corridor_exemplar_v1"))
 
 
@@ -212,6 +219,7 @@ def test_gpu_torch_no_accelerator_error_is_clear(monkeypatch) -> None:
     assert "cuda" in message
     assert "mps" in message
     assert "cpu_gpu" in message
+    assert "no CPU fallback" in message
 
 
 def test_gpu_torch_missing_transformers_error_is_clear(monkeypatch) -> None:
@@ -269,6 +277,12 @@ def test_gpu_torch_metadata_is_honest_without_emission() -> None:
     assert metadata["gpu_vocab_chunk_size_requested"] is None
     assert metadata["gpu_vocab_chunk_size_effective"] is None
     assert metadata["gpu_vocab_chunks_per_batch"] == 1
+    assert metadata["fallback_policy"] == "error"
+    assert metadata["fallback_allowed"] is False
+    assert metadata["fallback_handled_by"] == "none"
+    assert metadata["diagnostic_status"] == "ok"
+    assert metadata["failure_stage"] == "none"
+    assert metadata["failure_reason"] is None
 
 
 def test_gpu_torch_topk_metadata_records_compact_reduction() -> None:

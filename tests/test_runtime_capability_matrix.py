@@ -54,6 +54,10 @@ def test_runtime_backend_doc_defines_architecture_vocabulary() -> None:
     )
     assert "not the main optimization target" in text
     assert "There must be no silent accelerator-to-CPU fallback" in text
+    assert "Spec 3.3F5 adds runtime diagnostics and error hardening" in text
+    assert "fallback_policy=auto" in text
+    assert "orchestrator signal only" in text
+    assert "does not emit CPU results for an explicit `cpu_gpu` request" in text
 
 
 def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
@@ -316,6 +320,8 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert not dense["optimized"]
     assert "Spec 3.3F1 gpu_torch emits dense debug HF logits" in dense["notes"]
     assert "transfers dense logits back to host" in dense["notes"]
+    assert "Spec 3.3F5" in dense["notes"]
+    assert "no backend-local CPU fallback" in dense["notes"]
     assert topk["runtime_mode"] == "cpu_gpu"
     assert topk["implemented_now"]
     assert topk["status"] == "optimized"
@@ -324,6 +330,7 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "compact payload arrays" in topk["notes"]
     assert "optional vocab chunking" in topk["notes"]
     assert "memory/workspace metadata" in topk["notes"]
+    assert "fallback semantics" in topk["notes"]
     assert cascaded["runtime_mode"] == "cpu_gpu"
     assert cascaded["implemented_now"]
     assert cascaded["status"] == "optimized"
@@ -335,6 +342,7 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "requested cascaded chunking honestly" in cascaded["notes"]
     assert "full probability workspace" in cascaded["notes"]
     assert "shared probability workspace reuse" in cascaded["notes"]
+    assert "structured runtime diagnostics" in cascaded["notes"]
     assert corridor["runtime_mode"] == "cpu_gpu"
     assert corridor["status"] == "historical_reference_exists"
     assert not corridor["implemented_now"]
@@ -342,5 +350,6 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals
-    assert "Spec 3.3F4.1" in non_goals
+    assert "Spec 3.3F5" in non_goals
+    assert "backend-local CPU fallback" in non_goals
     assert "measured peak GPU memory" in non_goals
