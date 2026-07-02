@@ -103,9 +103,9 @@ def test_gpu_torch_registered_with_compact_capabilities() -> None:
     assert statuses["dynamic_cascaded_soft_labels_v1"] == "optimized"
     assert implemented["dynamic_cascaded_soft_labels_v1"]
     assert optimized["dynamic_cascaded_soft_labels_v1"]
-    assert statuses["corridor_exemplar_v1"] == "historical_reference_exists"
-    assert not implemented["corridor_exemplar_v1"]
-    assert not optimized["corridor_exemplar_v1"]
+    assert statuses["corridor_exemplar_v1"] == "optimized"
+    assert implemented["corridor_exemplar_v1"]
+    assert optimized["corridor_exemplar_v1"]
 
 
 def test_gpu_torch_constructs_without_loading_optional_deps() -> None:
@@ -142,6 +142,7 @@ def test_gpu_torch_rejects_invalid_vocab_chunk_size(
         "topk_with_tail_v0",
         "cascaded_soft_labels_v1",
         "dynamic_cascaded_soft_labels_v1",
+        "corridor_exemplar_v1",
     ),
 )
 def test_gpu_torch_accepts_f3_supported_policies(target_policy: str) -> None:
@@ -150,9 +151,9 @@ def test_gpu_torch_accepts_f3_supported_policies(target_policy: str) -> None:
     assert backend.config.target_policy == target_policy
 
 
-def test_gpu_torch_rejects_unimplemented_compact_policies() -> None:
+def test_gpu_torch_rejects_unknown_target_policy() -> None:
     with pytest.raises(TeacherBackendUnsupportedPolicyError, match="not implemented"):
-        GPUTorchTeacherEmissionBackend(_config(target_policy="corridor_exemplar_v1"))
+        GPUTorchTeacherEmissionBackend(_config(target_policy="unknown_policy"))
 
 
 @pytest.mark.parametrize(
@@ -163,6 +164,9 @@ def test_gpu_torch_rejects_unimplemented_compact_policies() -> None:
         ("dynamic_mass_threshold", 0.0, "dynamic_mass_threshold"),
         ("dynamic_mass_threshold", 1.1, "dynamic_mass_threshold"),
         ("dynamic_top_k_policy", "unknown", "dynamic_top_k_policy"),
+        ("exemplar_source_policy", "unknown", "exemplar_source_policy"),
+        ("exemplar_selection_policy", "unknown", "exemplar_selection_policy"),
+        ("corridor_payload_flavor", "proxy_v0", "corridor_payload_flavor"),
     ),
 )
 def test_gpu_torch_rejects_invalid_dynamic_config(
@@ -630,6 +634,128 @@ def test_gpu_torch_dynamic_cascaded_chunking_request_is_not_overclaimed() -> Non
     assert metadata["gpu_vocab_chunks_per_batch"] == 1
     assert metadata["gpu_reduction_mode"] == "compact_dynamic_cascaded_soft_labels"
     assert metadata["estimated_reducer_workspace_bytes"] == 2 * 4 * 11 * 4 * 3
+
+
+@pytest.mark.parametrize(
+    ("source_policy", "kind", "bucketed", "dynamic", "reason"),
+    (
+        (
+            "dense_logits",
+            "full_resolution",
+            False,
+            False,
+            "corridor_dense_source_requires_full_probability_workspace",
+        ),
+        (
+            "cascaded_soft_labels_v1",
+            "fixed_cascaded",
+            True,
+            False,
+            "exact_bucket_policy_requires_full_probability_workspace",
+        ),
+        (
+            "dynamic_cascaded_soft_labels_v1",
+            "dynamic_cascaded",
+            True,
+            True,
+            "dynamic_exact_bucket_policy_requires_full_probability_workspace",
+        ),
+    ),
+)
+def test_gpu_torch_corridor_metadata_records_compact_production_schema(
+    source_policy: str,
+    kind: str,
+    bucketed: bool,
+    dynamic: bool,
+    reason: str,
+) -> None:
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(
+            target_policy="corridor_exemplar_v1",
+            exemplar_source_policy=source_policy,
+            exemplar_top_n=2,
+            gpu_enable_vocab_chunking=True,
+            gpu_vocab_chunk_size=5,
+        )
+    )
+    compact_payload = {
+        "corridor_top_token_ids": np.zeros((2, 4), dtype=np.int32),
+        "corridor_top_probs": np.zeros((2, 4), dtype=np.float32),
+        "corridor_teacher_entropy": np.zeros((2, 4), dtype=np.float32),
+        "corridor_confidence": np.zeros((2, 4), dtype=np.float32),
+        "corridor_lengths": np.full((2,), 4, dtype=np.int32),
+        "exemplar_positions": np.zeros((2, 2), dtype=np.int32),
+        "exemplar_scores": np.zeros((2, 2), dtype=np.float32),
+        "exemplar_selection_mask": np.zeros((2, 4), dtype=np.int32),
+        "exemplar_source_policy_ids": np.ones((2, 4), dtype=np.int32),
+        "exemplar_source_effective_top_k": np.full((2, 4), 2, dtype=np.int32),
+        "exemplar_source_top_mass": np.zeros((2, 4), dtype=np.float32),
+        "exemplar_source_tail_mass": np.ones((2, 4), dtype=np.float32),
+        "schema_metadata": {"not": "counted"},
+    }
+
+    metadata = backend.metadata(
+        actual_batch_size=2,
+        effective_vocab_size=11,
+        compact_payload=compact_payload,
+        estimated_dense_logits_dtype="float32",
+    )
+
+    assert metadata["requested_target_policy"] == "corridor_exemplar_v1"
+    assert metadata["effective_target_policy"] == "corridor_exemplar_v1"
+    assert metadata["capability_status"] == "optimized"
+    assert metadata["optimized_path_used"] is True
+    assert metadata["dense_debug_path"] is False
+    assert metadata["dense_logits_transferred_to_host"] is False
+    assert metadata["compact_reduction_used"] is True
+    assert metadata["gpu_compact_reduction_implemented"] is True
+    assert metadata["gpu_reduction_mode"] == "compact_corridor_exemplar"
+    assert metadata["schema_version"] == "corridor_exemplar_v1"
+    assert metadata["corridor_payload_flavor"] == "production_v1"
+    assert metadata["production_corridor_schema"] is True
+    assert metadata["historical_parity_claimed"] is False
+    assert metadata["historical_reference_source"] == "gpu_torch_production"
+    assert metadata["exemplar_source_policy"] == source_policy
+    assert metadata["exemplar_selection_policy"] == "entropy_top_n_v1"
+    assert metadata["corridor_policy"] == "production_corridor_records_v1"
+    assert metadata["mode_record_policy"] == "top_mode_summary_v1"
+    assert metadata["fingerprint_topology_policy"] == "sequence_position_v1"
+    assert metadata["corridor_confidence_policy"] == "top_probability_v1"
+    assert metadata["source_policy_kind"] == kind
+    assert metadata["source_policy_uses_bucketed_tail"] is bucketed
+    assert metadata["source_policy_dynamic_top_k"] is dynamic
+    assert metadata["compact_payload_arrays"] == [
+        "corridor_top_token_ids",
+        "corridor_top_probs",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+        "corridor_lengths",
+        "exemplar_positions",
+        "exemplar_scores",
+        "exemplar_selection_mask",
+        "exemplar_source_policy_ids",
+        "exemplar_source_effective_top_k",
+        "exemplar_source_top_mass",
+        "exemplar_source_tail_mass",
+    ]
+    assert metadata["compact_payload_fields"] == metadata["compact_payload_arrays"]
+    assert metadata["compact_bytes_transferred_to_host"] == sum(
+        int(compact_payload[field].nbytes)
+        for field in metadata["compact_payload_fields"]
+    )
+    assert metadata["estimated_dense_logits_bytes"] == 2 * 4 * 11 * 4
+    assert metadata["estimated_reducer_workspace_bytes"] == 2 * 4 * 11 * 4 * 3
+    assert metadata["estimated_reducer_workspace_is_measured"] is False
+    assert metadata["vocab_chunking_requested"] is True
+    assert metadata["vocab_chunking_used"] is False
+    assert metadata["vocab_chunking_reason"] == reason
+    assert metadata["gpu_vocab_chunk_size_requested"] == 5
+    assert metadata["gpu_vocab_chunk_size_effective"] is None
+    assert metadata["gpu_vocab_chunks_per_batch"] == 1
+    assert metadata["fallback_used"] is False
+    assert metadata["fallback_policy"] == "error"
+    assert metadata["failure_stage"] == "none"
+    assert metadata["failure_reason"] is None
 
 
 def test_gpu_topk_tail_reducer_shapes_and_mass_accounting() -> None:

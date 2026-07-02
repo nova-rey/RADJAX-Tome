@@ -110,8 +110,15 @@ source-policy-aware summary. Allowed exemplar source policies are
 `dense_logits`, `cascaded_soft_labels_v1`, and
 `dynamic_cascaded_soft_labels_v1`; dynamic cascaded is the preferred future
 compact source. The CPU reference path remains deterministic/proxy math with
-`historical_reference_source=cpu_reference_proxy`. GPU corridor/exemplar
-acceleration remains F9.
+`historical_reference_source=cpu_reference_proxy`. F9 owns active GPU corridor/exemplar
+acceleration.
+
+Spec 3.3F9 implements `gpu_torch` corridor/exemplar emission against that F8
+production schema. It supports `dense_logits`, `cascaded_soft_labels_v1`, and
+`dynamic_cascaded_soft_labels_v1` as exemplar source policies, keeps dense
+logits on device even for dense source mode, and transfers only compact
+production arrays plus CPU-built record summaries. The public builder has not
+migrated to `gpu_torch`.
 
 ## CPU Orchestration Runner
 
@@ -282,8 +289,9 @@ tail-probability bucket policy as fixed cascaded soft labels.
 `corridor_exemplar_v1` is the behavioral corridor plus exemplar-oriented target
 family. As of Spec 3.3F8, it has a locked production payload flavor and is
 source-policy-aware. Dense, fixed-cascaded, and dynamic-cascaded source
-policies feed its behavioral fields; GPU acceleration for corridor/exemplar
-itself remains future F9 work.
+policies feed its behavioral fields. Spec 3.3F9 adds `gpu_torch` acceleration
+for the behavioral/fingerprint policy while preserving compact-only host
+transfer and leaving public builder migration out of scope.
 
 ## Support Statuses
 

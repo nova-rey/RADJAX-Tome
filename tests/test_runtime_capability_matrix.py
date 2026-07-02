@@ -176,6 +176,7 @@ def test_runtime_capability_matrix_reflects_contract_skeleton_only() -> None:
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
             "dynamic_cascaded_soft_labels_v1",
+            "corridor_exemplar_v1",
         }
     )
     assert not any(
@@ -239,6 +240,7 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
             "dynamic_cascaded_soft_labels_v1",
+            "corridor_exemplar_v1",
         }
     )
 
@@ -275,6 +277,7 @@ def test_runtime_capability_matrix_documents_orchestration() -> None:
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
             "dynamic_cascaded_soft_labels_v1",
+            "corridor_exemplar_v1",
         }
     )
 
@@ -332,6 +335,7 @@ def test_runtime_capability_matrix_reflects_hf_torch_backend_contract() -> None:
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
             "dynamic_cascaded_soft_labels_v1",
+            "corridor_exemplar_v1",
         }
     )
 
@@ -390,11 +394,12 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "dynamic top-k explicit head plus bucketed tail" in dynamic["notes"]
     assert "compact payload arrays" in dynamic["notes"]
     assert corridor["runtime_mode"] == "cpu_gpu"
-    assert corridor["status"] == "historical_reference_exists"
-    assert not corridor["implemented_now"]
-    assert not corridor["optimized"]
-    assert "Spec 3.3F8 locks the production schema" in corridor["notes"]
-    assert "planned for F9" in corridor["notes"]
+    assert corridor["status"] == "optimized"
+    assert corridor["implemented_now"]
+    assert corridor["optimized"]
+    assert "Spec 3.3F9" in corridor["notes"]
+    assert "F8 production schema" in corridor["notes"]
+    assert "compact production arrays" in corridor["notes"]
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals

@@ -44,17 +44,30 @@ _SUPPORTED_EMISSION_POLICIES = {
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
     "dynamic_cascaded_soft_labels_v1",
+    "corridor_exemplar_v1",
 }
 _CAPABILITY_STATUS = {
     "dense_logits": "supported_debug",
     "topk_with_tail_v0": "optimized",
     "cascaded_soft_labels_v1": "optimized",
     "dynamic_cascaded_soft_labels_v1": "optimized",
+    "corridor_exemplar_v1": "optimized",
 }
 _DEFAULT_GPU_VOCAB_CHUNK_SIZE = 8192
 _REDUCER_WORKSPACE_FACTOR = 3
 _DYNAMIC_TOP_K_POLICY = "mass_threshold_v1"
 _TAIL_BUCKET_POLICY = "contiguous_descending_tail_probability_mass"
+_CORRIDOR_PAYLOAD_FLAVOR = "production_v1"
+_EXEMPLAR_SELECTION_POLICY = "entropy_top_n_v1"
+_CORRIDOR_POLICY = "production_corridor_records_v1"
+_MODE_RECORD_POLICY = "top_mode_summary_v1"
+_FINGERPRINT_TOPOLOGY_POLICY = "sequence_position_v1"
+_CORRIDOR_CONFIDENCE_POLICY = "top_probability_v1"
+_EXEMPLAR_SOURCE_POLICIES = {
+    "dense_logits": 1,
+    "cascaded_soft_labels_v1": 2,
+    "dynamic_cascaded_soft_labels_v1": 3,
+}
 
 
 @dataclass(frozen=True)
@@ -156,13 +169,14 @@ class GPUTorchTeacherEmissionBackend:
                 backend_family=self.backend_family,
                 runtime_mode="cpu_gpu",
                 target_policy="corridor_exemplar_v1",
-                status="historical_reference_exists",
-                optimized=False,
-                implemented_now=False,
+                status="optimized",
+                optimized=True,
+                implemented_now=True,
                 notes=(
-                    "Historical QRWKV-XLA optimization work can guide future "
-                    "corridor/exemplar acceleration; active gpu_torch support "
-                    "is not implemented."
+                    "Spec 3.3F9 implements optimized gpu_torch "
+                    "corridor/exemplar emission against the F8 production "
+                    "schema and transfers only compact production arrays back "
+                    "to host."
                 ),
             ),
             BackendCapability(
@@ -262,6 +276,33 @@ class GPUTorchTeacherEmissionBackend:
             except Exception as exc:
                 raise _wrap_device_error(
                     "compact tensor transfer to CPU", exc, device
+                ) from exc
+        elif self.config.target_policy == "corridor_exemplar_v1":
+            try:
+                compact_payload = _gpu_corridor_exemplar_reduce(
+                    torch,
+                    logits,
+                    config=self.config,
+                    vocab_chunk_size=chunking_plan.effective_size,
+                )
+            except Exception as exc:
+                raise _wrap_device_error(
+                    "corridor/exemplar compact reduction", exc, device
+                ) from exc
+            try:
+                payload = _compact_payload_to_numpy(compact_payload)
+                payload.update(
+                    _gpu_corridor_payload_records(
+                        self.config,
+                        payload,
+                        effective_vocab_size=effective_vocab_size,
+                    )
+                )
+            except Exception as exc:
+                raise _wrap_device_error(
+                    "corridor/exemplar compact tensor transfer to CPU",
+                    exc,
+                    device,
                 ) from exc
         else:
             try:
@@ -368,6 +409,7 @@ class GPUTorchTeacherEmissionBackend:
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
             "dynamic_cascaded_soft_labels_v1",
+            "corridor_exemplar_v1",
         }:
             compact_payload = compact_payload or {}
             compact_fields = _compact_payload_fields(self.config.target_policy)
@@ -433,6 +475,14 @@ class GPUTorchTeacherEmissionBackend:
                         self.config,
                         effective_vocab_size=effective_vocab,
                         compact_payload=compact_payload,
+                    )
+                )
+            if self.config.target_policy == "corridor_exemplar_v1":
+                compact_metadata.update(
+                    _gpu_corridor_metadata(
+                        self.config,
+                        compact_payload=compact_payload,
+                        effective_vocab_size=effective_vocab,
                     )
                 )
             metadata.update(compact_metadata)
@@ -665,7 +715,7 @@ def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
             "gpu_torch target_policy "
             f"{config.target_policy!r} is not implemented; supported policies "
             "are dense_logits, topk_with_tail_v0, cascaded_soft_labels_v1, "
-            "and dynamic_cascaded_soft_labels_v1"
+            "dynamic_cascaded_soft_labels_v1, and corridor_exemplar_v1"
         )
     if config.sequence_length <= 0:
         raise ValueError("sequence_length must be > 0")
@@ -677,6 +727,17 @@ def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
         raise ValueError("top_k must be > 0")
     if config.num_buckets <= 0:
         raise ValueError("num_buckets must be > 0")
+    if config.exemplar_top_n <= 0:
+        raise ValueError("exemplar_top_n must be > 0")
+    if config.exemplar_source_policy not in _EXEMPLAR_SOURCE_POLICIES:
+        raise ValueError(
+            "exemplar_source_policy must be dense_logits, "
+            "cascaded_soft_labels_v1, or dynamic_cascaded_soft_labels_v1"
+        )
+    if config.exemplar_selection_policy != _EXEMPLAR_SELECTION_POLICY:
+        raise ValueError("exemplar_selection_policy must be 'entropy_top_n_v1'")
+    if config.corridor_payload_flavor != _CORRIDOR_PAYLOAD_FLAVOR:
+        raise ValueError("corridor_payload_flavor must be 'production_v1'")
     if config.gpu_vocab_chunk_size is not None and config.gpu_vocab_chunk_size <= 0:
         raise ValueError("gpu_vocab_chunk_size must be None or > 0")
     if config.dynamic_top_k_min < 1:
@@ -859,6 +920,26 @@ def _dynamic_cascaded_metadata(
         "effective_top_k_min_observed": observed_min,
         "effective_top_k_max_observed": observed_max,
         "effective_top_k_mean_observed": observed_mean,
+    }
+
+
+def _gpu_corridor_metadata(
+    config: TeacherBackendConfig,
+    *,
+    compact_payload: dict[str, np.ndarray],
+    effective_vocab_size: int,
+) -> dict[str, object]:
+    source_summary = _gpu_corridor_source_summary(
+        config,
+        compact_payload=compact_payload,
+        effective_vocab_size=effective_vocab_size,
+    )
+    return {
+        **_gpu_corridor_schema_metadata(config),
+        **source_summary,
+        "requested_exemplar_top_n": config.exemplar_top_n,
+        "effective_exemplar_top_n": min(config.exemplar_top_n, config.sequence_length),
+        "exemplar_records": min(config.exemplar_top_n, config.sequence_length),
     }
 
 
@@ -1076,6 +1157,236 @@ def _gpu_dynamic_cascaded_reduce(
     }
 
 
+def _gpu_corridor_exemplar_reduce(
+    torch: Any,
+    logits: Any,
+    *,
+    config: TeacherBackendConfig,
+    vocab_chunk_size: int | None = None,
+) -> dict[str, Any]:
+    source = _gpu_corridor_source_payload(
+        torch,
+        logits,
+        config=config,
+        vocab_chunk_size=vocab_chunk_size,
+    )
+    teacher_entropy = source["teacher_entropy"]
+    effective_exemplar_top_n = min(config.exemplar_top_n, int(logits.shape[1]))
+    exemplar_scores, exemplar_positions = torch.topk(
+        teacher_entropy,
+        k=effective_exemplar_top_n,
+        dim=-1,
+    )
+    exemplar_selection_mask = torch.zeros(
+        teacher_entropy.shape,
+        dtype=torch.int32,
+        device=teacher_entropy.device,
+    )
+    exemplar_selection_mask.scatter_(
+        -1,
+        exemplar_positions,
+        torch.ones_like(exemplar_positions, dtype=torch.int32),
+    )
+    corridor_top_token_ids = source["top_token_ids"][..., 0]
+    corridor_top_probs = source["top_probs"][..., 0]
+    batch_size = int(logits.shape[0])
+    sequence_length = int(logits.shape[1])
+    policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_source_policy]
+    return {
+        "corridor_top_token_ids": corridor_top_token_ids,
+        "corridor_top_probs": corridor_top_probs,
+        "corridor_teacher_entropy": teacher_entropy,
+        "corridor_confidence": corridor_top_probs,
+        "corridor_lengths": torch.full(
+            (batch_size,),
+            sequence_length,
+            dtype=torch.int32,
+            device=logits.device,
+        ),
+        "exemplar_positions": exemplar_positions,
+        "exemplar_scores": exemplar_scores,
+        "exemplar_selection_mask": exemplar_selection_mask,
+        "exemplar_source_policy_ids": torch.full(
+            teacher_entropy.shape,
+            policy_id,
+            dtype=torch.int32,
+            device=logits.device,
+        ),
+        "exemplar_source_effective_top_k": source["effective_top_k"],
+        "exemplar_source_top_mass": source["top_mass"],
+        "exemplar_source_tail_mass": source["tail_mass"],
+    }
+
+
+def _gpu_corridor_source_payload(
+    torch: Any,
+    logits: Any,
+    *,
+    config: TeacherBackendConfig,
+    vocab_chunk_size: int | None = None,
+) -> dict[str, Any]:
+    if config.exemplar_source_policy == "dense_logits":
+        workspace = _gpu_probability_workspace(
+            torch,
+            logits,
+            vocab_chunk_size=vocab_chunk_size,
+        )
+        source = _gpu_topk_tail_reduce_from_workspace(torch, workspace, top_k=1)
+        source["effective_top_k"] = torch.ones(
+            logits.shape[:2],
+            dtype=torch.int32,
+            device=logits.device,
+        )
+        return source
+    if config.exemplar_source_policy == "cascaded_soft_labels_v1":
+        source = _gpu_cascaded_reduce(
+            torch,
+            logits,
+            top_k=config.top_k,
+            num_buckets=config.num_buckets,
+            vocab_chunk_size=vocab_chunk_size,
+        )
+        source["effective_top_k"] = torch.full(
+            logits.shape[:2],
+            min(config.top_k, int(logits.shape[-1])),
+            dtype=torch.int32,
+            device=logits.device,
+        )
+        return source
+    return _gpu_dynamic_cascaded_reduce(
+        torch,
+        logits,
+        dynamic_top_k_min=config.dynamic_top_k_min,
+        dynamic_top_k_max=config.dynamic_top_k_max,
+        dynamic_mass_threshold=config.dynamic_mass_threshold,
+        num_buckets=config.num_buckets,
+        vocab_chunk_size=vocab_chunk_size,
+    )
+
+
+def _gpu_corridor_payload_records(
+    config: TeacherBackendConfig,
+    compact_payload: dict[str, np.ndarray],
+    *,
+    effective_vocab_size: int,
+) -> dict[str, object]:
+    effective_exemplar_top_n = min(config.exemplar_top_n, config.sequence_length)
+    confidence = compact_payload["corridor_confidence"]
+    entropy = compact_payload["corridor_teacher_entropy"]
+    return {
+        "corridor_records": {
+            "policy": _CORRIDOR_POLICY,
+            "record_count": int(confidence.shape[0]),
+            "fields": (
+                "corridor_top_token_ids",
+                "corridor_top_probs",
+                "corridor_teacher_entropy",
+                "corridor_confidence",
+            ),
+        },
+        "corridor_summary": {
+            "record_count": int(confidence.shape[0]),
+            "mean_confidence": float(np.mean(confidence, dtype=np.float32)),
+            "mean_entropy": float(np.mean(entropy, dtype=np.float32)),
+            "sequence_length": int(confidence.shape[1]),
+        },
+        "exemplar_records": {
+            "policy": config.exemplar_selection_policy,
+            "record_count": int(confidence.shape[0] * effective_exemplar_top_n),
+            "positions_per_example": int(effective_exemplar_top_n),
+        },
+        "exemplar_summary": {
+            "selection_policy": config.exemplar_selection_policy,
+            "record_count": int(confidence.shape[0] * effective_exemplar_top_n),
+            "positions_per_example": int(effective_exemplar_top_n),
+        },
+        "mode_records": {
+            "mode_record_policy": _MODE_RECORD_POLICY,
+            "record_count": int(confidence.shape[0]),
+            "mode_field": "corridor_top_token_ids",
+        },
+        "source_policy_summary": _gpu_corridor_source_summary(
+            config,
+            compact_payload=compact_payload,
+            effective_vocab_size=effective_vocab_size,
+        ),
+        "schema_metadata": _gpu_corridor_schema_metadata(config),
+    }
+
+
+def _gpu_corridor_source_summary(
+    config: TeacherBackendConfig,
+    *,
+    compact_payload: dict[str, np.ndarray],
+    effective_vocab_size: int,
+) -> dict[str, object]:
+    if config.exemplar_source_policy == "dense_logits":
+        return {
+            "exemplar_source_policy": "dense_logits",
+            "source_policy_kind": "full_resolution",
+            "source_policy_uses_bucketed_tail": False,
+            "source_policy_dynamic_top_k": False,
+            "source_effective_top_k_semantics": "top_mode_only",
+        }
+    if config.exemplar_source_policy == "cascaded_soft_labels_v1":
+        return {
+            "exemplar_source_policy": "cascaded_soft_labels_v1",
+            "source_policy_kind": "fixed_cascaded",
+            "source_policy_uses_bucketed_tail": True,
+            "source_policy_dynamic_top_k": False,
+            "requested_top_k": config.top_k,
+            "effective_top_k": min(config.top_k, effective_vocab_size),
+            "num_buckets": config.num_buckets,
+            "bucket_policy": _TAIL_BUCKET_POLICY,
+        }
+    effective_top_k = compact_payload.get("exemplar_source_effective_top_k")
+    if effective_top_k is None or effective_top_k.size == 0:
+        observed_min = min(config.dynamic_top_k_min, config.dynamic_top_k_max)
+        observed_max = observed_min
+        observed_mean = float(observed_min)
+    else:
+        observed_min = int(np.min(effective_top_k))
+        observed_max = int(np.max(effective_top_k))
+        observed_mean = float(np.mean(effective_top_k, dtype=np.float32))
+    return {
+        "exemplar_source_policy": "dynamic_cascaded_soft_labels_v1",
+        "source_policy_kind": "dynamic_cascaded",
+        "source_policy_uses_bucketed_tail": True,
+        "source_policy_dynamic_top_k": True,
+        "dynamic_top_k_policy": config.dynamic_top_k_policy,
+        "dynamic_top_k_min_effective": min(
+            config.dynamic_top_k_min,
+            min(config.dynamic_top_k_max, effective_vocab_size),
+        ),
+        "dynamic_top_k_max_effective": min(
+            config.dynamic_top_k_max,
+            effective_vocab_size,
+        ),
+        "dynamic_mass_threshold": config.dynamic_mass_threshold,
+        "num_buckets": config.num_buckets,
+        "bucket_policy": _TAIL_BUCKET_POLICY,
+        "effective_top_k_min_observed": observed_min,
+        "effective_top_k_max_observed": observed_max,
+        "effective_top_k_mean_observed": observed_mean,
+    }
+
+
+def _gpu_corridor_schema_metadata(config: TeacherBackendConfig) -> dict[str, object]:
+    return {
+        "schema_version": "corridor_exemplar_v1",
+        "corridor_payload_flavor": config.corridor_payload_flavor,
+        "production_corridor_schema": True,
+        "historical_parity_claimed": False,
+        "historical_reference_source": "gpu_torch_production",
+        "exemplar_source_policy": config.exemplar_source_policy,
+        "exemplar_selection_policy": config.exemplar_selection_policy,
+        "corridor_policy": _CORRIDOR_POLICY,
+        "mode_record_policy": _MODE_RECORD_POLICY,
+        "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
+        "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
+    }
+
+
 def _dynamic_cascaded_head_from_probs(
     torch: Any,
     probs: Any,
@@ -1241,6 +1552,57 @@ def _tail_bucket_masses_on_device(
 
 
 def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
+    if "corridor_top_token_ids" in payload:
+        return {
+            "corridor_top_token_ids": _tensor_to_numpy(
+                payload["corridor_top_token_ids"],
+                np.int32,
+            ),
+            "corridor_top_probs": _tensor_to_numpy(
+                payload["corridor_top_probs"],
+                np.float32,
+            ),
+            "corridor_teacher_entropy": _tensor_to_numpy(
+                payload["corridor_teacher_entropy"],
+                np.float32,
+            ),
+            "corridor_confidence": _tensor_to_numpy(
+                payload["corridor_confidence"],
+                np.float32,
+            ),
+            "corridor_lengths": _tensor_to_numpy(
+                payload["corridor_lengths"],
+                np.int32,
+            ),
+            "exemplar_positions": _tensor_to_numpy(
+                payload["exemplar_positions"],
+                np.int32,
+            ),
+            "exemplar_scores": _tensor_to_numpy(
+                payload["exemplar_scores"],
+                np.float32,
+            ),
+            "exemplar_selection_mask": _tensor_to_numpy(
+                payload["exemplar_selection_mask"],
+                np.int32,
+            ),
+            "exemplar_source_policy_ids": _tensor_to_numpy(
+                payload["exemplar_source_policy_ids"],
+                np.int32,
+            ),
+            "exemplar_source_effective_top_k": _tensor_to_numpy(
+                payload["exemplar_source_effective_top_k"],
+                np.int32,
+            ),
+            "exemplar_source_top_mass": _tensor_to_numpy(
+                payload["exemplar_source_top_mass"],
+                np.float32,
+            ),
+            "exemplar_source_tail_mass": _tensor_to_numpy(
+                payload["exemplar_source_tail_mass"],
+                np.float32,
+            ),
+        }
     compact = {
         "top_token_ids": _tensor_to_numpy(payload["top_token_ids"], np.int32),
         "top_log_probs": _tensor_to_numpy(payload["top_log_probs"], np.float32),
@@ -1348,6 +1710,20 @@ def _vocab_chunking_plan(
             used=False,
             reason="dynamic_exact_bucket_policy_requires_full_probability_workspace",
         )
+    if target_policy == "corridor_exemplar_v1":
+        if config.exemplar_source_policy == "dense_logits":
+            reason = "corridor_dense_source_requires_full_probability_workspace"
+        elif config.exemplar_source_policy == "cascaded_soft_labels_v1":
+            reason = "exact_bucket_policy_requires_full_probability_workspace"
+        else:
+            reason = "dynamic_exact_bucket_policy_requires_full_probability_workspace"
+        return VocabChunkingPlan(
+            requested=True,
+            requested_size=requested_size,
+            effective_size=None,
+            used=False,
+            reason=reason,
+        )
     return VocabChunkingPlan(
         requested=True,
         requested_size=requested_size,
@@ -1379,6 +1755,21 @@ def _chunk_slices(
 
 
 def _compact_payload_fields(target_policy: str) -> list[str]:
+    if target_policy == "corridor_exemplar_v1":
+        return [
+            "corridor_top_token_ids",
+            "corridor_top_probs",
+            "corridor_teacher_entropy",
+            "corridor_confidence",
+            "corridor_lengths",
+            "exemplar_positions",
+            "exemplar_scores",
+            "exemplar_selection_mask",
+            "exemplar_source_policy_ids",
+            "exemplar_source_effective_top_k",
+            "exemplar_source_top_mass",
+            "exemplar_source_tail_mass",
+        ]
     if target_policy == "dynamic_cascaded_soft_labels_v1":
         return [
             "top_token_ids",
@@ -1411,6 +1802,8 @@ def _gpu_reduction_mode(
 ) -> str:
     if target_policy == "dynamic_cascaded_soft_labels_v1":
         return "compact_dynamic_cascaded_soft_labels"
+    if target_policy == "corridor_exemplar_v1":
+        return "compact_corridor_exemplar"
     if target_policy == "cascaded_soft_labels_v1":
         return (
             "compact_cascaded_soft_labels_chunked"

@@ -180,11 +180,11 @@
     },
     {
       "backend_family": "gpu_torch",
-      "implemented_now": false,
-      "notes": "Historical QRWKV-XLA optimization work can guide future corridor/exemplar acceleration. Spec 3.3F8 locks the production schema; optimized gpu_torch implementation is planned for F9 and is not implemented now.",
-      "optimized": false,
+      "implemented_now": true,
+      "notes": "Spec 3.3F9 gpu_torch implements optimized corridor_exemplar_v1 emission against the F8 production schema, supports dense, fixed cascaded, and dynamic cascaded exemplar source policies, and transfers only compact production arrays back to host.",
+      "optimized": true,
       "runtime_mode": "cpu_gpu",
-      "status": "historical_reference_exists",
+      "status": "optimized",
       "target_policy": "corridor_exemplar_v1"
     },
     {

@@ -212,7 +212,7 @@ def test_gpu_torch_fallback_policy_auto_requires_orchestrator(
 
 
 def test_gpu_torch_unsupported_policy_is_structured() -> None:
-    config = _config(target_policy="corridor_exemplar_v1")
+    config = _config(target_policy="unknown_policy")
 
     with pytest.raises(TeacherBackendUnsupportedPolicyError) as exc_info:
         GPUTorchTeacherEmissionBackend(config)
@@ -220,13 +220,13 @@ def test_gpu_torch_unsupported_policy_is_structured() -> None:
     message = str(exc_info.value)
     assert "gpu_torch" in message
     assert "target_policy" in message
-    assert "corridor_exemplar_v1" in message
+    assert "unknown_policy" in message
     assert "not implemented" in message
 
     diagnostics = diagnose_gpu_torch_backend(config)
     assert diagnostics["can_emit"] is False
     assert diagnostics["failure_stage"] == "unsupported_target"
-    assert "corridor_exemplar_v1" in str(diagnostics["failure_reason"])
+    assert "unknown_policy" in str(diagnostics["failure_reason"])
 
 
 def test_gpu_torch_diagnostics_include_chunking_fields_for_invalid_config() -> None:

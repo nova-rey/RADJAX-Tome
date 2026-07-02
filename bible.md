@@ -240,3 +240,19 @@ exemplar, mode, and source arrays.
 This does not implement GPU corridor/exemplar acceleration; future `gpu_torch`
 F9 owns that. It also does not migrate the public builder and does not add
 TPU/JAX support.
+
+## 2026-07-02 — Spec 3.3F9 GPU Corridor/Exemplar Acceleration
+
+Spec 3.3F9 implements `gpu_torch` support for `corridor_exemplar_v1` against
+the F8 production schema. Successful GPU corridor emission records
+`gpu_reduction_mode=compact_corridor_exemplar`,
+`dense_logits_transferred_to_host=false`, `historical_parity_claimed=false`,
+and `historical_reference_source=gpu_torch_production`.
+
+The GPU path is source-policy-aware through `exemplar_source_policy` and
+supports `dense_logits`, `cascaded_soft_labels_v1`, and
+`dynamic_cascaded_soft_labels_v1`, with dynamic cascaded remaining the default
+compact source. It transfers compact production arrays only and builds record
+summaries after transfer.
+
+This does not migrate the public builder and does not add TPU/JAX support.
