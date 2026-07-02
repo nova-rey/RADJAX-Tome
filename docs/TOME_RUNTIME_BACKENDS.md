@@ -153,9 +153,20 @@ reduction path. It extends the top-k/tail reducer with `bucket_masses` computed
 on the selected accelerator using contiguous descending tail-probability
 buckets. Only compact payload arrays move back to host.
 
-`corridor_exemplar_v1` remains historical-reference/future GPU work. Chunked
-vocab reduction and memory hardening remain future Spec 3.3F4 work. The public
-builder has not migrated to `gpu_torch`.
+Spec 3.3F4 adds optional vocab-axis chunking for compact GPU reducers through
+`gpu_enable_vocab_chunking` and `gpu_vocab_chunk_size`. Dense debug remains
+unchunked and still transfers full logits to host. Compact top-k/tail and
+cascaded modes record requested/effective chunking, chunk counts, compact host
+transfer bytes, dense-equivalent byte estimates, and deterministic reducer
+workspace estimates. These are estimates, not measured peak GPU memory.
+
+Spec 3.3F4 also removes duplicate full-vocab softmax/probability work from the
+non-chunked cascaded path by sharing the probability workspace used for top-k
+and bucket-mass reduction.
+
+`corridor_exemplar_v1` remains historical-reference/future GPU work. Runtime
+fallback/error hardening remains future Spec 3.3F5 work. The public builder has
+not migrated to `gpu_torch`.
 
 ## Runtime Modes
 
@@ -166,7 +177,8 @@ is the universal correctness and reference path.
 GPU-backed reduction. Spec 3.3F1 implements a dense debug/smoke HF Torch path
 on CUDA or MPS. Spec 3.3F2 adds compact top-k/tail reduction on the accelerator.
 Spec 3.3F3 adds compact cascaded soft-label reduction on the accelerator.
-Chunked-vocab and memory-hardening work remains future 3.3F work.
+Spec 3.3F4 adds optional vocab chunking and memory/workspace metadata for
+compact reducers. Runtime fallback/error hardening remains future 3.3F work.
 
 `cpu_tpu` means CPU-side orchestration plus TPU/JAX/XLA-backed teacher
 execution and/or TPU-backed reduction. This is a future backend family; no

@@ -139,3 +139,18 @@ back to host.
 
 This does not implement chunked vocab reduction, GPU corridor/exemplar
 acceleration, public builder migration, or TPU/JAX support.
+
+## 2026-07-02 — Spec 3.3F4 Chunked Vocab Reduction And Memory Metadata
+
+Spec 3.3F4 adds optional vocab chunking to `gpu_torch` compact reducers and
+records memory metadata, including `estimated_reducer_workspace_bytes`, dense
+equivalent byte estimates, compact transfer bytes, requested/effective chunk
+size, and chunk counts.
+
+Compact top-k/tail and cascaded soft-label reduction still avoid full dense
+host transfer. The cascaded path now reuses the shared probability workspace
+instead of duplicating full-vocab softmax/probability work, while preserving
+`bucket_masses`.
+
+This does not migrate the public builder, implement GPU corridor/exemplar
+acceleration, claim measured peak GPU memory, or add TPU/JAX support.

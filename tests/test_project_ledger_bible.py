@@ -42,3 +42,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3F3" in text
     assert "cascaded_soft_labels_v1" in text
     assert "bucket_masses" in text
+    assert "3.3F4" in text
+    assert "vocab chunking" in text
+    assert "estimated_reducer_workspace_bytes" in text

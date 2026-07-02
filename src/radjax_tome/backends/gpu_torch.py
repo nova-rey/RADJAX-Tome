@@ -24,6 +24,8 @@ _CAPABILITY_STATUS = {
     "topk_with_tail_v0": "optimized",
     "cascaded_soft_labels_v1": "optimized",
 }
+_DEFAULT_GPU_VOCAB_CHUNK_SIZE = 8192
+_REDUCER_WORKSPACE_FACTOR = 3
 
 
 @dataclass(frozen=True)
@@ -66,6 +68,8 @@ class GPUTorchTeacherEmissionBackend:
             raise ValueError("top_k must be > 0")
         if config.num_buckets <= 0:
             raise ValueError("num_buckets must be > 0")
+        if config.gpu_vocab_chunk_size is not None and config.gpu_vocab_chunk_size <= 0:
+            raise ValueError("gpu_vocab_chunk_size must be None or > 0")
         self.config = config
         self._torch: Any | None = None
         self._tokenizer: Any | None = None
@@ -112,7 +116,9 @@ class GPUTorchTeacherEmissionBackend:
                 notes=(
                     "Spec 3.3F2 gpu_torch computes top-k plus tail compact "
                     "reduction on the selected CUDA or MPS accelerator and "
-                    "transfers only compact payload arrays back to host."
+                    "transfers only compact payload arrays back to host. "
+                    "Spec 3.3F4 adds optional vocab-axis chunking and "
+                    "workspace metadata for this compact reducer."
                 ),
             ),
             BackendCapability(
@@ -127,7 +133,9 @@ class GPUTorchTeacherEmissionBackend:
                     "Spec 3.3F3 gpu_torch computes cascaded soft-label "
                     "compact reduction on the selected CUDA or MPS "
                     "accelerator, including bucket masses, and transfers only "
-                    "compact payload arrays back to host."
+                    "compact payload arrays back to host. Spec 3.3F4 adds "
+                    "optional vocab-axis chunking, workspace metadata, and "
+                    "shared probability workspace reuse."
                 ),
             ),
             BackendCapability(
@@ -169,6 +177,7 @@ class GPUTorchTeacherEmissionBackend:
         logits = output.logits
         effective_vocab_size = int(logits.shape[-1])
         estimated_dense_logits_dtype = _logits_dtype_name(logits)
+        effective_chunk_size = _effective_gpu_vocab_chunk_size(self.config)
         if self.config.target_policy == "dense_logits":
             dense_logits = logits.detach().to("cpu").numpy().astype(np.float32)
             payload = {"logits": dense_logits}
@@ -179,11 +188,17 @@ class GPUTorchTeacherEmissionBackend:
                     logits,
                     top_k=self.config.top_k,
                     num_buckets=self.config.num_buckets,
+                    vocab_chunk_size=effective_chunk_size,
                 )
             )
         else:
             payload = _compact_payload_to_numpy(
-                _gpu_topk_tail_reduce(torch, logits, top_k=self.config.top_k)
+                _gpu_topk_tail_reduce(
+                    torch,
+                    logits,
+                    top_k=self.config.top_k,
+                    vocab_chunk_size=effective_chunk_size,
+                )
             )
         return TeacherEmissionResult(
             backend_id=self.backend_id,
@@ -222,6 +237,14 @@ class GPUTorchTeacherEmissionBackend:
             self.config.batch_size if actual_batch_size is None else actual_batch_size
         )
         dense_debug_path = self.config.target_policy == "dense_logits"
+        vocab_chunk_size_effective = _effective_gpu_vocab_chunk_size(self.config)
+        vocab_chunking_used = (
+            vocab_chunk_size_effective is not None and not dense_debug_path
+        )
+        chunks_per_batch = _vocab_chunks_per_batch(
+            effective_vocab_size=effective_vocab,
+            vocab_chunk_size=vocab_chunk_size_effective,
+        )
         metadata: dict[str, object] = {
             "requested_runtime_mode": self.config.runtime_mode,
             "effective_runtime_mode": "cpu_gpu",
@@ -251,6 +274,11 @@ class GPUTorchTeacherEmissionBackend:
             "torch_version": device.torch_version,
             "cuda_available": device.cuda_available,
             "mps_available": device.mps_available,
+            "vocab_chunking_requested": self.config.gpu_enable_vocab_chunking,
+            "vocab_chunking_used": vocab_chunking_used,
+            "gpu_vocab_chunk_size_requested": self.config.gpu_vocab_chunk_size,
+            "gpu_vocab_chunk_size_effective": vocab_chunk_size_effective,
+            "gpu_vocab_chunks_per_batch": chunks_per_batch,
         }
         if self.config.target_policy in {
             "topk_with_tail_v0",
@@ -258,18 +286,17 @@ class GPUTorchTeacherEmissionBackend:
         }:
             effective_top_k = min(self.config.top_k, effective_vocab)
             compact_payload = compact_payload or {}
-            compact_fields = [
-                "top_token_ids",
-                "top_log_probs",
-                "top_probs",
-                "top_mass",
-                "tail_mass",
-            ]
-            gpu_reduction_mode = "compact_topk_tail"
-            if self.config.target_policy == "cascaded_soft_labels_v1":
-                compact_fields.append("bucket_masses")
-                gpu_reduction_mode = "compact_cascaded_soft_labels"
-            compact_fields.append("teacher_entropy")
+            compact_fields = _compact_payload_fields(self.config.target_policy)
+            gpu_reduction_mode = _gpu_reduction_mode(
+                self.config.target_policy,
+                vocab_chunking_used=vocab_chunking_used,
+            )
+            estimated_dense_logits_bytes = _estimate_dense_logits_bytes(
+                actual_batch_size=actual_batch,
+                sequence_length=self.config.sequence_length,
+                effective_vocab_size=effective_vocab,
+                dtype_name=estimated_dense_logits_dtype,
+            )
             compact_metadata = {
                 "requested_top_k": self.config.top_k,
                 "effective_top_k": effective_top_k,
@@ -283,14 +310,29 @@ class GPUTorchTeacherEmissionBackend:
                     for field in compact_fields
                     if field in compact_payload
                 ),
-                "estimated_dense_logits_bytes": _estimate_dense_logits_bytes(
-                    actual_batch_size=actual_batch,
-                    sequence_length=self.config.sequence_length,
-                    effective_vocab_size=effective_vocab,
-                    dtype_name=estimated_dense_logits_dtype,
+                "estimated_dense_logits_bytes": estimated_dense_logits_bytes,
+                "estimated_reducer_workspace_bytes": (
+                    _estimate_reducer_workspace_bytes(
+                        actual_batch_size=actual_batch,
+                        sequence_length=self.config.sequence_length,
+                        effective_vocab_size=effective_vocab,
+                        vocab_chunk_size=vocab_chunk_size_effective,
+                        dtype_name=estimated_dense_logits_dtype,
+                    )
                 ),
+                "estimated_reducer_workspace_formula": (
+                    "batch*sequence*effective_vocab_or_chunk*bytes_per_logit*"
+                    f"{_REDUCER_WORKSPACE_FACTOR}"
+                ),
+                "estimated_reducer_workspace_is_measured": False,
                 "estimated_dense_logits_dtype": estimated_dense_logits_dtype,
             }
+            if self.config.gpu_enable_vocab_chunking and not vocab_chunking_used:
+                compact_metadata["vocab_chunking_reason"] = (
+                    "disabled_for_dense_debug"
+                    if dense_debug_path
+                    else "chunk_size_not_effective"
+                )
             if self.config.target_policy == "cascaded_soft_labels_v1":
                 compact_metadata.update(
                     {
@@ -445,10 +487,69 @@ def _gpu_topk_tail_reduce(
     logits: Any,
     *,
     top_k: int,
+    vocab_chunk_size: int | None = None,
 ) -> dict[str, Any]:
+    workspace = _gpu_probability_workspace(
+        torch,
+        logits,
+        vocab_chunk_size=vocab_chunk_size,
+    )
+    return _gpu_topk_tail_reduce_from_workspace(
+        torch,
+        workspace,
+        top_k=top_k,
+    )
+
+
+def _gpu_topk_tail_reduce_from_workspace(
+    torch: Any,
+    workspace: dict[str, Any],
+    *,
+    top_k: int,
+) -> dict[str, Any]:
+    logits = workspace["logits"]
     effective_top_k = min(top_k, int(logits.shape[-1]))
-    log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
-    probs = torch.exp(log_probs)
+    if workspace["chunked"]:
+        top_log_prob_chunks = []
+        top_token_id_chunks = []
+        entropy = None
+        for start, stop in _chunk_slices(
+            effective_vocab_size=int(logits.shape[-1]),
+            vocab_chunk_size=int(workspace["vocab_chunk_size"]),
+        ):
+            chunk_log_probs = logits[..., start:stop] - workspace["logsumexp"]
+            chunk_probs = torch.exp(chunk_log_probs)
+            chunk_top_k = min(effective_top_k, stop - start)
+            chunk_top_log_probs, chunk_top_token_ids = torch.topk(
+                chunk_log_probs,
+                k=chunk_top_k,
+                dim=-1,
+            )
+            top_log_prob_chunks.append(chunk_top_log_probs)
+            top_token_id_chunks.append(chunk_top_token_ids + start)
+            contribution = -torch.sum(chunk_probs * chunk_log_probs, dim=-1)
+            entropy = contribution if entropy is None else entropy + contribution
+        candidate_log_probs = torch.cat(top_log_prob_chunks, dim=-1)
+        candidate_token_ids = torch.cat(top_token_id_chunks, dim=-1)
+        top_log_probs, candidate_indices = torch.topk(
+            candidate_log_probs,
+            k=effective_top_k,
+            dim=-1,
+        )
+        top_token_ids = torch.gather(candidate_token_ids, -1, candidate_indices)
+        top_probs = torch.exp(top_log_probs)
+        top_mass = torch.sum(top_probs, dim=-1)
+        tail_mass = torch.clamp(1.0 - top_mass, min=0.0, max=1.0)
+        return {
+            "top_token_ids": top_token_ids,
+            "top_log_probs": top_log_probs,
+            "top_probs": top_probs,
+            "top_mass": top_mass,
+            "tail_mass": tail_mass,
+            "teacher_entropy": entropy,
+        }
+    log_probs = workspace["log_probs"]
+    probs = workspace["probs"]
     top_log_probs, top_token_ids = torch.topk(
         log_probs,
         k=effective_top_k,
@@ -474,17 +575,67 @@ def _gpu_cascaded_reduce(
     *,
     top_k: int,
     num_buckets: int,
+    vocab_chunk_size: int | None = None,
 ) -> dict[str, Any]:
-    payload = _gpu_topk_tail_reduce(torch, logits, top_k=top_k)
-    log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
-    probs = torch.exp(log_probs)
+    workspace = _gpu_probability_workspace(
+        torch,
+        logits,
+        vocab_chunk_size=vocab_chunk_size,
+    )
+    payload = _gpu_topk_tail_reduce_from_workspace(torch, workspace, top_k=top_k)
     payload["bucket_masses"] = _tail_bucket_masses_on_device(
         torch,
-        probs,
+        _probs_from_workspace(torch, workspace),
         top_token_ids=payload["top_token_ids"],
         num_buckets=num_buckets,
     )
     return payload
+
+
+def _gpu_probability_workspace(
+    torch: Any,
+    logits: Any,
+    *,
+    vocab_chunk_size: int | None,
+) -> dict[str, Any]:
+    if vocab_chunk_size is None:
+        log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+        return {
+            "chunked": False,
+            "logits": logits,
+            "log_probs": log_probs,
+            "probs": torch.exp(log_probs),
+        }
+    logsumexp = None
+    for start, stop in _chunk_slices(
+        effective_vocab_size=int(logits.shape[-1]),
+        vocab_chunk_size=vocab_chunk_size,
+    ):
+        chunk_logsumexp = torch.logsumexp(logits[..., start:stop], dim=-1, keepdim=True)
+        logsumexp = (
+            chunk_logsumexp
+            if logsumexp is None
+            else torch.logaddexp(logsumexp, chunk_logsumexp)
+        )
+    return {
+        "chunked": True,
+        "logits": logits,
+        "logsumexp": logsumexp,
+        "vocab_chunk_size": vocab_chunk_size,
+    }
+
+
+def _probs_from_workspace(torch: Any, workspace: dict[str, Any]) -> Any:
+    if not workspace["chunked"]:
+        return workspace["probs"]
+    logits = workspace["logits"]
+    chunks = []
+    for start, stop in _chunk_slices(
+        effective_vocab_size=int(logits.shape[-1]),
+        vocab_chunk_size=int(workspace["vocab_chunk_size"]),
+    ):
+        chunks.append(torch.exp(logits[..., start:stop] - workspace["logsumexp"]))
+    return torch.cat(chunks, dim=-1)
 
 
 def _tail_bucket_masses_on_device(
@@ -556,6 +707,83 @@ def _estimate_dense_logits_bytes(
         * effective_vocab_size
         * _dtype_nbytes(dtype_name)
     )
+
+
+def _estimate_reducer_workspace_bytes(
+    *,
+    actual_batch_size: int,
+    sequence_length: int,
+    effective_vocab_size: int,
+    vocab_chunk_size: int | None,
+    dtype_name: str,
+) -> int:
+    effective_axis = (
+        effective_vocab_size
+        if vocab_chunk_size is None
+        else min(vocab_chunk_size, effective_vocab_size)
+    )
+    return (
+        actual_batch_size
+        * sequence_length
+        * effective_axis
+        * _dtype_nbytes(dtype_name)
+        * _REDUCER_WORKSPACE_FACTOR
+    )
+
+
+def _effective_gpu_vocab_chunk_size(config: TeacherBackendConfig) -> int | None:
+    if not config.gpu_enable_vocab_chunking:
+        return None
+    return config.gpu_vocab_chunk_size or _DEFAULT_GPU_VOCAB_CHUNK_SIZE
+
+
+def _vocab_chunks_per_batch(
+    *,
+    effective_vocab_size: int,
+    vocab_chunk_size: int | None,
+) -> int:
+    if vocab_chunk_size is None:
+        return 1
+    return max(1, (effective_vocab_size + vocab_chunk_size - 1) // vocab_chunk_size)
+
+
+def _chunk_slices(
+    *,
+    effective_vocab_size: int,
+    vocab_chunk_size: int,
+) -> list[tuple[int, int]]:
+    return [
+        (start, min(start + vocab_chunk_size, effective_vocab_size))
+        for start in range(0, effective_vocab_size, vocab_chunk_size)
+    ]
+
+
+def _compact_payload_fields(target_policy: str) -> list[str]:
+    fields = [
+        "top_token_ids",
+        "top_log_probs",
+        "top_probs",
+        "top_mass",
+        "tail_mass",
+    ]
+    if target_policy == "cascaded_soft_labels_v1":
+        fields.append("bucket_masses")
+    fields.append("teacher_entropy")
+    return fields
+
+
+def _gpu_reduction_mode(
+    target_policy: str,
+    *,
+    vocab_chunking_used: bool,
+) -> str:
+    if target_policy == "cascaded_soft_labels_v1":
+        return (
+            "compact_cascaded_soft_labels_chunked"
+            if vocab_chunking_used
+            else "compact_cascaded_soft_labels"
+        )
+    return "compact_topk_tail_chunked" if vocab_chunking_used else "compact_topk_tail"
 
 
 def _logits_dtype_name(logits: Any) -> str:

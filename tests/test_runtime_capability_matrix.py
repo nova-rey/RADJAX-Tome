@@ -322,6 +322,8 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert topk["optimized"]
     assert "Spec 3.3F2 gpu_torch computes GPU compact top-k/tail" in topk["notes"]
     assert "compact payload arrays" in topk["notes"]
+    assert "optional vocab chunking" in topk["notes"]
+    assert "memory/workspace metadata" in topk["notes"]
     assert cascaded["runtime_mode"] == "cpu_gpu"
     assert cascaded["implemented_now"]
     assert cascaded["status"] == "optimized"
@@ -329,6 +331,8 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "Spec 3.3F3 gpu_torch computes GPU compact cascaded" in cascaded["notes"]
     assert "bucket masses" in cascaded["notes"]
     assert "compact payload arrays" in cascaded["notes"]
+    assert "optional vocab chunking" in cascaded["notes"]
+    assert "shared probability workspace reuse" in cascaded["notes"]
     assert corridor["runtime_mode"] == "cpu_gpu"
     assert corridor["status"] == "historical_reference_exists"
     assert not corridor["implemented_now"]
@@ -336,5 +340,5 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals
-    assert "Spec 3.3F3" in non_goals
-    assert "chunked-vocab reduction or memory hardening" in non_goals
+    assert "Spec 3.3F4" in non_goals
+    assert "measured peak GPU memory" in non_goals

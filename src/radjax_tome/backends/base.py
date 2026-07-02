@@ -41,6 +41,8 @@ class TeacherBackendConfig:
     top_k: int = 8
     num_buckets: int = 4
     exemplar_top_n: int = 1
+    gpu_vocab_chunk_size: int | None = None
+    gpu_enable_vocab_chunking: bool = False
     local_files_only: bool = True
     allow_downloads: bool = False
     fallback_policy: FallbackPolicy = "error"
