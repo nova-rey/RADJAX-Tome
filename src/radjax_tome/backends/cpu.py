@@ -26,6 +26,17 @@ _CAPABILITY_STATUS: dict[TargetPolicy, str] = {
 }
 _DYNAMIC_TOP_K_POLICY = "mass_threshold_v1"
 _TAIL_BUCKET_POLICY = "contiguous_descending_tail_probability_mass"
+_CORRIDOR_PAYLOAD_FLAVOR = "production_v1"
+_EXEMPLAR_SELECTION_POLICY = "entropy_top_n_v1"
+_CORRIDOR_POLICY = "production_corridor_records_v1"
+_MODE_RECORD_POLICY = "top_mode_summary_v1"
+_FINGERPRINT_TOPOLOGY_POLICY = "sequence_position_v1"
+_CORRIDOR_CONFIDENCE_POLICY = "top_probability_v1"
+_EXEMPLAR_SOURCE_POLICIES = {
+    "dense_logits": 1,
+    "cascaded_soft_labels_v1": 2,
+    "dynamic_cascaded_soft_labels_v1": 3,
+}
 
 
 class CPUReferenceTeacherEmissionBackend:
@@ -58,6 +69,15 @@ class CPUReferenceTeacherEmissionBackend:
             raise ValueError("num_buckets must be > 0")
         if config.exemplar_top_n <= 0:
             raise ValueError("exemplar_top_n must be > 0")
+        if config.exemplar_source_policy not in _EXEMPLAR_SOURCE_POLICIES:
+            raise ValueError(
+                "exemplar_source_policy must be dense_logits, "
+                "cascaded_soft_labels_v1, or dynamic_cascaded_soft_labels_v1"
+            )
+        if config.exemplar_selection_policy != _EXEMPLAR_SELECTION_POLICY:
+            raise ValueError("exemplar_selection_policy must be 'entropy_top_n_v1'")
+        if config.corridor_payload_flavor != _CORRIDOR_PAYLOAD_FLAVOR:
+            raise ValueError("corridor_payload_flavor must be 'production_v1'")
         if config.dynamic_top_k_min < 1:
             raise ValueError("dynamic_top_k_min must be >= 1")
         if config.dynamic_top_k_max < config.dynamic_top_k_min:
@@ -118,8 +138,9 @@ class CPUReferenceTeacherEmissionBackend:
                 optimized=False,
                 implemented_now=True,
                 notes=(
-                    "Spec 3.3C.1 adds serial/reference CPU corridor/exemplar "
-                    "support through the backend contract."
+                    "Spec 3.3F8 CPU reference corridor_exemplar_v1 emits the "
+                    "locked production schema with source-policy-aware "
+                    "metadata through the backend contract."
                 ),
             ),
             BackendCapability(
@@ -217,15 +238,34 @@ class CPUReferenceTeacherEmissionBackend:
                 self.config.exemplar_top_n,
                 self.config.sequence_length,
             )
+            source_summary = (
+                payload.get("source_policy_summary", {})
+                if payload is not None
+                else _corridor_source_policy_summary(self.config)
+            )
             metadata.update(
                 {
-                    "corridor_policy": "deterministic_reference_corridor_v1",
-                    "exemplar_selection_policy": (
-                        "deterministic_high_entropy_top_n_v1"
-                    ),
+                    "schema_version": "corridor_exemplar_v1",
+                    "corridor_payload_flavor": self.config.corridor_payload_flavor,
+                    "production_corridor_schema": True,
+                    "historical_parity_claimed": False,
+                    "historical_reference_source": "cpu_reference_proxy",
+                    "exemplar_source_policy": self.config.exemplar_source_policy,
+                    "exemplar_selection_policy": self.config.exemplar_selection_policy,
+                    "corridor_policy": _CORRIDOR_POLICY,
+                    "mode_record_policy": _MODE_RECORD_POLICY,
+                    "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
+                    "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
                     "requested_exemplar_top_n": self.config.exemplar_top_n,
                     "effective_exemplar_top_n": effective_exemplar_top_n,
                     "exemplar_records": effective_exemplar_top_n,
+                    "source_policy_kind": source_summary.get("source_policy_kind"),
+                    "source_policy_uses_bucketed_tail": source_summary.get(
+                        "source_policy_uses_bucketed_tail"
+                    ),
+                    "source_policy_dynamic_top_k": source_summary.get(
+                        "source_policy_dynamic_top_k"
+                    ),
                 }
             )
         return metadata
@@ -259,8 +299,7 @@ class CPUReferenceTeacherEmissionBackend:
         if self.config.target_policy == "corridor_exemplar_v1":
             return _corridor_exemplar_payload(
                 logits,
-                top_k=self.config.top_k,
-                exemplar_top_n=self.config.exemplar_top_n,
+                config=self.config,
             )
         raise ValueError(f"unsupported target_policy: {self.config.target_policy}")
 
@@ -467,13 +506,15 @@ def _dynamic_cascaded_metadata(
 def _corridor_exemplar_payload(
     logits: np.ndarray,
     *,
-    top_k: int,
-    exemplar_top_n: int,
+    config: TeacherBackendConfig,
 ) -> dict[str, object]:
-    topk = _dense_logits_to_topk_tail(logits, top_k=top_k)
-    effective_exemplar_top_n = min(exemplar_top_n, logits.shape[1])
-    entropy = topk["teacher_entropy"]
-    confidence = np.max(topk["top_probs"], axis=-1).astype(np.float32)
+    source = _corridor_source_payload(logits, config=config)
+    source_summary = _corridor_source_policy_summary(config, source_payload=source)
+    effective_exemplar_top_n = min(config.exemplar_top_n, logits.shape[1])
+    entropy = source["teacher_entropy"].astype(np.float32)
+    top_ids = source["top_token_ids"][..., 0].astype(np.int32)
+    top_probs = source["top_probs"][..., 0].astype(np.float32)
+    confidence = top_probs.astype(np.float32)
     exemplar_positions = np.argsort(
         -entropy,
         axis=-1,
@@ -486,11 +527,12 @@ def _corridor_exemplar_payload(
         exemplar_positions,
         axis=-1,
     ).astype(np.float32)
-    top_ids = topk["top_token_ids"][..., 0].astype(np.int32)
-    top_probs = topk["top_probs"][..., 0].astype(np.float32)
     lengths = np.full((logits.shape[0],), logits.shape[1], dtype=np.int32)
+    policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_source_policy]
+    source_policy_ids = np.full(entropy.shape, policy_id, dtype=np.int32)
+    schema_metadata = _corridor_schema_metadata(config)
     corridor_records = {
-        "policy": "deterministic_reference_corridor_v1",
+        "policy": _CORRIDOR_POLICY,
         "record_count": int(logits.shape[0]),
         "fields": (
             "corridor_top_token_ids",
@@ -500,7 +542,7 @@ def _corridor_exemplar_payload(
         ),
     }
     exemplar_records = {
-        "policy": "deterministic_high_entropy_top_n_v1",
+        "policy": config.exemplar_selection_policy,
         "record_count": int(logits.shape[0] * effective_exemplar_top_n),
         "positions_per_example": int(effective_exemplar_top_n),
     }
@@ -514,11 +556,17 @@ def _corridor_exemplar_payload(
         },
         "exemplar_records": exemplar_records,
         "exemplar_summary": {
-            "selection_policy": "deterministic_high_entropy_top_n_v1",
+            "selection_policy": config.exemplar_selection_policy,
             "record_count": int(logits.shape[0] * effective_exemplar_top_n),
             "positions_per_example": int(effective_exemplar_top_n),
         },
-        "mode_records": np.zeros((logits.shape[0],), dtype=np.int32),
+        "mode_records": {
+            "mode_record_policy": _MODE_RECORD_POLICY,
+            "record_count": int(logits.shape[0]),
+            "mode_field": "corridor_top_token_ids",
+        },
+        "source_policy_summary": source_summary,
+        "schema_metadata": schema_metadata,
         "corridor_top_token_ids": top_ids,
         "corridor_top_probs": top_probs,
         "corridor_teacher_entropy": entropy,
@@ -527,6 +575,109 @@ def _corridor_exemplar_payload(
         "exemplar_positions": exemplar_positions,
         "exemplar_scores": exemplar_scores,
         "exemplar_selection_mask": selection_mask,
+        "exemplar_source_policy_ids": source_policy_ids,
+        "exemplar_source_effective_top_k": source["effective_top_k"].astype(np.int32),
+        "exemplar_source_top_mass": source["top_mass"].astype(np.float32),
+        "exemplar_source_tail_mass": source["tail_mass"].astype(np.float32),
+    }
+
+
+def _corridor_source_payload(
+    logits: np.ndarray,
+    *,
+    config: TeacherBackendConfig,
+) -> dict[str, np.ndarray]:
+    if config.exemplar_source_policy == "dense_logits":
+        topk = _dense_logits_to_topk_tail(logits, top_k=1)
+        return {
+            **topk,
+            "effective_top_k": np.ones(logits.shape[:2], dtype=np.int32),
+        }
+    if config.exemplar_source_policy == "cascaded_soft_labels_v1":
+        topk = _dense_logits_to_topk_tail(logits, top_k=config.top_k)
+        return {
+            **topk,
+            "bucket_masses": _tail_bucket_masses(
+                logits,
+                top_token_ids=topk["top_token_ids"],
+                num_buckets=config.num_buckets,
+            ),
+            "effective_top_k": np.full(
+                logits.shape[:2],
+                min(config.top_k, logits.shape[-1]),
+                dtype=np.int32,
+            ),
+        }
+    return _dense_logits_to_dynamic_cascaded(
+        logits,
+        dynamic_top_k_min=config.dynamic_top_k_min,
+        dynamic_top_k_max=config.dynamic_top_k_max,
+        dynamic_mass_threshold=config.dynamic_mass_threshold,
+        num_buckets=config.num_buckets,
+    )
+
+
+def _corridor_source_policy_summary(
+    config: TeacherBackendConfig,
+    *,
+    source_payload: dict[str, np.ndarray] | None = None,
+) -> dict[str, object]:
+    if config.exemplar_source_policy == "dense_logits":
+        return {
+            "exemplar_source_policy": "dense_logits",
+            "source_policy_kind": "full_resolution",
+            "source_policy_uses_bucketed_tail": False,
+            "source_policy_dynamic_top_k": False,
+            "source_effective_top_k_semantics": "top_mode_only",
+        }
+    if config.exemplar_source_policy == "cascaded_soft_labels_v1":
+        return {
+            "exemplar_source_policy": "cascaded_soft_labels_v1",
+            "source_policy_kind": "fixed_cascaded",
+            "source_policy_uses_bucketed_tail": True,
+            "source_policy_dynamic_top_k": False,
+            "requested_top_k": config.top_k,
+            "effective_top_k": min(config.top_k, config.vocab_size),
+            "num_buckets": config.num_buckets,
+            "bucket_policy": _TAIL_BUCKET_POLICY,
+        }
+    dynamic_metadata = _dynamic_cascaded_metadata(config, payload=source_payload)
+    return {
+        "exemplar_source_policy": "dynamic_cascaded_soft_labels_v1",
+        "source_policy_kind": "dynamic_cascaded",
+        "source_policy_uses_bucketed_tail": True,
+        "source_policy_dynamic_top_k": True,
+        "dynamic_top_k_policy": dynamic_metadata["dynamic_top_k_policy"],
+        "dynamic_top_k_min_effective": dynamic_metadata["dynamic_top_k_min_effective"],
+        "dynamic_top_k_max_effective": dynamic_metadata["dynamic_top_k_max_effective"],
+        "dynamic_mass_threshold": dynamic_metadata["dynamic_mass_threshold"],
+        "num_buckets": dynamic_metadata["num_buckets"],
+        "bucket_policy": dynamic_metadata["bucket_policy"],
+        "effective_top_k_min_observed": dynamic_metadata[
+            "effective_top_k_min_observed"
+        ],
+        "effective_top_k_max_observed": dynamic_metadata[
+            "effective_top_k_max_observed"
+        ],
+        "effective_top_k_mean_observed": dynamic_metadata[
+            "effective_top_k_mean_observed"
+        ],
+    }
+
+
+def _corridor_schema_metadata(config: TeacherBackendConfig) -> dict[str, object]:
+    return {
+        "schema_version": "corridor_exemplar_v1",
+        "corridor_payload_flavor": config.corridor_payload_flavor,
+        "production_corridor_schema": True,
+        "historical_parity_claimed": False,
+        "historical_reference_source": "cpu_reference_proxy",
+        "exemplar_source_policy": config.exemplar_source_policy,
+        "exemplar_selection_policy": config.exemplar_selection_policy,
+        "corridor_policy": _CORRIDOR_POLICY,
+        "mode_record_policy": _MODE_RECORD_POLICY,
+        "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
+        "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
     }
 
 

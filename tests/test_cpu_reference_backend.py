@@ -296,6 +296,8 @@ def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
         "exemplar_records",
         "exemplar_summary",
         "mode_records",
+        "source_policy_summary",
+        "schema_metadata",
         "corridor_top_token_ids",
         "corridor_top_probs",
         "corridor_teacher_entropy",
@@ -304,11 +306,33 @@ def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
         "exemplar_positions",
         "exemplar_scores",
         "exemplar_selection_mask",
+        "exemplar_source_policy_ids",
+        "exemplar_source_effective_top_k",
+        "exemplar_source_top_mass",
+        "exemplar_source_tail_mass",
     } <= set(payload)
     assert payload["corridor_records"]["record_count"] == 2
     assert payload["corridor_summary"]["record_count"] == 2
     assert payload["exemplar_records"]["record_count"] == 4
     assert payload["exemplar_summary"]["positions_per_example"] == 2
+    assert payload["mode_records"]["mode_record_policy"] == "top_mode_summary_v1"
+    assert (
+        payload["source_policy_summary"]["exemplar_source_policy"]
+        == "dynamic_cascaded_soft_labels_v1"
+    )
+    assert payload["source_policy_summary"]["source_policy_kind"] == (
+        "dynamic_cascaded"
+    )
+    assert payload["source_policy_summary"]["source_policy_uses_bucketed_tail"] is True
+    assert payload["source_policy_summary"]["source_policy_dynamic_top_k"] is True
+    assert payload["schema_metadata"]["schema_version"] == "corridor_exemplar_v1"
+    assert payload["schema_metadata"]["corridor_payload_flavor"] == "production_v1"
+    assert payload["schema_metadata"]["production_corridor_schema"] is True
+    assert payload["schema_metadata"]["historical_parity_claimed"] is False
+    assert (
+        payload["schema_metadata"]["historical_reference_source"]
+        == "cpu_reference_proxy"
+    )
     assert payload["corridor_top_token_ids"].shape == (2, 5)
     assert payload["corridor_top_probs"].shape == (2, 5)
     assert payload["corridor_teacher_entropy"].shape == (2, 5)
@@ -317,10 +341,17 @@ def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
     assert payload["exemplar_positions"].shape == (2, 2)
     assert payload["exemplar_scores"].shape == (2, 2)
     assert payload["exemplar_selection_mask"].shape == (2, 5)
+    assert payload["exemplar_source_policy_ids"].shape == (2, 5)
+    assert payload["exemplar_source_effective_top_k"].shape == (2, 5)
+    assert payload["exemplar_source_top_mass"].shape == (2, 5)
+    assert payload["exemplar_source_tail_mass"].shape == (2, 5)
+    assert (payload["exemplar_source_policy_ids"] == 3).all()
     assert np.count_nonzero(payload["exemplar_selection_mask"]) == 4
     assert np.isfinite(payload["corridor_top_probs"]).all()
     assert np.isfinite(payload["corridor_teacher_entropy"]).all()
     assert np.isfinite(payload["exemplar_scores"]).all()
+    assert np.isfinite(payload["exemplar_source_top_mass"]).all()
+    assert np.isfinite(payload["exemplar_source_tail_mass"]).all()
 
     for key in (
         "mode_records",
@@ -332,24 +363,94 @@ def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
         "exemplar_positions",
         "exemplar_scores",
         "exemplar_selection_mask",
+        "exemplar_source_policy_ids",
+        "exemplar_source_effective_top_k",
+        "exemplar_source_top_mass",
+        "exemplar_source_tail_mass",
     ):
         np.testing.assert_array_equal(first.payload[key], second.payload[key])
     assert first.payload["corridor_records"] == second.payload["corridor_records"]
     assert first.payload["corridor_summary"] == second.payload["corridor_summary"]
     assert first.payload["exemplar_records"] == second.payload["exemplar_records"]
     assert first.payload["exemplar_summary"] == second.payload["exemplar_summary"]
+    assert first.payload["mode_records"] == second.payload["mode_records"]
+    assert (
+        first.payload["source_policy_summary"]
+        == second.payload["source_policy_summary"]
+    )
+    assert first.payload["schema_metadata"] == second.payload["schema_metadata"]
 
     assert first.metadata["effective_runtime_mode"] == "cpu"
     assert first.metadata["effective_cpu_orchestration_mode"] == "serial"
     assert first.metadata["optimized_path_used"] is False
     assert first.metadata["fallback_used"] is False
     assert first.metadata["capability_status"] == "supported"
-    assert first.metadata["corridor_policy"] == "deterministic_reference_corridor_v1"
-    assert (
-        first.metadata["exemplar_selection_policy"]
-        == "deterministic_high_entropy_top_n_v1"
+    assert first.metadata["schema_version"] == "corridor_exemplar_v1"
+    assert first.metadata["corridor_payload_flavor"] == "production_v1"
+    assert first.metadata["production_corridor_schema"] is True
+    assert first.metadata["historical_parity_claimed"] is False
+    assert first.metadata["historical_reference_source"] == "cpu_reference_proxy"
+    assert first.metadata["exemplar_source_policy"] == (
+        "dynamic_cascaded_soft_labels_v1"
     )
+    assert first.metadata["exemplar_selection_policy"] == "entropy_top_n_v1"
+    assert first.metadata["corridor_policy"] == "production_corridor_records_v1"
+    assert first.metadata["mode_record_policy"] == "top_mode_summary_v1"
+    assert first.metadata["fingerprint_topology_policy"] == "sequence_position_v1"
+    assert first.metadata["corridor_confidence_policy"] == "top_probability_v1"
+    assert first.metadata["source_policy_kind"] == "dynamic_cascaded"
+    assert first.metadata["source_policy_uses_bucketed_tail"] is True
+    assert first.metadata["source_policy_dynamic_top_k"] is True
     assert first.metadata["exemplar_records"] == 2
+
+
+@pytest.mark.parametrize(
+    ("source_policy", "kind", "bucketed", "dynamic", "policy_id"),
+    (
+        ("dense_logits", "full_resolution", False, False, 1),
+        ("cascaded_soft_labels_v1", "fixed_cascaded", True, False, 2),
+        ("dynamic_cascaded_soft_labels_v1", "dynamic_cascaded", True, True, 3),
+    ),
+)
+def test_corridor_exemplar_source_policy_summary_is_truthful(
+    source_policy: str,
+    kind: str,
+    bucketed: bool,
+    dynamic: bool,
+    policy_id: int,
+) -> None:
+    backend = create_backend(
+        _config(
+            target_policy="corridor_exemplar_v1",
+            exemplar_source_policy=source_policy,
+        )
+    )
+
+    result = backend.emit_batch(_batch())
+    payload = result.payload
+    summary = payload["source_policy_summary"]
+
+    assert summary["exemplar_source_policy"] == source_policy
+    assert summary["source_policy_kind"] == kind
+    assert summary["source_policy_uses_bucketed_tail"] is bucketed
+    assert summary["source_policy_dynamic_top_k"] is dynamic
+    assert result.metadata["exemplar_source_policy"] == source_policy
+    assert result.metadata["source_policy_kind"] == kind
+    assert result.metadata["source_policy_uses_bucketed_tail"] is bucketed
+    assert result.metadata["source_policy_dynamic_top_k"] is dynamic
+    assert (payload["exemplar_source_policy_ids"] == policy_id).all()
+    if source_policy == "dense_logits":
+        assert summary["source_effective_top_k_semantics"] == "top_mode_only"
+        assert (payload["exemplar_source_effective_top_k"] == 1).all()
+    if source_policy == "cascaded_soft_labels_v1":
+        assert summary["requested_top_k"] == 4
+        assert summary["effective_top_k"] == 4
+        assert summary["num_buckets"] == 3
+    if source_policy == "dynamic_cascaded_soft_labels_v1":
+        assert summary["dynamic_top_k_policy"] == "mass_threshold_v1"
+        assert summary["dynamic_top_k_min_effective"] == 2
+        assert summary["dynamic_top_k_max_effective"] == 5
+        assert "effective_top_k_mean_observed" in summary
 
 
 def test_cpu_reference_metadata_records_requested_and_effective_values() -> None:
@@ -395,6 +496,9 @@ def test_cpu_reference_metadata_records_requested_and_effective_values() -> None
         ("dynamic_mass_threshold", 0.0, "dynamic_mass_threshold"),
         ("dynamic_mass_threshold", 1.1, "dynamic_mass_threshold"),
         ("dynamic_top_k_policy", "unknown", "dynamic_top_k_policy"),
+        ("exemplar_source_policy", "unknown", "exemplar_source_policy"),
+        ("exemplar_selection_policy", "unknown", "exemplar_selection_policy"),
+        ("corridor_payload_flavor", "proxy_v0", "corridor_payload_flavor"),
     ),
 )
 def test_invalid_cpu_reference_config_values_fail_clearly(
@@ -420,9 +524,8 @@ def test_cpu_reference_capabilities_mark_corridor_exemplar_supported() -> None:
     assert corridor.status == "supported"
     assert corridor.implemented_now
     assert not corridor.optimized
-    assert "Spec 3.3C.1 adds serial/reference CPU corridor/exemplar support" in (
-        corridor.notes
-    )
+    assert "Spec 3.3F8" in corridor.notes
+    assert "locked production schema" in corridor.notes
 
 
 def test_cpu_reference_capabilities_mark_dynamic_cascaded_supported() -> None:

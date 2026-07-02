@@ -91,7 +91,7 @@
     {
       "backend_family": "cpu_reference",
       "implemented_now": true,
-      "notes": "Spec 3.3C.1 adds serial/reference CPU corridor/exemplar support through the backend contract.",
+      "notes": "Spec 3.3F8 CPU reference corridor_exemplar_v1 emits the locked production schema with source-policy-aware metadata. It remains unoptimized CPU reference behavior and does not migrate the public builder.",
       "optimized": false,
       "runtime_mode": "cpu",
       "status": "supported",
@@ -136,7 +136,7 @@
     {
       "backend_family": "hf_torch",
       "implemented_now": false,
-      "notes": "HF Torch corridor/exemplar target policy is planned after the backend contract exists.",
+      "notes": "HF Torch corridor/exemplar target policy remains planned after the F8 production schema lock; no HF corridor emission is implemented now.",
       "optimized": false,
       "runtime_mode": "cpu",
       "status": "planned",
@@ -181,7 +181,7 @@
     {
       "backend_family": "gpu_torch",
       "implemented_now": false,
-      "notes": "Historical QRWKV-XLA optimization work can guide future corridor/exemplar acceleration, but active support is not implemented.",
+      "notes": "Historical QRWKV-XLA optimization work can guide future corridor/exemplar acceleration. Spec 3.3F8 locks the production schema; optimized gpu_torch implementation is planned for F9 and is not implemented now.",
       "optimized": false,
       "runtime_mode": "cpu_gpu",
       "status": "historical_reference_exists",
@@ -226,7 +226,7 @@
     {
       "backend_family": "jax_tpu",
       "implemented_now": false,
-      "notes": "TPU corridor/exemplar support is planned as a future backend family, not active implementation.",
+      "notes": "TPU corridor/exemplar support is planned as a future backend family after the F8 production schema lock, not active implementation.",
       "optimized": false,
       "runtime_mode": "cpu_tpu",
       "status": "planned",

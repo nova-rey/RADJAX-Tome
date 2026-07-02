@@ -59,3 +59,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3F7.1" in text
     assert "vectorized dynamic head selection" in text
     assert "bucketed tail is preserved" in text
+    assert "3.3F8" in text
+    assert "production_corridor_schema" in text
+    assert "exemplar_source_policy" in text

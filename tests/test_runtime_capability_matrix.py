@@ -62,7 +62,9 @@ def test_runtime_backend_doc_defines_architecture_vocabulary() -> None:
     assert "dynamic_cascaded_soft_labels_v1" in text
     assert "dynamic top-k explicit head" in text
     assert "bucketed tail" in text
-    assert "Future corridor/exemplar schema" in text
+    assert "Spec 3.3F8 locks `corridor_exemplar_v1`" in text
+    assert "production behavioral/fingerprint payload" in text
+    assert "Allowed exemplar source policies" in text
 
 
 def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
@@ -217,10 +219,9 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     assert corridor["implemented_now"]
     assert corridor["status"] == "supported"
     assert not corridor["optimized"]
-    assert (
-        "Spec 3.3C.1 adds serial/reference CPU corridor/exemplar support"
-        in (corridor["notes"])
-    )
+    assert "Spec 3.3F8" in corridor["notes"]
+    assert "locked production schema" in corridor["notes"]
+    assert "source-policy-aware metadata" in corridor["notes"]
     assert "public builder has not migrated" in dense["notes"]
 
     assert not any(
@@ -315,6 +316,7 @@ def test_runtime_capability_matrix_reflects_hf_torch_backend_contract() -> None:
     assert not corridor["implemented_now"]
     assert corridor["status"] == "planned"
     assert not corridor["optimized"]
+    assert "F8 production schema lock" in corridor["notes"]
     assert not any(
         capability["implemented_now"]
         for capability in matrix["capabilities"]
@@ -391,6 +393,8 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert corridor["status"] == "historical_reference_exists"
     assert not corridor["implemented_now"]
     assert not corridor["optimized"]
+    assert "Spec 3.3F8 locks the production schema" in corridor["notes"]
+    assert "planned for F9" in corridor["notes"]
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals

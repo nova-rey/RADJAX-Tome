@@ -81,9 +81,11 @@ Payload summary:
 - `cascaded_soft_labels_v1`: the top-k/tail fields plus `bucket_masses`
 - `dynamic_cascaded_soft_labels_v1`: dynamic top-k explicit head arrays,
   `top_selection_mask`, `effective_top_k`, and bucketed tail masses
-- `corridor_exemplar_v1`: `corridor_records`, `corridor_summary`,
-  `exemplar_records`, `exemplar_summary`, corridor token/entropy/confidence
-  arrays, and deterministic high-entropy exemplar selections
+- `corridor_exemplar_v1`: production behavioral/fingerprint payload with
+  `corridor_records`, `corridor_summary`, `exemplar_records`,
+  `exemplar_summary`, `mode_records`, `source_policy_summary`,
+  `schema_metadata`, corridor token/entropy/confidence arrays, source-policy
+  arrays, and entropy-selected exemplar positions
 
 The cascaded reference reducer removes top-k tokens, sorts the remaining tail
 probabilities descending, partitions them into fixed contiguous buckets, and
@@ -99,16 +101,17 @@ probability 0.0, and consumers must ignore them. The CPU reference records
 `effective_top_k`, threshold/min/max metadata, bucket metadata, and observed
 effective-k statistics.
 
-The corridor/exemplar reference reducer derives token-level behavior scores
-from deterministic CPU logits, summarizes confidence and entropy per batch, and
-selects exemplar positions with the stable
-`deterministic_high_entropy_top_n_v1` policy.
-
-Future corridor/exemplar schema work may consume
-`dynamic_cascaded_soft_labels_v1` as an exemplar source policy, using fields
-such as `effective_top_k`, `top_selection_mask`, `top_mass`, `tail_mass`,
-`bucket_masses`, and `teacher_entropy`. Spec 3.3F6 documents that path but does
-not implement corridor/exemplar production schema.
+Spec 3.3F8 locks `corridor_exemplar_v1` as a production
+behavioral/fingerprint payload, not another soft-label compression format. It
+records `schema_version=corridor_exemplar_v1`,
+`corridor_payload_flavor=production_v1`,
+`production_corridor_schema=true`, `historical_parity_claimed=false`, and a
+source-policy-aware summary. Allowed exemplar source policies are
+`dense_logits`, `cascaded_soft_labels_v1`, and
+`dynamic_cascaded_soft_labels_v1`; dynamic cascaded is the preferred future
+compact source. The CPU reference path remains deterministic/proxy math with
+`historical_reference_source=cpu_reference_proxy`. GPU corridor/exemplar
+acceleration remains F9.
 
 ## CPU Orchestration Runner
 
@@ -277,10 +280,10 @@ padded explicit-head arrays, `top_selection_mask` to identify selected slots,
 tail-probability bucket policy as fixed cascaded soft labels.
 
 `corridor_exemplar_v1` is the behavioral corridor plus exemplar-oriented target
-family. It may map to multiple artifact substructures later, and future
-production schema work may consume dense, fixed-cascaded, or dynamic-cascaded
-source policies. GPU acceleration for corridor/exemplar itself remains future
-work.
+family. As of Spec 3.3F8, it has a locked production payload flavor and is
+source-policy-aware. Dense, fixed-cascaded, and dynamic-cascaded source
+policies feed its behavioral fields; GPU acceleration for corridor/exemplar
+itself remains future F9 work.
 
 ## Support Statuses
 

@@ -94,7 +94,7 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | 3.3F6 | Dynamic Cascaded Soft Labels CPU Reference + Contract Shape | complete once the CPU reference contract shape lands |
 | 3.3F7 | GPU Dynamic Cascaded Soft Labels Reducer | complete once the gpu_torch dynamic reducer lands |
 | 3.3F7.1 | GPU Dynamic Cascaded Reducer Vectorization Rehearsal | complete once dynamic head selection vectorization lands |
-| 3.3F8 | Corridor/Exemplar Production Schema Lock | planned |
+| 3.3F8 | Corridor/Exemplar Production Schema Lock | complete once the production corridor schema lands |
 | 3.3F9 | GPU Corridor/Exemplar Acceleration | planned |
 | 3.3F10 | GPU Builder Integration Gate | planned |
 | 3.3F11 | GPU Runtime Final Polish / Doctor Metadata | planned |
@@ -139,6 +139,12 @@ Spec 3.3F7.1 is a narrow vectorization rehearsal for that dynamic reducer. It
 keeps the same payload and metadata contract, vectorizes dynamic explicit-head
 selection across batch/sequence positions, and preserves exact bucketed tail
 semantics without claiming measured speedups.
+
+Spec 3.3F8 locks `corridor_exemplar_v1` as a production behavioral/fingerprint
+schema. It is source-policy-aware across `dense_logits`,
+`cascaded_soft_labels_v1`, and `dynamic_cascaded_soft_labels_v1`, with dynamic
+cascaded as the preferred future compact source. GPU corridor/exemplar
+acceleration remains planned for F9.
 
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1

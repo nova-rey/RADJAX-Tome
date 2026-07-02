@@ -221,3 +221,22 @@ transfer.
 This is only a vectorization rehearsal. It does not implement
 corridor/exemplar production schema or acceleration, does not migrate the
 public builder, and does not add TPU/JAX support.
+
+## 2026-07-02 — Spec 3.3F8 Corridor/Exemplar Production Schema Lock
+
+Spec 3.3F8 locks `corridor_exemplar_v1` as a production behavioral/fingerprint
+schema. CPU reference emissions now record
+`production_corridor_schema=true`, `corridor_payload_flavor=production_v1`, and
+`historical_parity_claimed=false`, with `historical_reference_source` set to
+`cpu_reference_proxy` for the deterministic reference implementation.
+
+The schema is source-policy-aware through `exemplar_source_policy`. Allowed
+source policies are `dense_logits`, `cascaded_soft_labels_v1`, and
+`dynamic_cascaded_soft_labels_v1`, with dynamic cascaded serving as the
+preferred future compact source for optimized work. The production payload
+includes source policy summary and schema metadata alongside corridor,
+exemplar, mode, and source arrays.
+
+This does not implement GPU corridor/exemplar acceleration; future `gpu_torch`
+F9 owns that. It also does not migrate the public builder and does not add
+TPU/JAX support.

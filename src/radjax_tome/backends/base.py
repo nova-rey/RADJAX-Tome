@@ -42,6 +42,9 @@ class TeacherBackendConfig:
     top_k: int = 8
     num_buckets: int = 4
     exemplar_top_n: int = 1
+    exemplar_source_policy: str = "dynamic_cascaded_soft_labels_v1"
+    exemplar_selection_policy: str = "entropy_top_n_v1"
+    corridor_payload_flavor: str = "production_v1"
     dynamic_top_k_min: int = 1
     dynamic_top_k_max: int = 32
     dynamic_mass_threshold: float = 0.95
