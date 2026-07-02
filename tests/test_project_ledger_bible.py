@@ -54,3 +54,5 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3F6" in text
     assert "dynamic_cascaded_soft_labels_v1" in text
     assert "top_selection_mask" in text
+    assert "3.3F7" in text
+    assert "compact payload transfer" in text

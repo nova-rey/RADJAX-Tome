@@ -92,7 +92,7 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | 3.3F4.1 | Cascaded Chunking Metadata Truth Fix | complete once cascaded chunking overclaim is fixed |
 | 3.3F5 | GPU Runtime Fallback / Error Hardening | complete once diagnostics and fallback hardening land |
 | 3.3F6 | Dynamic Cascaded Soft Labels CPU Reference + Contract Shape | complete once the CPU reference contract shape lands |
-| 3.3F7 | GPU Dynamic Cascaded Soft Labels Reducer | planned |
+| 3.3F7 | GPU Dynamic Cascaded Soft Labels Reducer | complete once the gpu_torch dynamic reducer lands |
 | 3.3F8 | Corridor/Exemplar Production Schema Lock | planned |
 | 3.3F9 | GPU Corridor/Exemplar Acceleration | planned |
 | 3.3F10 | GPU Builder Integration Gate | planned |
@@ -128,6 +128,11 @@ Spec 3.3F6 adds `dynamic_cascaded_soft_labels_v1` as a CPU reference contract:
 dynamic top-k explicit head plus bucketed tail, with padded mask-driven payload
 shape. It does not add GPU support; Spec 3.3F7 owns the optimized GPU dynamic
 cascaded reducer.
+
+Spec 3.3F7 adds the optimized `gpu_torch` reducer for
+`dynamic_cascaded_soft_labels_v1`, matching the F6 payload shape while keeping
+dynamic head selection and bucketed tail reduction on Torch tensors before
+compact host transfer.
 
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F8

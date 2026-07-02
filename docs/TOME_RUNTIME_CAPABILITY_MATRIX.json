@@ -171,11 +171,11 @@
     },
     {
       "backend_family": "gpu_torch",
-      "implemented_now": false,
-      "notes": "Spec 3.3F6 defines the CPU reference contract shape for dynamic cascaded soft labels. Future Spec 3.3F7 will add the optimized gpu_torch reducer.",
-      "optimized": false,
+      "implemented_now": true,
+      "notes": "Spec 3.3F7 gpu_torch computes GPU dynamic top-k explicit head plus bucketed tail on CUDA or MPS and transfers only compact payload arrays back to host.",
+      "optimized": true,
       "runtime_mode": "cpu_gpu",
-      "status": "planned",
+      "status": "optimized",
       "target_policy": "dynamic_cascaded_soft_labels_v1"
     },
     {
@@ -265,15 +265,14 @@
     "metadata_implementation_required_now": false
   },
   "non_goals": [
-    "Do not migrate the public builder to hf_torch or gpu_torch in Spec 3.3F6.",
-    "Do not claim staged mode is performance optimized in Spec 3.3F6.",
-    "Do not claim measured peak GPU memory or OOM recovery in Spec 3.3F6.",
+    "Do not migrate the public builder to hf_torch or gpu_torch in Spec 3.3F7.",
+    "Do not claim staged mode is performance optimized in Spec 3.3F7.",
+    "Do not claim measured peak GPU memory or OOM recovery in Spec 3.3F7.",
     "Do not silently fall back to CPU when gpu_torch is explicitly requested.",
     "Do not implement backend-local CPU fallback when gpu_torch fallback_policy is auto.",
-    "Do not implement gpu_torch dynamic cascaded reduction until Spec 3.3F7.",
-    "Do not implement corridor/exemplar production schema or GPU corridor/exemplar acceleration in Spec 3.3F6.",
-    "Do not implement TPU/JAX backend code in Spec 3.3F6.",
-    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3F6."
+    "Do not implement corridor/exemplar production schema or GPU corridor/exemplar acceleration in Spec 3.3F7.",
+    "Do not implement TPU/JAX backend code in Spec 3.3F7.",
+    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3F7."
   ],
   "orchestration": {
     "default_mode": "auto",

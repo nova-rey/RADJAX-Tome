@@ -209,8 +209,12 @@ later, but `gpu_torch` itself does not call `hf_torch` or `cpu_reference` and
 does not emit CPU results for an explicit `cpu_gpu` request.
 
 Spec 3.3F6 defines `dynamic_cascaded_soft_labels_v1` in the CPU reference
-backend only. `gpu_torch` lists this target policy as planned/unimplemented;
-future Spec 3.3F7 will add the optimized GPU dynamic cascaded reducer.
+backend. Spec 3.3F7 adds the optimized `gpu_torch` reducer for that policy:
+dynamic top-k explicit head plus bucketed tail, with a mass-threshold cutoff
+bounded by dynamic min/max K. The reducer keeps logits on the selected
+accelerator, computes dynamic head selection and tail buckets with Torch
+tensors, and transfers only compact payload arrays back to host. The dynamic
+cascaded payload can later be used as a corridor/exemplar source policy.
 
 `corridor_exemplar_v1` remains historical-reference/future GPU work. Runtime
 fallback/error hardening is in place for implemented `gpu_torch` policies. The
@@ -230,8 +234,8 @@ Spec 3.3F4 adds optional vocab chunking and memory/workspace metadata for
 compact reducers. Spec 3.3F4.1 corrects cascaded chunking metadata so exact
 bucket construction does not overclaim effective chunked workspace. Spec 3.3F5
 adds structured diagnostics and no-silent-CPU-fallback error hardening. Spec
-3.3F6 defines the dynamic cascaded CPU contract shape only; GPU support remains
-future Spec 3.3F7 work.
+3.3F6 defines the dynamic cascaded CPU contract shape, and Spec 3.3F7 adds the
+optimized GPU dynamic cascaded reducer.
 
 `cpu_tpu` means CPU-side orchestration plus TPU/JAX/XLA-backed teacher
 execution and/or TPU-backed reduction. This is a future backend family; no
@@ -269,9 +273,10 @@ padded explicit-head arrays, `top_selection_mask` to identify selected slots,
 tail-probability bucket policy as fixed cascaded soft labels.
 
 `corridor_exemplar_v1` is the behavioral corridor plus exemplar-oriented target
-family. It may map to multiple artifact substructures later. GPU and TPU
-optimization should prioritize this compact behavioral format once the backend
-contract exists.
+family. It may map to multiple artifact substructures later, and future
+production schema work may consume dense, fixed-cascaded, or dynamic-cascaded
+source policies. GPU acceleration for corridor/exemplar itself remains future
+work.
 
 ## Support Statuses
 

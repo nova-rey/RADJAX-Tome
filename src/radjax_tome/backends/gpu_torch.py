@@ -43,15 +43,18 @@ _SUPPORTED_EMISSION_POLICIES = {
     "dense_logits",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
+    "dynamic_cascaded_soft_labels_v1",
 }
 _CAPABILITY_STATUS = {
     "dense_logits": "supported_debug",
     "topk_with_tail_v0": "optimized",
     "cascaded_soft_labels_v1": "optimized",
-    "dynamic_cascaded_soft_labels_v1": "planned",
+    "dynamic_cascaded_soft_labels_v1": "optimized",
 }
 _DEFAULT_GPU_VOCAB_CHUNK_SIZE = 8192
 _REDUCER_WORKSPACE_FACTOR = 3
+_DYNAMIC_TOP_K_POLICY = "mass_threshold_v1"
+_TAIL_BUCKET_POLICY = "contiguous_descending_tail_probability_mass"
 
 
 @dataclass(frozen=True)
@@ -167,13 +170,14 @@ class GPUTorchTeacherEmissionBackend:
                 backend_family=self.backend_family,
                 runtime_mode="cpu_gpu",
                 target_policy="dynamic_cascaded_soft_labels_v1",
-                status="planned",
-                optimized=False,
-                implemented_now=False,
+                status="optimized",
+                optimized=True,
+                implemented_now=True,
                 notes=(
-                    "Spec 3.3F6 defines the CPU reference contract shape for "
-                    "dynamic cascaded soft labels. Future Spec 3.3F7 will add "
-                    "the optimized gpu_torch reducer."
+                    "Spec 3.3F7 gpu_torch computes dynamic top-k explicit "
+                    "head plus bucketed tail on the selected CUDA or MPS "
+                    "accelerator and transfers only compact payload arrays "
+                    "back to host."
                 ),
             ),
         )
@@ -229,6 +233,25 @@ class GPUTorchTeacherEmissionBackend:
                     torch,
                     logits,
                     top_k=self.config.top_k,
+                    num_buckets=self.config.num_buckets,
+                    vocab_chunk_size=chunking_plan.effective_size,
+                )
+            except Exception as exc:
+                raise _wrap_device_error("compact reduction", exc, device) from exc
+            try:
+                payload = _compact_payload_to_numpy(compact_payload)
+            except Exception as exc:
+                raise _wrap_device_error(
+                    "compact tensor transfer to CPU", exc, device
+                ) from exc
+        elif self.config.target_policy == "dynamic_cascaded_soft_labels_v1":
+            try:
+                compact_payload = _gpu_dynamic_cascaded_reduce(
+                    torch,
+                    logits,
+                    dynamic_top_k_min=self.config.dynamic_top_k_min,
+                    dynamic_top_k_max=self.config.dynamic_top_k_max,
+                    dynamic_mass_threshold=self.config.dynamic_mass_threshold,
                     num_buckets=self.config.num_buckets,
                     vocab_chunk_size=chunking_plan.effective_size,
                 )
@@ -344,8 +367,8 @@ class GPUTorchTeacherEmissionBackend:
         if self.config.target_policy in {
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
         }:
-            effective_top_k = min(self.config.top_k, effective_vocab)
             compact_payload = compact_payload or {}
             compact_fields = _compact_payload_fields(self.config.target_policy)
             gpu_reduction_mode = _gpu_reduction_mode(
@@ -359,8 +382,6 @@ class GPUTorchTeacherEmissionBackend:
                 dtype_name=estimated_dense_logits_dtype,
             )
             compact_metadata = {
-                "requested_top_k": self.config.top_k,
-                "effective_top_k": effective_top_k,
                 "gpu_reduction_mode": gpu_reduction_mode,
                 "compact_payload_fields": compact_fields,
                 "compact_payload_arrays": [
@@ -388,14 +409,31 @@ class GPUTorchTeacherEmissionBackend:
                 "estimated_reducer_workspace_is_measured": False,
                 "estimated_dense_logits_dtype": estimated_dense_logits_dtype,
             }
+            if self.config.target_policy in {
+                "topk_with_tail_v0",
+                "cascaded_soft_labels_v1",
+            }:
+                effective_top_k = min(self.config.top_k, effective_vocab)
+                compact_metadata.update(
+                    {
+                        "requested_top_k": self.config.top_k,
+                        "effective_top_k": effective_top_k,
+                    }
+                )
             if self.config.target_policy == "cascaded_soft_labels_v1":
                 compact_metadata.update(
                     {
                         "num_buckets": self.config.num_buckets,
-                        "bucket_policy": (
-                            "contiguous_descending_tail_probability_mass"
-                        ),
+                        "bucket_policy": _TAIL_BUCKET_POLICY,
                     }
+                )
+            if self.config.target_policy == "dynamic_cascaded_soft_labels_v1":
+                compact_metadata.update(
+                    _dynamic_cascaded_metadata(
+                        self.config,
+                        effective_vocab_size=effective_vocab,
+                        compact_payload=compact_payload,
+                    )
                 )
             metadata.update(compact_metadata)
         return metadata
@@ -626,7 +664,8 @@ def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
         raise TeacherBackendUnsupportedPolicyError(
             "gpu_torch target_policy "
             f"{config.target_policy!r} is not implemented; supported policies "
-            "are dense_logits, topk_with_tail_v0, and cascaded_soft_labels_v1"
+            "are dense_logits, topk_with_tail_v0, cascaded_soft_labels_v1, "
+            "and dynamic_cascaded_soft_labels_v1"
         )
     if config.sequence_length <= 0:
         raise ValueError("sequence_length must be > 0")
@@ -640,6 +679,14 @@ def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
         raise ValueError("num_buckets must be > 0")
     if config.gpu_vocab_chunk_size is not None and config.gpu_vocab_chunk_size <= 0:
         raise ValueError("gpu_vocab_chunk_size must be None or > 0")
+    if config.dynamic_top_k_min < 1:
+        raise ValueError("dynamic_top_k_min must be >= 1")
+    if config.dynamic_top_k_max < config.dynamic_top_k_min:
+        raise ValueError("dynamic_top_k_max must be >= dynamic_top_k_min")
+    if not 0.0 < config.dynamic_mass_threshold <= 1.0:
+        raise ValueError("dynamic_mass_threshold must be > 0 and <= 1")
+    if config.dynamic_top_k_policy != _DYNAMIC_TOP_K_POLICY:
+        raise ValueError("dynamic_top_k_policy must be 'mass_threshold_v1'")
 
 
 def _base_diagnostics(
@@ -772,6 +819,45 @@ def _wrap_device_error(
     ):
         message += " mps unsupported operation."
     return TeacherBackendDeviceError(message)
+
+
+def _dynamic_cascaded_metadata(
+    config: TeacherBackendConfig,
+    *,
+    effective_vocab_size: int,
+    compact_payload: dict[str, np.ndarray],
+) -> dict[str, object]:
+    effective_max_k = min(config.dynamic_top_k_max, effective_vocab_size)
+    effective_min_k = min(config.dynamic_top_k_min, effective_max_k)
+    effective_top_k = compact_payload.get("effective_top_k")
+    if effective_top_k is None or effective_top_k.size == 0:
+        observed_min = effective_min_k
+        observed_max = effective_min_k
+        observed_mean = float(effective_min_k)
+    else:
+        observed_min = int(np.min(effective_top_k))
+        observed_max = int(np.max(effective_top_k))
+        observed_mean = float(np.mean(effective_top_k, dtype=np.float32))
+    return {
+        "dynamic_top_k_policy": config.dynamic_top_k_policy,
+        "dynamic_top_k_min_configured": config.dynamic_top_k_min,
+        "dynamic_top_k_max_configured": config.dynamic_top_k_max,
+        "dynamic_top_k_min_effective": effective_min_k,
+        "dynamic_top_k_max_effective": effective_max_k,
+        "dynamic_mass_threshold": config.dynamic_mass_threshold,
+        "num_buckets": config.num_buckets,
+        "bucket_policy": _TAIL_BUCKET_POLICY,
+        "padding_policy": "pad_to_dynamic_top_k_max_effective",
+        "masked_slot_policy": (
+            "masked top slots use token_id=0, top_prob=0.0, "
+            "top_log_prob=0.0 and must be ignored"
+        ),
+        "selection_mask_field": "top_selection_mask",
+        "top_selection_mask_semantics": "true means explicit selected token",
+        "effective_top_k_min_observed": observed_min,
+        "effective_top_k_max_observed": observed_max,
+        "effective_top_k_mean_observed": observed_mean,
+    }
 
 
 def detect_torch_accelerator() -> TorchAcceleratorDetection:
@@ -940,6 +1026,117 @@ def _gpu_cascaded_reduce(
     return payload
 
 
+def _gpu_dynamic_cascaded_reduce(
+    torch: Any,
+    logits: Any,
+    *,
+    dynamic_top_k_min: int,
+    dynamic_top_k_max: int,
+    dynamic_mass_threshold: float,
+    num_buckets: int,
+    vocab_chunk_size: int | None = None,
+) -> dict[str, Any]:
+    workspace = _gpu_probability_workspace(
+        torch,
+        logits,
+        vocab_chunk_size=vocab_chunk_size,
+    )
+    probs = _probs_from_workspace(torch, workspace)
+    log_probs = torch.log(torch.clamp(probs, min=torch.finfo(probs.dtype).tiny))
+    effective_max_k = min(dynamic_top_k_max, int(logits.shape[-1]))
+    effective_min_k = min(dynamic_top_k_min, effective_max_k)
+
+    top_token_ids = torch.zeros(
+        (*logits.shape[:2], effective_max_k),
+        dtype=torch.long,
+        device=logits.device,
+    )
+    top_log_probs = torch.zeros(
+        (*logits.shape[:2], effective_max_k),
+        dtype=probs.dtype,
+        device=logits.device,
+    )
+    top_probs = torch.zeros_like(top_log_probs)
+    top_selection_mask = torch.zeros(
+        (*logits.shape[:2], effective_max_k),
+        dtype=torch.bool,
+        device=logits.device,
+    )
+    effective_top_k = torch.zeros(
+        logits.shape[:2],
+        dtype=torch.long,
+        device=logits.device,
+    )
+    top_mass = torch.zeros(logits.shape[:2], dtype=probs.dtype, device=logits.device)
+    bucket_masses = torch.zeros(
+        (*logits.shape[:2], num_buckets),
+        dtype=probs.dtype,
+        device=logits.device,
+    )
+    teacher_entropy = -torch.sum(probs * log_probs, dim=-1)
+    sorted_probs, sorted_ids = torch.sort(probs, dim=-1, descending=True)
+
+    for row in range(int(logits.shape[0])):
+        for position in range(int(logits.shape[1])):
+            cumulative = torch.cumsum(sorted_probs[row, position], dim=-1)
+            threshold_hits = torch.nonzero(
+                cumulative >= dynamic_mass_threshold,
+                as_tuple=False,
+            )
+            threshold_count = (
+                int(threshold_hits[0].item()) + 1
+                if int(threshold_hits.numel()) > 0
+                else effective_max_k
+            )
+            selected_count = min(
+                max(threshold_count, effective_min_k),
+                effective_max_k,
+            )
+            selected_ids = sorted_ids[row, position, :selected_count]
+            selected_probs = probs[row, position].gather(0, selected_ids)
+            selected_log_probs = log_probs[row, position].gather(0, selected_ids)
+
+            top_token_ids[row, position, :selected_count] = selected_ids
+            top_probs[row, position, :selected_count] = selected_probs
+            top_log_probs[row, position, :selected_count] = selected_log_probs
+            top_selection_mask[row, position, :selected_count] = True
+            effective_top_k[row, position] = selected_count
+            top_mass[row, position] = torch.sum(selected_probs)
+
+            selected_mask = torch.zeros(
+                int(logits.shape[-1]),
+                dtype=torch.bool,
+                device=logits.device,
+            )
+            selected_mask.scatter_(0, selected_ids, True)
+            tail_probs = probs[row, position][~selected_mask]
+            if int(tail_probs.shape[0]) == 0:
+                continue
+            sorted_tail = torch.sort(tail_probs, descending=True).values
+            tail_count = int(sorted_tail.shape[0])
+            quotient, remainder = divmod(tail_count, num_buckets)
+            for bucket_id in range(num_buckets):
+                start = bucket_id * quotient + min(bucket_id, remainder)
+                stop = start + quotient + (1 if bucket_id < remainder else 0)
+                if start < stop:
+                    bucket_masses[row, position, bucket_id] = torch.sum(
+                        sorted_tail[start:stop]
+                    )
+
+    tail_mass = torch.clamp(1.0 - top_mass, min=0.0, max=1.0)
+    return {
+        "top_token_ids": top_token_ids,
+        "top_log_probs": top_log_probs,
+        "top_probs": top_probs,
+        "top_selection_mask": top_selection_mask,
+        "effective_top_k": effective_top_k,
+        "top_mass": top_mass,
+        "tail_mass": tail_mass,
+        "bucket_masses": bucket_masses,
+        "teacher_entropy": teacher_entropy,
+    }
+
+
 def _gpu_probability_workspace(
     torch: Any,
     logits: Any,
@@ -1030,6 +1227,16 @@ def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
             np.float32,
         ),
     }
+    if "top_selection_mask" in payload:
+        compact["top_selection_mask"] = _tensor_to_numpy(
+            payload["top_selection_mask"],
+            np.bool_,
+        )
+    if "effective_top_k" in payload:
+        compact["effective_top_k"] = _tensor_to_numpy(
+            payload["effective_top_k"],
+            np.int32,
+        )
     if "bucket_masses" in payload:
         compact["bucket_masses"] = _tensor_to_numpy(
             payload["bucket_masses"],
@@ -1108,6 +1315,14 @@ def _vocab_chunking_plan(
             used=False,
             reason="exact_bucket_policy_requires_full_probability_workspace",
         )
+    if target_policy == "dynamic_cascaded_soft_labels_v1":
+        return VocabChunkingPlan(
+            requested=True,
+            requested_size=requested_size,
+            effective_size=None,
+            used=False,
+            reason="dynamic_exact_bucket_policy_requires_full_probability_workspace",
+        )
     return VocabChunkingPlan(
         requested=True,
         requested_size=requested_size,
@@ -1139,6 +1354,18 @@ def _chunk_slices(
 
 
 def _compact_payload_fields(target_policy: str) -> list[str]:
+    if target_policy == "dynamic_cascaded_soft_labels_v1":
+        return [
+            "top_token_ids",
+            "top_log_probs",
+            "top_probs",
+            "top_selection_mask",
+            "effective_top_k",
+            "top_mass",
+            "tail_mass",
+            "bucket_masses",
+            "teacher_entropy",
+        ]
     fields = [
         "top_token_ids",
         "top_log_probs",
@@ -1157,6 +1384,8 @@ def _gpu_reduction_mode(
     *,
     vocab_chunking_used: bool,
 ) -> str:
+    if target_policy == "dynamic_cascaded_soft_labels_v1":
+        return "compact_dynamic_cascaded_soft_labels"
     if target_policy == "cascaded_soft_labels_v1":
         return (
             "compact_cascaded_soft_labels_chunked"

@@ -100,9 +100,9 @@ def test_gpu_torch_registered_with_compact_capabilities() -> None:
     assert statuses["cascaded_soft_labels_v1"] == "optimized"
     assert implemented["cascaded_soft_labels_v1"]
     assert optimized["cascaded_soft_labels_v1"]
-    assert statuses["dynamic_cascaded_soft_labels_v1"] == "planned"
-    assert not implemented["dynamic_cascaded_soft_labels_v1"]
-    assert not optimized["dynamic_cascaded_soft_labels_v1"]
+    assert statuses["dynamic_cascaded_soft_labels_v1"] == "optimized"
+    assert implemented["dynamic_cascaded_soft_labels_v1"]
+    assert optimized["dynamic_cascaded_soft_labels_v1"]
     assert statuses["corridor_exemplar_v1"] == "historical_reference_exists"
     assert not implemented["corridor_exemplar_v1"]
     assert not optimized["corridor_exemplar_v1"]
@@ -137,7 +137,12 @@ def test_gpu_torch_rejects_invalid_vocab_chunk_size(
 
 @pytest.mark.parametrize(
     "target_policy",
-    ("dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"),
+    (
+        "dense_logits",
+        "topk_with_tail_v0",
+        "cascaded_soft_labels_v1",
+        "dynamic_cascaded_soft_labels_v1",
+    ),
 )
 def test_gpu_torch_accepts_f3_supported_policies(target_policy: str) -> None:
     backend = GPUTorchTeacherEmissionBackend(_config(target_policy=target_policy))
@@ -145,15 +150,33 @@ def test_gpu_torch_accepts_f3_supported_policies(target_policy: str) -> None:
     assert backend.config.target_policy == target_policy
 
 
-@pytest.mark.parametrize(
-    "target_policy",
-    ("corridor_exemplar_v1", "dynamic_cascaded_soft_labels_v1"),
-)
-def test_gpu_torch_rejects_unimplemented_compact_policies(
-    target_policy: str,
-) -> None:
+def test_gpu_torch_rejects_unimplemented_compact_policies() -> None:
     with pytest.raises(TeacherBackendUnsupportedPolicyError, match="not implemented"):
-        GPUTorchTeacherEmissionBackend(_config(target_policy=target_policy))
+        GPUTorchTeacherEmissionBackend(_config(target_policy="corridor_exemplar_v1"))
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("dynamic_top_k_min", 0, "dynamic_top_k_min"),
+        ("dynamic_top_k_max", 0, "dynamic_top_k_max"),
+        ("dynamic_mass_threshold", 0.0, "dynamic_mass_threshold"),
+        ("dynamic_mass_threshold", 1.1, "dynamic_mass_threshold"),
+        ("dynamic_top_k_policy", "unknown", "dynamic_top_k_policy"),
+    ),
+)
+def test_gpu_torch_rejects_invalid_dynamic_config(
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        GPUTorchTeacherEmissionBackend(
+            _config(
+                target_policy="dynamic_cascaded_soft_labels_v1",
+                **{field: value},
+            )
+        )
 
 
 def test_detect_torch_accelerator_reports_missing_torch(monkeypatch) -> None:
@@ -482,6 +505,129 @@ def test_gpu_torch_cascaded_chunking_request_is_not_overclaimed() -> None:
     assert metadata["gpu_reduction_mode"] == "compact_cascaded_soft_labels"
     assert metadata["estimated_reducer_workspace_bytes"] == 2 * 4 * 11 * 4 * 3
     assert metadata["dense_logits_transferred_to_host"] is False
+
+
+def test_gpu_torch_dynamic_cascaded_metadata_records_compact_reduction() -> None:
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(
+            target_policy="dynamic_cascaded_soft_labels_v1",
+            dynamic_top_k_min=2,
+            dynamic_top_k_max=5,
+            dynamic_mass_threshold=0.75,
+            num_buckets=3,
+        )
+    )
+    compact_payload = {
+        "top_token_ids": np.zeros((2, 4, 5), dtype=np.int32),
+        "top_log_probs": np.zeros((2, 4, 5), dtype=np.float32),
+        "top_probs": np.zeros((2, 4, 5), dtype=np.float32),
+        "top_selection_mask": np.zeros((2, 4, 5), dtype=bool),
+        "effective_top_k": np.full((2, 4), 2, dtype=np.int32),
+        "top_mass": np.zeros((2, 4), dtype=np.float32),
+        "tail_mass": np.ones((2, 4), dtype=np.float32),
+        "bucket_masses": np.ones((2, 4, 3), dtype=np.float32),
+        "teacher_entropy": np.zeros((2, 4), dtype=np.float32),
+    }
+
+    metadata = backend.metadata(
+        actual_batch_size=2,
+        effective_vocab_size=11,
+        compact_payload=compact_payload,
+        estimated_dense_logits_dtype="float32",
+    )
+
+    assert metadata["requested_target_policy"] == "dynamic_cascaded_soft_labels_v1"
+    assert metadata["effective_target_policy"] == "dynamic_cascaded_soft_labels_v1"
+    assert metadata["capability_status"] == "optimized"
+    assert metadata["optimized_path_used"] is True
+    assert metadata["dense_debug_path"] is False
+    assert metadata["dense_logits_transferred_to_host"] is False
+    assert metadata["compact_reduction_used"] is True
+    assert metadata["gpu_compact_reduction_implemented"] is True
+    assert metadata["gpu_reduction_mode"] == "compact_dynamic_cascaded_soft_labels"
+    assert metadata["dynamic_top_k_policy"] == "mass_threshold_v1"
+    assert metadata["dynamic_top_k_min_configured"] == 2
+    assert metadata["dynamic_top_k_max_configured"] == 5
+    assert metadata["dynamic_top_k_min_effective"] == 2
+    assert metadata["dynamic_top_k_max_effective"] == 5
+    assert metadata["dynamic_mass_threshold"] == 0.75
+    assert metadata["selection_mask_field"] == "top_selection_mask"
+    assert metadata["top_selection_mask_semantics"] == (
+        "true means explicit selected token"
+    )
+    assert metadata["padding_policy"] == "pad_to_dynamic_top_k_max_effective"
+    assert "must be ignored" in metadata["masked_slot_policy"]
+    assert metadata["effective_top_k_min_observed"] == 2
+    assert metadata["effective_top_k_max_observed"] == 2
+    assert metadata["effective_top_k_mean_observed"] == pytest.approx(2.0)
+    assert metadata["num_buckets"] == 3
+    assert metadata["bucket_policy"] == "contiguous_descending_tail_probability_mass"
+    assert metadata["compact_payload_arrays"] == [
+        "top_token_ids",
+        "top_log_probs",
+        "top_probs",
+        "top_selection_mask",
+        "effective_top_k",
+        "top_mass",
+        "tail_mass",
+        "bucket_masses",
+        "teacher_entropy",
+    ]
+    assert metadata["compact_payload_fields"] == metadata["compact_payload_arrays"]
+    assert metadata["compact_bytes_transferred_to_host"] == sum(
+        int(value.nbytes) for value in compact_payload.values()
+    )
+    assert metadata["estimated_dense_logits_bytes"] == 2 * 4 * 11 * 4
+    assert metadata["estimated_reducer_workspace_bytes"] == 2 * 4 * 11 * 4 * 3
+    assert metadata["estimated_reducer_workspace_is_measured"] is False
+    assert metadata["fallback_used"] is False
+    assert metadata["fallback_policy"] == "error"
+    assert metadata["failure_stage"] == "none"
+    assert metadata["failure_reason"] is None
+
+
+def test_gpu_torch_dynamic_cascaded_chunking_request_is_not_overclaimed() -> None:
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(
+            target_policy="dynamic_cascaded_soft_labels_v1",
+            dynamic_top_k_min=2,
+            dynamic_top_k_max=5,
+            dynamic_mass_threshold=0.75,
+            num_buckets=3,
+            gpu_enable_vocab_chunking=True,
+            gpu_vocab_chunk_size=5,
+        )
+    )
+    compact_payload = {
+        "top_token_ids": np.zeros((2, 4, 5), dtype=np.int32),
+        "top_log_probs": np.zeros((2, 4, 5), dtype=np.float32),
+        "top_probs": np.zeros((2, 4, 5), dtype=np.float32),
+        "top_selection_mask": np.zeros((2, 4, 5), dtype=bool),
+        "effective_top_k": np.full((2, 4), 2, dtype=np.int32),
+        "top_mass": np.zeros((2, 4), dtype=np.float32),
+        "tail_mass": np.ones((2, 4), dtype=np.float32),
+        "bucket_masses": np.ones((2, 4, 3), dtype=np.float32),
+        "teacher_entropy": np.zeros((2, 4), dtype=np.float32),
+    }
+
+    metadata = backend.metadata(
+        actual_batch_size=2,
+        effective_vocab_size=11,
+        compact_payload=compact_payload,
+        estimated_dense_logits_dtype="float32",
+    )
+
+    assert metadata["vocab_chunking_requested"] is True
+    assert metadata["vocab_chunking_used"] is False
+    assert (
+        metadata["vocab_chunking_reason"]
+        == "dynamic_exact_bucket_policy_requires_full_probability_workspace"
+    )
+    assert metadata["gpu_vocab_chunk_size_requested"] == 5
+    assert metadata["gpu_vocab_chunk_size_effective"] is None
+    assert metadata["gpu_vocab_chunks_per_batch"] == 1
+    assert metadata["gpu_reduction_mode"] == "compact_dynamic_cascaded_soft_labels"
+    assert metadata["estimated_reducer_workspace_bytes"] == 2 * 4 * 11 * 4 * 3
 
 
 def test_gpu_topk_tail_reducer_shapes_and_mass_accounting() -> None:
@@ -814,6 +960,72 @@ def test_gpu_torch_real_cascaded_emission_when_local_model_and_device_exist() ->
         result.metadata["bucket_policy"]
         == "contiguous_descending_tail_probability_mass"
     )
+    assert result.metadata["compact_bytes_transferred_to_host"] > 0
+    assert result.metadata["estimated_dense_logits_bytes"] > 0
+    for value in result.payload.values():
+        if isinstance(value, np.ndarray):
+            assert value.__class__.__module__.startswith("numpy")
+
+
+def test_gpu_torch_real_dynamic_cascaded_emission_when_model_and_device_exist() -> None:
+    model_dir = os.environ.get("RADJAX_TOME_TEST_HF_MODEL_DIR")
+    if not model_dir or not Path(model_dir).exists():
+        pytest.skip("RADJAX_TOME_TEST_HF_MODEL_DIR is not configured")
+    if not _optional_dependencies_available():
+        pytest.skip("optional torch/transformers dependencies are not installed")
+    if not detect_torch_accelerator().available:
+        pytest.skip("no CUDA or MPS Torch accelerator is available")
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(
+            model_id=model_dir,
+            tokenizer_id=model_dir,
+            target_policy="dynamic_cascaded_soft_labels_v1",
+            vocab_size=1,
+            dynamic_top_k_min=1,
+            dynamic_top_k_max=3,
+            dynamic_mass_threshold=0.75,
+            num_buckets=2,
+        )
+    )
+
+    result = backend.emit_batch(_batch())
+
+    assert result.backend_id == "gpu_torch"
+    assert result.runtime_mode == "cpu_gpu"
+    assert result.target_policy == "dynamic_cascaded_soft_labels_v1"
+    assert result.input_ids.shape == (2, 4)
+    assert result.attention_mask.shape == (2, 4)
+    assert result.payload["top_token_ids"].shape[:2] == (2, 4)
+    assert (
+        result.payload["top_log_probs"].shape == result.payload["top_token_ids"].shape
+    )
+    assert result.payload["top_probs"].shape == result.payload["top_token_ids"].shape
+    assert result.payload["top_selection_mask"].shape == (
+        result.payload["top_token_ids"].shape
+    )
+    assert result.payload["top_selection_mask"].dtype == np.bool_
+    assert result.payload["effective_top_k"].shape == (2, 4)
+    assert result.payload["top_mass"].shape == (2, 4)
+    assert result.payload["tail_mass"].shape == (2, 4)
+    assert result.payload["bucket_masses"].shape == (2, 4, 2)
+    assert result.payload["teacher_entropy"].shape == (2, 4)
+    np.testing.assert_allclose(
+        result.payload["bucket_masses"].sum(axis=-1),
+        result.payload["tail_mass"],
+        rtol=1e-5,
+        atol=1e-5,
+    )
+    assert result.metadata["runtime_kind"] == "gpu_torch"
+    assert result.metadata["device_kind"] in {"cuda", "mps"}
+    assert result.metadata["optimized_path_used"] is True
+    assert result.metadata["dense_debug_path"] is False
+    assert result.metadata["dense_logits_transferred_to_host"] is False
+    assert result.metadata["compact_reduction_used"] is True
+    assert result.metadata["gpu_compact_reduction_implemented"] is True
+    assert (
+        result.metadata["gpu_reduction_mode"] == "compact_dynamic_cascaded_soft_labels"
+    )
+    assert result.metadata["dynamic_top_k_policy"] == "mass_threshold_v1"
     assert result.metadata["compact_bytes_transferred_to_host"] > 0
     assert result.metadata["estimated_dense_logits_bytes"] > 0
     for value in result.payload.values():

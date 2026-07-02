@@ -194,3 +194,17 @@ then bucket the non-selected tail. This creates the reference oracle for future
 corridor/exemplar schema work a possible exemplar source policy. It does not
 migrate the public builder, add TPU/JAX, or implement corridor/exemplar
 production schema.
+
+## 2026-07-02 — Spec 3.3F7 GPU Dynamic Cascaded Reducer
+
+Spec 3.3F7 adds optimized `gpu_torch` support for
+`dynamic_cascaded_soft_labels_v1`. The reducer computes the dynamic top-k
+explicit head and bucketed tail with Torch tensors, using the
+`mass_threshold_v1` policy and preserving `top_selection_mask` plus
+`effective_top_k` in the compact payload.
+
+This path uses compact payload transfer only:
+`dense_logits_transferred_to_host=false` for dynamic cascaded emission. Dynamic
+cascaded can later serve as a corridor/exemplar source policy, but this spec
+does not migrate the public builder, add TPU/JAX, or implement
+corridor/exemplar production schema.

@@ -169,7 +169,12 @@ def test_runtime_capability_matrix_reflects_contract_skeleton_only() -> None:
         for capability in capabilities
         if capability["backend_family"] == "gpu_torch"
         and capability["target_policy"]
-        not in {"dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"}
+        not in {
+            "dense_logits",
+            "topk_with_tail_v0",
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        }
     )
     assert not any(
         "Spec 3.3B" in capability["notes"]
@@ -228,7 +233,12 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
         for capability in matrix["capabilities"]
         if capability["backend_family"] == "gpu_torch"
         and capability["target_policy"]
-        not in {"dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"}
+        not in {
+            "dense_logits",
+            "topk_with_tail_v0",
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        }
     )
 
 
@@ -259,7 +269,12 @@ def test_runtime_capability_matrix_documents_orchestration() -> None:
         for capability in matrix["capabilities"]
         if capability["backend_family"] == "gpu_torch"
         and capability["target_policy"]
-        not in {"dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"}
+        not in {
+            "dense_logits",
+            "topk_with_tail_v0",
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        }
     )
 
 
@@ -310,7 +325,12 @@ def test_runtime_capability_matrix_reflects_hf_torch_backend_contract() -> None:
         for capability in matrix["capabilities"]
         if capability["backend_family"] == "gpu_torch"
         and capability["target_policy"]
-        not in {"dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"}
+        not in {
+            "dense_logits",
+            "topk_with_tail_v0",
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        }
     )
 
 
@@ -361,10 +381,12 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "shared probability workspace reuse" in cascaded["notes"]
     assert "structured runtime diagnostics" in cascaded["notes"]
     assert dynamic["runtime_mode"] == "cpu_gpu"
-    assert dynamic["status"] == "planned"
-    assert not dynamic["implemented_now"]
-    assert not dynamic["optimized"]
+    assert dynamic["status"] == "optimized"
+    assert dynamic["implemented_now"]
+    assert dynamic["optimized"]
     assert "Spec 3.3F7" in dynamic["notes"]
+    assert "dynamic top-k explicit head plus bucketed tail" in dynamic["notes"]
+    assert "compact payload arrays" in dynamic["notes"]
     assert corridor["runtime_mode"] == "cpu_gpu"
     assert corridor["status"] == "historical_reference_exists"
     assert not corridor["implemented_now"]
@@ -372,6 +394,6 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals
-    assert "Spec 3.3F6" in non_goals
+    assert "Spec 3.3F7" in non_goals
     assert "backend-local CPU fallback" in non_goals
     assert "measured peak GPU memory" in non_goals
