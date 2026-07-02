@@ -9,6 +9,8 @@ from radjax_tome.backends.base import (
     TeacherBackendConfig,
     TeacherBatchInput,
     TeacherEmissionResult,
+    resolve_gpu_batch_size_policy,
+    validate_gpu_batch_size_policy_config,
 )
 
 
@@ -36,6 +38,7 @@ class FakeNumpyTeacherEmissionBackend:
             raise ValueError("fake_numpy supports only runtime_mode='cpu'")
         if config.target_policy != "dense_logits":
             raise ValueError("fake_numpy supports only target_policy='dense_logits'")
+        validate_gpu_batch_size_policy_config(config)
         self.config = config
 
     def capabilities(self) -> tuple[BackendCapability, ...]:
@@ -61,19 +64,20 @@ class FakeNumpyTeacherEmissionBackend:
             sequence_length=self.config.sequence_length,
             vocab_size=self.config.vocab_size,
         )
+        payload = {"logits": _deterministic_logits(input_ids, self.config.vocab_size)}
         return TeacherEmissionResult(
             backend_id=self.backend_id,
             runtime_mode="cpu",
             target_policy="dense_logits",
             input_ids=input_ids,
             attention_mask=attention_mask,
-            payload={
-                "logits": _deterministic_logits(input_ids, self.config.vocab_size)
-            },
-            metadata=self.metadata(),
+            payload=payload,
+            metadata=self.metadata(payload=payload),
         )
 
-    def metadata(self) -> dict[str, object]:
+    def metadata(
+        self, payload: dict[str, np.ndarray] | None = None
+    ) -> dict[str, object]:
         return {
             "requested_runtime_mode": self.config.runtime_mode,
             "effective_runtime_mode": "cpu",
@@ -85,6 +89,7 @@ class FakeNumpyTeacherEmissionBackend:
             "device_kind": "cpu",
             "optimized_path_used": False,
             "fallback_used": False,
+            **resolve_gpu_batch_size_policy(self.config, payload=payload),
         }
 
     def close(self) -> None:

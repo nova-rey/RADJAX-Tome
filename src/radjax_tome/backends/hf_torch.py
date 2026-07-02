@@ -11,6 +11,8 @@ from radjax_tome.backends.base import (
     TeacherBackendConfig,
     TeacherBatchInput,
     TeacherEmissionResult,
+    resolve_gpu_batch_size_policy,
+    validate_gpu_batch_size_policy_config,
 )
 
 _SUPPORTED_EMISSION_POLICIES = {
@@ -50,6 +52,7 @@ class HFTorchTeacherEmissionBackend:
             raise ValueError("sequence_length must be > 0")
         if config.batch_size <= 0:
             raise ValueError("batch_size must be > 0")
+        validate_gpu_batch_size_policy_config(config)
         if config.vocab_size <= 0:
             raise ValueError("vocab_size must be > 0")
         if config.top_k <= 0:
@@ -174,6 +177,7 @@ class HFTorchTeacherEmissionBackend:
             metadata=self.metadata(
                 actual_batch_size=len(batch.texts),
                 effective_vocab_size=effective_vocab_size,
+                payload=payload,
             ),
         )
 
@@ -182,6 +186,7 @@ class HFTorchTeacherEmissionBackend:
         *,
         actual_batch_size: int | None = None,
         effective_vocab_size: int | None = None,
+        payload: dict[str, np.ndarray] | None = None,
     ) -> dict[str, object]:
         tokenizer_id = _effective_tokenizer_id(self.config)
         local_files_only = (
@@ -222,6 +227,7 @@ class HFTorchTeacherEmissionBackend:
             "effective_vocab_size": effective_vocab,
             "vocab_size_mismatch": self.config.vocab_size != effective_vocab,
         }
+        metadata.update(resolve_gpu_batch_size_policy(self.config, payload=payload))
         if self.config.target_policy in {
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",

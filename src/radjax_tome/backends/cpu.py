@@ -11,6 +11,8 @@ from radjax_tome.backends.base import (
     TeacherBatchInput,
     TeacherEmissionResult,
     resolve_exemplar_capture_policy,
+    resolve_gpu_batch_size_policy,
+    validate_gpu_batch_size_policy_config,
 )
 
 _SUPPORTED_EMISSION_POLICIES = {
@@ -67,6 +69,7 @@ class CPUReferenceTeacherEmissionBackend:
             raise ValueError("sequence_length must be > 0")
         if config.batch_size <= 0:
             raise ValueError("batch_size must be > 0")
+        validate_gpu_batch_size_policy_config(config)
         if config.vocab_size <= 0:
             raise ValueError("vocab_size must be > 0")
         if config.top_k <= 0:
@@ -254,6 +257,7 @@ class CPUReferenceTeacherEmissionBackend:
             ),
             "vocab_size": self.config.vocab_size,
         }
+        metadata.update(resolve_gpu_batch_size_policy(self.config, payload=payload))
         if self.config.target_policy in {
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",

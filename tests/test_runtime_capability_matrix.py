@@ -73,6 +73,9 @@ def test_runtime_backend_doc_defines_architecture_vocabulary() -> None:
     assert "Spec 3.3F9.3 adds `exemplar_capture_mode=auto`" in text
     assert "auto_policy_reason" in text
     assert "auto_policy_inputs_missing" in text
+    assert "Spec 3.3F9.4 adds GPU batch-size policy" in text
+    assert "gpu_batch_size_policy_v1" in text
+    assert "exponential_probe_v1" in text
 
 
 def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
@@ -235,6 +238,8 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     assert "two_pass_sparse_exemplar" in corridor["notes"]
     assert "Spec 3.3F9.3" in corridor["notes"]
     assert "auto_policy_reason" in corridor["notes"]
+    assert "Spec 3.3F9.4" in corridor["notes"]
+    assert "batch-size policy" in corridor["notes"]
     assert "public builder has not migrated" in dense["notes"]
 
     assert not any(
@@ -418,6 +423,8 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "score_pass" in corridor["notes"]
     assert "Spec 3.3F9.3" in corridor["notes"]
     assert "auto_policy_reason" in corridor["notes"]
+    assert "Spec 3.3F9.4" in corridor["notes"]
+    assert "batch-size policy" in corridor["notes"]
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals

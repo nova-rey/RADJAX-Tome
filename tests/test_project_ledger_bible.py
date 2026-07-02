@@ -76,3 +76,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "exemplar_capture_mode=auto" in text
     assert "auto_policy_reason" in text
     assert "auto_policy_inputs_missing" in text
+    assert "3.3F9.4" in text
+    assert "gpu batch size policy" in text
+    assert "exponential_probe_v1" in text

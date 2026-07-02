@@ -12,6 +12,8 @@ from radjax_tome.backends.base import (
     TeacherBatchInput,
     TeacherEmissionResult,
     resolve_exemplar_capture_policy,
+    resolve_gpu_batch_size_policy,
+    validate_gpu_batch_size_policy_config,
 )
 from radjax_tome.backends.hf_torch import _effective_tokenizer_id
 
@@ -438,6 +440,12 @@ class GPUTorchTeacherEmissionBackend:
             "gpu_vocab_chunk_size_effective": chunking_plan.effective_size,
             "gpu_vocab_chunks_per_batch": chunks_per_batch,
         }
+        metadata.update(
+            resolve_gpu_batch_size_policy(
+                self.config,
+                payload=compact_payload,
+            )
+        )
         if chunking_plan.reason is not None:
             metadata["vocab_chunking_reason"] = chunking_plan.reason
         if self.config.target_policy in {
@@ -769,6 +777,7 @@ def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
         raise ValueError("sequence_length must be > 0")
     if config.batch_size <= 0:
         raise ValueError("batch_size must be > 0")
+    validate_gpu_batch_size_policy_config(config)
     if config.vocab_size <= 0:
         raise ValueError("vocab_size must be > 0")
     if config.top_k <= 0:

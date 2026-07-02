@@ -143,6 +143,19 @@ expected selected fraction, and any available disk budget, then records
 `auto_policy_inputs_missing` in metadata. The policy is an estimate; reducer
 semantics do not change.
 
+Spec 3.3F9.4 adds GPU batch-size policy and guardrail metadata. Batch size N
+means N examples enter the backend and one batched result with leading
+dimension N comes back. The backend does not stream examples back one by one
+and does not secretly split oversized batches; the future builder/orchestrator
+owns probing and scheduling. The policy modes are `preset`, `custom`, and
+`auto`: presets allow 1/2/4/8/16/32/64, `custom` preserves the user-specified
+positive batch size, and `custom >64` is allowed with warning metadata. Auto
+uses `exponential_probe_v1`, chooses the last good batch from probe results,
+and can use midpoint refinement. Metadata records estimated-vs-measured byte
+caveats and measured compact payload bytes when arrays are available. F9.4 is
+single-device only; multidevice vocabulary is future-reserved with
+`multidevice_enabled=false` and `batch_partition_strategy=single_device`.
+
 ## CPU Orchestration Runner
 
 Spec 3.3D adds a backend batch runner above backend emission. The runner
@@ -325,6 +338,13 @@ public builder migration or TPU/JAX.
 Spec 3.3F9.3 adds `auto` capture selection. Manual overrides win, and auto
 records estimated byte counts, expected selected fraction, disk budget if
 known, missing inputs, and the reason for the effective mode.
+Spec 3.3F9.4 adds `gpu_batch_size_policy_v1` guardrail metadata. `preset`,
+`custom`, and `auto` modes resolve an effective batch size without changing the
+backend batch-in/batch-out reducer semantics. `exponential_probe_v1` synthetic
+probe results choose the last good batch, `custom >64` emits a warning, and
+estimated-vs-measured byte fields are recorded without claiming measured GPU
+peak memory. Public builder migration, multidevice scheduling, and TPU/JAX
+remain out of scope.
 
 ## Support Statuses
 

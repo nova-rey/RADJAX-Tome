@@ -169,6 +169,15 @@ estimated one-pass candidate bytes, two-pass score bytes, selected-pass bytes,
 expected selected fraction, disk budget when known, missing inputs, and an
 explicit policy reason in metadata.
 
+Spec 3.3F9.4 adds GPU batch size policy guardrails before public builder
+integration. `preset`, `custom`, and `auto` modes resolve an effective batch
+size without changing backend batch-in/batch-out behavior. Auto uses
+`exponential_probe_v1` synthetic probe results to choose the last good batch,
+custom values above 64 are allowed with warning metadata, and
+estimated-vs-measured byte caveats are recorded. This is single-device only,
+future-reserves multidevice vocabulary, and does not migrate the builder or add
+TPU/JAX support.
+
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1
 dynamic reducer vectorization rehearsal, F8 corridor/exemplar production

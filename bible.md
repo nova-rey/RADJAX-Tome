@@ -293,3 +293,20 @@ Auto records `exemplar_capture_policy=auto_exemplar_capture_policy_v1`,
 `expected_selected_exemplar_fraction`, `available_disk_budget_bytes`, and
 `auto_policy_inputs_missing`. This does not change reducer semantics, migrate
 the public builder, or add TPU/JAX.
+
+## 2026-07-02 — Spec 3.3F9.4 GPU Batch Size Policy Guardrails
+
+Spec 3.3F9.4 adds a gpu batch size policy with
+`gpu_batch_size_policy_v1` guardrail metadata and `preset`, `custom`, and
+`auto` modes. Presets are
+bounded to 1/2/4/8/16/32/64, `custom` preserves the requested batch size, and
+`custom >64` is allowed with warning metadata.
+
+Auto uses `exponential_probe_v1` synthetic probe results to choose the last
+good batch, with optional midpoint refinement. Metadata records the estimated
+vs measured bytes caveat, actual compact payload bytes when arrays are
+available, and no measured GPU peak memory claim unless measured.
+
+F9.4 preserves batch-in/batch-out backend behavior, remains single-device only,
+future-reserves multidevice vocabulary, does not migrate the public builder,
+and does not add TPU/JAX.
