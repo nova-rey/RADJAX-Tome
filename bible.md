@@ -128,3 +128,14 @@ payload arrays back to host as a compact payload.
 The `dense_logits` debug path still transfers full logits to host and remains
 unoptimized. This spec does not implement cascaded GPU reduction, chunked vocab
 reduction, public builder migration, or TPU/JAX support.
+
+## 2026-07-02 — Spec 3.3F3 GPU Cascaded Soft-Label Reducer
+
+Spec 3.3F3 adds `cascaded_soft_labels_v1` as an optimized `gpu_torch` compact
+path. The GPU compact cascaded reducer builds on the top-k/tail reducer,
+computes `bucket_masses` on the selected CUDA or MPS device with contiguous
+descending tail-probability buckets, and transfers only compact payload arrays
+back to host.
+
+This does not implement chunked vocab reduction, GPU corridor/exemplar
+acceleration, public builder migration, or TPU/JAX support.

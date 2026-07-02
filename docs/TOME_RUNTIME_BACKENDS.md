@@ -148,10 +148,14 @@ After model forward, logits remain as Torch tensors on the selected accelerator
 while log-softmax, top-k probability, tail mass, and entropy are computed. Only
 the compact payload arrays move back to host.
 
-`cascaded_soft_labels_v1` and `corridor_exemplar_v1` remain
-historical-reference/future GPU compact-reduction work. Chunked vocab reduction
-and memory hardening remain future Spec 3.3F4 work. The public builder has not
-migrated to `gpu_torch`.
+Spec 3.3F3 adds `cascaded_soft_labels_v1` as an optimized compact GPU
+reduction path. It extends the top-k/tail reducer with `bucket_masses` computed
+on the selected accelerator using contiguous descending tail-probability
+buckets. Only compact payload arrays move back to host.
+
+`corridor_exemplar_v1` remains historical-reference/future GPU work. Chunked
+vocab reduction and memory hardening remain future Spec 3.3F4 work. The public
+builder has not migrated to `gpu_torch`.
 
 ## Runtime Modes
 
@@ -161,7 +165,8 @@ is the universal correctness and reference path.
 `cpu_gpu` means CPU-side orchestration plus GPU-backed teacher execution and/or
 GPU-backed reduction. Spec 3.3F1 implements a dense debug/smoke HF Torch path
 on CUDA or MPS. Spec 3.3F2 adds compact top-k/tail reduction on the accelerator.
-Cascaded, chunked-vocab, and memory-hardening work remains future 3.3F work.
+Spec 3.3F3 adds compact cascaded soft-label reduction on the accelerator.
+Chunked-vocab and memory-hardening work remains future 3.3F work.
 
 `cpu_tpu` means CPU-side orchestration plus TPU/JAX/XLA-backed teacher
 execution and/or TPU-backed reduction. This is a future backend family; no

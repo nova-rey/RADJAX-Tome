@@ -71,7 +71,7 @@ print(",".join(loaded))
     assert result.stdout.strip() == ""
 
 
-def test_gpu_torch_registered_with_dense_debug_and_topk_capabilities() -> None:
+def test_gpu_torch_registered_with_compact_capabilities() -> None:
     capabilities = [
         capability
         for capability in list_backend_capabilities()
@@ -96,10 +96,12 @@ def test_gpu_torch_registered_with_dense_debug_and_topk_capabilities() -> None:
     assert statuses["topk_with_tail_v0"] == "optimized"
     assert implemented["topk_with_tail_v0"]
     assert optimized["topk_with_tail_v0"]
-    for policy in ("cascaded_soft_labels_v1", "corridor_exemplar_v1"):
-        assert statuses[policy] == "historical_reference_exists"
-        assert not implemented[policy]
-        assert not optimized[policy]
+    assert statuses["cascaded_soft_labels_v1"] == "optimized"
+    assert implemented["cascaded_soft_labels_v1"]
+    assert optimized["cascaded_soft_labels_v1"]
+    assert statuses["corridor_exemplar_v1"] == "historical_reference_exists"
+    assert not implemented["corridor_exemplar_v1"]
+    assert not optimized["corridor_exemplar_v1"]
 
 
 def test_gpu_torch_constructs_without_loading_optional_deps() -> None:
@@ -118,23 +120,17 @@ def test_gpu_torch_rejects_non_gpu_runtime_modes(runtime_mode: str) -> None:
 
 @pytest.mark.parametrize(
     "target_policy",
-    ("dense_logits", "topk_with_tail_v0"),
+    ("dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"),
 )
-def test_gpu_torch_accepts_f2_supported_policies(target_policy: str) -> None:
+def test_gpu_torch_accepts_f3_supported_policies(target_policy: str) -> None:
     backend = GPUTorchTeacherEmissionBackend(_config(target_policy=target_policy))
 
     assert backend.config.target_policy == target_policy
 
 
-@pytest.mark.parametrize(
-    "target_policy",
-    ("cascaded_soft_labels_v1", "corridor_exemplar_v1"),
-)
-def test_gpu_torch_rejects_unimplemented_compact_policies(
-    target_policy: str,
-) -> None:
+def test_gpu_torch_rejects_unimplemented_compact_policies() -> None:
     with pytest.raises(ValueError, match="not implemented"):
-        GPUTorchTeacherEmissionBackend(_config(target_policy=target_policy))
+        GPUTorchTeacherEmissionBackend(_config(target_policy="corridor_exemplar_v1"))
 
 
 def test_detect_torch_accelerator_reports_missing_torch(monkeypatch) -> None:
@@ -310,6 +306,57 @@ def test_gpu_torch_topk_metadata_records_compact_reduction() -> None:
     assert metadata["estimated_dense_logits_dtype"] == "float32"
 
 
+def test_gpu_torch_cascaded_metadata_records_bucket_reduction() -> None:
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(target_policy="cascaded_soft_labels_v1", top_k=3, num_buckets=2)
+    )
+    compact_payload = {
+        "top_token_ids": np.zeros((2, 4, 3), dtype=np.int32),
+        "top_log_probs": np.zeros((2, 4, 3), dtype=np.float32),
+        "top_probs": np.zeros((2, 4, 3), dtype=np.float32),
+        "top_mass": np.zeros((2, 4), dtype=np.float32),
+        "tail_mass": np.ones((2, 4), dtype=np.float32),
+        "bucket_masses": np.ones((2, 4, 2), dtype=np.float32),
+        "teacher_entropy": np.zeros((2, 4), dtype=np.float32),
+    }
+
+    metadata = backend.metadata(
+        actual_batch_size=2,
+        effective_vocab_size=11,
+        compact_payload=compact_payload,
+        estimated_dense_logits_dtype="float32",
+    )
+
+    assert metadata["requested_target_policy"] == "cascaded_soft_labels_v1"
+    assert metadata["effective_target_policy"] == "cascaded_soft_labels_v1"
+    assert metadata["capability_status"] == "optimized"
+    assert metadata["optimized_path_used"] is True
+    assert metadata["dense_debug_path"] is False
+    assert metadata["dense_logits_transferred_to_host"] is False
+    assert metadata["compact_reduction_used"] is True
+    assert metadata["gpu_compact_reduction_implemented"] is True
+    assert metadata["gpu_reduction_mode"] == "compact_cascaded_soft_labels"
+    assert metadata["requested_top_k"] == 3
+    assert metadata["effective_top_k"] == 3
+    assert metadata["num_buckets"] == 2
+    assert metadata["bucket_policy"] == "contiguous_descending_tail_probability_mass"
+    assert metadata["compact_payload_arrays"] == [
+        "top_token_ids",
+        "top_log_probs",
+        "top_probs",
+        "top_mass",
+        "tail_mass",
+        "bucket_masses",
+        "teacher_entropy",
+    ]
+    assert metadata["compact_payload_fields"] == metadata["compact_payload_arrays"]
+    assert metadata["compact_bytes_transferred_to_host"] == sum(
+        int(value.nbytes) for value in compact_payload.values()
+    )
+    assert metadata["estimated_dense_logits_bytes"] == 2 * 4 * 11 * 4
+    assert metadata["estimated_dense_logits_dtype"] == "float32"
+
+
 def test_gpu_topk_tail_reducer_shapes_and_mass_accounting() -> None:
     if not _optional_torch_available():
         pytest.skip("optional torch dependency is not installed")
@@ -348,6 +395,62 @@ def test_gpu_topk_tail_reducer_shapes_and_mass_accounting() -> None:
     np.testing.assert_allclose(
         payload["tail_mass"],
         1.0 - payload["top_mass"],
+        rtol=1e-6,
+        atol=1e-6,
+    )
+    for value in payload.values():
+        assert isinstance(value, np.ndarray)
+
+
+def test_gpu_cascaded_reducer_shapes_and_bucket_mass_accounting() -> None:
+    if not _optional_torch_available():
+        pytest.skip("optional torch dependency is not installed")
+    torch = import_module("torch")
+    gpu_torch = import_module("radjax_tome.backends.gpu_torch")
+    logits = torch.tensor(
+        [
+            [
+                [4.0, 1.0, 0.0, -1.0, -2.0, -3.0],
+                [0.5, 2.0, -0.5, -1.5, -2.0, -3.0],
+                [1.0, 0.0, 3.0, -2.0, -3.0, -4.0],
+                [2.0, 1.0, 0.0, -1.0, -2.0, -3.0],
+            ],
+            [
+                [3.0, 2.0, 1.0, 0.0, -1.0, -2.0],
+                [0.0, 4.0, 1.0, -1.0, -2.0, -3.0],
+                [1.0, 2.0, 4.0, 0.0, -1.0, -2.0],
+                [0.0, -1.0, -2.0, 3.0, 1.0, -3.0],
+            ],
+        ],
+        dtype=torch.float32,
+    )
+
+    payload = gpu_torch._compact_payload_to_numpy(
+        gpu_torch._gpu_cascaded_reduce(
+            torch,
+            logits,
+            top_k=3,
+            num_buckets=2,
+        )
+    )
+
+    assert payload["top_token_ids"].shape == (2, 4, 3)
+    assert payload["top_log_probs"].shape == (2, 4, 3)
+    assert payload["top_probs"].shape == (2, 4, 3)
+    assert payload["top_mass"].shape == (2, 4)
+    assert payload["tail_mass"].shape == (2, 4)
+    assert payload["bucket_masses"].shape == (2, 4, 2)
+    assert payload["teacher_entropy"].shape == (2, 4)
+    assert np.isfinite(payload["bucket_masses"]).all()
+    np.testing.assert_allclose(
+        payload["tail_mass"],
+        1.0 - payload["top_mass"],
+        rtol=1e-6,
+        atol=1e-6,
+    )
+    np.testing.assert_allclose(
+        payload["bucket_masses"].sum(axis=-1),
+        payload["tail_mass"],
         rtol=1e-6,
         atol=1e-6,
     )
@@ -447,6 +550,68 @@ def test_gpu_torch_real_topk_emission_when_local_model_and_device_exist() -> Non
     assert result.metadata["compact_reduction_used"] is True
     assert result.metadata["gpu_compact_reduction_implemented"] is True
     assert result.metadata["gpu_reduction_mode"] == "compact_topk_tail"
+    assert result.metadata["compact_bytes_transferred_to_host"] > 0
+    assert result.metadata["estimated_dense_logits_bytes"] > 0
+    for value in result.payload.values():
+        if isinstance(value, np.ndarray):
+            assert value.__class__.__module__.startswith("numpy")
+
+
+def test_gpu_torch_real_cascaded_emission_when_local_model_and_device_exist() -> None:
+    model_dir = os.environ.get("RADJAX_TOME_TEST_HF_MODEL_DIR")
+    if not model_dir or not Path(model_dir).exists():
+        pytest.skip("RADJAX_TOME_TEST_HF_MODEL_DIR is not configured")
+    if not _optional_dependencies_available():
+        pytest.skip("optional torch/transformers dependencies are not installed")
+    if not detect_torch_accelerator().available:
+        pytest.skip("no CUDA or MPS Torch accelerator is available")
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(
+            model_id=model_dir,
+            tokenizer_id=model_dir,
+            target_policy="cascaded_soft_labels_v1",
+            vocab_size=1,
+            top_k=3,
+            num_buckets=2,
+        )
+    )
+
+    result = backend.emit_batch(_batch())
+
+    assert result.backend_id == "gpu_torch"
+    assert result.runtime_mode == "cpu_gpu"
+    assert result.target_policy == "cascaded_soft_labels_v1"
+    assert result.input_ids.shape == (2, 4)
+    assert result.attention_mask.shape == (2, 4)
+    assert result.payload["top_token_ids"].shape[:2] == (2, 4)
+    assert (
+        result.payload["top_log_probs"].shape == result.payload["top_token_ids"].shape
+    )
+    assert result.payload["top_probs"].shape == result.payload["top_token_ids"].shape
+    assert result.payload["top_mass"].shape == (2, 4)
+    assert result.payload["tail_mass"].shape == (2, 4)
+    assert result.payload["bucket_masses"].shape == (2, 4, 2)
+    assert result.payload["teacher_entropy"].shape == (2, 4)
+    assert np.isfinite(result.payload["bucket_masses"]).all()
+    np.testing.assert_allclose(
+        result.payload["bucket_masses"].sum(axis=-1),
+        result.payload["tail_mass"],
+        rtol=1e-5,
+        atol=1e-5,
+    )
+    assert result.metadata["runtime_kind"] == "gpu_torch"
+    assert result.metadata["device_kind"] in {"cuda", "mps"}
+    assert result.metadata["optimized_path_used"] is True
+    assert result.metadata["dense_debug_path"] is False
+    assert result.metadata["dense_logits_transferred_to_host"] is False
+    assert result.metadata["compact_reduction_used"] is True
+    assert result.metadata["gpu_compact_reduction_implemented"] is True
+    assert result.metadata["gpu_reduction_mode"] == "compact_cascaded_soft_labels"
+    assert result.metadata["num_buckets"] == 2
+    assert (
+        result.metadata["bucket_policy"]
+        == "contiguous_descending_tail_probability_mass"
+    )
     assert result.metadata["compact_bytes_transferred_to_host"] > 0
     assert result.metadata["estimated_dense_logits_bytes"] > 0
     for value in result.payload.values():

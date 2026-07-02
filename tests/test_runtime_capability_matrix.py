@@ -159,7 +159,8 @@ def test_runtime_capability_matrix_reflects_contract_skeleton_only() -> None:
         capability["implemented_now"]
         for capability in capabilities
         if capability["backend_family"] == "gpu_torch"
-        and capability["target_policy"] not in {"dense_logits", "topk_with_tail_v0"}
+        and capability["target_policy"]
+        not in {"dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"}
     )
     assert not any(
         "Spec 3.3B" in capability["notes"]
@@ -211,7 +212,8 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
         capability["implemented_now"]
         for capability in matrix["capabilities"]
         if capability["backend_family"] == "gpu_torch"
-        and capability["target_policy"] not in {"dense_logits", "topk_with_tail_v0"}
+        and capability["target_policy"]
+        not in {"dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"}
     )
 
 
@@ -241,7 +243,8 @@ def test_runtime_capability_matrix_documents_orchestration() -> None:
         capability["implemented_now"]
         for capability in matrix["capabilities"]
         if capability["backend_family"] == "gpu_torch"
-        and capability["target_policy"] not in {"dense_logits", "topk_with_tail_v0"}
+        and capability["target_policy"]
+        not in {"dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"}
     )
 
 
@@ -286,11 +289,12 @@ def test_runtime_capability_matrix_reflects_hf_torch_backend_contract() -> None:
         capability["implemented_now"]
         for capability in matrix["capabilities"]
         if capability["backend_family"] == "gpu_torch"
-        and capability["target_policy"] not in {"dense_logits", "topk_with_tail_v0"}
+        and capability["target_policy"]
+        not in {"dense_logits", "topk_with_tail_v0", "cascaded_soft_labels_v1"}
     )
 
 
-def test_runtime_capability_matrix_reflects_gpu_torch_topk_reducer() -> None:
+def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None:
     matrix = json.loads(
         (ROOT / "docs" / "TOME_RUNTIME_CAPABILITY_MATRIX.json").read_text(
             encoding="utf-8"
@@ -318,14 +322,19 @@ def test_runtime_capability_matrix_reflects_gpu_torch_topk_reducer() -> None:
     assert topk["optimized"]
     assert "Spec 3.3F2 gpu_torch computes GPU compact top-k/tail" in topk["notes"]
     assert "compact payload arrays" in topk["notes"]
-    for compact in (cascaded, corridor):
-        assert compact["runtime_mode"] == "cpu_gpu"
-        assert compact["status"] == "historical_reference_exists"
-        assert not compact["implemented_now"]
-        assert not compact["optimized"]
-    assert "Spec 3.3F3" in cascaded["notes"]
+    assert cascaded["runtime_mode"] == "cpu_gpu"
+    assert cascaded["implemented_now"]
+    assert cascaded["status"] == "optimized"
+    assert cascaded["optimized"]
+    assert "Spec 3.3F3 gpu_torch computes GPU compact cascaded" in cascaded["notes"]
+    assert "bucket masses" in cascaded["notes"]
+    assert "compact payload arrays" in cascaded["notes"]
+    assert corridor["runtime_mode"] == "cpu_gpu"
+    assert corridor["status"] == "historical_reference_exists"
+    assert not corridor["implemented_now"]
+    assert not corridor["optimized"]
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals
-    assert "Spec 3.3F2" in non_goals
-    assert "cascaded or chunked-vocab reduction" in non_goals
+    assert "Spec 3.3F3" in non_goals
+    assert "chunked-vocab reduction or memory hardening" in non_goals

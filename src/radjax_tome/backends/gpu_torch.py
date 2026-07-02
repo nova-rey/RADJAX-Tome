@@ -17,10 +17,12 @@ from radjax_tome.backends.hf_torch import _effective_tokenizer_id
 _SUPPORTED_EMISSION_POLICIES = {
     "dense_logits",
     "topk_with_tail_v0",
+    "cascaded_soft_labels_v1",
 }
 _CAPABILITY_STATUS = {
     "dense_logits": "supported_debug",
     "topk_with_tail_v0": "optimized",
+    "cascaded_soft_labels_v1": "optimized",
 }
 
 
@@ -50,7 +52,8 @@ class GPUTorchTeacherEmissionBackend:
             raise ValueError("gpu_torch supports only runtime_mode='cpu_gpu'")
         if config.target_policy not in _SUPPORTED_EMISSION_POLICIES:
             raise ValueError(
-                "gpu_torch supports dense_logits and topk_with_tail_v0; "
+                "gpu_torch supports dense_logits, topk_with_tail_v0, "
+                "and cascaded_soft_labels_v1; "
                 f"{config.target_policy!r} is not implemented yet"
             )
         if config.sequence_length <= 0:
@@ -61,6 +64,8 @@ class GPUTorchTeacherEmissionBackend:
             raise ValueError("vocab_size must be > 0")
         if config.top_k <= 0:
             raise ValueError("top_k must be > 0")
+        if config.num_buckets <= 0:
+            raise ValueError("num_buckets must be > 0")
         self.config = config
         self._torch: Any | None = None
         self._tokenizer: Any | None = None
@@ -115,13 +120,14 @@ class GPUTorchTeacherEmissionBackend:
                 backend_family=self.backend_family,
                 runtime_mode="cpu_gpu",
                 target_policy="cascaded_soft_labels_v1",
-                status="historical_reference_exists",
-                optimized=False,
-                implemented_now=False,
+                status="optimized",
+                optimized=True,
+                implemented_now=True,
                 notes=(
-                    "Historical QRWKV-XLA compact GPU reduction can guide "
-                    "future cascaded soft-label migration; Spec 3.3F2 does "
-                    "not implement this reduction."
+                    "Spec 3.3F3 gpu_torch computes cascaded soft-label "
+                    "compact reduction on the selected CUDA or MPS "
+                    "accelerator, including bucket masses, and transfers only "
+                    "compact payload arrays back to host."
                 ),
             ),
             BackendCapability(
@@ -166,6 +172,15 @@ class GPUTorchTeacherEmissionBackend:
         if self.config.target_policy == "dense_logits":
             dense_logits = logits.detach().to("cpu").numpy().astype(np.float32)
             payload = {"logits": dense_logits}
+        elif self.config.target_policy == "cascaded_soft_labels_v1":
+            payload = _compact_payload_to_numpy(
+                _gpu_cascaded_reduce(
+                    torch,
+                    logits,
+                    top_k=self.config.top_k,
+                    num_buckets=self.config.num_buckets,
+                )
+            )
         else:
             payload = _compact_payload_to_numpy(
                 _gpu_topk_tail_reduce(torch, logits, top_k=self.config.top_k)
@@ -237,40 +252,55 @@ class GPUTorchTeacherEmissionBackend:
             "cuda_available": device.cuda_available,
             "mps_available": device.mps_available,
         }
-        if self.config.target_policy == "topk_with_tail_v0":
+        if self.config.target_policy in {
+            "topk_with_tail_v0",
+            "cascaded_soft_labels_v1",
+        }:
             effective_top_k = min(self.config.top_k, effective_vocab)
             compact_payload = compact_payload or {}
-            compact_fields = (
+            compact_fields = [
                 "top_token_ids",
                 "top_log_probs",
                 "top_probs",
                 "top_mass",
                 "tail_mass",
-                "teacher_entropy",
-            )
-            metadata.update(
-                {
-                    "requested_top_k": self.config.top_k,
-                    "effective_top_k": effective_top_k,
-                    "gpu_reduction_mode": "compact_topk_tail",
-                    "compact_payload_fields": list(compact_fields),
-                    "compact_payload_arrays": [
-                        field for field in compact_fields if field in compact_payload
-                    ],
-                    "compact_bytes_transferred_to_host": sum(
-                        int(compact_payload[field].nbytes)
-                        for field in compact_fields
-                        if field in compact_payload
-                    ),
-                    "estimated_dense_logits_bytes": _estimate_dense_logits_bytes(
-                        actual_batch_size=actual_batch,
-                        sequence_length=self.config.sequence_length,
-                        effective_vocab_size=effective_vocab,
-                        dtype_name=estimated_dense_logits_dtype,
-                    ),
-                    "estimated_dense_logits_dtype": estimated_dense_logits_dtype,
-                }
-            )
+            ]
+            gpu_reduction_mode = "compact_topk_tail"
+            if self.config.target_policy == "cascaded_soft_labels_v1":
+                compact_fields.append("bucket_masses")
+                gpu_reduction_mode = "compact_cascaded_soft_labels"
+            compact_fields.append("teacher_entropy")
+            compact_metadata = {
+                "requested_top_k": self.config.top_k,
+                "effective_top_k": effective_top_k,
+                "gpu_reduction_mode": gpu_reduction_mode,
+                "compact_payload_fields": compact_fields,
+                "compact_payload_arrays": [
+                    field for field in compact_fields if field in compact_payload
+                ],
+                "compact_bytes_transferred_to_host": sum(
+                    int(compact_payload[field].nbytes)
+                    for field in compact_fields
+                    if field in compact_payload
+                ),
+                "estimated_dense_logits_bytes": _estimate_dense_logits_bytes(
+                    actual_batch_size=actual_batch,
+                    sequence_length=self.config.sequence_length,
+                    effective_vocab_size=effective_vocab,
+                    dtype_name=estimated_dense_logits_dtype,
+                ),
+                "estimated_dense_logits_dtype": estimated_dense_logits_dtype,
+            }
+            if self.config.target_policy == "cascaded_soft_labels_v1":
+                compact_metadata.update(
+                    {
+                        "num_buckets": self.config.num_buckets,
+                        "bucket_policy": (
+                            "contiguous_descending_tail_probability_mass"
+                        ),
+                    }
+                )
+            metadata.update(compact_metadata)
         return metadata
 
     def close(self) -> None:
@@ -438,8 +468,59 @@ def _gpu_topk_tail_reduce(
     }
 
 
+def _gpu_cascaded_reduce(
+    torch: Any,
+    logits: Any,
+    *,
+    top_k: int,
+    num_buckets: int,
+) -> dict[str, Any]:
+    payload = _gpu_topk_tail_reduce(torch, logits, top_k=top_k)
+    log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+    probs = torch.exp(log_probs)
+    payload["bucket_masses"] = _tail_bucket_masses_on_device(
+        torch,
+        probs,
+        top_token_ids=payload["top_token_ids"],
+        num_buckets=num_buckets,
+    )
+    return payload
+
+
+def _tail_bucket_masses_on_device(
+    torch: Any,
+    probs: Any,
+    *,
+    top_token_ids: Any,
+    num_buckets: int,
+) -> Any:
+    top_mask = torch.zeros_like(probs, dtype=torch.bool)
+    top_mask.scatter_(-1, top_token_ids, True)
+    bucket_masses = torch.zeros(
+        (*probs.shape[:2], num_buckets),
+        dtype=probs.dtype,
+        device=probs.device,
+    )
+    for row in range(int(probs.shape[0])):
+        for position in range(int(probs.shape[1])):
+            tail_probs = probs[row, position][~top_mask[row, position]]
+            if int(tail_probs.shape[0]) == 0:
+                continue
+            sorted_tail = torch.sort(tail_probs, descending=True).values
+            tail_count = int(sorted_tail.shape[0])
+            quotient, remainder = divmod(tail_count, num_buckets)
+            for bucket_id in range(num_buckets):
+                start = bucket_id * quotient + min(bucket_id, remainder)
+                stop = start + quotient + (1 if bucket_id < remainder else 0)
+                if start < stop:
+                    bucket_masses[row, position, bucket_id] = torch.sum(
+                        sorted_tail[start:stop]
+                    )
+    return bucket_masses
+
+
 def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
-    return {
+    compact = {
         "top_token_ids": _tensor_to_numpy(payload["top_token_ids"], np.int32),
         "top_log_probs": _tensor_to_numpy(payload["top_log_probs"], np.float32),
         "top_probs": _tensor_to_numpy(payload["top_probs"], np.float32),
@@ -450,6 +531,12 @@ def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
             np.float32,
         ),
     }
+    if "bucket_masses" in payload:
+        compact["bucket_masses"] = _tensor_to_numpy(
+            payload["bucket_masses"],
+            np.float32,
+        )
+    return compact
 
 
 def _tensor_to_numpy(tensor: Any, dtype: type[np.generic]) -> np.ndarray:
