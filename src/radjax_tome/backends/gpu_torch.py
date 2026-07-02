@@ -11,6 +11,7 @@ from radjax_tome.backends.base import (
     TeacherBackendConfig,
     TeacherBatchInput,
     TeacherEmissionResult,
+    resolve_exemplar_capture_policy,
 )
 from radjax_tome.backends.hf_torch import _effective_tokenizer_id
 
@@ -64,7 +65,7 @@ _MODE_RECORD_POLICY = "top_mode_summary_v1"
 _FINGERPRINT_TOPOLOGY_POLICY = "sequence_position_v1"
 _CORRIDOR_CONFIDENCE_POLICY = "top_probability_v1"
 _EXEMPLAR_CAPTURE_MODE = "one_pass_candidate"
-_EXEMPLAR_CAPTURE_MODES = {"one_pass_candidate", "two_pass_sparse_exemplar"}
+_EXEMPLAR_CAPTURE_MODES = {"auto", "one_pass_candidate", "two_pass_sparse_exemplar"}
 _EXEMPLAR_FIRST_PASS_SCORE_POLICY = "entropy_score_v1"
 _EXEMPLAR_SOURCE_POLICIES = {
     "dense_logits": 1,
@@ -282,7 +283,14 @@ class GPUTorchTeacherEmissionBackend:
                 ) from exc
         elif self.config.target_policy == "corridor_exemplar_v1":
             try:
-                if self.config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+                if (
+                    _effective_exemplar_capture_mode(
+                        self.config,
+                        actual_batch_size=len(batch.texts),
+                        effective_vocab_size=effective_vocab_size,
+                    )
+                    == "two_pass_sparse_exemplar"
+                ):
                     compact_payload = _gpu_corridor_exemplar_score_reduce(
                         torch,
                         logits,
@@ -302,7 +310,14 @@ class GPUTorchTeacherEmissionBackend:
                 ) from exc
             try:
                 payload = _compact_payload_to_numpy(compact_payload)
-                if self.config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+                if (
+                    _effective_exemplar_capture_mode(
+                        self.config,
+                        actual_batch_size=len(batch.texts),
+                        effective_vocab_size=effective_vocab_size,
+                    )
+                    == "two_pass_sparse_exemplar"
+                ):
                     payload.update(
                         _gpu_corridor_score_records(
                             self.config,
@@ -434,11 +449,19 @@ class GPUTorchTeacherEmissionBackend:
             compact_payload = compact_payload or {}
             compact_fields = _compact_payload_fields(
                 self.config.target_policy,
-                exemplar_capture_mode=self.config.exemplar_capture_mode,
+                exemplar_capture_mode=_effective_exemplar_capture_mode(
+                    self.config,
+                    actual_batch_size=actual_batch,
+                    effective_vocab_size=effective_vocab,
+                ),
             )
             gpu_reduction_mode = _gpu_reduction_mode(
                 self.config.target_policy,
-                exemplar_capture_mode=self.config.exemplar_capture_mode,
+                exemplar_capture_mode=_effective_exemplar_capture_mode(
+                    self.config,
+                    actual_batch_size=actual_batch,
+                    effective_vocab_size=effective_vocab,
+                ),
                 vocab_chunking_used=chunking_plan.used,
             )
             estimated_dense_logits_bytes = _estimate_dense_logits_bytes(
@@ -506,6 +529,7 @@ class GPUTorchTeacherEmissionBackend:
                     _gpu_corridor_metadata(
                         self.config,
                         compact_payload=compact_payload,
+                        actual_batch_size=actual_batch,
                         effective_vocab_size=effective_vocab,
                     )
                 )
@@ -762,8 +786,8 @@ def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
         raise ValueError("exemplar_selection_policy must be 'entropy_top_n_v1'")
     if config.exemplar_capture_mode not in _EXEMPLAR_CAPTURE_MODES:
         raise ValueError(
-            "exemplar_capture_mode must be 'one_pass_candidate' or "
-            "'two_pass_sparse_exemplar'"
+            "exemplar_capture_mode must be 'auto', 'one_pass_candidate', "
+            "or 'two_pass_sparse_exemplar'"
         )
     if config.exemplar_first_pass_score_policy != _EXEMPLAR_FIRST_PASS_SCORE_POLICY:
         raise ValueError("exemplar_first_pass_score_policy must be 'entropy_score_v1'")
@@ -779,6 +803,22 @@ def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
     ):
         raise ValueError(
             "exemplar_sparse_selection_fraction must be None or > 0 and <= 1"
+        )
+    if config.exemplar_auto_num_examples is not None and (
+        config.exemplar_auto_num_examples < 1
+    ):
+        raise ValueError("exemplar_auto_num_examples must be None or >= 1")
+    if config.exemplar_auto_expected_selected_fraction is not None and not (
+        0.0 < config.exemplar_auto_expected_selected_fraction <= 1.0
+    ):
+        raise ValueError(
+            "exemplar_auto_expected_selected_fraction must be None or > 0 and <= 1"
+        )
+    if config.exemplar_auto_available_disk_budget_bytes is not None and (
+        config.exemplar_auto_available_disk_budget_bytes < 1
+    ):
+        raise ValueError(
+            "exemplar_auto_available_disk_budget_bytes must be None or >= 1"
         )
     if config.corridor_payload_flavor != _CORRIDOR_PAYLOAD_FLAVOR:
         raise ValueError("corridor_payload_flavor must be 'production_v1'")
@@ -971,9 +1011,16 @@ def _gpu_corridor_metadata(
     config: TeacherBackendConfig,
     *,
     compact_payload: dict[str, np.ndarray],
+    actual_batch_size: int | None,
     effective_vocab_size: int,
 ) -> dict[str, object]:
-    if config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+    policy = resolve_exemplar_capture_policy(
+        config,
+        actual_batch_size=actual_batch_size,
+        effective_vocab_size=effective_vocab_size,
+    )
+    effective_mode = str(policy["exemplar_capture_mode_effective"])
+    if effective_mode == "two_pass_sparse_exemplar":
         source_summary = _gpu_corridor_source_summary(
             _second_pass_source_config(config),
             compact_payload=compact_payload,
@@ -994,7 +1041,7 @@ def _gpu_corridor_metadata(
             ),
             "score_source_policy": config.exemplar_second_pass_source_policy,
             "exemplar_selection_policy": config.exemplar_selection_policy,
-            **_gpu_corridor_score_pass_metadata(config),
+            **_gpu_corridor_score_pass_metadata(config, policy=policy),
             "requested_exemplar_top_n": config.exemplar_top_n,
             "effective_exemplar_top_n": min(
                 config.exemplar_top_n,
@@ -1024,6 +1071,7 @@ def _gpu_corridor_metadata(
     )
     return {
         **_gpu_corridor_schema_metadata(config),
+        **_gpu_corridor_capture_mode_metadata(config, policy=policy),
         **source_summary,
         "requested_exemplar_top_n": config.exemplar_top_n,
         "effective_exemplar_top_n": min(config.exemplar_top_n, config.sequence_length),
@@ -1589,16 +1637,34 @@ def _gpu_corridor_schema_metadata(config: TeacherBackendConfig) -> dict[str, obj
         "mode_record_policy": _MODE_RECORD_POLICY,
         "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
         "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
-        **_gpu_corridor_capture_mode_metadata(config),
+        **_gpu_corridor_capture_mode_metadata(config, policy=None),
     }
+
+
+def _effective_exemplar_capture_mode(
+    config: TeacherBackendConfig,
+    *,
+    actual_batch_size: int | None = None,
+    effective_vocab_size: int | None = None,
+) -> str:
+    return str(
+        resolve_exemplar_capture_policy(
+            config,
+            actual_batch_size=actual_batch_size,
+            effective_vocab_size=effective_vocab_size,
+        )["exemplar_capture_mode_effective"]
+    )
 
 
 def _gpu_corridor_capture_mode_metadata(
     config: TeacherBackendConfig,
+    *,
+    policy: dict[str, object] | None,
 ) -> dict[str, object]:
+    if policy is None:
+        policy = resolve_exemplar_capture_policy(config)
     return {
-        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
-        "exemplar_capture_mode_effective": _EXEMPLAR_CAPTURE_MODE,
+        **policy,
         "exemplar_capture_mode_policy": "explicit_one_pass_candidate_v1",
         "exemplar_candidate_scope": "batch_all_examples",
         "corpus_level_exemplar_finalization": False,
@@ -1609,10 +1675,13 @@ def _gpu_corridor_capture_mode_metadata(
 
 def _gpu_corridor_score_pass_metadata(
     config: TeacherBackendConfig,
+    *,
+    policy: dict[str, object] | None = None,
 ) -> dict[str, object]:
+    if policy is None:
+        policy = resolve_exemplar_capture_policy(config)
     return {
-        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
-        "exemplar_capture_mode_effective": "two_pass_sparse_exemplar",
+        **policy,
         "exemplar_capture_stage": "score_pass",
         "exemplar_capture_mode_policy": "explicit_two_pass_sparse_exemplar_v1",
         "exemplar_candidate_scope": "batch_score_summary_only",
@@ -1627,9 +1696,10 @@ def _gpu_corridor_selected_pass_metadata(
     *,
     corpus_level_finalized: bool,
 ) -> dict[str, object]:
+    policy = resolve_exemplar_capture_policy(config)
+    policy = {**policy, "exemplar_capture_mode_effective": "two_pass_sparse_exemplar"}
     return {
-        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
-        "exemplar_capture_mode_effective": "two_pass_sparse_exemplar",
+        **policy,
         "exemplar_capture_stage": "selected_exemplar_pass",
         "exemplar_capture_mode_policy": "explicit_two_pass_sparse_exemplar_v1",
         "exemplar_candidate_scope": "selected_examples_only",

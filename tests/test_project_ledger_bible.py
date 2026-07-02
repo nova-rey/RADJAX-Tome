@@ -72,3 +72,7 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "two_pass_sparse_exemplar" in text
     assert "score_pass" in text
     assert "selected_exemplar_pass" in text
+    assert "3.3F9.3" in text
+    assert "exemplar_capture_mode=auto" in text
+    assert "auto_policy_reason" in text
+    assert "auto_policy_inputs_missing" in text

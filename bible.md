@@ -279,3 +279,17 @@ production-shaped exemplar payloads with `selected_exemplar_pass` metadata.
 
 One-pass mode remains available. No auto policy yet, no builder migration, no
 TPU/JAX.
+
+## 2026-07-02 — Spec 3.3F9.3 Exemplar Capture Auto Policy
+
+Spec 3.3F9.3 adds `exemplar_capture_mode=auto` for choosing between
+`one_pass_candidate` and `two_pass_sparse_exemplar`. Manual capture-mode
+settings still win.
+
+Auto records `exemplar_capture_policy=auto_exemplar_capture_policy_v1`,
+`manual_override_used`, `auto_policy_reason`,
+`estimated_one_pass_candidate_bytes`, `estimated_two_pass_score_bytes`,
+`estimated_two_pass_selected_bytes`, `estimated_two_pass_total_bytes`,
+`expected_selected_exemplar_fraction`, `available_disk_budget_bytes`, and
+`auto_policy_inputs_missing`. This does not change reducer semantics, migrate
+the public builder, or add TPU/JAX.

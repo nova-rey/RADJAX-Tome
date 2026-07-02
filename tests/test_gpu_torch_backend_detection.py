@@ -167,7 +167,7 @@ def test_gpu_torch_rejects_unknown_target_policy() -> None:
         ("dynamic_top_k_policy", "unknown", "dynamic_top_k_policy"),
         ("exemplar_source_policy", "unknown", "exemplar_source_policy"),
         ("exemplar_selection_policy", "unknown", "exemplar_selection_policy"),
-        ("exemplar_capture_mode", "auto", "exemplar_capture_mode"),
+        ("exemplar_capture_mode", "unknown", "exemplar_capture_mode"),
         (
             "exemplar_first_pass_score_policy",
             "unknown",
@@ -192,6 +192,22 @@ def test_gpu_torch_rejects_unknown_target_policy() -> None:
             "exemplar_sparse_selection_fraction",
             1.1,
             "exemplar_sparse_selection_fraction",
+        ),
+        ("exemplar_auto_num_examples", 0, "exemplar_auto_num_examples"),
+        (
+            "exemplar_auto_expected_selected_fraction",
+            0.0,
+            "exemplar_auto_expected_selected_fraction",
+        ),
+        (
+            "exemplar_auto_expected_selected_fraction",
+            1.1,
+            "exemplar_auto_expected_selected_fraction",
+        ),
+        (
+            "exemplar_auto_available_disk_budget_bytes",
+            0,
+            "exemplar_auto_available_disk_budget_bytes",
         ),
         ("corridor_payload_flavor", "proxy_v0", "corridor_payload_flavor"),
     ),
@@ -843,6 +859,91 @@ def test_gpu_torch_corridor_two_pass_metadata_records_score_pass() -> None:
     assert metadata["exemplar_candidate_scope"] == "batch_score_summary_only"
     assert metadata["requires_second_pass_for_final_exemplars"] is True
     assert metadata["rerun_teacher_for_selected_examples"] is True
+
+
+def test_gpu_torch_corridor_auto_metadata_chooses_one_pass_for_small_estimate() -> None:
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(
+            target_policy="corridor_exemplar_v1",
+            exemplar_capture_mode="auto",
+            exemplar_auto_num_examples=4,
+            exemplar_auto_expected_selected_fraction=0.25,
+            exemplar_auto_teacher_inference_cost_hint="cheap",
+        )
+    )
+    compact_payload = {
+        "corridor_top_token_ids": np.zeros((2, 4), dtype=np.int32),
+        "corridor_top_probs": np.zeros((2, 4), dtype=np.float32),
+        "corridor_teacher_entropy": np.zeros((2, 4), dtype=np.float32),
+        "corridor_confidence": np.zeros((2, 4), dtype=np.float32),
+        "corridor_lengths": np.full((2,), 4, dtype=np.int32),
+        "exemplar_positions": np.zeros((2, 1), dtype=np.int32),
+        "exemplar_scores": np.zeros((2, 1), dtype=np.float32),
+        "exemplar_selection_mask": np.zeros((2, 4), dtype=np.int32),
+        "exemplar_source_policy_ids": np.ones((2, 4), dtype=np.int32),
+        "exemplar_source_effective_top_k": np.full((2, 4), 2, dtype=np.int32),
+        "exemplar_source_top_mass": np.zeros((2, 4), dtype=np.float32),
+        "exemplar_source_tail_mass": np.ones((2, 4), dtype=np.float32),
+    }
+
+    metadata = backend.metadata(
+        actual_batch_size=2,
+        effective_vocab_size=11,
+        compact_payload=compact_payload,
+        estimated_dense_logits_dtype="float32",
+    )
+
+    assert metadata["gpu_reduction_mode"] == "compact_corridor_exemplar"
+    assert metadata["exemplar_capture_mode_requested"] == "auto"
+    assert metadata["exemplar_capture_mode_effective"] == "one_pass_candidate"
+    assert metadata["exemplar_capture_policy"] == "auto_exemplar_capture_policy_v1"
+    assert metadata["manual_override_used"] is False
+    assert "small enough" in metadata["auto_policy_reason"]
+    assert metadata["estimated_one_pass_candidate_bytes"] > 0
+    assert metadata["estimated_two_pass_total_bytes"] > 0
+    assert "available_disk_budget_bytes" in metadata["auto_policy_inputs_missing"]
+
+
+def test_gpu_torch_corridor_auto_metadata_chooses_two_pass_for_huge_estimate() -> None:
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(
+            target_policy="corridor_exemplar_v1",
+            exemplar_capture_mode="auto",
+            sequence_length=64,
+            exemplar_auto_num_examples=1_000_000,
+            exemplar_auto_expected_selected_fraction=0.01,
+            exemplar_auto_available_disk_budget_bytes=1_000_000,
+        )
+    )
+    compact_payload = {
+        "score_example_ids": np.arange(2, dtype=np.int32),
+        "score_max_entropy": np.zeros((2,), dtype=np.float32),
+        "score_mean_entropy": np.zeros((2,), dtype=np.float32),
+        "score_selected_position": np.zeros((2,), dtype=np.int32),
+        "score_selected_position_entropy": np.zeros((2,), dtype=np.float32),
+        "score_confidence_at_selected_position": np.ones((2,), dtype=np.float32),
+        "score_source_policy_ids": np.full((2,), 3, dtype=np.int32),
+        "score_lengths": np.full((2,), 64, dtype=np.int32),
+    }
+
+    metadata = backend.metadata(
+        actual_batch_size=2,
+        effective_vocab_size=11,
+        compact_payload=compact_payload,
+        estimated_dense_logits_dtype="float32",
+    )
+
+    assert metadata["gpu_reduction_mode"] == "compact_corridor_exemplar_score_pass"
+    assert metadata["exemplar_capture_mode_requested"] == "auto"
+    assert metadata["exemplar_capture_mode_effective"] == ("two_pass_sparse_exemplar")
+    assert metadata["exemplar_capture_policy"] == "auto_exemplar_capture_policy_v1"
+    assert metadata["manual_override_used"] is False
+    assert "budget" in metadata["auto_policy_reason"]
+    assert (
+        metadata["estimated_one_pass_candidate_bytes"]
+        > (metadata["available_disk_budget_bytes"])
+    )
+    assert metadata["exemplar_capture_stage"] == "score_pass"
 
 
 def test_gpu_topk_tail_reducer_shapes_and_mass_accounting() -> None:

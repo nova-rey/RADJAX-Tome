@@ -10,6 +10,7 @@ from radjax_tome.backends.base import (
     TeacherBackendConfig,
     TeacherBatchInput,
     TeacherEmissionResult,
+    resolve_exemplar_capture_policy,
 )
 
 _SUPPORTED_EMISSION_POLICIES = {
@@ -35,7 +36,7 @@ _MODE_RECORD_POLICY = "top_mode_summary_v1"
 _FINGERPRINT_TOPOLOGY_POLICY = "sequence_position_v1"
 _CORRIDOR_CONFIDENCE_POLICY = "top_probability_v1"
 _EXEMPLAR_CAPTURE_MODE = "one_pass_candidate"
-_EXEMPLAR_CAPTURE_MODES = {"one_pass_candidate", "two_pass_sparse_exemplar"}
+_EXEMPLAR_CAPTURE_MODES = {"auto", "one_pass_candidate", "two_pass_sparse_exemplar"}
 _EXEMPLAR_FIRST_PASS_SCORE_POLICY = "entropy_score_v1"
 _EXEMPLAR_SOURCE_POLICIES = {
     "dense_logits": 1,
@@ -83,8 +84,8 @@ class CPUReferenceTeacherEmissionBackend:
             raise ValueError("exemplar_selection_policy must be 'entropy_top_n_v1'")
         if config.exemplar_capture_mode not in _EXEMPLAR_CAPTURE_MODES:
             raise ValueError(
-                "exemplar_capture_mode must be 'one_pass_candidate' or "
-                "'two_pass_sparse_exemplar'"
+                "exemplar_capture_mode must be 'auto', 'one_pass_candidate', "
+                "or 'two_pass_sparse_exemplar'"
             )
         if config.exemplar_first_pass_score_policy != _EXEMPLAR_FIRST_PASS_SCORE_POLICY:
             raise ValueError(
@@ -102,6 +103,22 @@ class CPUReferenceTeacherEmissionBackend:
         ):
             raise ValueError(
                 "exemplar_sparse_selection_fraction must be None or > 0 and <= 1"
+            )
+        if config.exemplar_auto_num_examples is not None and (
+            config.exemplar_auto_num_examples < 1
+        ):
+            raise ValueError("exemplar_auto_num_examples must be None or >= 1")
+        if config.exemplar_auto_expected_selected_fraction is not None and not (
+            0.0 < config.exemplar_auto_expected_selected_fraction <= 1.0
+        ):
+            raise ValueError(
+                "exemplar_auto_expected_selected_fraction must be None or > 0 and <= 1"
+            )
+        if config.exemplar_auto_available_disk_budget_bytes is not None and (
+            config.exemplar_auto_available_disk_budget_bytes < 1
+        ):
+            raise ValueError(
+                "exemplar_auto_available_disk_budget_bytes must be None or >= 1"
             )
         if config.corridor_payload_flavor != _CORRIDOR_PAYLOAD_FLAVOR:
             raise ValueError("corridor_payload_flavor must be 'production_v1'")
@@ -265,6 +282,7 @@ class CPUReferenceTeacherEmissionBackend:
                 _corridor_metadata(
                     self.config,
                     payload=payload,
+                    actual_batch_size=actual_batch_size,
                 )
             )
         return metadata
@@ -348,7 +366,13 @@ class CPUReferenceTeacherEmissionBackend:
                 num_buckets=self.config.num_buckets,
             )
         if self.config.target_policy == "corridor_exemplar_v1":
-            if self.config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+            if (
+                _effective_exemplar_capture_mode(
+                    self.config,
+                    actual_batch_size=logits.shape[0],
+                )
+                == "two_pass_sparse_exemplar"
+            ):
                 return _corridor_exemplar_score_payload(
                     logits,
                     config=self.config,
@@ -823,8 +847,14 @@ def _corridor_metadata(
     config: TeacherBackendConfig,
     *,
     payload: dict[str, object] | None,
+    actual_batch_size: int | None,
 ) -> dict[str, object]:
-    if config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+    policy = resolve_exemplar_capture_policy(
+        config,
+        actual_batch_size=actual_batch_size,
+    )
+    effective_mode = str(policy["exemplar_capture_mode_effective"])
+    if effective_mode == "two_pass_sparse_exemplar":
         source_summary = (
             payload.get("source_policy_summary", {})
             if payload is not None
@@ -843,7 +873,7 @@ def _corridor_metadata(
             ),
             "score_source_policy": config.exemplar_second_pass_source_policy,
             "exemplar_selection_policy": config.exemplar_selection_policy,
-            **_corridor_score_pass_metadata(config),
+            **_corridor_score_pass_metadata(config, policy=policy),
             "requested_exemplar_top_n": config.exemplar_top_n,
             "effective_exemplar_top_n": min(
                 config.exemplar_top_n,
@@ -886,7 +916,7 @@ def _corridor_metadata(
         "mode_record_policy": _MODE_RECORD_POLICY,
         "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
         "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
-        **_corridor_capture_mode_metadata(config),
+        **_corridor_capture_mode_metadata(config, policy=policy),
         "requested_exemplar_top_n": config.exemplar_top_n,
         "effective_exemplar_top_n": effective_exemplar_top_n,
         "exemplar_records": effective_exemplar_top_n,
@@ -913,14 +943,32 @@ def _corridor_schema_metadata(config: TeacherBackendConfig) -> dict[str, object]
         "mode_record_policy": _MODE_RECORD_POLICY,
         "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
         "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
-        **_corridor_capture_mode_metadata(config),
+        **_corridor_capture_mode_metadata(config, policy=None),
     }
 
 
-def _corridor_capture_mode_metadata(config: TeacherBackendConfig) -> dict[str, object]:
+def _effective_exemplar_capture_mode(
+    config: TeacherBackendConfig,
+    *,
+    actual_batch_size: int | None = None,
+) -> str:
+    return str(
+        resolve_exemplar_capture_policy(
+            config,
+            actual_batch_size=actual_batch_size,
+        )["exemplar_capture_mode_effective"]
+    )
+
+
+def _corridor_capture_mode_metadata(
+    config: TeacherBackendConfig,
+    *,
+    policy: dict[str, object] | None,
+) -> dict[str, object]:
+    if policy is None:
+        policy = resolve_exemplar_capture_policy(config)
     return {
-        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
-        "exemplar_capture_mode_effective": _EXEMPLAR_CAPTURE_MODE,
+        **policy,
         "exemplar_capture_mode_policy": "explicit_one_pass_candidate_v1",
         "exemplar_candidate_scope": "batch_all_examples",
         "corpus_level_exemplar_finalization": False,
@@ -929,10 +977,15 @@ def _corridor_capture_mode_metadata(config: TeacherBackendConfig) -> dict[str, o
     }
 
 
-def _corridor_score_pass_metadata(config: TeacherBackendConfig) -> dict[str, object]:
+def _corridor_score_pass_metadata(
+    config: TeacherBackendConfig,
+    *,
+    policy: dict[str, object] | None = None,
+) -> dict[str, object]:
+    if policy is None:
+        policy = resolve_exemplar_capture_policy(config)
     return {
-        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
-        "exemplar_capture_mode_effective": "two_pass_sparse_exemplar",
+        **policy,
         "exemplar_capture_stage": "score_pass",
         "exemplar_capture_mode_policy": "explicit_two_pass_sparse_exemplar_v1",
         "exemplar_candidate_scope": "batch_score_summary_only",
@@ -947,9 +1000,10 @@ def _corridor_selected_pass_metadata(
     *,
     corpus_level_finalized: bool,
 ) -> dict[str, object]:
+    policy = resolve_exemplar_capture_policy(config)
+    policy = {**policy, "exemplar_capture_mode_effective": "two_pass_sparse_exemplar"}
     return {
-        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
-        "exemplar_capture_mode_effective": "two_pass_sparse_exemplar",
+        **policy,
         "exemplar_capture_stage": "selected_exemplar_pass",
         "exemplar_capture_mode_policy": "explicit_two_pass_sparse_exemplar_v1",
         "exemplar_candidate_scope": "selected_examples_only",

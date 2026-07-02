@@ -70,6 +70,9 @@ def test_runtime_backend_doc_defines_architecture_vocabulary() -> None:
     assert "Spec 3.3F9.2 adds explicit `two_pass_sparse_exemplar`" in text
     assert "score_pass" in text
     assert "selected_exemplar_pass" in text
+    assert "Spec 3.3F9.3 adds `exemplar_capture_mode=auto`" in text
+    assert "auto_policy_reason" in text
+    assert "auto_policy_inputs_missing" in text
 
 
 def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
@@ -230,6 +233,8 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     assert "source-policy-aware metadata" in corridor["notes"]
     assert "Spec 3.3F9.2" in corridor["notes"]
     assert "two_pass_sparse_exemplar" in corridor["notes"]
+    assert "Spec 3.3F9.3" in corridor["notes"]
+    assert "auto_policy_reason" in corridor["notes"]
     assert "public builder has not migrated" in dense["notes"]
 
     assert not any(
@@ -411,6 +416,8 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "Spec 3.3F9.2" in corridor["notes"]
     assert "two_pass_sparse_exemplar" in corridor["notes"]
     assert "score_pass" in corridor["notes"]
+    assert "Spec 3.3F9.3" in corridor["notes"]
+    assert "auto_policy_reason" in corridor["notes"]
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals

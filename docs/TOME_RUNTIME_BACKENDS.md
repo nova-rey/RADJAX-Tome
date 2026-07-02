@@ -132,7 +132,16 @@ selector can choose examples/positions; pass 2 reruns selected examples and
 emits F8 production-shaped exemplar payloads with
 `exemplar_capture_stage=selected_exemplar_pass`. This trades extra teacher
 inference for lower transfer and storage. The public builder has not migrated,
-`auto` is not implemented in F9.2, and TPU/JAX remain out of scope.
+and TPU/JAX remain out of scope.
+
+Spec 3.3F9.3 adds `exemplar_capture_mode=auto`. Manual
+`one_pass_candidate` and `two_pass_sparse_exemplar` settings still win. Auto
+estimates one-pass candidate bytes, two-pass score bytes, selected-pass bytes,
+expected selected fraction, and any available disk budget, then records
+`exemplar_capture_policy=auto_exemplar_capture_policy_v1`,
+`manual_override_used`, `auto_policy_reason`, and
+`auto_policy_inputs_missing` in metadata. The policy is an estimate; reducer
+semantics do not change.
 
 ## CPU Orchestration Runner
 
@@ -312,7 +321,10 @@ Spec 3.3F9.1 records `one_pass_candidate` capture metadata with
 Spec 3.3F9.2 adds `two_pass_sparse_exemplar`: a compact `score_pass` emits
 only [B]-scale score summaries, then a `selected_exemplar_pass` can rerun
 chosen examples and emit the F8 production schema. F9.2 does not implement
-`auto`, public builder migration, or TPU/JAX.
+public builder migration or TPU/JAX.
+Spec 3.3F9.3 adds `auto` capture selection. Manual overrides win, and auto
+records estimated byte counts, expected selected fraction, disk budget if
+known, missing inputs, and the reason for the effective mode.
 
 ## Support Statuses
 

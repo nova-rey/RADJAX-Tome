@@ -160,8 +160,14 @@ corpus-level exemplar pruning.
 Spec 3.3F9.2 adds `two_pass_sparse_exemplar` as an explicit storage/transfer
 saving mode. The first `score_pass` emits [B]-scale score summaries for all
 examples; the `selected_exemplar_pass` reruns chosen examples and emits the F8
-production schema. This does not implement `auto`, migrate the public builder,
-or add TPU/JAX support.
+production schema. This does not migrate the public builder or add TPU/JAX
+support.
+
+Spec 3.3F9.3 adds `auto` exemplar capture selection. Manual
+`one_pass_candidate` and `two_pass_sparse_exemplar` overrides win; auto records
+estimated one-pass candidate bytes, two-pass score bytes, selected-pass bytes,
+expected selected fraction, disk budget when known, missing inputs, and an
+explicit policy reason in metadata.
 
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1

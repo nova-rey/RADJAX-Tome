@@ -528,6 +528,96 @@ def test_corridor_two_pass_selected_helper_emits_production_schema() -> None:
     )
 
 
+def test_corridor_auto_policy_chooses_one_pass_for_small_estimate() -> None:
+    backend = create_backend(
+        _config(
+            target_policy="corridor_exemplar_v1",
+            exemplar_capture_mode="auto",
+            exemplar_auto_num_examples=4,
+            exemplar_auto_expected_selected_fraction=0.25,
+            exemplar_auto_teacher_inference_cost_hint="cheap",
+        )
+    )
+
+    result = backend.emit_batch(_batch())
+
+    assert "corridor_teacher_entropy" in result.payload
+    assert "score_max_entropy" not in result.payload
+    assert result.metadata["exemplar_capture_mode_requested"] == "auto"
+    assert result.metadata["exemplar_capture_mode_effective"] == "one_pass_candidate"
+    assert (
+        result.metadata["exemplar_capture_policy"] == "auto_exemplar_capture_policy_v1"
+    )
+    assert result.metadata["manual_override_used"] is False
+    assert "small enough" in result.metadata["auto_policy_reason"]
+    assert result.metadata["estimated_one_pass_candidate_bytes"] > 0
+    assert result.metadata["estimated_two_pass_score_bytes"] > 0
+    assert result.metadata["estimated_two_pass_selected_bytes"] > 0
+    assert result.metadata["estimated_two_pass_total_bytes"] > 0
+    assert result.metadata["expected_selected_exemplar_fraction"] == 0.25
+    assert result.metadata["available_disk_budget_bytes"] is None
+    assert (
+        "available_disk_budget_bytes" in result.metadata["auto_policy_inputs_missing"]
+    )
+
+
+def test_corridor_auto_policy_chooses_two_pass_for_huge_estimate() -> None:
+    backend = create_backend(
+        _config(
+            target_policy="corridor_exemplar_v1",
+            exemplar_capture_mode="auto",
+            sequence_length=64,
+            exemplar_auto_num_examples=1_000_000,
+            exemplar_auto_expected_selected_fraction=0.01,
+            exemplar_auto_available_disk_budget_bytes=1_000_000,
+        )
+    )
+
+    result = backend.emit_batch(_batch())
+
+    assert "score_max_entropy" in result.payload
+    assert "corridor_teacher_entropy" not in result.payload
+    assert result.metadata["exemplar_capture_mode_requested"] == "auto"
+    assert result.metadata["exemplar_capture_mode_effective"] == (
+        "two_pass_sparse_exemplar"
+    )
+    assert (
+        result.metadata["exemplar_capture_policy"] == "auto_exemplar_capture_policy_v1"
+    )
+    assert result.metadata["manual_override_used"] is False
+    assert "budget" in result.metadata["auto_policy_reason"]
+    assert (
+        result.metadata["estimated_one_pass_candidate_bytes"]
+        > (result.metadata["available_disk_budget_bytes"])
+    )
+    assert result.metadata["exemplar_capture_stage"] == "score_pass"
+    assert result.metadata["requires_second_pass_for_final_exemplars"] is True
+
+
+def test_corridor_manual_one_pass_overrides_auto_estimates() -> None:
+    backend = create_backend(
+        _config(
+            target_policy="corridor_exemplar_v1",
+            exemplar_capture_mode="one_pass_candidate",
+            sequence_length=64,
+            exemplar_auto_num_examples=1_000_000,
+            exemplar_auto_available_disk_budget_bytes=1_000_000,
+        )
+    )
+
+    result = backend.emit_batch(_batch())
+
+    assert "corridor_teacher_entropy" in result.payload
+    assert result.metadata["exemplar_capture_mode_requested"] == "one_pass_candidate"
+    assert result.metadata["exemplar_capture_mode_effective"] == "one_pass_candidate"
+    assert (
+        result.metadata["exemplar_capture_policy"]
+        == "manual_exemplar_capture_policy_v1"
+    )
+    assert result.metadata["manual_override_used"] is True
+    assert "manual override" in result.metadata["auto_policy_reason"]
+
+
 @pytest.mark.parametrize(
     ("source_policy", "kind", "bucketed", "dynamic", "policy_id"),
     (
@@ -622,7 +712,7 @@ def test_cpu_reference_metadata_records_requested_and_effective_values() -> None
         ("dynamic_top_k_policy", "unknown", "dynamic_top_k_policy"),
         ("exemplar_source_policy", "unknown", "exemplar_source_policy"),
         ("exemplar_selection_policy", "unknown", "exemplar_selection_policy"),
-        ("exemplar_capture_mode", "auto", "exemplar_capture_mode"),
+        ("exemplar_capture_mode", "unknown", "exemplar_capture_mode"),
         (
             "exemplar_first_pass_score_policy",
             "unknown",
@@ -647,6 +737,22 @@ def test_cpu_reference_metadata_records_requested_and_effective_values() -> None
             "exemplar_sparse_selection_fraction",
             1.1,
             "exemplar_sparse_selection_fraction",
+        ),
+        ("exemplar_auto_num_examples", 0, "exemplar_auto_num_examples"),
+        (
+            "exemplar_auto_expected_selected_fraction",
+            0.0,
+            "exemplar_auto_expected_selected_fraction",
+        ),
+        (
+            "exemplar_auto_expected_selected_fraction",
+            1.1,
+            "exemplar_auto_expected_selected_fraction",
+        ),
+        (
+            "exemplar_auto_available_disk_budget_bytes",
+            0,
+            "exemplar_auto_available_disk_budget_bytes",
         ),
         ("corridor_payload_flavor", "proxy_v0", "corridor_payload_flavor"),
     ),
