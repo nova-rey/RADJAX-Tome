@@ -39,6 +39,15 @@ class TorchAcceleratorDetection:
     mps_available: bool = False
 
 
+@dataclass(frozen=True)
+class VocabChunkingPlan:
+    requested: bool
+    requested_size: int | None
+    effective_size: int | None
+    used: bool
+    reason: str | None
+
+
 class GPUTorchTeacherEmissionBackend:
     backend_id = "gpu_torch"
     backend_family = "gpu_torch"
@@ -177,7 +186,7 @@ class GPUTorchTeacherEmissionBackend:
         logits = output.logits
         effective_vocab_size = int(logits.shape[-1])
         estimated_dense_logits_dtype = _logits_dtype_name(logits)
-        effective_chunk_size = _effective_gpu_vocab_chunk_size(self.config)
+        chunking_plan = _vocab_chunking_plan(self.config, self.config.target_policy)
         if self.config.target_policy == "dense_logits":
             dense_logits = logits.detach().to("cpu").numpy().astype(np.float32)
             payload = {"logits": dense_logits}
@@ -188,7 +197,7 @@ class GPUTorchTeacherEmissionBackend:
                     logits,
                     top_k=self.config.top_k,
                     num_buckets=self.config.num_buckets,
-                    vocab_chunk_size=effective_chunk_size,
+                    vocab_chunk_size=chunking_plan.effective_size,
                 )
             )
         else:
@@ -197,7 +206,7 @@ class GPUTorchTeacherEmissionBackend:
                     torch,
                     logits,
                     top_k=self.config.top_k,
-                    vocab_chunk_size=effective_chunk_size,
+                    vocab_chunk_size=chunking_plan.effective_size,
                 )
             )
         return TeacherEmissionResult(
@@ -237,13 +246,10 @@ class GPUTorchTeacherEmissionBackend:
             self.config.batch_size if actual_batch_size is None else actual_batch_size
         )
         dense_debug_path = self.config.target_policy == "dense_logits"
-        vocab_chunk_size_effective = _effective_gpu_vocab_chunk_size(self.config)
-        vocab_chunking_used = (
-            vocab_chunk_size_effective is not None and not dense_debug_path
-        )
+        chunking_plan = _vocab_chunking_plan(self.config, self.config.target_policy)
         chunks_per_batch = _vocab_chunks_per_batch(
             effective_vocab_size=effective_vocab,
-            vocab_chunk_size=vocab_chunk_size_effective,
+            vocab_chunk_size=chunking_plan.effective_size,
         )
         metadata: dict[str, object] = {
             "requested_runtime_mode": self.config.runtime_mode,
@@ -274,12 +280,14 @@ class GPUTorchTeacherEmissionBackend:
             "torch_version": device.torch_version,
             "cuda_available": device.cuda_available,
             "mps_available": device.mps_available,
-            "vocab_chunking_requested": self.config.gpu_enable_vocab_chunking,
-            "vocab_chunking_used": vocab_chunking_used,
-            "gpu_vocab_chunk_size_requested": self.config.gpu_vocab_chunk_size,
-            "gpu_vocab_chunk_size_effective": vocab_chunk_size_effective,
+            "vocab_chunking_requested": chunking_plan.requested,
+            "vocab_chunking_used": chunking_plan.used,
+            "gpu_vocab_chunk_size_requested": chunking_plan.requested_size,
+            "gpu_vocab_chunk_size_effective": chunking_plan.effective_size,
             "gpu_vocab_chunks_per_batch": chunks_per_batch,
         }
+        if chunking_plan.reason is not None:
+            metadata["vocab_chunking_reason"] = chunking_plan.reason
         if self.config.target_policy in {
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
@@ -289,7 +297,7 @@ class GPUTorchTeacherEmissionBackend:
             compact_fields = _compact_payload_fields(self.config.target_policy)
             gpu_reduction_mode = _gpu_reduction_mode(
                 self.config.target_policy,
-                vocab_chunking_used=vocab_chunking_used,
+                vocab_chunking_used=chunking_plan.used,
             )
             estimated_dense_logits_bytes = _estimate_dense_logits_bytes(
                 actual_batch_size=actual_batch,
@@ -316,7 +324,7 @@ class GPUTorchTeacherEmissionBackend:
                         actual_batch_size=actual_batch,
                         sequence_length=self.config.sequence_length,
                         effective_vocab_size=effective_vocab,
-                        vocab_chunk_size=vocab_chunk_size_effective,
+                        vocab_chunk_size=chunking_plan.effective_size,
                         dtype_name=estimated_dense_logits_dtype,
                     )
                 ),
@@ -327,12 +335,6 @@ class GPUTorchTeacherEmissionBackend:
                 "estimated_reducer_workspace_is_measured": False,
                 "estimated_dense_logits_dtype": estimated_dense_logits_dtype,
             }
-            if self.config.gpu_enable_vocab_chunking and not vocab_chunking_used:
-                compact_metadata["vocab_chunking_reason"] = (
-                    "disabled_for_dense_debug"
-                    if dense_debug_path
-                    else "chunk_size_not_effective"
-                )
             if self.config.target_policy == "cascaded_soft_labels_v1":
                 compact_metadata.update(
                     {
@@ -731,10 +733,42 @@ def _estimate_reducer_workspace_bytes(
     )
 
 
-def _effective_gpu_vocab_chunk_size(config: TeacherBackendConfig) -> int | None:
+def _vocab_chunking_plan(
+    config: TeacherBackendConfig,
+    target_policy: str,
+) -> VocabChunkingPlan:
+    requested_size = config.gpu_vocab_chunk_size
     if not config.gpu_enable_vocab_chunking:
-        return None
-    return config.gpu_vocab_chunk_size or _DEFAULT_GPU_VOCAB_CHUNK_SIZE
+        return VocabChunkingPlan(
+            requested=False,
+            requested_size=requested_size,
+            effective_size=None,
+            used=False,
+            reason=None,
+        )
+    if target_policy == "dense_logits":
+        return VocabChunkingPlan(
+            requested=True,
+            requested_size=requested_size,
+            effective_size=None,
+            used=False,
+            reason="disabled_for_dense_debug",
+        )
+    if target_policy == "cascaded_soft_labels_v1":
+        return VocabChunkingPlan(
+            requested=True,
+            requested_size=requested_size,
+            effective_size=None,
+            used=False,
+            reason="exact_bucket_policy_requires_full_probability_workspace",
+        )
+    return VocabChunkingPlan(
+        requested=True,
+        requested_size=requested_size,
+        effective_size=requested_size or _DEFAULT_GPU_VOCAB_CHUNK_SIZE,
+        used=True,
+        reason=None,
+    )
 
 
 def _vocab_chunks_per_batch(

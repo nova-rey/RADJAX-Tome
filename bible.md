@@ -154,3 +154,14 @@ instead of duplicating full-vocab softmax/probability work, while preserving
 
 This does not migrate the public builder, implement GPU corridor/exemplar
 acceleration, claim measured peak GPU memory, or add TPU/JAX support.
+
+## 2026-07-02 — Spec 3.3F4.1 Cascaded Chunking Metadata Truth Fix
+
+Spec 3.3F4.1 fixes metadata truth for `cascaded_soft_labels_v1`. When vocab
+chunking is requested for cascaded exact bucket construction, metadata now
+preserves `vocab_chunking_requested=true` but records `vocab_chunking_used=false`
+with `exact_bucket_policy_requires_full_probability_workspace`, because the
+current exact `bucket_masses` path needs a full probability workspace on device.
+
+Top-k chunking remains effective. This metadata truth fix does not migrate the
+public builder, add TPU/JAX support, or change target artifacts.

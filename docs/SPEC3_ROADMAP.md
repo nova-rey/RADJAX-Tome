@@ -89,6 +89,7 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | 3.3F2 | GPU Top-K/Tail Compact Reducer | complete once the gpu_torch top-k/tail reducer lands |
 | 3.3F3 | GPU Cascaded Soft-Label Reducer | complete once the gpu_torch cascaded reducer lands |
 | 3.3F4 | Chunked Vocab Reduction + Memory Metadata | complete once chunking metadata lands |
+| 3.3F4.1 | Cascaded Chunking Metadata Truth Fix | complete once cascaded chunking overclaim is fixed |
 | 3.3F5 | GPU Runtime Fallback / Error Hardening | planned |
 
 Spec 3.3F1 adds `gpu_torch` as a CUDA/MPS-detecting dense debug backend. It
@@ -108,6 +109,10 @@ Spec 3.3F4 adds optional vocab-axis chunking and memory/workspace metadata for
 `gpu_torch` compact reducers, plus the cascaded duplicate-softmax cleanup. It
 does not complete OOM recovery, runtime fallback hardening, corridor
 acceleration, or public builder migration.
+
+Spec 3.3F4.1 corrects cascaded chunking metadata: requested cascaded vocab
+chunking is preserved, but current exact bucket construction does not claim
+effective chunked workspace because it requires a full probability workspace.
 
 3.3G adds TPU/JAX shape without CUDA assumptions.
 

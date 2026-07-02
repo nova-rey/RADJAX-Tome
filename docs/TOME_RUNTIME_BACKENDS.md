@@ -155,14 +155,24 @@ buckets. Only compact payload arrays move back to host.
 
 Spec 3.3F4 adds optional vocab-axis chunking for compact GPU reducers through
 `gpu_enable_vocab_chunking` and `gpu_vocab_chunk_size`. Dense debug remains
-unchunked and still transfers full logits to host. Compact top-k/tail and
-cascaded modes record requested/effective chunking, chunk counts, compact host
-transfer bytes, dense-equivalent byte estimates, and deterministic reducer
-workspace estimates. These are estimates, not measured peak GPU memory.
+unchunked and still transfers full logits to host. Compact top-k/tail supports
+effective vocab-axis chunking and records requested/effective chunking, chunk
+counts, compact host transfer bytes, dense-equivalent byte estimates, and
+deterministic reducer workspace estimates. These are estimates, not measured
+peak GPU memory.
 
 Spec 3.3F4 also removes duplicate full-vocab softmax/probability work from the
 non-chunked cascaded path by sharing the probability workspace used for top-k
 and bucket-mass reduction.
+
+Spec 3.3F4.1 fixes cascaded chunking metadata truthfulness. Cascaded
+soft-label reduction still uses exact contiguous descending tail-probability
+buckets. When vocab chunking is requested for cascaded, current metadata records
+`vocab_chunking_requested=true` but `vocab_chunking_used=false` with
+`vocab_chunking_reason=exact_bucket_policy_requires_full_probability_workspace`
+because exact bucket construction reconstructs a full probability workspace on
+device. It does not transfer full dense logits to host, but it also does not
+claim chunk-sized reducer workspace.
 
 `corridor_exemplar_v1` remains historical-reference/future GPU work. Runtime
 fallback/error hardening remains future Spec 3.3F5 work. The public builder has
@@ -179,6 +189,8 @@ on CUDA or MPS. Spec 3.3F2 adds compact top-k/tail reduction on the accelerator.
 Spec 3.3F3 adds compact cascaded soft-label reduction on the accelerator.
 Spec 3.3F4 adds optional vocab chunking and memory/workspace metadata for
 compact reducers. Runtime fallback/error hardening remains future 3.3F work.
+Spec 3.3F4.1 corrects cascaded chunking metadata so exact bucket construction
+does not overclaim effective chunked workspace.
 
 `cpu_tpu` means CPU-side orchestration plus TPU/JAX/XLA-backed teacher
 execution and/or TPU-backed reduction. This is a future backend family; no

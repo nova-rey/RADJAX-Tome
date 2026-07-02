@@ -331,7 +331,9 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "Spec 3.3F3 gpu_torch computes GPU compact cascaded" in cascaded["notes"]
     assert "bucket masses" in cascaded["notes"]
     assert "compact payload arrays" in cascaded["notes"]
-    assert "optional vocab chunking" in cascaded["notes"]
+    assert "Spec 3.3F4.1" in cascaded["notes"]
+    assert "requested cascaded chunking honestly" in cascaded["notes"]
+    assert "full probability workspace" in cascaded["notes"]
     assert "shared probability workspace reuse" in cascaded["notes"]
     assert corridor["runtime_mode"] == "cpu_gpu"
     assert corridor["status"] == "historical_reference_exists"
@@ -340,5 +342,5 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals
-    assert "Spec 3.3F4" in non_goals
+    assert "Spec 3.3F4.1" in non_goals
     assert "measured peak GPU memory" in non_goals

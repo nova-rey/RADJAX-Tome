@@ -136,7 +136,7 @@
     {
       "backend_family": "gpu_torch",
       "implemented_now": true,
-      "notes": "Spec 3.3F3 gpu_torch computes GPU compact cascaded soft-label reduction on CUDA or MPS, including bucket masses, and transfers only compact payload arrays back to host. Spec 3.3F4 adds optional vocab chunking, memory metadata, and shared probability workspace reuse.",
+      "notes": "Spec 3.3F3 gpu_torch computes GPU compact cascaded soft-label reduction on CUDA or MPS, including bucket masses, and transfers only compact payload arrays back to host. Spec 3.3F4 adds memory metadata and shared probability workspace reuse. Spec 3.3F4.1 records requested cascaded chunking honestly when exact bucket construction requires a full probability workspace.",
       "optimized": true,
       "runtime_mode": "cpu_gpu",
       "status": "optimized",
@@ -220,13 +220,13 @@
     "metadata_implementation_required_now": false
   },
   "non_goals": [
-    "Do not migrate the public builder to hf_torch or gpu_torch in Spec 3.3F4.",
-    "Do not claim staged mode is performance optimized in Spec 3.3F4.",
-    "Do not claim measured peak GPU memory or OOM recovery in Spec 3.3F4.",
+    "Do not migrate the public builder to hf_torch or gpu_torch in Spec 3.3F4.1.",
+    "Do not claim staged mode is performance optimized in Spec 3.3F4.1.",
+    "Do not claim measured peak GPU memory or OOM recovery in Spec 3.3F4.1.",
     "Do not silently fall back to CPU when gpu_torch is explicitly requested.",
-    "Do not implement GPU corridor/exemplar acceleration in Spec 3.3F4.",
-    "Do not implement TPU/JAX backend code in Spec 3.3F4.",
-    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3F4."
+    "Do not implement GPU corridor/exemplar acceleration in Spec 3.3F4.1.",
+    "Do not implement TPU/JAX backend code in Spec 3.3F4.1.",
+    "Do not change target shard binary layout, cover page schema, or .rtome bundle format in Spec 3.3F4.1."
   ],
   "orchestration": {
     "default_mode": "auto",

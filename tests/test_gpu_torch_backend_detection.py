@@ -420,6 +420,47 @@ def test_gpu_torch_cascaded_metadata_records_bucket_reduction() -> None:
     assert metadata["gpu_vocab_chunks_per_batch"] == 1
 
 
+def test_gpu_torch_cascaded_chunking_request_is_not_overclaimed() -> None:
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(
+            target_policy="cascaded_soft_labels_v1",
+            top_k=3,
+            num_buckets=2,
+            gpu_enable_vocab_chunking=True,
+            gpu_vocab_chunk_size=5,
+        )
+    )
+    compact_payload = {
+        "top_token_ids": np.zeros((2, 4, 3), dtype=np.int32),
+        "top_log_probs": np.zeros((2, 4, 3), dtype=np.float32),
+        "top_probs": np.zeros((2, 4, 3), dtype=np.float32),
+        "top_mass": np.zeros((2, 4), dtype=np.float32),
+        "tail_mass": np.ones((2, 4), dtype=np.float32),
+        "bucket_masses": np.ones((2, 4, 2), dtype=np.float32),
+        "teacher_entropy": np.zeros((2, 4), dtype=np.float32),
+    }
+
+    metadata = backend.metadata(
+        actual_batch_size=2,
+        effective_vocab_size=11,
+        compact_payload=compact_payload,
+        estimated_dense_logits_dtype="float32",
+    )
+
+    assert metadata["vocab_chunking_requested"] is True
+    assert metadata["vocab_chunking_used"] is False
+    assert (
+        metadata["vocab_chunking_reason"]
+        == "exact_bucket_policy_requires_full_probability_workspace"
+    )
+    assert metadata["gpu_vocab_chunk_size_requested"] == 5
+    assert metadata["gpu_vocab_chunk_size_effective"] is None
+    assert metadata["gpu_vocab_chunks_per_batch"] == 1
+    assert metadata["gpu_reduction_mode"] == "compact_cascaded_soft_labels"
+    assert metadata["estimated_reducer_workspace_bytes"] == 2 * 4 * 11 * 4 * 3
+    assert metadata["dense_logits_transferred_to_host"] is False
+
+
 def test_gpu_topk_tail_reducer_shapes_and_mass_accounting() -> None:
     if not _optional_torch_available():
         pytest.skip("optional torch dependency is not installed")
@@ -571,43 +612,6 @@ def test_gpu_cascaded_reducer_shapes_and_bucket_mass_accounting() -> None:
     )
     for value in payload.values():
         assert isinstance(value, np.ndarray)
-
-
-def test_gpu_cascaded_chunked_reducer_bucket_mass_accounting() -> None:
-    if not _optional_torch_available():
-        pytest.skip("optional torch dependency is not installed")
-    torch = import_module("torch")
-    gpu_torch = import_module("radjax_tome.backends.gpu_torch")
-    logits = torch.tensor(
-        [
-            [
-                [4.0, 1.0, 0.0, -1.0, -2.0, -3.0],
-                [0.5, 2.0, -0.5, -1.5, -2.0, -3.0],
-                [1.0, 0.0, 3.0, -2.0, -3.0, -4.0],
-                [2.0, 1.0, 0.0, -1.0, -2.0, -3.0],
-            ],
-        ],
-        dtype=torch.float32,
-    )
-
-    payload = gpu_torch._compact_payload_to_numpy(
-        gpu_torch._gpu_cascaded_reduce(
-            torch,
-            logits,
-            top_k=3,
-            num_buckets=2,
-            vocab_chunk_size=2,
-        )
-    )
-
-    assert payload["bucket_masses"].shape == (1, 4, 2)
-    assert np.isfinite(payload["bucket_masses"]).all()
-    np.testing.assert_allclose(
-        payload["bucket_masses"].sum(axis=-1),
-        payload["tail_mass"],
-        rtol=1e-6,
-        atol=1e-6,
-    )
 
 
 def test_gpu_cascaded_nonchunked_reuses_probability_workspace(monkeypatch) -> None:
