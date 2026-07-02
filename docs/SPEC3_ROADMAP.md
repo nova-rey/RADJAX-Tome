@@ -152,6 +152,11 @@ and dynamic-cascaded exemplar source policies, emits
 `compact_corridor_exemplar` metadata, and transfers compact production arrays
 only. It does not migrate the public builder.
 
+Spec 3.3F9.1 formalizes that behavior as `one_pass_candidate` capture mode:
+the backend emits compact candidate data for every batch example, with
+`exemplar_candidate_scope=batch_all_examples`, and does not perform final
+corpus-level exemplar pruning.
+
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1
 dynamic reducer vectorization rehearsal, F8 corridor/exemplar production

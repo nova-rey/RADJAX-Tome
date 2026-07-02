@@ -120,6 +120,13 @@ logits on device even for dense source mode, and transfers only compact
 production arrays plus CPU-built record summaries. The public builder has not
 migrated to `gpu_torch`.
 
+Spec 3.3F9.1 names the current capture behavior
+`one_pass_candidate`. In this mode, the backend emits compact candidate data
+for every batch example in one teacher pass. This is compute-efficient and
+simple, but may become storage-heavy for huge corpora. It is not final
+corpus-level exemplar pruning. Future modes are expected to add
+`two_pass_sparse_exemplar` and `auto`, but those modes are not implemented.
+
 ## CPU Orchestration Runner
 
 Spec 3.3D adds a backend batch runner above backend emission. The runner
@@ -292,6 +299,9 @@ source-policy-aware. Dense, fixed-cascaded, and dynamic-cascaded source
 policies feed its behavioral fields. Spec 3.3F9 adds `gpu_torch` acceleration
 for the behavioral/fingerprint policy while preserving compact-only host
 transfer and leaving public builder migration out of scope.
+Spec 3.3F9.1 records `one_pass_candidate` capture metadata with
+`exemplar_candidate_scope=batch_all_examples` and
+`corpus_level_exemplar_finalization=false`.
 
 ## Support Statuses
 

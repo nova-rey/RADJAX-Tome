@@ -256,3 +256,16 @@ compact source. It transfers compact production arrays only and builds record
 summaries after transfer.
 
 This does not migrate the public builder and does not add TPU/JAX support.
+
+## 2026-07-02 — Spec 3.3F9.1 One-Pass Candidate Formalization
+
+Spec 3.3F9.1 formalizes current `corridor_exemplar_v1` behavior as
+`one_pass_candidate`. CPU reference and `gpu_torch` backends emit compact
+candidate data for every example in the batch and record
+`exemplar_candidate_scope=batch_all_examples`.
+
+This mode is not final corpus-level exemplar pruning:
+`corpus_level_exemplar_finalization=false` and
+`requires_second_pass_for_final_exemplars=false`. It does not implement
+two-pass sparse exemplar capture, does not migrate the public builder, and does
+not add TPU/JAX support.

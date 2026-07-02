@@ -63,6 +63,7 @@ _CORRIDOR_POLICY = "production_corridor_records_v1"
 _MODE_RECORD_POLICY = "top_mode_summary_v1"
 _FINGERPRINT_TOPOLOGY_POLICY = "sequence_position_v1"
 _CORRIDOR_CONFIDENCE_POLICY = "top_probability_v1"
+_EXEMPLAR_CAPTURE_MODE = "one_pass_candidate"
 _EXEMPLAR_SOURCE_POLICIES = {
     "dense_logits": 1,
     "cascaded_soft_labels_v1": 2,
@@ -736,6 +737,8 @@ def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
         )
     if config.exemplar_selection_policy != _EXEMPLAR_SELECTION_POLICY:
         raise ValueError("exemplar_selection_policy must be 'entropy_top_n_v1'")
+    if config.exemplar_capture_mode != _EXEMPLAR_CAPTURE_MODE:
+        raise ValueError("exemplar_capture_mode must be 'one_pass_candidate'")
     if config.corridor_payload_flavor != _CORRIDOR_PAYLOAD_FLAVOR:
         raise ValueError("corridor_payload_flavor must be 'production_v1'")
     if config.gpu_vocab_chunk_size is not None and config.gpu_vocab_chunk_size <= 0:
@@ -1384,6 +1387,20 @@ def _gpu_corridor_schema_metadata(config: TeacherBackendConfig) -> dict[str, obj
         "mode_record_policy": _MODE_RECORD_POLICY,
         "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
         "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
+        **_gpu_corridor_capture_mode_metadata(config),
+    }
+
+
+def _gpu_corridor_capture_mode_metadata(
+    config: TeacherBackendConfig,
+) -> dict[str, object]:
+    return {
+        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
+        "exemplar_capture_mode_effective": _EXEMPLAR_CAPTURE_MODE,
+        "exemplar_capture_mode_policy": "explicit_one_pass_candidate_v1",
+        "exemplar_candidate_scope": "batch_all_examples",
+        "corpus_level_exemplar_finalization": False,
+        "requires_second_pass_for_final_exemplars": False,
     }
 
 

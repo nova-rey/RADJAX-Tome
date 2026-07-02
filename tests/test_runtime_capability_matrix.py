@@ -65,6 +65,8 @@ def test_runtime_backend_doc_defines_architecture_vocabulary() -> None:
     assert "Spec 3.3F8 locks `corridor_exemplar_v1`" in text
     assert "production behavioral/fingerprint payload" in text
     assert "Allowed exemplar source policies" in text
+    assert "one_pass_candidate" in text
+    assert "batch_all_examples" in text
 
 
 def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
@@ -400,6 +402,7 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "Spec 3.3F9" in corridor["notes"]
     assert "F8 production schema" in corridor["notes"]
     assert "compact production arrays" in corridor["notes"]
+    assert "one_pass_candidate" in corridor["notes"]
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals

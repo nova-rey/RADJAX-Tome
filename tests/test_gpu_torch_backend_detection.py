@@ -114,6 +114,7 @@ def test_gpu_torch_constructs_without_loading_optional_deps() -> None:
     assert backend.backend_id == "gpu_torch"
     assert backend.backend_family == "gpu_torch"
     assert backend.runtime_mode == "cpu_gpu"
+    assert backend.config.exemplar_capture_mode == "one_pass_candidate"
 
 
 @pytest.mark.parametrize("runtime_mode", ("cpu", "cpu_tpu"))
@@ -166,6 +167,7 @@ def test_gpu_torch_rejects_unknown_target_policy() -> None:
         ("dynamic_top_k_policy", "unknown", "dynamic_top_k_policy"),
         ("exemplar_source_policy", "unknown", "exemplar_source_policy"),
         ("exemplar_selection_policy", "unknown", "exemplar_selection_policy"),
+        ("exemplar_capture_mode", "two_pass_sparse_exemplar", "exemplar_capture_mode"),
         ("corridor_payload_flavor", "proxy_v0", "corridor_payload_flavor"),
     ),
 )
@@ -721,6 +723,14 @@ def test_gpu_torch_corridor_metadata_records_compact_production_schema(
     assert metadata["mode_record_policy"] == "top_mode_summary_v1"
     assert metadata["fingerprint_topology_policy"] == "sequence_position_v1"
     assert metadata["corridor_confidence_policy"] == "top_probability_v1"
+    assert metadata["exemplar_capture_mode_requested"] == "one_pass_candidate"
+    assert metadata["exemplar_capture_mode_effective"] == "one_pass_candidate"
+    assert metadata["exemplar_capture_mode_policy"] == (
+        "explicit_one_pass_candidate_v1"
+    )
+    assert metadata["exemplar_candidate_scope"] == "batch_all_examples"
+    assert metadata["corpus_level_exemplar_finalization"] is False
+    assert metadata["requires_second_pass_for_final_exemplars"] is False
     assert metadata["source_policy_kind"] == kind
     assert metadata["source_policy_uses_bucketed_tail"] is bucketed
     assert metadata["source_policy_dynamic_top_k"] is dynamic

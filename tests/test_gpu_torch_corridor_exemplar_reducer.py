@@ -166,6 +166,23 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
         gpu_payload["schema_metadata"]["historical_reference_source"]
         == "gpu_torch_production"
     )
+    assert gpu_payload["schema_metadata"]["exemplar_capture_mode_requested"] == (
+        "one_pass_candidate"
+    )
+    assert gpu_payload["schema_metadata"]["exemplar_capture_mode_effective"] == (
+        "one_pass_candidate"
+    )
+    assert gpu_payload["schema_metadata"]["exemplar_capture_mode_policy"] == (
+        "explicit_one_pass_candidate_v1"
+    )
+    assert gpu_payload["schema_metadata"]["exemplar_candidate_scope"] == (
+        "batch_all_examples"
+    )
+    assert gpu_payload["schema_metadata"]["corpus_level_exemplar_finalization"] is False
+    assert (
+        gpu_payload["schema_metadata"]["requires_second_pass_for_final_exemplars"]
+        is False
+    )
 
 
 def _optional_torch_available() -> bool:

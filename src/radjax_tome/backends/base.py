@@ -44,6 +44,7 @@ class TeacherBackendConfig:
     exemplar_top_n: int = 1
     exemplar_source_policy: str = "dynamic_cascaded_soft_labels_v1"
     exemplar_selection_policy: str = "entropy_top_n_v1"
+    exemplar_capture_mode: str = "one_pass_candidate"
     corridor_payload_flavor: str = "production_v1"
     dynamic_top_k_min: int = 1
     dynamic_top_k_max: int = 32

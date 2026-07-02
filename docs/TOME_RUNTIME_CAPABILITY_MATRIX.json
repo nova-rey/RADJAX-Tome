@@ -91,7 +91,7 @@
     {
       "backend_family": "cpu_reference",
       "implemented_now": true,
-      "notes": "Spec 3.3F8 CPU reference corridor_exemplar_v1 emits the locked production schema with source-policy-aware metadata. It remains unoptimized CPU reference behavior and does not migrate the public builder.",
+      "notes": "Spec 3.3F8 CPU reference corridor_exemplar_v1 emits the locked production schema with source-policy-aware metadata. It remains unoptimized CPU reference behavior and does not migrate the public builder. Spec 3.3F9.1 records one_pass_candidate capture mode metadata.",
       "optimized": false,
       "runtime_mode": "cpu",
       "status": "supported",
@@ -181,7 +181,7 @@
     {
       "backend_family": "gpu_torch",
       "implemented_now": true,
-      "notes": "Spec 3.3F9 gpu_torch implements optimized corridor_exemplar_v1 emission against the F8 production schema, supports dense, fixed cascaded, and dynamic cascaded exemplar source policies, and transfers only compact production arrays back to host.",
+      "notes": "Spec 3.3F9 gpu_torch implements optimized corridor_exemplar_v1 emission against the F8 production schema, supports dense, fixed cascaded, and dynamic cascaded exemplar source policies, and transfers only compact production arrays back to host. Spec 3.3F9.1 formalizes this implementation as one_pass_candidate capture mode.",
       "optimized": true,
       "runtime_mode": "cpu_gpu",
       "status": "optimized",

@@ -46,6 +46,7 @@ def test_cpu_reference_backend_created_through_registry() -> None:
     assert backend.backend_id == "cpu_reference"
     assert backend.backend_family == "cpu_reference"
     assert backend.runtime_mode == "cpu"
+    assert backend.config.exemplar_capture_mode == "one_pass_candidate"
 
 
 def test_registry_lists_fake_and_cpu_reference_backends() -> None:
@@ -333,6 +334,22 @@ def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
         payload["schema_metadata"]["historical_reference_source"]
         == "cpu_reference_proxy"
     )
+    assert payload["schema_metadata"]["exemplar_capture_mode_requested"] == (
+        "one_pass_candidate"
+    )
+    assert payload["schema_metadata"]["exemplar_capture_mode_effective"] == (
+        "one_pass_candidate"
+    )
+    assert payload["schema_metadata"]["exemplar_capture_mode_policy"] == (
+        "explicit_one_pass_candidate_v1"
+    )
+    assert payload["schema_metadata"]["exemplar_candidate_scope"] == (
+        "batch_all_examples"
+    )
+    assert payload["schema_metadata"]["corpus_level_exemplar_finalization"] is False
+    assert (
+        payload["schema_metadata"]["requires_second_pass_for_final_exemplars"] is False
+    )
     assert payload["corridor_top_token_ids"].shape == (2, 5)
     assert payload["corridor_top_probs"].shape == (2, 5)
     assert payload["corridor_teacher_entropy"].shape == (2, 5)
@@ -398,6 +415,14 @@ def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
     assert first.metadata["mode_record_policy"] == "top_mode_summary_v1"
     assert first.metadata["fingerprint_topology_policy"] == "sequence_position_v1"
     assert first.metadata["corridor_confidence_policy"] == "top_probability_v1"
+    assert first.metadata["exemplar_capture_mode_requested"] == "one_pass_candidate"
+    assert first.metadata["exemplar_capture_mode_effective"] == "one_pass_candidate"
+    assert first.metadata["exemplar_capture_mode_policy"] == (
+        "explicit_one_pass_candidate_v1"
+    )
+    assert first.metadata["exemplar_candidate_scope"] == "batch_all_examples"
+    assert first.metadata["corpus_level_exemplar_finalization"] is False
+    assert first.metadata["requires_second_pass_for_final_exemplars"] is False
     assert first.metadata["source_policy_kind"] == "dynamic_cascaded"
     assert first.metadata["source_policy_uses_bucketed_tail"] is True
     assert first.metadata["source_policy_dynamic_top_k"] is True
@@ -498,6 +523,7 @@ def test_cpu_reference_metadata_records_requested_and_effective_values() -> None
         ("dynamic_top_k_policy", "unknown", "dynamic_top_k_policy"),
         ("exemplar_source_policy", "unknown", "exemplar_source_policy"),
         ("exemplar_selection_policy", "unknown", "exemplar_selection_policy"),
+        ("exemplar_capture_mode", "two_pass_sparse_exemplar", "exemplar_capture_mode"),
         ("corridor_payload_flavor", "proxy_v0", "corridor_payload_flavor"),
     ),
 )
