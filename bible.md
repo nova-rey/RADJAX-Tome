@@ -269,3 +269,13 @@ This mode is not final corpus-level exemplar pruning:
 `requires_second_pass_for_final_exemplars=false`. It does not implement
 two-pass sparse exemplar capture, does not migrate the public builder, and does
 not add TPU/JAX support.
+
+## 2026-07-02 — Spec 3.3F9.2 Two-Pass Sparse Exemplar Capture
+
+Spec 3.3F9.2 adds `two_pass_sparse_exemplar` as a storage/transfer-saving
+corridor-exemplar capture mode. Pass 1 emits [B]-scale `score_pass` summaries
+for all examples; pass 2 reruns selected examples and emits F8
+production-shaped exemplar payloads with `selected_exemplar_pass` metadata.
+
+One-pass mode remains available. No auto policy yet, no builder migration, no
+TPU/JAX.

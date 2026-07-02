@@ -185,6 +185,58 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
     )
 
 
+def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
+    if not _optional_torch_available():
+        pytest.skip("optional torch dependency is not installed")
+    torch = import_module("torch")
+    gpu_torch = import_module("radjax_tome.backends.gpu_torch")
+    config = _config(exemplar_capture_mode="two_pass_sparse_exemplar")
+    logits_np = np.asarray(
+        [
+            [
+                [4.0, 1.0, 0.0, -1.0, -2.0, -3.0],
+                [0.5, 2.0, -0.5, -1.5, -2.0, -3.0],
+                [1.0, 0.0, 3.0, -2.0, -3.0, -4.0],
+            ],
+            [
+                [3.0, 2.0, 1.0, 0.0, -1.0, -2.0],
+                [0.0, 4.0, 1.0, -1.0, -2.0, -3.0],
+                [1.0, 2.0, 4.0, 0.0, -1.0, -2.0],
+            ],
+        ],
+        dtype=np.float32,
+    )
+    logits = torch.tensor(logits_np, dtype=torch.float32)
+
+    payload = gpu_torch._compact_payload_to_numpy(
+        gpu_torch._gpu_corridor_exemplar_score_reduce(torch, logits, config=config)
+    )
+
+    assert set(payload) == {
+        "score_example_ids",
+        "score_max_entropy",
+        "score_mean_entropy",
+        "score_selected_position",
+        "score_selected_position_entropy",
+        "score_confidence_at_selected_position",
+        "score_source_policy_ids",
+        "score_lengths",
+    }
+    for value in payload.values():
+        assert value.shape == (2,)
+    assert (payload["score_source_policy_ids"] == 3).all()
+    assert (payload["score_lengths"] == 3).all()
+    assert np.isfinite(payload["score_max_entropy"]).all()
+    assert np.isfinite(payload["score_mean_entropy"]).all()
+    assert np.isfinite(payload["score_confidence_at_selected_position"]).all()
+
+    selected = gpu_torch._compact_payload_to_numpy(
+        gpu_torch._gpu_corridor_exemplar_selected_reduce(torch, logits, config=config)
+    )
+    assert selected["corridor_teacher_entropy"].shape == (2, 3)
+    assert selected["exemplar_positions"].shape == (2, 2)
+
+
 def _optional_torch_available() -> bool:
     try:
         import_module("torch")

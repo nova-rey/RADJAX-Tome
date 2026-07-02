@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from importlib import import_module
 from typing import Any
 
@@ -64,6 +64,8 @@ _MODE_RECORD_POLICY = "top_mode_summary_v1"
 _FINGERPRINT_TOPOLOGY_POLICY = "sequence_position_v1"
 _CORRIDOR_CONFIDENCE_POLICY = "top_probability_v1"
 _EXEMPLAR_CAPTURE_MODE = "one_pass_candidate"
+_EXEMPLAR_CAPTURE_MODES = {"one_pass_candidate", "two_pass_sparse_exemplar"}
+_EXEMPLAR_FIRST_PASS_SCORE_POLICY = "entropy_score_v1"
 _EXEMPLAR_SOURCE_POLICIES = {
     "dense_logits": 1,
     "cascaded_soft_labels_v1": 2,
@@ -280,25 +282,42 @@ class GPUTorchTeacherEmissionBackend:
                 ) from exc
         elif self.config.target_policy == "corridor_exemplar_v1":
             try:
-                compact_payload = _gpu_corridor_exemplar_reduce(
-                    torch,
-                    logits,
-                    config=self.config,
-                    vocab_chunk_size=chunking_plan.effective_size,
-                )
+                if self.config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+                    compact_payload = _gpu_corridor_exemplar_score_reduce(
+                        torch,
+                        logits,
+                        config=self.config,
+                        vocab_chunk_size=chunking_plan.effective_size,
+                    )
+                else:
+                    compact_payload = _gpu_corridor_exemplar_reduce(
+                        torch,
+                        logits,
+                        config=self.config,
+                        vocab_chunk_size=chunking_plan.effective_size,
+                    )
             except Exception as exc:
                 raise _wrap_device_error(
                     "corridor/exemplar compact reduction", exc, device
                 ) from exc
             try:
                 payload = _compact_payload_to_numpy(compact_payload)
-                payload.update(
-                    _gpu_corridor_payload_records(
-                        self.config,
-                        payload,
-                        effective_vocab_size=effective_vocab_size,
+                if self.config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+                    payload.update(
+                        _gpu_corridor_score_records(
+                            self.config,
+                            payload,
+                            effective_vocab_size=effective_vocab_size,
+                        )
                     )
-                )
+                else:
+                    payload.update(
+                        _gpu_corridor_payload_records(
+                            self.config,
+                            payload,
+                            effective_vocab_size=effective_vocab_size,
+                        )
+                    )
             except Exception as exc:
                 raise _wrap_device_error(
                     "corridor/exemplar compact tensor transfer to CPU",
@@ -413,9 +432,13 @@ class GPUTorchTeacherEmissionBackend:
             "corridor_exemplar_v1",
         }:
             compact_payload = compact_payload or {}
-            compact_fields = _compact_payload_fields(self.config.target_policy)
+            compact_fields = _compact_payload_fields(
+                self.config.target_policy,
+                exemplar_capture_mode=self.config.exemplar_capture_mode,
+            )
             gpu_reduction_mode = _gpu_reduction_mode(
                 self.config.target_policy,
+                exemplar_capture_mode=self.config.exemplar_capture_mode,
                 vocab_chunking_used=chunking_plan.used,
             )
             estimated_dense_logits_bytes = _estimate_dense_logits_bytes(
@@ -737,8 +760,26 @@ def _validate_gpu_torch_config(config: TeacherBackendConfig) -> None:
         )
     if config.exemplar_selection_policy != _EXEMPLAR_SELECTION_POLICY:
         raise ValueError("exemplar_selection_policy must be 'entropy_top_n_v1'")
-    if config.exemplar_capture_mode != _EXEMPLAR_CAPTURE_MODE:
-        raise ValueError("exemplar_capture_mode must be 'one_pass_candidate'")
+    if config.exemplar_capture_mode not in _EXEMPLAR_CAPTURE_MODES:
+        raise ValueError(
+            "exemplar_capture_mode must be 'one_pass_candidate' or "
+            "'two_pass_sparse_exemplar'"
+        )
+    if config.exemplar_first_pass_score_policy != _EXEMPLAR_FIRST_PASS_SCORE_POLICY:
+        raise ValueError("exemplar_first_pass_score_policy must be 'entropy_score_v1'")
+    if config.exemplar_second_pass_source_policy not in _EXEMPLAR_SOURCE_POLICIES:
+        raise ValueError(
+            "exemplar_second_pass_source_policy must be dense_logits, "
+            "cascaded_soft_labels_v1, or dynamic_cascaded_soft_labels_v1"
+        )
+    if config.exemplar_sparse_selection_top_n < 1:
+        raise ValueError("exemplar_sparse_selection_top_n must be >= 1")
+    if config.exemplar_sparse_selection_fraction is not None and not (
+        0.0 < config.exemplar_sparse_selection_fraction <= 1.0
+    ):
+        raise ValueError(
+            "exemplar_sparse_selection_fraction must be None or > 0 and <= 1"
+        )
     if config.corridor_payload_flavor != _CORRIDOR_PAYLOAD_FLAVOR:
         raise ValueError("corridor_payload_flavor must be 'production_v1'")
     if config.gpu_vocab_chunk_size is not None and config.gpu_vocab_chunk_size <= 0:
@@ -932,6 +973,50 @@ def _gpu_corridor_metadata(
     compact_payload: dict[str, np.ndarray],
     effective_vocab_size: int,
 ) -> dict[str, object]:
+    if config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+        source_summary = _gpu_corridor_source_summary(
+            _second_pass_source_config(config),
+            compact_payload=compact_payload,
+            effective_vocab_size=effective_vocab_size,
+        )
+        return {
+            "schema_version": "corridor_exemplar_score_pass_v1",
+            "corridor_payload_flavor": config.corridor_payload_flavor,
+            "production_corridor_schema": False,
+            "historical_parity_claimed": False,
+            "historical_reference_source": "gpu_torch_score_pass",
+            "exemplar_source_policy": config.exemplar_source_policy,
+            "exemplar_first_pass_score_policy": (
+                config.exemplar_first_pass_score_policy
+            ),
+            "exemplar_second_pass_source_policy": (
+                config.exemplar_second_pass_source_policy
+            ),
+            "score_source_policy": config.exemplar_second_pass_source_policy,
+            "exemplar_selection_policy": config.exemplar_selection_policy,
+            **_gpu_corridor_score_pass_metadata(config),
+            "requested_exemplar_top_n": config.exemplar_top_n,
+            "effective_exemplar_top_n": min(
+                config.exemplar_top_n,
+                config.sequence_length,
+            ),
+            "requested_exemplar_sparse_selection_top_n": (
+                config.exemplar_sparse_selection_top_n
+            ),
+            "exemplar_sparse_selection_fraction": (
+                config.exemplar_sparse_selection_fraction
+            ),
+            "score_records": int(compact_payload["score_example_ids"].shape[0])
+            if "score_example_ids" in compact_payload
+            else 0,
+            "source_policy_kind": source_summary.get("source_policy_kind"),
+            "source_policy_uses_bucketed_tail": source_summary.get(
+                "source_policy_uses_bucketed_tail"
+            ),
+            "source_policy_dynamic_top_k": source_summary.get(
+                "source_policy_dynamic_top_k"
+            ),
+        }
     source_summary = _gpu_corridor_source_summary(
         config,
         compact_payload=compact_payload,
@@ -1221,6 +1306,88 @@ def _gpu_corridor_exemplar_reduce(
     }
 
 
+def _gpu_corridor_exemplar_score_reduce(
+    torch: Any,
+    logits: Any,
+    *,
+    config: TeacherBackendConfig,
+    vocab_chunk_size: int | None = None,
+) -> dict[str, Any]:
+    source_config = _second_pass_source_config(config)
+    source = _gpu_corridor_source_payload(
+        torch,
+        logits,
+        config=source_config,
+        vocab_chunk_size=vocab_chunk_size,
+    )
+    teacher_entropy = source["teacher_entropy"]
+    confidence = source["top_probs"][..., 0]
+    score_selected_position = torch.argmax(teacher_entropy, dim=-1).to(torch.int32)
+    gather_positions = score_selected_position.to(torch.int64).unsqueeze(-1)
+    selected_entropy = torch.gather(
+        teacher_entropy,
+        -1,
+        gather_positions,
+    ).squeeze(-1)
+    selected_confidence = torch.gather(
+        confidence,
+        -1,
+        gather_positions,
+    ).squeeze(-1)
+    batch_size = int(logits.shape[0])
+    sequence_length = int(logits.shape[1])
+    policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_second_pass_source_policy]
+    return {
+        "score_example_ids": torch.arange(
+            batch_size,
+            dtype=torch.int32,
+            device=logits.device,
+        ),
+        "score_max_entropy": torch.max(teacher_entropy, dim=-1).values,
+        "score_mean_entropy": torch.mean(teacher_entropy, dim=-1),
+        "score_selected_position": score_selected_position,
+        "score_selected_position_entropy": selected_entropy,
+        "score_confidence_at_selected_position": selected_confidence,
+        "score_source_policy_ids": torch.full(
+            (batch_size,),
+            policy_id,
+            dtype=torch.int32,
+            device=logits.device,
+        ),
+        "score_lengths": torch.full(
+            (batch_size,),
+            sequence_length,
+            dtype=torch.int32,
+            device=logits.device,
+        ),
+    }
+
+
+def _gpu_corridor_exemplar_selected_reduce(
+    torch: Any,
+    logits: Any,
+    *,
+    config: TeacherBackendConfig,
+    vocab_chunk_size: int | None = None,
+) -> dict[str, Any]:
+    return _gpu_corridor_exemplar_reduce(
+        torch,
+        logits,
+        config=_second_pass_source_config(config),
+        vocab_chunk_size=vocab_chunk_size,
+    )
+
+
+def _second_pass_source_config(
+    config: TeacherBackendConfig,
+) -> TeacherBackendConfig:
+    return replace(
+        config,
+        exemplar_capture_mode="one_pass_candidate",
+        exemplar_source_policy=config.exemplar_second_pass_source_policy,
+    )
+
+
 def _gpu_corridor_source_payload(
     torch: Any,
     logits: Any,
@@ -1317,6 +1484,41 @@ def _gpu_corridor_payload_records(
     }
 
 
+def _gpu_corridor_score_records(
+    config: TeacherBackendConfig,
+    compact_payload: dict[str, np.ndarray],
+    *,
+    effective_vocab_size: int,
+) -> dict[str, object]:
+    score_fields = tuple(_corridor_score_payload_fields())
+    return {
+        "score_records": {
+            "policy": config.exemplar_first_pass_score_policy,
+            "record_count": int(compact_payload["score_example_ids"].shape[0]),
+            "fields": score_fields,
+        },
+        "score_summary": {
+            "record_count": int(compact_payload["score_example_ids"].shape[0]),
+            "mean_max_entropy": float(
+                np.mean(compact_payload["score_max_entropy"], dtype=np.float32)
+            ),
+            "mean_selected_position_entropy": float(
+                np.mean(
+                    compact_payload["score_selected_position_entropy"],
+                    dtype=np.float32,
+                )
+            ),
+            "sequence_length": config.sequence_length,
+        },
+        "source_policy_summary": _gpu_corridor_source_summary(
+            _second_pass_source_config(config),
+            compact_payload=compact_payload,
+            effective_vocab_size=effective_vocab_size,
+        ),
+        "score_metadata": _gpu_corridor_score_pass_metadata(config),
+    }
+
+
 def _gpu_corridor_source_summary(
     config: TeacherBackendConfig,
     *,
@@ -1401,6 +1603,39 @@ def _gpu_corridor_capture_mode_metadata(
         "exemplar_candidate_scope": "batch_all_examples",
         "corpus_level_exemplar_finalization": False,
         "requires_second_pass_for_final_exemplars": False,
+        "rerun_teacher_for_selected_examples": False,
+    }
+
+
+def _gpu_corridor_score_pass_metadata(
+    config: TeacherBackendConfig,
+) -> dict[str, object]:
+    return {
+        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
+        "exemplar_capture_mode_effective": "two_pass_sparse_exemplar",
+        "exemplar_capture_stage": "score_pass",
+        "exemplar_capture_mode_policy": "explicit_two_pass_sparse_exemplar_v1",
+        "exemplar_candidate_scope": "batch_score_summary_only",
+        "corpus_level_exemplar_finalization": False,
+        "requires_second_pass_for_final_exemplars": True,
+        "rerun_teacher_for_selected_examples": True,
+    }
+
+
+def _gpu_corridor_selected_pass_metadata(
+    config: TeacherBackendConfig,
+    *,
+    corpus_level_finalized: bool,
+) -> dict[str, object]:
+    return {
+        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
+        "exemplar_capture_mode_effective": "two_pass_sparse_exemplar",
+        "exemplar_capture_stage": "selected_exemplar_pass",
+        "exemplar_capture_mode_policy": "explicit_two_pass_sparse_exemplar_v1",
+        "exemplar_candidate_scope": "selected_examples_only",
+        "corpus_level_exemplar_finalization": corpus_level_finalized,
+        "requires_second_pass_for_final_exemplars": False,
+        "rerun_teacher_for_selected_examples": True,
     }
 
 
@@ -1569,6 +1804,41 @@ def _tail_bucket_masses_on_device(
 
 
 def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
+    if "score_example_ids" in payload:
+        return {
+            "score_example_ids": _tensor_to_numpy(
+                payload["score_example_ids"],
+                np.int32,
+            ),
+            "score_max_entropy": _tensor_to_numpy(
+                payload["score_max_entropy"],
+                np.float32,
+            ),
+            "score_mean_entropy": _tensor_to_numpy(
+                payload["score_mean_entropy"],
+                np.float32,
+            ),
+            "score_selected_position": _tensor_to_numpy(
+                payload["score_selected_position"],
+                np.int32,
+            ),
+            "score_selected_position_entropy": _tensor_to_numpy(
+                payload["score_selected_position_entropy"],
+                np.float32,
+            ),
+            "score_confidence_at_selected_position": _tensor_to_numpy(
+                payload["score_confidence_at_selected_position"],
+                np.float32,
+            ),
+            "score_source_policy_ids": _tensor_to_numpy(
+                payload["score_source_policy_ids"],
+                np.int32,
+            ),
+            "score_lengths": _tensor_to_numpy(
+                payload["score_lengths"],
+                np.int32,
+            ),
+        }
     if "corridor_top_token_ids" in payload:
         return {
             "corridor_top_token_ids": _tensor_to_numpy(
@@ -1771,8 +2041,27 @@ def _chunk_slices(
     ]
 
 
-def _compact_payload_fields(target_policy: str) -> list[str]:
+def _corridor_score_payload_fields() -> list[str]:
+    return [
+        "score_example_ids",
+        "score_max_entropy",
+        "score_mean_entropy",
+        "score_selected_position",
+        "score_selected_position_entropy",
+        "score_confidence_at_selected_position",
+        "score_source_policy_ids",
+        "score_lengths",
+    ]
+
+
+def _compact_payload_fields(
+    target_policy: str,
+    *,
+    exemplar_capture_mode: str = "one_pass_candidate",
+) -> list[str]:
     if target_policy == "corridor_exemplar_v1":
+        if exemplar_capture_mode == "two_pass_sparse_exemplar":
+            return _corridor_score_payload_fields()
         return [
             "corridor_top_token_ids",
             "corridor_top_probs",
@@ -1815,11 +2104,14 @@ def _compact_payload_fields(target_policy: str) -> list[str]:
 def _gpu_reduction_mode(
     target_policy: str,
     *,
+    exemplar_capture_mode: str = "one_pass_candidate",
     vocab_chunking_used: bool,
 ) -> str:
     if target_policy == "dynamic_cascaded_soft_labels_v1":
         return "compact_dynamic_cascaded_soft_labels"
     if target_policy == "corridor_exemplar_v1":
+        if exemplar_capture_mode == "two_pass_sparse_exemplar":
+            return "compact_corridor_exemplar_score_pass"
         return "compact_corridor_exemplar"
     if target_policy == "cascaded_soft_labels_v1":
         return (

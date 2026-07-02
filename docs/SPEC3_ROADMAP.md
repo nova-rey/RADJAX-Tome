@@ -157,6 +157,12 @@ the backend emits compact candidate data for every batch example, with
 `exemplar_candidate_scope=batch_all_examples`, and does not perform final
 corpus-level exemplar pruning.
 
+Spec 3.3F9.2 adds `two_pass_sparse_exemplar` as an explicit storage/transfer
+saving mode. The first `score_pass` emits [B]-scale score summaries for all
+examples; the `selected_exemplar_pass` reruns chosen examples and emits the F8
+production schema. This does not implement `auto`, migrate the public builder,
+or add TPU/JAX support.
+
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1
 dynamic reducer vectorization rehearsal, F8 corridor/exemplar production

@@ -429,6 +429,105 @@ def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
     assert first.metadata["exemplar_records"] == 2
 
 
+def test_corridor_two_pass_score_payload_is_batch_scale() -> None:
+    backend = create_backend(
+        _config(
+            target_policy="corridor_exemplar_v1",
+            exemplar_capture_mode="two_pass_sparse_exemplar",
+            exemplar_sparse_selection_top_n=1,
+        )
+    )
+
+    result = backend.emit_batch(_batch())
+    payload = result.payload
+
+    assert {
+        "score_records",
+        "score_summary",
+        "score_metadata",
+        "score_example_ids",
+        "score_max_entropy",
+        "score_mean_entropy",
+        "score_selected_position",
+        "score_selected_position_entropy",
+        "score_confidence_at_selected_position",
+        "score_source_policy_ids",
+        "score_lengths",
+    } <= set(payload)
+    assert "corridor_teacher_entropy" not in payload
+    assert "exemplar_positions" not in payload
+    for field in (
+        "score_example_ids",
+        "score_max_entropy",
+        "score_mean_entropy",
+        "score_selected_position",
+        "score_selected_position_entropy",
+        "score_confidence_at_selected_position",
+        "score_source_policy_ids",
+        "score_lengths",
+    ):
+        assert payload[field].shape == (2,)
+
+    one_pass = create_backend(_config(target_policy="corridor_exemplar_v1")).emit_batch(
+        _batch()
+    )
+    score_bytes = sum(
+        value.nbytes for value in payload.values() if hasattr(value, "nbytes")
+    )
+    one_pass_bytes = sum(
+        value.nbytes for value in one_pass.payload.values() if hasattr(value, "nbytes")
+    )
+    assert score_bytes < one_pass_bytes
+
+    assert result.metadata["schema_version"] == "corridor_exemplar_score_pass_v1"
+    assert result.metadata["production_corridor_schema"] is False
+    assert result.metadata["exemplar_capture_mode_requested"] == (
+        "two_pass_sparse_exemplar"
+    )
+    assert result.metadata["exemplar_capture_mode_effective"] == (
+        "two_pass_sparse_exemplar"
+    )
+    assert result.metadata["exemplar_capture_stage"] == "score_pass"
+    assert result.metadata["exemplar_candidate_scope"] == "batch_score_summary_only"
+    assert result.metadata["requires_second_pass_for_final_exemplars"] is True
+    assert result.metadata["rerun_teacher_for_selected_examples"] is True
+
+
+def test_corridor_two_pass_selected_helper_emits_production_schema() -> None:
+    backend = CPUReferenceTeacherEmissionBackend(
+        _config(
+            target_policy="corridor_exemplar_v1",
+            exemplar_capture_mode="two_pass_sparse_exemplar",
+            exemplar_second_pass_source_policy="cascaded_soft_labels_v1",
+        )
+    )
+
+    result = backend.emit_corridor_exemplar_selected_batch(
+        _batch(),
+        corpus_level_finalized=True,
+    )
+    payload = result.payload
+
+    assert payload["schema_metadata"]["schema_version"] == "corridor_exemplar_v1"
+    assert payload["schema_metadata"]["production_corridor_schema"] is True
+    assert payload["schema_metadata"]["exemplar_capture_stage"] == (
+        "selected_exemplar_pass"
+    )
+    assert payload["schema_metadata"]["exemplar_candidate_scope"] == (
+        "selected_examples_only"
+    )
+    assert payload["schema_metadata"]["corpus_level_exemplar_finalization"] is True
+    assert (
+        payload["schema_metadata"]["requires_second_pass_for_final_exemplars"] is False
+    )
+    assert payload["schema_metadata"]["rerun_teacher_for_selected_examples"] is True
+    assert payload["corridor_teacher_entropy"].shape == (2, 5)
+    assert payload["exemplar_positions"].shape == (2, 2)
+    assert payload["source_policy_summary"]["exemplar_source_policy"] == (
+        "cascaded_soft_labels_v1"
+    )
+
+
 @pytest.mark.parametrize(
     ("source_policy", "kind", "bucketed", "dynamic", "policy_id"),
     (
@@ -523,7 +622,32 @@ def test_cpu_reference_metadata_records_requested_and_effective_values() -> None
         ("dynamic_top_k_policy", "unknown", "dynamic_top_k_policy"),
         ("exemplar_source_policy", "unknown", "exemplar_source_policy"),
         ("exemplar_selection_policy", "unknown", "exemplar_selection_policy"),
-        ("exemplar_capture_mode", "two_pass_sparse_exemplar", "exemplar_capture_mode"),
+        ("exemplar_capture_mode", "auto", "exemplar_capture_mode"),
+        (
+            "exemplar_first_pass_score_policy",
+            "unknown",
+            "exemplar_first_pass_score_policy",
+        ),
+        (
+            "exemplar_second_pass_source_policy",
+            "unknown",
+            "exemplar_second_pass_source_policy",
+        ),
+        (
+            "exemplar_sparse_selection_top_n",
+            0,
+            "exemplar_sparse_selection_top_n",
+        ),
+        (
+            "exemplar_sparse_selection_fraction",
+            0.0,
+            "exemplar_sparse_selection_fraction",
+        ),
+        (
+            "exemplar_sparse_selection_fraction",
+            1.1,
+            "exemplar_sparse_selection_fraction",
+        ),
         ("corridor_payload_flavor", "proxy_v0", "corridor_payload_flavor"),
     ),
 )

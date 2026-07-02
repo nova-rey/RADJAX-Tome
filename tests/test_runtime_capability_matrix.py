@@ -67,6 +67,9 @@ def test_runtime_backend_doc_defines_architecture_vocabulary() -> None:
     assert "Allowed exemplar source policies" in text
     assert "one_pass_candidate" in text
     assert "batch_all_examples" in text
+    assert "Spec 3.3F9.2 adds explicit `two_pass_sparse_exemplar`" in text
+    assert "score_pass" in text
+    assert "selected_exemplar_pass" in text
 
 
 def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
@@ -225,6 +228,8 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     assert "Spec 3.3F8" in corridor["notes"]
     assert "locked production schema" in corridor["notes"]
     assert "source-policy-aware metadata" in corridor["notes"]
+    assert "Spec 3.3F9.2" in corridor["notes"]
+    assert "two_pass_sparse_exemplar" in corridor["notes"]
     assert "public builder has not migrated" in dense["notes"]
 
     assert not any(
@@ -403,6 +408,9 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "F8 production schema" in corridor["notes"]
     assert "compact production arrays" in corridor["notes"]
     assert "one_pass_candidate" in corridor["notes"]
+    assert "Spec 3.3F9.2" in corridor["notes"]
+    assert "two_pass_sparse_exemplar" in corridor["notes"]
+    assert "score_pass" in corridor["notes"]
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals

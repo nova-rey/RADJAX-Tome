@@ -124,8 +124,15 @@ Spec 3.3F9.1 names the current capture behavior
 `one_pass_candidate`. In this mode, the backend emits compact candidate data
 for every batch example in one teacher pass. This is compute-efficient and
 simple, but may become storage-heavy for huge corpora. It is not final
-corpus-level exemplar pruning. Future modes are expected to add
-`two_pass_sparse_exemplar` and `auto`, but those modes are not implemented.
+corpus-level exemplar pruning.
+
+Spec 3.3F9.2 adds explicit `two_pass_sparse_exemplar` capture mode. In this
+mode, pass 1 emits [B]-scale `score_pass` summaries for every example; a later
+selector can choose examples/positions; pass 2 reruns selected examples and
+emits F8 production-shaped exemplar payloads with
+`exemplar_capture_stage=selected_exemplar_pass`. This trades extra teacher
+inference for lower transfer and storage. The public builder has not migrated,
+`auto` is not implemented in F9.2, and TPU/JAX remain out of scope.
 
 ## CPU Orchestration Runner
 
@@ -302,6 +309,10 @@ transfer and leaving public builder migration out of scope.
 Spec 3.3F9.1 records `one_pass_candidate` capture metadata with
 `exemplar_candidate_scope=batch_all_examples` and
 `corpus_level_exemplar_finalization=false`.
+Spec 3.3F9.2 adds `two_pass_sparse_exemplar`: a compact `score_pass` emits
+only [B]-scale score summaries, then a `selected_exemplar_pass` can rerun
+chosen examples and emit the F8 production schema. F9.2 does not implement
+`auto`, public builder migration, or TPU/JAX.
 
 ## Support Statuses
 

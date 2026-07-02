@@ -68,3 +68,7 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3F9.1" in text
     assert "one_pass_candidate" in text
     assert "batch_all_examples" in text
+    assert "3.3F9.2" in text
+    assert "two_pass_sparse_exemplar" in text
+    assert "score_pass" in text
+    assert "selected_exemplar_pass" in text

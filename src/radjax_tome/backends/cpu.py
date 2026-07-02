@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 
 from radjax_tome.backends.base import (
@@ -33,6 +35,8 @@ _MODE_RECORD_POLICY = "top_mode_summary_v1"
 _FINGERPRINT_TOPOLOGY_POLICY = "sequence_position_v1"
 _CORRIDOR_CONFIDENCE_POLICY = "top_probability_v1"
 _EXEMPLAR_CAPTURE_MODE = "one_pass_candidate"
+_EXEMPLAR_CAPTURE_MODES = {"one_pass_candidate", "two_pass_sparse_exemplar"}
+_EXEMPLAR_FIRST_PASS_SCORE_POLICY = "entropy_score_v1"
 _EXEMPLAR_SOURCE_POLICIES = {
     "dense_logits": 1,
     "cascaded_soft_labels_v1": 2,
@@ -77,8 +81,28 @@ class CPUReferenceTeacherEmissionBackend:
             )
         if config.exemplar_selection_policy != _EXEMPLAR_SELECTION_POLICY:
             raise ValueError("exemplar_selection_policy must be 'entropy_top_n_v1'")
-        if config.exemplar_capture_mode != _EXEMPLAR_CAPTURE_MODE:
-            raise ValueError("exemplar_capture_mode must be 'one_pass_candidate'")
+        if config.exemplar_capture_mode not in _EXEMPLAR_CAPTURE_MODES:
+            raise ValueError(
+                "exemplar_capture_mode must be 'one_pass_candidate' or "
+                "'two_pass_sparse_exemplar'"
+            )
+        if config.exemplar_first_pass_score_policy != _EXEMPLAR_FIRST_PASS_SCORE_POLICY:
+            raise ValueError(
+                "exemplar_first_pass_score_policy must be 'entropy_score_v1'"
+            )
+        if config.exemplar_second_pass_source_policy not in _EXEMPLAR_SOURCE_POLICIES:
+            raise ValueError(
+                "exemplar_second_pass_source_policy must be dense_logits, "
+                "cascaded_soft_labels_v1, or dynamic_cascaded_soft_labels_v1"
+            )
+        if config.exemplar_sparse_selection_top_n < 1:
+            raise ValueError("exemplar_sparse_selection_top_n must be >= 1")
+        if config.exemplar_sparse_selection_fraction is not None and not (
+            0.0 < config.exemplar_sparse_selection_fraction <= 1.0
+        ):
+            raise ValueError(
+                "exemplar_sparse_selection_fraction must be None or > 0 and <= 1"
+            )
         if config.corridor_payload_flavor != _CORRIDOR_PAYLOAD_FLAVOR:
             raise ValueError("corridor_payload_flavor must be 'production_v1'")
         if config.dynamic_top_k_min < 1:
@@ -237,45 +261,68 @@ class CPUReferenceTeacherEmissionBackend:
             )
             metadata.update(dynamic_metadata)
         if self.config.target_policy == "corridor_exemplar_v1":
-            effective_exemplar_top_n = min(
-                self.config.exemplar_top_n,
-                self.config.sequence_length,
-            )
-            source_summary = (
-                payload.get("source_policy_summary", {})
-                if payload is not None
-                else _corridor_source_policy_summary(self.config)
-            )
             metadata.update(
-                {
-                    "schema_version": "corridor_exemplar_v1",
-                    "corridor_payload_flavor": self.config.corridor_payload_flavor,
-                    "production_corridor_schema": True,
-                    "historical_parity_claimed": False,
-                    "historical_reference_source": "cpu_reference_proxy",
-                    "exemplar_source_policy": self.config.exemplar_source_policy,
-                    "exemplar_selection_policy": self.config.exemplar_selection_policy,
-                    "corridor_policy": _CORRIDOR_POLICY,
-                    "mode_record_policy": _MODE_RECORD_POLICY,
-                    "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
-                    "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
-                    **_corridor_capture_mode_metadata(self.config),
-                    "requested_exemplar_top_n": self.config.exemplar_top_n,
-                    "effective_exemplar_top_n": effective_exemplar_top_n,
-                    "exemplar_records": effective_exemplar_top_n,
-                    "source_policy_kind": source_summary.get("source_policy_kind"),
-                    "source_policy_uses_bucketed_tail": source_summary.get(
-                        "source_policy_uses_bucketed_tail"
-                    ),
-                    "source_policy_dynamic_top_k": source_summary.get(
-                        "source_policy_dynamic_top_k"
-                    ),
-                }
+                _corridor_metadata(
+                    self.config,
+                    payload=payload,
+                )
             )
         return metadata
 
     def close(self) -> None:
         return None
+
+    def emit_corridor_exemplar_score_batch(
+        self,
+        batch: TeacherBatchInput,
+    ) -> TeacherEmissionResult:
+        input_ids, attention_mask = _encode_texts(
+            batch.texts,
+            sequence_length=self.config.sequence_length,
+            vocab_size=self.config.vocab_size,
+        )
+        logits = _deterministic_logits(input_ids, vocab_size=self.config.vocab_size)
+        payload = _corridor_exemplar_score_payload(logits, config=self.config)
+        return TeacherEmissionResult(
+            backend_id=self.backend_id,
+            runtime_mode="cpu",
+            target_policy="corridor_exemplar_v1",
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            payload=payload,
+            metadata=self.metadata(actual_batch_size=len(batch.texts), payload=payload),
+        )
+
+    def emit_corridor_exemplar_selected_batch(
+        self,
+        batch: TeacherBatchInput,
+        *,
+        corpus_level_finalized: bool = False,
+    ) -> TeacherEmissionResult:
+        input_ids, attention_mask = _encode_texts(
+            batch.texts,
+            sequence_length=self.config.sequence_length,
+            vocab_size=self.config.vocab_size,
+        )
+        logits = _deterministic_logits(input_ids, vocab_size=self.config.vocab_size)
+        payload = _corridor_exemplar_selected_payload(
+            logits,
+            config=self.config,
+            corpus_level_finalized=corpus_level_finalized,
+        )
+        metadata = dict(
+            self.metadata(actual_batch_size=len(batch.texts), payload=payload)
+        )
+        metadata.update(payload["schema_metadata"])
+        return TeacherEmissionResult(
+            backend_id=self.backend_id,
+            runtime_mode="cpu",
+            target_policy="corridor_exemplar_v1",
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            payload=payload,
+            metadata=metadata,
+        )
 
     def _payload_for_policy(self, logits: np.ndarray) -> dict[str, np.ndarray]:
         if self.config.target_policy == "dense_logits":
@@ -301,6 +348,11 @@ class CPUReferenceTeacherEmissionBackend:
                 num_buckets=self.config.num_buckets,
             )
         if self.config.target_policy == "corridor_exemplar_v1":
+            if self.config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+                return _corridor_exemplar_score_payload(
+                    logits,
+                    config=self.config,
+                )
             return _corridor_exemplar_payload(
                 logits,
                 config=self.config,
@@ -586,6 +638,104 @@ def _corridor_exemplar_payload(
     }
 
 
+def _corridor_exemplar_score_payload(
+    logits: np.ndarray,
+    *,
+    config: TeacherBackendConfig,
+) -> dict[str, object]:
+    source_config = _second_pass_source_config(config)
+    source = _corridor_source_payload(logits, config=source_config)
+    source_summary = _corridor_source_policy_summary(
+        source_config,
+        source_payload=source,
+    )
+    entropy = source["teacher_entropy"].astype(np.float32)
+    confidence = source["top_probs"][..., 0].astype(np.float32)
+    selected_position = np.argmax(entropy, axis=-1).astype(np.int32)
+    selected_entropy = np.take_along_axis(
+        entropy,
+        selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.float32)
+    selected_confidence = np.take_along_axis(
+        confidence,
+        selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.float32)
+    policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_second_pass_source_policy]
+    batch_size = int(logits.shape[0])
+    fields = (
+        "score_example_ids",
+        "score_max_entropy",
+        "score_mean_entropy",
+        "score_selected_position",
+        "score_selected_position_entropy",
+        "score_confidence_at_selected_position",
+        "score_source_policy_ids",
+        "score_lengths",
+    )
+    return {
+        "score_records": {
+            "policy": config.exemplar_first_pass_score_policy,
+            "record_count": batch_size,
+            "fields": fields,
+        },
+        "score_summary": {
+            "record_count": batch_size,
+            "mean_max_entropy": float(np.mean(np.max(entropy, axis=-1))),
+            "mean_selected_position_entropy": float(np.mean(selected_entropy)),
+            "sequence_length": int(logits.shape[1]),
+        },
+        "source_policy_summary": source_summary,
+        "score_metadata": _corridor_score_pass_metadata(config),
+        "score_example_ids": np.arange(batch_size, dtype=np.int32),
+        "score_max_entropy": np.max(entropy, axis=-1).astype(np.float32),
+        "score_mean_entropy": np.mean(entropy, axis=-1, dtype=np.float32).astype(
+            np.float32
+        ),
+        "score_selected_position": selected_position,
+        "score_selected_position_entropy": selected_entropy,
+        "score_confidence_at_selected_position": selected_confidence,
+        "score_source_policy_ids": np.full((batch_size,), policy_id, dtype=np.int32),
+        "score_lengths": np.full((batch_size,), logits.shape[1], dtype=np.int32),
+    }
+
+
+def _corridor_exemplar_selected_payload(
+    logits: np.ndarray,
+    *,
+    config: TeacherBackendConfig,
+    corpus_level_finalized: bool = False,
+) -> dict[str, object]:
+    selected_config = replace(
+        config,
+        exemplar_capture_mode="one_pass_candidate",
+        exemplar_source_policy=config.exemplar_second_pass_source_policy,
+    )
+    payload = _corridor_exemplar_payload(logits, config=selected_config)
+    payload["schema_metadata"] = {
+        **payload["schema_metadata"],
+        **_corridor_selected_pass_metadata(
+            config,
+            corpus_level_finalized=corpus_level_finalized,
+        ),
+    }
+    payload["source_policy_summary"] = _corridor_source_policy_summary(
+        selected_config,
+        source_payload=None,
+    )
+    return payload
+
+
+def _second_pass_source_config(
+    config: TeacherBackendConfig,
+) -> TeacherBackendConfig:
+    return replace(
+        config,
+        exemplar_source_policy=config.exemplar_second_pass_source_policy,
+    )
+
+
 def _corridor_source_payload(
     logits: np.ndarray,
     *,
@@ -669,6 +819,87 @@ def _corridor_source_policy_summary(
     }
 
 
+def _corridor_metadata(
+    config: TeacherBackendConfig,
+    *,
+    payload: dict[str, object] | None,
+) -> dict[str, object]:
+    if config.exemplar_capture_mode == "two_pass_sparse_exemplar":
+        source_summary = (
+            payload.get("source_policy_summary", {})
+            if payload is not None
+            else _corridor_source_policy_summary(_second_pass_source_config(config))
+        )
+        return {
+            "schema_version": "corridor_exemplar_score_pass_v1",
+            "corridor_payload_flavor": config.corridor_payload_flavor,
+            "production_corridor_schema": False,
+            "historical_parity_claimed": False,
+            "historical_reference_source": "cpu_reference_score_pass",
+            "exemplar_source_policy": config.exemplar_source_policy,
+            "exemplar_first_pass_score_policy": config.exemplar_first_pass_score_policy,
+            "exemplar_second_pass_source_policy": (
+                config.exemplar_second_pass_source_policy
+            ),
+            "score_source_policy": config.exemplar_second_pass_source_policy,
+            "exemplar_selection_policy": config.exemplar_selection_policy,
+            **_corridor_score_pass_metadata(config),
+            "requested_exemplar_top_n": config.exemplar_top_n,
+            "effective_exemplar_top_n": min(
+                config.exemplar_top_n,
+                config.sequence_length,
+            ),
+            "requested_exemplar_sparse_selection_top_n": (
+                config.exemplar_sparse_selection_top_n
+            ),
+            "exemplar_sparse_selection_fraction": (
+                config.exemplar_sparse_selection_fraction
+            ),
+            "score_records": (
+                payload.get("score_records", {}).get("record_count", 0)
+                if payload is not None
+                else 0
+            ),
+            "source_policy_kind": source_summary.get("source_policy_kind"),
+            "source_policy_uses_bucketed_tail": source_summary.get(
+                "source_policy_uses_bucketed_tail"
+            ),
+            "source_policy_dynamic_top_k": source_summary.get(
+                "source_policy_dynamic_top_k"
+            ),
+        }
+    effective_exemplar_top_n = min(config.exemplar_top_n, config.sequence_length)
+    source_summary = (
+        payload.get("source_policy_summary", {})
+        if payload is not None
+        else _corridor_source_policy_summary(config)
+    )
+    return {
+        "schema_version": "corridor_exemplar_v1",
+        "corridor_payload_flavor": config.corridor_payload_flavor,
+        "production_corridor_schema": True,
+        "historical_parity_claimed": False,
+        "historical_reference_source": "cpu_reference_proxy",
+        "exemplar_source_policy": config.exemplar_source_policy,
+        "exemplar_selection_policy": config.exemplar_selection_policy,
+        "corridor_policy": _CORRIDOR_POLICY,
+        "mode_record_policy": _MODE_RECORD_POLICY,
+        "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
+        "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
+        **_corridor_capture_mode_metadata(config),
+        "requested_exemplar_top_n": config.exemplar_top_n,
+        "effective_exemplar_top_n": effective_exemplar_top_n,
+        "exemplar_records": effective_exemplar_top_n,
+        "source_policy_kind": source_summary.get("source_policy_kind"),
+        "source_policy_uses_bucketed_tail": source_summary.get(
+            "source_policy_uses_bucketed_tail"
+        ),
+        "source_policy_dynamic_top_k": source_summary.get(
+            "source_policy_dynamic_top_k"
+        ),
+    }
+
+
 def _corridor_schema_metadata(config: TeacherBackendConfig) -> dict[str, object]:
     return {
         "schema_version": "corridor_exemplar_v1",
@@ -694,6 +925,37 @@ def _corridor_capture_mode_metadata(config: TeacherBackendConfig) -> dict[str, o
         "exemplar_candidate_scope": "batch_all_examples",
         "corpus_level_exemplar_finalization": False,
         "requires_second_pass_for_final_exemplars": False,
+        "rerun_teacher_for_selected_examples": False,
+    }
+
+
+def _corridor_score_pass_metadata(config: TeacherBackendConfig) -> dict[str, object]:
+    return {
+        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
+        "exemplar_capture_mode_effective": "two_pass_sparse_exemplar",
+        "exemplar_capture_stage": "score_pass",
+        "exemplar_capture_mode_policy": "explicit_two_pass_sparse_exemplar_v1",
+        "exemplar_candidate_scope": "batch_score_summary_only",
+        "corpus_level_exemplar_finalization": False,
+        "requires_second_pass_for_final_exemplars": True,
+        "rerun_teacher_for_selected_examples": True,
+    }
+
+
+def _corridor_selected_pass_metadata(
+    config: TeacherBackendConfig,
+    *,
+    corpus_level_finalized: bool,
+) -> dict[str, object]:
+    return {
+        "exemplar_capture_mode_requested": config.exemplar_capture_mode,
+        "exemplar_capture_mode_effective": "two_pass_sparse_exemplar",
+        "exemplar_capture_stage": "selected_exemplar_pass",
+        "exemplar_capture_mode_policy": "explicit_two_pass_sparse_exemplar_v1",
+        "exemplar_candidate_scope": "selected_examples_only",
+        "corpus_level_exemplar_finalization": corpus_level_finalized,
+        "requires_second_pass_for_final_exemplars": False,
+        "rerun_teacher_for_selected_examples": True,
     }
 
 
