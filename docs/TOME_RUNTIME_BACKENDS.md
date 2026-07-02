@@ -216,6 +216,10 @@ accelerator, computes dynamic head selection and tail buckets with Torch
 tensors, and transfers only compact payload arrays back to host. The dynamic
 cascaded payload can later be used as a corridor/exemplar source policy.
 
+Spec 3.3F7.1 keeps the F7 dynamic cascaded payload and metadata contract but
+vectorizes dynamic explicit-head selection to reduce Python-loop overhead.
+Exact bucket semantics remain unchanged.
+
 `corridor_exemplar_v1` remains historical-reference/future GPU work. Runtime
 fallback/error hardening is in place for implemented `gpu_torch` policies. The
 public builder has not migrated to `gpu_torch`.

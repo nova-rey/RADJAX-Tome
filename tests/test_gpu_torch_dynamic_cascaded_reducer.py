@@ -163,6 +163,54 @@ def test_gpu_dynamic_cascaded_reducer_honors_min_and_max() -> None:
     assert max_payload["top_token_ids"].shape == (1, 2, 2)
 
 
+def test_dynamic_cascaded_head_vectorizes_mixed_position_cutoffs() -> None:
+    if not _optional_torch_available():
+        pytest.skip("optional torch dependency is not installed")
+    torch = import_module("torch")
+    gpu_torch = import_module("radjax_tome.backends.gpu_torch")
+    probs = torch.tensor(
+        [
+            [
+                [0.95, 0.02, 0.01, 0.01, 0.01],
+                [0.65, 0.30, 0.02, 0.02, 0.01],
+                [0.30, 0.25, 0.20, 0.15, 0.10],
+            ]
+        ],
+        dtype=torch.float32,
+    )
+    log_probs = torch.log(probs)
+
+    head = gpu_torch._dynamic_cascaded_head_from_probs(
+        torch,
+        probs,
+        log_probs,
+        dynamic_top_k_min=2,
+        dynamic_top_k_max=4,
+        dynamic_mass_threshold=0.91,
+    )
+    payload = {
+        "effective_top_k": head["effective_top_k"].detach().numpy().astype(np.int32),
+        "top_selection_mask": head["top_selection_mask"].detach().numpy(),
+        "top_probs": head["top_probs"].detach().numpy(),
+        "top_log_probs": head["top_log_probs"].detach().numpy(),
+        "top_mass": head["top_mass"].detach().numpy(),
+    }
+
+    np.testing.assert_array_equal(payload["effective_top_k"], [[2, 2, 4]])
+    np.testing.assert_array_equal(
+        np.sum(payload["top_selection_mask"], axis=-1),
+        payload["effective_top_k"],
+    )
+    assert (payload["top_probs"][~payload["top_selection_mask"]] == 0.0).all()
+    assert (payload["top_log_probs"][~payload["top_selection_mask"]] == 0.0).all()
+    np.testing.assert_allclose(
+        payload["top_mass"],
+        [[0.97, 0.95, 0.90]],
+        rtol=1e-6,
+        atol=1e-6,
+    )
+
+
 def _optional_torch_available() -> bool:
     try:
         import_module("torch")

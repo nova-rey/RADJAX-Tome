@@ -854,6 +854,8 @@ def _dynamic_cascaded_metadata(
         ),
         "selection_mask_field": "top_selection_mask",
         "top_selection_mask_semantics": "true means explicit selected token",
+        "dynamic_head_selection_vectorized": True,
+        "dynamic_tail_bucket_vectorized": True,
         "effective_top_k_min_observed": observed_min,
         "effective_top_k_max_observed": observed_max,
         "effective_top_k_mean_observed": observed_mean,
@@ -1045,96 +1047,119 @@ def _gpu_dynamic_cascaded_reduce(
     log_probs = torch.log(torch.clamp(probs, min=torch.finfo(probs.dtype).tiny))
     effective_max_k = min(dynamic_top_k_max, int(logits.shape[-1]))
     effective_min_k = min(dynamic_top_k_min, effective_max_k)
-
-    top_token_ids = torch.zeros(
-        (*logits.shape[:2], effective_max_k),
-        dtype=torch.long,
-        device=logits.device,
+    head_payload = _dynamic_cascaded_head_from_probs(
+        torch,
+        probs,
+        log_probs,
+        dynamic_top_k_min=effective_min_k,
+        dynamic_top_k_max=effective_max_k,
+        dynamic_mass_threshold=dynamic_mass_threshold,
     )
-    top_log_probs = torch.zeros(
-        (*logits.shape[:2], effective_max_k),
-        dtype=probs.dtype,
-        device=logits.device,
+    bucket_masses = _dynamic_bucket_masses_from_sorted_tail(
+        torch,
+        head_payload["sorted_probs"],
+        effective_top_k=head_payload["effective_top_k"],
+        num_buckets=num_buckets,
     )
-    top_probs = torch.zeros_like(top_log_probs)
-    top_selection_mask = torch.zeros(
-        (*logits.shape[:2], effective_max_k),
-        dtype=torch.bool,
-        device=logits.device,
-    )
-    effective_top_k = torch.zeros(
-        logits.shape[:2],
-        dtype=torch.long,
-        device=logits.device,
-    )
-    top_mass = torch.zeros(logits.shape[:2], dtype=probs.dtype, device=logits.device)
-    bucket_masses = torch.zeros(
-        (*logits.shape[:2], num_buckets),
-        dtype=probs.dtype,
-        device=logits.device,
-    )
+    tail_mass = torch.clamp(1.0 - head_payload["top_mass"], min=0.0, max=1.0)
     teacher_entropy = -torch.sum(probs * log_probs, dim=-1)
-    sorted_probs, sorted_ids = torch.sort(probs, dim=-1, descending=True)
-
-    for row in range(int(logits.shape[0])):
-        for position in range(int(logits.shape[1])):
-            cumulative = torch.cumsum(sorted_probs[row, position], dim=-1)
-            threshold_hits = torch.nonzero(
-                cumulative >= dynamic_mass_threshold,
-                as_tuple=False,
-            )
-            threshold_count = (
-                int(threshold_hits[0].item()) + 1
-                if int(threshold_hits.numel()) > 0
-                else effective_max_k
-            )
-            selected_count = min(
-                max(threshold_count, effective_min_k),
-                effective_max_k,
-            )
-            selected_ids = sorted_ids[row, position, :selected_count]
-            selected_probs = probs[row, position].gather(0, selected_ids)
-            selected_log_probs = log_probs[row, position].gather(0, selected_ids)
-
-            top_token_ids[row, position, :selected_count] = selected_ids
-            top_probs[row, position, :selected_count] = selected_probs
-            top_log_probs[row, position, :selected_count] = selected_log_probs
-            top_selection_mask[row, position, :selected_count] = True
-            effective_top_k[row, position] = selected_count
-            top_mass[row, position] = torch.sum(selected_probs)
-
-            selected_mask = torch.zeros(
-                int(logits.shape[-1]),
-                dtype=torch.bool,
-                device=logits.device,
-            )
-            selected_mask.scatter_(0, selected_ids, True)
-            tail_probs = probs[row, position][~selected_mask]
-            if int(tail_probs.shape[0]) == 0:
-                continue
-            sorted_tail = torch.sort(tail_probs, descending=True).values
-            tail_count = int(sorted_tail.shape[0])
-            quotient, remainder = divmod(tail_count, num_buckets)
-            for bucket_id in range(num_buckets):
-                start = bucket_id * quotient + min(bucket_id, remainder)
-                stop = start + quotient + (1 if bucket_id < remainder else 0)
-                if start < stop:
-                    bucket_masses[row, position, bucket_id] = torch.sum(
-                        sorted_tail[start:stop]
-                    )
-
-    tail_mass = torch.clamp(1.0 - top_mass, min=0.0, max=1.0)
     return {
+        "top_token_ids": head_payload["top_token_ids"],
+        "top_log_probs": head_payload["top_log_probs"],
+        "top_probs": head_payload["top_probs"],
+        "top_selection_mask": head_payload["top_selection_mask"],
+        "effective_top_k": head_payload["effective_top_k"],
+        "top_mass": head_payload["top_mass"],
+        "tail_mass": tail_mass,
+        "bucket_masses": bucket_masses,
+        "teacher_entropy": teacher_entropy,
+    }
+
+
+def _dynamic_cascaded_head_from_probs(
+    torch: Any,
+    probs: Any,
+    log_probs: Any,
+    *,
+    dynamic_top_k_min: int,
+    dynamic_top_k_max: int,
+    dynamic_mass_threshold: float,
+) -> dict[str, Any]:
+    sorted_probs, sorted_ids = torch.sort(probs, dim=-1, descending=True)
+    cumulative = torch.cumsum(sorted_probs, dim=-1)
+    threshold_reached = cumulative >= dynamic_mass_threshold
+    has_hit = torch.any(threshold_reached, dim=-1)
+    first_hit = torch.argmax(threshold_reached.to(torch.int64), dim=-1)
+    threshold_count = torch.where(
+        has_hit,
+        first_hit + 1,
+        torch.full_like(first_hit, dynamic_top_k_max),
+    )
+    effective_top_k = torch.clamp(
+        threshold_count,
+        min=dynamic_top_k_min,
+        max=dynamic_top_k_max,
+    )
+    head_ids = sorted_ids[..., :dynamic_top_k_max]
+    head_probs = sorted_probs[..., :dynamic_top_k_max]
+    head_log_probs = torch.gather(log_probs, -1, head_ids)
+    slots = torch.arange(dynamic_top_k_max, device=probs.device)
+    top_selection_mask = slots < effective_top_k[..., None]
+    top_token_ids = torch.where(
+        top_selection_mask, head_ids, torch.zeros_like(head_ids)
+    )
+    top_probs = torch.where(
+        top_selection_mask,
+        head_probs,
+        torch.zeros_like(head_probs),
+    )
+    top_log_probs = torch.where(
+        top_selection_mask,
+        head_log_probs,
+        torch.zeros_like(head_log_probs),
+    )
+    top_mass = torch.sum(top_probs, dim=-1)
+    return {
+        "sorted_probs": sorted_probs,
         "top_token_ids": top_token_ids,
         "top_log_probs": top_log_probs,
         "top_probs": top_probs,
         "top_selection_mask": top_selection_mask,
         "effective_top_k": effective_top_k,
         "top_mass": top_mass,
-        "tail_mass": tail_mass,
-        "bucket_masses": bucket_masses,
-        "teacher_entropy": teacher_entropy,
     }
+
+
+def _dynamic_bucket_masses_from_sorted_tail(
+    torch: Any,
+    sorted_probs: Any,
+    *,
+    effective_top_k: Any,
+    num_buckets: int,
+) -> Any:
+    vocab_size = int(sorted_probs.shape[-1])
+    tail_count = vocab_size - effective_top_k
+    quotient = torch.div(tail_count, num_buckets, rounding_mode="floor")
+    remainder = torch.remainder(tail_count, num_buckets)
+    rank_shape = (1,) * (len(sorted_probs.shape) - 1) + (vocab_size,)
+    ranks = torch.arange(vocab_size, device=sorted_probs.device).view(rank_shape)
+    bucket_masses = []
+    for bucket_id in range(num_buckets):
+        tail_start = bucket_id * quotient + torch.clamp(remainder, max=bucket_id)
+        tail_width = quotient + (remainder > bucket_id).to(quotient.dtype)
+        tail_stop = tail_start + tail_width
+        absolute_start = effective_top_k + tail_start
+        absolute_stop = effective_top_k + tail_stop
+        bucket_mask = (ranks >= absolute_start[..., None]) & (
+            ranks < absolute_stop[..., None]
+        )
+        bucket_masses.append(
+            torch.sum(
+                torch.where(bucket_mask, sorted_probs, torch.zeros_like(sorted_probs)),
+                dim=-1,
+            )
+        )
+    return torch.stack(bucket_masses, dim=-1)
 
 
 def _gpu_probability_workspace(

@@ -93,6 +93,7 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | 3.3F5 | GPU Runtime Fallback / Error Hardening | complete once diagnostics and fallback hardening land |
 | 3.3F6 | Dynamic Cascaded Soft Labels CPU Reference + Contract Shape | complete once the CPU reference contract shape lands |
 | 3.3F7 | GPU Dynamic Cascaded Soft Labels Reducer | complete once the gpu_torch dynamic reducer lands |
+| 3.3F7.1 | GPU Dynamic Cascaded Reducer Vectorization Rehearsal | complete once dynamic head selection vectorization lands |
 | 3.3F8 | Corridor/Exemplar Production Schema Lock | planned |
 | 3.3F9 | GPU Corridor/Exemplar Acceleration | planned |
 | 3.3F10 | GPU Builder Integration Gate | planned |
@@ -134,11 +135,17 @@ Spec 3.3F7 adds the optimized `gpu_torch` reducer for
 dynamic head selection and bucketed tail reduction on Torch tensors before
 compact host transfer.
 
+Spec 3.3F7.1 is a narrow vectorization rehearsal for that dynamic reducer. It
+keeps the same payload and metadata contract, vectorizes dynamic explicit-head
+selection across batch/sequence positions, and preserves exact bucketed tail
+semantics without claiming measured speedups.
+
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
-TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F8
-corridor/exemplar production schema lock, F9 GPU corridor/exemplar
-acceleration, F10 GPU builder integration gate, F11 runtime final polish and
-doctor metadata, then 3.3G TPU/JAX backend skeleton.
+TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1
+dynamic reducer vectorization rehearsal, F8 corridor/exemplar production
+schema lock, F9 GPU corridor/exemplar acceleration, F10 GPU builder integration
+gate, F11 runtime final polish and doctor metadata, then 3.3G TPU/JAX backend
+skeleton.
 
 3.3G adds TPU/JAX shape without CUDA assumptions.
 

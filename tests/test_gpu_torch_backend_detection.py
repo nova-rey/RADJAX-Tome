@@ -555,6 +555,8 @@ def test_gpu_torch_dynamic_cascaded_metadata_records_compact_reduction() -> None
     assert metadata["top_selection_mask_semantics"] == (
         "true means explicit selected token"
     )
+    assert metadata["dynamic_head_selection_vectorized"] is True
+    assert metadata["dynamic_tail_bucket_vectorized"] is True
     assert metadata["padding_policy"] == "pad_to_dynamic_top_k_max_effective"
     assert "must be ignored" in metadata["masked_slot_policy"]
     assert metadata["effective_top_k_min_observed"] == 2

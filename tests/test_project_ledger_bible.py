@@ -56,3 +56,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "top_selection_mask" in text
     assert "3.3F7" in text
     assert "compact payload transfer" in text
+    assert "3.3F7.1" in text
+    assert "vectorized dynamic head selection" in text
+    assert "bucketed tail is preserved" in text

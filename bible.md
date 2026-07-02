@@ -208,3 +208,16 @@ This path uses compact payload transfer only:
 cascaded can later serve as a corridor/exemplar source policy, but this spec
 does not migrate the public builder, add TPU/JAX, or implement
 corridor/exemplar production schema.
+
+## 2026-07-02 — Spec 3.3F7.1 GPU Dynamic Cascaded Vectorization Rehearsal
+
+Spec 3.3F7.1 keeps `gpu_torch` support for
+`dynamic_cascaded_soft_labels_v1` on the same payload contract and same metadata
+contract while adding vectorized dynamic head selection across batch/sequence
+positions. The bucketed tail is preserved with exact contiguous descending tail
+probability masses, and dynamic cascaded emission still uses no dense host
+transfer.
+
+This is only a vectorization rehearsal. It does not implement
+corridor/exemplar production schema or acceleration, does not migrate the
+public builder, and does not add TPU/JAX support.
