@@ -59,6 +59,61 @@ def _build_parser() -> argparse.ArgumentParser:
         default="dense_logits",
     )
     build.add_argument("--top-k", type=int, default=256)
+    build.add_argument(
+        "--teacher-backend",
+        choices=("fake_numpy", "cpu_reference", "hf_torch", "gpu_torch"),
+        help="Route build through the TeacherEmissionBackend contract.",
+    )
+    build.add_argument("--runtime-mode", choices=("cpu", "cpu_gpu"), default="cpu")
+    build.add_argument(
+        "--target-policy",
+        choices=(
+            "dense",
+            "dense_logits",
+            "topk",
+            "topk_with_tail_v0",
+            "cascaded",
+            "cascaded_soft_labels_v1",
+            "dynamic",
+            "dynamic_cascaded_soft_labels_v1",
+            "corridor",
+            "corridor_exemplar_v1",
+        ),
+        help="Backend contract target policy. Defaults to --target-type.",
+    )
+    build.add_argument(
+        "--exemplar-source-policy",
+        choices=(
+            "dense_logits",
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        ),
+        default="dynamic_cascaded_soft_labels_v1",
+    )
+    build.add_argument(
+        "--exemplar-capture-mode",
+        choices=("one_pass_candidate", "two_pass_sparse_exemplar", "auto"),
+        default="one_pass_candidate",
+    )
+    build.add_argument(
+        "--exemplar-second-pass-source-policy",
+        choices=(
+            "dense_logits",
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        ),
+        default="dynamic_cascaded_soft_labels_v1",
+    )
+    build.add_argument(
+        "--gpu-batch-size-mode",
+        choices=("preset", "custom", "auto"),
+        default="preset",
+    )
+    build.add_argument("--gpu-batch-size-preset", type=int, default=8)
+    build.add_argument("--gpu-batch-size-custom", type=int)
+    build.add_argument("--gpu-batch-size-auto-min", type=int, default=1)
+    build.add_argument("--gpu-batch-size-auto-max", type=int, default=64)
+    build.add_argument("--fallback-policy", choices=("error", "auto"), default="error")
     build.add_argument("--overwrite", action="store_true")
     build.set_defaults(func=_cmd_build)
 
@@ -127,7 +182,47 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_build(args: argparse.Namespace) -> int:
-    from radjax_tome.builder import TeacherTextbookBuildConfig, build_teacher_textbook
+    from radjax_tome.builder import (
+        BackendTeacherTextbookBuildConfig,
+        TeacherTextbookBuildConfig,
+        build_backend_teacher_textbook,
+        build_teacher_textbook,
+    )
+
+    if args.teacher_backend is not None:
+        config = BackendTeacherTextbookBuildConfig(
+            output_dir=args.output,
+            dataset_path=args.dataset,
+            teacher_backend=args.teacher_backend,
+            runtime_mode=args.runtime_mode,
+            target_policy=_normalize_target_policy(
+                args.target_policy or args.target_type
+            ),
+            teacher_model_id=args.teacher_model,
+            sequence_length=args.sequence_length,
+            batch_size=args.batch_size,
+            max_examples=args.max_examples,
+            overwrite=args.overwrite,
+            vocab_size=args.vocab_size,
+            top_k=args.top_k,
+            exemplar_source_policy=args.exemplar_source_policy,
+            exemplar_capture_mode=args.exemplar_capture_mode,
+            exemplar_second_pass_source_policy=args.exemplar_second_pass_source_policy,
+            gpu_batch_size_mode=args.gpu_batch_size_mode,
+            gpu_batch_size_preset=args.gpu_batch_size_preset,
+            gpu_batch_size_custom=args.gpu_batch_size_custom,
+            gpu_batch_size_auto_min=args.gpu_batch_size_auto_min,
+            gpu_batch_size_auto_max=args.gpu_batch_size_auto_max,
+            fallback_policy=args.fallback_policy,
+            local_files_only=True,
+            allow_downloads=False,
+        )
+        report = build_backend_teacher_textbook(config)
+        print(
+            f"status={report.status} blockers={len(report.blockers)} "
+            f"warnings={len(report.warnings)} output={args.output}"
+        )
+        return 0 if report.status == "pass" else 1
 
     teacher_mode = "fake" if args.teacher_mode == "synthetic" else args.teacher_mode
     config = TeacherTextbookBuildConfig(
@@ -170,6 +265,17 @@ def _cmd_build(args: argparse.Namespace) -> int:
         f"warnings={len(report.warnings)} output={args.output}"
     )
     return 0 if report.status == "pass" else 1
+
+
+def _normalize_target_policy(value: str) -> str:
+    aliases = {
+        "dense": "dense_logits",
+        "topk": "topk_with_tail_v0",
+        "cascaded": "cascaded_soft_labels_v1",
+        "dynamic": "dynamic_cascaded_soft_labels_v1",
+        "corridor": "corridor_exemplar_v1",
+    }
+    return aliases.get(value, value)
 
 
 def _cmd_validate(args: argparse.Namespace) -> int:

@@ -310,3 +310,22 @@ available, and no measured GPU peak memory claim unless measured.
 F9.4 preserves batch-in/batch-out backend behavior, remains single-device only,
 future-reserves multidevice vocabulary, does not migrate the public builder,
 and does not add TPU/JAX.
+
+## 2026-07-02 — Spec 3.3F10 GPU Builder Integration Gate
+
+Spec 3.3F10 adds the GPU Builder Integration Gate. The builder now supports
+gpu_torch builder routing through the `TeacherEmissionBackend` contract for
+explicit `teacher_backend=gpu_torch` and `runtime_mode=cpu_gpu` requests, with
+no silent CPU fallback.
+
+The artifact path recognizes `dynamic_cascaded_soft_labels_v1`
+artifact/schema recognition, `corridor_exemplar_v1` artifact/schema
+recognition, and `corridor_exemplar_score_pass_v1` score-pass artifacts.
+Metadata propagation preserves runtime/backend/fallback/capability fields,
+optimized-path evidence, GPU compact fields, exemplar-capture metadata
+propagation, auto-policy fields, and batch-size metadata propagation into the
+artifact metadata and cover page.
+
+This is not a production global two-pass selector, no real auto batch probing,
+no builder hydra, and no TPU/JAX. It is a builder integration gate for
+backend-routed artifacts, not a new reducer or production readiness claim.

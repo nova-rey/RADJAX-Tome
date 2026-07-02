@@ -79,3 +79,7 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3F9.4" in text
     assert "gpu batch size policy" in text
     assert "exponential_probe_v1" in text
+    assert "3.3F10" in text
+    assert "GPU Builder Integration Gate" in text
+    assert "metadata propagation" in text
+    assert "no silent CPU fallback" in text

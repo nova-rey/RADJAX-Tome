@@ -69,6 +69,35 @@ def test_public_cli_fake_build_validate_and_inspect(tmp_path: Path) -> None:
     assert "shard_count=1" in inspect.stdout
 
 
+def test_public_cli_backend_contract_build_smoke(tmp_path: Path) -> None:
+    output = tmp_path / "backend_tome"
+
+    build = run_cli(
+        ROOT,
+        "build",
+        "--output",
+        str(output),
+        "--teacher-backend",
+        "cpu_reference",
+        "--runtime-mode",
+        "cpu",
+        "--target-policy",
+        "dynamic",
+        "--max-examples",
+        "2",
+        "--sequence-length",
+        "8",
+        "--overwrite",
+    )
+
+    assert build.returncode == 0, build.stderr
+    assert "status=pass" in build.stdout
+
+    inspect = run_cli(ROOT, "inspect", "--path", str(output))
+    assert inspect.returncode == 0, inspect.stderr
+    assert "target_type=dynamic_cascaded_soft_labels_v1" in inspect.stdout
+
+
 def test_public_cli_prove_capabilities_smoke(tmp_path: Path) -> None:
     work_dir = tmp_path / "capabilities"
 

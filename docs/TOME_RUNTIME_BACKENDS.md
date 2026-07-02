@@ -266,9 +266,62 @@ Spec 3.3F7.1 keeps the F7 dynamic cascaded payload and metadata contract but
 vectorizes dynamic explicit-head selection to reduce Python-loop overhead.
 Exact bucket semantics remain unchanged.
 
-`corridor_exemplar_v1` remains historical-reference/future GPU work. Runtime
-fallback/error hardening is in place for implemented `gpu_torch` policies. The
-public builder has not migrated to `gpu_torch`.
+Runtime fallback/error hardening is in place for implemented `gpu_torch`
+policies. Spec 3.3F10 adds explicit builder routing for backend-contract
+emissions, including `gpu_torch` when `runtime_mode=cpu_gpu`.
+
+## GPU Builder Integration Gate
+
+Spec 3.3F10 adds a medium integration gate for the builder, not a new reducer.
+The build command can explicitly select `teacher_backend=gpu_torch` with
+`runtime_mode=cpu_gpu`, route batches through `TeacherEmissionBackend`, and
+write valid Tome artifacts for backend-emitted policies.
+
+Builder-routed artifacts preserve backend metadata in the target-store
+metadata, `cover_page.json`, `teacher_manifest.json`, and
+`emission_config.json`. The propagated fields include requested/effective
+runtime, backend identity, fallback policy, capability status, optimized-path
+flag, GPU compact metadata, exemplar-capture metadata, auto capture policy
+metadata, and batch-size policy metadata.
+
+The builder recognizes the backend artifact schemas
+`dynamic_cascaded_soft_labels_v1`, `corridor_exemplar_v1`, and
+`corridor_exemplar_score_pass_v1`. The two-pass score-pass schema is writeable
+for deterministic local smoke coverage, but F10 does not implement a
+production global two-pass selector.
+
+Batch size remains batch-in/batch-out: the builder may slice the input corpus
+into batches using its configured batch size, but the backend receives one
+batch and returns one batched result. The backend does not secretly split
+oversized batches. Artifacts record configured, actual, and effective GPU
+batch-size metadata.
+
+Example GPU-routed dynamic cascaded build:
+
+```bash
+python -m radjax_tome.cli.main build \
+  --output out/tome_dynamic_gpu \
+  --teacher-backend gpu_torch \
+  --runtime-mode cpu_gpu \
+  --target-policy dynamic
+```
+
+Example GPU-routed corridor build:
+
+```bash
+python -m radjax_tome.cli.main build \
+  --output out/tome_corridor_gpu \
+  --teacher-backend gpu_torch \
+  --runtime-mode cpu_gpu \
+  --target-policy corridor \
+  --exemplar-capture-mode one_pass_candidate
+```
+
+An explicit `gpu_torch` request never silently falls back to CPU, `hf_torch`,
+or `cpu_reference`. `fallback_policy=auto` is still only an orchestrator
+signal; the builder records the request but does not perform a hidden backend
+swap. F10 also does not add real auto batch probing, builder hydra behavior,
+multidevice scheduling, TPU/JAX support, or production-readiness claims.
 
 ## Runtime Modes
 
@@ -285,7 +338,8 @@ compact reducers. Spec 3.3F4.1 corrects cascaded chunking metadata so exact
 bucket construction does not overclaim effective chunked workspace. Spec 3.3F5
 adds structured diagnostics and no-silent-CPU-fallback error hardening. Spec
 3.3F6 defines the dynamic cascaded CPU contract shape, and Spec 3.3F7 adds the
-optimized GPU dynamic cascaded reducer.
+optimized GPU dynamic cascaded reducer. Spec 3.3F10 adds explicit builder
+routing for supported `gpu_torch` policies without silent CPU fallback.
 
 `cpu_tpu` means CPU-side orchestration plus TPU/JAX/XLA-backed teacher
 execution and/or TPU-backed reduction. This is a future backend family; no

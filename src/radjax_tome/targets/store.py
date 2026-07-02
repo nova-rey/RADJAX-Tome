@@ -127,6 +127,13 @@ class TeacherTargetStore:
             if self.metadata.target_type == "cascaded_soft_labels_v1":
                 _validate_cascaded_arrays(arrays, self.metadata)
             return
+        if self.metadata.target_type in {
+            "dynamic_cascaded_soft_labels_v1",
+            "corridor_exemplar_v1",
+            "corridor_exemplar_score_pass_v1",
+        }:
+            _validate_backend_experimental_arrays(arrays, self.metadata)
+            return
         missing = [
             name
             for name in ("input_ids", "attention_mask", "logits")
@@ -346,6 +353,87 @@ def _validate_cascaded_arrays(
         raise ValueError("sum(bucket_mass) must approximately match tail_mass")
     if not np.allclose(top_mass + bucket_mass_sum, 1.0, atol=tolerance):
         raise ValueError("top_mass + sum(bucket_mass) must be approximately 1")
+
+
+def _validate_backend_experimental_arrays(
+    arrays: Mapping[str, np.ndarray],
+    metadata: TargetStoreMetadata,
+) -> None:
+    required_by_type = {
+        "dynamic_cascaded_soft_labels_v1": (
+            "input_ids",
+            "attention_mask",
+            "top_token_ids",
+            "top_log_probs",
+            "top_probs",
+            "top_selection_mask",
+            "effective_top_k",
+            "top_mass",
+            "tail_mass",
+            "bucket_masses",
+            "teacher_entropy",
+        ),
+        "corridor_exemplar_v1": (
+            "input_ids",
+            "attention_mask",
+            "corridor_top_token_ids",
+            "corridor_top_probs",
+            "corridor_teacher_entropy",
+            "corridor_confidence",
+            "corridor_lengths",
+            "exemplar_positions",
+            "exemplar_scores",
+            "exemplar_selection_mask",
+            "exemplar_source_policy_ids",
+            "exemplar_source_effective_top_k",
+            "exemplar_source_top_mass",
+            "exemplar_source_tail_mass",
+        ),
+        "corridor_exemplar_score_pass_v1": (
+            "input_ids",
+            "attention_mask",
+            "score_example_ids",
+            "score_max_entropy",
+            "score_mean_entropy",
+            "score_selected_position",
+            "score_selected_position_entropy",
+            "score_confidence_at_selected_position",
+            "score_source_policy_ids",
+            "score_lengths",
+        ),
+    }
+    required = required_by_type[metadata.target_type]
+    missing = [name for name in required if name not in arrays]
+    if missing:
+        raise ValueError(
+            f"{metadata.target_type} shard missing required arrays: {missing}"
+        )
+    input_ids = np.asarray(arrays["input_ids"])
+    attention_mask = np.asarray(arrays["attention_mask"])
+    if input_ids.ndim != 2:
+        raise ValueError("input_ids must have shape [N,T]")
+    if attention_mask.shape != input_ids.shape:
+        raise ValueError("attention_mask shape must match input_ids")
+    if input_ids.shape[1] != metadata.sequence_length:
+        raise ValueError(
+            "input_ids sequence_length must match metadata.sequence_length"
+        )
+    if not np.issubdtype(input_ids.dtype, np.integer):
+        raise ValueError("input_ids dtype must be integer")
+    if not (
+        np.issubdtype(attention_mask.dtype, np.integer)
+        or np.issubdtype(attention_mask.dtype, np.bool_)
+    ):
+        raise ValueError("attention_mask dtype must be integer or bool")
+    expected_batch = input_ids.shape[0]
+    for name in required:
+        value = np.asarray(arrays[name])
+        if value.shape[0] != expected_batch:
+            raise ValueError(f"{name} leading dimension must match input_ids")
+        if value.dtype == np.dtype("O"):
+            raise ValueError(f"{name} dtype must not be object")
+        if np.issubdtype(value.dtype, np.floating) and not np.all(np.isfinite(value)):
+            raise ValueError(f"{name} must be finite")
 
 
 def _metadata_bucket_edges(metadata: TargetStoreMetadata) -> tuple[float, ...]:

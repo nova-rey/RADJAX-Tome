@@ -247,6 +247,8 @@ class CPUReferenceTeacherEmissionBackend:
             "capability_status": _CAPABILITY_STATUS[self.config.target_policy],
             "optimized_path_used": False,
             "fallback_used": False,
+            "fallback_policy": self.config.fallback_policy,
+            "fallback_handled_by": "none",
             "sequence_length": self.config.sequence_length,
             "batch_size": self.config.batch_size,
             "configured_batch_size": self.config.batch_size,

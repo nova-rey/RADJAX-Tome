@@ -12,6 +12,9 @@ SUPPORTED_TARGET_TYPES = {
     "top_k_logprobs",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
+    "dynamic_cascaded_soft_labels_v1",
+    "corridor_exemplar_v1",
+    "corridor_exemplar_score_pass_v1",
     "hidden_states",
     "attention_derived",
     "synthetic",
@@ -22,6 +25,9 @@ P93_ARRAY_TARGET_TYPES = {
     "synthetic",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
+    "dynamic_cascaded_soft_labels_v1",
+    "corridor_exemplar_v1",
+    "corridor_exemplar_score_pass_v1",
 }
 FLOAT_DTYPES = {"float32", "fp32", "bfloat16", "bf16", "float16", "fp16"}
 

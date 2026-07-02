@@ -96,7 +96,7 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | 3.3F7.1 | GPU Dynamic Cascaded Reducer Vectorization Rehearsal | complete once dynamic head selection vectorization lands |
 | 3.3F8 | Corridor/Exemplar Production Schema Lock | complete once the production corridor schema lands |
 | 3.3F9 | GPU Corridor/Exemplar Acceleration | complete once gpu_torch emits the F8 production schema |
-| 3.3F10 | GPU Builder Integration Gate | planned |
+| 3.3F10 | GPU Builder Integration Gate | complete once backend-routed builder artifacts land |
 | 3.3F11 | GPU Runtime Final Polish / Doctor Metadata | planned |
 
 Spec 3.3F1 adds `gpu_torch` as a CUDA/MPS-detecting dense debug backend. It
@@ -177,6 +177,17 @@ custom values above 64 are allowed with warning metadata, and
 estimated-vs-measured byte caveats are recorded. This is single-device only,
 future-reserves multidevice vocabulary, and does not migrate the builder or add
 TPU/JAX support.
+
+Spec 3.3F10 adds the GPU Builder Integration Gate. The public build command can
+explicitly route through the backend contract, including `gpu_torch` with
+`runtime_mode=cpu_gpu`, and write artifacts for
+`dynamic_cascaded_soft_labels_v1`, `corridor_exemplar_v1`, and
+`corridor_exemplar_score_pass_v1` schema recognition. Metadata propagation is
+the gate: runtime/backend/fallback/capability, optimized-path, GPU compact,
+exemplar-capture, auto-policy, and batch-size policy fields flow into artifact
+metadata and cover pages. It preserves no silent CPU fallback and does not add
+a production global two-pass selector, real auto batch probing, builder hydra
+behavior, or TPU/JAX support.
 
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1
