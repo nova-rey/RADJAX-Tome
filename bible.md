@@ -422,3 +422,26 @@ manifest hash across different build times.
 
 This patch does not add structured JSON import, internet scraping, GitHub
 cloning, model downloading, teacher emission changes, GPU work, JAX, or TPU.
+
+## 2026-07-07 — Spec 4.2 Teacher Model Provenance and Setup UX
+
+Spec 4.2 adds first-class teacher model provenance for local teacher files.
+`radjax-tome model inspect` writes `teacher_model_provenance_v1`, hashing
+recognized config, tokenizer, and weight files with per-file records plus
+`config_hash`, `tokenizer_hash`, `weights_hash`, and `model_directory_hash`.
+`radjax-tome model validate` recomputes those hashes and rejects tampered local
+files.
+
+The provenance sidecar records identity confidence honestly. Friendly identity
+may be verified from local config, inferred from a local Hugging Face cache
+snapshot path, declared by the user, or left unknown. HF repo/revision inference
+is local path inference only, not upstream or network verification.
+
+Tome builds can now accept `--teacher-model-provenance` and record a compact
+teacher model provenance summary in target metadata, `teacher_manifest.json`,
+`emission_config.json`, and `cover_page.json`; full file inventories remain in
+the sidecar.
+
+This patch does not silently download teacher models, does not perform network
+verification, does not add GPU run planning, does not add parity/deathmatch
+harnesses, and does not touch JAX or TPU.

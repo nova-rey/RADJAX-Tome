@@ -247,3 +247,11 @@ until a structured JSON import spec exists, `.jsonl` text rows remain
 supported, `created_at` is a real UTC timestamp, and
 `manifest_hash_policy=exclude_self_hash_and_created_at_v1` keeps manifest
 hashes stable by excluding both `manifest_hash` and `created_at`.
+
+Spec 4.2 adds local teacher model provenance and setup UX. `radjax-tome model
+inspect` writes `teacher_model_provenance_v1` from local files, hashes config,
+tokenizer, and weight files, infers Hugging Face cache identity only from local
+path shape, supports user-declared identity, and lets Tome builds cite the
+validated sidecar. It does not download teacher models, perform network
+verification, change backend emission capability statuses, plan GPU runs, or
+touch TPU/JAX.

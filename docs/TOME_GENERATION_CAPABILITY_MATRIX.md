@@ -38,6 +38,10 @@ structured `.json` import is not supported yet, and manifest hashes exclude
 both `manifest_hash` and `created_at`. Backend emission capabilities remain
 unchanged.
 
+Spec 4.2 adds teacher model provenance/setup utilities. Local model files can
+be inspected, hashed, validated, and linked into generated Tome metadata, but
+backend emission capability statuses are unchanged.
+
 ## Synthetic Vs Real Teacher Proof
 
 Dense, top-k/tail, cascaded, fingerprint, and exemplar proofs use

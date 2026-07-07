@@ -34,6 +34,10 @@ from radjax_tome.builder.teacher_textbook import (
 )
 from radjax_tome.corpora import stringify_corpus_provenance
 from radjax_tome.io.json import write_json
+from radjax_tome.provenance import (
+    teacher_model_provenance_summary,
+    teacher_model_target_params,
+)
 from radjax_tome.targets.schema import (
     TEACHER_TARGET_STORE_SCHEMA_VERSION,
     TEACHER_TARGET_STORE_VERSION,
@@ -77,6 +81,7 @@ class BackendTeacherTextbookBuildConfig:
     allow_downloads: bool = False
     overwrite: bool = False
     corpus_manifest_path: Path | None = None
+    teacher_model_provenance_path: Path | None = None
 
 
 def build_backend_teacher_textbook(
@@ -118,12 +123,7 @@ def build_backend_teacher_textbook(
             "phase": "radjax-tome-spec-3.3F10",
             "teacher_backend": config.teacher_backend,
         },
-        target_params={
-            "target_policy": config.target_policy,
-            "artifact_emission_path": "teacher_backend_contract",
-            "student_consumption_ready": "false",
-            "experimental_target_schema": "true",
-        },
+        target_params=_target_params(config, {}),
     )
     store = TeacherTargetStore.create(config.output_dir, metadata, overwrite=True)
     try:
@@ -358,6 +358,7 @@ def _target_params(
         "experimental_target_schema": "true",
         "production_global_selector": "false",
         **_corpus_provenance(config),
+        **teacher_model_target_params(config.teacher_model_provenance_path),
     }
     for key, value in backend_metadata.items():
         params[_target_param_key(key)] = _stringify_metadata_value(value)
@@ -442,6 +443,7 @@ def _write_backend_sidecars(
     shard_count: int,
 ) -> None:
     corpus_provenance = _corpus_provenance(config)
+    teacher_model_provenance = _teacher_model_provenance(config)
     write_json(
         config.output_dir / "vocab_contract.json",
         {
@@ -472,6 +474,7 @@ def _write_backend_sidecars(
             "local_files_only": config.local_files_only,
             "allow_downloads": config.allow_downloads,
             "corpus_provenance": corpus_provenance or None,
+            "teacher_model_provenance": teacher_model_provenance or None,
             "claims_not_made": (
                 "no_silent_cpu_fallback",
                 "no_historical_parity_claim",
@@ -509,6 +512,7 @@ def _write_backend_sidecars(
                 else None
             ),
             "corpus_provenance": corpus_provenance or None,
+            "teacher_model_provenance": teacher_model_provenance or None,
         },
     )
 
@@ -523,6 +527,14 @@ def _metadata_source(config: BackendTeacherTextbookBuildConfig) -> dict[str, str
 
 def _corpus_provenance(config: BackendTeacherTextbookBuildConfig) -> dict[str, str]:
     return stringify_corpus_provenance(config.corpus_manifest_path)
+
+
+def _teacher_model_provenance(
+    config: BackendTeacherTextbookBuildConfig,
+) -> dict[str, object]:
+    if config.teacher_model_provenance_path is None:
+        return {}
+    return teacher_model_provenance_summary(config.teacher_model_provenance_path)
 
 
 def _effective_capture_mode(

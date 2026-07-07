@@ -13,6 +13,10 @@ import numpy as np
 from radjax_tome.builder.cascaded_soft_labels import encode_cascaded_soft_labels
 from radjax_tome.corpora import stringify_corpus_provenance
 from radjax_tome.io.json import int_value, read_json_object, require_fields, write_json
+from radjax_tome.provenance import (
+    teacher_model_provenance_summary,
+    teacher_model_target_params,
+)
 from radjax_tome.targets.schema import (
     TEACHER_TARGET_STORE_SCHEMA_VERSION,
     TEACHER_TARGET_STORE_VERSION,
@@ -133,6 +137,7 @@ class TeacherTextbookBuildConfig:
     bucket_mass_dtype: str = "float32"
     bucket_mean_logp_dtype: str = "float32"
     corpus_manifest_path: Path | None = None
+    teacher_model_provenance_path: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -625,6 +630,7 @@ def _write_sidecars(
     shard_count = (len(examples) + config.batch_size - 1) // config.batch_size
     output_dir = config.output_dir
     corpus_provenance = _corpus_provenance(config)
+    teacher_model_provenance = _teacher_model_provenance(config)
     write_json(
         output_dir / "vocab_contract.json",
         {
@@ -657,6 +663,7 @@ def _write_sidecars(
             "allow_downloads": config.allow_downloads,
             "claims_not_made": _claims_not_made(config, teacher_mode="fake"),
             "corpus_provenance": corpus_provenance or None,
+            "teacher_model_provenance": teacher_model_provenance or None,
         },
     )
     write_json(
@@ -677,6 +684,7 @@ def _write_sidecars(
             "seed": config.seed,
             "teacher_mode": config.teacher_mode,
             "corpus_provenance": corpus_provenance or None,
+            "teacher_model_provenance": teacher_model_provenance or None,
         },
     )
 
@@ -693,6 +701,7 @@ def _write_hf_sidecars(
 ) -> None:
     shard_count = (len(examples) + config.batch_size - 1) // config.batch_size
     corpus_provenance = _corpus_provenance(config)
+    teacher_model_provenance = _teacher_model_provenance(config)
     special_tokens = {
         "pad_token_id": _optional_int(getattr(tokenizer, "pad_token_id", None)),
         "eos_token_id": _optional_int(getattr(tokenizer, "eos_token_id", None)),
@@ -734,6 +743,7 @@ def _write_hf_sidecars(
             "allow_downloads": config.allow_downloads and not local_files_only,
             "claims_not_made": _claims_not_made(config, teacher_mode="hf"),
             "corpus_provenance": corpus_provenance or None,
+            "teacher_model_provenance": teacher_model_provenance or None,
         },
     )
     write_json(
@@ -757,6 +767,7 @@ def _write_hf_sidecars(
             "local_files_only": local_files_only,
             "allow_downloads": config.allow_downloads and not local_files_only,
             "corpus_provenance": corpus_provenance or None,
+            "teacher_model_provenance": teacher_model_provenance or None,
         },
     )
 
@@ -902,10 +913,19 @@ def _corpus_provenance(config: TeacherTextbookBuildConfig) -> dict[str, str]:
     return stringify_corpus_provenance(config.corpus_manifest_path)
 
 
+def _teacher_model_provenance(config: TeacherTextbookBuildConfig) -> dict[str, Any]:
+    if config.teacher_model_provenance_path is None:
+        return {}
+    return teacher_model_provenance_summary(config.teacher_model_provenance_path)
+
+
 def _target_params(config: TeacherTextbookBuildConfig) -> dict[str, str]:
     corpus_params = _corpus_provenance(config)
+    teacher_model_params = teacher_model_target_params(
+        config.teacher_model_provenance_path
+    )
     if not _is_compressed_target(config.target_type):
-        return corpus_params
+        return {**corpus_params, **teacher_model_params}
     params = {
         "top_k": str(config.top_k),
         "top_log_probs_dtype": _canonical_dtype(config.top_log_probs_dtype),
@@ -928,7 +948,7 @@ def _target_params(config: TeacherTextbookBuildConfig) -> dict[str, str]:
                 "empty_bucket_mean_logp_sentinel": "0.0",
             }
         )
-    return {**params, **corpus_params}
+    return {**params, **corpus_params, **teacher_model_params}
 
 
 def _manifest_topk_fields(config: TeacherTextbookBuildConfig) -> dict[str, object]:

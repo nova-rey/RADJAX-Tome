@@ -168,8 +168,8 @@ def validate_corpus_artifact(path: str | Path) -> CorpusValidationReport:
             )
         if manifest.get("manifest_hash") != actual_manifest_hash:
             blockers.append(
-                "corpus_manifest.json manifest_hash does not validate excluding "
-                "self hash"
+                "corpus_manifest.json manifest_hash does not validate under "
+                "exclude_self_hash_and_created_at_v1"
             )
         if int(manifest.get("num_examples", -1)) != len(rows):
             blockers.append("manifest num_examples does not match corpus rows")

@@ -49,6 +49,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Use fake/synthetic for offline deterministic output; hf needs extras.",
     )
     build.add_argument("--teacher-model", default="fake-deterministic-teacher")
+    build.add_argument("--teacher-model-provenance", type=Path)
     build.add_argument("--dataset", type=Path)
     build.add_argument("--corpus-manifest", type=Path)
     build.add_argument("--max-examples", type=int, default=4)
@@ -225,6 +226,40 @@ def _build_parser() -> argparse.ArgumentParser:
     corpus_validate.add_argument("--path", type=Path, required=True)
     corpus_validate.set_defaults(func=_cmd_corpus_validate)
 
+    model = subparsers.add_parser(
+        "model",
+        help="Inspect and validate local teacher model provenance.",
+    )
+    model_subparsers = model.add_subparsers(dest="model_command", required=True)
+    model_inspect = model_subparsers.add_parser(
+        "inspect",
+        help="Inspect local teacher model files and write provenance JSON.",
+    )
+    model_inspect.add_argument("--model-path", type=Path, required=True)
+    model_inspect.add_argument("--output", type=Path, required=True)
+    model_inspect.add_argument("--model-name")
+    model_inspect.add_argument("--model-revision")
+    model_inspect.add_argument(
+        "--check",
+        choices=("metadata_only",),
+        default="metadata_only",
+    )
+    model_inspect.set_defaults(func=_cmd_model_inspect)
+
+    model_validate = model_subparsers.add_parser(
+        "validate",
+        help="Validate teacher model provenance JSON.",
+    )
+    model_validate.add_argument("--provenance", type=Path, required=True)
+    model_validate.set_defaults(func=_cmd_model_validate)
+
+    model_discover = model_subparsers.add_parser(
+        "discover",
+        help="Report candidate local teacher model directories.",
+    )
+    model_discover.add_argument("--search-path", type=Path, required=True)
+    model_discover.set_defaults(func=_cmd_model_discover)
+
     doctor = subparsers.add_parser(
         "doctor",
         help="Show environment and command recommendations.",
@@ -326,6 +361,7 @@ def _cmd_build(args: argparse.Namespace) -> int:
             local_files_only=True,
             allow_downloads=False,
             corpus_manifest_path=args.corpus_manifest,
+            teacher_model_provenance_path=args.teacher_model_provenance,
         )
         report = build_backend_teacher_textbook(config)
         print(
@@ -350,6 +386,7 @@ def _cmd_build(args: argparse.Namespace) -> int:
         local_files_only=teacher_mode != "hf",
         allow_downloads=False,
         corpus_manifest_path=args.corpus_manifest,
+        teacher_model_provenance_path=args.teacher_model_provenance,
     )
     try:
         report = build_teacher_textbook(config)
@@ -597,6 +634,57 @@ def _cmd_corpus_validate(args: argparse.Namespace) -> int:
         f"warnings={len(report.warnings)} corpus_hash={report.corpus_hash}"
     )
     return 0 if report.status == "pass" else 1
+
+
+def _cmd_model_inspect(args: argparse.Namespace) -> int:
+    from radjax_tome.provenance import (
+        inspect_teacher_model,
+        validate_teacher_model_provenance,
+        write_teacher_model_provenance,
+    )
+
+    provenance = inspect_teacher_model(
+        args.model_path,
+        model_name=args.model_name,
+        model_revision=args.model_revision,
+        check=args.check,
+    )
+    write_teacher_model_provenance(provenance, args.output)
+    report = validate_teacher_model_provenance(args.output)
+    print(
+        f"status={report.status} blockers={len(report.blockers)} "
+        f"warnings={len(report.warnings)} output={args.output} "
+        f"model_directory_hash={report.model_directory_hash}"
+    )
+    return 0 if report.status in {"pass", "warn"} else 1
+
+
+def _cmd_model_validate(args: argparse.Namespace) -> int:
+    from radjax_tome.provenance import validate_teacher_model_provenance
+
+    report = validate_teacher_model_provenance(args.provenance)
+    print(
+        f"status={report.status} blockers={len(report.blockers)} "
+        f"warnings={len(report.warnings)} "
+        f"model_source_kind={report.model_source_kind} "
+        f"model_directory_hash={report.model_directory_hash}"
+    )
+    return 0 if report.status in {"pass", "warn"} else 1
+
+
+def _cmd_model_discover(args: argparse.Namespace) -> int:
+    from radjax_tome.provenance import discover_teacher_model_candidates
+
+    candidates = discover_teacher_model_candidates(args.search_path)
+    for candidate in candidates:
+        print(
+            f"candidate_path={candidate['candidate_path']} "
+            f"source_kind={candidate['source_kind']} "
+            f"has_config={str(candidate['has_config']).lower()} "
+            f"has_tokenizer={str(candidate['has_tokenizer']).lower()} "
+            f"has_weights={str(candidate['has_weights']).lower()}"
+        )
+    return 0
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:

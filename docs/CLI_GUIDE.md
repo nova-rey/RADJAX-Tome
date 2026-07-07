@@ -64,6 +64,28 @@ Corpus source formats are intentionally narrow: `.txt`, `.md`, `.markdown`,
 `.py`, and `.jsonl` rows with `text`. Structured `.json` import is not
 supported yet.
 
+Inspect and validate local teacher model provenance before Tome generation:
+
+```bash
+radjax-tome model inspect \
+  --model-path ./local_teacher \
+  --output ./teacher_model_provenance.json
+
+radjax-tome model validate \
+  --provenance ./teacher_model_provenance.json
+
+radjax-tome build \
+  --teacher-model ./local_teacher \
+  --teacher-model-provenance ./teacher_model_provenance.json \
+  --output artifacts/from_teacher_model_provenance \
+  --teacher-mode fake \
+  --overwrite
+```
+
+`model inspect` is local-only and does not download teacher models. It records
+verified file hashes, inferred or declared friendly identity, and
+`network_used=false`. See `docs/TEACHER_MODEL_PROVENANCE.md`.
+
 For runtime/backend preflight and artifact metadata sanity checks:
 
 ```bash

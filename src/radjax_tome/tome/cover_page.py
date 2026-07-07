@@ -107,6 +107,36 @@ def build_cover_page(tome_root: str | Path) -> dict[str, Any]:
     corpus_provenance = teacher_manifest.get("corpus_provenance")
     if isinstance(corpus_provenance, dict):
         cover_page["corpus"] = dict(corpus_provenance)
+    teacher_model_provenance = teacher_manifest.get("teacher_model_provenance")
+    if isinstance(teacher_model_provenance, dict):
+        cover_page["teacher_model_provenance"] = {
+            "allow_downloads": teacher_model_provenance.get("allow_downloads"),
+            "config_hash": teacher_model_provenance.get("config_hash"),
+            "local_files_only": teacher_model_provenance.get("local_files_only"),
+            "model_directory_hash": teacher_model_provenance.get(
+                "model_directory_hash"
+            ),
+            "model_identity_confidence": teacher_model_provenance.get(
+                "model_identity_confidence"
+            ),
+            "model_name": teacher_model_provenance.get("model_name"),
+            "model_name_source": teacher_model_provenance.get("model_name_source"),
+            "model_provenance_mode": teacher_model_provenance.get(
+                "model_provenance_mode"
+            ),
+            "model_revision": teacher_model_provenance.get("model_revision"),
+            "model_revision_source": teacher_model_provenance.get(
+                "model_revision_source"
+            ),
+            "model_source_kind": teacher_model_provenance.get("model_source_kind"),
+            "network_used": teacher_model_provenance.get("network_used"),
+            "schema_version": teacher_model_provenance.get("schema_version"),
+            "teacher_model_provenance_path": teacher_model_provenance.get(
+                "teacher_model_provenance_path"
+            ),
+            "tokenizer_hash": teacher_model_provenance.get("tokenizer_hash"),
+            "weights_hash": teacher_model_provenance.get("weights_hash"),
+        }
     return cover_page
 
 

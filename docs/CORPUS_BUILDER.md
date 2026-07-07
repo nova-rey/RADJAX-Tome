@@ -61,6 +61,11 @@ The generated Tome records `source_corpus_hash`,
 policy, chunking policy, deduplication policy, and manifest path in metadata,
 `teacher_manifest.json`, `emission_config.json`, and `cover_page.json`.
 
+Teacher model provenance is tracked separately by
+`docs/TEACHER_MODEL_PROVENANCE.md`; corpus provenance proves where text came
+from, while teacher model provenance proves which local teacher files were
+inspected and hashed.
+
 Spec 4.1 is local only. Do not scrape the internet, clone GitHub repositories,
 download teacher models, make license/legal judgments, add semantic filtering,
 plan GPU runs, or touch TPU/JAX.
