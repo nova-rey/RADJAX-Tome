@@ -110,3 +110,7 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "manifest_hash" in text
     assert "radjax-tome corpus build" in text
     assert "source_corpus_hash" in text
+    assert "Spec 4.1.1" in text
+    assert "Corpus Format Truth Cleanup" in text
+    assert "Structured `.json` import is intentionally not supported yet" in text
+    assert "exclude_self_hash_and_created_at_v1" in text

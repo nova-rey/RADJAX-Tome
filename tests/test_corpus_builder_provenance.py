@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
+import radjax_tome.corpora.builder as corpus_builder
 from radjax_tome.builder import TeacherTextbookBuildConfig, build_teacher_textbook
 from radjax_tome.corpora import (
     CORPUS_BUILD_REPORT_FILENAME,
@@ -47,6 +48,25 @@ def _manifest(output: Path) -> dict[str, object]:
 def _report(output: Path) -> dict[str, object]:
     return json.loads(
         (output / CORPUS_BUILD_REPORT_FILENAME).read_text(encoding="utf-8")
+    )
+
+
+def _manifest_hash_payload(manifest: dict[str, object]) -> str:
+    payload = {
+        key: value
+        for key, value in manifest.items()
+        if key not in {"manifest_hash", "created_at"}
+    }
+    return (
+        "sha256:"
+        + hashlib.sha256(
+            json.dumps(
+                payload,
+                ensure_ascii=False,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode("utf-8")
+        ).hexdigest()
     )
 
 
@@ -113,13 +133,18 @@ def test_binary_and_unsupported_files_are_skipped_with_reasons(tmp_path: Path) -
     (source / "ok.txt").write_text("ok", encoding="utf-8")
     (source / "image.bin").write_bytes(b"\x00\x01")
     (source / "data.csv").write_text("a,b\n", encoding="utf-8")
+    (source / "data.json").write_text('{"text": "ambiguous"}', encoding="utf-8")
 
     output = _build(tmp_path, source)
     report = _report(output)
 
     assert report["status"] == "warn"
-    reasons = {item["excluded_reason"] for item in report["excluded_sources"]}
-    assert "unsupported_file_type" in reasons
+    excluded = {
+        item["source_relative_path"]: item["excluded_reason"]
+        for item in report["excluded_sources"]
+    }
+    assert excluded["data.csv"] == "unsupported_file_type"
+    assert excluded["data.json"] == "unsupported_file_type"
 
 
 def test_normalization_and_hashes_are_recorded(tmp_path: Path) -> None:
@@ -173,9 +198,83 @@ def test_corpus_and_manifest_hashes_validate(tmp_path: Path) -> None:
 
     assert manifest["corpus_hash"] == corpus_hash
     assert str(manifest["manifest_hash"]).startswith("sha256:")
+    assert manifest["created_at"] != "1970-01-01T00:00:00+00:00"
+    assert manifest["manifest_hash_policy"] == "exclude_self_hash_and_created_at_v1"
+    assert manifest["manifest_hash"] == _manifest_hash_payload(manifest)
+    assert _report(output)["manifest_hash_policy"] == (
+        "exclude_self_hash_and_created_at_v1"
+    )
     validation = validate_corpus_artifact(output)
     assert validation.status == "pass"
     assert validation.corpus_hash == corpus_hash
+
+
+def test_manifest_hash_excludes_created_at_for_identical_inputs(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source = tmp_path / "source.txt"
+    source.write_text("alpha", encoding="utf-8")
+    first_output = tmp_path / "first"
+    second_output = tmp_path / "second"
+
+    monkeypatch.setattr(
+        corpus_builder,
+        "_utc_created_at",
+        lambda: "2026-07-07T00:00:00.000001+00:00",
+    )
+    build_corpus_artifact(
+        CorpusBuildConfig(inputs=(source,), output_dir=first_output, overwrite=True)
+    )
+    monkeypatch.setattr(
+        corpus_builder,
+        "_utc_created_at",
+        lambda: "2026-07-07T00:00:01.000001+00:00",
+    )
+    build_corpus_artifact(
+        CorpusBuildConfig(inputs=(source,), output_dir=second_output, overwrite=True)
+    )
+
+    first = _manifest(first_output)
+    second = _manifest(second_output)
+    assert first["created_at"] != second["created_at"]
+    assert first["corpus_hash"] == second["corpus_hash"]
+    assert first["manifest_hash"] == second["manifest_hash"]
+
+
+def test_corpus_and_manifest_hash_change_for_content_or_config(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.txt"
+    source.write_text("alpha", encoding="utf-8")
+    first_output = tmp_path / "first"
+    second_output = tmp_path / "second"
+    third_output = tmp_path / "third"
+
+    build_corpus_artifact(
+        CorpusBuildConfig(inputs=(source,), output_dir=first_output, overwrite=True)
+    )
+    source.write_text("beta", encoding="utf-8")
+    build_corpus_artifact(
+        CorpusBuildConfig(inputs=(source,), output_dir=second_output, overwrite=True)
+    )
+    source.write_text("alpha", encoding="utf-8")
+    build_corpus_artifact(
+        CorpusBuildConfig(
+            inputs=(source,),
+            output_dir=third_output,
+            include_globs=("*.txt",),
+            overwrite=True,
+        )
+    )
+
+    first = _manifest(first_output)
+    second = _manifest(second_output)
+    third = _manifest(third_output)
+    assert first["corpus_hash"] != second["corpus_hash"]
+    assert first["manifest_hash"] != second["manifest_hash"]
+    assert first["corpus_hash"] == third["corpus_hash"]
+    assert first["manifest_hash"] != third["manifest_hash"]
 
 
 def test_corpus_validator_fails_corrupted_content_and_corpus_hash(
@@ -278,3 +377,6 @@ def test_docs_and_bible_mention_spec_4_1() -> None:
     assert "corpus builder" in bible
     assert "corpus_hash" in docs
     assert "Do not scrape" in docs
+    assert "Spec 4.1.1" in bible
+    assert ".json is not supported yet" in docs
+    assert "exclude_self_hash_and_created_at_v1" in docs

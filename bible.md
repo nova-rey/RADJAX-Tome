@@ -405,3 +405,20 @@ manifest path in target metadata, `teacher_manifest.json`,
 Spec 4.1 does not scrape the internet, does not clone GitHub, does not
 download teacher models, does not add semantic filtering, does not implement
 license/legal judgment, does not plan GPU runs, and does not touch TPU/JAX.
+
+## 2026-07-07 — Spec 4.1.1 Corpus Format Truth Cleanup
+
+Spec 4.1.1 removes ambiguous `.json` corpus source support. The corpus builder
+now supports `.txt`, `.md`, `.markdown`, `.py`, and `.jsonl` rows with a string
+`text` field. Structured `.json` import is intentionally not supported yet
+because arbitrary JSON extraction needs a separate contract.
+
+Corpus manifests now record a real UTC `created_at` and
+`manifest_hash_policy=exclude_self_hash_and_created_at_v1`. `corpus_hash`
+still hashes canonical `corpus.jsonl` bytes. `manifest_hash` hashes canonical
+manifest JSON while excluding both `manifest_hash` and `created_at`, so
+identical corpus content and stable build configuration can retain the same
+manifest hash across different build times.
+
+This patch does not add structured JSON import, internet scraping, GitHub
+cloning, model downloading, teacher emission changes, GPU work, JAX, or TPU.

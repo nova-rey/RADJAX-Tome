@@ -241,3 +241,9 @@ content/source/corpus/manifest hashes, and lets generated Tomes cite
 
 Spec 4.1 does not scrape the internet, clone GitHub repositories, download
 teacher models, add semantic filtering, plan GPU runs, or touch TPU/JAX.
+
+Spec 4.1.1 cleans up corpus format truth: `.json` is intentionally unsupported
+until a structured JSON import spec exists, `.jsonl` text rows remain
+supported, `created_at` is a real UTC timestamp, and
+`manifest_hash_policy=exclude_self_hash_and_created_at_v1` keeps manifest
+hashes stable by excluding both `manifest_hash` and `created_at`.

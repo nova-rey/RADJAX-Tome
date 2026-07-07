@@ -60,6 +60,10 @@ The corpus builder is local-only. It writes `corpus_hash` and
 `manifest_hash` provenance that generated Tomes can cite. See
 `docs/CORPUS_BUILDER.md`.
 
+Corpus source formats are intentionally narrow: `.txt`, `.md`, `.markdown`,
+`.py`, and `.jsonl` rows with `text`. Structured `.json` import is not
+supported yet.
+
 For runtime/backend preflight and artifact metadata sanity checks:
 
 ```bash

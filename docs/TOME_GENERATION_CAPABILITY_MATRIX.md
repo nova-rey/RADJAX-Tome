@@ -33,6 +33,11 @@ Spec 4.1 adds local corpus-builder/provenance utilities. Corpus artifacts can
 be hashed, validated, inspected, and linked into generated Tome metadata, but
 backend emission capability statuses are unchanged.
 
+Spec 4.1.1 clarifies corpus format support and manifest hash policy:
+structured `.json` import is not supported yet, and manifest hashes exclude
+both `manifest_hash` and `created_at`. Backend emission capabilities remain
+unchanged.
+
 ## Synthetic Vs Real Teacher Proof
 
 Dense, top-k/tail, cascaded, fingerprint, and exemplar proofs use

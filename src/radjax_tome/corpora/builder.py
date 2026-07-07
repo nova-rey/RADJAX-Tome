@@ -6,6 +6,7 @@ import json
 import shutil
 from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -21,8 +22,8 @@ NORMALIZATION_POLICY = "text_normalize_lf_strip_trailing_ws_v1"
 CHUNKING_POLICY = "char_window_v1"
 DEDUPLICATION_POLICY = "exact_normalized_text_sha256_v1"
 SOURCE_DISCOVERY_POLICY = "local_files_sorted_globs_v1"
-BUILDER_CREATED_AT = "1970-01-01T00:00:00+00:00"
-SUPPORTED_SUFFIXES = {".txt", ".md", ".markdown", ".py", ".json", ".jsonl"}
+MANIFEST_HASH_POLICY = "exclude_self_hash_and_created_at_v1"
+SUPPORTED_SUFFIXES = {".txt", ".md", ".markdown", ".py", ".jsonl"}
 DEFAULT_EXCLUDE_GLOBS = (
     "**/.git/**",
     "**/__pycache__/**",
@@ -126,6 +127,7 @@ def inspect_corpus_artifact(path: Path) -> dict[str, Any]:
         "num_chars": manifest["num_chars"],
         "corpus_hash": manifest["corpus_hash"],
         "manifest_hash": manifest["manifest_hash"],
+        "manifest_hash_policy": manifest["manifest_hash_policy"],
         "normalization_policy": manifest["normalization_policy"],
         "chunking_policy": manifest["chunking_policy"],
         "deduplication_policy": manifest["deduplication_policy"],
@@ -158,6 +160,8 @@ def validate_corpus_artifact(path: str | Path) -> CorpusValidationReport:
         _compute_manifest_hash(manifest) if isinstance(manifest, dict) else None
     )
     if manifest:
+        if manifest.get("manifest_hash_policy") != MANIFEST_HASH_POLICY:
+            blockers.append("corpus_manifest.json manifest_hash_policy is unsupported")
         if manifest.get("corpus_hash") != actual_corpus_hash:
             blockers.append(
                 "corpus_manifest.json corpus_hash does not match corpus.jsonl"
@@ -208,6 +212,8 @@ def read_corpus_manifest(path: str | Path) -> dict[str, Any]:
 def corpus_provenance_from_manifest(path: str | Path) -> dict[str, Any]:
     manifest_path = Path(path)
     manifest = read_corpus_manifest(manifest_path)
+    if manifest.get("manifest_hash_policy") != MANIFEST_HASH_POLICY:
+        raise ValueError("corpus manifest hash policy is unsupported")
     expected_hash = _compute_manifest_hash(manifest)
     if manifest.get("manifest_hash") != expected_hash:
         raise ValueError("corpus manifest hash does not validate")
@@ -538,11 +544,12 @@ def _build_manifest(
         "chunking_policy": CHUNKING_POLICY,
         "corpus_hash": corpus_hash,
         "corpus_jsonl_path": CORPUS_JSONL_FILENAME,
-        "created_at": BUILDER_CREATED_AT,
+        "created_at": _utc_created_at(),
         "deduplication_policy": DEDUPLICATION_POLICY,
         "exclude_globs": list(config.exclude_globs),
         "include_globs": list(config.include_globs),
         "manifest_hash": None,
+        "manifest_hash_policy": MANIFEST_HASH_POLICY,
         "normalization_policy": NORMALIZATION_POLICY,
         "num_chars": sum(int(row["char_count"]) for row in rows),
         "num_examples": len(rows),
@@ -580,11 +587,13 @@ def _build_report(
     status = "fail" if blockers else "warn" if warnings else "pass"
     return {
         "blockers": blockers,
+        "created_at": _utc_created_at(),
         "corpus_hash": corpus_hash,
         "corpus_jsonl_path": str(config.output_dir / CORPUS_JSONL_FILENAME),
         "corpus_manifest_path": str(config.output_dir / CORPUS_MANIFEST_FILENAME),
         "excluded_sources": excluded,
         "manifest_hash": manifest_hash,
+        "manifest_hash_policy": MANIFEST_HASH_POLICY,
         "num_chars": sum(int(row["char_count"]) for row in rows),
         "num_duplicates_removed": counters.get("duplicates_removed", 0),
         "num_empty_removed": counters.get("empty_removed", 0),
@@ -683,8 +692,16 @@ def _corpus_jsonl_bytes(rows: list[dict[str, Any]]) -> bytes:
 
 
 def _compute_manifest_hash(manifest: Mapping[str, Any]) -> str:
-    payload = {key: value for key, value in manifest.items() if key != "manifest_hash"}
+    payload = {
+        key: value
+        for key, value in manifest.items()
+        if key not in {"manifest_hash", "created_at"}
+    }
     return _sha256_bytes(_canonical_json_bytes(payload))
+
+
+def _utc_created_at() -> str:
+    return datetime.now(UTC).isoformat(timespec="microseconds")
 
 
 def _canonical_json_bytes(payload: Mapping[str, Any]) -> bytes:

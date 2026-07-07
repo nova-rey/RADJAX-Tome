@@ -579,6 +579,7 @@ def _cmd_corpus_inspect(args: argparse.Namespace) -> int:
         "num_chars",
         "corpus_hash",
         "manifest_hash",
+        "manifest_hash_policy",
         "normalization_policy",
         "chunking_policy",
         "deduplication_policy",
