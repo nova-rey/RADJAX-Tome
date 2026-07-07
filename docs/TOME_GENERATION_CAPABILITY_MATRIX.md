@@ -38,6 +38,11 @@ structured `.json` import is not supported yet, and manifest hashes exclude
 both `manifest_hash` and `created_at`. Backend emission capabilities remain
 unchanged.
 
+Spec 4.5 adds GPU run planning and bounded auto batch probing. Backend emission
+capabilities are unchanged: this does not add streaming/resume, one-command
+production build orchestration, multidevice scheduling, TPU/JAX support,
+reducer math changes, or selector behavior changes.
+
 Spec 4.2 adds teacher model provenance/setup utilities. Local model files can
 be inspected, hashed, validated, and linked into generated Tome metadata, but
 backend emission capability statuses are unchanged.

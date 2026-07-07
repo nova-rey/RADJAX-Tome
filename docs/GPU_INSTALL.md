@@ -100,7 +100,32 @@ radjax-tome model inspect \
 The model must already be local or cached. RADJAX-Tome does not silently
 download teacher models and does not perform network model verification.
 
-## 6. Tiny Local Smokes
+## 6. Plan The GPU Run
+
+Before a larger GPU build, write a run plan:
+
+```bash
+radjax-tome plan \
+  --teacher-backend gpu_torch \
+  --runtime-mode cpu_gpu \
+  --target-policy corridor_exemplar_v1 \
+  --teacher-model /models/MODEL \
+  --tokenizer-id /models/MODEL \
+  --dataset ./corpus_out/corpus.jsonl \
+  --corpus-manifest ./corpus_out/corpus_manifest.json \
+  --teacher-model-provenance teacher_model_provenance.json \
+  --gpu-batch-size-mode auto \
+  --gpu-batch-size-auto-min 1 \
+  --gpu-batch-size-auto-max 64 \
+  --output run_plan.json
+```
+
+The planner writes `gpu_run_plan_v1`, reuses doctor diagnostics, validates
+supplied provenance, performs only bounded tiny auto-batch probes, and marks
+memory/artifact estimates as rough. It does not download models or perform
+network verification.
+
+## 7. Tiny Local Smokes
 
 Build a tiny fake artifact to confirm the package and artifact validators:
 
@@ -141,7 +166,7 @@ radjax-tome parity \
   --output parity_report.json
 ```
 
-Spec 4.4 adds install and diagnostics UX only. It does not add real auto batch
-probing, GPU run planning, backend reducer changes, selector changes,
+Spec 4.5 adds GPU run planning and bounded auto batch probing. It does not add
+backend reducer changes, selector changes, production build orchestration,
 streaming/resume, model downloading, network verification, Docker requirements,
-or TPU/JAX work.
+multidevice scheduling, or TPU/JAX work.

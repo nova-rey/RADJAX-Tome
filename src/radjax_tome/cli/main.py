@@ -12,6 +12,7 @@ Recommended commands:
   build
   validate
   inspect
+  plan
   corpus
   pack
   unpack
@@ -205,6 +206,88 @@ def _build_parser() -> argparse.ArgumentParser:
     parity.add_argument("--left-label", default="left")
     parity.add_argument("--right-label", default="right")
     parity.set_defaults(func=_cmd_parity)
+
+    plan = subparsers.add_parser(
+        "plan",
+        help="Write a GPU run preflight plan.",
+        description=(
+            "Write gpu_run_plan_v1 JSON without running a production build. "
+            "Auto GPU batch mode performs bounded local probing."
+        ),
+    )
+    plan.add_argument("--teacher-backend", choices=("gpu_torch",), default="gpu_torch")
+    plan.add_argument("--runtime-mode", choices=("cpu_gpu",), default="cpu_gpu")
+    plan.add_argument(
+        "--target-policy",
+        choices=(
+            "dense",
+            "dense_logits",
+            "topk",
+            "topk_with_tail_v0",
+            "cascaded",
+            "cascaded_soft_labels_v1",
+            "dynamic",
+            "dynamic_cascaded_soft_labels_v1",
+            "corridor",
+            "corridor_exemplar_v1",
+        ),
+        default="corridor_exemplar_v1",
+    )
+    plan.add_argument("--teacher-model", required=True)
+    plan.add_argument("--tokenizer-id")
+    plan.add_argument("--dataset", type=Path, required=True)
+    plan.add_argument("--corpus-manifest", type=Path)
+    plan.add_argument("--teacher-model-provenance", type=Path)
+    plan.add_argument("--output", type=Path, required=True)
+    plan.add_argument("--max-examples", type=int)
+    plan.add_argument("--sequence-length", type=int, default=16)
+    plan.add_argument("--batch-size", type=int, default=2)
+    plan.add_argument("--vocab-size", type=int, default=32)
+    plan.add_argument("--top-k", type=int, default=8)
+    plan.add_argument("--num-buckets", type=int, default=4)
+    plan.add_argument(
+        "--exemplar-capture-mode",
+        choices=("one_pass_candidate", "two_pass_sparse_exemplar", "auto"),
+        default="one_pass_candidate",
+    )
+    plan.add_argument(
+        "--exemplar-source-policy",
+        choices=(
+            "dense_logits",
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        ),
+        default="dynamic_cascaded_soft_labels_v1",
+    )
+    plan.add_argument(
+        "--exemplar-second-pass-source-policy",
+        choices=(
+            "dense_logits",
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        ),
+        default="dynamic_cascaded_soft_labels_v1",
+    )
+    plan.add_argument(
+        "--gpu-batch-size-mode",
+        choices=("preset", "custom", "auto"),
+        default="preset",
+    )
+    plan.add_argument("--gpu-batch-size-preset", type=int, default=8)
+    plan.add_argument("--gpu-batch-size-custom", type=int)
+    plan.add_argument("--gpu-batch-size-auto-min", type=int, default=1)
+    plan.add_argument("--gpu-batch-size-auto-max", type=int, default=64)
+    plan.add_argument("--fallback-policy", choices=("error", "auto"), default="error")
+    plan.add_argument("--exemplar-selection-enabled", action="store_true")
+    plan.add_argument(
+        "--exemplar-fulfillment-policy",
+        choices=("auto", "select_from_existing_capture", "rerun_selected_capture"),
+        default="auto",
+    )
+    plan.add_argument("--strict-provenance", action="store_true")
+    plan.add_argument("--max-artifact-bytes", type=int)
+    plan.add_argument("--fail-on-warnings", action="store_true")
+    plan.set_defaults(func=_cmd_plan)
 
     prove = subparsers.add_parser(
         "prove-capabilities",
@@ -618,6 +701,58 @@ def _cmd_parity(args: argparse.Namespace) -> int:
     print(f"metadata_truth={report.summary['metadata_truth']}")
     print(f"numeric_parity={report.summary['numeric_parity']}")
     return 0 if report.status in {"pass", "warn"} else 1
+
+
+def _cmd_plan(args: argparse.Namespace) -> int:
+    from radjax_tome.backends import TeacherBackendConfig
+    from radjax_tome.reports import (
+        GPURunPlanConfig,
+        build_gpu_run_plan,
+        render_gpu_run_plan_summary,
+        write_gpu_run_plan,
+    )
+
+    teacher_model = str(args.teacher_model)
+    config = TeacherBackendConfig(
+        backend_id=args.teacher_backend,
+        runtime_mode=args.runtime_mode,
+        target_policy=_normalize_target_policy(args.target_policy),  # type: ignore[arg-type]
+        model_id=teacher_model,
+        tokenizer_id=args.tokenizer_id or teacher_model,
+        sequence_length=args.sequence_length,
+        batch_size=args.batch_size,
+        vocab_size=args.vocab_size,
+        top_k=args.top_k,
+        num_buckets=args.num_buckets,
+        exemplar_source_policy=args.exemplar_source_policy,
+        exemplar_capture_mode=args.exemplar_capture_mode,
+        exemplar_second_pass_source_policy=args.exemplar_second_pass_source_policy,
+        gpu_batch_size_mode=args.gpu_batch_size_mode,
+        gpu_batch_size_preset=args.gpu_batch_size_preset,
+        gpu_batch_size_custom=args.gpu_batch_size_custom,
+        gpu_batch_size_auto_min=args.gpu_batch_size_auto_min,
+        gpu_batch_size_auto_max=args.gpu_batch_size_auto_max,
+        fallback_policy=args.fallback_policy,
+        local_files_only=True,
+        allow_downloads=False,
+    )
+    plan_config = GPURunPlanConfig(
+        backend_config=config,
+        dataset_path=args.dataset,
+        corpus_manifest_path=args.corpus_manifest,
+        teacher_model_provenance_path=args.teacher_model_provenance,
+        max_examples=args.max_examples,
+        exemplar_selection_enabled=args.exemplar_selection_enabled,
+        exemplar_fulfillment_policy=args.exemplar_fulfillment_policy,
+        strict_provenance=args.strict_provenance,
+        max_artifact_bytes=args.max_artifact_bytes,
+        fail_on_warnings=args.fail_on_warnings,
+    )
+    plan = build_gpu_run_plan(plan_config)
+    write_gpu_run_plan(plan, args.output)
+    for line in render_gpu_run_plan_summary(plan, args.output):
+        print(line)
+    return 1 if plan["status"] == "fail" else 0
 
 
 def _cmd_prove_capabilities(args: argparse.Namespace) -> int:

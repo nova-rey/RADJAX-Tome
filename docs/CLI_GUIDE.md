@@ -130,6 +130,30 @@ hints, selector metadata sanity, and batch-size metadata sanity; they do not
 add reducer math, selector policy, real auto batch probing, production global
 selection, multidevice scheduling, or TPU/JAX support.
 
+Plan a GPU run before a large build:
+
+```bash
+radjax-tome plan \
+  --teacher-backend gpu_torch \
+  --runtime-mode cpu_gpu \
+  --target-policy corridor_exemplar_v1 \
+  --teacher-model /models/MODEL \
+  --tokenizer-id /models/MODEL \
+  --dataset ./corpus_out/corpus.jsonl \
+  --corpus-manifest ./corpus_out/corpus_manifest.json \
+  --teacher-model-provenance ./teacher_model_provenance.json \
+  --gpu-batch-size-mode auto \
+  --gpu-batch-size-auto-min 1 \
+  --gpu-batch-size-auto-max 64 \
+  --output run_plan.json
+```
+
+`plan` writes `gpu_run_plan_v1` without running a production build. In auto GPU
+batch mode it performs bounded tiny local probes, records the selected batch
+size, and marks memory/artifact estimates as rough. It does not download
+models, perform network verification, add streaming/resume, or add multidevice
+or TPU/JAX support. See `docs/GPU_RUN_PLANNER.md`.
+
 For GPU teacher setup on a fresh machine, install the GPU/HF optional extra and
 run doctor before building:
 

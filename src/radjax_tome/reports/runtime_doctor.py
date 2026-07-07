@@ -222,8 +222,8 @@ def remediation_hints_for_failure(
     if stage == "model_load":
         if config.local_files_only or not config.allow_downloads:
             return [
-                "Provide local model/tokenizer files or rerun with downloads "
-                "explicitly enabled. RADJAX-Tome did not download a model."
+                "Provide or cache the model locally; RADJAX-Tome did not "
+                "download a model."
             ]
         return ["Check model_id, tokenizer_id, and local Hugging Face cache access."]
     if stage == "unsupported_target":

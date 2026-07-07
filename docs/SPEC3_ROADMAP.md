@@ -270,3 +270,11 @@ fresh venv setup and CUDA wheel caveats, and `radjax-tome doctor` now reports
 GPU install diagnostics plus actionable remediation. It does not change
 backend capability statuses, reducer math, selector behavior, model download
 policy, GPU run planning, or TPU/JAX support.
+
+Spec 4.5 adds `radjax-tome plan` and `gpu_run_plan_v1` for GPU run preflight.
+The planner reuses doctor diagnostics, validates supplied corpus/model
+provenance, writes rough memory/artifact estimates, records capture-mode
+implications, and can perform bounded tiny auto-batch probes for `gpu_torch`.
+It does not run production builds, download models, perform network
+verification, add streaming/resume, add multidevice scheduling, or touch
+TPU/JAX.

@@ -492,3 +492,28 @@ This patch does not install NVIDIA drivers, does not silently download teacher
 models, does not perform network model verification, does not add real auto
 batch probing, does not add GPU run planning, does not change backend reducer
 math, does not change selector behavior, and does not touch JAX or TPU.
+
+## 2026-07-07 — Spec 4.5 Real GPU Run Planner and Auto Batch Probe
+
+Spec 4.5 adds `radjax-tome plan`, which writes `gpu_run_plan_v1` to
+`run_plan.json` before a large GPU Tome build. The plan includes doctor-derived
+environment diagnostics, dataset summary, corpus manifest validation when
+provided, teacher model provenance validation when provided, requested and
+resolved GPU batch policy, memory estimates, artifact estimates, capture-mode
+implications, recommended build command, and explicit non-claims.
+
+When `gpu_batch_size_mode=auto` is requested for `gpu_torch`, the planner runs
+bounded tiny local probes over exponential candidate batch sizes, using the
+same local model/tokenizer load path and target reducer path. It records
+per-candidate pass/fail details, observed memory fields when available, the
+largest passing batch size, the first failing batch size, and the selected
+effective batch size.
+
+The planner treats missing provenance as a warning by default and invalid
+supplied provenance as a blocker. Memory and artifact estimates are explicitly
+rough planning estimates, not contractual output sizes.
+
+This patch does not run a production build, does not download models, does not
+perform network verification, does not add streaming/resume, does not add
+multidevice scheduling, does not change backend reducer math, does not change
+selector behavior, and does not touch JAX or TPU.
