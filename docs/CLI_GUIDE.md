@@ -86,6 +86,22 @@ radjax-tome build \
 verified file hashes, inferred or declared friendly identity, and
 `network_used=false`. See `docs/TEACHER_MODEL_PROVENANCE.md`.
 
+Compare two generated Tome artifact directories after they exist:
+
+```bash
+radjax-tome parity \
+  --left ./artifact_cpu \
+  --right ./artifact_gpu \
+  --left-label cpu_reference \
+  --right-label gpu_torch \
+  --output ./parity_report.json
+```
+
+`parity` writes `tome_parity_report_v1` and checks sidecars, target-store
+metadata, shard arrays, finite values, numeric tolerances, selector manifests,
+corpus provenance, teacher model provenance, and metadata truth. See
+`docs/PARITY_HARNESS.md`.
+
 For runtime/backend preflight and artifact metadata sanity checks:
 
 ```bash

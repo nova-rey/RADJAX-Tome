@@ -180,6 +180,32 @@ def _build_parser() -> argparse.ArgumentParser:
     unpack.add_argument("--overwrite", action="store_true")
     unpack.set_defaults(func=_cmd_unpack)
 
+    parity = subparsers.add_parser(
+        "parity",
+        help="Compare two generated Tome artifact directories.",
+        description="Build a post-build parity report for two Tome artifacts.",
+    )
+    parity.add_argument("--left", type=Path, required=True)
+    parity.add_argument("--right", type=Path, required=True)
+    parity.add_argument("--output", type=Path, required=True)
+    parity.add_argument("--rtol", type=float, default=1e-4)
+    parity.add_argument("--atol", type=float, default=1e-5)
+    parity.add_argument("--max-examples", type=int)
+    parity.add_argument(
+        "--compare-values",
+        dest="compare_values",
+        action="store_true",
+        default=True,
+    )
+    parity.add_argument(
+        "--no-compare-values",
+        dest="compare_values",
+        action="store_false",
+    )
+    parity.add_argument("--left-label", default="left")
+    parity.add_argument("--right-label", default="right")
+    parity.set_defaults(func=_cmd_parity)
+
     prove = subparsers.add_parser(
         "prove-capabilities",
         help="Run advanced local capability diagnostics.",
@@ -561,6 +587,37 @@ def _cmd_unpack(args: argparse.Namespace) -> int:
     )
     print(f"status=pass output={output}")
     return 0
+
+
+def _cmd_parity(args: argparse.Namespace) -> int:
+    from radjax_tome.reports import (
+        TomeParityConfig,
+        compare_tome_artifacts,
+        write_tome_parity_report,
+    )
+
+    report = compare_tome_artifacts(
+        args.left,
+        args.right,
+        TomeParityConfig(
+            rtol=args.rtol,
+            atol=args.atol,
+            compare_values=args.compare_values,
+            max_examples=args.max_examples,
+        ),
+        left_label=args.left_label,
+        right_label=args.right_label,
+    )
+    write_tome_parity_report(report, args.output)
+    print(
+        f"status={report.status} blockers={len(report.blockers)} "
+        f"warnings={len(report.warnings)} output={args.output}"
+    )
+    print(f"schema_parity={report.summary['schema_parity']}")
+    print(f"array_parity={report.summary['array_parity']}")
+    print(f"metadata_truth={report.summary['metadata_truth']}")
+    print(f"numeric_parity={report.summary['numeric_parity']}")
+    return 0 if report.status in {"pass", "warn"} else 1
 
 
 def _cmd_prove_capabilities(args: argparse.Namespace) -> int:

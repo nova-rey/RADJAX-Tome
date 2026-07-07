@@ -255,3 +255,11 @@ path shape, supports user-declared identity, and lets Tome builds cite the
 validated sidecar. It does not download teacher models, perform network
 verification, change backend emission capability statuses, plan GPU runs, or
 touch TPU/JAX.
+
+Spec 4.3 adds a post-build parity / A-B deathmatch harness. `radjax-tome
+parity` compares two generated Tome artifact directories, writes
+`tome_parity_report_v1`, and checks required sidecars, target-store metadata,
+shard arrays, finite values, numeric tolerance metrics, selector manifests,
+corpus provenance, teacher model provenance, metadata truth, and forbidden
+claims. It does not change backend math, selector behavior, GPU planning,
+model acquisition, network verification, or TPU/JAX support.

@@ -445,3 +445,25 @@ the sidecar.
 This patch does not silently download teacher models, does not perform network
 verification, does not add GPU run planning, does not add parity/deathmatch
 harnesses, and does not touch JAX or TPU.
+
+## 2026-07-07 — Spec 4.3 Parity / A-B Deathmatch Harness
+
+Spec 4.3 adds a post-build Tome parity harness. `radjax-tome parity` compares
+two generated Tome artifact directories and writes `tome_parity_report_v1` to
+`parity_report.json`.
+
+The report checks required sidecars, target-store metadata, shard array fields,
+array shapes and dtypes, finite floating values, numeric tolerance metrics,
+selector manifest policy/truth fields, selected exemplar overlap, corpus
+provenance, teacher model provenance, metadata sanity, cover-page linkage, and
+forbidden truth claims.
+
+Parity does not require byte-identical artifacts or exact floating equality.
+Floating arrays record max/mean absolute difference, max relative difference,
+and within-tolerance fraction under declared `rtol`/`atol`. Shape, dtype,
+schema, sidecar, finite-value, provenance hash, and metadata-truth violations
+remain hard failures.
+
+This patch does not change backend reducer math, does not change selector
+behavior, does not download teacher models, does not perform network
+verification, does not add GPU run planning, and does not touch JAX or TPU.

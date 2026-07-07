@@ -42,6 +42,10 @@ Spec 4.2 adds teacher model provenance/setup utilities. Local model files can
 be inspected, hashed, validated, and linked into generated Tome metadata, but
 backend emission capability statuses are unchanged.
 
+Spec 4.3 adds post-build parity comparison reports. Two generated Tome
+artifacts can be compared for schema, metadata, array, selector, and
+provenance compatibility, but backend emission capabilities remain unchanged.
+
 ## Synthetic Vs Real Teacher Proof
 
 Dense, top-k/tail, cascaded, fingerprint, and exemplar proofs use

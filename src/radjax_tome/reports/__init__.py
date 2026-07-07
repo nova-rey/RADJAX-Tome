@@ -31,6 +31,14 @@ from radjax_tome.reports.metadata_sanity import (
     render_artifact_metadata_sanity_summary,
     write_artifact_metadata_sanity_report,
 )
+from radjax_tome.reports.parity import (
+    TOME_PARITY_REPORT_FILENAME,
+    TOME_PARITY_REPORT_SCHEMA,
+    TomeParityConfig,
+    TomeParityReport,
+    compare_tome_artifacts,
+    write_tome_parity_report,
+)
 from radjax_tome.reports.rendering import markdown_table, status_line
 from radjax_tome.reports.runtime_doctor import (
     RUNTIME_DOCTOR_REPORT_SCHEMA,
@@ -51,10 +59,15 @@ __all__ = [
     "QualityPerByteDelta",
     "REQUIRED_ARC2_FLAGS",
     "RUNTIME_DOCTOR_REPORT_SCHEMA",
+    "TOME_PARITY_REPORT_FILENAME",
+    "TOME_PARITY_REPORT_SCHEMA",
+    "TomeParityConfig",
+    "TomeParityReport",
     "build_artifact_metadata_sanity_report",
     "build_fingerprint_arc_report",
     "build_quality_per_byte_delta",
     "build_runtime_doctor_report",
+    "compare_tome_artifacts",
     "read_fingerprint_arc_report",
     "read_fingerprint_baseline_report",
     "read_fingerprint_quality_report",
@@ -72,4 +85,5 @@ __all__ = [
     "write_json_report",
     "write_markdown_report",
     "write_runtime_doctor_report",
+    "write_tome_parity_report",
 ]
