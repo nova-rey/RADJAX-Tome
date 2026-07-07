@@ -363,3 +363,22 @@ and score-aware budget trimming through `score_aware_assigned_board_rank_v1`.
 This adds no semantic embeddings, no utility-calibrated selector, no production
 global selector, and no TPU/JAX work. Backend reducer math and Path A / Path B
 capture semantics stay unchanged.
+
+## 2026-07-07 — Spec 3.3F11 GPU Runtime Final Polish / Doctor Metadata
+
+Spec 3.3F11 adds GPU Runtime Final Polish around the existing backend
+contract. `radjax-tome doctor` now produces a runtime doctor preflight report
+with backend availability summary, dependency/accelerator status,
+`can_emit`, failure stage/reason, fallback fields, and remediation hints.
+
+Artifacts can now be inspected with an artifact metadata sanity report. The
+report summarizes backend/effective-backend routing, compact GPU metadata,
+exemplar capture state, selector metadata sanity, and batch-size metadata sanity.
+It flags contradictory claims such as a score pass pretending to be
+final production corridor output, a gpu_torch request with no explained
+fallback, future selector claims, or multidevice metadata without
+`single_device`.
+
+This is a report/doctor polish step only: no new reducer math, no new selector policy,
+no real auto batch probing, no production global selector, no multidevice, and
+no TPU/JAX.

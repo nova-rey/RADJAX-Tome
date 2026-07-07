@@ -358,6 +358,30 @@ example IDs. This remains the same selector architecture and makes no semantic
 embedding, utility-calibrated, production global selector, TPU/JAX, or backend
 capability claim.
 
+## Runtime Doctor And Metadata Sanity
+
+Spec 3.3F11 adds operational polish around the existing runtime/backend
+surface. `radjax-tome doctor` now emits a backend availability summary and a
+JSON-serializable `runtime_doctor_report_v1` preflight report. It records the
+requested backend/runtime/target policy, model/tokenizer IDs, local-files and
+download flags, fallback policy, capability status, optional dependency
+availability, accelerator availability, `can_emit`, failure stage/reason, and
+remediation hints.
+
+`radjax-tome inspect --metadata-sanity` and
+`radjax-tome validate --metadata-sanity --write-report` now expose
+`artifact_metadata_sanity_report_v1`. The report normalizes stringified
+artifact metadata for reporting only, summarizes backend/effective-backend
+routing, compact GPU metadata, exemplar capture metadata, selector metadata,
+and batch-size metadata, then flags contradictory claims such as score-pass
+artifacts that claim final corridor schema, `gpu_torch` requested/effective
+mismatches without explicit fallback metadata, false future-selector claims,
+or multidevice metadata that is not `single_device`.
+
+F11 changes report and CLI diagnostics only. It adds no new reducer math, no
+new selector policy, no real auto batch probing, no production global selector,
+no multidevice scheduler, and no TPU/JAX backend.
+
 ## Runtime Modes
 
 `cpu` means CPU-side orchestration plus CPU teacher execution and reduction. It
@@ -439,6 +463,9 @@ Path B use the same selector; only fulfillment differs.
 Spec 3.3F10.1.1 makes that selector rank-aware: duplicate candidates are
 assigned to their strongest board, weaker boards backfill from runner-up pools,
 and budget trimming is score-aware rather than alphabetical.
+Spec 3.3F11 adds runtime doctor/preflight reports and artifact metadata sanity
+reports. Backend emission semantics, selector behavior, capability statuses,
+auto-batch behavior, multidevice support, and TPU/JAX remain unchanged.
 
 ## Support Statuses
 

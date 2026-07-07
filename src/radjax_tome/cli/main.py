@@ -142,6 +142,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     validate.add_argument("--path", type=Path, required=True)
     validate.add_argument("--write-report", action="store_true")
+    validate.add_argument("--metadata-sanity", action="store_true")
     validate.set_defaults(func=_cmd_validate)
 
     inspect = subparsers.add_parser(
@@ -150,6 +151,7 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Print a concise summary for a TeacherTextbook artifact.",
     )
     inspect.add_argument("--path", type=Path, required=True)
+    inspect.add_argument("--metadata-sanity", action="store_true")
     inspect.set_defaults(func=_cmd_inspect)
 
     pack = subparsers.add_parser(
@@ -194,6 +196,55 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Show environment and command recommendations.",
         description="Show lightweight environment status without importing HF deps.",
     )
+    doctor.add_argument(
+        "--teacher-backend",
+        choices=("fake_numpy", "cpu_reference", "hf_torch", "gpu_torch"),
+        default="cpu_reference",
+    )
+    doctor.add_argument("--runtime-mode", choices=("cpu", "cpu_gpu"), default="cpu")
+    doctor.add_argument(
+        "--target-policy",
+        choices=(
+            "dense",
+            "dense_logits",
+            "topk",
+            "topk_with_tail_v0",
+            "cascaded",
+            "cascaded_soft_labels_v1",
+            "dynamic",
+            "dynamic_cascaded_soft_labels_v1",
+            "corridor",
+            "corridor_exemplar_v1",
+        ),
+        default="dense_logits",
+    )
+    doctor.add_argument("--teacher-model", default="fake-deterministic-teacher")
+    doctor.add_argument("--tokenizer-id", default="fake-deterministic-tokenizer")
+    doctor.add_argument("--sequence-length", type=int, default=16)
+    doctor.add_argument("--batch-size", type=int, default=2)
+    doctor.add_argument("--vocab-size", type=int, default=32)
+    doctor.add_argument("--top-k", type=int, default=8)
+    doctor.add_argument(
+        "--exemplar-capture-mode",
+        choices=("one_pass_candidate", "two_pass_sparse_exemplar", "auto"),
+        default="one_pass_candidate",
+    )
+    doctor.add_argument(
+        "--gpu-batch-size-mode",
+        choices=("preset", "custom", "auto"),
+        default="preset",
+    )
+    doctor.add_argument("--gpu-batch-size-preset", type=int, default=8)
+    doctor.add_argument("--gpu-batch-size-custom", type=int)
+    doctor.add_argument("--allow-downloads", action="store_true")
+    doctor.add_argument("--fallback-policy", choices=("error", "auto"), default="error")
+    doctor.add_argument("--exemplar-selection-enabled", action="store_true")
+    doctor.add_argument(
+        "--exemplar-fulfillment-policy",
+        choices=("auto", "select_from_existing_capture", "rerun_selected_capture"),
+        default="auto",
+    )
+    doctor.add_argument("--write-report", type=Path)
     doctor.set_defaults(func=_cmd_doctor)
 
     return parser
@@ -327,6 +378,7 @@ def _cmd_validate(args: argparse.Namespace) -> int:
         )
         return 0 if report.status == "pass" else 1
 
+    metadata_sanity_status = "pass"
     report = validate_teacher_textbook(args.path)
     if args.write_report:
         write_teacher_textbook_validation_report(
@@ -347,9 +399,21 @@ def _cmd_validate(args: argparse.Namespace) -> int:
             f"cover_page_status={cover_report.status} "
             f"cover_page_blockers={len(cover_report.blockers)}"
         )
+    if args.metadata_sanity:
+        metadata_sanity_report = _artifact_metadata_sanity_report(args.path)
+        metadata_sanity_status = str(metadata_sanity_report["status"])
+        for line in _artifact_metadata_sanity_summary(metadata_sanity_report):
+            print(line)
+        if args.write_report:
+            _write_artifact_metadata_sanity_report(
+                metadata_sanity_report,
+                args.path / "metadata_sanity_report.json",
+            )
     if report.status != "pass":
         return 1
     if cover_report is not None and cover_report.status != "pass":
+        return 1
+    if metadata_sanity_status == "fail":
         return 1
     return 0
 
@@ -373,6 +437,8 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
         print(f"shard_count={summary['shard_count']}")
         print(f"content_count={summary['content_count']}")
         print(f"compression={summary['compression']}")
+        if args.metadata_sanity:
+            print("metadata_sanity=unsupported_for_bundle")
         return 0
 
     summary = inspect_target_store(args.path)
@@ -392,7 +458,12 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
     print(f"sequence_length={summary['sequence_length']}")
     print(f"num_examples={summary['num_examples']}")
     print(f"shard_count={summary['shard_count']}")
-    return 0
+    if not args.metadata_sanity:
+        return 0
+    metadata_sanity_report = _artifact_metadata_sanity_report(args.path)
+    for line in _artifact_metadata_sanity_summary(metadata_sanity_report):
+        print(line)
+    return 1 if metadata_sanity_report["status"] == "fail" else 0
 
 
 def _cmd_pack(args: argparse.Namespace) -> int:
@@ -435,7 +506,6 @@ def _cmd_prove_capabilities(args: argparse.Namespace) -> int:
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:
-    del args
     print(f"python={platform.python_version()}")
     try:
         import radjax_tome
@@ -449,7 +519,63 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     print("recommended=radjax-tome build --teacher-mode fake")
     print("recommended=radjax-tome validate --path ARTIFACT")
     print("recommended=radjax-tome inspect --path ARTIFACT")
+
+    from radjax_tome.backends import TeacherBackendConfig
+    from radjax_tome.reports import (
+        build_runtime_doctor_report,
+        render_runtime_doctor_summary,
+        write_runtime_doctor_report,
+    )
+
+    config = TeacherBackendConfig(
+        backend_id=args.teacher_backend,
+        runtime_mode=args.runtime_mode,
+        target_policy=_normalize_target_policy(args.target_policy),  # type: ignore[arg-type]
+        model_id=args.teacher_model,
+        tokenizer_id=args.tokenizer_id,
+        sequence_length=args.sequence_length,
+        batch_size=args.batch_size,
+        vocab_size=args.vocab_size,
+        top_k=args.top_k,
+        exemplar_capture_mode=args.exemplar_capture_mode,
+        gpu_batch_size_mode=args.gpu_batch_size_mode,
+        gpu_batch_size_preset=args.gpu_batch_size_preset,
+        gpu_batch_size_custom=args.gpu_batch_size_custom,
+        fallback_policy=args.fallback_policy,
+        local_files_only=not args.allow_downloads,
+        allow_downloads=args.allow_downloads,
+    )
+    report = build_runtime_doctor_report(
+        config,
+        exemplar_selection_enabled=args.exemplar_selection_enabled,
+        exemplar_fulfillment_policy=args.exemplar_fulfillment_policy,
+    )
+    for line in render_runtime_doctor_summary(report):
+        print(line)
+    if args.write_report is not None:
+        write_runtime_doctor_report(report, args.write_report)
     return 0
+
+
+def _artifact_metadata_sanity_report(path: Path) -> dict[str, object]:
+    from radjax_tome.reports import build_artifact_metadata_sanity_report
+
+    return build_artifact_metadata_sanity_report(path)
+
+
+def _artifact_metadata_sanity_summary(report: dict[str, object]) -> list[str]:
+    from radjax_tome.reports import render_artifact_metadata_sanity_summary
+
+    return render_artifact_metadata_sanity_summary(report)
+
+
+def _write_artifact_metadata_sanity_report(
+    report: dict[str, object],
+    path: Path,
+) -> None:
+    from radjax_tome.reports import write_artifact_metadata_sanity_report
+
+    write_artifact_metadata_sanity_report(report, path)
 
 
 if __name__ == "__main__":

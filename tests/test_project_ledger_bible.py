@@ -89,3 +89,18 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3F10.1.1" in text
     assert "rank_aware_board_assignment_with_backfill_v1" in text
     assert "runner-up backfill" in text
+    assert "3.3F11" in text
+    assert "GPU Runtime Final Polish" in text
+    assert "runtime doctor" in text
+    assert "preflight report" in text
+    assert "artifact metadata sanity report" in text
+    assert "remediation hints" in text
+    assert "backend availability summary" in text
+    assert "selector metadata sanity" in text
+    assert "batch-size metadata sanity" in text
+    assert "no new reducer math" in text
+    assert "no new selector policy" in text
+    assert "no real auto batch probing" in text
+    assert "no production global selector" in text
+    assert "no multidevice" in text
+    assert "no TPU/JAX" in text

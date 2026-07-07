@@ -35,6 +35,34 @@ Use `pack` and `unpack` for deterministic `.rtome` bundle v1 archives. Bundle
 validation and inspection work through the same `validate --path` and
 `inspect --path` commands. See `docs/TOME_BUNDLE.md`.
 
+For runtime/backend preflight and artifact metadata sanity checks:
+
+```bash
+radjax-tome doctor
+
+radjax-tome doctor \
+  --teacher-backend gpu_torch \
+  --runtime-mode cpu_gpu \
+  --target-policy corridor_exemplar_v1
+
+radjax-tome inspect \
+  --path artifacts/backend_tome \
+  --metadata-sanity
+
+radjax-tome validate \
+  --path artifacts/backend_tome \
+  --metadata-sanity \
+  --write-report
+```
+
+`doctor` writes a `runtime_doctor_report_v1` preflight summary when
+`--write-report PATH` is provided. Metadata sanity writes
+`metadata_sanity_report.json` during `validate --metadata-sanity
+--write-report`. These commands report backend availability, remediation
+hints, selector metadata sanity, and batch-size metadata sanity; they do not
+add reducer math, selector policy, real auto batch probing, production global
+selection, multidevice scheduling, or TPU/JAX support.
+
 For advanced diagnostics:
 
 ```bash

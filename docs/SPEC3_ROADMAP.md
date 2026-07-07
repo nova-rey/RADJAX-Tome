@@ -99,7 +99,7 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | 3.3F10 | GPU Builder Integration Gate | complete once backend-routed builder artifacts land |
 | 3.3F10.1 | Multi-Leaderboard Exemplar Selection Harness | complete once shared selector manifests land |
 | 3.3F10.1.1 | Rank-Aware Leaderboard Deduplication Backfill | complete once rank-aware dedupe and backfill land |
-| 3.3F11 | GPU Runtime Final Polish / Doctor Metadata | planned |
+| 3.3F11 | GPU Runtime Final Polish / Doctor Metadata | complete once runtime doctor and artifact metadata sanity reports land |
 
 Spec 3.3F1 adds `gpu_torch` as a CUDA/MPS-detecting dense debug backend. It
 does not implement compact GPU reduction or public builder migration.
@@ -207,6 +207,17 @@ on the board where it has the strongest rank, removed from weaker boards, and
 those boards backfill from runner-up pools when possible. Budgets are applied
 after assignment using score-aware rank/score ordering instead of alphabetical
 example ID ordering.
+
+Spec 3.3F11 adds runtime final polish and doctor metadata without changing
+backend math. `radjax-tome doctor` emits a `runtime_doctor_report_v1`
+preflight report with dependency, accelerator, capability, fallback, failure,
+and remediation fields. `inspect --metadata-sanity` and
+`validate --metadata-sanity --write-report` emit
+`artifact_metadata_sanity_report_v1` summaries for backend routing, compact
+GPU metadata, exemplar capture, selector metadata, and batch-size metadata.
+F11 adds no new reducer math, no new selector policy, no real auto batch
+probing, no production global selector, no multidevice scheduler, and no
+TPU/JAX.
 
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1

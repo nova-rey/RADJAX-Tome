@@ -23,6 +23,12 @@ dense_teacher_targets, topk_tail_targets, cascaded_bucket_targets, fingerprint_a
 
 hf_local_teacher_export
 
+Spec 3.3F11 adds runtime doctor/preflight reporting and artifact metadata
+sanity reporting around existing backend-routed artifacts. It does not change
+generation capability statuses, backend emission semantics, reducer math,
+selector policy, real auto batch probing, production global selection,
+multidevice scheduling, or TPU/JAX support.
+
 ## Synthetic Vs Real Teacher Proof
 
 Dense, top-k/tail, cascaded, fingerprint, and exemplar proofs use
