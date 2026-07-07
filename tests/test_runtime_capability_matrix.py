@@ -83,6 +83,12 @@ def test_runtime_backend_doc_defines_architecture_vocabulary() -> None:
     assert "metadata in the target-store" in text
     assert "does not secretly split oversized batches" in text
     assert "does not add real auto batch probing" in text
+    assert "Spec 3.3F10.1 adds the shared" in text
+    assert "multi_leaderboard_exemplar_selector_v1" in text
+    assert "exemplar_selection_manifest.json" in text
+    assert "select_from_existing_capture" in text
+    assert "rerun_selected_capture" in text
+    assert "utility-calibrated selector" in text
 
 
 def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
@@ -249,6 +255,8 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     assert "batch-size policy" in corridor["notes"]
     assert "Spec 3.3F10" in corridor["notes"]
     assert "preserves metadata" in corridor["notes"]
+    assert "Spec 3.3F10.1" in corridor["notes"]
+    assert "builder-level exemplar selection" in corridor["notes"]
     assert "public builder has not migrated" in dense["notes"]
 
     assert not any(
@@ -438,6 +446,8 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "batch-size policy" in corridor["notes"]
     assert "Spec 3.3F10" in corridor["notes"]
     assert "no silent CPU fallback" in corridor["notes"]
+    assert "Spec 3.3F10.1" in corridor["notes"]
+    assert "exemplar selection manifests" in corridor["notes"]
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals

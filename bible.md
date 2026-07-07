@@ -329,3 +329,21 @@ artifact metadata and cover page.
 This is not a production global two-pass selector, no real auto batch probing,
 no builder hydra, and no TPU/JAX. It is a builder integration gate for
 backend-routed artifacts, not a new reducer or production readiness claim.
+
+## 2026-07-07 — Spec 3.3F10.1 Multi-Leaderboard Exemplar Selection Harness
+
+Spec 3.3F10.1 adds `multi_leaderboard_exemplar_selector_v1`, a
+capture-mode-agnostic selector shared by `one_pass_candidate` and
+`two_pass_sparse_exemplar`. Both paths produce common candidate records, feed
+bounded leaderboards, and deduplicate winners into
+`exemplar_selection_manifest.json` while preserving winning boards and
+selection reasons.
+
+Only fulfillment differs. Path A uses `select_from_existing_capture` for
+debug/small-run inspection and can retain the full rich candidate artifact.
+Path B uses `rerun_selected_capture` as a production-shaped rerun requisition
+for selected examples.
+
+This adds no semantic embeddings, no utility-calibrated selector, and no
+TPU/JAX work. It also does not change reducer math or backend capability
+statuses.

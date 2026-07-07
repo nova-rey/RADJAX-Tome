@@ -97,6 +97,7 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | 3.3F8 | Corridor/Exemplar Production Schema Lock | complete once the production corridor schema lands |
 | 3.3F9 | GPU Corridor/Exemplar Acceleration | complete once gpu_torch emits the F8 production schema |
 | 3.3F10 | GPU Builder Integration Gate | complete once backend-routed builder artifacts land |
+| 3.3F10.1 | Multi-Leaderboard Exemplar Selection Harness | complete once shared selector manifests land |
 | 3.3F11 | GPU Runtime Final Polish / Doctor Metadata | planned |
 
 Spec 3.3F1 adds `gpu_torch` as a CUDA/MPS-detecting dense debug backend. It
@@ -189,12 +190,23 @@ metadata and cover pages. It preserves no silent CPU fallback and does not add
 a production global two-pass selector, real auto batch probing, builder hydra
 behavior, or TPU/JAX support.
 
+Spec 3.3F10.1 adds `multi_leaderboard_exemplar_selector_v1`, a
+capture-mode-agnostic selector shared by `one_pass_candidate` and
+`two_pass_sparse_exemplar`. Candidates compete for bounded leaderboards, then
+the union of winners is deduplicated into `exemplar_selection_manifest.json`.
+Path A fulfills with `select_from_existing_capture` for debug/small-run
+inspection. Path B fulfills with `rerun_selected_capture` as a
+production-shaped rerun requisition for selected examples. This does not add
+semantic embeddings, a utility-calibrated selector, TPU/JAX, or backend
+capability status changes.
+
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1
 dynamic reducer vectorization rehearsal, F8 corridor/exemplar production
 schema lock, F9 GPU corridor/exemplar acceleration, F10 GPU builder integration
-gate, F11 runtime final polish and doctor metadata, then 3.3G TPU/JAX backend
-skeleton.
+gate, F10.1 multi-leaderboard exemplar selection, F11 runtime final polish and
+doctor metadata, F12 optional parity/deathmatch harness, then 3.3G TPU/JAX
+backend skeleton.
 
 3.3G adds TPU/JAX shape without CUDA assumptions.
 

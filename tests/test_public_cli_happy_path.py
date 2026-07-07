@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from tests.helpers.subprocess import run_cli, run_repo_python, run_script
@@ -96,6 +97,38 @@ def test_public_cli_backend_contract_build_smoke(tmp_path: Path) -> None:
     inspect = run_cli(ROOT, "inspect", "--path", str(output))
     assert inspect.returncode == 0, inspect.stderr
     assert "target_type=dynamic_cascaded_soft_labels_v1" in inspect.stdout
+
+
+def test_public_cli_backend_selection_manifest_smoke(tmp_path: Path) -> None:
+    output = tmp_path / "selected_backend_tome"
+
+    build = run_cli(
+        ROOT,
+        "build",
+        "--output",
+        str(output),
+        "--teacher-backend",
+        "cpu_reference",
+        "--runtime-mode",
+        "cpu",
+        "--target-policy",
+        "corridor",
+        "--exemplar-selection-enabled",
+        "--exemplar-selection-board-capacity",
+        "2",
+        "--max-examples",
+        "2",
+        "--sequence-length",
+        "8",
+        "--overwrite",
+    )
+
+    assert build.returncode == 0, build.stderr
+    manifest = json.loads(
+        (output / "exemplar_selection_manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["selection_policy"] == "multi_leaderboard_exemplar_selector_v1"
+    assert manifest["fulfillment_policy"] == "select_from_existing_capture"
 
 
 def test_public_cli_prove_capabilities_smoke(tmp_path: Path) -> None:

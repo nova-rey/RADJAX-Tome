@@ -114,6 +114,24 @@ def _build_parser() -> argparse.ArgumentParser:
     build.add_argument("--gpu-batch-size-auto-min", type=int, default=1)
     build.add_argument("--gpu-batch-size-auto-max", type=int, default=64)
     build.add_argument("--fallback-policy", choices=("error", "auto"), default="error")
+    build.add_argument("--exemplar-selection-enabled", action="store_true")
+    build.add_argument(
+        "--exemplar-selector-policy",
+        choices=("multi_leaderboard_exemplar_selector_v1",),
+        default="multi_leaderboard_exemplar_selector_v1",
+    )
+    build.add_argument("--exemplar-selection-board-capacity", type=int, default=16)
+    build.add_argument("--exemplar-selection-budget-examples", type=int)
+    build.add_argument("--exemplar-selection-budget-fraction", type=float)
+    build.add_argument(
+        "--exemplar-fulfillment-policy",
+        choices=(
+            "auto",
+            "select_from_existing_capture",
+            "rerun_selected_capture",
+        ),
+        default="auto",
+    )
     build.add_argument("--overwrite", action="store_true")
     build.set_defaults(func=_cmd_build)
 
@@ -214,6 +232,12 @@ def _cmd_build(args: argparse.Namespace) -> int:
             gpu_batch_size_auto_min=args.gpu_batch_size_auto_min,
             gpu_batch_size_auto_max=args.gpu_batch_size_auto_max,
             fallback_policy=args.fallback_policy,
+            exemplar_selector_policy=args.exemplar_selector_policy,
+            exemplar_selection_enabled=args.exemplar_selection_enabled,
+            exemplar_selection_board_capacity=args.exemplar_selection_board_capacity,
+            exemplar_selection_budget_examples=args.exemplar_selection_budget_examples,
+            exemplar_selection_budget_fraction=args.exemplar_selection_budget_fraction,
+            exemplar_fulfillment_policy=args.exemplar_fulfillment_policy,
             local_files_only=True,
             allow_downloads=False,
         )

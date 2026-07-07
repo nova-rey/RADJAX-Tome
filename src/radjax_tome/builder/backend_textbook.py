@@ -14,6 +14,14 @@ from radjax_tome.backends import (
     TeacherBatchInput,
     create_backend,
 )
+from radjax_tome.builder.exemplar_selection import (
+    EXEMPLAR_SELECTION_MANIFEST_FILENAME,
+    MULTI_LEADERBOARD_SELECTOR_POLICY,
+    PATH_A_FULFILLMENT_POLICY,
+    PATH_B_FULFILLMENT_POLICY,
+    build_exemplar_selection_manifest,
+    write_exemplar_selection_manifest,
+)
 from radjax_tome.builder.teacher_textbook import (
     DEFAULT_FAKE_TEACHER_MODEL_ID,
     DEFAULT_FAKE_TOKENIZER_ID,
@@ -58,6 +66,12 @@ class BackendTeacherTextbookBuildConfig:
     gpu_batch_size_auto_min: int = 1
     gpu_batch_size_auto_max: int = 64
     fallback_policy: str = "error"
+    exemplar_selector_policy: str = MULTI_LEADERBOARD_SELECTOR_POLICY
+    exemplar_selection_enabled: bool = False
+    exemplar_selection_board_capacity: int = 16
+    exemplar_selection_budget_examples: int | None = None
+    exemplar_selection_budget_fraction: float | None = None
+    exemplar_fulfillment_policy: str = "auto"
     local_files_only: bool = True
     allow_downloads: bool = False
     overwrite: bool = False
@@ -149,11 +163,37 @@ def build_backend_teacher_textbook(
     finally:
         backend.close()
 
+    selection_manifest: dict[str, object] | None = None
+    if config.exemplar_selection_enabled:
+        capture_mode = _effective_capture_mode(config, first_metadata or {})
+        fulfillment_policy = _effective_fulfillment_policy(config, capture_mode)
+        selection_manifest = build_exemplar_selection_manifest(
+            store,
+            examples=examples,
+            batch_size=config.batch_size,
+            capture_mode=capture_mode,
+            fulfillment_policy=fulfillment_policy,
+            board_capacity=config.exemplar_selection_board_capacity,
+            budget_examples=config.exemplar_selection_budget_examples,
+            budget_fraction=config.exemplar_selection_budget_fraction,
+            created_at=created_at,
+        )
+        manifest_path = write_exemplar_selection_manifest(
+            config.output_dir,
+            selection_manifest,
+        )
+        _rewrite_metadata_with_selection_params(
+            store,
+            selection_manifest=selection_manifest,
+            manifest_path=manifest_path,
+        )
+
     _write_backend_sidecars(
         config,
         examples,
         created_at,
         backend_metadata=first_metadata or {},
+        selection_manifest=selection_manifest,
         target_type=target_type,
         shard_count=shard_count,
     )
@@ -204,6 +244,29 @@ def _validate_backend_build_config(config: BackendTeacherTextbookBuildConfig) ->
         raise ValueError("gpu_torch builder routing requires runtime_mode='cpu_gpu'")
     if config.teacher_backend != "gpu_torch" and config.runtime_mode == "cpu_gpu":
         raise ValueError("runtime_mode='cpu_gpu' requires teacher_backend='gpu_torch'")
+    if (
+        config.exemplar_selector_policy != MULTI_LEADERBOARD_SELECTOR_POLICY
+        and config.exemplar_selection_enabled
+    ):
+        raise ValueError(
+            "only multi_leaderboard_exemplar_selector_v1 is supported for "
+            "exemplar selection"
+        )
+    if (
+        config.exemplar_selection_enabled
+        and config.target_policy != "corridor_exemplar_v1"
+    ):
+        raise ValueError(
+            "exemplar selection requires target_policy='corridor_exemplar_v1'"
+        )
+    if config.exemplar_selection_board_capacity < 1:
+        raise ValueError("exemplar_selection_board_capacity must be positive")
+    if config.exemplar_fulfillment_policy not in {
+        "auto",
+        PATH_A_FULFILLMENT_POLICY,
+        PATH_B_FULFILLMENT_POLICY,
+    }:
+        raise ValueError("unsupported exemplar fulfillment policy")
 
 
 def _arrays_for_store(
@@ -256,6 +319,29 @@ def _rewrite_metadata_with_backend_params(
     object.__setattr__(store, "metadata", metadata)
 
 
+def _rewrite_metadata_with_selection_params(
+    store: TeacherTargetStore,
+    *,
+    selection_manifest: dict[str, object],
+    manifest_path: Path,
+) -> None:
+    metadata = TargetStoreMetadata(
+        **{
+            **asdict(store.metadata),
+            "target_params": {
+                **store.metadata.target_params,
+                **_selection_target_params(selection_manifest, manifest_path),
+            },
+        }
+    )
+    metadata_file = store.root / "metadata.json"
+    metadata_file.write_text(
+        json.dumps(asdict(metadata), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    object.__setattr__(store, "metadata", metadata)
+
+
 def _target_params(
     config: BackendTeacherTextbookBuildConfig,
     backend_metadata: dict[str, object],
@@ -272,6 +358,47 @@ def _target_params(
     }
     for key, value in backend_metadata.items():
         params[_target_param_key(key)] = _stringify_metadata_value(value)
+    return params
+
+
+def _selection_target_params(
+    manifest: dict[str, object],
+    manifest_path: Path,
+) -> dict[str, str]:
+    params = {
+        "exemplar_selector_policy": str(manifest["selection_policy"]),
+        "exemplar_selection_enabled": "true",
+        "exemplar_selection_manifest_path": manifest_path.name,
+        "exemplar_selection_manifest_schema": str(manifest["schema_version"]),
+        "exemplar_fulfillment_policy": str(manifest["fulfillment_policy"]),
+        "selection_application": str(manifest["selection_application"]),
+        "num_candidates_seen": _stringify_metadata_value(
+            manifest["num_candidates_seen"]
+        ),
+        "num_unique_examples_selected": _stringify_metadata_value(
+            manifest["num_unique_examples_selected"]
+        ),
+        "num_unique_positions_selected": _stringify_metadata_value(
+            manifest["num_unique_positions_selected"]
+        ),
+        "production_global_selector": _stringify_metadata_value(
+            manifest["production_global_selector"]
+        ),
+        "semantic_diversity_used": _stringify_metadata_value(
+            manifest["semantic_diversity_used"]
+        ),
+        "utility_calibrated": _stringify_metadata_value(manifest["utility_calibrated"]),
+        "retention_policy": str(manifest["retention_policy"]),
+    }
+    if manifest["fulfillment_policy"] == PATH_B_FULFILLMENT_POLICY:
+        params.update(
+            {
+                "rerun_manifest_ready": "true",
+                "selected_pass_rerun_performed": "false",
+            }
+        )
+    if manifest["fulfillment_policy"] == PATH_A_FULFILLMENT_POLICY:
+        params["selected_from_existing_capture"] = "true"
     return params
 
 
@@ -295,6 +422,7 @@ def _write_backend_sidecars(
     created_at: str,
     *,
     backend_metadata: dict[str, object],
+    selection_manifest: dict[str, object] | None,
     target_type: str,
     shard_count: int,
 ) -> None:
@@ -356,9 +484,43 @@ def _write_backend_sidecars(
             "runtime_mode": config.runtime_mode,
             "target_policy": config.target_policy,
             "backend_metadata": backend_metadata,
+            "exemplar_selection_enabled": config.exemplar_selection_enabled,
+            "exemplar_selector_policy": config.exemplar_selector_policy,
+            "exemplar_selection_manifest": (
+                EXEMPLAR_SELECTION_MANIFEST_FILENAME
+                if selection_manifest is not None
+                else None
+            ),
         },
     )
 
 
 def _dataset_source(path: Path | None) -> str:
     return "builtin_examples" if path is None else str(path)
+
+
+def _effective_capture_mode(
+    config: BackendTeacherTextbookBuildConfig,
+    backend_metadata: dict[str, object],
+) -> str:
+    value = backend_metadata.get("exemplar_capture_mode_effective")
+    if isinstance(value, str):
+        return value
+    if config.exemplar_capture_mode == "auto":
+        return "two_pass_sparse_exemplar"
+    return config.exemplar_capture_mode
+
+
+def _effective_fulfillment_policy(
+    config: BackendTeacherTextbookBuildConfig,
+    capture_mode: str,
+) -> str:
+    if config.exemplar_fulfillment_policy != "auto":
+        return config.exemplar_fulfillment_policy
+    if capture_mode == "two_pass_sparse_exemplar":
+        return PATH_B_FULFILLMENT_POLICY
+    if capture_mode == "one_pass_candidate":
+        return PATH_A_FULFILLMENT_POLICY
+    if capture_mode == "auto":
+        return PATH_B_FULFILLMENT_POLICY
+    raise ValueError(f"unsupported exemplar capture mode: {capture_mode}")

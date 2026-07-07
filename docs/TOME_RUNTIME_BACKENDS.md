@@ -323,6 +323,31 @@ signal; the builder records the request but does not perform a hidden backend
 swap. F10 also does not add real auto batch probing, builder hydra behavior,
 multidevice scheduling, TPU/JAX support, or production-readiness claims.
 
+## Multi-Leaderboard Exemplar Selection
+
+Spec 3.3F10.1 adds the shared
+`multi_leaderboard_exemplar_selector_v1` harness above corridor/exemplar
+emission. It is capture-mode-agnostic: `one_pass_candidate` and
+`two_pass_sparse_exemplar` produce common candidate records, then candidates
+compete for bounded high-score boards. At the end, board winners are
+deduplicated and written to `exemplar_selection_manifest.json`.
+
+Path A, `one_pass_candidate`, is debug/small-run oriented. Rich candidate
+payloads already exist, so fulfillment uses `select_from_existing_capture` and
+marks retained examples/positions from the existing artifact. The full debug
+artifact may remain intact with `retain_all_candidates_debug`.
+
+Path B, `two_pass_sparse_exemplar`, is production-shaped for large corpora and
+storage-sensitive runs. Cheap score-pass summaries feed the same selector, and
+fulfillment uses `rerun_selected_capture`: the manifest is a rerun requisition
+with enough source addressing to rerun selected examples in a later selected
+pass.
+
+F10.1 does not implement semantic embeddings, a utility-calibrated selector, a
+claimed optimal production selector, real auto batch probing, multidevice
+scheduling, TPU/JAX, or reducer math changes. Backend emission capability
+statuses are unchanged.
+
 ## Runtime Modes
 
 `cpu` means CPU-side orchestration plus CPU teacher execution and reduction. It
@@ -399,6 +424,8 @@ probe results choose the last good batch, `custom >64` emits a warning, and
 estimated-vs-measured byte fields are recorded without claiming measured GPU
 peak memory. Public builder migration, multidevice scheduling, and TPU/JAX
 remain out of scope.
+Spec 3.3F10.1 adds the shared multi-leaderboard exemplar selector. Path A and
+Path B use the same selector; only fulfillment differs.
 
 ## Support Statuses
 
