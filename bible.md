@@ -591,3 +591,18 @@ no distinct non-fail-fast continuation mode to advertise or record. This patch
 does not add new production behavior, downloads, network verification,
 multidevice scheduling, TPU/JAX support, reducer math changes, or selector
 behavior changes.
+
+## 2026-07-07 — Spec 4.7.a Experimental Multi-GPU Path B Candidate Harness
+
+Spec 4.7.a adds `radjax-tome multi-gpu-path-b` as an opt-in experimental Path B
+candidate scheduling harness. It requires explicit device IDs, assigns shard
+ranges round-robin to candidate workers, writes worker-local outputs, keeps the
+coordinator in charge of `multi_gpu_worker_manifest.json` and
+`multi_gpu_path_b_report.json`, and merges candidate records deterministically
+on CPU.
+
+The accepted 4.7.a path is a fake-worker scheduler harness for GPU-free testing
+and report/manifest truth. Single-GPU `production-build` remains the
+recommended production path. This patch does not add DDP, model parallelism,
+combined VRAM, network verification, model downloads, TPU/JAX support, full
+multi-GPU burn validation, reducer math changes, or selector scoring changes.

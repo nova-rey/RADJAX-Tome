@@ -54,6 +54,12 @@ components. Backend emission capabilities are unchanged: this does not add
 multidevice scheduling, TPU/JAX support, reducer math changes, selector
 behavior changes, model downloads, or network verification.
 
+Spec 4.7.a adds experimental opt-in multi-GPU Path B candidate scheduling.
+Single-GPU production-build remains the recommended path. This does not add
+DDP, model parallelism, combined VRAM, network verification, TPU/JAX support,
+or full multi-GPU burn validation. Backend emission capability statuses remain
+unchanged.
+
 Spec 4.2 adds teacher model provenance/setup utilities. Local model files can
 be inspected, hashed, validated, and linked into generated Tome metadata, but
 backend emission capability statuses are unchanged.

@@ -224,6 +224,11 @@ Tome path. It composes existing doctor, planner, streaming builder,
 validation, cover-page, and optional parity surfaces into a single local-only,
 no-download workflow with `production_build_report_v1`.
 
+Spec 4.7.a adds a separate experimental `multi-gpu-path-b` harness for Path B
+candidate scheduling. It requires explicit devices, keeps worker outputs
+disjoint, merges candidate records deterministically on CPU, and keeps
+single-GPU `production-build` as the recommended path.
+
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1
 dynamic reducer vectorization rehearsal, F8 corridor/exemplar production

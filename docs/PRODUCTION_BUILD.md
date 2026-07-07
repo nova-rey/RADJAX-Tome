@@ -76,3 +76,7 @@ The command does not expose an `--allow-downloads` flag. Teacher model setup is
 a separate local provenance step; see `docs/TEACHER_MODEL_PROVENANCE.md`.
 The low-level build CLI also does not expose `--fail-fast`; only fail-fast
 streaming behavior exists today.
+
+Spec 4.7.a adds a separate experimental `multi-gpu-path-b` command for Path B
+candidate scheduling. It is not part of the default production-build happy
+path. Single-GPU `production-build` remains the recommended path.

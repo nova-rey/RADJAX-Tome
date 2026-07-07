@@ -197,6 +197,27 @@ error-on-fallback behavior. It writes `run_plan.json` and
 `--parity-left BASELINE` for optional post-build parity. See
 `docs/PRODUCTION_BUILD.md`.
 
+For experimental Path B candidate scheduling across explicit device IDs:
+
+```bash
+radjax-tome multi-gpu-path-b \
+  --teacher-model /models/MODEL \
+  --dataset ./corpus_out/corpus.jsonl \
+  --corpus-manifest ./corpus_out/corpus_manifest.json \
+  --teacher-model-provenance ./teacher_model_provenance.json \
+  --output ./multi_gpu_path_b_out \
+  --devices cuda:0,cuda:1 \
+  --target-policy corridor_exemplar_v1 \
+  --batch-size-per-device 4 \
+  --shard-size-examples 1024 \
+  --fake-workers
+```
+
+`multi-gpu-path-b` is opt-in and experimental. It does not use DDP, model
+parallelism, combined VRAM, network verification, model downloads, or TPU/JAX.
+Single-GPU `production-build` remains the recommended path. See
+`docs/MULTI_GPU_PATH_B.md`.
+
 For GPU teacher setup on a fresh machine, install the GPU/HF optional extra and
 run doctor before building:
 

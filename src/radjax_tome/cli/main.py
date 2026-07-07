@@ -375,6 +375,38 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument("--progress-log", type=Path)
     production.set_defaults(func=_cmd_production_build)
 
+    multi_gpu = subparsers.add_parser(
+        "multi-gpu-path-b",
+        help="Run the experimental multi-GPU Path B candidate harness.",
+        description=(
+            "Experimental opt-in Path B candidate scheduling. Single-GPU "
+            "production-build remains the recommended production path."
+        ),
+    )
+    multi_gpu.add_argument("--teacher-model", required=True)
+    multi_gpu.add_argument("--tokenizer-id")
+    multi_gpu.add_argument("--dataset", type=Path, required=True)
+    multi_gpu.add_argument("--corpus-manifest", type=Path, required=True)
+    multi_gpu.add_argument("--teacher-model-provenance", type=Path, required=True)
+    multi_gpu.add_argument("--output", type=Path, required=True)
+    multi_gpu.add_argument("--devices", required=True)
+    multi_gpu.add_argument(
+        "--target-policy",
+        choices=("corridor", "corridor_exemplar_v1"),
+        default="corridor_exemplar_v1",
+    )
+    multi_gpu.add_argument("--sequence-length", type=int, default=128)
+    multi_gpu.add_argument("--batch-size-per-device", type=int, required=True)
+    multi_gpu.add_argument("--shard-size-examples", type=int, required=True)
+    multi_gpu.add_argument("--max-examples", type=int)
+    multi_gpu.add_argument("--top-k", type=int, default=8)
+    multi_gpu.add_argument("--num-buckets", type=int, default=4)
+    multi_gpu.add_argument("--resume", action="store_true")
+    multi_gpu.add_argument("--overwrite", action="store_true")
+    multi_gpu.add_argument("--dry-run", action="store_true")
+    multi_gpu.add_argument("--fake-workers", action="store_true")
+    multi_gpu.set_defaults(func=_cmd_multi_gpu_path_b)
+
     prove = subparsers.add_parser(
         "prove-capabilities",
         help="Run advanced local capability diagnostics.",
@@ -891,6 +923,42 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
     )
     for line in render_production_build_summary(report):
         print(line)
+    return 0 if report["status"] in {"pass", "warn"} else 1
+
+
+def _cmd_multi_gpu_path_b(args: argparse.Namespace) -> int:
+    from radjax_tome.builder import (
+        MultiGPUPathBConfig,
+        render_multi_gpu_path_b_summary,
+        run_multi_gpu_path_b_candidate_harness,
+    )
+
+    report = run_multi_gpu_path_b_candidate_harness(
+        MultiGPUPathBConfig(
+            teacher_model=str(args.teacher_model),
+            tokenizer_id=args.tokenizer_id,
+            dataset_path=args.dataset,
+            corpus_manifest_path=args.corpus_manifest,
+            teacher_model_provenance_path=args.teacher_model_provenance,
+            output_dir=args.output,
+            devices=args.devices,
+            target_policy=_normalize_target_policy(args.target_policy),
+            sequence_length=args.sequence_length,
+            batch_size_per_device=args.batch_size_per_device,
+            shard_size_examples=args.shard_size_examples,
+            max_examples=args.max_examples,
+            top_k=args.top_k,
+            num_buckets=args.num_buckets,
+            resume=args.resume,
+            overwrite=args.overwrite,
+            dry_run=args.dry_run,
+            fake_workers=args.fake_workers,
+        )
+    )
+    for line in render_multi_gpu_path_b_summary(report):
+        print(line)
+    for warning in report.get("warnings", ()):
+        print(f"warning: {warning}")
     return 0 if report["status"] in {"pass", "warn"} else 1
 
 
