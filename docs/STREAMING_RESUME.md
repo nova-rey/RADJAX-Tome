@@ -23,6 +23,12 @@ bounded shard groups. It does not change backend reducer math, selector
 behavior, model download policy, network policy, multidevice scheduling, or
 TPU/JAX support.
 
+Spec 4.7 reuses this same streaming/resume machinery from
+`radjax-tome production-build` after doctor and planner preflights. The
+production command writes `run_plan.json`, then starts streaming emission in
+the same output directory and records custom manifest/progress paths truthfully
+when `--run-manifest` or `--progress-log` is supplied.
+
 ## Files
 
 Streaming builds add:

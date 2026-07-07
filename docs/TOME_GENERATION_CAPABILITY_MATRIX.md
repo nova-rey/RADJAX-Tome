@@ -48,6 +48,12 @@ capabilities are unchanged: this does not add one-command production pipeline
 automation, multidevice scheduling, TPU/JAX support, reducer math changes, or
 selector behavior changes.
 
+Spec 4.7 adds one-command production build orchestration around existing
+doctor, planner, streaming builder, validation, cover-page, and optional parity
+components. Backend emission capabilities are unchanged: this does not add
+multidevice scheduling, TPU/JAX support, reducer math changes, selector
+behavior changes, model downloads, or network verification.
+
 Spec 4.2 adds teacher model provenance/setup utilities. Local model files can
 be inspected, hashed, validated, and linked into generated Tome metadata, but
 backend emission capability statuses are unchanged.

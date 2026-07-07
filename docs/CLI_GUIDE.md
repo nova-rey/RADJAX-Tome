@@ -177,6 +177,26 @@ sidecars, and atomically renamed shards. `--resume` verifies the resume config
 hash and completed shard hashes before continuing. See
 `docs/STREAMING_RESUME.md`.
 
+Run the one-command production path when you want planning, streaming emission,
+validation, cover writing, and production reporting in one local-only workflow:
+
+```bash
+radjax-tome production-build \
+  --teacher-model /models/MODEL \
+  --tokenizer-id /models/MODEL \
+  --dataset ./corpus_out/corpus.jsonl \
+  --corpus-manifest ./corpus_out/corpus_manifest.json \
+  --teacher-model-provenance ./teacher_model_provenance.json \
+  --output ./tome_out
+```
+
+`production-build` defaults to `gpu_torch`, `cpu_gpu`,
+`corridor_exemplar_v1`, streaming output, strict local files, no downloads, and
+error-on-fallback behavior. It writes `run_plan.json` and
+`production_build_report.json`; use `--resume` after interruption and
+`--parity-left BASELINE` for optional post-build parity. See
+`docs/PRODUCTION_BUILD.md`.
+
 For GPU teacher setup on a fresh machine, install the GPU/HF optional extra and
 run doctor before building:
 

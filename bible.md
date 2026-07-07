@@ -562,3 +562,17 @@ This patch does not add one-command production orchestration, does not change
 backend reducer math, does not change selector behavior, does not download
 models, does not perform network verification, does not add multidevice
 scheduling, and does not touch JAX or TPU.
+
+## 2026-07-07 — Spec 4.7 One-Command Production GPU Tome Build
+
+Spec 4.7 adds `radjax-tome production-build` as the high-level production GPU
+Tome command. It validates corpus and teacher-model provenance, runs doctor and
+planner preflights, writes `run_plan.json`, passes the effective batch size
+into the streaming builder, validates the artifact, writes `cover_page.json`,
+optionally runs post-build parity, and emits `production_build_report_v1`.
+
+The production path defaults to `gpu_torch`, `cpu_gpu`,
+`corridor_exemplar_v1`, streaming output, resumability, strict local files, no
+downloads, and error-on-fallback behavior. This is orchestration and reporting
+only: it does not add new reducer math, multidevice scheduling, TPU/JAX, model
+downloads, network verification, or silent CPU fallback.

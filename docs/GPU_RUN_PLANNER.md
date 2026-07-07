@@ -69,4 +69,8 @@ streaming/resume, does not schedule multiple devices, and does not add TPU/JAX
 support. Backend emission capability statuses are unchanged by Spec 4.5.
 
 After planning, use `radjax-tome build --streaming` for durable large-run
-emission and `--resume` after interruption. See `docs/STREAMING_RESUME.md`.
+emission and `--resume` after interruption. The higher-level
+`radjax-tome production-build` command runs this planner first, writes
+`run_plan.json`, and passes the selected effective batch size into the
+streaming builder automatically. See `docs/STREAMING_RESUME.md` and
+`docs/PRODUCTION_BUILD.md`.

@@ -219,6 +219,11 @@ F11 adds no new reducer math, no new selector policy, no real auto batch
 probing, no production global selector, no multidevice scheduler, and no
 TPU/JAX.
 
+Spec 4.7 adds `radjax-tome production-build` as the one-command production GPU
+Tome path. It composes existing doctor, planner, streaming builder,
+validation, cover-page, and optional parity surfaces into a single local-only,
+no-download workflow with `production_build_report_v1`.
+
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1
 dynamic reducer vectorization rehearsal, F8 corridor/exemplar production

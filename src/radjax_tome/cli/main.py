@@ -10,6 +10,7 @@ HELP_DESCRIPTION = """RADJAX-Tome produces teacher-side distillation artifacts.
 
 Recommended commands:
   build
+  production-build
   validate
   inspect
   plan
@@ -122,7 +123,6 @@ def _build_parser() -> argparse.ArgumentParser:
     build.add_argument("--shard-size-examples", type=int)
     build.add_argument("--progress-log", type=Path)
     build.add_argument("--run-manifest", type=Path)
-    build.add_argument("--fail-fast", action="store_true", default=True)
     build.add_argument("--fallback-policy", choices=("error", "auto"), default="error")
     build.add_argument("--exemplar-selection-enabled", action="store_true")
     build.add_argument(
@@ -294,6 +294,86 @@ def _build_parser() -> argparse.ArgumentParser:
     plan.add_argument("--max-artifact-bytes", type=int)
     plan.add_argument("--fail-on-warnings", action="store_true")
     plan.set_defaults(func=_cmd_plan)
+
+    production = subparsers.add_parser(
+        "production-build",
+        help="Run the one-command production GPU Tome build workflow.",
+        description=(
+            "Validate provenance, run doctor and planner preflights, build a "
+            "streaming Tome artifact, validate it, write cover_page.json, and "
+            "emit production_build_report.json."
+        ),
+    )
+    production.add_argument("--teacher-model", required=True)
+    production.add_argument("--tokenizer-id")
+    production.add_argument("--dataset", type=Path, required=True)
+    production.add_argument("--corpus-manifest", type=Path, required=True)
+    production.add_argument("--teacher-model-provenance", type=Path, required=True)
+    production.add_argument("--output", type=Path, required=True)
+    production.add_argument(
+        "--teacher-backend",
+        choices=("gpu_torch", "cpu_reference"),
+        default="gpu_torch",
+    )
+    production.add_argument(
+        "--runtime-mode",
+        choices=("cpu_gpu", "cpu"),
+        default="cpu_gpu",
+    )
+    production.add_argument(
+        "--target-policy",
+        choices=(
+            "dense",
+            "dense_logits",
+            "topk",
+            "topk_with_tail_v0",
+            "cascaded",
+            "cascaded_soft_labels_v1",
+            "dynamic",
+            "dynamic_cascaded_soft_labels_v1",
+            "corridor",
+            "corridor_exemplar_v1",
+        ),
+        default="corridor_exemplar_v1",
+    )
+    production.add_argument("--sequence-length", type=int, default=16)
+    production.add_argument("--vocab-size", type=int, default=32)
+    production.add_argument("--top-k", type=int, default=8)
+    production.add_argument("--num-buckets", type=int, default=4)
+    production.add_argument(
+        "--gpu-batch-size-mode",
+        choices=("preset", "custom", "auto"),
+        default="auto",
+    )
+    production.add_argument("--gpu-batch-size-preset", type=int, default=8)
+    production.add_argument("--gpu-batch-size-custom", type=int)
+    production.add_argument("--gpu-batch-size-auto-min", type=int, default=1)
+    production.add_argument("--gpu-batch-size-auto-max", type=int, default=64)
+    production.add_argument("--shard-size-examples", type=int, default=1024)
+    production.add_argument("--max-examples", type=int)
+    production.add_argument("--resume", action="store_true")
+    production.add_argument("--overwrite", action="store_true")
+    production.add_argument(
+        "--strict-provenance",
+        dest="strict_provenance",
+        action="store_true",
+        default=True,
+    )
+    production.add_argument(
+        "--no-strict-provenance",
+        dest="strict_provenance",
+        action="store_false",
+    )
+    production.add_argument("--fail-on-plan-warnings", action="store_true")
+    production.add_argument("--no-build-if-plan-warn", action="store_true")
+    production.add_argument("--max-artifact-bytes", type=int)
+    production.add_argument("--run-plan", type=Path)
+    production.add_argument("--production-report", type=Path)
+    production.add_argument("--parity-left", type=Path)
+    production.add_argument("--parity-report", type=Path)
+    production.add_argument("--run-manifest", type=Path)
+    production.add_argument("--progress-log", type=Path)
+    production.set_defaults(func=_cmd_production_build)
 
     prove = subparsers.add_parser(
         "prove-capabilities",
@@ -471,7 +551,6 @@ def _cmd_build(args: argparse.Namespace) -> int:
             shard_size_examples=args.shard_size_examples,
             progress_log_path=args.progress_log,
             run_manifest_path=args.run_manifest,
-            fail_fast=args.fail_fast,
             fallback_policy=args.fallback_policy,
             exemplar_selector_policy=args.exemplar_selector_policy,
             exemplar_selection_enabled=args.exemplar_selection_enabled,
@@ -765,6 +844,54 @@ def _cmd_plan(args: argparse.Namespace) -> int:
     for line in render_gpu_run_plan_summary(plan, args.output):
         print(line)
     return 1 if plan["status"] == "fail" else 0
+
+
+def _cmd_production_build(args: argparse.Namespace) -> int:
+    from radjax_tome.builder import (
+        ProductionBuildConfig,
+        build_production_gpu_tome,
+        render_production_build_summary,
+    )
+
+    report = build_production_gpu_tome(
+        ProductionBuildConfig(
+            teacher_model=str(args.teacher_model),
+            tokenizer_id=args.tokenizer_id,
+            dataset_path=args.dataset,
+            corpus_manifest_path=args.corpus_manifest,
+            teacher_model_provenance_path=args.teacher_model_provenance,
+            output_dir=args.output,
+            teacher_backend=args.teacher_backend,
+            runtime_mode=args.runtime_mode,
+            target_policy=_normalize_target_policy(args.target_policy),
+            sequence_length=args.sequence_length,
+            vocab_size=args.vocab_size,
+            top_k=args.top_k,
+            num_buckets=args.num_buckets,
+            gpu_batch_size_mode=args.gpu_batch_size_mode,
+            gpu_batch_size_preset=args.gpu_batch_size_preset,
+            gpu_batch_size_custom=args.gpu_batch_size_custom,
+            gpu_batch_size_auto_min=args.gpu_batch_size_auto_min,
+            gpu_batch_size_auto_max=args.gpu_batch_size_auto_max,
+            shard_size_examples=args.shard_size_examples,
+            max_examples=args.max_examples,
+            resume=args.resume,
+            overwrite=args.overwrite,
+            strict_provenance=args.strict_provenance,
+            fail_on_plan_warnings=args.fail_on_plan_warnings,
+            no_build_if_plan_warn=args.no_build_if_plan_warn,
+            max_artifact_bytes=args.max_artifact_bytes,
+            run_plan_path=args.run_plan,
+            production_report_path=args.production_report,
+            parity_left=args.parity_left,
+            parity_report_path=args.parity_report,
+            run_manifest_path=args.run_manifest,
+            progress_log_path=args.progress_log,
+        )
+    )
+    for line in render_production_build_summary(report):
+        print(line)
+    return 0 if report["status"] in {"pass", "warn"} else 1
 
 
 def _cmd_prove_capabilities(args: argparse.Namespace) -> int:

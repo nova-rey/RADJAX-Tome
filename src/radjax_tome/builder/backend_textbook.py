@@ -242,12 +242,12 @@ def build_streaming_backend_teacher_textbook(
     if output_dir.exists():
         if config.overwrite:
             shutil.rmtree(output_dir)
-        elif not config.resume:
+        elif not config.resume and _has_existing_streaming_artifact(output_dir):
             raise ValueError(
                 f"TeacherTextbook output already exists: {output_dir}. "
                 "Pass overwrite=True to replace it or resume=True to resume."
             )
-        elif not run_manifest_path.is_file():
+        elif config.resume and not run_manifest_path.is_file():
             raise ValueError("cannot resume streaming build without run_manifest.json")
     output_dir.mkdir(parents=True, exist_ok=True)
     _remove_stale_tmp_shards(output_dir)
@@ -464,6 +464,7 @@ def build_streaming_backend_teacher_textbook(
         raise ValueError("streaming build produced no examples")
     _rewrite_metadata_with_streaming_completion(
         store,
+        config=config,
         resume_config_hash=resume_hash,
         shard_size_examples=shard_size,
         num_examples_completed=_completed_example_count(completed_shards),
@@ -756,6 +757,7 @@ def _create_streaming_store(
         target_params={
             **_target_params(config, backend_metadata),
             **_streaming_target_params(
+                config,
                 resume_config_hash=resume_config_hash,
                 shard_size_examples=shard_size_examples,
                 num_examples_completed=0,
@@ -789,6 +791,20 @@ def _remove_stale_tmp_shards(output_dir: Path) -> None:
         return
     for tmp_path in shards_dir.glob("*.tmp"):
         tmp_path.unlink()
+
+
+def _has_existing_streaming_artifact(output_dir: Path) -> bool:
+    artifact_markers = (
+        "metadata.json",
+        "teacher_manifest.json",
+        "emission_config.json",
+        "validation_report.json",
+        STREAMING_RUN_MANIFEST_FILENAME,
+    )
+    if any((output_dir / marker).exists() for marker in artifact_markers):
+        return True
+    shards_dir = output_dir / "shards"
+    return shards_dir.is_dir() and any(shards_dir.iterdir())
 
 
 def _read_streaming_manifest(path: Path) -> dict[str, object]:
@@ -1042,6 +1058,7 @@ def _ceil_div(numerator: int, denominator: int) -> int:
 
 
 def _streaming_target_params(
+    config: BackendTeacherTextbookBuildConfig,
     *,
     resume_config_hash: str,
     shard_size_examples: int,
@@ -1050,8 +1067,8 @@ def _streaming_target_params(
     return {
         "streaming_build": "true",
         "resume_supported": "true",
-        "run_manifest_path": STREAMING_RUN_MANIFEST_FILENAME,
-        "progress_log_path": STREAMING_PROGRESS_LOG_FILENAME,
+        "run_manifest_path": _artifact_path_value(config, _run_manifest_path(config)),
+        "progress_log_path": _artifact_path_value(config, _progress_log_path(config)),
         "shard_size_examples": str(shard_size_examples),
         "num_examples_completed": str(num_examples_completed),
         "resume_config_hash": resume_config_hash,
@@ -1085,8 +1102,8 @@ def _write_streaming_backend_sidecars(
     streaming_fields = {
         "streaming_build": True,
         "resume_supported": True,
-        "run_manifest_path": STREAMING_RUN_MANIFEST_FILENAME,
-        "progress_log_path": STREAMING_PROGRESS_LOG_FILENAME,
+        "run_manifest_path": _artifact_path_value(config, _run_manifest_path(config)),
+        "progress_log_path": _artifact_path_value(config, _progress_log_path(config)),
         "shard_size_examples": shard_size_examples,
         "resume_config_hash": resume_config_hash,
         "atomic_shard_write_policy": "tmp_file_fsync_rename_v1",
@@ -1154,6 +1171,16 @@ def _write_streaming_backend_sidecars(
 
 def _path_or_none(path: Path | None) -> str | None:
     return str(path) if path is not None else None
+
+
+def _artifact_path_value(
+    config: BackendTeacherTextbookBuildConfig,
+    path: Path,
+) -> str:
+    try:
+        return path.resolve().relative_to(config.output_dir.resolve()).as_posix()
+    except ValueError:
+        return str(path)
 
 
 def _arrays_for_store(
@@ -1232,6 +1259,7 @@ def _rewrite_metadata_with_selection_params(
 def _rewrite_metadata_with_streaming_completion(
     store: TeacherTargetStore,
     *,
+    config: BackendTeacherTextbookBuildConfig,
     resume_config_hash: str,
     shard_size_examples: int,
     num_examples_completed: int,
@@ -1242,6 +1270,7 @@ def _rewrite_metadata_with_streaming_completion(
             "target_params": {
                 **store.metadata.target_params,
                 **_streaming_target_params(
+                    config,
                     resume_config_hash=resume_config_hash,
                     shard_size_examples=shard_size_examples,
                     num_examples_completed=num_examples_completed,
