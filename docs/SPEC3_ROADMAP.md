@@ -278,3 +278,12 @@ implications, and can perform bounded tiny auto-batch probes for `gpu_torch`.
 It does not run production builds, download models, perform network
 verification, add streaming/resume, add multidevice scheduling, or touch
 TPU/JAX.
+
+Spec 4.6 adds streaming backend build orchestration and safe resume.
+`radjax-tome build --streaming` reads corpus JSONL incrementally, writes shards
+atomically, records `run_manifest.json` plus `progress_log.jsonl`, writes
+`failure_report.json` on failure, and resumes only when config and completed
+shard hashes still match. It refuses corpus-global exemplar selection rather
+than pretending a streaming global selector ran. It does not change backend
+math, selector behavior, model download policy, network policy, multidevice
+scheduling, or TPU/JAX support.

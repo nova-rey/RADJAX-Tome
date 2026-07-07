@@ -117,6 +117,12 @@ def _build_parser() -> argparse.ArgumentParser:
     build.add_argument("--gpu-batch-size-custom", type=int)
     build.add_argument("--gpu-batch-size-auto-min", type=int, default=1)
     build.add_argument("--gpu-batch-size-auto-max", type=int, default=64)
+    build.add_argument("--streaming", action="store_true")
+    build.add_argument("--resume", action="store_true")
+    build.add_argument("--shard-size-examples", type=int)
+    build.add_argument("--progress-log", type=Path)
+    build.add_argument("--run-manifest", type=Path)
+    build.add_argument("--fail-fast", action="store_true", default=True)
     build.add_argument("--fallback-policy", choices=("error", "auto"), default="error")
     build.add_argument("--exemplar-selection-enabled", action="store_true")
     build.add_argument(
@@ -460,6 +466,12 @@ def _cmd_build(args: argparse.Namespace) -> int:
             gpu_batch_size_custom=args.gpu_batch_size_custom,
             gpu_batch_size_auto_min=args.gpu_batch_size_auto_min,
             gpu_batch_size_auto_max=args.gpu_batch_size_auto_max,
+            streaming=args.streaming,
+            resume=args.resume,
+            shard_size_examples=args.shard_size_examples,
+            progress_log_path=args.progress_log,
+            run_manifest_path=args.run_manifest,
+            fail_fast=args.fail_fast,
             fallback_policy=args.fallback_policy,
             exemplar_selector_policy=args.exemplar_selector_policy,
             exemplar_selection_enabled=args.exemplar_selection_enabled,

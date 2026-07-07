@@ -3,6 +3,7 @@
 from radjax_tome.builder.backend_textbook import (
     BackendTeacherTextbookBuildConfig,
     build_backend_teacher_textbook,
+    build_streaming_backend_teacher_textbook,
     teacher_backend_config_from_build_config,
 )
 from radjax_tome.builder.exemplar_selection import (
@@ -44,6 +45,7 @@ __all__ = [
     "build_exemplar_selection_manifest",
     "build_fake_teacher_textbook",
     "build_hf_teacher_textbook",
+    "build_streaming_backend_teacher_textbook",
     "build_teacher_textbook",
     "extract_one_pass_candidates",
     "extract_score_pass_candidates",

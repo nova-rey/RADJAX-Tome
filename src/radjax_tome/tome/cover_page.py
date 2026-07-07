@@ -137,6 +137,20 @@ def build_cover_page(tome_root: str | Path) -> dict[str, Any]:
             "tokenizer_hash": teacher_model_provenance.get("tokenizer_hash"),
             "weights_hash": teacher_model_provenance.get("weights_hash"),
         }
+    target_params = metadata.get("target_params", {})
+    if (
+        isinstance(target_params, dict)
+        and target_params.get("streaming_build") == "true"
+    ):
+        cover_page["streaming"] = {
+            "streaming_build": True,
+            "resume_supported": target_params.get("resume_supported") == "true",
+            "run_manifest_path": target_params.get("run_manifest_path"),
+            "progress_log_path": target_params.get("progress_log_path"),
+            "shard_size_examples": target_params.get("shard_size_examples"),
+            "resume_config_hash": target_params.get("resume_config_hash"),
+            "atomic_shard_write_policy": target_params.get("atomic_shard_write_policy"),
+        }
     return cover_page
 
 

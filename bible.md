@@ -533,3 +533,32 @@ recommended command is omitted.
 
 The generic rough-estimate caveat moved from a warning into `estimate_notes`;
 estimate sections still record `estimate_confidence=rough`.
+
+## 2026-07-07 — Spec 4.6 Streaming Large-Run Builder and Resume
+
+Spec 4.6 adds a streaming backend build path behind
+`radjax-tome build --streaming`. The builder reads corpus JSONL incrementally,
+preserves corpus order, emits backend batches into bounded shard groups, and
+writes each shard through a temporary file plus fsync and rename before marking
+it complete.
+
+Streaming builds write `run_manifest.json` with
+`streaming_run_manifest_v1`, `progress_log.jsonl` with append-only run/shard
+events, and `failure_report.json` on failure. Completed shard records include
+example ranges and final shard `sha256:<hex>` hashes.
+
+Resume is enabled with `--resume`. It verifies `resume_config_hash`, completed
+shard existence, completed shard hashes, and removes stale temporary shard
+files before continuing from the next incomplete shard. Config, dataset, or
+corpus drift is refused. Completed shards are preserved after failure.
+
+Streaming metadata records `streaming_build=true`, `resume_supported=true`,
+`run_manifest_path`, `progress_log_path`, shard size, completed example count,
+`resume_config_hash`, and atomic write policy. The cover page includes a
+streaming summary. The streaming path refuses corpus-global exemplar selection
+for now rather than claiming selector finalization that did not happen.
+
+This patch does not add one-command production orchestration, does not change
+backend reducer math, does not change selector behavior, does not download
+models, does not perform network verification, does not add multidevice
+scheduling, and does not touch JAX or TPU.

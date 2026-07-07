@@ -154,6 +154,29 @@ size, and marks memory/artifact estimates as rough. It does not download
 models, perform network verification, add streaming/resume, or add multidevice
 or TPU/JAX support. See `docs/GPU_RUN_PLANNER.md`.
 
+Run a resumable streaming backend build after planning:
+
+```bash
+radjax-tome build \
+  --streaming \
+  --teacher-backend gpu_torch \
+  --runtime-mode cpu_gpu \
+  --target-policy corridor_exemplar_v1 \
+  --teacher-model /models/MODEL \
+  --teacher-model-provenance ./teacher_model_provenance.json \
+  --dataset ./corpus_out/corpus.jsonl \
+  --corpus-manifest ./corpus_out/corpus_manifest.json \
+  --output ./tome_out \
+  --shard-size-examples 1024
+
+radjax-tome build ... --streaming --resume
+```
+
+`--streaming` writes `run_manifest.json`, `progress_log.jsonl`, normal Tome
+sidecars, and atomically renamed shards. `--resume` verifies the resume config
+hash and completed shard hashes before continuing. See
+`docs/STREAMING_RESUME.md`.
+
 For GPU teacher setup on a fresh machine, install the GPU/HF optional extra and
 run doctor before building:
 

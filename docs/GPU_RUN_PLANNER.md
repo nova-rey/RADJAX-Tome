@@ -67,3 +67,6 @@ The planner does not download models, does not perform network verification,
 does not run the full corpus, does not write production artifacts, does not add
 streaming/resume, does not schedule multiple devices, and does not add TPU/JAX
 support. Backend emission capability statuses are unchanged by Spec 4.5.
+
+After planning, use `radjax-tome build --streaming` for durable large-run
+emission and `--resume` after interruption. See `docs/STREAMING_RESUME.md`.
