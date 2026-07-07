@@ -130,6 +130,24 @@ hints, selector metadata sanity, and batch-size metadata sanity; they do not
 add reducer math, selector policy, real auto batch probing, production global
 selection, multidevice scheduling, or TPU/JAX support.
 
+For GPU teacher setup on a fresh machine, install the GPU/HF optional extra and
+run doctor before building:
+
+```bash
+pip install -e ".[gpu-teacher]"
+
+radjax-tome doctor \
+  --teacher-backend gpu_torch \
+  --runtime-mode cpu_gpu \
+  --target-policy corridor_exemplar_v1 \
+  --write-report runtime_doctor_report.json
+```
+
+`gpu-teacher` currently aliases the `torch` and `transformers` dependencies
+used by `teacher-hf`. PyTorch CUDA wheels are platform-specific; follow
+PyTorch's install selector if the default wheel does not expose CUDA. See
+`docs/GPU_INSTALL.md`.
+
 For advanced diagnostics:
 
 ```bash

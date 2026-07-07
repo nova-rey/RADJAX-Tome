@@ -46,6 +46,10 @@ Spec 4.3 adds post-build parity comparison reports. Two generated Tome
 artifacts can be compared for schema, metadata, array, selector, and
 provenance compatibility, but backend emission capabilities remain unchanged.
 
+Spec 4.4 improves GPU install/doctor UX. Optional dependency naming, install
+docs, CUDA visibility diagnostics, and remediation hints are clearer, but
+backend emission capabilities remain unchanged.
+
 ## Synthetic Vs Real Teacher Proof
 
 Dense, top-k/tail, cascaded, fingerprint, and exemplar proofs use

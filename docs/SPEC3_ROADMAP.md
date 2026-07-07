@@ -263,3 +263,10 @@ shard arrays, finite values, numeric tolerance metrics, selector manifests,
 corpus provenance, teacher model provenance, metadata truth, and forbidden
 claims. It does not change backend math, selector behavior, GPU planning,
 model acquisition, network verification, or TPU/JAX support.
+
+Spec 4.4 improves GPU install and dependency UX. `gpu-teacher` names the
+HF/PyTorch GPU teacher optional dependency path, `docs/GPU_INSTALL.md` explains
+fresh venv setup and CUDA wheel caveats, and `radjax-tome doctor` now reports
+GPU install diagnostics plus actionable remediation. It does not change
+backend capability statuses, reducer math, selector behavior, model download
+policy, GPU run planning, or TPU/JAX support.

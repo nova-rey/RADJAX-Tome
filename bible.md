@@ -467,3 +467,28 @@ remain hard failures.
 This patch does not change backend reducer math, does not change selector
 behavior, does not download teacher models, does not perform network
 verification, does not add GPU run planning, and does not touch JAX or TPU.
+
+## 2026-07-07 — Spec 4.4 GPU Install / Dependency UX
+
+Spec 4.4 improves the setup and diagnostic path for GPU teacher emission. The
+package now exposes a `gpu-teacher` optional dependency extra, currently
+matching the `teacher-hf` Torch/Transformers dependencies while naming the
+GPU-oriented workflow explicitly.
+
+`radjax-tome doctor` now includes additive GPU install diagnostics in
+`runtime_doctor_report_v1`: Python/platform status, RADJAX-Tome import status,
+Torch and Transformers availability/version, CUDA availability, CUDA device
+count and names, Torch CUDA version, MPS availability, JAX availability, and
+recommended install extra. Doctor summaries include actionable remediation
+hints and recommended next commands for model provenance, corpus build, GPU
+build, and parity comparison.
+
+`docs/GPU_INSTALL.md` documents fresh venv setup, editable installs,
+`teacher-hf` and `gpu-teacher` extras, PyTorch CUDA wheel caveats, doctor
+usage, local teacher model provenance, corpus building, fake smokes, tiny local
+GPU smokes, and parity comparison.
+
+This patch does not install NVIDIA drivers, does not silently download teacher
+models, does not perform network model verification, does not add real auto
+batch probing, does not add GPU run planning, does not change backend reducer
+math, does not change selector behavior, and does not touch JAX or TPU.

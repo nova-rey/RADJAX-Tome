@@ -914,14 +914,16 @@ def _diagnostic_chunking_fields(
 def _missing_torch_message() -> str:
     return (
         "gpu_torch backend requires optional dependency torch. Install the "
-        "teacher-hf extra to use torch/transformers emission."
+        "gpu-teacher extra, or the equivalent teacher-hf extra, to use "
+        "torch/transformers GPU emission."
     )
 
 
 def _missing_transformers_message() -> str:
     return (
         "gpu_torch backend requires optional dependency transformers. Install "
-        "the teacher-hf extra to use torch/transformers emission."
+        "the gpu-teacher extra, or the equivalent teacher-hf extra, to use "
+        "torch/transformers GPU emission."
     )
 
 
@@ -945,9 +947,9 @@ def _model_load_message(
         "gpu_torch backend could not load torch/transformers model or tokenizer "
         f"for model_id={config.model_id!r}, tokenizer_id={tokenizer_id!r}, "
         f"local_files_only={local_files_only!r}, "
-        f"allow_downloads={config.allow_downloads!r}. Install the teacher-hf "
-        "extra and provide local model files, or set allow_downloads only in "
-        "an explicitly network-enabled run."
+        f"allow_downloads={config.allow_downloads!r}. Install the gpu-teacher "
+        "extra, or the equivalent teacher-hf extra, and provide/cache local "
+        "model files. RADJAX-Tome did not download a model."
     )
 
 
