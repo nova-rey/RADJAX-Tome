@@ -142,6 +142,39 @@ def test_valid_corpus_manifest_records_hashes(tmp_path: Path) -> None:
 
     assert plan["corpus_provenance"]["status"] == "pass"
     assert str(plan["corpus_provenance"]["source_corpus_hash"])
+    assert not any(
+        "corpus manifest hash does not match dataset" in blocker
+        for blocker in plan["blockers"]
+    )
+    assert plan["status"] in {"pass", "warn"}
+
+
+def test_corrupted_corpus_dataset_fails_manifest_hash_check(tmp_path: Path) -> None:
+    source = tmp_path / "source.txt"
+    source.write_text("alpha\nbeta\n", encoding="utf-8")
+    corpus_dir = tmp_path / "corpus_out"
+    build_corpus_artifact(
+        CorpusBuildConfig(inputs=(source,), output_dir=corpus_dir, overwrite=True)
+    )
+    (corpus_dir / "corpus.jsonl").write_text(
+        json.dumps({"text": "tampered"}) + "\n",
+        encoding="utf-8",
+    )
+
+    plan = build_gpu_run_plan(
+        GPURunPlanConfig(
+            backend_config=_cpu_config(),
+            dataset_path=corpus_dir / "corpus.jsonl",
+            corpus_manifest_path=corpus_dir / "corpus_manifest.json",
+        )
+    )
+
+    assert plan["status"] == "fail"
+    assert plan["corpus_provenance"]["status"] == "fail"
+    assert any(
+        "corpus manifest hash does not match dataset" in blocker
+        for blocker in plan["blockers"]
+    )
 
 
 def test_auto_batch_probe_selects_largest_passing_batch(tmp_path: Path) -> None:
@@ -207,6 +240,9 @@ def test_auto_batch_probe_fails_when_no_candidate_passes(tmp_path: Path) -> None
 
     assert plan["status"] == "fail"
     assert plan["auto_batch_probe"]["largest_passing_batch_size"] is None
+    assert plan["auto_batch_probe"]["selected_batch_size"] is None
+    assert plan["resolved_batch_policy"]["effective_gpu_batch_size"] is None
+    assert plan["recommended_command"] is None
     assert any("no candidate" in item for item in plan["blockers"])
 
 

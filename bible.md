@@ -517,3 +517,19 @@ This patch does not run a production build, does not download models, does not
 perform network verification, does not add streaming/resume, does not add
 multidevice scheduling, does not change backend reducer math, does not change
 selector behavior, and does not touch JAX or TPU.
+
+## 2026-07-07 — Spec 4.5.1 Run Planner Hash Truth Fix
+
+Spec 4.5.1 fixes run-planner corpus hash truth. `radjax-tome plan` now compares
+the supplied `corpus.jsonl` hash to `corpus_manifest.json` using the same
+`sha256:<hex>` string format as the 4.1 corpus builder, so valid corpus
+artifacts are not falsely rejected.
+
+Corpus provenance status now fails when the supplied manifest hash does not
+match the dataset, instead of reporting `corpus_provenance.status=pass` while
+also emitting a corpus blocker. Failed auto batch probes with no passing
+candidate no longer present a fallback effective batch as runnable, and their
+recommended command is omitted.
+
+The generic rough-estimate caveat moved from a warning into `estimate_notes`;
+estimate sections still record `estimate_confidence=rough`.

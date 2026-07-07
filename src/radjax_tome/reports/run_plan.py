@@ -92,9 +92,13 @@ def build_gpu_run_plan(
         probe_results=probe_results if probe_results else None,
         payload=None,
     )
+    resolved_policy = _resolved_batch_policy(resolved, auto_probe)
+    selected_batch_size = resolved_policy.get("effective_gpu_batch_size")
     memory = _memory_estimates(
         backend_config,
-        selected_batch_size=int(resolved["effective_gpu_batch_size"]),
+        selected_batch_size=(
+            int(selected_batch_size) if selected_batch_size is not None else None
+        ),
         observed_peak_memory_bytes=auto_probe.get("observed_peak_memory_bytes"),
     )
     artifact = _artifact_estimates(
@@ -144,12 +148,13 @@ def build_gpu_run_plan(
         "environment": _environment_from_doctor(doctor),
         "doctor_diagnostics": doctor,
         "requested_batch_policy": _requested_batch_policy(backend_config),
-        "resolved_batch_policy": _resolved_batch_policy(resolved, auto_probe),
+        "resolved_batch_policy": resolved_policy,
         "auto_batch_probe": auto_probe,
         "memory_estimates": memory,
         "artifact_estimates": artifact,
+        "estimate_notes": ["memory and artifact estimates are rough"],
         "capture_mode_estimates": capture,
-        "recommended_command": _recommended_command(backend_config, resolved),
+        "recommended_command": _recommended_command(backend_config, resolved_policy),
         "claims_not_made": _claims_not_made(),
     }
 
@@ -362,9 +367,18 @@ def _corpus_provenance_summary(
         manifest = read_corpus_manifest(path)
         provenance = corpus_provenance_from_manifest(path)
         if dataset_path.is_file():
-            dataset_hash = hashlib.sha256(dataset_path.read_bytes()).hexdigest()
+            dataset_hash = (
+                "sha256:" + hashlib.sha256(dataset_path.read_bytes()).hexdigest()
+            )
             if manifest.get("corpus_hash") != dataset_hash:
                 blockers.append("corpus manifest hash does not match dataset")
+                return {
+                    "provided": True,
+                    "status": "fail",
+                    "corpus_manifest_path": str(path),
+                    "dataset_hash": dataset_hash,
+                    **provenance,
+                }
         return {
             "provided": True,
             "status": "pass",
@@ -423,9 +437,20 @@ def _add_doctor_blockers(
 def _memory_estimates(
     config: TeacherBackendConfig,
     *,
-    selected_batch_size: int,
+    selected_batch_size: int | None,
     observed_peak_memory_bytes: object,
 ) -> dict[str, Any]:
+    if selected_batch_size is None:
+        return {
+            "estimate_available": False,
+            "reason": "selected_batch_size_unavailable",
+            "estimate_confidence": "rough",
+            "estimated_dense_logits_bytes": None,
+            "estimated_compact_payload_bytes": None,
+            "estimated_workspace_bytes": None,
+            "estimated_total_probe_payload_bytes": None,
+            "observed_peak_memory_bytes": None,
+        }
     dense = (
         selected_batch_size * config.sequence_length * config.vocab_size * _DTYPE_BYTES
     )
@@ -558,7 +583,6 @@ def _add_estimate_warnings(
         and int(total) > max_artifact_bytes
     ):
         blockers.append("estimated artifact size exceeds max_artifact_bytes")
-    warnings.append("memory and artifact estimates are rough")
 
 
 def _requested_batch_policy(config: TeacherBackendConfig) -> dict[str, Any]:
@@ -577,17 +601,39 @@ def _resolved_batch_policy(
 ) -> dict[str, Any]:
     return {
         "gpu_batch_size_mode_effective": resolved["gpu_batch_size_mode_effective"],
-        "effective_gpu_batch_size": resolved["effective_gpu_batch_size"],
+        "effective_gpu_batch_size": _effective_batch_size_for_plan(
+            resolved,
+            auto_probe,
+        ),
         "batch_selection_reason": _batch_selection_reason(resolved, auto_probe),
         "probe_required": resolved["gpu_batch_size_probe_required"],
         "probe_performed": bool(auto_probe.get("probe_performed", False)),
     }
 
 
+def _effective_batch_size_for_plan(
+    resolved: Mapping[str, Any],
+    auto_probe: Mapping[str, Any],
+) -> object | None:
+    if (
+        auto_probe.get("probe_performed")
+        and auto_probe.get("probe_status") == "fail"
+        and auto_probe.get("selected_batch_size") is None
+    ):
+        return None
+    return resolved["effective_gpu_batch_size"]
+
+
 def _batch_selection_reason(
     resolved: Mapping[str, Any],
     auto_probe: Mapping[str, Any],
 ) -> str:
+    if (
+        auto_probe.get("probe_performed")
+        and auto_probe.get("probe_status") == "fail"
+        and auto_probe.get("selected_batch_size") is None
+    ):
+        return "auto_batch_probe_failed_no_passing_candidate"
     if auto_probe.get("probe_performed"):
         return str(auto_probe.get("selection_policy"))
     mode = resolved["gpu_batch_size_mode_effective"]
@@ -620,8 +666,10 @@ def _environment_from_doctor(doctor: Mapping[str, Any]) -> dict[str, Any]:
 def _recommended_command(
     config: TeacherBackendConfig,
     resolved: Mapping[str, Any],
-) -> str:
-    batch = resolved["effective_gpu_batch_size"]
+) -> str | None:
+    batch = resolved.get("effective_gpu_batch_size")
+    if batch is None:
+        return None
     return (
         "radjax-tome build "
         f"--teacher-backend {config.backend_id} "
