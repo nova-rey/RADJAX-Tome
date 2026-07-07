@@ -241,6 +241,58 @@ def test_production_build_resume_completed_reports_already_complete(
     assert resumed["already_complete"] is True
 
 
+def test_production_build_completed_resume_skips_failing_planner(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(tmp_path)
+    first = build_production_gpu_tome(config)
+
+    def fail_if_called(_config):
+        raise AssertionError("planner should not run")
+
+    monkeypatch.setattr(production, "build_gpu_run_plan", fail_if_called)
+    resumed = build_production_gpu_tome(
+        _config(tmp_path, output_dir=config.output_dir, resume=True)
+    )
+
+    assert first["status"] == "pass"
+    assert resumed["status"] == "pass"
+    assert resumed["already_complete"] is True
+    assert resumed["resume_requested"] is True
+    assert resumed["validation_status"] == "pass"
+    assert resumed["run_plan_status"] == "not_run"
+    assert resumed["build_status"] == "already_complete"
+    assert "planner should not run" not in resumed["blockers"]
+    assert (config.output_dir / "production_build_report.json").is_file()
+
+
+def test_production_build_completed_invalid_resume_fails_without_planner(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(tmp_path)
+    first = build_production_gpu_tome(config)
+    (config.output_dir / "metadata.json").unlink()
+
+    def fail_if_called(_config):
+        raise AssertionError("planner should not run")
+
+    monkeypatch.setattr(production, "build_gpu_run_plan", fail_if_called)
+    resumed = build_production_gpu_tome(
+        _config(tmp_path, output_dir=config.output_dir, resume=True)
+    )
+
+    assert first["status"] == "pass"
+    assert resumed["status"] == "fail"
+    assert resumed["already_complete"] is True
+    assert resumed["validation_status"] == "fail"
+    assert resumed["run_plan_status"] == "not_run"
+    assert resumed["build_status"] == "already_complete_invalid"
+    assert resumed["blockers"]
+    assert "planner should not run" not in resumed["blockers"]
+
+
 def test_production_build_overwrite_rebuilds_and_preserves_run_plan(
     tmp_path: Path,
 ) -> None:
@@ -391,3 +443,13 @@ def test_production_build_cli_smoke_and_no_allow_downloads_flag(
     assert "status=pass" in result.stdout
     assert (output / "production_build_report.json").is_file()
     assert "--allow-downloads" not in help_result.stdout
+
+
+def test_fail_fast_is_not_user_facing() -> None:
+    build_help = run_cli(ROOT, "build", "--help")
+    production_help = run_cli(ROOT, "production-build", "--help")
+
+    assert build_help.returncode == 0, build_help.stderr
+    assert production_help.returncode == 0, production_help.stderr
+    assert "--fail-fast" not in build_help.stdout
+    assert "--fail-fast" not in production_help.stdout

@@ -576,3 +576,18 @@ The production path defaults to `gpu_torch`, `cpu_gpu`,
 downloads, and error-on-fallback behavior. This is orchestration and reporting
 only: it does not add new reducer math, multidevice scheduling, TPU/JAX, model
 downloads, network verification, or silent CPU fallback.
+
+## 2026-07-07 — Spec 4.7.1 Production Resume / Fail-Fast Truth Polish
+
+Spec 4.7.1 fixes the completed-resume production path. When
+`production-build --resume` finds a complete run manifest and the existing
+artifact validates, it now writes `production_build_report.json` and returns
+`pass` before doctor, planner, or streaming build reruns. If the completed
+artifact is invalid, it fails from validation blockers without invoking the
+planner or builder.
+
+The low-level build CLI keeps `--fail-fast` hidden from users because there is
+no distinct non-fail-fast continuation mode to advertise or record. This patch
+does not add new production behavior, downloads, network verification,
+multidevice scheduling, TPU/JAX support, reducer math changes, or selector
+behavior changes.

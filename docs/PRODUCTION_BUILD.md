@@ -66,5 +66,13 @@ Custom `--run-manifest` and `--progress-log` paths are recorded truthfully in
 streaming metadata, teacher manifests, emission config, cover pages, and
 production reports.
 
+Spec 4.7.1 fixes already-complete production resume truth: when `--resume`
+finds a complete, valid run manifest and the artifact validates, the command
+writes `production_build_report.json` and returns `pass` without rerunning
+doctor, planner, or the streaming builder. If that completed artifact is
+invalid, it fails from validation blockers without rerunning planner or build.
+
 The command does not expose an `--allow-downloads` flag. Teacher model setup is
 a separate local provenance step; see `docs/TEACHER_MODEL_PROVENANCE.md`.
+The low-level build CLI also does not expose `--fail-fast`; only fail-fast
+streaming behavior exists today.

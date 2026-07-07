@@ -115,6 +115,47 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         )
         write_production_build_report(report, report_path)
         return report
+    if already_complete:
+        validation = validate_teacher_textbook(config.output_dir)
+        if validation.status == "pass":
+            report = _production_report(
+                config,
+                created_at=created_at,
+                completed_at=_now(),
+                status="pass",
+                blockers=[],
+                warnings=[],
+                doctor_report={},
+                run_plan_path=run_plan_path,
+                run_plan={"status": "not_run"},
+                effective_batch_size=None,
+                already_complete=True,
+                parity_report_path=parity_report_path,
+                parity_status="not_run",
+                validation_status="pass",
+                build_status="already_complete",
+            )
+            write_production_build_report(report, report_path)
+            return report
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=list(validation.blockers),
+            warnings=list(validation.warnings),
+            doctor_report={},
+            run_plan_path=run_plan_path,
+            run_plan={"status": "not_run"},
+            effective_batch_size=None,
+            already_complete=True,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+            validation_status=validation.status,
+            build_status="already_complete_invalid",
+        )
+        write_production_build_report(report, report_path)
+        return report
     if output_has_artifact and config.overwrite:
         shutil.rmtree(config.output_dir)
 
