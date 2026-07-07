@@ -382,3 +382,26 @@ fallback, future selector claims, or multidevice metadata without
 This is a report/doctor polish step only: no new reducer math, no new selector policy,
 no real auto batch probing, no production global selector, no multidevice, and
 no TPU/JAX.
+
+## 2026-07-07 — Spec 4.1 Corpus Builder and Provenance Contract
+
+Spec 4.1 begins Phase 4, the Production GPU Tome Pipeline, by adding a
+first-class local corpus builder and provenance contract. The builder turns
+local source files into deterministic normalized corpus records, writes
+`corpus.jsonl`, `corpus_manifest.json`, and `corpus_build_report.json`, and
+computes content hashes, source hashes, `corpus_hash`, and `manifest_hash`.
+
+The corpus artifact records normalization policy, chunking policy,
+deduplication policy, source discovery policy, source counts, example counts,
+and source summaries. `radjax-tome corpus build`, `radjax-tome corpus inspect`,
+and `radjax-tome corpus validate` expose the workflow through the public CLI.
+
+Tome builds can now accept `--corpus-manifest` and record
+`source_corpus_hash`, `source_corpus_manifest_hash`, corpus schema, corpus
+counts, normalization policy, chunking policy, deduplication policy, and
+manifest path in target metadata, `teacher_manifest.json`,
+`emission_config.json`, and `cover_page.json`.
+
+Spec 4.1 does not scrape the internet, does not clone GitHub, does not
+download teacher models, does not add semantic filtering, does not implement
+license/legal judgment, does not plan GPU runs, and does not touch TPU/JAX.

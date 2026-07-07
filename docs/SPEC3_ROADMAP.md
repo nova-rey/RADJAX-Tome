@@ -230,3 +230,14 @@ optional parity/deathmatch harness, then 3.3G TPU/JAX backend skeleton.
 3.3G adds TPU/JAX shape without CUDA assumptions.
 
 3.3H exposes backend status through CLI/doctor polish.
+
+## Phase 4
+
+Phase 4 is the Production GPU Tome Pipeline. Spec 4.1 starts that phase with a
+local deterministic corpus builder and provenance contract. It writes
+`corpus.jsonl`, `corpus_manifest.json`, and `corpus_build_report.json`, records
+content/source/corpus/manifest hashes, and lets generated Tomes cite
+`source_corpus_hash` plus manifest provenance.
+
+Spec 4.1 does not scrape the internet, clone GitHub repositories, download
+teacher models, add semantic filtering, plan GPU runs, or touch TPU/JAX.

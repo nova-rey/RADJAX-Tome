@@ -32,6 +32,7 @@ from radjax_tome.builder.teacher_textbook import (
     validate_teacher_textbook,
     write_teacher_textbook_validation_report,
 )
+from radjax_tome.corpora import stringify_corpus_provenance
 from radjax_tome.io.json import write_json
 from radjax_tome.targets.schema import (
     TEACHER_TARGET_STORE_SCHEMA_VERSION,
@@ -75,6 +76,7 @@ class BackendTeacherTextbookBuildConfig:
     local_files_only: bool = True
     allow_downloads: bool = False
     overwrite: bool = False
+    corpus_manifest_path: Path | None = None
 
 
 def build_backend_teacher_textbook(
@@ -111,7 +113,7 @@ def build_backend_teacher_textbook(
         shard_count=shard_count,
         created_by="radjax_tome.builder.backend_textbook",
         created_at=created_at,
-        source={"kind": _dataset_source(config.dataset_path)},
+        source=_metadata_source(config),
         provenance={
             "phase": "radjax-tome-spec-3.3F10",
             "teacher_backend": config.teacher_backend,
@@ -355,6 +357,7 @@ def _target_params(
         "student_consumption_ready": "false",
         "experimental_target_schema": "true",
         "production_global_selector": "false",
+        **_corpus_provenance(config),
     }
     for key, value in backend_metadata.items():
         params[_target_param_key(key)] = _stringify_metadata_value(value)
@@ -438,6 +441,7 @@ def _write_backend_sidecars(
     target_type: str,
     shard_count: int,
 ) -> None:
+    corpus_provenance = _corpus_provenance(config)
     write_json(
         config.output_dir / "vocab_contract.json",
         {
@@ -467,6 +471,7 @@ def _write_backend_sidecars(
             "created_at": created_at,
             "local_files_only": config.local_files_only,
             "allow_downloads": config.allow_downloads,
+            "corpus_provenance": corpus_provenance or None,
             "claims_not_made": (
                 "no_silent_cpu_fallback",
                 "no_historical_parity_claim",
@@ -503,12 +508,21 @@ def _write_backend_sidecars(
                 if selection_manifest is not None
                 else None
             ),
+            "corpus_provenance": corpus_provenance or None,
         },
     )
 
 
 def _dataset_source(path: Path | None) -> str:
     return "builtin_examples" if path is None else str(path)
+
+
+def _metadata_source(config: BackendTeacherTextbookBuildConfig) -> dict[str, str]:
+    return {"kind": _dataset_source(config.dataset_path), **_corpus_provenance(config)}
+
+
+def _corpus_provenance(config: BackendTeacherTextbookBuildConfig) -> dict[str, str]:
+    return stringify_corpus_provenance(config.corpus_manifest_path)
 
 
 def _effective_capture_mode(

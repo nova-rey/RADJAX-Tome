@@ -104,3 +104,9 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "no production global selector" in text
     assert "no multidevice" in text
     assert "no TPU/JAX" in text
+    assert "Spec 4.1" in text
+    assert "Corpus Builder and Provenance Contract" in text
+    assert "corpus_hash" in text
+    assert "manifest_hash" in text
+    assert "radjax-tome corpus build" in text
+    assert "source_corpus_hash" in text

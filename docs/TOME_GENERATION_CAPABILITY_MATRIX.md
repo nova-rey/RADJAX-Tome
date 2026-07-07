@@ -29,6 +29,10 @@ generation capability statuses, backend emission semantics, reducer math,
 selector policy, real auto batch probing, production global selection,
 multidevice scheduling, or TPU/JAX support.
 
+Spec 4.1 adds local corpus-builder/provenance utilities. Corpus artifacts can
+be hashed, validated, inspected, and linked into generated Tome metadata, but
+backend emission capability statuses are unchanged.
+
 ## Synthetic Vs Real Teacher Proof
 
 Dense, top-k/tail, cascaded, fingerprint, and exemplar proofs use

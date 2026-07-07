@@ -12,6 +12,7 @@ Recommended commands:
   build
   validate
   inspect
+  corpus
   pack
   unpack
   prove-capabilities
@@ -49,6 +50,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     build.add_argument("--teacher-model", default="fake-deterministic-teacher")
     build.add_argument("--dataset", type=Path)
+    build.add_argument("--corpus-manifest", type=Path)
     build.add_argument("--max-examples", type=int, default=4)
     build.add_argument("--sequence-length", type=int, default=16)
     build.add_argument("--batch-size", type=int, default=2)
@@ -191,6 +193,38 @@ def _build_parser() -> argparse.ArgumentParser:
     prove.add_argument("--overwrite", action="store_true")
     prove.set_defaults(func=_cmd_prove_capabilities)
 
+    corpus = subparsers.add_parser(
+        "corpus",
+        help="Build, inspect, and validate deterministic local corpus artifacts.",
+    )
+    corpus_subparsers = corpus.add_subparsers(dest="corpus_command", required=True)
+    corpus_build = corpus_subparsers.add_parser(
+        "build",
+        help="Build a deterministic corpus artifact from local files.",
+    )
+    corpus_build.add_argument("--input", type=Path, action="append", required=True)
+    corpus_build.add_argument("--output", type=Path, required=True)
+    corpus_build.add_argument("--include", action="append", default=[])
+    corpus_build.add_argument("--exclude", action="append", default=[])
+    corpus_build.add_argument("--min-chars", type=int, default=1)
+    corpus_build.add_argument("--max-chars", type=int, default=12_000)
+    corpus_build.add_argument("--overwrite", action="store_true")
+    corpus_build.set_defaults(func=_cmd_corpus_build)
+
+    corpus_inspect = corpus_subparsers.add_parser(
+        "inspect",
+        help="Inspect a deterministic corpus artifact.",
+    )
+    corpus_inspect.add_argument("--path", type=Path, required=True)
+    corpus_inspect.set_defaults(func=_cmd_corpus_inspect)
+
+    corpus_validate = corpus_subparsers.add_parser(
+        "validate",
+        help="Validate a deterministic corpus artifact.",
+    )
+    corpus_validate.add_argument("--path", type=Path, required=True)
+    corpus_validate.set_defaults(func=_cmd_corpus_validate)
+
     doctor = subparsers.add_parser(
         "doctor",
         help="Show environment and command recommendations.",
@@ -291,6 +325,7 @@ def _cmd_build(args: argparse.Namespace) -> int:
             exemplar_fulfillment_policy=args.exemplar_fulfillment_policy,
             local_files_only=True,
             allow_downloads=False,
+            corpus_manifest_path=args.corpus_manifest,
         )
         report = build_backend_teacher_textbook(config)
         print(
@@ -314,6 +349,7 @@ def _cmd_build(args: argparse.Namespace) -> int:
         top_k=args.top_k,
         local_files_only=teacher_mode != "hf",
         allow_downloads=False,
+        corpus_manifest_path=args.corpus_manifest,
     )
     try:
         report = build_teacher_textbook(config)
@@ -503,6 +539,63 @@ def _cmd_prove_capabilities(args: argparse.Namespace) -> int:
     )
     print(result.status_line())
     return result.exit_code
+
+
+def _cmd_corpus_build(args: argparse.Namespace) -> int:
+    from radjax_tome.corpora import (
+        DEFAULT_EXCLUDE_GLOBS,
+        CorpusBuildConfig,
+        build_corpus_artifact,
+    )
+
+    exclude_globs = tuple(args.exclude) if args.exclude else DEFAULT_EXCLUDE_GLOBS
+    report = build_corpus_artifact(
+        CorpusBuildConfig(
+            inputs=tuple(args.input),
+            output_dir=args.output,
+            include_globs=tuple(args.include),
+            exclude_globs=exclude_globs,
+            min_chars=args.min_chars,
+            max_chars=args.max_chars,
+            overwrite=args.overwrite,
+        )
+    )
+    print(
+        f"status={report['status']} output={args.output} "
+        f"examples={report['num_examples']} sources={report['num_sources_included']} "
+        f"corpus_hash={report['corpus_hash']}"
+    )
+    return 1 if report["status"] == "fail" else 0
+
+
+def _cmd_corpus_inspect(args: argparse.Namespace) -> int:
+    from radjax_tome.corpora import inspect_corpus_artifact
+
+    summary = inspect_corpus_artifact(args.path)
+    for key in (
+        "corpus_schema",
+        "num_examples",
+        "num_sources",
+        "num_chars",
+        "corpus_hash",
+        "manifest_hash",
+        "normalization_policy",
+        "chunking_policy",
+        "deduplication_policy",
+    ):
+        print(f"{key}={summary[key]}")
+    return 0
+
+
+def _cmd_corpus_validate(args: argparse.Namespace) -> int:
+    from radjax_tome.corpora import validate_corpus_artifact
+
+    report = validate_corpus_artifact(args.path)
+    print(
+        f"status={report.status} blockers={len(report.blockers)} "
+        f"warnings={len(report.warnings)} corpus_hash={report.corpus_hash}"
+    )
+    return 0 if report.status == "pass" else 1
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:

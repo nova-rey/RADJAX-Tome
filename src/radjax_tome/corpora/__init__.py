@@ -1,5 +1,22 @@
 """Corpus loading and split utilities."""
 
+from radjax_tome.corpora.builder import (
+    CORPUS_BUILD_REPORT_FILENAME,
+    CORPUS_BUILD_REPORT_SCHEMA,
+    CORPUS_JSONL_FILENAME,
+    CORPUS_MANIFEST_FILENAME,
+    CORPUS_MANIFEST_SCHEMA,
+    DEFAULT_EXCLUDE_GLOBS,
+    CorpusBuildConfig,
+    CorpusValidationReport,
+    build_corpus_artifact,
+    corpus_provenance_from_manifest,
+    inspect_corpus_artifact,
+    normalize_text,
+    read_corpus_manifest,
+    stringify_corpus_provenance,
+    validate_corpus_artifact,
+)
 from radjax_tome.corpora.loaders import load_jsonl_corpus
 from radjax_tome.corpora.prompts import (
     PromptCorpus,
@@ -31,6 +48,14 @@ from radjax_tome.corpora.tokenizer import (
 )
 
 __all__ = [
+    "CORPUS_BUILD_REPORT_FILENAME",
+    "CORPUS_BUILD_REPORT_SCHEMA",
+    "CORPUS_JSONL_FILENAME",
+    "CORPUS_MANIFEST_FILENAME",
+    "CORPUS_MANIFEST_SCHEMA",
+    "CorpusBuildConfig",
+    "CorpusValidationReport",
+    "DEFAULT_EXCLUDE_GLOBS",
     "SmokeTokenizer",
     "PromptCorpus",
     "PromptCorpusManifest",
@@ -41,16 +66,23 @@ __all__ = [
     "TokenizerMetadata",
     "assign_prompt_splits",
     "available_tokenizer_backends",
+    "build_corpus_artifact",
     "build_prompt_corpus_manifest",
     "compute_prompt_corpus_hash",
+    "corpus_provenance_from_manifest",
     "create_tokenizer",
     "filter_prompt_corpus",
     "hash_prompt_records",
+    "inspect_corpus_artifact",
     "load_jsonl_corpus",
+    "normalize_text",
     "normalize_tokenizer_config",
+    "read_corpus_manifest",
     "read_prompt_corpus",
     "split_corpus",
+    "stringify_corpus_provenance",
     "tokenize_jsonl_corpus",
+    "validate_corpus_artifact",
     "validate_prompt_corpus",
     "write_prompt_corpus",
     "write_prompt_corpus_manifest",

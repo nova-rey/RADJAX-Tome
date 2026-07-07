@@ -63,7 +63,7 @@ def build_cover_page(tome_root: str | Path) -> dict[str, Any]:
     teacher_manifest = read_json_object(root / "teacher_manifest.json")
     validation_report = read_json_object(root / "validation_report.json")
     contents = _content_entries(root)
-    return {
+    cover_page = {
         "artifact_kind": ARTIFACT_KIND,
         "claims_not_made": _claims_not_made(teacher_manifest, validation_report),
         "contents": contents,
@@ -104,6 +104,10 @@ def build_cover_page(tome_root: str | Path) -> dict[str, Any]:
             "validation_report_path": "validation_report.json",
         },
     }
+    corpus_provenance = teacher_manifest.get("corpus_provenance")
+    if isinstance(corpus_provenance, dict):
+        cover_page["corpus"] = dict(corpus_provenance)
+    return cover_page
 
 
 def write_cover_page(tome_root: str | Path) -> Path:

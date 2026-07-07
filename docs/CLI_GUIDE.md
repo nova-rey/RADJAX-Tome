@@ -35,6 +35,31 @@ Use `pack` and `unpack` for deterministic `.rtome` bundle v1 archives. Bundle
 validation and inspection work through the same `validate --path` and
 `inspect --path` commands. See `docs/TOME_BUNDLE.md`.
 
+Build deterministic local corpus artifacts before Tome generation:
+
+```bash
+radjax-tome corpus build \
+  --input ./sources \
+  --output ./corpus_out \
+  --include "**/*.md" \
+  --include "**/*.txt" \
+  --overwrite
+
+radjax-tome corpus inspect --path ./corpus_out
+radjax-tome corpus validate --path ./corpus_out
+
+radjax-tome build \
+  --dataset ./corpus_out/corpus.jsonl \
+  --corpus-manifest ./corpus_out/corpus_manifest.json \
+  --output artifacts/from_corpus \
+  --teacher-mode fake \
+  --overwrite
+```
+
+The corpus builder is local-only. It writes `corpus_hash` and
+`manifest_hash` provenance that generated Tomes can cite. See
+`docs/CORPUS_BUILDER.md`.
+
 For runtime/backend preflight and artifact metadata sanity checks:
 
 ```bash
