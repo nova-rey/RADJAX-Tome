@@ -372,6 +372,18 @@ def _selection_target_params(
         "exemplar_selection_manifest_schema": str(manifest["schema_version"]),
         "exemplar_fulfillment_policy": str(manifest["fulfillment_policy"]),
         "selection_application": str(manifest["selection_application"]),
+        "deduplication_policy": str(manifest["deduplication_policy"]),
+        "duplicate_candidate_count": _stringify_metadata_value(
+            manifest["duplicate_candidate_count"]
+        ),
+        "backfill_success_count": _stringify_metadata_value(
+            manifest["backfill_success_count"]
+        ),
+        "score_aware_budget_trimming": _stringify_metadata_value(
+            manifest["score_aware_budget_trimming"]
+        ),
+        "budget_trimming_policy": str(manifest["budget_trimming_policy"]),
+        "budget_applied": _stringify_metadata_value(manifest["budget_applied"]),
         "num_candidates_seen": _stringify_metadata_value(
             manifest["num_candidates_seen"]
         ),

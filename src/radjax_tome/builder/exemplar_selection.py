@@ -19,6 +19,19 @@ PATH_A_FULFILLMENT_POLICY = "select_from_existing_capture"
 PATH_B_FULFILLMENT_POLICY = "rerun_selected_capture"
 PATH_A_SELECTION_APPLICATION = "retain_selected_candidates"
 PATH_B_SELECTION_APPLICATION = "rerun_selected_examples"
+RANK_AWARE_DEDUPLICATION_POLICY = "rank_aware_board_assignment_with_backfill_v1"
+SCORE_AWARE_BUDGET_TRIMMING_POLICY = "score_aware_assigned_board_rank_v1"
+RUNNER_UP_POOL_MULTIPLIER = 4
+_BOARD_PRIORITY_PREFIXES = (
+    "global_max_entropy",
+    "low_confidence",
+    "high_tail_mass",
+    "high_effective_top_k",
+    "global_mean_entropy",
+    "position_bucket_entropy",
+    "length_bucket_entropy",
+    "shard_coverage",
+)
 
 
 @dataclass(frozen=True)
@@ -46,42 +59,63 @@ class _BoardEntry:
 
 
 class _Board:
-    def __init__(self, board_id: str, score_policy: str, capacity: int) -> None:
+    def __init__(
+        self,
+        board_id: str,
+        score_policy: str,
+        capacity: int,
+        runner_up_pool_multiplier: int,
+    ) -> None:
         self.board_id = board_id
         self.score_policy = score_policy
         self.capacity = capacity
+        self.runner_up_pool_multiplier = runner_up_pool_multiplier
+        self.pool_capacity = capacity * runner_up_pool_multiplier
         self.candidate_count_seen = 0
-        self._winners: list[_BoardEntry] = []
+        self._pool: list[_BoardEntry] = []
+        self.assigned_winners: list[_BoardEntry] = []
+        self.backfill_count = 0
+        self.duplicate_suppression_count = 0
 
     def consider(self, candidate: ExemplarCandidate, score: float | None) -> None:
         if score is None:
             return
         self.candidate_count_seen += 1
         entry = _BoardEntry(score=score, candidate=candidate)
-        self._winners.append(entry)
-        self._winners.sort(key=self._sort_key)
-        del self._winners[self.capacity :]
+        self._pool.append(entry)
+        self._pool.sort(key=self._sort_key)
+        del self._pool[self.pool_capacity :]
 
     @property
-    def winners(self) -> tuple[_BoardEntry, ...]:
-        return tuple(self._winners)
+    def pool(self) -> tuple[_BoardEntry, ...]:
+        return tuple(self._pool)
 
     def to_manifest(self) -> dict[str, object]:
-        cutoff_score = self._winners[-1].score if self._winners else None
+        cutoff_score = (
+            self.assigned_winners[-1].score if self.assigned_winners else None
+        )
+        assigned_identities = {
+            entry.candidate.position_key for entry in self.assigned_winners
+        }
         return {
             "board_id": self.board_id,
             "score_policy": self.score_policy,
             "capacity": self.capacity,
+            "pool_capacity": self.pool_capacity,
             "candidate_count_seen": self.candidate_count_seen,
-            "winner_count": len(self._winners),
+            "winner_count": len(self.assigned_winners),
+            "assigned_winner_count": len(self.assigned_winners),
+            "runner_up_count": len(self._pool) - len(assigned_identities),
             "cutoff_score": cutoff_score,
+            "backfill_count": self.backfill_count,
+            "duplicate_suppression_count": self.duplicate_suppression_count,
             "winners": [
                 {
                     "example_id": entry.candidate.example_id,
                     "selected_position": entry.candidate.selected_position,
                     "score": entry.score,
                 }
-                for entry in self._winners
+                for entry in self.assigned_winners
             ],
         }
 
@@ -214,33 +248,42 @@ def select_exemplars(
 ) -> dict[str, Any]:
     if board_capacity < 1:
         raise ValueError("exemplar_selection_board_capacity must be positive")
+    _validate_budget_request(
+        budget_examples=budget_examples,
+        budget_fraction=budget_fraction,
+    )
     boards: dict[str, _Board] = {}
     num_candidates_seen = 0
     for candidate in candidates:
         num_candidates_seen += 1
         for board_id, score_policy, score in _scores_for_candidate(candidate):
+            if score is None:
+                continue
             board = boards.setdefault(
                 board_id,
                 _Board(
                     board_id=board_id,
                     score_policy=score_policy,
                     capacity=board_capacity,
+                    runner_up_pool_multiplier=RUNNER_UP_POOL_MULTIPLIER,
                 ),
             )
             board.consider(candidate, score)
 
-    selected_by_position: dict[tuple[str, int], dict[str, Any]] = {}
-    num_board_winners = 0
-    for board in boards.values():
-        for entry in board.winners:
-            num_board_winners += 1
-            _merge_position_winner(selected_by_position, board, entry)
-
-    selected_examples = _selected_examples(
-        selected_by_position.values(),
+    assignment = _assign_rank_aware_board_winners(boards)
+    position_records = _position_records_from_assignment(boards)
+    budget_result = _apply_score_aware_budget(
+        position_records,
         fulfillment_policy=fulfillment_policy,
         budget_examples=budget_examples,
         budget_fraction=budget_fraction,
+    )
+    selected_examples = budget_result["selected_examples"]
+
+    num_board_winners = sum(len(board.assigned_winners) for board in boards.values())
+    duplicate_candidate_count = _duplicate_candidate_count(boards)
+    boards_with_backfill = sorted(
+        board_id for board_id, board in boards.items() if board.backfill_count
     )
     application = _selection_application(fulfillment_policy)
     retention_policy = (
@@ -262,7 +305,19 @@ def select_exemplars(
         "num_unique_positions_selected": sum(
             len(record["selected_positions"]) for record in selected_examples
         ),
-        "deduplication_policy": "example_id_plus_selected_position_then_example_union",
+        "deduplication_policy": RANK_AWARE_DEDUPLICATION_POLICY,
+        "duplicate_candidate_count": duplicate_candidate_count,
+        "backfill_attempt_count": assignment["backfill_attempt_count"],
+        "backfill_success_count": assignment["backfill_success_count"],
+        "boards_with_backfill": boards_with_backfill,
+        "runner_up_pool_multiplier": RUNNER_UP_POOL_MULTIPLIER,
+        "score_aware_budget_trimming": True,
+        "budget_trimming_policy": SCORE_AWARE_BUDGET_TRIMMING_POLICY,
+        "budget_requested_examples": budget_examples,
+        "budget_requested_fraction": budget_fraction,
+        "budget_applied": budget_result["budget_applied"],
+        "budget_trimmed_example_count": budget_result["trimmed_example_count"],
+        "budget_trimmed_position_count": budget_result["trimmed_position_count"],
         "production_global_selector": False,
         "semantic_diversity_used": False,
         "utility_calibrated": False,
@@ -356,6 +411,18 @@ def validate_exemplar_selection_manifest(manifest: Mapping[str, Any]) -> None:
         "num_unique_examples_selected",
         "num_unique_positions_selected",
         "deduplication_policy",
+        "duplicate_candidate_count",
+        "backfill_attempt_count",
+        "backfill_success_count",
+        "boards_with_backfill",
+        "runner_up_pool_multiplier",
+        "score_aware_budget_trimming",
+        "budget_trimming_policy",
+        "budget_requested_examples",
+        "budget_requested_fraction",
+        "budget_applied",
+        "budget_trimmed_example_count",
+        "budget_trimmed_position_count",
         "production_global_selector",
         "semantic_diversity_used",
         "utility_calibrated",
@@ -372,6 +439,10 @@ def validate_exemplar_selection_manifest(manifest: Mapping[str, Any]) -> None:
         raise ValueError("unsupported exemplar selection manifest schema")
     if manifest["selection_policy"] != MULTI_LEADERBOARD_SELECTOR_POLICY:
         raise ValueError("unsupported exemplar selection policy")
+    if manifest["deduplication_policy"] != RANK_AWARE_DEDUPLICATION_POLICY:
+        raise ValueError("unsupported exemplar deduplication policy")
+    if manifest["budget_trimming_policy"] != SCORE_AWARE_BUDGET_TRIMMING_POLICY:
+        raise ValueError("unsupported exemplar budget trimming policy")
     if manifest["production_global_selector"] is not False:
         raise ValueError("manifest must not claim production global selection")
     if manifest["semantic_diversity_used"] is not False:
@@ -449,34 +520,203 @@ def _inverse_confidence(candidate: ExemplarCandidate) -> float | None:
     return None if confidence is None else 1.0 - confidence
 
 
-def _merge_position_winner(
-    selected: dict[tuple[str, int], dict[str, Any]],
-    board: _Board,
-    entry: _BoardEntry,
-) -> None:
-    candidate = entry.candidate
-    record = selected.setdefault(
-        candidate.position_key,
-        {
-            "candidate": candidate,
-            "winning_boards": [],
-            "scores_by_board": {},
-            "selection_reasons": [],
-        },
+def _assign_rank_aware_board_winners(
+    boards: Mapping[str, _Board],
+) -> dict[str, int]:
+    for board in boards.values():
+        board.assigned_winners = list(board.pool[: board.capacity])
+        board.backfill_count = 0
+        board.duplicate_suppression_count = 0
+
+    backfill_attempt_count = 0
+    backfill_success_count = 0
+    changed = True
+    while changed:
+        changed = False
+        assigned_by_identity: dict[tuple[str, int], list[str]] = {}
+        for board_id, board in boards.items():
+            for entry in board.assigned_winners:
+                assigned_by_identity.setdefault(
+                    entry.candidate.position_key, []
+                ).append(board_id)
+        for identity, board_ids in sorted(assigned_by_identity.items()):
+            if len(board_ids) < 2:
+                continue
+            strongest = _strongest_board_for_identity(identity, board_ids, boards)
+            for board_id in board_ids:
+                if board_id == strongest:
+                    continue
+                board = boards[board_id]
+                before = len(board.assigned_winners)
+                board.assigned_winners = [
+                    entry
+                    for entry in board.assigned_winners
+                    if entry.candidate.position_key != identity
+                ]
+                if len(board.assigned_winners) != before:
+                    board.duplicate_suppression_count += 1
+                    changed = True
+
+        assigned_identities = _assigned_identities(boards)
+        for board_id in sorted(boards, key=_board_priority):
+            board = boards[board_id]
+            while len(board.assigned_winners) < board.capacity:
+                backfill_attempt_count += 1
+                replacement = _next_backfill_entry(board, assigned_identities)
+                if replacement is None:
+                    break
+                board.assigned_winners.append(replacement)
+                board.assigned_winners.sort(key=board._sort_key)
+                board.backfill_count += 1
+                backfill_success_count += 1
+                assigned_identities.add(replacement.candidate.position_key)
+                changed = True
+
+    return {
+        "backfill_attempt_count": backfill_attempt_count,
+        "backfill_success_count": backfill_success_count,
+    }
+
+
+def _strongest_board_for_identity(
+    identity: tuple[str, int],
+    board_ids: Iterable[str],
+    boards: Mapping[str, _Board],
+) -> str:
+    return min(
+        board_ids,
+        key=lambda board_id: _identity_board_strength(identity, board_id, boards),
     )
-    if board.board_id not in record["winning_boards"]:
-        record["winning_boards"].append(board.board_id)
-        record["selection_reasons"].append(board.score_policy)
-    record["scores_by_board"][board.board_id] = entry.score
 
 
-def _selected_examples(
-    position_records: Iterable[Mapping[str, Any]],
+def _identity_board_strength(
+    identity: tuple[str, int],
+    board_id: str,
+    boards: Mapping[str, _Board],
+) -> tuple[int, float, int, str, int]:
+    rank, entry = _entry_rank_for_identity(boards[board_id], identity)
+    return (
+        rank,
+        -entry.score,
+        _board_priority(board_id),
+        identity[0],
+        identity[1],
+    )
+
+
+def _entry_rank_for_identity(
+    board: _Board,
+    identity: tuple[str, int],
+) -> tuple[int, _BoardEntry]:
+    for index, entry in enumerate(board.pool, start=1):
+        if entry.candidate.position_key == identity:
+            return index, entry
+    raise ValueError(f"candidate identity missing from board pool: {identity}")
+
+
+def _next_backfill_entry(
+    board: _Board,
+    assigned_identities: set[tuple[str, int]],
+) -> _BoardEntry | None:
+    local_identities = {
+        entry.candidate.position_key for entry in board.assigned_winners
+    }
+    for entry in board.pool:
+        identity = entry.candidate.position_key
+        if identity in local_identities:
+            continue
+        if identity in assigned_identities:
+            continue
+        return entry
+    return None
+
+
+def _assigned_identities(boards: Mapping[str, _Board]) -> set[tuple[str, int]]:
+    return {
+        entry.candidate.position_key
+        for board in boards.values()
+        for entry in board.assigned_winners
+    }
+
+
+def _position_records_from_assignment(
+    boards: Mapping[str, _Board],
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for board_id in sorted(boards, key=_board_priority):
+        board = boards[board_id]
+        for entry in board.assigned_winners:
+            candidate = entry.candidate
+            context = _candidate_board_context(candidate.position_key, boards)
+            records.append(
+                {
+                    "candidate": candidate,
+                    "selected_position": candidate.selected_position,
+                    "assigned_board": board_id,
+                    "winning_boards": context["winning_boards"],
+                    "suppressed_duplicate_boards": [
+                        value
+                        for value in context["winning_boards"]
+                        if value != board_id
+                    ],
+                    "rank_by_board": context["rank_by_board"],
+                    "scores_by_board": context["scores_by_board"],
+                    "selection_reasons": context["selection_reasons"],
+                    "payload_ref": candidate.payload_ref,
+                    "sort_key": _position_budget_sort_key(
+                        assigned_board=board_id,
+                        candidate=candidate,
+                        rank_by_board=context["rank_by_board"],
+                        scores_by_board=context["scores_by_board"],
+                        winning_boards=context["winning_boards"],
+                    ),
+                }
+            )
+    records.sort(key=lambda item: item["sort_key"])
+    return records
+
+
+def _candidate_board_context(
+    identity: tuple[str, int],
+    boards: Mapping[str, _Board],
+) -> dict[str, Any]:
+    winning_boards: list[str] = []
+    rank_by_board: dict[str, int] = {}
+    scores_by_board: dict[str, float] = {}
+    selection_reasons: dict[str, str] = {}
+    for board_id, board in boards.items():
+        for rank, entry in enumerate(board.pool, start=1):
+            if entry.candidate.position_key != identity:
+                continue
+            winning_boards.append(board_id)
+            rank_by_board[board_id] = rank
+            scores_by_board[board_id] = entry.score
+            selection_reasons[board_id] = board.score_policy
+            break
+    return {
+        "winning_boards": sorted(winning_boards, key=_board_priority),
+        "rank_by_board": {
+            key: rank_by_board[key]
+            for key in sorted(rank_by_board, key=_board_priority)
+        },
+        "scores_by_board": {
+            key: scores_by_board[key]
+            for key in sorted(scores_by_board, key=_board_priority)
+        },
+        "selection_reasons": [
+            selection_reasons[key]
+            for key in sorted(selection_reasons, key=_board_priority)
+        ],
+    }
+
+
+def _apply_score_aware_budget(
+    position_records: list[dict[str, Any]],
     *,
     fulfillment_policy: str,
     budget_examples: int | None,
     budget_fraction: float | None,
-) -> list[dict[str, Any]]:
+) -> dict[str, Any]:
     examples: dict[str, dict[str, Any]] = {}
     for position_record in position_records:
         candidate = position_record["candidate"]
@@ -491,13 +731,20 @@ def _selected_examples(
                 "scores_by_board": {},
                 "selection_reasons": [],
                 "payload_ref": candidate.payload_ref,
+                "selected_position_records": [],
+                "sort_key": position_record["sort_key"],
                 "rerun_for_pass_2": fulfillment_policy == PATH_B_FULFILLMENT_POLICY,
                 "retain_from_existing_capture": (
                     fulfillment_policy == PATH_A_FULFILLMENT_POLICY
                 ),
             },
         )
+        if position_record["sort_key"] < record["sort_key"]:
+            record["sort_key"] = position_record["sort_key"]
         record["selected_positions"].append(candidate.selected_position)
+        record["selected_position_records"].append(
+            _selected_position_manifest_record(position_record)
+        )
         for board_id in position_record["winning_boards"]:
             if board_id not in record["winning_boards"]:
                 record["winning_boards"].append(board_id)
@@ -515,16 +762,79 @@ def _selected_examples(
             key: record["scores_by_board"][key]
             for key in sorted(record["scores_by_board"])
         }
-    selected.sort(key=lambda item: (item["example_id"], item["source_shard_id"]))
-    limit = _selection_limit(
+        record["selected_position_records"].sort(
+            key=lambda item: (
+                item["rank_by_board"].get(item["assigned_board"], 999_999),
+                _board_priority(item["assigned_board"]),
+                item["selected_position"],
+            )
+        )
+    selected.sort(key=lambda item: item["sort_key"])
+    original_examples = len(selected)
+    original_positions = sum(len(record["selected_positions"]) for record in selected)
+    limit = _selection_limit_from_budget(
         selected_count=len(selected),
         budget_examples=budget_examples,
         budget_fraction=budget_fraction,
     )
-    return selected[:limit]
+    selected = selected[:limit]
+    for record in selected:
+        del record["sort_key"]
+    retained_positions = sum(len(record["selected_positions"]) for record in selected)
+    return {
+        "selected_examples": selected,
+        "budget_applied": limit < original_examples,
+        "trimmed_example_count": original_examples - len(selected),
+        "trimmed_position_count": original_positions - retained_positions,
+    }
 
 
-def _selection_limit(
+def _selected_position_manifest_record(
+    position_record: Mapping[str, Any],
+) -> dict[str, Any]:
+    candidate = position_record["candidate"]
+    return {
+        "selected_position": candidate.selected_position,
+        "assigned_board": position_record["assigned_board"],
+        "winning_boards": position_record["winning_boards"],
+        "suppressed_duplicate_boards": position_record["suppressed_duplicate_boards"],
+        "rank_by_board": position_record["rank_by_board"],
+        "scores_by_board": position_record["scores_by_board"],
+        "selection_reasons": position_record["selection_reasons"],
+        "payload_ref": position_record["payload_ref"],
+    }
+
+
+def _position_budget_sort_key(
+    *,
+    assigned_board: str,
+    candidate: ExemplarCandidate,
+    rank_by_board: Mapping[str, int],
+    scores_by_board: Mapping[str, float],
+    winning_boards: Iterable[str],
+) -> tuple[int, int, float, int, str, int]:
+    return (
+        int(rank_by_board[assigned_board]),
+        _board_priority(assigned_board),
+        -float(scores_by_board[assigned_board]),
+        -len(tuple(winning_boards)),
+        candidate.example_id,
+        candidate.selected_position,
+    )
+
+
+def _validate_budget_request(
+    *,
+    budget_examples: int | None,
+    budget_fraction: float | None,
+) -> None:
+    if budget_examples is not None and budget_examples < 1:
+        raise ValueError("exemplar_selection_budget_examples must be positive")
+    if budget_fraction is not None and not 0 < budget_fraction <= 1:
+        raise ValueError("exemplar_selection_budget_fraction must be in (0, 1]")
+
+
+def _selection_limit_from_budget(
     *,
     selected_count: int,
     budget_examples: int | None,
@@ -532,14 +842,25 @@ def _selection_limit(
 ) -> int:
     limit = selected_count
     if budget_examples is not None:
-        if budget_examples < 1:
-            raise ValueError("exemplar_selection_budget_examples must be positive")
         limit = min(limit, budget_examples)
     if budget_fraction is not None:
-        if not 0 < budget_fraction <= 1:
-            raise ValueError("exemplar_selection_budget_fraction must be in (0, 1]")
         limit = min(limit, max(1, int(np.ceil(selected_count * budget_fraction))))
     return limit
+
+
+def _duplicate_candidate_count(boards: Mapping[str, _Board]) -> int:
+    appearances: dict[tuple[str, int], set[str]] = {}
+    for board_id, board in boards.items():
+        for entry in board.pool:
+            appearances.setdefault(entry.candidate.position_key, set()).add(board_id)
+    return sum(1 for board_ids in appearances.values() if len(board_ids) > 1)
+
+
+def _board_priority(board_id: str) -> int:
+    for priority, prefix in enumerate(_BOARD_PRIORITY_PREFIXES):
+        if board_id == prefix or board_id.startswith(f"{prefix}:"):
+            return priority
+    return len(_BOARD_PRIORITY_PREFIXES)
 
 
 def _selection_application(fulfillment_policy: str) -> str:

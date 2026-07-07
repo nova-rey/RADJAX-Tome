@@ -348,6 +348,16 @@ claimed optimal production selector, real auto batch probing, multidevice
 scheduling, TPU/JAX, or reducer math changes. Backend emission capability
 statuses are unchanged.
 
+Spec 3.3F10.1.1 refines the multi-leaderboard dedupe pass with
+`rank_aware_board_assignment_with_backfill_v1`. If one candidate appears on
+several boards, it stays on the board where it ranked strongest, is suppressed
+from weaker boards, and those boards scan runner-up pools to backfill open
+slots. Budget trimming is `score_aware_assigned_board_rank_v1`, so retained
+examples prefer better assigned-board rank and score rather than alphabetical
+example IDs. This remains the same selector architecture and makes no semantic
+embedding, utility-calibrated, production global selector, TPU/JAX, or backend
+capability claim.
+
 ## Runtime Modes
 
 `cpu` means CPU-side orchestration plus CPU teacher execution and reduction. It
@@ -426,6 +436,9 @@ peak memory. Public builder migration, multidevice scheduling, and TPU/JAX
 remain out of scope.
 Spec 3.3F10.1 adds the shared multi-leaderboard exemplar selector. Path A and
 Path B use the same selector; only fulfillment differs.
+Spec 3.3F10.1.1 makes that selector rank-aware: duplicate candidates are
+assigned to their strongest board, weaker boards backfill from runner-up pools,
+and budget trimming is score-aware rather than alphabetical.
 
 ## Support Statuses
 

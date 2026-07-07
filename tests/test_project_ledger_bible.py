@@ -86,3 +86,6 @@ def test_project_ledger_bible_exists_and_mentions_current_arc() -> None:
     assert "3.3F10.1" in text
     assert "multi_leaderboard_exemplar_selector_v1" in text
     assert "exemplar_selection_manifest.json" in text
+    assert "3.3F10.1.1" in text
+    assert "rank_aware_board_assignment_with_backfill_v1" in text
+    assert "runner-up backfill" in text

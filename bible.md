@@ -347,3 +347,19 @@ for selected examples.
 This adds no semantic embeddings, no utility-calibrated selector, and no
 TPU/JAX work. It also does not change reducer math or backend capability
 statuses.
+
+## 2026-07-07 — Spec 3.3F10.1.1 Rank-Aware Leaderboard Deduplication Backfill
+
+Spec 3.3F10.1.1 refines `multi_leaderboard_exemplar_selector_v1` with
+`rank_aware_board_assignment_with_backfill_v1`. Duplicate suppression now
+assigns a candidate to the board where it ranks strongest, removes it from
+weaker boards, and lets those boards perform runner-up backfill from retained
+candidate pools.
+
+The same `exemplar_selection_manifest.json` records assigned boards,
+suppressed duplicate boards, rank-by-board evidence, duplicate/backfill counts,
+and score-aware budget trimming through `score_aware_assigned_board_rank_v1`.
+
+This adds no semantic embeddings, no utility-calibrated selector, no production
+global selector, and no TPU/JAX work. Backend reducer math and Path A / Path B
+capture semantics stay unchanged.

@@ -128,6 +128,9 @@ def test_public_cli_backend_selection_manifest_smoke(tmp_path: Path) -> None:
         (output / "exemplar_selection_manifest.json").read_text(encoding="utf-8")
     )
     assert manifest["selection_policy"] == "multi_leaderboard_exemplar_selector_v1"
+    assert manifest["deduplication_policy"] == (
+        "rank_aware_board_assignment_with_backfill_v1"
+    )
     assert manifest["fulfillment_policy"] == "select_from_existing_capture"
 
 

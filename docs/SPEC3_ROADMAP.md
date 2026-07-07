@@ -98,6 +98,7 @@ Spec 3.3F is split into smaller GPU Torch migration units:
 | 3.3F9 | GPU Corridor/Exemplar Acceleration | complete once gpu_torch emits the F8 production schema |
 | 3.3F10 | GPU Builder Integration Gate | complete once backend-routed builder artifacts land |
 | 3.3F10.1 | Multi-Leaderboard Exemplar Selection Harness | complete once shared selector manifests land |
+| 3.3F10.1.1 | Rank-Aware Leaderboard Deduplication Backfill | complete once rank-aware dedupe and backfill land |
 | 3.3F11 | GPU Runtime Final Polish / Doctor Metadata | planned |
 
 Spec 3.3F1 adds `gpu_torch` as a CUDA/MPS-detecting dense debug backend. It
@@ -200,13 +201,20 @@ production-shaped rerun requisition for selected examples. This does not add
 semantic embeddings, a utility-calibrated selector, TPU/JAX, or backend
 capability status changes.
 
+Spec 3.3F10.1.1 refines selector deduplication with
+`rank_aware_board_assignment_with_backfill_v1`. A duplicate candidate is kept
+on the board where it has the strongest rank, removed from weaker boards, and
+those boards backfill from runner-up pools when possible. Budgets are applied
+after assignment using score-aware rank/score ordering instead of alphabetical
+example ID ordering.
+
 The official post-F5 path finishes meaningful `gpu_torch` optimization before
 TPU: F6 dynamic cascaded CPU reference, F7 GPU dynamic cascaded reducer, F7.1
 dynamic reducer vectorization rehearsal, F8 corridor/exemplar production
 schema lock, F9 GPU corridor/exemplar acceleration, F10 GPU builder integration
-gate, F10.1 multi-leaderboard exemplar selection, F11 runtime final polish and
-doctor metadata, F12 optional parity/deathmatch harness, then 3.3G TPU/JAX
-backend skeleton.
+gate, F10.1 multi-leaderboard exemplar selection, F10.1.1 rank-aware
+deduplication backfill, F11 runtime final polish and doctor metadata, F12
+optional parity/deathmatch harness, then 3.3G TPU/JAX backend skeleton.
 
 3.3G adds TPU/JAX shape without CUDA assumptions.
 

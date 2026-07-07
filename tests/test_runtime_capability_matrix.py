@@ -89,6 +89,10 @@ def test_runtime_backend_doc_defines_architecture_vocabulary() -> None:
     assert "select_from_existing_capture" in text
     assert "rerun_selected_capture" in text
     assert "utility-calibrated selector" in text
+    assert "Spec 3.3F10.1.1 refines" in text
+    assert "rank_aware_board_assignment_with_backfill_v1" in text
+    assert "runner-up pools" in text
+    assert "score-aware rather than alphabetical" in text
 
 
 def test_runtime_capability_matrix_is_deterministic_and_complete() -> None:
@@ -257,6 +261,8 @@ def test_runtime_capability_matrix_reflects_cpu_reference_backend() -> None:
     assert "preserves metadata" in corridor["notes"]
     assert "Spec 3.3F10.1" in corridor["notes"]
     assert "builder-level exemplar selection" in corridor["notes"]
+    assert "Spec 3.3F10.1.1" in corridor["notes"]
+    assert "deduplication/backfill" in corridor["notes"]
     assert "public builder has not migrated" in dense["notes"]
 
     assert not any(
@@ -448,6 +454,8 @@ def test_runtime_capability_matrix_reflects_gpu_torch_cascaded_reducer() -> None
     assert "no silent CPU fallback" in corridor["notes"]
     assert "Spec 3.3F10.1" in corridor["notes"]
     assert "exemplar selection manifests" in corridor["notes"]
+    assert "Spec 3.3F10.1.1" in corridor["notes"]
+    assert "deduplication/backfill" in corridor["notes"]
 
     non_goals = " ".join(matrix["non_goals"])
     assert "Do not silently fall back to CPU" in non_goals
