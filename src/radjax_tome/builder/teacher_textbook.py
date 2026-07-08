@@ -499,6 +499,18 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
     except (OSError, ValueError) as exc:
         blockers.append(f"emission_config.json invalid: {exc}")
 
+    from radjax_tome.builder.exemplar_delivery import (
+        validate_selected_exemplar_delivery,
+    )
+
+    delivery_blockers, delivery_warnings = validate_selected_exemplar_delivery(root)
+    blockers.extend(delivery_blockers)
+    warnings.extend(delivery_warnings)
+    if delivery_blockers:
+        checks.append("selected exemplar delivery: invalid")
+    elif (root / "delivery_report.json").is_file():
+        checks.append("selected exemplar delivery: valid")
+
     return _report(
         checks=checks,
         blockers=blockers,

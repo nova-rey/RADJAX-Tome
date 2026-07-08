@@ -6,6 +6,15 @@ from radjax_tome.builder.backend_textbook import (
     build_streaming_backend_teacher_textbook,
     teacher_backend_config_from_build_config,
 )
+from radjax_tome.builder.exemplar_delivery import (
+    EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA,
+    EXEMPLAR_DELIVERY_REPORT_FILENAME,
+    EXEMPLAR_DELIVERY_REPORT_SCHEMA,
+    ExemplarDeliveryConfig,
+    compare_exemplar_delivery_artifacts,
+    materialize_selected_exemplar_delivery,
+    validate_selected_exemplar_delivery,
+)
 from radjax_tome.builder.exemplar_selection import (
     EXEMPLAR_SELECTION_MANIFEST_FILENAME,
     EXEMPLAR_SELECTION_MANIFEST_SCHEMA,
@@ -54,6 +63,9 @@ from radjax_tome.builder.teacher_textbook import (
 __all__ = [
     "TEACHER_TEXTBOOK_VERSION",
     "BackendTeacherTextbookBuildConfig",
+    "EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA",
+    "EXEMPLAR_DELIVERY_REPORT_FILENAME",
+    "EXEMPLAR_DELIVERY_REPORT_SCHEMA",
     "EXEMPLAR_SELECTION_MANIFEST_FILENAME",
     "EXEMPLAR_SELECTION_MANIFEST_SCHEMA",
     "MULTI_LEADERBOARD_SELECTOR_POLICY",
@@ -64,6 +76,7 @@ __all__ = [
     "PRODUCTION_BUILD_REPORT_FILENAME",
     "PRODUCTION_BUILD_REPORT_SCHEMA",
     "ExemplarCandidate",
+    "ExemplarDeliveryConfig",
     "MultiGPUPathBConfig",
     "ProductionBuildConfig",
     "TeacherTextbookBuildConfig",
@@ -77,9 +90,11 @@ __all__ = [
     "build_production_gpu_tome",
     "build_streaming_backend_teacher_textbook",
     "build_teacher_textbook",
+    "compare_exemplar_delivery_artifacts",
     "extract_one_pass_candidates",
     "extract_score_pass_candidates",
     "load_text_examples",
+    "materialize_selected_exemplar_delivery",
     "merge_path_b_candidate_records",
     "normalize_multi_gpu_devices",
     "render_multi_gpu_path_b_summary",
@@ -89,6 +104,7 @@ __all__ = [
     "teacher_backend_config_from_build_config",
     "validate_teacher_textbook",
     "validate_exemplar_selection_manifest",
+    "validate_selected_exemplar_delivery",
     "write_exemplar_selection_manifest",
     "write_production_build_report",
     "write_teacher_textbook_validation_report",

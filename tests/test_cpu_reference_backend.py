@@ -542,7 +542,8 @@ def test_corridor_auto_policy_chooses_one_pass_for_small_estimate() -> None:
     result = backend.emit_batch(_batch())
 
     assert "corridor_teacher_entropy" in result.payload
-    assert "score_max_entropy" not in result.payload
+    assert result.payload["score_max_entropy"].shape == (2,)
+    assert result.payload["score_selected_position"].shape == (2,)
     assert result.metadata["exemplar_capture_mode_requested"] == "auto"
     assert result.metadata["exemplar_capture_mode_effective"] == "one_pass_candidate"
     assert (

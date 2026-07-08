@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from importlib import import_module
 from typing import Any
@@ -1334,6 +1335,18 @@ def _gpu_corridor_exemplar_reduce(
         exemplar_positions,
         torch.ones_like(exemplar_positions, dtype=torch.int32),
     )
+    score_selected_position = torch.argmax(teacher_entropy, dim=-1).to(torch.int32)
+    gather_positions = score_selected_position.to(torch.int64).unsqueeze(-1)
+    score_selected_entropy = torch.gather(
+        teacher_entropy,
+        -1,
+        gather_positions,
+    ).squeeze(-1)
+    score_selected_confidence = torch.gather(
+        source["top_probs"][..., 0],
+        -1,
+        gather_positions,
+    ).squeeze(-1)
     corridor_top_token_ids = source["top_token_ids"][..., 0]
     corridor_top_probs = source["top_probs"][..., 0]
     batch_size = int(logits.shape[0])
@@ -1359,9 +1372,46 @@ def _gpu_corridor_exemplar_reduce(
             dtype=torch.int32,
             device=logits.device,
         ),
+        "exemplar_source_top_token_ids": source["top_token_ids"],
+        "exemplar_source_top_log_probs": source["top_log_probs"],
+        "exemplar_source_top_probs": source["top_probs"],
+        "exemplar_source_top_selection_mask": source.get(
+            "top_selection_mask",
+            torch.ones_like(source["top_token_ids"], dtype=torch.bool),
+        ),
         "exemplar_source_effective_top_k": source["effective_top_k"],
         "exemplar_source_top_mass": source["top_mass"],
         "exemplar_source_tail_mass": source["tail_mass"],
+        "exemplar_source_bucket_masses": source.get(
+            "bucket_masses",
+            torch.zeros(
+                (*teacher_entropy.shape, config.num_buckets),
+                dtype=torch.float32,
+                device=logits.device,
+            ),
+        ),
+        "score_example_ids": torch.arange(
+            batch_size,
+            dtype=torch.int32,
+            device=logits.device,
+        ),
+        "score_max_entropy": torch.max(teacher_entropy, dim=-1).values,
+        "score_mean_entropy": torch.mean(teacher_entropy, dim=-1),
+        "score_selected_position": score_selected_position,
+        "score_selected_position_entropy": score_selected_entropy,
+        "score_confidence_at_selected_position": score_selected_confidence,
+        "score_source_policy_ids": torch.full(
+            (batch_size,),
+            policy_id,
+            dtype=torch.int32,
+            device=logits.device,
+        ),
+        "score_lengths": torch.full(
+            (batch_size,),
+            sequence_length,
+            dtype=torch.int32,
+            device=logits.device,
+        ),
     }
 
 
@@ -1884,44 +1934,30 @@ def _tail_bucket_masses_on_device(
     return bucket_masses
 
 
+_SCORE_PAYLOAD_DTYPES: Mapping[str, type[np.generic]] = {
+    "score_example_ids": np.int32,
+    "score_max_entropy": np.float32,
+    "score_mean_entropy": np.float32,
+    "score_selected_position": np.int32,
+    "score_selected_position_entropy": np.float32,
+    "score_confidence_at_selected_position": np.float32,
+    "score_source_policy_ids": np.int32,
+    "score_lengths": np.int32,
+}
+
+
+def _compact_score_payload_to_numpy(
+    payload: Mapping[str, Any],
+) -> dict[str, np.ndarray]:
+    return {
+        name: _tensor_to_numpy(payload[name], dtype)
+        for name, dtype in _SCORE_PAYLOAD_DTYPES.items()
+    }
+
+
 def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
-    if "score_example_ids" in payload:
-        return {
-            "score_example_ids": _tensor_to_numpy(
-                payload["score_example_ids"],
-                np.int32,
-            ),
-            "score_max_entropy": _tensor_to_numpy(
-                payload["score_max_entropy"],
-                np.float32,
-            ),
-            "score_mean_entropy": _tensor_to_numpy(
-                payload["score_mean_entropy"],
-                np.float32,
-            ),
-            "score_selected_position": _tensor_to_numpy(
-                payload["score_selected_position"],
-                np.int32,
-            ),
-            "score_selected_position_entropy": _tensor_to_numpy(
-                payload["score_selected_position_entropy"],
-                np.float32,
-            ),
-            "score_confidence_at_selected_position": _tensor_to_numpy(
-                payload["score_confidence_at_selected_position"],
-                np.float32,
-            ),
-            "score_source_policy_ids": _tensor_to_numpy(
-                payload["score_source_policy_ids"],
-                np.int32,
-            ),
-            "score_lengths": _tensor_to_numpy(
-                payload["score_lengths"],
-                np.int32,
-            ),
-        }
     if "corridor_top_token_ids" in payload:
-        return {
+        compact = {
             "corridor_top_token_ids": _tensor_to_numpy(
                 payload["corridor_top_token_ids"],
                 np.int32,
@@ -1958,6 +1994,22 @@ def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
                 payload["exemplar_source_policy_ids"],
                 np.int32,
             ),
+            "exemplar_source_top_token_ids": _tensor_to_numpy(
+                payload["exemplar_source_top_token_ids"],
+                np.int32,
+            ),
+            "exemplar_source_top_log_probs": _tensor_to_numpy(
+                payload["exemplar_source_top_log_probs"],
+                np.float32,
+            ),
+            "exemplar_source_top_probs": _tensor_to_numpy(
+                payload["exemplar_source_top_probs"],
+                np.float32,
+            ),
+            "exemplar_source_top_selection_mask": _tensor_to_numpy(
+                payload["exemplar_source_top_selection_mask"],
+                np.bool_,
+            ),
             "exemplar_source_effective_top_k": _tensor_to_numpy(
                 payload["exemplar_source_effective_top_k"],
                 np.int32,
@@ -1970,7 +2022,16 @@ def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
                 payload["exemplar_source_tail_mass"],
                 np.float32,
             ),
+            "exemplar_source_bucket_masses": _tensor_to_numpy(
+                payload["exemplar_source_bucket_masses"],
+                np.float32,
+            ),
         }
+        if "score_example_ids" in payload:
+            compact.update(_compact_score_payload_to_numpy(payload))
+        return compact
+    if "score_example_ids" in payload:
+        return _compact_score_payload_to_numpy(payload)
     compact = {
         "top_token_ids": _tensor_to_numpy(payload["top_token_ids"], np.int32),
         "top_log_probs": _tensor_to_numpy(payload["top_log_probs"], np.float32),
@@ -2001,7 +2062,10 @@ def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
 
 
 def _tensor_to_numpy(tensor: Any, dtype: type[np.generic]) -> np.ndarray:
-    return tensor.detach().to("cpu").numpy().astype(dtype)
+    detached = tensor.detach()
+    if np.issubdtype(np.dtype(dtype), np.floating):
+        detached = detached.float()
+    return detached.to("cpu").numpy().astype(dtype)
 
 
 def _estimate_dense_logits_bytes(

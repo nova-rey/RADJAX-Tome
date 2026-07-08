@@ -384,10 +384,6 @@ def _validate_backend_experimental_arrays(
             "exemplar_positions",
             "exemplar_scores",
             "exemplar_selection_mask",
-            "exemplar_source_policy_ids",
-            "exemplar_source_effective_top_k",
-            "exemplar_source_top_mass",
-            "exemplar_source_tail_mass",
         ),
         "corridor_exemplar_score_pass_v1": (
             "input_ids",
