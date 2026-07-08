@@ -606,3 +606,11 @@ and report/manifest truth. Single-GPU `production-build` remains the
 recommended production path. This patch does not add DDP, model parallelism,
 combined VRAM, network verification, model downloads, TPU/JAX support, full
 multi-GPU burn validation, reducer math changes, or selector scoring changes.
+
+## 2026-07-08 — HF Dry-Run Heavy Import Test Isolation
+
+The HF specimen dry-run test now asserts the actual contract: dry-run execution
+must not introduce new heavy imports with `jax`, `torch`, or `transformers`
+prefixes. The assertion is isolated around the dry-run call so earlier tests or
+test harness setup that already imported a heavy module do not create a false
+failure. Production code is unchanged.

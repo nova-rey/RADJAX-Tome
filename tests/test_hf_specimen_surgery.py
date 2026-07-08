@@ -29,19 +29,20 @@ def test_hf_specimen_dry_run_round_trip_without_heavy_imports(tmp_path: Path) ->
         local_files_only=True,
         allow_downloads=False,
     )
+    heavy_prefixes = ("jax", "torch", "transformers")
+    before = {name for name in sys.modules if name.startswith(heavy_prefixes)}
     result = build_hf_teacher_specimen_dry_run(
         config,
         target_store=tmp_path / "targets",
     )
+    after = {name for name in sys.modules if name.startswith(heavy_prefixes)}
     path = write_hf_teacher_specimen_report(tmp_path / "specimen.json", result)
     loaded = read_hf_teacher_specimen_report(path)
 
     assert loaded.status == "dry_run"
     assert loaded.local_files_only
     assert loaded.num_examples == 2
-    assert not any(
-        name.startswith(("jax", "torch", "transformers")) for name in sys.modules
-    )
+    assert after == before
 
 
 def test_hf_specimen_validation_and_swap_report(tmp_path: Path) -> None:
