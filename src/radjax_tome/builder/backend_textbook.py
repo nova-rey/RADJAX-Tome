@@ -4,7 +4,7 @@ import hashlib
 import json
 import os
 import shutil
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -56,6 +56,7 @@ STREAMING_FAILURE_REPORT_FILENAME = "failure_report.json"
 STREAMING_RUN_MANIFEST_SCHEMA = "streaming_run_manifest_v1"
 STREAMING_FAILURE_REPORT_SCHEMA = "streaming_failure_report_v1"
 STREAMING_BUILDER_VERSION = "spec_4_6_streaming_backend_builder_v1"
+StreamingProgressCallback = Callable[[dict[str, object]], None]
 
 
 @dataclass(frozen=True)
@@ -102,6 +103,7 @@ class BackendTeacherTextbookBuildConfig:
     progress_log_path: Path | None = None
     run_manifest_path: Path | None = None
     fail_fast: bool = True
+    progress_callback: StreamingProgressCallback | None = None
 
 
 def build_backend_teacher_textbook(
@@ -284,7 +286,8 @@ def build_streaming_backend_teacher_textbook(
         if manifest.get("status") == "complete":
             report = validate_teacher_textbook(output_dir)
             if report.status == "pass":
-                _append_progress(
+                _notify_progress(
+                    config,
                     progress_log_path,
                     "run_resumed",
                     message="streaming build already complete",
@@ -310,13 +313,14 @@ def build_streaming_backend_teacher_textbook(
             raise ValueError("resume_config_hash mismatch; refusing to resume")
         completed_shards = _verified_completed_shards(output_dir, manifest)
         start_index = _next_example_index(completed_shards)
-        _append_progress(
+        _notify_progress(
+            config,
             progress_log_path,
             "run_resumed",
             message=f"resuming at example_index={start_index}",
         )
     else:
-        _append_progress(progress_log_path, "run_started")
+        _notify_progress(config, progress_log_path, "run_started")
 
     backend_config = teacher_backend_config_from_build_config(config)
     backend = create_backend(backend_config)
@@ -352,7 +356,8 @@ def build_streaming_backend_teacher_textbook(
             start_index=start_index,
         ):
             if any(int(item["shard_id"]) == shard_id for item in completed_shards):
-                _append_progress(
+                _notify_progress(
+                    config,
                     progress_log_path,
                     "shard_skipped_existing",
                     shard_id=shard_id,
@@ -364,7 +369,8 @@ def build_streaming_backend_teacher_textbook(
                 continue
             shard_start = shard_id * shard_size
             shard_end = shard_start + len(shard_examples)
-            _append_progress(
+            _notify_progress(
+                config,
                 progress_log_path,
                 "shard_started",
                 shard_id=shard_id,
@@ -419,7 +425,8 @@ def build_streaming_backend_teacher_textbook(
                 failure_report_path=None,
             )
             _write_streaming_manifest(run_manifest_path, manifest)
-            _append_progress(
+            _notify_progress(
+                config,
                 progress_log_path,
                 "shard_completed",
                 shard_id=shard_id,
@@ -459,7 +466,7 @@ def build_streaming_backend_teacher_textbook(
             failure_report_path=STREAMING_FAILURE_REPORT_FILENAME,
         )
         _write_streaming_manifest(run_manifest_path, manifest)
-        _append_progress(progress_log_path, "run_failed", message=str(exc))
+        _notify_progress(config, progress_log_path, "run_failed", message=str(exc))
         raise
     finally:
         backend.close()
@@ -530,7 +537,7 @@ def build_streaming_backend_teacher_textbook(
         failure_report_path=None,
     )
     _write_streaming_manifest(run_manifest_path, manifest)
-    _append_progress(progress_log_path, "run_completed")
+    _notify_progress(config, progress_log_path, "run_completed")
     return validate_teacher_textbook(output_dir)
 
 
@@ -900,7 +907,7 @@ def _append_progress(
     example_end_index_exclusive: int | None = None,
     num_examples: int | None = None,
     message: str | None = None,
-) -> None:
+) -> dict[str, object]:
     payload = {
         "event": event,
         "created_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
@@ -917,6 +924,31 @@ def _append_progress(
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    return payload
+
+
+def _notify_progress(
+    config: BackendTeacherTextbookBuildConfig,
+    path: Path,
+    event: str,
+    *,
+    shard_id: int | None = None,
+    example_start_index: int | None = None,
+    example_end_index_exclusive: int | None = None,
+    num_examples: int | None = None,
+    message: str | None = None,
+) -> None:
+    payload = _append_progress(
+        path,
+        event,
+        shard_id=shard_id,
+        example_start_index=example_start_index,
+        example_end_index_exclusive=example_end_index_exclusive,
+        num_examples=num_examples,
+        message=message,
+    )
+    if config.progress_callback is not None:
+        config.progress_callback(payload)
 
 
 def _write_failure_report(

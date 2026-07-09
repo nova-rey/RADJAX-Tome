@@ -378,6 +378,19 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument("--run-manifest", type=Path)
     production.add_argument("--progress-log", type=Path)
     production.add_argument(
+        "--progress",
+        dest="progress",
+        action="store_true",
+        default=True,
+        help="Emit production progress lines and production_progress.json.",
+    )
+    production.add_argument(
+        "--no-progress",
+        dest="progress",
+        action="store_false",
+        help="Disable production progress stdout and sidecar updates.",
+    )
+    production.add_argument(
         "--exemplar-delivery-path",
         choices=("one_pass_pruned_candidate", "two_pass_rerun_selected"),
     )
@@ -964,6 +977,7 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
             parity_report_path=args.parity_report,
             run_manifest_path=args.run_manifest,
             progress_log_path=args.progress_log,
+            progress=args.progress,
             exemplar_delivery_path=args.exemplar_delivery_path,
             exemplar_selection_enabled=args.exemplar_selection_enabled,
             exemplar_leaderboard_capacity=args.exemplar_leaderboard_capacity,

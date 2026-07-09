@@ -111,6 +111,26 @@ def test_production_build_writes_plan_report_cover_and_valid_artifact(
     assert _json(output / "run_manifest.json")["status"] == "complete"
 
 
+def test_production_build_progress_sidecar_reaches_complete(tmp_path: Path) -> None:
+    config = _config(tmp_path, progress=True)
+
+    report = build_production_gpu_tome(config)
+    progress = _json(config.output_dir / "production_progress.json")
+
+    assert report["status"] == "pass"
+    assert report["production_progress_path"].endswith("production_progress.json")
+    assert progress["schema_version"] == "production_progress_v1"
+    assert progress["status"] == "complete"
+    assert progress["phase"] == "complete"
+    assert progress["production_status"] == "pass"
+    assert progress["score_pass"]["status"] == "complete"
+    assert progress["score_pass"]["examples_processed"] == 5
+    assert progress["score_pass"]["examples_total"] == 5
+    assert progress["score_pass"]["shard_count_written"] == 3
+    assert progress["validation"]["status"] == "complete"
+    assert progress["report_writing"]["status"] == "complete"
+
+
 def test_production_config_passes_dynamic_top_k_controls_to_backend(
     tmp_path: Path,
 ) -> None:
@@ -462,7 +482,9 @@ def test_production_build_cli_smoke_and_no_allow_downloads_flag(
 
     assert result.returncode == 0, result.stderr
     assert "status=pass" in result.stdout
+    assert "phase=score_pass" in result.stdout
     assert (output / "production_build_report.json").is_file()
+    assert _json(output / "production_progress.json")["status"] == "complete"
     assert production_report["dynamic_top_k_max"] == 128
     assert production_report["inputs"]["dynamic_top_k_max"] == 128
     assert emission_config["dynamic_top_k_max"] == 128
@@ -470,6 +492,8 @@ def test_production_build_cli_smoke_and_no_allow_downloads_flag(
     assert "--dynamic-top-k-min" in help_result.stdout
     assert "--dynamic-top-k-max" in help_result.stdout
     assert "--dynamic-mass-threshold" in help_result.stdout
+    assert "--progress" in help_result.stdout
+    assert "--no-progress" in help_result.stdout
 
 
 def test_fail_fast_is_not_user_facing() -> None:

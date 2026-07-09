@@ -797,3 +797,12 @@ GPU corridor reducer contract tests now use top-32-capable logits so optional
 Torch environments exercise the production corridor stat requirement instead of
 failing on under-depth fixtures. The explicit K<32 failure test remains the
 coverage for inputs that cannot compute real `top32_mass` and `tail_mass`.
+
+## 2026-07-09 — Production Build Progress Sidecar
+
+`radjax-tome production-build` now emits visible progress by default and writes
+an atomically replaced `production_progress.json` sidecar. Score pass updates
+report processed examples, throughput, elapsed time, ETA, and shard count;
+selected reruns report selected-example throughput; corridor export reports
+position counts, mode/fingerprint discovery, and assignment storage; validation
+and report writing also publish phase updates.

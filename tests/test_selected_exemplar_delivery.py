@@ -77,6 +77,7 @@ def _config(
     gpu_batch_size_preset: int = 2,
     shard_size_examples: int = 2,
     track_delivery_timing: bool = False,
+    progress: bool = False,
 ) -> ProductionBuildConfig:
     dataset, corpus_manifest, provenance_path, model = _production_inputs(
         tmp_path,
@@ -105,6 +106,7 @@ def _config(
         selected_exemplar_budget=2,
         retain_unselected_exemplar_payloads=retain_unselected,
         track_delivery_timing=track_delivery_timing,
+        progress=progress,
     )
 
 
@@ -164,6 +166,46 @@ def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retent
         assert field in selected_payload
     assert not (output / "unselected_candidate_payloads").exists()
     assert validate_teacher_textbook(output).status == "pass"
+
+
+def test_path_b_progress_sidecar_records_rerun_and_corridor_export(
+    tmp_path: Path,
+) -> None:
+    config = _config(
+        tmp_path,
+        output_name="path_b_progress",
+        delivery_path="two_pass_rerun_selected",
+        progress=True,
+    )
+
+    report = build_production_gpu_tome(config)
+    progress = _json(config.output_dir / "production_progress.json")
+    delivery = _json(config.output_dir / "delivery_report.json")
+
+    assert report["status"] == "pass"
+    assert progress["status"] == "complete"
+    assert progress["selected_rerun"]["status"] == "complete"
+    assert (
+        progress["selected_rerun"]["selected_examples_processed"]
+        == delivery["selected_example_count"]
+    )
+    assert (
+        progress["selected_rerun"]["selected_examples_total"]
+        == delivery["selected_example_count"]
+    )
+    assert progress["corridor_export"]["status"] == "complete"
+    assert (
+        progress["corridor_export"]["positions_processed"]
+        == report["corridor_positions_used"]
+    )
+    assert (
+        progress["corridor_export"]["modes_discovered"] == report["corridor_mode_count"]
+    )
+    assert (
+        progress["corridor_export"]["fingerprints_discovered"]
+        == report["corridor_fingerprint_count"]
+    )
+    assert progress["corridor_export"]["assignment_storage_kind"] == "packed_numpy_v1"
 
 
 def test_path_b_main_artifact_is_score_pass_without_broad_exemplar_payloads(

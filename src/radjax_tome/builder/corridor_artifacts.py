@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -38,6 +39,7 @@ CORRIDOR_TRACKED_STATS = (
     "tail_mass",
 )
 _CORRIDOR_MIN_WIDTH = 1e-6
+CorridorProgressCallback = Callable[[dict[str, Any]], None]
 
 
 @dataclass(frozen=True)
@@ -179,12 +181,34 @@ def build_corridor_artifacts(
     fingerprint_policy: str = FINGERPRINT_POLICY,
     mode_policy: str = MODE_POLICY,
     allow_degraded_score_only: bool = False,
+    progress_callback: CorridorProgressCallback | None = None,
 ) -> CorridorArtifactBuildResult:
     store = TeacherTargetStore.open(output_dir)
+    positions_total = store.metadata.num_examples * store.metadata.sequence_length
+    _notify_corridor_progress(
+        progress_callback,
+        phase="corridor_export",
+        event="started",
+        positions_processed=0,
+        positions_total=positions_total,
+        modes_discovered=0,
+        fingerprints_discovered=0,
+        assignment_storage_kind=ASSIGNMENT_STORAGE_KIND,
+    )
     extraction = _corridor_observations(
         store,
         examples,
         allow_degraded_score_only=allow_degraded_score_only,
+    )
+    _notify_corridor_progress(
+        progress_callback,
+        phase="corridor_export",
+        event="observations_extracted",
+        positions_processed=extraction.positions_used,
+        positions_total=extraction.positions_available,
+        modes_discovered=0,
+        fingerprints_discovered=0,
+        assignment_storage_kind=ASSIGNMENT_STORAGE_KIND,
     )
     observations = extraction.observations
     fingerprints, observation_to_fingerprint = _fingerprints(
@@ -199,6 +223,16 @@ def build_corridor_artifacts(
     modes, observation_to_mode = _modes(
         observations,
         mode_policy=mode_policy,
+    )
+    _notify_corridor_progress(
+        progress_callback,
+        phase="corridor_export",
+        event="modes_discovered",
+        positions_processed=extraction.positions_used,
+        positions_total=extraction.positions_available,
+        modes_discovered=len(modes),
+        fingerprints_discovered=len(fingerprints),
+        assignment_storage_kind=ASSIGNMENT_STORAGE_KIND,
     )
     linked = _link_selected_exemplars(
         selected_records,
@@ -222,6 +256,16 @@ def build_corridor_artifacts(
         observation_to_fingerprint=observation_to_fingerprint,
         observation_to_mode=observation_to_mode,
         observation_basis=extraction.observation_basis,
+    )
+    _notify_corridor_progress(
+        progress_callback,
+        phase="corridor_export",
+        event="assignments_written",
+        positions_processed=extraction.positions_used,
+        positions_total=extraction.positions_available,
+        modes_discovered=len(modes),
+        fingerprints_discovered=len(fingerprints),
+        assignment_storage_kind=ASSIGNMENT_STORAGE_KIND,
     )
 
     summary = {
@@ -331,6 +375,14 @@ def build_corridor_artifacts(
         assignment_storage_kind=ASSIGNMENT_STORAGE_KIND,
         assignment_count=int(assignments_manifest["num_assignments"]),
     )
+
+
+def _notify_corridor_progress(
+    progress_callback: CorridorProgressCallback | None,
+    **payload: Any,
+) -> None:
+    if progress_callback is not None:
+        progress_callback(payload)
 
 
 def validate_corridor_artifacts(

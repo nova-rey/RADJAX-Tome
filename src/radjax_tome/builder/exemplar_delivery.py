@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -37,6 +38,7 @@ SELECTED_EXEMPLARS_FILENAME = "selected_exemplars.json"
 ONE_PASS_PRUNED_CANDIDATE = "one_pass_pruned_candidate"
 TWO_PASS_RERUN_SELECTED = "two_pass_rerun_selected"
 EXEMPLAR_SCORE_POLICY = "entropy_top_n_v1"
+DeliveryProgressCallback = Callable[[dict[str, Any]], None]
 
 _REQUIRED_SELECTED_PAYLOAD_FIELDS = (
     "selected_example_id",
@@ -94,6 +96,7 @@ class ExemplarDeliveryConfig:
     backend_config: TeacherBackendConfig | None = None
     selected_rerun_batch_size: int = 1
     track_timing: bool = False
+    progress_callback: DeliveryProgressCallback | None = None
 
 
 def materialize_selected_exemplar_delivery(
@@ -130,8 +133,19 @@ def materialize_selected_exemplar_delivery(
         manifest,
         delivery_path=config.delivery_path,
     )
+    selected_example_count = len(
+        {record["selected_example_id"] for record in selected_records}
+    )
     selection_wall_seconds = _elapsed(selection_started)
     payload_started = perf_counter()
+    if config.delivery_path == TWO_PASS_RERUN_SELECTED:
+        _notify_delivery_progress(
+            config,
+            phase="selected_rerun",
+            event="started",
+            selected_examples_processed=0,
+            selected_examples_total=selected_example_count,
+        )
     selected_payloads = _selected_payloads(
         selected_records,
         store=store,
@@ -155,6 +169,7 @@ def materialize_selected_exemplar_delivery(
         non_selected_exemplar_payload_retained=(
             config.retain_unselected_exemplar_payloads
         ),
+        progress_callback=config.progress_callback,
     )
     pruning_started = perf_counter()
     pruned_candidate_payload_bytes = _prune_path_a_candidate_payload_arrays(
@@ -193,9 +208,6 @@ def materialize_selected_exemplar_delivery(
         },
     )
 
-    selected_example_count = len(
-        {record["selected_example_id"] for record in selected_records}
-    )
     retained_bytes = _tree_bytes(corridors_dir) + _tree_bytes(leaderboards_dir)
     retained_bytes += _tree_bytes(selected_dir)
     report = {
@@ -892,11 +904,26 @@ def _selected_payloads_from_backend(
                     row=row_by_example_id[example_id],
                     config=config,
                 )
+            _notify_delivery_progress(
+                config,
+                phase="selected_rerun",
+                event="progress",
+                selected_examples_processed=start + len(chunk),
+                selected_examples_total=len(selected_examples),
+            )
     finally:
         close = getattr(backend, "close", None)
         if callable(close):
             close()
     return [payloads_by_record[index] for index in range(len(selected_records))]
+
+
+def _notify_delivery_progress(
+    config: ExemplarDeliveryConfig,
+    **payload: Any,
+) -> None:
+    if config.progress_callback is not None:
+        config.progress_callback(payload)
 
 
 def _prune_path_a_candidate_payload_arrays(

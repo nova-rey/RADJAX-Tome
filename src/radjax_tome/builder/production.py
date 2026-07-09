@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import os
 import shutil
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -37,6 +39,8 @@ from radjax_tome.tome import write_cover_page
 
 PRODUCTION_BUILD_REPORT_SCHEMA = "production_build_report_v1"
 PRODUCTION_BUILD_REPORT_FILENAME = "production_build_report.json"
+PRODUCTION_PROGRESS_SCHEMA = "production_progress_v1"
+PRODUCTION_PROGRESS_FILENAME = "production_progress.json"
 
 
 @dataclass(frozen=True)
@@ -76,6 +80,7 @@ class ProductionBuildConfig:
     parity_report_path: Path | None = None
     run_manifest_path: Path | None = None
     progress_log_path: Path | None = None
+    progress: bool = False
     exemplar_delivery_path: str | None = None
     exemplar_selection_enabled: bool = False
     exemplar_leaderboard_capacity: int = 16
@@ -93,6 +98,12 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
     report_path = _production_report_path(config)
     run_plan_path = _run_plan_path(config)
     parity_report_path = _parity_report_path(config)
+    progress = _ProductionProgressReporter(
+        enabled=config.progress,
+        output_dir=config.output_dir,
+        path=_production_progress_path(config),
+    )
+    progress.start()
     blockers: list[str] = []
     warnings: list[str] = []
     already_complete = _already_complete(config)
@@ -114,8 +125,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             parity_report_path=parity_report_path,
             parity_status="not_run",
         )
-        write_production_build_report(report, report_path)
-        return report
+        return _finalize_production_report(report, report_path, progress)
 
     output_has_artifact = _has_existing_artifact(config)
     if output_has_artifact and not (config.resume or config.overwrite):
@@ -135,8 +145,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             parity_report_path=parity_report_path,
             parity_status="not_run",
         )
-        write_production_build_report(report, report_path)
-        return report
+        return _finalize_production_report(report, report_path, progress)
     if already_complete:
         validation = validate_teacher_textbook(config.output_dir)
         if validation.status == "pass":
@@ -157,8 +166,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
                 validation_status="pass",
                 build_status="already_complete",
             )
-            write_production_build_report(report, report_path)
-            return report
+            return _finalize_production_report(report, report_path, progress)
         report = _production_report(
             config,
             created_at=created_at,
@@ -176,8 +184,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             validation_status=validation.status,
             build_status="already_complete_invalid",
         )
-        write_production_build_report(report, report_path)
-        return report
+        return _finalize_production_report(report, report_path, progress)
     if output_has_artifact and config.overwrite:
         shutil.rmtree(config.output_dir)
 
@@ -221,14 +228,21 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             parity_report_path=parity_report_path,
             parity_status="not_run",
         )
-        write_production_build_report(report, report_path)
-        return report
+        return _finalize_production_report(report, report_path, progress)
 
     preflight_wall_seconds = _elapsed(preflight_started)
     main_pass_started = perf_counter()
+    progress.start_score_pass(
+        examples_total=_planned_example_count(plan),
+        shard_count_total=_planned_shard_count(config, plan),
+    )
     try:
         build_report = build_streaming_backend_teacher_textbook(
-            _streaming_config(config, effective_batch_size)
+            _streaming_config(
+                config,
+                effective_batch_size,
+                progress_callback=progress.handle_streaming_event,
+            )
         )
     except Exception as exc:
         blockers.append(str(exc))
@@ -247,18 +261,22 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             parity_report_path=parity_report_path,
             parity_status="not_run",
         )
-        write_production_build_report(report, report_path)
-        return report
+        return _finalize_production_report(report, report_path, progress)
     main_pass_wall_seconds = _elapsed(main_pass_started)
 
     delivery_report: dict[str, Any] | None = None
     if _selected_exemplar_delivery_enabled(config):
         try:
             delivery_report = materialize_selected_exemplar_delivery(
-                _exemplar_delivery_config(config, effective_batch_size)
+                _exemplar_delivery_config(
+                    config,
+                    effective_batch_size,
+                    progress_callback=progress.handle_delivery_event,
+                )
             )
         except Exception as exc:
             blockers.append(str(exc))
+    progress.validation_started()
     validation_started = perf_counter()
     validation = validate_teacher_textbook(config.output_dir)
     write_teacher_textbook_validation_report(
@@ -267,6 +285,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
     )
     write_cover_page(config.output_dir)
     validation_wall_seconds = _elapsed(validation_started)
+    progress.validation_completed(validation.status)
     parity_status = "not_run"
     if config.parity_left is not None and validation.status == "pass":
         parity_report = compare_tome_artifacts(
@@ -321,12 +340,22 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             delivery_report=delivery_report,
         ),
     )
-    write_production_build_report(report, report_path)
-    return report
+    return _finalize_production_report(report, report_path, progress)
 
 
 def write_production_build_report(report: dict[str, Any], path: Path) -> None:
     write_json(path, report)
+
+
+def _finalize_production_report(
+    report: dict[str, Any],
+    path: Path,
+    progress: _ProductionProgressReporter,
+) -> dict[str, Any]:
+    progress.report_writing_started()
+    write_production_build_report(report, path)
+    progress.complete(str(report.get("status") or "unknown"))
+    return report
 
 
 def render_production_build_summary(report: dict[str, Any]) -> list[str]:
@@ -342,6 +371,292 @@ def render_production_build_summary(report: dict[str, Any]) -> list[str]:
         f"warnings={len(report.get('warnings', ()) or ())}",
         f"blockers={len(report.get('blockers', ()) or ())}",
     ]
+
+
+class _ProductionProgressReporter:
+    def __init__(self, *, enabled: bool, output_dir: Path, path: Path) -> None:
+        self.enabled = enabled
+        self.output_dir = output_dir
+        self.path = path
+        self.started_at = perf_counter()
+        self.started_at_iso = _now()
+        self.score_started_at = self.started_at
+        self.selected_started_at = self.started_at
+        self.last_emit_at = 0.0
+        self.last_score_examples = 0
+        self.score_emit_interval_examples = 1
+        self.payload: dict[str, Any] = {
+            "schema_version": PRODUCTION_PROGRESS_SCHEMA,
+            "status": "running",
+            "phase": "preflight",
+            "created_at": self.started_at_iso,
+            "updated_at": self.started_at_iso,
+            "output_dir": str(output_dir),
+        }
+
+    def start(self) -> None:
+        if not self.enabled:
+            return
+        self._write()
+        self._emit("phase=preflight status=running", force=True)
+
+    def start_score_pass(
+        self,
+        *,
+        examples_total: int | None,
+        shard_count_total: int | None,
+    ) -> None:
+        if not self.enabled:
+            return
+        self.score_started_at = perf_counter()
+        total = int(examples_total or 0)
+        self.score_emit_interval_examples = max(1, min(1_000, total or 1))
+        self.payload["phase"] = "score_pass"
+        self.payload["score_pass"] = {
+            "status": "running",
+            "examples_processed": 0,
+            "examples_total": total,
+            "examples_per_second": 0.0,
+            "elapsed_seconds": 0.0,
+            "eta_seconds": None,
+            "shard_count_written": 0,
+            "shard_count_total": shard_count_total,
+        }
+        self._write()
+        self._emit_score(force=True)
+
+    def handle_streaming_event(self, event: dict[str, object]) -> None:
+        if not self.enabled:
+            return
+        event_name = str(event.get("event") or "")
+        if event_name in {"shard_completed", "shard_skipped_existing"}:
+            score = dict(self.payload.get("score_pass") or {})
+            processed = int(
+                event.get("example_end_index_exclusive")
+                or score.get("examples_processed")
+                or 0
+            )
+            shard_count = int(score.get("shard_count_written") or 0) + 1
+            self._update_score_pass(
+                examples_processed=processed,
+                shard_count_written=shard_count,
+                status="running",
+            )
+        elif event_name == "run_completed":
+            score = dict(self.payload.get("score_pass") or {})
+            total = int(score.get("examples_total") or 0)
+            processed = total or int(score.get("examples_processed") or 0)
+            self._update_score_pass(
+                examples_processed=processed,
+                shard_count_written=int(score.get("shard_count_written") or 0),
+                status="complete",
+                force=True,
+            )
+        elif event_name == "run_failed":
+            self.payload["status"] = "failed"
+            self.payload["phase"] = "score_pass"
+            self.payload["message"] = event.get("message")
+            self._write()
+            self._emit("phase=score_pass status=failed", force=True)
+
+    def handle_delivery_event(self, event: dict[str, Any]) -> None:
+        if not self.enabled:
+            return
+        phase = str(event.get("phase") or "")
+        if phase == "selected_rerun":
+            self._update_selected_rerun(event)
+        elif phase == "corridor_export":
+            self._update_corridor_export(event)
+
+    def validation_started(self) -> None:
+        if not self.enabled:
+            return
+        self.payload["phase"] = "validation"
+        self.payload["validation"] = {
+            "status": "running",
+            "elapsed_seconds": round(_elapsed(self.started_at), 3),
+        }
+        self._write()
+        self._emit("phase=validation status=running", force=True)
+
+    def validation_completed(self, validation_status: str) -> None:
+        if not self.enabled:
+            return
+        self.payload["phase"] = "validation"
+        self.payload["validation"] = {
+            "status": "complete",
+            "validation_status": validation_status,
+            "elapsed_seconds": round(_elapsed(self.started_at), 3),
+        }
+        self._write()
+        self._emit(
+            f"phase=validation status=complete validation_status={validation_status}",
+            force=True,
+        )
+
+    def report_writing_started(self) -> None:
+        if not self.enabled:
+            return
+        self.payload["phase"] = "report_writing"
+        self.payload["report_writing"] = {
+            "status": "running",
+            "elapsed_seconds": round(_elapsed(self.started_at), 3),
+        }
+        self._write()
+        self._emit("phase=report_writing status=running", force=True)
+
+    def complete(self, production_status: str) -> None:
+        if not self.enabled:
+            return
+        progress_status = (
+            "complete" if production_status in {"pass", "warn"} else "failed"
+        )
+        if isinstance(self.payload.get("report_writing"), dict):
+            report_writing = dict(self.payload["report_writing"])
+            report_writing["status"] = "complete"
+            report_writing["elapsed_seconds"] = round(_elapsed(self.started_at), 3)
+            self.payload["report_writing"] = report_writing
+        self.payload.update(
+            {
+                "status": progress_status,
+                "phase": "complete" if progress_status == "complete" else "failed",
+                "production_status": production_status,
+                "completed_at": _now(),
+                "elapsed_seconds": round(_elapsed(self.started_at), 3),
+            }
+        )
+        self._write()
+        self._emit(
+            "phase="
+            f"{self.payload['phase']} status={progress_status} "
+            f"production_status={production_status}",
+            force=True,
+        )
+
+    def _update_score_pass(
+        self,
+        *,
+        examples_processed: int,
+        shard_count_written: int,
+        status: str,
+        force: bool = False,
+    ) -> None:
+        score = dict(self.payload.get("score_pass") or {})
+        total = int(score.get("examples_total") or 0)
+        elapsed = _elapsed(self.score_started_at)
+        eps = _rate(examples_processed, elapsed)
+        score.update(
+            {
+                "status": status,
+                "examples_processed": examples_processed,
+                "examples_total": total,
+                "examples_per_second": eps,
+                "elapsed_seconds": round(elapsed, 3),
+                "eta_seconds": _eta(total - examples_processed, eps),
+                "shard_count_written": shard_count_written,
+            }
+        )
+        self.payload["phase"] = "score_pass"
+        self.payload["score_pass"] = score
+        self._write()
+        examples_delta = examples_processed - self.last_score_examples
+        if force or examples_delta >= self.score_emit_interval_examples:
+            self.last_score_examples = examples_processed
+            self._emit_score(force=True)
+
+    def _update_selected_rerun(self, event: dict[str, Any]) -> None:
+        total = int(event.get("selected_examples_total") or 0)
+        processed = int(event.get("selected_examples_processed") or 0)
+        if str(event.get("event")) == "started":
+            self.selected_started_at = perf_counter()
+        elapsed = _elapsed(self.selected_started_at)
+        rps = _rate(processed, elapsed)
+        self.payload["phase"] = "selected_rerun"
+        self.payload["selected_rerun"] = {
+            "status": "complete" if total and processed >= total else "running",
+            "selected_examples_processed": processed,
+            "selected_examples_total": total,
+            "reruns_per_second": rps,
+            "elapsed_seconds": round(elapsed, 3),
+            "eta_seconds": _eta(total - processed, rps),
+        }
+        self._write()
+        self._emit_selected(force=True)
+
+    def _update_corridor_export(self, event: dict[str, Any]) -> None:
+        self.payload["phase"] = "corridor_export"
+        self.payload["corridor_export"] = {
+            "status": (
+                "complete"
+                if str(event.get("event")) == "assignments_written"
+                else "running"
+            ),
+            "positions_processed": int(event.get("positions_processed") or 0),
+            "positions_total": int(event.get("positions_total") or 0),
+            "modes_discovered": int(event.get("modes_discovered") or 0),
+            "fingerprints_discovered": int(event.get("fingerprints_discovered") or 0),
+            "assignment_storage_kind": event.get("assignment_storage_kind"),
+            "elapsed_seconds": round(_elapsed(self.started_at), 3),
+        }
+        self._write()
+        self._emit_corridor(force=True)
+
+    def _emit_score(self, *, force: bool = False) -> None:
+        score = dict(self.payload.get("score_pass") or {})
+        self._emit(
+            "phase=score_pass "
+            f"examples={score.get('examples_processed', 0)}/"
+            f"{score.get('examples_total', 0)} "
+            f"eps={float(score.get('examples_per_second') or 0.0):.1f} "
+            f"elapsed={float(score.get('elapsed_seconds') or 0.0):.1f} "
+            f"eta={_format_eta(score.get('eta_seconds'))} "
+            f"shards={score.get('shard_count_written', 0)}",
+            force=force,
+        )
+
+    def _emit_selected(self, *, force: bool = False) -> None:
+        selected = dict(self.payload.get("selected_rerun") or {})
+        self._emit(
+            "phase=selected_rerun "
+            f"selected_examples={selected.get('selected_examples_processed', 0)}/"
+            f"{selected.get('selected_examples_total', 0)} "
+            f"reruns_per_second={float(selected.get('reruns_per_second') or 0.0):.1f} "
+            f"elapsed={float(selected.get('elapsed_seconds') or 0.0):.1f} "
+            f"eta={_format_eta(selected.get('eta_seconds'))}",
+            force=force,
+        )
+
+    def _emit_corridor(self, *, force: bool = False) -> None:
+        corridor = dict(self.payload.get("corridor_export") or {})
+        self._emit(
+            "phase=corridor_export "
+            f"positions={corridor.get('positions_processed', 0)}/"
+            f"{corridor.get('positions_total', 0)} "
+            f"modes={corridor.get('modes_discovered', 0)} "
+            f"fingerprints={corridor.get('fingerprints_discovered', 0)} "
+            "assignment_storage_kind="
+            f"{corridor.get('assignment_storage_kind')}",
+            force=force,
+        )
+
+    def _emit(self, line: str, *, force: bool = False) -> None:
+        if not self.enabled:
+            return
+        now = perf_counter()
+        if not force and now - self.last_emit_at < 5.0:
+            return
+        self.last_emit_at = now
+        print(line, flush=True)
+
+    def _write(self) -> None:
+        self.payload["updated_at"] = _now()
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = self.path.with_name(f".{self.path.name}.tmp")
+        tmp.write_text(
+            json.dumps(self.payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        os.replace(tmp, self.path)
 
 
 def _validate_required_inputs(
@@ -407,6 +722,8 @@ def _backend_config(config: ProductionBuildConfig) -> TeacherBackendConfig:
 def _streaming_config(
     config: ProductionBuildConfig,
     effective_batch_size: int,
+    *,
+    progress_callback: Any = None,
 ) -> BackendTeacherTextbookBuildConfig:
     return BackendTeacherTextbookBuildConfig(
         output_dir=config.output_dir,
@@ -442,6 +759,7 @@ def _streaming_config(
         shard_size_examples=config.shard_size_examples,
         progress_log_path=config.progress_log_path,
         run_manifest_path=config.run_manifest_path,
+        progress_callback=progress_callback,
     )
 
 
@@ -485,6 +803,7 @@ def _production_report(
         "already_complete": already_complete,
         "run_manifest_path": str(_run_manifest_path(config)),
         "progress_log_path": str(_progress_log_path(config)),
+        "production_progress_path": str(_production_progress_path(config)),
         "validation_report_path": str(config.output_dir / "validation_report.json"),
         "validation_status": validation_status or _validation_status(config.output_dir),
         "cover_page_path": str(config.output_dir / "cover_page.json"),
@@ -668,6 +987,7 @@ def _inputs(config: ProductionBuildConfig) -> dict[str, Any]:
         ),
         "exemplar_score_policy": config.exemplar_score_policy,
         "track_delivery_timing": config.track_delivery_timing,
+        "progress": config.progress,
     }
 
 
@@ -722,6 +1042,8 @@ def _selected_exemplar_delivery_enabled(config: ProductionBuildConfig) -> bool:
 def _exemplar_delivery_config(
     config: ProductionBuildConfig,
     effective_batch_size: int,
+    *,
+    progress_callback: Any = None,
 ) -> ExemplarDeliveryConfig:
     return ExemplarDeliveryConfig(
         artifact_dir=config.output_dir,
@@ -741,6 +1063,7 @@ def _exemplar_delivery_config(
         backend_config=_backend_config(config),
         selected_rerun_batch_size=effective_batch_size,
         track_timing=config.track_delivery_timing,
+        progress_callback=progress_callback,
     )
 
 
@@ -797,6 +1120,45 @@ def _production_timing_fields(
     return fields
 
 
+def _planned_example_count(plan: dict[str, Any]) -> int | None:
+    artifact_estimates = plan.get("artifact_estimates", {})
+    if not isinstance(artifact_estimates, dict):
+        return None
+    value = artifact_estimates.get("num_examples_effective")
+    return int(value) if value is not None else None
+
+
+def _planned_shard_count(
+    config: ProductionBuildConfig,
+    plan: dict[str, Any],
+) -> int | None:
+    examples = _planned_example_count(plan)
+    if examples is None:
+        return None
+    shard_size = max(1, int(config.shard_size_examples))
+    return (examples + shard_size - 1) // shard_size
+
+
+def _rate(count: int, elapsed: float) -> float:
+    if elapsed <= 0:
+        return 0.0
+    return round(float(count) / elapsed, 3)
+
+
+def _eta(remaining: int, rate: float) -> float | None:
+    if remaining <= 0:
+        return 0.0
+    if rate <= 0:
+        return None
+    return round(float(remaining) / rate, 3)
+
+
+def _format_eta(value: object) -> str:
+    if value is None:
+        return "unknown"
+    return f"{float(value):.1f}"
+
+
 def _elapsed(started_at: float) -> float:
     return max(0.0, perf_counter() - started_at)
 
@@ -845,6 +1207,10 @@ def _run_manifest_path(config: ProductionBuildConfig) -> Path:
 
 def _progress_log_path(config: ProductionBuildConfig) -> Path:
     return config.progress_log_path or config.output_dir / "progress_log.jsonl"
+
+
+def _production_progress_path(config: ProductionBuildConfig) -> Path:
+    return config.output_dir / PRODUCTION_PROGRESS_FILENAME
 
 
 def _production_report_path(config: ProductionBuildConfig) -> Path:
