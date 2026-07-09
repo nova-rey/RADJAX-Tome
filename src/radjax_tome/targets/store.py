@@ -392,6 +392,7 @@ def _validate_backend_experimental_arrays(
             "score_max_entropy",
             "score_mean_entropy",
             "score_selected_position",
+            "score_top_token_id",
             "score_selected_position_entropy",
             "score_confidence_at_selected_position",
             "score_source_policy_ids",

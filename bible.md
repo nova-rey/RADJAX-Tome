@@ -717,3 +717,17 @@ both corridor/source capture arrays and canonical `score_*` fields, conversion
 returns the union so Path A can select from the shared score surface and still
 materialize selected payloads from one-pass `exemplar_source_*` candidate shard
 data before final pruning.
+
+## 2026-07-09 — P4.11 First-Class Corridor Artifact Export
+
+Selected-only `corridor_exemplar_v1` production builds now emit explicit
+`corridors/` artifacts: `corridor_fingerprints.json`, `corridor_modes.json`,
+`mode_assignments.json`, `corridor_summary.json`, and a human-readable
+`corridor_summary.txt`. Path A and Path B share the same logical artifact shape;
+Path A still uses captured one-pass payload arrays before pruning, while Path B
+reruns only selected examples for selected exemplar payloads.
+
+The corridor exporter groups canonical score-surface observations by top token,
+entropy bucket, confidence bucket, and position bucket. Reports and validation
+now expose direct corridor yes/no fields and counts, and selected exemplar
+records/payloads are linked back to corridor fingerprint and mode IDs.

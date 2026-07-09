@@ -1348,6 +1348,11 @@ def _gpu_corridor_exemplar_reduce(
         gather_positions,
     ).squeeze(-1)
     corridor_top_token_ids = source["top_token_ids"][..., 0]
+    score_top_token_id = torch.gather(
+        corridor_top_token_ids,
+        -1,
+        gather_positions,
+    ).squeeze(-1)
     corridor_top_probs = source["top_probs"][..., 0]
     batch_size = int(logits.shape[0])
     sequence_length = int(logits.shape[1])
@@ -1398,6 +1403,7 @@ def _gpu_corridor_exemplar_reduce(
         "score_max_entropy": torch.max(teacher_entropy, dim=-1).values,
         "score_mean_entropy": torch.mean(teacher_entropy, dim=-1),
         "score_selected_position": score_selected_position,
+        "score_top_token_id": score_top_token_id.to(torch.int32),
         "score_selected_position_entropy": score_selected_entropy,
         "score_confidence_at_selected_position": score_selected_confidence,
         "score_source_policy_ids": torch.full(
@@ -1443,6 +1449,11 @@ def _gpu_corridor_exemplar_score_reduce(
         -1,
         gather_positions,
     ).squeeze(-1)
+    selected_top_token_id = torch.gather(
+        source["top_token_ids"][..., 0],
+        -1,
+        gather_positions,
+    ).squeeze(-1)
     batch_size = int(logits.shape[0])
     sequence_length = int(logits.shape[1])
     policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_second_pass_source_policy]
@@ -1455,6 +1466,7 @@ def _gpu_corridor_exemplar_score_reduce(
         "score_max_entropy": torch.max(teacher_entropy, dim=-1).values,
         "score_mean_entropy": torch.mean(teacher_entropy, dim=-1),
         "score_selected_position": score_selected_position,
+        "score_top_token_id": selected_top_token_id.to(torch.int32),
         "score_selected_position_entropy": selected_entropy,
         "score_confidence_at_selected_position": selected_confidence,
         "score_source_policy_ids": torch.full(
@@ -1939,6 +1951,7 @@ _SCORE_PAYLOAD_DTYPES: Mapping[str, type[np.generic]] = {
     "score_max_entropy": np.float32,
     "score_mean_entropy": np.float32,
     "score_selected_position": np.int32,
+    "score_top_token_id": np.int32,
     "score_selected_position_entropy": np.float32,
     "score_confidence_at_selected_position": np.float32,
     "score_source_policy_ids": np.int32,
@@ -2192,6 +2205,7 @@ def _corridor_score_payload_fields() -> list[str]:
         "score_max_entropy",
         "score_mean_entropy",
         "score_selected_position",
+        "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
         "score_source_policy_ids",

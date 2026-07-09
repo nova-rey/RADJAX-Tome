@@ -317,6 +317,9 @@ def test_path_a_path_b_1000_example_selected_only_parity_and_pruning(
     assert report["selected_score_ranks_match"] is True
     assert report["selected_mode_keys_match"] is True
     assert report["payload_shape_compatible"] is True
+    assert report["corridor_artifact_shape_match"] is True
+    assert report["path_a_corridor_mode_count"] >= 1
+    assert report["path_b_corridor_mode_count"] >= 1
     assert report["timing_enabled"] is True
     assert report["path_a_wall_seconds"] >= 0.0
     assert report["path_b_wall_seconds"] >= 0.0

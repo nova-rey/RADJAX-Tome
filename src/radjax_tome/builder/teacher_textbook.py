@@ -167,6 +167,11 @@ class TeacherTextbookValidationReport:
     bucket_count_ok: bool | None = None
     sort_ok: bool | None = None
     duplicate_ok: bool | None = None
+    corridor_artifact_ok: bool | None = None
+    corridor_fingerprints_ok: bool | None = None
+    corridor_modes_ok: bool | None = None
+    corridor_mode_count: int | None = None
+    corridor_fingerprint_count: int | None = None
     claims_not_made: tuple[str, ...] = field(default_factory=tuple)
 
     def to_dict(self) -> dict[str, Any]:
@@ -391,6 +396,11 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
     bucket_count_ok: bool | None = None
     sort_ok: bool | None = None
     duplicate_ok: bool | None = None
+    corridor_artifact_ok: bool | None = None
+    corridor_fingerprints_ok: bool | None = None
+    corridor_modes_ok: bool | None = None
+    corridor_mode_count: int | None = None
+    corridor_fingerprint_count: int | None = None
     claims_not_made: tuple[str, ...] = ()
 
     if not root.is_dir():
@@ -499,6 +509,7 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
     except (OSError, ValueError) as exc:
         blockers.append(f"emission_config.json invalid: {exc}")
 
+    from radjax_tome.builder.corridor_artifacts import validate_corridor_artifacts
     from radjax_tome.builder.exemplar_delivery import (
         validate_selected_exemplar_delivery,
     )
@@ -510,6 +521,15 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
         checks.append("selected exemplar delivery: invalid")
     elif (root / "delivery_report.json").is_file():
         checks.append("selected exemplar delivery: valid")
+    if (root / "delivery_report.json").is_file():
+        corridor_report = validate_corridor_artifacts(root)
+        corridor_artifact_ok = corridor_report.corridor_artifact_ok
+        corridor_fingerprints_ok = corridor_report.corridor_fingerprints_ok
+        corridor_modes_ok = corridor_report.corridor_modes_ok
+        corridor_mode_count = corridor_report.corridor_mode_count
+        corridor_fingerprint_count = corridor_report.corridor_fingerprint_count
+        if corridor_report.ok:
+            checks.append("corridor artifacts: valid")
 
     return _report(
         checks=checks,
@@ -534,6 +554,11 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
         bucket_count_ok=bucket_count_ok,
         sort_ok=sort_ok,
         duplicate_ok=duplicate_ok,
+        corridor_artifact_ok=corridor_artifact_ok,
+        corridor_fingerprints_ok=corridor_fingerprints_ok,
+        corridor_modes_ok=corridor_modes_ok,
+        corridor_mode_count=corridor_mode_count,
+        corridor_fingerprint_count=corridor_fingerprint_count,
         claims_not_made=claims_not_made,
     )
 
@@ -1221,6 +1246,11 @@ def _report(
     bucket_count_ok: bool | None = None,
     sort_ok: bool | None = None,
     duplicate_ok: bool | None = None,
+    corridor_artifact_ok: bool | None = None,
+    corridor_fingerprints_ok: bool | None = None,
+    corridor_modes_ok: bool | None = None,
+    corridor_mode_count: int | None = None,
+    corridor_fingerprint_count: int | None = None,
     claims_not_made: tuple[str, ...] = (),
 ) -> TeacherTextbookValidationReport:
     blocker_tuple = tuple(blockers or ())
@@ -1248,5 +1278,10 @@ def _report(
         bucket_count_ok=bucket_count_ok,
         sort_ok=sort_ok,
         duplicate_ok=duplicate_ok,
+        corridor_artifact_ok=corridor_artifact_ok,
+        corridor_fingerprints_ok=corridor_fingerprints_ok,
+        corridor_modes_ok=corridor_modes_ok,
+        corridor_mode_count=corridor_mode_count,
+        corridor_fingerprint_count=corridor_fingerprint_count,
         claims_not_made=claims_not_made,
     )

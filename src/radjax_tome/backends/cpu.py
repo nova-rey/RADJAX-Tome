@@ -627,6 +627,11 @@ def _corridor_exemplar_payload(
         score_selected_position[:, None],
         axis=-1,
     )[:, 0].astype(np.float32)
+    score_top_token_id = np.take_along_axis(
+        top_ids,
+        score_selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.int32)
     schema_metadata = _corridor_schema_metadata(config)
     corridor_records = {
         "policy": _CORRIDOR_POLICY,
@@ -691,6 +696,7 @@ def _corridor_exemplar_payload(
             np.float32
         ),
         "score_selected_position": score_selected_position,
+        "score_top_token_id": score_top_token_id,
         "score_selected_position_entropy": score_selected_entropy,
         "score_confidence_at_selected_position": score_selected_confidence,
         "score_source_policy_ids": np.full(
@@ -713,6 +719,7 @@ def _corridor_exemplar_score_payload(
     )
     entropy = source["teacher_entropy"].astype(np.float32)
     confidence = source["top_probs"][..., 0].astype(np.float32)
+    top_ids = source["top_token_ids"][..., 0].astype(np.int32)
     selected_position = np.argmax(entropy, axis=-1).astype(np.int32)
     selected_entropy = np.take_along_axis(
         entropy,
@@ -724,6 +731,11 @@ def _corridor_exemplar_score_payload(
         selected_position[:, None],
         axis=-1,
     )[:, 0].astype(np.float32)
+    selected_top_token_id = np.take_along_axis(
+        top_ids,
+        selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.int32)
     policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_second_pass_source_policy]
     batch_size = int(logits.shape[0])
     fields = (
@@ -731,6 +743,7 @@ def _corridor_exemplar_score_payload(
         "score_max_entropy",
         "score_mean_entropy",
         "score_selected_position",
+        "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
         "score_source_policy_ids",
@@ -756,6 +769,7 @@ def _corridor_exemplar_score_payload(
             np.float32
         ),
         "score_selected_position": selected_position,
+        "score_top_token_id": selected_top_token_id,
         "score_selected_position_entropy": selected_entropy,
         "score_confidence_at_selected_position": selected_confidence,
         "score_source_policy_ids": np.full((batch_size,), policy_id, dtype=np.int32),

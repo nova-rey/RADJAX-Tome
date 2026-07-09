@@ -15,6 +15,10 @@ from radjax_tome.backends import (
     TeacherBatchInput,
     create_backend,
 )
+from radjax_tome.builder.corridor_artifacts import (
+    build_corridor_artifacts,
+    validate_corridor_artifacts,
+)
 from radjax_tome.builder.exemplar_selection import (
     PATH_A_FULFILLMENT_POLICY,
     PATH_B_FULFILLMENT_POLICY,
@@ -53,6 +57,9 @@ _REQUIRED_SELECTED_PAYLOAD_FIELDS = (
     "vocab_size",
     "num_buckets",
     "dynamic_top_k",
+    "corridor_mode_id",
+    "corridor_fingerprint_id",
+    "corridor_assignment_status",
 )
 
 _ONE_PASS_CANDIDATE_PAYLOAD_ARRAYS = (
@@ -132,6 +139,23 @@ def materialize_selected_exemplar_delivery(
         config=config,
     )
     payload_wall_seconds = _elapsed(payload_started)
+    output = config.artifact_dir
+    corridors_dir = output / "corridors"
+    leaderboards_dir = output / "leaderboards"
+    selected_dir = output / "selected_exemplars"
+    leaderboards_dir.mkdir(parents=True, exist_ok=True)
+    selected_dir.mkdir(parents=True, exist_ok=True)
+
+    corridor_result = build_corridor_artifacts(
+        output_dir=output,
+        examples=examples,
+        selected_records=selected_records,
+        selected_payloads=selected_payloads,
+        delivery_path=config.delivery_path,
+        non_selected_exemplar_payload_retained=(
+            config.retain_unselected_exemplar_payloads
+        ),
+    )
     pruning_started = perf_counter()
     pruned_candidate_payload_bytes = _prune_path_a_candidate_payload_arrays(
         store,
@@ -139,34 +163,11 @@ def materialize_selected_exemplar_delivery(
         enabled=config.delivery_path == ONE_PASS_PRUNED_CANDIDATE,
     )
     pruning_wall_seconds = _elapsed(pruning_started)
-    output = config.artifact_dir
-    corridors_dir = output / "corridors"
-    leaderboards_dir = output / "leaderboards"
-    selected_dir = output / "selected_exemplars"
-    corridors_dir.mkdir(parents=True, exist_ok=True)
-    leaderboards_dir.mkdir(parents=True, exist_ok=True)
-    selected_dir.mkdir(parents=True, exist_ok=True)
-
     temporary_candidate_bytes = _materialize_path_a_temp_cache(
         output,
         selected_payloads=selected_payloads,
         retain=config.retain_unselected_exemplar_payloads,
         enabled=config.delivery_path == ONE_PASS_PRUNED_CANDIDATE,
-    )
-    write_json(
-        corridors_dir / "corridor_summary.json",
-        {
-            "schema_version": "selected_exemplar_corridor_summary_v1",
-            "score_policy": config.score_policy,
-            "num_examples_scored": store.metadata.num_examples,
-            "num_positions_scored": store.metadata.num_examples
-            * store.metadata.sequence_length,
-            "target_type": store.metadata.target_type,
-            "corridor_evidence_retained": True,
-            "full_exemplar_payload_retained_for_non_selected": (
-                config.retain_unselected_exemplar_payloads
-            ),
-        },
     )
     leaderboard_report = _leaderboard_report(
         manifest,
@@ -249,6 +250,7 @@ def materialize_selected_exemplar_delivery(
             "no_path_b_quality_parity_without_report": True,
         },
     }
+    report.update(corridor_result.report_fields())
     if config.retain_unselected_exemplar_payloads:
         report["status"] = "fail"
         report["blockers"] = ["non-selected exemplar payload retention is enabled"]
@@ -294,6 +296,11 @@ def validate_selected_exemplar_delivery(
     selected_path = leaderboards_dir / SELECTED_EXEMPLARS_FILENAME
     selected = _read_selected_exemplars(selected_path, blockers)
     payloads = _read_selected_payloads(selected_dir, blockers)
+    expected_selected_count = int(report.get("num_selected_exemplars") or 0)
+    if selected and len(selected) != expected_selected_count:
+        blockers.append("selected_exemplars.json count does not match delivery report")
+    if payloads and len(payloads) != expected_selected_count:
+        blockers.append("selected payload count does not match delivery report")
     sequence_length = _metadata_int(artifact_dir, "sequence_length")
     selected_ids = {str(item.get("selected_example_id")) for item in selected}
     payload_ids = {str(item.get("selected_example_id")) for item in payloads}
@@ -335,6 +342,14 @@ def validate_selected_exemplar_delivery(
                 "final artifact retains unselected one-pass candidate payload arrays: "
                 + ", ".join(retained_arrays)
             )
+    corridor_validation = validate_corridor_artifacts(
+        artifact_dir,
+        selected_records=selected,
+        selected_payloads=payloads,
+        expected_selected_count=expected_selected_count,
+    )
+    blockers.extend(corridor_validation.blockers)
+    warnings.extend(corridor_validation.warnings)
     return blockers, warnings
 
 
@@ -396,6 +411,15 @@ def compare_exemplar_delivery_artifacts(
         blockers.append("selected mode keys differ")
     if left["payload_shapes"] != right["payload_shapes"]:
         blockers.append("compressed exemplar payload shapes differ")
+    if left["corridor_shape"] != right["corridor_shape"]:
+        blockers.append("corridor artifact shapes differ")
+    for label, artifact in (("Path A", left), ("Path B", right)):
+        if artifact["report"].get("corridor_artifact_built") is not True:
+            blockers.append(f"{label} did not build corridor artifacts")
+        if artifact["report"].get("corridor_modes_built") is not True:
+            blockers.append(f"{label} did not build corridor modes")
+        if int(artifact["report"].get("corridor_mode_count") or 0) < 1:
+            blockers.append(f"{label} corridor mode count is zero")
     if right["report"].get("non_selected_exemplar_payload_retained") is True:
         blockers.append("Path B retained non-selected exemplar payloads")
     left_retained = int(left["report"].get("final_retained_bytes") or 0)
@@ -417,6 +441,14 @@ def compare_exemplar_delivery_artifacts(
         "selected_score_ranks_match": left["ranks"] == right["ranks"],
         "selected_mode_keys_match": left["mode_keys"] == right["mode_keys"],
         "payload_shape_compatible": left["payload_shapes"] == right["payload_shapes"],
+        "corridor_artifact_shape_match": left["corridor_shape"]
+        == right["corridor_shape"],
+        "path_a_corridor_artifact_built": left["report"].get("corridor_artifact_built"),
+        "path_b_corridor_artifact_built": right["report"].get(
+            "corridor_artifact_built"
+        ),
+        "path_a_corridor_mode_count": left["report"].get("corridor_mode_count"),
+        "path_b_corridor_mode_count": right["report"].get("corridor_mode_count"),
         "path_a_retained_bytes": left_retained,
         "path_b_retained_bytes": right_retained,
         "path_a_teacher_rerun_count": left["report"].get("teacher_rerun_count"),
@@ -1065,7 +1097,21 @@ def _artifact_selection(path: Path) -> dict[str, Any]:
         "scores": [float(item.get("selected_score") or 0.0) for item in selected],
         "mode_keys": [item.get("mode_key") for item in selected],
         "payload_shapes": [_payload_shape(item) for item in payloads],
+        "corridor_shape": _corridor_artifact_shape(path),
     }
+
+
+def _corridor_artifact_shape(path: Path) -> tuple[str, ...]:
+    return tuple(
+        relative_path
+        for relative_path in (
+            "corridors/corridor_summary.json",
+            "corridors/corridor_fingerprints.json",
+            "corridors/corridor_modes.json",
+            "corridors/mode_assignments.json",
+        )
+        if (path / relative_path).is_file()
+    )
 
 
 def _payload_shape(payload: dict[str, Any]) -> dict[str, int]:

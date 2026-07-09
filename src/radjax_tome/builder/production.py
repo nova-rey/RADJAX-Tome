@@ -17,7 +17,10 @@ from radjax_tome.builder.exemplar_delivery import (
     ExemplarDeliveryConfig,
     materialize_selected_exemplar_delivery,
 )
-from radjax_tome.builder.teacher_textbook import validate_teacher_textbook
+from radjax_tome.builder.teacher_textbook import (
+    validate_teacher_textbook,
+    write_teacher_textbook_validation_report,
+)
 from radjax_tome.corpora import validate_corpus_artifact
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.provenance import validate_teacher_model_provenance
@@ -255,6 +258,10 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             blockers.append(str(exc))
     validation_started = perf_counter()
     validation = validate_teacher_textbook(config.output_dir)
+    write_teacher_textbook_validation_report(
+        validation,
+        config.output_dir / "validation_report.json",
+    )
     write_cover_page(config.output_dir)
     validation_wall_seconds = _elapsed(validation_started)
     parity_status = "not_run"
@@ -499,6 +506,46 @@ def _production_report(
         ),
         "non_selected_exemplar_payload_retained": (
             delivery_report.get("non_selected_exemplar_payload_retained")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_artifact_built": (
+            delivery_report.get("corridor_artifact_built")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_modes_built": (
+            delivery_report.get("corridor_modes_built")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_summary_path": (
+            delivery_report.get("corridor_summary_path")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_fingerprints_path": (
+            delivery_report.get("corridor_fingerprints_path")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_modes_path": (
+            delivery_report.get("corridor_modes_path")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_mode_assignments_path": (
+            delivery_report.get("corridor_mode_assignments_path")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_fingerprint_count": (
+            delivery_report.get("corridor_fingerprint_count")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_mode_count": (
+            delivery_report.get("corridor_mode_count")
             if delivery_report is not None
             else None
         ),

@@ -130,6 +130,7 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
         "score_max_entropy",
         "score_mean_entropy",
         "score_selected_position",
+        "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
         "score_source_policy_ids",
@@ -219,6 +220,7 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
     for field in (
         "score_example_ids",
         "score_selected_position",
+        "score_top_token_id",
         "score_source_policy_ids",
         "score_lengths",
     ):
@@ -288,6 +290,7 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
         "score_max_entropy",
         "score_mean_entropy",
         "score_selected_position",
+        "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
         "score_source_policy_ids",
@@ -344,6 +347,7 @@ def test_compact_payload_to_numpy_keeps_mixed_corridor_source_and_score_fields()
         "score_max_entropy": _ArrayTensor(np.ones(2, dtype=np.float32)),
         "score_mean_entropy": _ArrayTensor(np.ones(2, dtype=np.float32)),
         "score_selected_position": _ArrayTensor(np.zeros(2, dtype=np.int32)),
+        "score_top_token_id": _ArrayTensor(np.zeros(2, dtype=np.int32)),
         "score_selected_position_entropy": _ArrayTensor(np.ones(2, dtype=np.float32)),
         "score_confidence_at_selected_position": _ArrayTensor(
             np.ones(2, dtype=np.float32)
