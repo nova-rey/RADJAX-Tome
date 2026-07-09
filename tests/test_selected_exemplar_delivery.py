@@ -323,12 +323,30 @@ def test_path_a_path_b_1000_example_selected_only_parity_and_pruning(
     assert report["corridor_artifact_shape_match"] is True
     assert report["path_a_corridor_mode_count"] >= 1
     assert report["path_b_corridor_mode_count"] >= 1
+    assert report["path_a_corridor_mode_policy"] == "stat_bands_v0"
+    assert report["path_b_corridor_mode_policy"] == "stat_bands_v0"
+    assert report["corridor_mode_policy_match"] is True
+    assert report["corridor_mode_count_match"] is True
+    assert report["corridor_tracked_stats_match"] is True
+    assert report["corridor_mode_table_match"] is True
+    assert report["path_a_corridor_mode_count"] <= 125
+    assert report["path_b_corridor_mode_count"] <= 125
     assert report["timing_enabled"] is True
     assert report["path_a_wall_seconds"] >= 0.0
     assert report["path_b_wall_seconds"] >= 0.0
     assert report["faster_path"] in {"path_a", "path_b", "tie", "unknown"}
     assert report["timing_claims_not_made"]["no_speed_parity_requirement"] is True
     assert path_a_delivery["teacher_rerun_count"] == 0
+    assert path_a_delivery["corridor_mode_policy"] == "stat_bands_v0"
+    assert path_b_delivery["corridor_mode_policy"] == "stat_bands_v0"
+    assert path_a_delivery["corridor_max_modes"] == 256
+    assert path_b_delivery["corridor_max_modes"] == 256
+    assert (
+        path_a_delivery["corridor_mode_count"] <= path_a_delivery["corridor_max_modes"]
+    )
+    assert (
+        path_b_delivery["corridor_mode_count"] <= path_b_delivery["corridor_max_modes"]
+    )
     assert (
         path_b_delivery["teacher_rerun_count"]
         == path_b_delivery["selected_example_count"]

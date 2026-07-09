@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -11,15 +12,28 @@ from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.targets.store import TeacherTargetStore
 
 FINGERPRINT_POLICY = "top_token_entropy_confidence_v1"
-MODE_POLICY = "fingerprint_group_v1"
-ASSIGNMENT_POLICY = "selected_and_representative_positions_v1"
+CORRIDOR_MODE_POLICY = "stat_bands_v0"
+MODE_POLICY = CORRIDOR_MODE_POLICY
+ASSIGNMENT_POLICY = "full_token_position_stat_bands_v0"
 CORRIDOR_SUMMARY_SCHEMA = "corridor_summary_v3"
 CORRIDOR_FINGERPRINTS_SCHEMA = "corridor_fingerprints_v1"
-CORRIDOR_MODES_SCHEMA = "corridor_modes_v1"
-CORRIDOR_ASSIGNMENTS_SCHEMA = "corridor_mode_assignments_v1"
+CORRIDOR_MODES_SCHEMA = "corridor_modes_v2"
+CORRIDOR_ASSIGNMENTS_SCHEMA = "corridor_mode_assignments_v2"
 FULL_TOKEN_POSITION_CORRIDOR = "full_token_position_corridor"
 BOUNDED_FULL_SURFACE_SKETCH = "bounded_full_surface_sketch"
 SCORE_SELECTED_POSITION_ONLY = "score_selected_position_only"
+DEFAULT_CORRIDOR_MAX_MODES = 256
+DEFAULT_ENTROPY_BINS = (0.0, 1.0, 2.5, 4.0, 8.0, math.inf)
+DEFAULT_TOP1_MARGIN_BINS = (0.0, 0.05, 0.15, 0.35, 1.0, math.inf)
+DEFAULT_TOP32_MASS_BINS = (0.0, 0.5, 0.75, 0.9, 1.0, math.inf)
+CORRIDOR_TRACKED_STATS = (
+    "entropy",
+    "top1_margin",
+    "top8_mass",
+    "top32_mass",
+    "tail_mass",
+)
+_CORRIDOR_MIN_WIDTH = 1e-6
 
 
 @dataclass(frozen=True)
@@ -52,6 +66,9 @@ class CorridorArtifactBuildResult:
             "corridor_mode_assignments_path": str(self.assignments_path),
             "corridor_fingerprint_count": self.fingerprint_count,
             "corridor_mode_count": self.mode_count,
+            "corridor_mode_policy": CORRIDOR_MODE_POLICY,
+            "corridor_max_modes": DEFAULT_CORRIDOR_MAX_MODES,
+            "corridor_tracked_stats": list(CORRIDOR_TRACKED_STATS),
             "selected_exemplars_linked_to_corridor_modes": (
                 self.selected_exemplars_linked
             ),
@@ -71,6 +88,7 @@ class CorridorArtifactValidationResult:
     degraded_corridor_export: bool | None = None
     corridor_positions_available: int = 0
     corridor_positions_used: int = 0
+    corridor_mode_policy: str | None = None
 
     @property
     def ok(self) -> bool:
@@ -87,6 +105,9 @@ class CorridorArtifactValidationResult:
             "degraded_corridor_export": self.degraded_corridor_export,
             "corridor_positions_available": self.corridor_positions_available,
             "corridor_positions_used": self.corridor_positions_used,
+            "corridor_mode_policy": self.corridor_mode_policy,
+            "corridor_max_modes": DEFAULT_CORRIDOR_MAX_MODES,
+            "corridor_tracked_stats": list(CORRIDOR_TRACKED_STATS),
         }
 
 
@@ -107,12 +128,26 @@ class _Observation:
     top_token_id: int
     entropy: float
     confidence: float
+    top1_margin: float
+    top8_mass: float
+    top32_mass: float
+    tail_mass: float
     length: int
     source_policy_id: int
 
     @property
     def key(self) -> tuple[str, int]:
         return (self.example_id, self.position)
+
+    @property
+    def stat_values(self) -> dict[str, float]:
+        return {
+            "entropy": self.entropy,
+            "top1_margin": self.top1_margin,
+            "top8_mass": self.top8_mass,
+            "top32_mass": self.top32_mass,
+            "tail_mass": self.tail_mass,
+        }
 
 
 def build_corridor_artifacts(
@@ -143,21 +178,20 @@ def build_corridor_artifacts(
         * store.metadata.sequence_length,
         fingerprint_policy=fingerprint_policy,
     )
-    modes, fingerprint_to_mode = _modes(
-        fingerprints,
+    modes, observation_to_mode = _modes(
+        observations,
         mode_policy=mode_policy,
-        observation_count=len(observations),
     )
     linked = _link_selected_exemplars(
         selected_records,
         selected_payloads,
         observation_to_fingerprint=observation_to_fingerprint,
-        fingerprint_to_mode=fingerprint_to_mode,
+        observation_to_mode=observation_to_mode,
     )
     assignments = _mode_assignments(
-        selected_records,
-        fingerprints=fingerprints,
-        fingerprint_to_mode=fingerprint_to_mode,
+        observations,
+        observation_to_fingerprint=observation_to_fingerprint,
+        observation_to_mode=observation_to_mode,
     )
     selected_linked = bool(selected_records) and linked == len(selected_records)
 
@@ -186,6 +220,9 @@ def build_corridor_artifacts(
         * store.metadata.sequence_length,
         "fingerprint_policy": fingerprint_policy,
         "mode_policy": mode_policy,
+        "corridor_mode_policy": mode_policy,
+        "corridor_max_modes": DEFAULT_CORRIDOR_MAX_MODES,
+        "corridor_tracked_stats": list(CORRIDOR_TRACKED_STATS),
         "selected_exemplar_count": len(selected_records),
         "selected_exemplars_linked_to_modes": selected_linked,
         "non_selected_exemplar_payload_retained": (
@@ -219,6 +256,9 @@ def build_corridor_artifacts(
         {
             "schema_version": CORRIDOR_MODES_SCHEMA,
             "mode_policy": mode_policy,
+            "corridor_mode_policy": mode_policy,
+            "corridor_max_modes": DEFAULT_CORRIDOR_MAX_MODES,
+            "tracked_stats": list(CORRIDOR_TRACKED_STATS),
             "corridor_observation_basis": extraction.observation_basis,
             "degraded_corridor_export": extraction.degraded,
             "corridor_positions_available": extraction.positions_available,
@@ -233,7 +273,8 @@ def build_corridor_artifacts(
             "schema_version": CORRIDOR_ASSIGNMENTS_SCHEMA,
             "assignment_policy": ASSIGNMENT_POLICY,
             "corridor_observation_basis": extraction.observation_basis,
-            "full_assignment_retained": False,
+            "full_assignment_retained": True,
+            "num_assignments": len(assignments),
             "assignments": assignments,
         },
     )
@@ -245,6 +286,7 @@ def build_corridor_artifacts(
             observation_basis=extraction.observation_basis,
             degraded=extraction.degraded,
             mode_count=len(modes),
+            mode_policy=mode_policy,
             fingerprint_count=len(fingerprints),
             selected_count=len(selected_records),
             selected_payload_retained=bool(selected_payloads),
@@ -320,6 +362,10 @@ def validate_corridor_artifacts(
     positions_used = int(summary.get("corridor_positions_used") or 0)
     num_examples_scored = int(summary.get("num_examples_scored") or 0)
     num_positions_scored = int(summary.get("num_positions_scored") or 0)
+    mode_policy = str(
+        summary.get("corridor_mode_policy") or summary.get("mode_policy") or ""
+    )
+    max_modes = int(summary.get("corridor_max_modes") or DEFAULT_CORRIDOR_MAX_MODES)
     if summary.get("corridor_artifact_built") is not True:
         blockers.append("corridor_summary.corridor_artifact_built is not true")
     if summary.get("corridor_modes_built") is not True:
@@ -353,26 +399,58 @@ def validate_corridor_artifacts(
         blockers.append("corridor_summary.fingerprint_count must be >= 1")
     if mode_count < 1:
         blockers.append("corridor_summary.mode_count must be >= 1")
+    if mode_policy != CORRIDOR_MODE_POLICY:
+        blockers.append(
+            "corridor modes use deprecated fingerprint_group_v1 pseudo-mode policy; "
+            "expected stat_bands_v0"
+        )
+    if mode_count > max_modes:
+        blockers.append("corridor_summary.mode_count exceeds corridor_max_modes")
     if fingerprints.get("fingerprint_count") != fingerprint_count:
         blockers.append("corridor_fingerprints fingerprint_count mismatch")
     if modes.get("mode_count") != mode_count:
         blockers.append("corridor_modes mode_count mismatch")
+    if modes.get("mode_policy") != CORRIDOR_MODE_POLICY:
+        blockers.append("corridor_modes.mode_policy must be stat_bands_v0")
+    if modes.get("tracked_stats") != list(CORRIDOR_TRACKED_STATS):
+        blockers.append("corridor_modes.tracked_stats mismatch")
+    mode_ids = _validate_modes_payload(modes, blockers)
     if (
         expected_selected_count is not None
         and int(summary.get("selected_exemplar_count") or -1) != expected_selected_count
     ):
         blockers.append("corridor_summary selected_exemplar_count mismatch")
-    _validate_selected_links(selected_records or (), blockers, source="selected")
-    _validate_selected_links(selected_payloads or (), blockers, source="payload")
+    _validate_selected_links(
+        selected_records or (),
+        blockers,
+        source="selected",
+        valid_mode_ids=mode_ids,
+    )
+    _validate_selected_links(
+        selected_payloads or (),
+        blockers,
+        source="payload",
+        valid_mode_ids=mode_ids,
+    )
     assignment_items = assignments.get("assignments", [])
     if not isinstance(assignment_items, list):
         blockers.append("mode_assignments.assignments must be a list")
-    elif selected_records and not any(
-        item.get("source") == "selected_exemplar"
-        for item in assignment_items
-        if isinstance(item, dict)
-    ):
-        blockers.append("mode_assignments missing selected exemplar assignments")
+    else:
+        if assignments.get("schema_version") != CORRIDOR_ASSIGNMENTS_SCHEMA:
+            blockers.append("mode_assignments schema_version mismatch")
+        if assignments.get("assignment_policy") != ASSIGNMENT_POLICY:
+            blockers.append("mode_assignments.assignment_policy mismatch")
+        if assignments.get("full_assignment_retained") is not True:
+            blockers.append("mode_assignments.full_assignment_retained is not true")
+        if int(assignments.get("num_assignments") or -1) != len(assignment_items):
+            blockers.append("mode_assignments.num_assignments mismatch")
+        for item in assignment_items:
+            if not isinstance(item, dict):
+                blockers.append("mode_assignments contains non-object assignment")
+                break
+            if item.get("mode_id") not in mode_ids:
+                blockers.append("mode_assignments references nonexistent mode_id")
+                break
     corridor_artifact_ok = not blockers
     return CorridorArtifactValidationResult(
         blockers=tuple(blockers),
@@ -388,6 +466,7 @@ def validate_corridor_artifacts(
         degraded_corridor_export=degraded,
         corridor_positions_available=positions_available,
         corridor_positions_used=positions_used,
+        corridor_mode_policy=mode_policy,
     )
 
 
@@ -450,6 +529,11 @@ def _has_full_corridor_arrays(arrays: dict[str, np.ndarray]) -> bool:
         for name in (
             "corridor_top_token_ids",
             "corridor_teacher_entropy",
+            "corridor_entropy",
+            "corridor_top1_margin",
+            "corridor_top8_mass",
+            "corridor_top32_mass",
+            "corridor_tail_mass",
             "corridor_confidence",
         )
     )
@@ -462,7 +546,11 @@ def _full_corridor_observations_from_shard(
     example_offset: int,
 ) -> tuple[list[_Observation], int, tuple[str, ...]]:
     top_ids = np.asarray(arrays["corridor_top_token_ids"])
-    entropy = np.asarray(arrays["corridor_teacher_entropy"])
+    entropy = np.asarray(arrays["corridor_entropy"])
+    top1_margin = np.asarray(arrays["corridor_top1_margin"])
+    top8_mass = np.asarray(arrays["corridor_top8_mass"])
+    top32_mass = np.asarray(arrays["corridor_top32_mass"])
+    tail_mass = np.asarray(arrays["corridor_tail_mass"])
     confidence = np.asarray(arrays["corridor_confidence"])
     rows, sequence_length = top_ids.shape
     observations: list[_Observation] = []
@@ -492,6 +580,10 @@ def _full_corridor_observations_from_shard(
                     top_token_id=int(top_ids[row, position]),
                     entropy=float(entropy[row, position]),
                     confidence=float(confidence[row, position]),
+                    top1_margin=float(top1_margin[row, position]),
+                    top8_mass=float(top8_mass[row, position]),
+                    top32_mass=float(top32_mass[row, position]),
+                    tail_mass=float(tail_mass[row, position]),
                     length=valid_length,
                     source_policy_id=_source_policy_id(arrays, row, position),
                 )
@@ -562,6 +654,7 @@ def _validate_selected_links(
     blockers: list[str],
     *,
     source: str,
+    valid_mode_ids: set[Any],
 ) -> None:
     if not isinstance(items, (list, tuple)):
         return
@@ -573,6 +666,9 @@ def _validate_selected_links(
             return
         if item.get("corridor_assignment_status") != "linked":
             blockers.append(f"{source} selected exemplar corridor assignment missing")
+            return
+        if item.get("corridor_mode_id") not in valid_mode_ids:
+            blockers.append(f"{source} selected exemplar references invalid mode_id")
             return
 
 
@@ -597,9 +693,50 @@ def _score_observation_from_row(
         confidence=float(
             np.asarray(arrays["score_confidence_at_selected_position"])[row]
         ),
+        top1_margin=_score_stat_at_position(
+            arrays,
+            "corridor_top1_margin",
+            row=row,
+            position=position,
+            default=0.0,
+        ),
+        top8_mass=_score_stat_at_position(
+            arrays,
+            "corridor_top8_mass",
+            row=row,
+            position=position,
+            default=0.0,
+        ),
+        top32_mass=_score_stat_at_position(
+            arrays,
+            "corridor_top32_mass",
+            row=row,
+            position=position,
+            default=0.0,
+        ),
+        tail_mass=_score_stat_at_position(
+            arrays,
+            "corridor_tail_mass",
+            row=row,
+            position=position,
+            default=1.0,
+        ),
         length=length,
         source_policy_id=int(np.asarray(arrays["score_source_policy_ids"])[row]),
     )
+
+
+def _score_stat_at_position(
+    arrays: dict[str, np.ndarray],
+    name: str,
+    *,
+    row: int,
+    position: int,
+    default: float,
+) -> float:
+    if name not in arrays:
+        return default
+    return float(np.asarray(arrays[name])[row, position])
 
 
 def _fingerprints(
@@ -679,45 +816,61 @@ def _fingerprints(
 
 
 def _modes(
-    fingerprints: list[dict[str, Any]],
+    observations: list[_Observation],
     *,
     mode_policy: str,
-    observation_count: int,
-) -> tuple[list[dict[str, Any]], dict[str, str]]:
-    modes: list[dict[str, Any]] = []
-    fingerprint_to_mode: dict[str, str] = {}
-    denominator = max(observation_count, 1)
-    for index, fingerprint in enumerate(fingerprints):
-        mode_id = f"mode_{index:06d}"
-        fingerprint_id = str(fingerprint["fingerprint_id"])
-        signature = fingerprint["signature"]
-        top_token_ids = list(signature["top_token_ids"])
-        label = (
-            f"token_{top_token_ids[0]}_{signature['entropy_bucket']}_entropy_"
-            f"{signature['confidence_bucket']}_confidence"
+) -> tuple[list[dict[str, Any]], dict[tuple[str, int], int]]:
+    if mode_policy != CORRIDOR_MODE_POLICY:
+        raise ValueError(f"unsupported corridor mode policy: {mode_policy}")
+    groups: dict[tuple[int, int, int], list[_Observation]] = {}
+    for observation in observations:
+        groups.setdefault(_stat_band_mode_key(observation.stat_values), []).append(
+            observation
         )
-        fingerprint_to_mode[fingerprint_id] = mode_id
+    if len(groups) > DEFAULT_CORRIDOR_MAX_MODES:
+        raise ValueError(
+            "corridor mode count exceeds DEFAULT_CORRIDOR_MAX_MODES for "
+            f"{CORRIDOR_MODE_POLICY}: {len(groups)}"
+        )
+    modes: list[dict[str, Any]] = []
+    observation_to_mode: dict[tuple[str, int], int] = {}
+    denominator = max(len(observations), 1)
+    for mode_id, (mode_key, members) in enumerate(sorted(groups.items())):
+        for member in members:
+            observation_to_mode[member.key] = mode_id
+        representatives = sorted(
+            members,
+            key=lambda item: (-item.entropy, item.example_id, item.position),
+        )[:3]
+        entropy_bin, top1_margin_bin, top32_mass_bin = mode_key
         modes.append(
             {
                 "mode_id": mode_id,
-                "fingerprint_ids": [fingerprint_id],
-                "count": fingerprint["count"],
-                "share": float(fingerprint["count"]) / float(denominator),
-                "label": label,
-                "top_token_ids": top_token_ids,
-                "mean_entropy": fingerprint["mean_entropy"],
-                "mean_confidence": fingerprint["mean_confidence"],
+                "name": (
+                    f"{CORRIDOR_MODE_POLICY}/e{entropy_bin}_m{top1_margin_bin}_"
+                    f"t{top32_mass_bin}"
+                ),
+                "description": f"{CORRIDOR_MODE_POLICY} teacher-side corridor mode.",
+                "mode_key": {
+                    "entropy_bin": entropy_bin,
+                    "top1_margin_bin": top1_margin_bin,
+                    "top32_mass_bin": top32_mass_bin,
+                },
+                "record_count": len(members),
+                "count": len(members),
+                "share": float(len(members)) / float(denominator),
+                "bounds": _mode_bounds(members),
                 "representative_examples": [
                     {
-                        "example_id": item["example_id"],
-                        "position": item["position"],
+                        "example_id": item.example_id,
+                        "position": item.position,
                     }
-                    for item in fingerprint["representatives"]
+                    for item in representatives
                 ],
                 "mode_policy": mode_policy,
             }
         )
-    return modes, fingerprint_to_mode
+    return modes, observation_to_mode
 
 
 def _link_selected_exemplars(
@@ -725,7 +878,7 @@ def _link_selected_exemplars(
     selected_payloads: list[dict[str, Any]],
     *,
     observation_to_fingerprint: dict[tuple[str, int], str],
-    fingerprint_to_mode: dict[str, str],
+    observation_to_mode: dict[tuple[str, int], int],
 ) -> int:
     linked = 0
     for collection in (selected_records, selected_payloads):
@@ -735,14 +888,10 @@ def _link_selected_exemplars(
                 int(item.get("selected_position", -1)),
             )
             fingerprint_id = observation_to_fingerprint.get(key)
-            mode_id = (
-                fingerprint_to_mode.get(fingerprint_id)
-                if fingerprint_id is not None
-                else None
-            )
+            mode_id = observation_to_mode.get(key)
             item["corridor_fingerprint_id"] = fingerprint_id
             item["corridor_mode_id"] = mode_id
-            is_linked = fingerprint_id is not None and mode_id is not None
+            is_linked = mode_id is not None
             item["corridor_assignment_status"] = "linked" if is_linked else "missing"
             if collection is selected_records and is_linked:
                 linked += 1
@@ -750,52 +899,113 @@ def _link_selected_exemplars(
 
 
 def _mode_assignments(
-    selected_records: list[dict[str, Any]],
+    observations: list[_Observation],
     *,
-    fingerprints: list[dict[str, Any]],
-    fingerprint_to_mode: dict[str, str],
+    observation_to_fingerprint: dict[tuple[str, int], str],
+    observation_to_mode: dict[tuple[str, int], int],
 ) -> list[dict[str, Any]]:
-    assignments: dict[tuple[str, int, str], dict[str, Any]] = {}
-    for item in selected_records:
-        fingerprint_id = item.get("corridor_fingerprint_id")
-        mode_id = item.get("corridor_mode_id")
-        if fingerprint_id is None or mode_id is None:
-            continue
-        key = (
-            str(item["selected_example_id"]),
-            int(item["selected_position"]),
-            "selected_exemplar",
+    assignments: list[dict[str, Any]] = []
+    for observation in sorted(
+        observations,
+        key=lambda item: (item.example_id, item.position),
+    ):
+        mode_id = observation_to_mode[observation.key]
+        assignments.append(
+            {
+                "example_id": observation.example_id,
+                "position": observation.position,
+                "mode_id": mode_id,
+                "fingerprint_id": observation_to_fingerprint.get(observation.key),
+                "weight": 1.0,
+                "source": "corridor_position",
+            }
         )
-        assignments[key] = {
-            "example_id": item["selected_example_id"],
-            "position": item["selected_position"],
-            "mode_id": mode_id,
-            "fingerprint_id": fingerprint_id,
-            "source": "selected_exemplar",
-        }
-    for fingerprint in fingerprints:
-        fingerprint_id = str(fingerprint["fingerprint_id"])
-        mode_id = fingerprint_to_mode[fingerprint_id]
-        for representative in fingerprint["representatives"][:1]:
-            key = (
-                str(representative["example_id"]),
-                int(representative["position"]),
-                "representative",
-            )
-            assignments.setdefault(
-                key,
-                {
-                    "example_id": representative["example_id"],
-                    "position": representative["position"],
-                    "mode_id": mode_id,
-                    "fingerprint_id": fingerprint_id,
-                    "source": "representative",
-                },
-            )
-    return [
-        assignments[key]
-        for key in sorted(assignments, key=lambda item: (item[0], item[1], item[2]))
-    ]
+    return assignments
+
+
+def _stat_band_mode_key(stats: dict[str, float]) -> tuple[int, int, int]:
+    return (
+        _bin_index(stats["entropy"], DEFAULT_ENTROPY_BINS),
+        _bin_index(stats["top1_margin"], DEFAULT_TOP1_MARGIN_BINS),
+        _bin_index(stats["top32_mass"], DEFAULT_TOP32_MASS_BINS),
+    )
+
+
+def _bin_index(value: float, bins: tuple[float, ...]) -> int:
+    clamped = max(float(value), 0.0)
+    for index, upper_bound in enumerate(bins[1:]):
+        if clamped < upper_bound:
+            return index
+    return max(len(bins) - 2, 0)
+
+
+def _mode_bounds(members: list[_Observation]) -> dict[str, dict[str, float]]:
+    return {
+        stat: _stat_bounds(
+            [observation.stat_values[stat] for observation in members],
+            clamp_unit=stat != "entropy",
+        )
+        for stat in CORRIDOR_TRACKED_STATS
+    }
+
+
+def _stat_bounds(values: list[float], *, clamp_unit: bool) -> dict[str, float]:
+    array = np.asarray(values, dtype=np.float32)
+    minimum = float(np.min(array))
+    maximum = float(np.max(array))
+    mean = float(np.mean(array, dtype=np.float32))
+    if maximum - minimum < _CORRIDOR_MIN_WIDTH:
+        midpoint = (maximum + minimum) / 2.0
+        minimum = midpoint - (_CORRIDOR_MIN_WIDTH / 2.0)
+        maximum = midpoint + (_CORRIDOR_MIN_WIDTH / 2.0)
+    if clamp_unit:
+        minimum = max(0.0, min(1.0, minimum))
+        maximum = max(0.0, min(1.0, maximum))
+        mean = max(0.0, min(1.0, mean))
+    else:
+        minimum = max(0.0, minimum)
+        maximum = max(0.0, maximum)
+        mean = max(0.0, mean)
+    return {"min": minimum, "max": maximum, "mean": mean}
+
+
+def _validate_modes_payload(
+    modes_payload: dict[str, Any],
+    blockers: list[str],
+) -> set[Any]:
+    mode_items = modes_payload.get("modes", [])
+    if not isinstance(mode_items, list):
+        blockers.append("corridor_modes.modes must be a list")
+        return set()
+    mode_ids: set[Any] = set()
+    for mode in mode_items:
+        if not isinstance(mode, dict):
+            blockers.append("corridor_modes contains non-object mode")
+            continue
+        mode_id = mode.get("mode_id")
+        mode_ids.add(mode_id)
+        if mode.get("mode_policy") != CORRIDOR_MODE_POLICY:
+            blockers.append("corridor mode entry policy must be stat_bands_v0")
+            continue
+        key = mode.get("mode_key")
+        if not isinstance(key, dict) or not {
+            "entropy_bin",
+            "top1_margin_bin",
+            "top32_mass_bin",
+        }.issubset(key):
+            blockers.append("corridor mode entry missing stat band mode_key")
+        bounds = mode.get("bounds")
+        if not isinstance(bounds, dict):
+            blockers.append("corridor mode entry missing bounds")
+            continue
+        for stat in CORRIDOR_TRACKED_STATS:
+            stat_bounds = bounds.get(stat)
+            if not isinstance(stat_bounds, dict):
+                blockers.append(f"corridor mode bounds missing {stat}")
+                continue
+            if not {"min", "max", "mean"}.issubset(stat_bounds):
+                blockers.append(f"corridor mode bounds incomplete for {stat}")
+    return mode_ids
 
 
 def _entropy_bucket(value: float) -> str:
@@ -837,6 +1047,7 @@ def _human_summary(
     observation_basis: str,
     degraded: bool,
     mode_count: int,
+    mode_policy: str,
     fingerprint_count: int,
     selected_count: int,
     selected_payload_retained: bool,
@@ -849,6 +1060,7 @@ def _human_summary(
         f"  - {num_positions:,} scored token positions",
         f"  - {corridor_positions_used:,} corridor positions used for fingerprinting",
         f"  - {mode_count:,} discovered corridor modes",
+        f"  - corridor mode policy: {mode_policy}",
         f"  - {fingerprint_count:,} corridor fingerprints",
         f"  - {selected_count:,} selected exemplars",
         "  - selected exemplar payloads retained: "

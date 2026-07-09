@@ -413,6 +413,14 @@ def compare_exemplar_delivery_artifacts(
         blockers.append("compressed exemplar payload shapes differ")
     if left["corridor_shape"] != right["corridor_shape"]:
         blockers.append("corridor artifact shapes differ")
+    if left["corridor_mode_policy"] != right["corridor_mode_policy"]:
+        blockers.append("corridor mode policies differ")
+    if left["corridor_mode_count"] != right["corridor_mode_count"]:
+        blockers.append("corridor mode counts differ")
+    if left["corridor_tracked_stats"] != right["corridor_tracked_stats"]:
+        blockers.append("corridor tracked stats differ")
+    if left["corridor_mode_table"] != right["corridor_mode_table"]:
+        blockers.append("corridor mode tables differ")
     for label, artifact in (("Path A", left), ("Path B", right)):
         if artifact["report"].get("corridor_artifact_built") is not True:
             blockers.append(f"{label} did not build corridor artifacts")
@@ -443,12 +451,22 @@ def compare_exemplar_delivery_artifacts(
         "payload_shape_compatible": left["payload_shapes"] == right["payload_shapes"],
         "corridor_artifact_shape_match": left["corridor_shape"]
         == right["corridor_shape"],
+        "corridor_mode_policy_match": left["corridor_mode_policy"]
+        == right["corridor_mode_policy"],
+        "corridor_mode_count_match": left["corridor_mode_count"]
+        == right["corridor_mode_count"],
+        "corridor_tracked_stats_match": left["corridor_tracked_stats"]
+        == right["corridor_tracked_stats"],
+        "corridor_mode_table_match": left["corridor_mode_table"]
+        == right["corridor_mode_table"],
         "path_a_corridor_artifact_built": left["report"].get("corridor_artifact_built"),
         "path_b_corridor_artifact_built": right["report"].get(
             "corridor_artifact_built"
         ),
         "path_a_corridor_mode_count": left["report"].get("corridor_mode_count"),
         "path_b_corridor_mode_count": right["report"].get("corridor_mode_count"),
+        "path_a_corridor_mode_policy": left["corridor_mode_policy"],
+        "path_b_corridor_mode_policy": right["corridor_mode_policy"],
         "path_a_retained_bytes": left_retained,
         "path_b_retained_bytes": right_retained,
         "path_a_teacher_rerun_count": left["report"].get("teacher_rerun_count"),
@@ -1089,15 +1107,20 @@ def _artifact_selection(path: Path) -> dict[str, Any]:
         [],
     )
     payloads = _read_selected_payloads(path / "selected_exemplars", [])
+    corridor_modes = _corridor_modes_payload(path)
     return {
         "report": report,
         "ids": [item.get("selected_example_id") for item in selected],
         "positions": [item.get("selected_position") for item in selected],
         "ranks": [item.get("rank") for item in selected],
         "scores": [float(item.get("selected_score") or 0.0) for item in selected],
-        "mode_keys": [item.get("mode_key") for item in selected],
+        "mode_keys": [item.get("corridor_mode_id") for item in selected],
         "payload_shapes": [_payload_shape(item) for item in payloads],
         "corridor_shape": _corridor_artifact_shape(path),
+        "corridor_mode_policy": corridor_modes.get("mode_policy"),
+        "corridor_mode_count": corridor_modes.get("mode_count"),
+        "corridor_tracked_stats": corridor_modes.get("tracked_stats", []),
+        "corridor_mode_table": _normalized_mode_table(corridor_modes),
     }
 
 
@@ -1112,6 +1135,32 @@ def _corridor_artifact_shape(path: Path) -> tuple[str, ...]:
         )
         if (path / relative_path).is_file()
     )
+
+
+def _corridor_modes_payload(path: Path) -> dict[str, Any]:
+    try:
+        return read_json_object(path / "corridors" / "corridor_modes.json")
+    except (OSError, ValueError):
+        return {}
+
+
+def _normalized_mode_table(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    modes = payload.get("modes", [])
+    if not isinstance(modes, list):
+        return []
+    normalized: list[dict[str, Any]] = []
+    for mode in modes:
+        if not isinstance(mode, dict):
+            continue
+        normalized.append(
+            {
+                "mode_id": mode.get("mode_id"),
+                "mode_key": mode.get("mode_key"),
+                "record_count": mode.get("record_count"),
+                "bounds": mode.get("bounds"),
+            }
+        )
+    return normalized
 
 
 def _payload_shape(payload: dict[str, Any]) -> dict[str, int]:

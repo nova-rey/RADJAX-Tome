@@ -1354,6 +1354,7 @@ def _gpu_corridor_exemplar_reduce(
         gather_positions,
     ).squeeze(-1)
     corridor_top_probs = source["top_probs"][..., 0]
+    corridor_stats = _gpu_corridor_stat_tensors(torch, source)
     batch_size = int(logits.shape[0])
     sequence_length = int(logits.shape[1])
     policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_source_policy]
@@ -1361,6 +1362,11 @@ def _gpu_corridor_exemplar_reduce(
         "corridor_top_token_ids": corridor_top_token_ids,
         "corridor_top_probs": corridor_top_probs,
         "corridor_teacher_entropy": teacher_entropy,
+        "corridor_entropy": corridor_stats["entropy"],
+        "corridor_top1_margin": corridor_stats["top1_margin"],
+        "corridor_top8_mass": corridor_stats["top8_mass"],
+        "corridor_top32_mass": corridor_stats["top32_mass"],
+        "corridor_tail_mass": corridor_stats["tail_mass"],
         "corridor_confidence": corridor_top_probs,
         "corridor_lengths": torch.full(
             (batch_size,),
@@ -1438,6 +1444,7 @@ def _gpu_corridor_exemplar_score_reduce(
     teacher_entropy = source["teacher_entropy"]
     corridor_top_token_ids = source["top_token_ids"][..., 0]
     confidence = source["top_probs"][..., 0]
+    corridor_stats = _gpu_corridor_stat_tensors(torch, source)
     score_selected_position = torch.argmax(teacher_entropy, dim=-1).to(torch.int32)
     gather_positions = score_selected_position.to(torch.int64).unsqueeze(-1)
     selected_entropy = torch.gather(
@@ -1461,6 +1468,11 @@ def _gpu_corridor_exemplar_score_reduce(
     return {
         "corridor_top_token_ids": corridor_top_token_ids,
         "corridor_teacher_entropy": teacher_entropy,
+        "corridor_entropy": corridor_stats["entropy"],
+        "corridor_top1_margin": corridor_stats["top1_margin"],
+        "corridor_top8_mass": corridor_stats["top8_mass"],
+        "corridor_top32_mass": corridor_stats["top32_mass"],
+        "corridor_tail_mass": corridor_stats["tail_mass"],
         "corridor_confidence": confidence,
         "corridor_lengths": torch.full(
             (batch_size,),
@@ -1491,6 +1503,24 @@ def _gpu_corridor_exemplar_score_reduce(
             dtype=torch.int32,
             device=logits.device,
         ),
+    }
+
+
+def _gpu_corridor_stat_tensors(torch: Any, source: Mapping[str, Any]) -> dict[str, Any]:
+    top_probs = source["top_probs"]
+    top1 = top_probs[..., 0]
+    if int(top_probs.shape[-1]) > 1:
+        top2 = top_probs[..., 1]
+    else:
+        top2 = torch.zeros_like(top1)
+    top8_mass = torch.sum(top_probs[..., : min(8, int(top_probs.shape[-1]))], dim=-1)
+    top32_mass = torch.sum(top_probs[..., : min(32, int(top_probs.shape[-1]))], dim=-1)
+    return {
+        "entropy": source["teacher_entropy"],
+        "top1_margin": torch.clamp(top1 - top2, min=0.0),
+        "top8_mass": torch.clamp(top8_mass, min=0.0, max=1.0),
+        "top32_mass": torch.clamp(top32_mass, min=0.0, max=1.0),
+        "tail_mass": torch.clamp(1.0 - top32_mass, min=0.0, max=1.0),
     }
 
 
@@ -1959,6 +1989,11 @@ def _tail_bucket_masses_on_device(
 _SCORE_PAYLOAD_DTYPES: Mapping[str, type[np.generic]] = {
     "corridor_top_token_ids": np.int32,
     "corridor_teacher_entropy": np.float32,
+    "corridor_entropy": np.float32,
+    "corridor_top1_margin": np.float32,
+    "corridor_top8_mass": np.float32,
+    "corridor_top32_mass": np.float32,
+    "corridor_tail_mass": np.float32,
     "corridor_confidence": np.float32,
     "corridor_lengths": np.int32,
     "score_example_ids": np.int32,
@@ -2013,6 +2048,26 @@ def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
             ),
             "corridor_teacher_entropy": _tensor_to_numpy(
                 payload["corridor_teacher_entropy"],
+                np.float32,
+            ),
+            "corridor_entropy": _tensor_to_numpy(
+                payload["corridor_entropy"],
+                np.float32,
+            ),
+            "corridor_top1_margin": _tensor_to_numpy(
+                payload["corridor_top1_margin"],
+                np.float32,
+            ),
+            "corridor_top8_mass": _tensor_to_numpy(
+                payload["corridor_top8_mass"],
+                np.float32,
+            ),
+            "corridor_top32_mass": _tensor_to_numpy(
+                payload["corridor_top32_mass"],
+                np.float32,
+            ),
+            "corridor_tail_mass": _tensor_to_numpy(
+                payload["corridor_tail_mass"],
                 np.float32,
             ),
             "corridor_confidence": _tensor_to_numpy(

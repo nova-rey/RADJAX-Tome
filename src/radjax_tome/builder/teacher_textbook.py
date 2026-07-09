@@ -176,6 +176,7 @@ class TeacherTextbookValidationReport:
     degraded_corridor_export: bool | None = None
     corridor_positions_available: int | None = None
     corridor_positions_used: int | None = None
+    corridor_mode_policy: str | None = None
     claims_not_made: tuple[str, ...] = field(default_factory=tuple)
 
     def to_dict(self) -> dict[str, Any]:
@@ -409,6 +410,7 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
     degraded_corridor_export: bool | None = None
     corridor_positions_available: int | None = None
     corridor_positions_used: int | None = None
+    corridor_mode_policy: str | None = None
     claims_not_made: tuple[str, ...] = ()
 
     if not root.is_dir():
@@ -540,6 +542,7 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
         degraded_corridor_export = corridor_report.degraded_corridor_export
         corridor_positions_available = corridor_report.corridor_positions_available
         corridor_positions_used = corridor_report.corridor_positions_used
+        corridor_mode_policy = corridor_report.corridor_mode_policy
         if corridor_report.ok:
             checks.append("corridor artifacts: valid")
 
@@ -575,6 +578,7 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
         degraded_corridor_export=degraded_corridor_export,
         corridor_positions_available=corridor_positions_available,
         corridor_positions_used=corridor_positions_used,
+        corridor_mode_policy=corridor_mode_policy,
         claims_not_made=claims_not_made,
     )
 
@@ -1271,6 +1275,7 @@ def _report(
     degraded_corridor_export: bool | None = None,
     corridor_positions_available: int | None = None,
     corridor_positions_used: int | None = None,
+    corridor_mode_policy: str | None = None,
     claims_not_made: tuple[str, ...] = (),
 ) -> TeacherTextbookValidationReport:
     blocker_tuple = tuple(blockers or ())
@@ -1307,5 +1312,6 @@ def _report(
         degraded_corridor_export=degraded_corridor_export,
         corridor_positions_available=corridor_positions_available,
         corridor_positions_used=corridor_positions_used,
+        corridor_mode_policy=corridor_mode_policy,
         claims_not_made=claims_not_made,
     )

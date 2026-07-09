@@ -581,6 +581,21 @@ def _production_report(
             if delivery_report is not None
             else None
         ),
+        "corridor_mode_policy": (
+            delivery_report.get("corridor_mode_policy")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_max_modes": (
+            delivery_report.get("corridor_max_modes")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_tracked_stats": (
+            delivery_report.get("corridor_tracked_stats")
+            if delivery_report is not None
+            else None
+        ),
         "parity_report_path": str(parity_report_path) if config.parity_left else None,
         "parity_status": parity_status,
         "build_status": build_status,

@@ -6,10 +6,21 @@ from pathlib import Path
 import numpy as np
 
 from radjax_tome.builder import build_production_gpu_tome, validate_teacher_textbook
-from radjax_tome.builder.corridor_artifacts import build_corridor_artifacts
+from radjax_tome.builder.corridor_artifacts import (
+    CORRIDOR_TRACKED_STATS,
+    DEFAULT_CORRIDOR_MAX_MODES,
+    build_corridor_artifacts,
+)
 from radjax_tome.builder.exemplar_delivery import (
     SELECTED_EXEMPLARS_FILENAME,
     _load_examples,
+)
+from radjax_tome.builder.teacher_textbook import TinyTextExample
+from radjax_tome.targets import (
+    TEACHER_TARGET_STORE_SCHEMA_VERSION,
+    TEACHER_TARGET_STORE_VERSION,
+    TargetStoreMetadata,
+    TeacherTargetStore,
 )
 from tests.test_selected_exemplar_delivery import _config, _json
 
@@ -40,15 +51,130 @@ def test_path_b_emits_first_class_corridor_artifacts(tmp_path: Path) -> None:
     assert summary["corridor_positions_used"] == 25
     assert summary["corridor_observation_count"] == 25
     assert summary["mode_count"] >= 1
+    assert summary["mode_policy"] == "stat_bands_v0"
+    assert summary["corridor_mode_policy"] == "stat_bands_v0"
+    assert summary["corridor_max_modes"] == DEFAULT_CORRIDOR_MAX_MODES
+    assert summary["corridor_tracked_stats"] == list(CORRIDOR_TRACKED_STATS)
+    assert summary["mode_count"] <= DEFAULT_CORRIDOR_MAX_MODES
+    assert summary["mode_count"] < summary["corridor_positions_used"]
+    assert summary["mode_count"] <= 125
     assert summary["fingerprint_count"] >= 1
     assert fingerprints["fingerprint_count"] == summary["fingerprint_count"]
     assert modes["mode_count"] == summary["mode_count"]
+    assert modes["mode_policy"] == "stat_bands_v0"
+    assert modes["tracked_stats"] == list(CORRIDOR_TRACKED_STATS)
+    for stat in CORRIDOR_TRACKED_STATS:
+        assert stat in modes["modes"][0]["bounds"]
     assert assignments["assignments"]
+    assert assignments["schema_version"] == "corridor_mode_assignments_v2"
+    assert assignments["assignment_policy"] == "full_token_position_stat_bands_v0"
+    assert assignments["full_assignment_retained"] is True
+    assert assignments["num_assignments"] == summary["corridor_positions_used"]
     assert selected_payloads
     assert selected_payloads[0]["corridor_mode_id"] is not None
     assert selected_payloads[0]["corridor_fingerprint_id"] is not None
     assert selected_payloads[0]["corridor_assignment_status"] == "linked"
     assert (output / "corridors" / "corridor_summary.txt").is_file()
+
+
+def test_stat_band_modes_do_not_explode_on_distinct_top_tokens(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "top_token_collapse"
+    sequence_length = 40
+    metadata = TargetStoreMetadata(
+        schema_version=TEACHER_TARGET_STORE_SCHEMA_VERSION,
+        target_store_version=TEACHER_TARGET_STORE_VERSION,
+        model_id="fake-teacher",
+        model_family="fake",
+        tokenizer_id="fake-tokenizer",
+        tokenizer_hash=None,
+        vocab_size=512,
+        target_type="corridor_exemplar_score_pass_v1",
+        dtype="float32",
+        sequence_length=sequence_length,
+        num_examples=1,
+        shard_count=1,
+        created_by="test",
+        created_at="2026-07-09T00:00:00Z",
+    )
+    store = TeacherTargetStore.create(output, metadata, overwrite=True)
+    input_ids = np.arange(sequence_length, dtype=np.int32)[None, :]
+    attention_mask = np.ones((1, sequence_length), dtype=np.int32)
+    entropy = np.full((1, sequence_length), 2.0, dtype=np.float32)
+    top1_margin = np.full((1, sequence_length), 0.10, dtype=np.float32)
+    top8_mass = np.full((1, sequence_length), 0.80, dtype=np.float32)
+    top32_mass = np.full((1, sequence_length), 0.80, dtype=np.float32)
+    store.write_shard(
+        0,
+        {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "corridor_top_token_ids": np.arange(
+                sequence_length,
+                dtype=np.int32,
+            )[None, :],
+            "corridor_teacher_entropy": entropy,
+            "corridor_entropy": entropy,
+            "corridor_top1_margin": top1_margin,
+            "corridor_top8_mass": top8_mass,
+            "corridor_top32_mass": top32_mass,
+            "corridor_tail_mass": np.full(
+                (1, sequence_length),
+                0.20,
+                dtype=np.float32,
+            ),
+            "corridor_confidence": np.full(
+                (1, sequence_length),
+                0.45,
+                dtype=np.float32,
+            ),
+            "corridor_lengths": np.asarray([sequence_length], dtype=np.int32),
+            "score_example_ids": np.asarray([0], dtype=np.int32),
+            "score_max_entropy": np.asarray([2.0], dtype=np.float32),
+            "score_mean_entropy": np.asarray([2.0], dtype=np.float32),
+            "score_selected_position": np.asarray([0], dtype=np.int32),
+            "score_top_token_id": np.asarray([0], dtype=np.int32),
+            "score_selected_position_entropy": np.asarray([2.0], dtype=np.float32),
+            "score_confidence_at_selected_position": np.asarray(
+                [0.45],
+                dtype=np.float32,
+            ),
+            "score_source_policy_ids": np.asarray([0], dtype=np.int32),
+            "score_lengths": np.asarray([sequence_length], dtype=np.int32),
+        },
+    )
+    selected = {
+        "selected_example_id": "example-0",
+        "selected_position": 0,
+        "selected_score": 2.0,
+    }
+
+    build_corridor_artifacts(
+        output_dir=output,
+        examples=(TinyTextExample(example_id="example-0", text="hello"),),
+        selected_records=[selected],
+        selected_payloads=[selected.copy()],
+        delivery_path="two_pass_rerun_selected",
+        non_selected_exemplar_payload_retained=False,
+    )
+    summary = _json(output / "corridors" / "corridor_summary.json")
+    modes = _json(output / "corridors" / "corridor_modes.json")
+    assignments = _json(output / "corridors" / "mode_assignments.json")
+
+    assert summary["mode_policy"] == "stat_bands_v0"
+    assert summary["mode_count"] == 1
+    assert summary["fingerprint_count"] == sequence_length
+    assert modes["modes"][0]["mode_key"] == {
+        "entropy_bin": 1,
+        "top1_margin_bin": 1,
+        "top32_mass_bin": 2,
+    }
+    assert set(CORRIDOR_TRACKED_STATS).issubset(modes["modes"][0]["bounds"])
+    assert assignments["num_assignments"] == sequence_length
+    assert {item["mode_id"] for item in assignments["assignments"]} == {0}
+    assert selected["corridor_mode_id"] == 0
+    assert selected["corridor_assignment_status"] == "linked"
 
 
 def test_path_a_emits_corridors_and_prunes_only_candidate_arrays(
@@ -72,6 +198,8 @@ def test_path_a_emits_corridors_and_prunes_only_candidate_arrays(
     assert delivery["corridor_observation_basis"] == "full_token_position_corridor"
     assert delivery["corridor_positions_used"] == 25
     assert summary["mode_count"] >= 1
+    assert summary["mode_policy"] == "stat_bands_v0"
+    assert summary["mode_count"] <= DEFAULT_CORRIDOR_MAX_MODES
     assert (output / "corridors" / "corridor_fingerprints.json").is_file()
     assert (output / "corridors" / "corridor_modes.json").is_file()
     assert (output / "corridors" / "mode_assignments.json").is_file()
@@ -122,6 +250,11 @@ def test_score_only_corridor_export_is_degraded_and_rejected(
         for key in (
             "corridor_top_token_ids",
             "corridor_teacher_entropy",
+            "corridor_entropy",
+            "corridor_top1_margin",
+            "corridor_top8_mass",
+            "corridor_top32_mass",
+            "corridor_tail_mass",
             "corridor_confidence",
             "corridor_lengths",
         ):
@@ -180,10 +313,14 @@ def test_reports_and_cover_page_include_corridor_counts(tmp_path: Path) -> None:
         assert report["corridor_positions_available"] == 25
         assert report["corridor_positions_used"] == 25
         assert report["corridor_mode_count"] >= 1
+        assert report["corridor_mode_policy"] == "stat_bands_v0"
+        assert report["corridor_max_modes"] == DEFAULT_CORRIDOR_MAX_MODES
+        assert report["corridor_tracked_stats"] == list(CORRIDOR_TRACKED_STATS)
         assert report["corridor_fingerprint_count"] >= 1
     assert validation["corridor_artifact_ok"] is True
     assert validation["corridor_modes_ok"] is True
     assert validation["corridor_mode_count"] >= 1
+    assert validation["corridor_mode_policy"] == "stat_bands_v0"
     assert validation["corridor_observation_basis"] == "full_token_position_corridor"
     assert validation["corridor_positions_used"] == 25
     assert contents["corridors/corridor_summary.json"] == "corridor_summary"

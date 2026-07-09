@@ -601,6 +601,7 @@ def _corridor_exemplar_payload(
     top_ids = source["top_token_ids"][..., 0].astype(np.int32)
     top_probs = source["top_probs"][..., 0].astype(np.float32)
     confidence = top_probs.astype(np.float32)
+    corridor_stats = _corridor_stat_arrays(source)
     exemplar_positions = np.argsort(
         -entropy,
         axis=-1,
@@ -672,6 +673,11 @@ def _corridor_exemplar_payload(
         "corridor_top_token_ids": top_ids,
         "corridor_top_probs": top_probs,
         "corridor_teacher_entropy": entropy,
+        "corridor_entropy": corridor_stats["entropy"],
+        "corridor_top1_margin": corridor_stats["top1_margin"],
+        "corridor_top8_mass": corridor_stats["top8_mass"],
+        "corridor_top32_mass": corridor_stats["top32_mass"],
+        "corridor_tail_mass": corridor_stats["tail_mass"],
         "corridor_confidence": confidence,
         "corridor_lengths": lengths,
         "exemplar_positions": exemplar_positions,
@@ -720,6 +726,7 @@ def _corridor_exemplar_score_payload(
     entropy = source["teacher_entropy"].astype(np.float32)
     confidence = source["top_probs"][..., 0].astype(np.float32)
     top_ids = source["top_token_ids"][..., 0].astype(np.int32)
+    corridor_stats = _corridor_stat_arrays(source)
     selected_position = np.argmax(entropy, axis=-1).astype(np.int32)
     selected_entropy = np.take_along_axis(
         entropy,
@@ -765,6 +772,11 @@ def _corridor_exemplar_score_payload(
         "score_metadata": _corridor_score_pass_metadata(config),
         "corridor_top_token_ids": top_ids,
         "corridor_teacher_entropy": entropy,
+        "corridor_entropy": corridor_stats["entropy"],
+        "corridor_top1_margin": corridor_stats["top1_margin"],
+        "corridor_top8_mass": corridor_stats["top8_mass"],
+        "corridor_top32_mass": corridor_stats["top32_mass"],
+        "corridor_tail_mass": corridor_stats["tail_mass"],
         "corridor_confidence": confidence,
         "corridor_lengths": np.full((batch_size,), logits.shape[1], dtype=np.int32),
         "score_example_ids": np.arange(batch_size, dtype=np.int32),
@@ -778,6 +790,24 @@ def _corridor_exemplar_score_payload(
         "score_confidence_at_selected_position": selected_confidence,
         "score_source_policy_ids": np.full((batch_size,), policy_id, dtype=np.int32),
         "score_lengths": np.full((batch_size,), logits.shape[1], dtype=np.int32),
+    }
+
+
+def _corridor_stat_arrays(source: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    top_probs = np.asarray(source["top_probs"], dtype=np.float32)
+    top1 = top_probs[..., 0]
+    if top_probs.shape[-1] > 1:
+        top2 = top_probs[..., 1]
+    else:
+        top2 = np.zeros_like(top1, dtype=np.float32)
+    top8_mass = np.sum(top_probs[..., : min(8, top_probs.shape[-1])], axis=-1)
+    top32_mass = np.sum(top_probs[..., : min(32, top_probs.shape[-1])], axis=-1)
+    return {
+        "entropy": np.asarray(source["teacher_entropy"], dtype=np.float32),
+        "top1_margin": np.maximum(top1 - top2, 0.0).astype(np.float32),
+        "top8_mass": np.clip(top8_mass, 0.0, 1.0).astype(np.float32),
+        "top32_mass": np.clip(top32_mass, 0.0, 1.0).astype(np.float32),
+        "tail_mass": np.maximum(1.0 - top32_mass, 0.0).astype(np.float32),
     }
 
 

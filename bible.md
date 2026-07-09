@@ -761,3 +761,17 @@ corridor evidence while avoiding one-pass candidate retention.
 backend config construction, emission metadata, target params, and
 `production_build_report.json` all record the requested dynamic top-k controls
 so selected-only burns can test larger exemplar caps such as 128.
+
+## 2026-07-09 — P4.12 Stat-Band Corridor Mode Export
+
+Fingerprint corridor export now separates diagnostic fingerprints from training
+corridor modes. CPU and GPU corridor score payloads retain compact per-position
+stats for entropy, top1 margin, top8 mass, top32 mass, and tail mass without
+dense logits or dense probabilities.
+
+`corridor_modes.json` now uses the original QRWKV-XLA-style `stat_bands_v0`
+policy keyed by entropy, top1-margin, and top32-mass bins, bounded by the
+default 256-mode cap. Mode records include min/max/mean bounds for the five
+tracked stats, full token-position mode assignments are retained, selected
+exemplars link to stat-band `corridor_mode_id` values, and validation rejects
+legacy `fingerprint_group_v1` pseudo-mode artifacts.
