@@ -181,6 +181,9 @@ def test_path_b_main_artifact_is_score_pass_without_broad_exemplar_payloads(
 
     assert metadata["target_type"] == "corridor_exemplar_score_pass_v1"
     with np.load(shard_path) as shard:
+        assert "corridor_top_token_ids" in shard.files
+        assert "corridor_teacher_entropy" in shard.files
+        assert "corridor_confidence" in shard.files
         assert "score_selected_position" in shard.files
         assert "score_selected_position_entropy" in shard.files
         assert "exemplar_positions" not in shard.files

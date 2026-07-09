@@ -13,10 +13,13 @@ from radjax_tome.targets.store import TeacherTargetStore
 FINGERPRINT_POLICY = "top_token_entropy_confidence_v1"
 MODE_POLICY = "fingerprint_group_v1"
 ASSIGNMENT_POLICY = "selected_and_representative_positions_v1"
-CORRIDOR_SUMMARY_SCHEMA = "corridor_summary_v2"
+CORRIDOR_SUMMARY_SCHEMA = "corridor_summary_v3"
 CORRIDOR_FINGERPRINTS_SCHEMA = "corridor_fingerprints_v1"
 CORRIDOR_MODES_SCHEMA = "corridor_modes_v1"
 CORRIDOR_ASSIGNMENTS_SCHEMA = "corridor_mode_assignments_v1"
+FULL_TOKEN_POSITION_CORRIDOR = "full_token_position_corridor"
+BOUNDED_FULL_SURFACE_SKETCH = "bounded_full_surface_sketch"
+SCORE_SELECTED_POSITION_ONLY = "score_selected_position_only"
 
 
 @dataclass(frozen=True)
@@ -29,11 +32,20 @@ class CorridorArtifactBuildResult:
     fingerprint_count: int
     mode_count: int
     selected_exemplars_linked: bool
+    observation_basis: str
+    degraded: bool
+    positions_available: int
+    positions_used: int
 
     def report_fields(self) -> dict[str, Any]:
         return {
             "corridor_artifact_built": True,
             "corridor_modes_built": True,
+            "corridor_observation_basis": self.observation_basis,
+            "degraded_corridor_export": self.degraded,
+            "corridor_positions_available": self.positions_available,
+            "corridor_positions_used": self.positions_used,
+            "corridor_observation_count": self.positions_used,
             "corridor_summary_path": str(self.summary_path),
             "corridor_fingerprints_path": str(self.fingerprints_path),
             "corridor_modes_path": str(self.modes_path),
@@ -55,6 +67,10 @@ class CorridorArtifactValidationResult:
     corridor_modes_ok: bool = False
     corridor_mode_count: int = 0
     corridor_fingerprint_count: int = 0
+    corridor_observation_basis: str | None = None
+    degraded_corridor_export: bool | None = None
+    corridor_positions_available: int = 0
+    corridor_positions_used: int = 0
 
     @property
     def ok(self) -> bool:
@@ -67,10 +83,24 @@ class CorridorArtifactValidationResult:
             "corridor_modes_ok": self.corridor_modes_ok,
             "corridor_mode_count": self.corridor_mode_count,
             "corridor_fingerprint_count": self.corridor_fingerprint_count,
+            "corridor_observation_basis": self.corridor_observation_basis,
+            "degraded_corridor_export": self.degraded_corridor_export,
+            "corridor_positions_available": self.corridor_positions_available,
+            "corridor_positions_used": self.corridor_positions_used,
         }
 
 
 @dataclass(frozen=True)
+class CorridorObservationExtraction:
+    observations: list[_Observation]
+    observation_basis: str
+    positions_available: int
+    positions_used: int
+    degraded: bool
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class _Observation:
     example_id: str
     position: int
@@ -95,9 +125,15 @@ def build_corridor_artifacts(
     non_selected_exemplar_payload_retained: bool,
     fingerprint_policy: str = FINGERPRINT_POLICY,
     mode_policy: str = MODE_POLICY,
+    allow_degraded_score_only: bool = False,
 ) -> CorridorArtifactBuildResult:
     store = TeacherTargetStore.open(output_dir)
-    observations = _score_observations(store, examples)
+    extraction = _corridor_observations(
+        store,
+        examples,
+        allow_degraded_score_only=allow_degraded_score_only,
+    )
+    observations = extraction.observations
     fingerprints, observation_to_fingerprint = _fingerprints(
         observations,
         target_type="corridor_exemplar_v1",
@@ -138,6 +174,11 @@ def build_corridor_artifacts(
         "corridor_artifact_built": True,
         "corridor_fingerprints_retained": True,
         "corridor_modes_built": True,
+        "corridor_observation_basis": extraction.observation_basis,
+        "degraded_corridor_export": extraction.degraded,
+        "corridor_positions_available": extraction.positions_available,
+        "corridor_positions_used": extraction.positions_used,
+        "corridor_observation_count": extraction.positions_used,
         "fingerprint_count": len(fingerprints),
         "mode_count": len(modes),
         "num_examples_scored": store.metadata.num_examples,
@@ -160,6 +201,11 @@ def build_corridor_artifacts(
             "target_type": "corridor_exemplar_v1",
             "source_target_type": "corridor_exemplar_score_pass_v1",
             "source_store_target_type": store.metadata.target_type,
+            "corridor_observation_basis": extraction.observation_basis,
+            "degraded_corridor_export": extraction.degraded,
+            "corridor_positions_available": extraction.positions_available,
+            "corridor_positions_used": extraction.positions_used,
+            "corridor_observation_count": extraction.positions_used,
             "num_examples_scored": store.metadata.num_examples,
             "num_positions_scored": store.metadata.num_examples
             * store.metadata.sequence_length,
@@ -173,6 +219,10 @@ def build_corridor_artifacts(
         {
             "schema_version": CORRIDOR_MODES_SCHEMA,
             "mode_policy": mode_policy,
+            "corridor_observation_basis": extraction.observation_basis,
+            "degraded_corridor_export": extraction.degraded,
+            "corridor_positions_available": extraction.positions_available,
+            "corridor_positions_used": extraction.positions_used,
             "mode_count": len(modes),
             "modes": modes,
         },
@@ -182,6 +232,7 @@ def build_corridor_artifacts(
         {
             "schema_version": CORRIDOR_ASSIGNMENTS_SCHEMA,
             "assignment_policy": ASSIGNMENT_POLICY,
+            "corridor_observation_basis": extraction.observation_basis,
             "full_assignment_retained": False,
             "assignments": assignments,
         },
@@ -190,6 +241,9 @@ def build_corridor_artifacts(
         _human_summary(
             num_examples=store.metadata.num_examples,
             num_positions=store.metadata.num_examples * store.metadata.sequence_length,
+            corridor_positions_used=extraction.positions_used,
+            observation_basis=extraction.observation_basis,
+            degraded=extraction.degraded,
             mode_count=len(modes),
             fingerprint_count=len(fingerprints),
             selected_count=len(selected_records),
@@ -208,6 +262,10 @@ def build_corridor_artifacts(
         fingerprint_count=len(fingerprints),
         mode_count=len(modes),
         selected_exemplars_linked=selected_linked,
+        observation_basis=extraction.observation_basis,
+        degraded=extraction.degraded,
+        positions_available=extraction.positions_available,
+        positions_used=extraction.positions_used,
     )
 
 
@@ -256,10 +314,41 @@ def validate_corridor_artifacts(
 
     fingerprint_count = int(summary.get("fingerprint_count") or 0)
     mode_count = int(summary.get("mode_count") or 0)
+    observation_basis = summary.get("corridor_observation_basis")
+    degraded = bool(summary.get("degraded_corridor_export"))
+    positions_available = int(summary.get("corridor_positions_available") or 0)
+    positions_used = int(summary.get("corridor_positions_used") or 0)
+    num_examples_scored = int(summary.get("num_examples_scored") or 0)
+    num_positions_scored = int(summary.get("num_positions_scored") or 0)
     if summary.get("corridor_artifact_built") is not True:
         blockers.append("corridor_summary.corridor_artifact_built is not true")
     if summary.get("corridor_modes_built") is not True:
         blockers.append("corridor_summary.corridor_modes_built is not true")
+    if observation_basis == SCORE_SELECTED_POSITION_ONLY or degraded:
+        blockers.append(
+            "corridor artifact was built from score-selected positions only; "
+            "full corridor fingerprint export is missing"
+        )
+    if observation_basis not in {
+        FULL_TOKEN_POSITION_CORRIDOR,
+        BOUNDED_FULL_SURFACE_SKETCH,
+        SCORE_SELECTED_POSITION_ONLY,
+    }:
+        blockers.append("corridor_summary.corridor_observation_basis is invalid")
+    if observation_basis == FULL_TOKEN_POSITION_CORRIDOR:
+        if positions_used != num_positions_scored:
+            blockers.append(
+                "corridor_summary.corridor_positions_used must equal "
+                "num_positions_scored for full token-position export"
+            )
+    if positions_used <= num_examples_scored:
+        blockers.append(
+            "corridor_summary.corridor_positions_used must exceed num_examples_scored"
+        )
+    if positions_available < positions_used:
+        blockers.append(
+            "corridor_summary.corridor_positions_available must be >= positions_used"
+        )
     if fingerprint_count < 1:
         blockers.append("corridor_summary.fingerprint_count must be >= 1")
     if mode_count < 1:
@@ -293,13 +382,154 @@ def validate_corridor_artifacts(
         corridor_modes_ok=mode_count >= 1 and not blockers,
         corridor_mode_count=mode_count,
         corridor_fingerprint_count=fingerprint_count,
+        corridor_observation_basis=(
+            str(observation_basis) if observation_basis is not None else None
+        ),
+        degraded_corridor_export=degraded,
+        corridor_positions_available=positions_available,
+        corridor_positions_used=positions_used,
     )
 
 
-def _score_observations(
+def _corridor_observations(
     store: TeacherTargetStore,
     examples: tuple[TinyTextExample, ...],
-) -> list[_Observation]:
+    *,
+    allow_degraded_score_only: bool = False,
+) -> CorridorObservationExtraction:
+    observations: list[_Observation] = []
+    warnings: list[str] = []
+    example_offset = 0
+    positions_available = 0
+    found_full_corridor_arrays = False
+    for shard_id in range(store.metadata.shard_count):
+        arrays = store.read_shard(shard_id)
+        row_count = int(np.asarray(arrays["input_ids"]).shape[0])
+        if _has_full_corridor_arrays(arrays):
+            found_full_corridor_arrays = True
+            shard_observations, shard_available, shard_warnings = (
+                _full_corridor_observations_from_shard(
+                    arrays,
+                    examples=examples,
+                    example_offset=example_offset,
+                )
+            )
+            observations.extend(shard_observations)
+            positions_available += shard_available
+            warnings.extend(shard_warnings)
+        else:
+            positions_available += row_count * store.metadata.sequence_length
+        example_offset += row_count
+    if found_full_corridor_arrays:
+        return CorridorObservationExtraction(
+            observations=observations,
+            observation_basis=FULL_TOKEN_POSITION_CORRIDOR,
+            positions_available=positions_available,
+            positions_used=len(observations),
+            degraded=False,
+            warnings=tuple(warnings),
+        )
+    if allow_degraded_score_only:
+        return _score_selected_observations(
+            store,
+            examples,
+            positions_available=max(
+                positions_available,
+                store.metadata.num_examples * store.metadata.sequence_length,
+            ),
+        )
+    raise ValueError(
+        "corridor_exemplar_v1 selected-only run did not retain full token-position "
+        "corridor arrays"
+    )
+
+
+def _has_full_corridor_arrays(arrays: dict[str, np.ndarray]) -> bool:
+    return all(
+        name in arrays
+        for name in (
+            "corridor_top_token_ids",
+            "corridor_teacher_entropy",
+            "corridor_confidence",
+        )
+    )
+
+
+def _full_corridor_observations_from_shard(
+    arrays: dict[str, np.ndarray],
+    *,
+    examples: tuple[TinyTextExample, ...],
+    example_offset: int,
+) -> tuple[list[_Observation], int, tuple[str, ...]]:
+    top_ids = np.asarray(arrays["corridor_top_token_ids"])
+    entropy = np.asarray(arrays["corridor_teacher_entropy"])
+    confidence = np.asarray(arrays["corridor_confidence"])
+    rows, sequence_length = top_ids.shape
+    observations: list[_Observation] = []
+    warnings: list[str] = []
+    positions_available = 0
+    for row in range(rows):
+        example_index = example_offset + row
+        example_id = (
+            examples[example_index].example_id
+            if example_index < len(examples)
+            else f"row-{example_index:06d}"
+        )
+        length, length_warning = _corridor_row_length(
+            arrays,
+            row=row,
+            sequence_length=sequence_length,
+        )
+        if length_warning is not None:
+            warnings.append(length_warning)
+        valid_length = min(max(length, 0), sequence_length)
+        positions_available += valid_length
+        for position in range(valid_length):
+            observations.append(
+                _Observation(
+                    example_id=example_id,
+                    position=position,
+                    top_token_id=int(top_ids[row, position]),
+                    entropy=float(entropy[row, position]),
+                    confidence=float(confidence[row, position]),
+                    length=valid_length,
+                    source_policy_id=_source_policy_id(arrays, row, position),
+                )
+            )
+    return observations, positions_available, tuple(sorted(set(warnings)))
+
+
+def _corridor_row_length(
+    arrays: dict[str, np.ndarray],
+    *,
+    row: int,
+    sequence_length: int,
+) -> tuple[int, str | None]:
+    if "corridor_lengths" in arrays:
+        return int(np.asarray(arrays["corridor_lengths"])[row]), None
+    if "attention_mask" in arrays:
+        return int(np.sum(np.asarray(arrays["attention_mask"])[row])), None
+    return sequence_length, "corridor_lengths missing; used full sequence length"
+
+
+def _source_policy_id(
+    arrays: dict[str, np.ndarray],
+    row: int,
+    position: int,
+) -> int:
+    if "exemplar_source_policy_ids" in arrays:
+        return int(np.asarray(arrays["exemplar_source_policy_ids"])[row, position])
+    if "score_source_policy_ids" in arrays:
+        return int(np.asarray(arrays["score_source_policy_ids"])[row])
+    return 0
+
+
+def _score_selected_observations(
+    store: TeacherTargetStore,
+    examples: tuple[TinyTextExample, ...],
+    *,
+    positions_available: int,
+) -> CorridorObservationExtraction:
     observations: list[_Observation] = []
     example_offset = 0
     for shard_id in range(store.metadata.shard_count):
@@ -312,9 +542,19 @@ def _score_observations(
                 if example_index < len(examples)
                 else f"row-{example_index:06d}"
             )
-            observations.append(_observation_from_row(arrays, row, example_id))
+            observations.append(_score_observation_from_row(arrays, row, example_id))
         example_offset += row_count
-    return observations
+    return CorridorObservationExtraction(
+        observations=observations,
+        observation_basis=SCORE_SELECTED_POSITION_ONLY,
+        positions_available=positions_available,
+        positions_used=len(observations),
+        degraded=True,
+        warnings=(
+            "corridor artifact was built from score-selected positions only; "
+            "full corridor fingerprint export is missing",
+        ),
+    )
 
 
 def _validate_selected_links(
@@ -336,7 +576,7 @@ def _validate_selected_links(
             return
 
 
-def _observation_from_row(
+def _score_observation_from_row(
     arrays: dict[str, np.ndarray],
     row: int,
     example_id: str,
@@ -593,6 +833,9 @@ def _human_summary(
     *,
     num_examples: int,
     num_positions: int,
+    corridor_positions_used: int,
+    observation_basis: str,
+    degraded: bool,
     mode_count: int,
     fingerprint_count: int,
     selected_count: int,
@@ -600,19 +843,29 @@ def _human_summary(
     non_selected_payload_retained: bool,
     delivery_path: str,
 ) -> str:
-    return "\n".join(
-        (
-            "This Tome artifact contains:",
-            f"  - {num_examples:,} scored examples",
-            f"  - {num_positions:,} scored token positions",
-            f"  - {mode_count:,} discovered corridor modes",
-            f"  - {fingerprint_count:,} corridor fingerprints",
-            f"  - {selected_count:,} selected exemplars",
-            "  - selected exemplar payloads retained: "
-            f"{'yes' if selected_payload_retained else 'no'}",
-            "  - non-selected exemplar payloads retained: "
-            f"{'yes' if non_selected_payload_retained else 'no'}",
-            f"  - delivery path: {delivery_path}",
-            "",
+    lines = [
+        "This Tome artifact contains:",
+        f"  - {num_examples:,} scored examples",
+        f"  - {num_positions:,} scored token positions",
+        f"  - {corridor_positions_used:,} corridor positions used for fingerprinting",
+        f"  - {mode_count:,} discovered corridor modes",
+        f"  - {fingerprint_count:,} corridor fingerprints",
+        f"  - {selected_count:,} selected exemplars",
+        "  - selected exemplar payloads retained: "
+        f"{'yes' if selected_payload_retained else 'no'}",
+        "  - non-selected exemplar payloads retained: "
+        f"{'yes' if non_selected_payload_retained else 'no'}",
+        f"  - corridor observation basis: {observation_basis}",
+        f"  - delivery path: {delivery_path}",
+    ]
+    if degraded:
+        lines.extend(
+            (
+                "",
+                "WARNING: corridor export is degraded.",
+                "Only score-selected positions were used for corridor modes.",
+                "This is not a full fingerprint corridor artifact.",
+            )
         )
-    )
+    lines.append("")
+    return "\n".join(lines)

@@ -519,6 +519,26 @@ def _production_report(
             if delivery_report is not None
             else None
         ),
+        "corridor_observation_basis": (
+            delivery_report.get("corridor_observation_basis")
+            if delivery_report is not None
+            else None
+        ),
+        "degraded_corridor_export": (
+            delivery_report.get("degraded_corridor_export")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_positions_available": (
+            delivery_report.get("corridor_positions_available")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_positions_used": (
+            delivery_report.get("corridor_positions_used")
+            if delivery_report is not None
+            else None
+        ),
         "corridor_summary_path": (
             delivery_report.get("corridor_summary_path")
             if delivery_report is not None

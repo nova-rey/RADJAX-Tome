@@ -172,6 +172,10 @@ class TeacherTextbookValidationReport:
     corridor_modes_ok: bool | None = None
     corridor_mode_count: int | None = None
     corridor_fingerprint_count: int | None = None
+    corridor_observation_basis: str | None = None
+    degraded_corridor_export: bool | None = None
+    corridor_positions_available: int | None = None
+    corridor_positions_used: int | None = None
     claims_not_made: tuple[str, ...] = field(default_factory=tuple)
 
     def to_dict(self) -> dict[str, Any]:
@@ -401,6 +405,10 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
     corridor_modes_ok: bool | None = None
     corridor_mode_count: int | None = None
     corridor_fingerprint_count: int | None = None
+    corridor_observation_basis: str | None = None
+    degraded_corridor_export: bool | None = None
+    corridor_positions_available: int | None = None
+    corridor_positions_used: int | None = None
     claims_not_made: tuple[str, ...] = ()
 
     if not root.is_dir():
@@ -528,6 +536,10 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
         corridor_modes_ok = corridor_report.corridor_modes_ok
         corridor_mode_count = corridor_report.corridor_mode_count
         corridor_fingerprint_count = corridor_report.corridor_fingerprint_count
+        corridor_observation_basis = corridor_report.corridor_observation_basis
+        degraded_corridor_export = corridor_report.degraded_corridor_export
+        corridor_positions_available = corridor_report.corridor_positions_available
+        corridor_positions_used = corridor_report.corridor_positions_used
         if corridor_report.ok:
             checks.append("corridor artifacts: valid")
 
@@ -559,6 +571,10 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
         corridor_modes_ok=corridor_modes_ok,
         corridor_mode_count=corridor_mode_count,
         corridor_fingerprint_count=corridor_fingerprint_count,
+        corridor_observation_basis=corridor_observation_basis,
+        degraded_corridor_export=degraded_corridor_export,
+        corridor_positions_available=corridor_positions_available,
+        corridor_positions_used=corridor_positions_used,
         claims_not_made=claims_not_made,
     )
 
@@ -1251,6 +1267,10 @@ def _report(
     corridor_modes_ok: bool | None = None,
     corridor_mode_count: int | None = None,
     corridor_fingerprint_count: int | None = None,
+    corridor_observation_basis: str | None = None,
+    degraded_corridor_export: bool | None = None,
+    corridor_positions_available: int | None = None,
+    corridor_positions_used: int | None = None,
     claims_not_made: tuple[str, ...] = (),
 ) -> TeacherTextbookValidationReport:
     blocker_tuple = tuple(blockers or ())
@@ -1283,5 +1303,9 @@ def _report(
         corridor_modes_ok=corridor_modes_ok,
         corridor_mode_count=corridor_mode_count,
         corridor_fingerprint_count=corridor_fingerprint_count,
+        corridor_observation_basis=corridor_observation_basis,
+        degraded_corridor_export=degraded_corridor_export,
+        corridor_positions_available=corridor_positions_available,
+        corridor_positions_used=corridor_positions_used,
         claims_not_made=claims_not_made,
     )

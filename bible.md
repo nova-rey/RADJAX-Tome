@@ -731,3 +731,17 @@ The corridor exporter groups canonical score-surface observations by top token,
 entropy bucket, confidence bucket, and position bucket. Reports and validation
 now expose direct corridor yes/no fields and counts, and selected exemplar
 records/payloads are linked back to corridor fingerprint and mode IDs.
+
+## 2026-07-09 — P4.12 Full-Corpus Corridor Observation Basis
+
+Fingerprint corridor export now prefers full per-token-position corridor arrays
+instead of score-selected rows. Two-pass score shards retain compact
+`corridor_top_token_ids`, `corridor_teacher_entropy`, `corridor_confidence`, and
+`corridor_lengths`, while still avoiding dense logits and broad non-selected
+exemplar payloads.
+
+`corridor_summary.json`, delivery reports, production reports, validation
+reports, and the human corridor summary now state the observation basis,
+positions available, positions used, and whether the export is degraded.
+Score-selected-only corridor export is explicitly marked degraded and rejected
+by happy-path validation.

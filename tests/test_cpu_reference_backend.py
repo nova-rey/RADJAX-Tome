@@ -445,6 +445,10 @@ def test_corridor_two_pass_score_payload_is_batch_scale() -> None:
         "score_records",
         "score_summary",
         "score_metadata",
+        "corridor_top_token_ids",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+        "corridor_lengths",
         "score_example_ids",
         "score_max_entropy",
         "score_mean_entropy",
@@ -455,9 +459,10 @@ def test_corridor_two_pass_score_payload_is_batch_scale() -> None:
         "score_source_policy_ids",
         "score_lengths",
     } <= set(payload)
-    assert "corridor_teacher_entropy" not in payload
+    assert "corridor_teacher_entropy" in payload
     assert "exemplar_positions" not in payload
     for field in (
+        "corridor_lengths",
         "score_example_ids",
         "score_max_entropy",
         "score_mean_entropy",
@@ -469,6 +474,12 @@ def test_corridor_two_pass_score_payload_is_batch_scale() -> None:
         "score_lengths",
     ):
         assert payload[field].shape == (2,)
+    for field in (
+        "corridor_top_token_ids",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+    ):
+        assert payload[field].shape == (2, 5)
 
     one_pass = create_backend(_config(target_policy="corridor_exemplar_v1")).emit_batch(
         _batch()
@@ -490,7 +501,9 @@ def test_corridor_two_pass_score_payload_is_batch_scale() -> None:
         "two_pass_sparse_exemplar"
     )
     assert result.metadata["exemplar_capture_stage"] == "score_pass"
-    assert result.metadata["exemplar_candidate_scope"] == "batch_score_summary_only"
+    assert result.metadata["exemplar_candidate_scope"] == (
+        "batch_score_and_corridor_evidence"
+    )
     assert result.metadata["requires_second_pass_for_final_exemplars"] is True
     assert result.metadata["rerun_teacher_for_selected_examples"] is True
 
@@ -579,7 +592,8 @@ def test_corridor_auto_policy_chooses_two_pass_for_huge_estimate() -> None:
     result = backend.emit_batch(_batch())
 
     assert "score_max_entropy" in result.payload
-    assert "corridor_teacher_entropy" not in result.payload
+    assert "corridor_teacher_entropy" in result.payload
+    assert "exemplar_positions" not in result.payload
     assert result.metadata["exemplar_capture_mode_requested"] == "auto"
     assert result.metadata["exemplar_capture_mode_effective"] == (
         "two_pass_sparse_exemplar"

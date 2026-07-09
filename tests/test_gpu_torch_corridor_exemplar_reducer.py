@@ -286,6 +286,10 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
     )
 
     assert set(payload) == {
+        "corridor_top_token_ids",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+        "corridor_lengths",
         "score_example_ids",
         "score_max_entropy",
         "score_mean_entropy",
@@ -296,8 +300,25 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
         "score_source_policy_ids",
         "score_lengths",
     }
-    for value in payload.values():
-        assert value.shape == (2,)
+    for field in (
+        "corridor_lengths",
+        "score_example_ids",
+        "score_max_entropy",
+        "score_mean_entropy",
+        "score_selected_position",
+        "score_top_token_id",
+        "score_selected_position_entropy",
+        "score_confidence_at_selected_position",
+        "score_source_policy_ids",
+        "score_lengths",
+    ):
+        assert payload[field].shape == (2,)
+    for field in (
+        "corridor_top_token_ids",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+    ):
+        assert payload[field].shape == (2, 3)
     assert (payload["score_source_policy_ids"] == 3).all()
     assert (payload["score_lengths"] == 3).all()
     assert np.isfinite(payload["score_max_entropy"]).all()

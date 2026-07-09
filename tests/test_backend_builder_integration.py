@@ -212,13 +212,15 @@ def test_backend_builder_writes_two_pass_score_artifact_truthfully(
 
     assert store.metadata.target_type == "corridor_exemplar_score_pass_v1"
     assert params["exemplar_capture_stage"] == "score_pass"
-    assert params["exemplar_candidate_scope"] == "batch_score_summary_only"
+    assert params["exemplar_candidate_scope"] == "batch_score_and_corridor_evidence"
     assert params["corpus_level_exemplar_finalization"] == "false"
     assert params["requires_second_pass_for_final_exemplars"] == "true"
     assert params["production_global_selector"] == "false"
     shard = store.read_shard(0)
     assert shard["score_max_entropy"].shape == (2,)
-    assert "corridor_teacher_entropy" not in shard
+    assert shard["corridor_teacher_entropy"].shape == (2, 5)
+    assert shard["corridor_top_token_ids"].shape == (2, 5)
+    assert "exemplar_positions" not in shard
 
 
 def test_backend_builder_preserves_batch_size_and_no_split_semantics(
