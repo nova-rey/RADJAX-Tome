@@ -72,6 +72,9 @@ class BackendTeacherTextbookBuildConfig:
     vocab_size: int = DEFAULT_FAKE_VOCAB_SIZE
     top_k: int = 8
     num_buckets: int = 4
+    dynamic_top_k_min: int = 1
+    dynamic_top_k_max: int = 32
+    dynamic_mass_threshold: float = 0.95
     exemplar_source_policy: str = "dynamic_cascaded_soft_labels_v1"
     exemplar_capture_mode: str = "one_pass_candidate"
     exemplar_second_pass_source_policy: str = "dynamic_cascaded_soft_labels_v1"
@@ -544,6 +547,9 @@ def teacher_backend_config_from_build_config(
         vocab_size=config.vocab_size,
         top_k=config.top_k,
         num_buckets=config.num_buckets,
+        dynamic_top_k_min=config.dynamic_top_k_min,
+        dynamic_top_k_max=config.dynamic_top_k_max,
+        dynamic_mass_threshold=config.dynamic_mass_threshold,
         exemplar_source_policy=config.exemplar_source_policy,
         exemplar_capture_mode=config.exemplar_capture_mode,
         exemplar_second_pass_source_policy=config.exemplar_second_pass_source_policy,
@@ -1153,6 +1159,9 @@ def _write_streaming_backend_sidecars(
             "temperature": None,
             "top_p": None,
             "top_k": config.top_k,
+            "dynamic_top_k_min": config.dynamic_top_k_min,
+            "dynamic_top_k_max": config.dynamic_top_k_max,
+            "dynamic_mass_threshold": config.dynamic_mass_threshold,
             "seed": 0,
             "teacher_mode": "backend_contract",
             "teacher_backend": config.teacher_backend,
@@ -1299,6 +1308,9 @@ def _target_params(
         "student_consumption_ready": "false",
         "experimental_target_schema": "true",
         "production_global_selector": "false",
+        "dynamic_top_k_min": str(config.dynamic_top_k_min),
+        "dynamic_top_k_max": str(config.dynamic_top_k_max),
+        "dynamic_mass_threshold": str(config.dynamic_mass_threshold),
         **_corpus_provenance(config),
         **teacher_model_target_params(config.teacher_model_provenance_path),
     }
@@ -1440,6 +1452,9 @@ def _write_backend_sidecars(
             "temperature": None,
             "top_p": None,
             "top_k": config.top_k,
+            "dynamic_top_k_min": config.dynamic_top_k_min,
+            "dynamic_top_k_max": config.dynamic_top_k_max,
+            "dynamic_mass_threshold": config.dynamic_mass_threshold,
             "seed": 0,
             "teacher_mode": "backend_contract",
             "teacher_backend": config.teacher_backend,

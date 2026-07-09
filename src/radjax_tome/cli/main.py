@@ -341,6 +341,9 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument("--vocab-size", type=int, default=32)
     production.add_argument("--top-k", type=int, default=8)
     production.add_argument("--num-buckets", type=int, default=4)
+    production.add_argument("--dynamic-top-k-min", type=int, default=1)
+    production.add_argument("--dynamic-top-k-max", type=int, default=32)
+    production.add_argument("--dynamic-mass-threshold", type=float, default=0.95)
     production.add_argument(
         "--gpu-batch-size-mode",
         choices=("preset", "custom", "auto"),
@@ -939,6 +942,9 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
             vocab_size=args.vocab_size,
             top_k=args.top_k,
             num_buckets=args.num_buckets,
+            dynamic_top_k_min=args.dynamic_top_k_min,
+            dynamic_top_k_max=args.dynamic_top_k_max,
+            dynamic_mass_threshold=args.dynamic_mass_threshold,
             gpu_batch_size_mode=args.gpu_batch_size_mode,
             gpu_batch_size_preset=args.gpu_batch_size_preset,
             gpu_batch_size_custom=args.gpu_batch_size_custom,

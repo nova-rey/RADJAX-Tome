@@ -753,3 +753,11 @@ from full one-pass corridor/exemplar payloads. Score-pass payloads can include
 compact full-surface corridor arrays without requiring `corridor_top_probs` or
 `exemplar_source_*` candidate payload arrays, preserving the full-corpus
 corridor evidence while avoiding one-pass candidate retention.
+
+## 2026-07-09 — Production Dynamic Top-K CLI Controls
+
+`radjax-tome production-build` now exposes `--dynamic-top-k-min`,
+`--dynamic-top-k-max`, and `--dynamic-mass-threshold`. Production build config,
+backend config construction, emission metadata, target params, and
+`production_build_report.json` all record the requested dynamic top-k controls
+so selected-only burns can test larger exemplar caps such as 128.

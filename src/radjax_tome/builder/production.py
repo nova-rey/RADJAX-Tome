@@ -54,6 +54,9 @@ class ProductionBuildConfig:
     vocab_size: int = 32
     top_k: int = 8
     num_buckets: int = 4
+    dynamic_top_k_min: int = 1
+    dynamic_top_k_max: int = 32
+    dynamic_mass_threshold: float = 0.95
     gpu_batch_size_mode: str = "auto"
     gpu_batch_size_preset: int = 8
     gpu_batch_size_custom: int | None = None
@@ -386,6 +389,9 @@ def _backend_config(config: ProductionBuildConfig) -> TeacherBackendConfig:
         vocab_size=config.vocab_size,
         top_k=config.top_k,
         num_buckets=config.num_buckets,
+        dynamic_top_k_min=config.dynamic_top_k_min,
+        dynamic_top_k_max=config.dynamic_top_k_max,
+        dynamic_mass_threshold=config.dynamic_mass_threshold,
         gpu_batch_size_mode=config.gpu_batch_size_mode,
         gpu_batch_size_preset=config.gpu_batch_size_preset,
         gpu_batch_size_custom=config.gpu_batch_size_custom,
@@ -416,6 +422,9 @@ def _streaming_config(
         vocab_size=config.vocab_size,
         top_k=config.top_k,
         num_buckets=config.num_buckets,
+        dynamic_top_k_min=config.dynamic_top_k_min,
+        dynamic_top_k_max=config.dynamic_top_k_max,
+        dynamic_mass_threshold=config.dynamic_mass_threshold,
         gpu_batch_size_mode=config.gpu_batch_size_mode,
         gpu_batch_size_preset=config.gpu_batch_size_preset,
         gpu_batch_size_custom=config.gpu_batch_size_custom,
@@ -504,6 +513,9 @@ def _production_report(
             if delivery_report is not None
             else None
         ),
+        "dynamic_top_k_min": config.dynamic_top_k_min,
+        "dynamic_top_k_max": config.dynamic_top_k_max,
+        "dynamic_mass_threshold": config.dynamic_mass_threshold,
         "non_selected_exemplar_payload_retained": (
             delivery_report.get("non_selected_exemplar_payload_retained")
             if delivery_report is not None
@@ -601,6 +613,9 @@ def _inputs(config: ProductionBuildConfig) -> dict[str, Any]:
         "vocab_size": config.vocab_size,
         "top_k": config.top_k,
         "num_buckets": config.num_buckets,
+        "dynamic_top_k_min": config.dynamic_top_k_min,
+        "dynamic_top_k_max": config.dynamic_top_k_max,
+        "dynamic_mass_threshold": config.dynamic_mass_threshold,
         "allow_downloads": False,
         "local_files_only": True,
         "exemplar_selection_enabled": config.exemplar_selection_enabled,

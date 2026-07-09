@@ -111,6 +111,23 @@ def test_production_build_writes_plan_report_cover_and_valid_artifact(
     assert _json(output / "run_manifest.json")["status"] == "complete"
 
 
+def test_production_config_passes_dynamic_top_k_controls_to_backend(
+    tmp_path: Path,
+) -> None:
+    config = _config(
+        tmp_path,
+        dynamic_top_k_min=3,
+        dynamic_top_k_max=128,
+        dynamic_mass_threshold=0.975,
+    )
+
+    backend_config = production._backend_config(config)
+
+    assert backend_config.dynamic_top_k_min == 3
+    assert backend_config.dynamic_top_k_max == 128
+    assert backend_config.dynamic_mass_threshold == 0.975
+
+
 def test_production_build_stops_on_planner_failure(tmp_path: Path) -> None:
     config = _config(tmp_path, max_artifact_bytes=1)
 
@@ -436,13 +453,23 @@ def test_production_build_cli_smoke_and_no_allow_downloads_flag(
         "13",
         "--top-k",
         "4",
+        "--dynamic-top-k-max",
+        "128",
     )
     help_result = run_cli(ROOT, "production-build", "--help")
+    production_report = _json(output / "production_build_report.json")
+    emission_config = _json(output / "emission_config.json")
 
     assert result.returncode == 0, result.stderr
     assert "status=pass" in result.stdout
     assert (output / "production_build_report.json").is_file()
+    assert production_report["dynamic_top_k_max"] == 128
+    assert production_report["inputs"]["dynamic_top_k_max"] == 128
+    assert emission_config["dynamic_top_k_max"] == 128
     assert "--allow-downloads" not in help_result.stdout
+    assert "--dynamic-top-k-min" in help_result.stdout
+    assert "--dynamic-top-k-max" in help_result.stdout
+    assert "--dynamic-mass-threshold" in help_result.stdout
 
 
 def test_fail_fast_is_not_user_facing() -> None:
