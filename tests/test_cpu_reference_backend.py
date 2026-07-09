@@ -10,6 +10,7 @@ from radjax_tome.backends import (
     create_backend,
     list_backend_capabilities,
 )
+from radjax_tome.backends.cpu import _corridor_stat_arrays
 
 
 def _batch() -> TeacherBatchInput:
@@ -27,7 +28,7 @@ def _config(**overrides: object) -> TeacherBackendConfig:
         "target_policy": "dense_logits",
         "sequence_length": 5,
         "batch_size": 99,
-        "vocab_size": 11,
+        "vocab_size": 64,
         "top_k": 4,
         "num_buckets": 3,
         "exemplar_top_n": 2,
@@ -58,12 +59,13 @@ def test_registry_lists_fake_and_cpu_reference_backends() -> None:
 
 
 def test_dense_logits_payload_shape_and_determinism() -> None:
-    backend = create_backend(_config(target_policy="dense_logits"))
+    config = _config(target_policy="dense_logits")
+    backend = create_backend(config)
 
     first = backend.emit_batch(_batch())
     second = backend.emit_batch(_batch())
 
-    assert first.payload["logits"].shape == (2, 5, 11)
+    assert first.payload["logits"].shape == (2, 5, config.vocab_size)
     np.testing.assert_array_equal(first.input_ids, second.input_ids)
     np.testing.assert_array_equal(first.attention_mask, second.attention_mask)
     np.testing.assert_array_equal(first.payload["logits"], second.payload["logits"])
@@ -279,6 +281,41 @@ def test_dynamic_cascaded_max_k_clamps_to_vocab_size() -> None:
     assert result.metadata["dynamic_top_k_max_configured"] == 99
     assert result.metadata["dynamic_top_k_max_effective"] == 4
     assert result.metadata["dynamic_top_k_min_effective"] == 2
+
+
+def test_corridor_stat_arrays_require_real_top32_support() -> None:
+    source = {
+        "top_probs": np.full((1, 2, 8), 0.1, dtype=np.float32),
+        "teacher_entropy": np.ones((1, 2), dtype=np.float32),
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "corridor stat export requires top_probs depth >= 32 to compute "
+            "top32_mass and tail_mass; got K=8"
+        ),
+    ):
+        _corridor_stat_arrays(source)
+
+
+def test_corridor_stat_arrays_compute_top32_stats() -> None:
+    probs = np.zeros((1, 1, 32), dtype=np.float32)
+    probs[0, 0] = np.linspace(0.05, 0.001, 32, dtype=np.float32)
+    source = {
+        "top_probs": probs,
+        "teacher_entropy": np.asarray([[1.5]], dtype=np.float32),
+    }
+
+    stats = _corridor_stat_arrays(source)
+
+    assert stats["top8_mass"][0, 0] <= stats["top32_mass"][0, 0]
+    assert stats["tail_mass"][0, 0] == pytest.approx(
+        1.0 - stats["top32_mass"][0, 0],
+    )
+    assert stats["top1_margin"][0, 0] == pytest.approx(probs[0, 0, 0] - probs[0, 0, 1])
+    for value in stats.values():
+        assert np.isfinite(value).all()
 
 
 def test_corridor_exemplar_payload_and_metadata_are_deterministic() -> None:
@@ -708,7 +745,7 @@ def test_cpu_reference_metadata_records_requested_and_effective_values() -> None
     assert metadata["fallback_used"] is False
     assert metadata["sequence_length"] == 5
     assert metadata["batch_size"] == 99
-    assert metadata["vocab_size"] == 11
+    assert metadata["vocab_size"] == 64
 
 
 @pytest.mark.parametrize(

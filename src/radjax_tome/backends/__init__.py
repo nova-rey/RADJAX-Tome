@@ -1,6 +1,7 @@
 """Teacher backend interfaces and fake/synthetic implementations."""
 
 from radjax_tome.backends.base import (
+    MIN_CORRIDOR_STAT_TOP_K,
     BackendCapability,
     CpuOrchestrationMode,
     FallbackPolicy,
@@ -80,6 +81,7 @@ __all__ = [
     "CPUReferenceTeacherEmissionBackend",
     "CpuOrchestrationMode",
     "FallbackPolicy",
+    "MIN_CORRIDOR_STAT_TOP_K",
     "FakeNumpyTeacherEmissionBackend",
     "FakeTeacherBackend",
     "DEFAULT_HF_SPECIMEN_MODEL_ID",

@@ -27,6 +27,7 @@ SupportStatus = Literal[
     "historical_reference_exists",
 ]
 FallbackPolicy = Literal["error", "auto"]
+MIN_CORRIDOR_STAT_TOP_K = 32
 
 
 @dataclass(frozen=True)

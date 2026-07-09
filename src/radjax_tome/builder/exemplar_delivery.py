@@ -409,6 +409,10 @@ def compare_exemplar_delivery_artifacts(
             break
     if left["mode_keys"] != right["mode_keys"]:
         blockers.append("selected mode keys differ")
+    if not all(status == "linked" for status in left["assignment_statuses"]):
+        blockers.append("Path A selected corridor assignments are not linked")
+    if not all(status == "linked" for status in right["assignment_statuses"]):
+        blockers.append("Path B selected corridor assignments are not linked")
     if left["payload_shapes"] != right["payload_shapes"]:
         blockers.append("compressed exemplar payload shapes differ")
     if left["corridor_shape"] != right["corridor_shape"]:
@@ -421,6 +425,11 @@ def compare_exemplar_delivery_artifacts(
         blockers.append("corridor tracked stats differ")
     if left["corridor_mode_table"] != right["corridor_mode_table"]:
         blockers.append("corridor mode tables differ")
+    if (
+        left["corridor_assignment_storage_kind"]
+        != right["corridor_assignment_storage_kind"]
+    ):
+        blockers.append("corridor assignment storage kinds differ")
     for label, artifact in (("Path A", left), ("Path B", right)):
         if artifact["report"].get("corridor_artifact_built") is not True:
             blockers.append(f"{label} did not build corridor artifacts")
@@ -448,6 +457,11 @@ def compare_exemplar_delivery_artifacts(
         "selected_positions_match": left["positions"] == right["positions"],
         "selected_score_ranks_match": left["ranks"] == right["ranks"],
         "selected_mode_keys_match": left["mode_keys"] == right["mode_keys"],
+        "selected_corridor_mode_ids_match": left["mode_keys"] == right["mode_keys"],
+        "selected_corridor_assignments_linked": all(
+            status == "linked"
+            for status in (*left["assignment_statuses"], *right["assignment_statuses"])
+        ),
         "payload_shape_compatible": left["payload_shapes"] == right["payload_shapes"],
         "corridor_artifact_shape_match": left["corridor_shape"]
         == right["corridor_shape"],
@@ -459,6 +473,10 @@ def compare_exemplar_delivery_artifacts(
         == right["corridor_tracked_stats"],
         "corridor_mode_table_match": left["corridor_mode_table"]
         == right["corridor_mode_table"],
+        "corridor_assignment_storage_kind_match": left[
+            "corridor_assignment_storage_kind"
+        ]
+        == right["corridor_assignment_storage_kind"],
         "path_a_corridor_artifact_built": left["report"].get("corridor_artifact_built"),
         "path_b_corridor_artifact_built": right["report"].get(
             "corridor_artifact_built"
@@ -467,6 +485,12 @@ def compare_exemplar_delivery_artifacts(
         "path_b_corridor_mode_count": right["report"].get("corridor_mode_count"),
         "path_a_corridor_mode_policy": left["corridor_mode_policy"],
         "path_b_corridor_mode_policy": right["corridor_mode_policy"],
+        "path_a_corridor_assignment_storage_kind": left[
+            "corridor_assignment_storage_kind"
+        ],
+        "path_b_corridor_assignment_storage_kind": right[
+            "corridor_assignment_storage_kind"
+        ],
         "path_a_retained_bytes": left_retained,
         "path_b_retained_bytes": right_retained,
         "path_a_teacher_rerun_count": left["report"].get("teacher_rerun_count"),
@@ -1115,12 +1139,18 @@ def _artifact_selection(path: Path) -> dict[str, Any]:
         "ranks": [item.get("rank") for item in selected],
         "scores": [float(item.get("selected_score") or 0.0) for item in selected],
         "mode_keys": [item.get("corridor_mode_id") for item in selected],
+        "assignment_statuses": [
+            item.get("corridor_assignment_status") for item in selected
+        ],
         "payload_shapes": [_payload_shape(item) for item in payloads],
         "corridor_shape": _corridor_artifact_shape(path),
         "corridor_mode_policy": corridor_modes.get("mode_policy"),
         "corridor_mode_count": corridor_modes.get("mode_count"),
         "corridor_tracked_stats": corridor_modes.get("tracked_stats", []),
         "corridor_mode_table": _normalized_mode_table(corridor_modes),
+        "corridor_assignment_storage_kind": report.get(
+            "corridor_assignment_storage_kind"
+        ),
     }
 
 

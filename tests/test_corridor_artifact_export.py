@@ -55,6 +55,10 @@ def test_path_b_emits_first_class_corridor_artifacts(tmp_path: Path) -> None:
     assert summary["corridor_mode_policy"] == "stat_bands_v0"
     assert summary["corridor_max_modes"] == DEFAULT_CORRIDOR_MAX_MODES
     assert summary["corridor_tracked_stats"] == list(CORRIDOR_TRACKED_STATS)
+    assert summary["corridor_stat_top_k"] >= 32
+    assert summary["min_corridor_stat_top_k"] == 32
+    assert summary["corridor_assignment_storage_kind"] == "packed_numpy_v1"
+    assert summary["corridor_assignment_count"] == summary["corridor_positions_used"]
     assert summary["mode_count"] <= DEFAULT_CORRIDOR_MAX_MODES
     assert summary["mode_count"] < summary["corridor_positions_used"]
     assert summary["mode_count"] <= 125
@@ -65,11 +69,14 @@ def test_path_b_emits_first_class_corridor_artifacts(tmp_path: Path) -> None:
     assert modes["tracked_stats"] == list(CORRIDOR_TRACKED_STATS)
     for stat in CORRIDOR_TRACKED_STATS:
         assert stat in modes["modes"][0]["bounds"]
-    assert assignments["assignments"]
-    assert assignments["schema_version"] == "corridor_mode_assignments_v2"
+    assert assignments["schema_version"] == "corridor_mode_assignments_v3"
     assert assignments["assignment_policy"] == "full_token_position_stat_bands_v0"
+    assert assignments["storage_kind"] == "packed_numpy_v1"
     assert assignments["full_assignment_retained"] is True
     assert assignments["num_assignments"] == summary["corridor_positions_used"]
+    assert "assignments" not in assignments
+    for spec in assignments["arrays"].values():
+        assert (output / spec["path"]).is_file()
     assert selected_payloads
     assert selected_payloads[0]["corridor_mode_id"] is not None
     assert selected_payloads[0]["corridor_fingerprint_id"] is not None
@@ -97,6 +104,10 @@ def test_stat_band_modes_do_not_explode_on_distinct_top_tokens(
         shard_count=1,
         created_by="test",
         created_at="2026-07-09T00:00:00Z",
+        target_params={
+            "corridor_stat_top_k": "32",
+            "min_corridor_stat_top_k": "32",
+        },
     )
     store = TeacherTargetStore.create(output, metadata, overwrite=True)
     input_ids = np.arange(sequence_length, dtype=np.int32)[None, :]
@@ -172,7 +183,9 @@ def test_stat_band_modes_do_not_explode_on_distinct_top_tokens(
     }
     assert set(CORRIDOR_TRACKED_STATS).issubset(modes["modes"][0]["bounds"])
     assert assignments["num_assignments"] == sequence_length
-    assert {item["mode_id"] for item in assignments["assignments"]} == {0}
+    assert assignments["storage_kind"] == "packed_numpy_v1"
+    mode_ids = np.load(output / assignments["arrays"]["mode_id"]["path"])
+    assert set(mode_ids.tolist()) == {0}
     assert selected["corridor_mode_id"] == 0
     assert selected["corridor_assignment_status"] == "linked"
 
@@ -231,6 +244,47 @@ def test_validation_fails_for_selected_only_artifact_missing_corridors(
         in validation.blockers
     )
     assert validation.corridor_artifact_ok is False
+
+
+def test_validation_fails_for_packed_assignment_invalid_mode_id(
+    tmp_path: Path,
+) -> None:
+    config = _config(
+        tmp_path,
+        output_name="invalid_assignment_mode",
+        delivery_path="two_pass_rerun_selected",
+    )
+    assert build_production_gpu_tome(config)["status"] == "pass"
+    manifest = _json(config.output_dir / "corridors" / "mode_assignments.json")
+    mode_path = config.output_dir / manifest["arrays"]["mode_id"]["path"]
+    mode_ids = np.load(mode_path)
+    mode_ids[0] = 999_999
+    np.save(mode_path, mode_ids)
+
+    validation = validate_teacher_textbook(config.output_dir)
+
+    assert validation.status == "fail"
+    assert "mode_assignments references nonexistent mode_id" in validation.blockers
+
+
+def test_validation_fails_for_packed_assignment_shape_mismatch(
+    tmp_path: Path,
+) -> None:
+    config = _config(
+        tmp_path,
+        output_name="invalid_assignment_shape",
+        delivery_path="two_pass_rerun_selected",
+    )
+    assert build_production_gpu_tome(config)["status"] == "pass"
+    manifest = _json(config.output_dir / "corridors" / "mode_assignments.json")
+    position_path = config.output_dir / manifest["arrays"]["position"]["path"]
+    positions = np.load(position_path)
+    np.save(position_path, positions[:-1])
+
+    validation = validate_teacher_textbook(config.output_dir)
+
+    assert validation.status == "fail"
+    assert "mode_assignments array shape mismatch: position" in validation.blockers
 
 
 def test_score_only_corridor_export_is_degraded_and_rejected(
@@ -316,11 +370,19 @@ def test_reports_and_cover_page_include_corridor_counts(tmp_path: Path) -> None:
         assert report["corridor_mode_policy"] == "stat_bands_v0"
         assert report["corridor_max_modes"] == DEFAULT_CORRIDOR_MAX_MODES
         assert report["corridor_tracked_stats"] == list(CORRIDOR_TRACKED_STATS)
+        assert report["corridor_stat_top_k"] >= 32
+        assert report["min_corridor_stat_top_k"] == 32
+        assert report["corridor_assignment_storage_kind"] == "packed_numpy_v1"
+        assert report["corridor_assignment_count"] == report["corridor_positions_used"]
+        assert report["selected_exemplars_linked_to_corridor_modes"] is True
         assert report["corridor_fingerprint_count"] >= 1
     assert validation["corridor_artifact_ok"] is True
     assert validation["corridor_modes_ok"] is True
     assert validation["corridor_mode_count"] >= 1
     assert validation["corridor_mode_policy"] == "stat_bands_v0"
+    assert validation["corridor_stat_top_k"] >= 32
+    assert validation["corridor_assignment_storage_kind"] == "packed_numpy_v1"
+    assert validation["corridor_assignment_count"] == 25
     assert validation["corridor_observation_basis"] == "full_token_position_corridor"
     assert validation["corridor_positions_used"] == 25
     assert contents["corridors/corridor_summary.json"] == "corridor_summary"

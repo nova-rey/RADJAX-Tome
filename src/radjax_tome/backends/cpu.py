@@ -5,6 +5,7 @@ from dataclasses import replace
 import numpy as np
 
 from radjax_tome.backends.base import (
+    MIN_CORRIDOR_STAT_TOP_K,
     BackendCapability,
     TargetPolicy,
     TeacherBackendConfig,
@@ -595,13 +596,14 @@ def _corridor_exemplar_payload(
     config: TeacherBackendConfig,
 ) -> dict[str, object]:
     source = _corridor_source_payload(logits, config=config)
+    stat_source = _corridor_stat_source_payload(logits, config=config)
     source_summary = _corridor_source_policy_summary(config, source_payload=source)
     effective_exemplar_top_n = min(config.exemplar_top_n, logits.shape[1])
-    entropy = source["teacher_entropy"].astype(np.float32)
-    top_ids = source["top_token_ids"][..., 0].astype(np.int32)
-    top_probs = source["top_probs"][..., 0].astype(np.float32)
+    entropy = stat_source["teacher_entropy"].astype(np.float32)
+    top_ids = stat_source["top_token_ids"][..., 0].astype(np.int32)
+    top_probs = stat_source["top_probs"][..., 0].astype(np.float32)
     confidence = top_probs.astype(np.float32)
-    corridor_stats = _corridor_stat_arrays(source)
+    corridor_stats = _corridor_stat_arrays(stat_source)
     exemplar_positions = np.argsort(
         -entropy,
         axis=-1,
@@ -719,14 +721,15 @@ def _corridor_exemplar_score_payload(
 ) -> dict[str, object]:
     source_config = _second_pass_source_config(config)
     source = _corridor_source_payload(logits, config=source_config)
+    stat_source = _corridor_stat_source_payload(logits, config=source_config)
     source_summary = _corridor_source_policy_summary(
         source_config,
         source_payload=source,
     )
-    entropy = source["teacher_entropy"].astype(np.float32)
-    confidence = source["top_probs"][..., 0].astype(np.float32)
-    top_ids = source["top_token_ids"][..., 0].astype(np.int32)
-    corridor_stats = _corridor_stat_arrays(source)
+    entropy = stat_source["teacher_entropy"].astype(np.float32)
+    confidence = stat_source["top_probs"][..., 0].astype(np.float32)
+    top_ids = stat_source["top_token_ids"][..., 0].astype(np.int32)
+    corridor_stats = _corridor_stat_arrays(stat_source)
     selected_position = np.argmax(entropy, axis=-1).astype(np.int32)
     selected_entropy = np.take_along_axis(
         entropy,
@@ -795,13 +798,19 @@ def _corridor_exemplar_score_payload(
 
 def _corridor_stat_arrays(source: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
     top_probs = np.asarray(source["top_probs"], dtype=np.float32)
+    top_k = int(top_probs.shape[-1])
+    if top_k < MIN_CORRIDOR_STAT_TOP_K:
+        raise ValueError(
+            "corridor stat export requires top_probs depth >= 32 to compute "
+            f"top32_mass and tail_mass; got K={top_k}"
+        )
     top1 = top_probs[..., 0]
-    if top_probs.shape[-1] > 1:
+    if top_k > 1:
         top2 = top_probs[..., 1]
     else:
         top2 = np.zeros_like(top1, dtype=np.float32)
-    top8_mass = np.sum(top_probs[..., : min(8, top_probs.shape[-1])], axis=-1)
-    top32_mass = np.sum(top_probs[..., : min(32, top_probs.shape[-1])], axis=-1)
+    top8_mass = np.sum(top_probs[..., :8], axis=-1)
+    top32_mass = np.sum(top_probs[..., :MIN_CORRIDOR_STAT_TOP_K], axis=-1)
     return {
         "entropy": np.asarray(source["teacher_entropy"], dtype=np.float32),
         "top1_margin": np.maximum(top1 - top2, 0.0).astype(np.float32),
@@ -809,6 +818,17 @@ def _corridor_stat_arrays(source: dict[str, np.ndarray]) -> dict[str, np.ndarray
         "top32_mass": np.clip(top32_mass, 0.0, 1.0).astype(np.float32),
         "tail_mass": np.maximum(1.0 - top32_mass, 0.0).astype(np.float32),
     }
+
+
+def _corridor_stat_source_payload(
+    logits: np.ndarray,
+    *,
+    config: TeacherBackendConfig,
+) -> dict[str, np.ndarray]:
+    return _dense_logits_to_topk_tail(
+        logits,
+        top_k=max(config.top_k, MIN_CORRIDOR_STAT_TOP_K),
+    )
 
 
 def _corridor_exemplar_selected_payload(
@@ -976,6 +996,7 @@ def _corridor_metadata(
             ),
             "score_source_policy": config.exemplar_second_pass_source_policy,
             "exemplar_selection_policy": config.exemplar_selection_policy,
+            **_corridor_stat_metadata(config),
             **_corridor_score_pass_metadata(config, policy=policy),
             "requested_exemplar_top_n": config.exemplar_top_n,
             "effective_exemplar_top_n": min(
@@ -1019,6 +1040,7 @@ def _corridor_metadata(
         "mode_record_policy": _MODE_RECORD_POLICY,
         "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
         "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
+        **_corridor_stat_metadata(config),
         **_corridor_capture_mode_metadata(config, policy=policy),
         "requested_exemplar_top_n": config.exemplar_top_n,
         "effective_exemplar_top_n": effective_exemplar_top_n,
@@ -1046,7 +1068,18 @@ def _corridor_schema_metadata(config: TeacherBackendConfig) -> dict[str, object]
         "mode_record_policy": _MODE_RECORD_POLICY,
         "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
         "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
+        **_corridor_stat_metadata(config),
         **_corridor_capture_mode_metadata(config, policy=None),
+    }
+
+
+def _corridor_stat_metadata(config: TeacherBackendConfig) -> dict[str, object]:
+    return {
+        "corridor_stat_top_k": min(
+            max(config.top_k, MIN_CORRIDOR_STAT_TOP_K),
+            config.vocab_size,
+        ),
+        "min_corridor_stat_top_k": MIN_CORRIDOR_STAT_TOP_K,
     }
 
 

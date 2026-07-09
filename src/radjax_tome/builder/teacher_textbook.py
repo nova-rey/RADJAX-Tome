@@ -177,6 +177,9 @@ class TeacherTextbookValidationReport:
     corridor_positions_available: int | None = None
     corridor_positions_used: int | None = None
     corridor_mode_policy: str | None = None
+    corridor_stat_top_k: int | None = None
+    corridor_assignment_storage_kind: str | None = None
+    corridor_assignment_count: int | None = None
     claims_not_made: tuple[str, ...] = field(default_factory=tuple)
 
     def to_dict(self) -> dict[str, Any]:
@@ -411,6 +414,9 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
     corridor_positions_available: int | None = None
     corridor_positions_used: int | None = None
     corridor_mode_policy: str | None = None
+    corridor_stat_top_k: int | None = None
+    corridor_assignment_storage_kind: str | None = None
+    corridor_assignment_count: int | None = None
     claims_not_made: tuple[str, ...] = ()
 
     if not root.is_dir():
@@ -543,6 +549,11 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
         corridor_positions_available = corridor_report.corridor_positions_available
         corridor_positions_used = corridor_report.corridor_positions_used
         corridor_mode_policy = corridor_report.corridor_mode_policy
+        corridor_stat_top_k = corridor_report.corridor_stat_top_k
+        corridor_assignment_storage_kind = (
+            corridor_report.corridor_assignment_storage_kind
+        )
+        corridor_assignment_count = corridor_report.corridor_assignment_count
         if corridor_report.ok:
             checks.append("corridor artifacts: valid")
 
@@ -579,6 +590,9 @@ def validate_teacher_textbook(path: str | Path) -> TeacherTextbookValidationRepo
         corridor_positions_available=corridor_positions_available,
         corridor_positions_used=corridor_positions_used,
         corridor_mode_policy=corridor_mode_policy,
+        corridor_stat_top_k=corridor_stat_top_k,
+        corridor_assignment_storage_kind=corridor_assignment_storage_kind,
+        corridor_assignment_count=corridor_assignment_count,
         claims_not_made=claims_not_made,
     )
 
@@ -1276,6 +1290,9 @@ def _report(
     corridor_positions_available: int | None = None,
     corridor_positions_used: int | None = None,
     corridor_mode_policy: str | None = None,
+    corridor_stat_top_k: int | None = None,
+    corridor_assignment_storage_kind: str | None = None,
+    corridor_assignment_count: int | None = None,
     claims_not_made: tuple[str, ...] = (),
 ) -> TeacherTextbookValidationReport:
     blocker_tuple = tuple(blockers or ())
@@ -1313,5 +1330,8 @@ def _report(
         corridor_positions_available=corridor_positions_available,
         corridor_positions_used=corridor_positions_used,
         corridor_mode_policy=corridor_mode_policy,
+        corridor_stat_top_k=corridor_stat_top_k,
+        corridor_assignment_storage_kind=corridor_assignment_storage_kind,
+        corridor_assignment_count=corridor_assignment_count,
         claims_not_made=claims_not_made,
     )

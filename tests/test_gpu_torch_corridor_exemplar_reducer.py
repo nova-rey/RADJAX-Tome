@@ -52,6 +52,26 @@ def test_tensor_to_numpy_casts_floating_dtype_before_numpy_without_torch() -> No
     np.testing.assert_allclose(converted, np.asarray([1.25], dtype=np.float32))
 
 
+def test_gpu_corridor_stat_tensors_require_real_top32_support() -> None:
+    if not _optional_torch_available():
+        pytest.skip("optional torch dependency is not installed")
+    torch = import_module("torch")
+    gpu_torch = import_module("radjax_tome.backends.gpu_torch")
+    source = {
+        "top_probs": torch.full((1, 2, 8), 0.1, dtype=torch.float32),
+        "teacher_entropy": torch.ones((1, 2), dtype=torch.float32),
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "corridor stat export requires top_probs depth >= 32 to compute "
+            "top32_mass and tail_mass; got K=8"
+        ),
+    ):
+        gpu_torch._gpu_corridor_stat_tensors(torch, source)
+
+
 @pytest.mark.parametrize(
     ("source_policy", "policy_id", "kind", "bucketed", "dynamic"),
     (

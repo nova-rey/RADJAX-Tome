@@ -8,6 +8,7 @@ from typing import Any
 import numpy as np
 
 from radjax_tome.backends.base import (
+    MIN_CORRIDOR_STAT_TOP_K,
     BackendCapability,
     TeacherBackendConfig,
     TeacherBatchInput,
@@ -1053,6 +1054,7 @@ def _gpu_corridor_metadata(
             ),
             "score_source_policy": config.exemplar_second_pass_source_policy,
             "exemplar_selection_policy": config.exemplar_selection_policy,
+            **_gpu_corridor_stat_metadata(config, effective_vocab_size),
             **_gpu_corridor_score_pass_metadata(config, policy=policy),
             "requested_exemplar_top_n": config.exemplar_top_n,
             "effective_exemplar_top_n": min(
@@ -1083,6 +1085,7 @@ def _gpu_corridor_metadata(
     )
     return {
         **_gpu_corridor_schema_metadata(config),
+        **_gpu_corridor_stat_metadata(config, effective_vocab_size),
         **_gpu_corridor_capture_mode_metadata(config, policy=policy),
         **source_summary,
         "requested_exemplar_top_n": config.exemplar_top_n,
@@ -1318,7 +1321,14 @@ def _gpu_corridor_exemplar_reduce(
         config=config,
         vocab_chunk_size=vocab_chunk_size,
     )
+    stat_source = _gpu_corridor_stat_source_payload(
+        torch,
+        logits,
+        config=config,
+        vocab_chunk_size=vocab_chunk_size,
+    )
     teacher_entropy = source["teacher_entropy"]
+    stat_entropy = stat_source["teacher_entropy"]
     effective_exemplar_top_n = min(config.exemplar_top_n, int(logits.shape[1]))
     exemplar_scores, exemplar_positions = torch.topk(
         teacher_entropy,
@@ -1343,25 +1353,25 @@ def _gpu_corridor_exemplar_reduce(
         gather_positions,
     ).squeeze(-1)
     score_selected_confidence = torch.gather(
-        source["top_probs"][..., 0],
+        stat_source["top_probs"][..., 0],
         -1,
         gather_positions,
     ).squeeze(-1)
-    corridor_top_token_ids = source["top_token_ids"][..., 0]
+    corridor_top_token_ids = stat_source["top_token_ids"][..., 0]
     score_top_token_id = torch.gather(
         corridor_top_token_ids,
         -1,
         gather_positions,
     ).squeeze(-1)
-    corridor_top_probs = source["top_probs"][..., 0]
-    corridor_stats = _gpu_corridor_stat_tensors(torch, source)
+    corridor_top_probs = stat_source["top_probs"][..., 0]
+    corridor_stats = _gpu_corridor_stat_tensors(torch, stat_source)
     batch_size = int(logits.shape[0])
     sequence_length = int(logits.shape[1])
     policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_source_policy]
     return {
         "corridor_top_token_ids": corridor_top_token_ids,
         "corridor_top_probs": corridor_top_probs,
-        "corridor_teacher_entropy": teacher_entropy,
+        "corridor_teacher_entropy": stat_entropy,
         "corridor_entropy": corridor_stats["entropy"],
         "corridor_top1_margin": corridor_stats["top1_margin"],
         "corridor_top8_mass": corridor_stats["top8_mass"],
@@ -1435,16 +1445,16 @@ def _gpu_corridor_exemplar_score_reduce(
     vocab_chunk_size: int | None = None,
 ) -> dict[str, Any]:
     source_config = _second_pass_source_config(config)
-    source = _gpu_corridor_source_payload(
+    stat_source = _gpu_corridor_stat_source_payload(
         torch,
         logits,
         config=source_config,
         vocab_chunk_size=vocab_chunk_size,
     )
-    teacher_entropy = source["teacher_entropy"]
-    corridor_top_token_ids = source["top_token_ids"][..., 0]
-    confidence = source["top_probs"][..., 0]
-    corridor_stats = _gpu_corridor_stat_tensors(torch, source)
+    teacher_entropy = stat_source["teacher_entropy"]
+    corridor_top_token_ids = stat_source["top_token_ids"][..., 0]
+    confidence = stat_source["top_probs"][..., 0]
+    corridor_stats = _gpu_corridor_stat_tensors(torch, stat_source)
     score_selected_position = torch.argmax(teacher_entropy, dim=-1).to(torch.int32)
     gather_positions = score_selected_position.to(torch.int64).unsqueeze(-1)
     selected_entropy = torch.gather(
@@ -1508,13 +1518,19 @@ def _gpu_corridor_exemplar_score_reduce(
 
 def _gpu_corridor_stat_tensors(torch: Any, source: Mapping[str, Any]) -> dict[str, Any]:
     top_probs = source["top_probs"]
+    top_k = int(top_probs.shape[-1])
+    if top_k < MIN_CORRIDOR_STAT_TOP_K:
+        raise ValueError(
+            "corridor stat export requires top_probs depth >= 32 to compute "
+            f"top32_mass and tail_mass; got K={top_k}"
+        )
     top1 = top_probs[..., 0]
-    if int(top_probs.shape[-1]) > 1:
+    if top_k > 1:
         top2 = top_probs[..., 1]
     else:
         top2 = torch.zeros_like(top1)
-    top8_mass = torch.sum(top_probs[..., : min(8, int(top_probs.shape[-1]))], dim=-1)
-    top32_mass = torch.sum(top_probs[..., : min(32, int(top_probs.shape[-1]))], dim=-1)
+    top8_mass = torch.sum(top_probs[..., :8], dim=-1)
+    top32_mass = torch.sum(top_probs[..., :MIN_CORRIDOR_STAT_TOP_K], dim=-1)
     return {
         "entropy": source["teacher_entropy"],
         "top1_margin": torch.clamp(top1 - top2, min=0.0),
@@ -1522,6 +1538,21 @@ def _gpu_corridor_stat_tensors(torch: Any, source: Mapping[str, Any]) -> dict[st
         "top32_mass": torch.clamp(top32_mass, min=0.0, max=1.0),
         "tail_mass": torch.clamp(1.0 - top32_mass, min=0.0, max=1.0),
     }
+
+
+def _gpu_corridor_stat_source_payload(
+    torch: Any,
+    logits: Any,
+    *,
+    config: TeacherBackendConfig,
+    vocab_chunk_size: int | None = None,
+) -> dict[str, Any]:
+    return _gpu_topk_tail_reduce(
+        torch,
+        logits,
+        top_k=max(config.top_k, MIN_CORRIDOR_STAT_TOP_K),
+        vocab_chunk_size=vocab_chunk_size,
+    )
 
 
 def _gpu_corridor_exemplar_selected_reduce(
@@ -1750,7 +1781,21 @@ def _gpu_corridor_schema_metadata(config: TeacherBackendConfig) -> dict[str, obj
         "mode_record_policy": _MODE_RECORD_POLICY,
         "fingerprint_topology_policy": _FINGERPRINT_TOPOLOGY_POLICY,
         "corridor_confidence_policy": _CORRIDOR_CONFIDENCE_POLICY,
+        **_gpu_corridor_stat_metadata(config, config.vocab_size),
         **_gpu_corridor_capture_mode_metadata(config, policy=None),
+    }
+
+
+def _gpu_corridor_stat_metadata(
+    config: TeacherBackendConfig,
+    effective_vocab_size: int,
+) -> dict[str, object]:
+    return {
+        "corridor_stat_top_k": min(
+            max(config.top_k, MIN_CORRIDOR_STAT_TOP_K),
+            effective_vocab_size,
+        ),
+        "min_corridor_stat_top_k": MIN_CORRIDOR_STAT_TOP_K,
     }
 
 

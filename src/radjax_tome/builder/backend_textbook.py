@@ -17,6 +17,7 @@ from radjax_tome.backends import (
     TeacherBatchInput,
     create_backend,
 )
+from radjax_tome.backends.base import MIN_CORRIDOR_STAT_TOP_K
 from radjax_tome.builder.exemplar_selection import (
     EXEMPLAR_SELECTION_MANIFEST_FILENAME,
     MULTI_LEADERBOARD_SELECTOR_POLICY,
@@ -1162,6 +1163,8 @@ def _write_streaming_backend_sidecars(
             "dynamic_top_k_min": config.dynamic_top_k_min,
             "dynamic_top_k_max": config.dynamic_top_k_max,
             "dynamic_mass_threshold": config.dynamic_mass_threshold,
+            "corridor_stat_top_k": _corridor_stat_top_k(config),
+            "min_corridor_stat_top_k": MIN_CORRIDOR_STAT_TOP_K,
             "seed": 0,
             "teacher_mode": "backend_contract",
             "teacher_backend": config.teacher_backend,
@@ -1311,12 +1314,18 @@ def _target_params(
         "dynamic_top_k_min": str(config.dynamic_top_k_min),
         "dynamic_top_k_max": str(config.dynamic_top_k_max),
         "dynamic_mass_threshold": str(config.dynamic_mass_threshold),
+        "corridor_stat_top_k": str(_corridor_stat_top_k(config)),
+        "min_corridor_stat_top_k": str(MIN_CORRIDOR_STAT_TOP_K),
         **_corpus_provenance(config),
         **teacher_model_target_params(config.teacher_model_provenance_path),
     }
     for key, value in backend_metadata.items():
         params[_target_param_key(key)] = _stringify_metadata_value(value)
     return params
+
+
+def _corridor_stat_top_k(config: BackendTeacherTextbookBuildConfig) -> int:
+    return min(max(config.top_k, MIN_CORRIDOR_STAT_TOP_K), config.vocab_size)
 
 
 def _selection_target_params(
@@ -1455,6 +1464,8 @@ def _write_backend_sidecars(
             "dynamic_top_k_min": config.dynamic_top_k_min,
             "dynamic_top_k_max": config.dynamic_top_k_max,
             "dynamic_mass_threshold": config.dynamic_mass_threshold,
+            "corridor_stat_top_k": _corridor_stat_top_k(config),
+            "min_corridor_stat_top_k": MIN_CORRIDOR_STAT_TOP_K,
             "seed": 0,
             "teacher_mode": "backend_contract",
             "teacher_backend": config.teacher_backend,

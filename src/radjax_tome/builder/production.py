@@ -596,6 +596,31 @@ def _production_report(
             if delivery_report is not None
             else None
         ),
+        "corridor_stat_top_k": (
+            delivery_report.get("corridor_stat_top_k")
+            if delivery_report is not None
+            else None
+        ),
+        "min_corridor_stat_top_k": (
+            delivery_report.get("min_corridor_stat_top_k")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_assignment_storage_kind": (
+            delivery_report.get("corridor_assignment_storage_kind")
+            if delivery_report is not None
+            else None
+        ),
+        "corridor_assignment_count": (
+            delivery_report.get("corridor_assignment_count")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_exemplars_linked_to_corridor_modes": (
+            delivery_report.get("selected_exemplars_linked_to_corridor_modes")
+            if delivery_report is not None
+            else None
+        ),
         "parity_report_path": str(parity_report_path) if config.parity_left else None,
         "parity_status": parity_status,
         "build_status": build_status,

@@ -37,7 +37,7 @@ def _backend_config(
         "sequence_length": 5,
         "batch_size": 2,
         "max_examples": 2,
-        "vocab_size": 11,
+        "vocab_size": 64,
         "top_k": 4,
         "num_buckets": 3,
         "overwrite": True,

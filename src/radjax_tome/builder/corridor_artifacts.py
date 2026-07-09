@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -7,6 +8,7 @@ from typing import Any
 
 import numpy as np
 
+from radjax_tome.backends import MIN_CORRIDOR_STAT_TOP_K
 from radjax_tome.builder.teacher_textbook import TinyTextExample
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.targets.store import TeacherTargetStore
@@ -18,7 +20,9 @@ ASSIGNMENT_POLICY = "full_token_position_stat_bands_v0"
 CORRIDOR_SUMMARY_SCHEMA = "corridor_summary_v3"
 CORRIDOR_FINGERPRINTS_SCHEMA = "corridor_fingerprints_v1"
 CORRIDOR_MODES_SCHEMA = "corridor_modes_v2"
-CORRIDOR_ASSIGNMENTS_SCHEMA = "corridor_mode_assignments_v2"
+CORRIDOR_ASSIGNMENTS_SCHEMA = "corridor_mode_assignments_v3"
+LEGACY_CORRIDOR_ASSIGNMENTS_SCHEMA = "corridor_mode_assignments_v2"
+ASSIGNMENT_STORAGE_KIND = "packed_numpy_v1"
 FULL_TOKEN_POSITION_CORRIDOR = "full_token_position_corridor"
 BOUNDED_FULL_SURFACE_SKETCH = "bounded_full_surface_sketch"
 SCORE_SELECTED_POSITION_ONLY = "score_selected_position_only"
@@ -50,6 +54,9 @@ class CorridorArtifactBuildResult:
     degraded: bool
     positions_available: int
     positions_used: int
+    corridor_stat_top_k: int
+    assignment_storage_kind: str
+    assignment_count: int
 
     def report_fields(self) -> dict[str, Any]:
         return {
@@ -69,6 +76,10 @@ class CorridorArtifactBuildResult:
             "corridor_mode_policy": CORRIDOR_MODE_POLICY,
             "corridor_max_modes": DEFAULT_CORRIDOR_MAX_MODES,
             "corridor_tracked_stats": list(CORRIDOR_TRACKED_STATS),
+            "corridor_stat_top_k": self.corridor_stat_top_k,
+            "min_corridor_stat_top_k": MIN_CORRIDOR_STAT_TOP_K,
+            "corridor_assignment_storage_kind": self.assignment_storage_kind,
+            "corridor_assignment_count": self.assignment_count,
             "selected_exemplars_linked_to_corridor_modes": (
                 self.selected_exemplars_linked
             ),
@@ -89,6 +100,9 @@ class CorridorArtifactValidationResult:
     corridor_positions_available: int = 0
     corridor_positions_used: int = 0
     corridor_mode_policy: str | None = None
+    corridor_stat_top_k: int = 0
+    corridor_assignment_storage_kind: str | None = None
+    corridor_assignment_count: int = 0
 
     @property
     def ok(self) -> bool:
@@ -108,6 +122,10 @@ class CorridorArtifactValidationResult:
             "corridor_mode_policy": self.corridor_mode_policy,
             "corridor_max_modes": DEFAULT_CORRIDOR_MAX_MODES,
             "corridor_tracked_stats": list(CORRIDOR_TRACKED_STATS),
+            "corridor_stat_top_k": self.corridor_stat_top_k,
+            "min_corridor_stat_top_k": MIN_CORRIDOR_STAT_TOP_K,
+            "corridor_assignment_storage_kind": self.corridor_assignment_storage_kind,
+            "corridor_assignment_count": self.corridor_assignment_count,
         }
 
 
@@ -188,20 +206,23 @@ def build_corridor_artifacts(
         observation_to_fingerprint=observation_to_fingerprint,
         observation_to_mode=observation_to_mode,
     )
-    assignments = _mode_assignments(
-        observations,
-        observation_to_fingerprint=observation_to_fingerprint,
-        observation_to_mode=observation_to_mode,
-    )
     selected_linked = bool(selected_records) and linked == len(selected_records)
 
     corridors_dir = output_dir / "corridors"
     corridors_dir.mkdir(parents=True, exist_ok=True)
+    corridor_stat_top_k = _store_corridor_stat_top_k(store)
     summary_path = corridors_dir / "corridor_summary.json"
     fingerprints_path = corridors_dir / "corridor_fingerprints.json"
     modes_path = corridors_dir / "corridor_modes.json"
     assignments_path = corridors_dir / "mode_assignments.json"
     human_summary_path = corridors_dir / "corridor_summary.txt"
+    assignments_manifest = _write_packed_mode_assignments(
+        output_dir=output_dir,
+        observations=observations,
+        observation_to_fingerprint=observation_to_fingerprint,
+        observation_to_mode=observation_to_mode,
+        observation_basis=extraction.observation_basis,
+    )
 
     summary = {
         "schema_version": CORRIDOR_SUMMARY_SCHEMA,
@@ -223,8 +244,13 @@ def build_corridor_artifacts(
         "corridor_mode_policy": mode_policy,
         "corridor_max_modes": DEFAULT_CORRIDOR_MAX_MODES,
         "corridor_tracked_stats": list(CORRIDOR_TRACKED_STATS),
+        "corridor_stat_top_k": corridor_stat_top_k,
+        "min_corridor_stat_top_k": MIN_CORRIDOR_STAT_TOP_K,
+        "corridor_assignment_storage_kind": ASSIGNMENT_STORAGE_KIND,
+        "corridor_assignment_count": assignments_manifest["num_assignments"],
         "selected_exemplar_count": len(selected_records),
         "selected_exemplars_linked_to_modes": selected_linked,
+        "selected_exemplars_linked_to_corridor_modes": selected_linked,
         "non_selected_exemplar_payload_retained": (
             non_selected_exemplar_payload_retained
         ),
@@ -258,6 +284,8 @@ def build_corridor_artifacts(
             "mode_policy": mode_policy,
             "corridor_mode_policy": mode_policy,
             "corridor_max_modes": DEFAULT_CORRIDOR_MAX_MODES,
+            "corridor_stat_top_k": corridor_stat_top_k,
+            "min_corridor_stat_top_k": MIN_CORRIDOR_STAT_TOP_K,
             "tracked_stats": list(CORRIDOR_TRACKED_STATS),
             "corridor_observation_basis": extraction.observation_basis,
             "degraded_corridor_export": extraction.degraded,
@@ -267,17 +295,7 @@ def build_corridor_artifacts(
             "modes": modes,
         },
     )
-    write_json(
-        assignments_path,
-        {
-            "schema_version": CORRIDOR_ASSIGNMENTS_SCHEMA,
-            "assignment_policy": ASSIGNMENT_POLICY,
-            "corridor_observation_basis": extraction.observation_basis,
-            "full_assignment_retained": True,
-            "num_assignments": len(assignments),
-            "assignments": assignments,
-        },
-    )
+    write_json(assignments_path, assignments_manifest)
     human_summary_path.write_text(
         _human_summary(
             num_examples=store.metadata.num_examples,
@@ -287,6 +305,7 @@ def build_corridor_artifacts(
             degraded=extraction.degraded,
             mode_count=len(modes),
             mode_policy=mode_policy,
+            assignment_storage_kind=ASSIGNMENT_STORAGE_KIND,
             fingerprint_count=len(fingerprints),
             selected_count=len(selected_records),
             selected_payload_retained=bool(selected_payloads),
@@ -308,6 +327,9 @@ def build_corridor_artifacts(
         degraded=extraction.degraded,
         positions_available=extraction.positions_available,
         positions_used=extraction.positions_used,
+        corridor_stat_top_k=corridor_stat_top_k,
+        assignment_storage_kind=ASSIGNMENT_STORAGE_KIND,
+        assignment_count=int(assignments_manifest["num_assignments"]),
     )
 
 
@@ -366,6 +388,9 @@ def validate_corridor_artifacts(
         summary.get("corridor_mode_policy") or summary.get("mode_policy") or ""
     )
     max_modes = int(summary.get("corridor_max_modes") or DEFAULT_CORRIDOR_MAX_MODES)
+    corridor_stat_top_k = int(summary.get("corridor_stat_top_k") or 0)
+    assignment_storage_kind = summary.get("corridor_assignment_storage_kind")
+    assignment_count = int(summary.get("corridor_assignment_count") or 0)
     if summary.get("corridor_artifact_built") is not True:
         blockers.append("corridor_summary.corridor_artifact_built is not true")
     if summary.get("corridor_modes_built") is not True:
@@ -404,6 +429,24 @@ def validate_corridor_artifacts(
             "corridor modes use deprecated fingerprint_group_v1 pseudo-mode policy; "
             "expected stat_bands_v0"
         )
+    if summary.get("corridor_tracked_stats") != list(CORRIDOR_TRACKED_STATS):
+        blockers.append("corridor_summary.corridor_tracked_stats mismatch")
+    if corridor_stat_top_k < MIN_CORRIDOR_STAT_TOP_K:
+        blockers.append("corridor_summary.corridor_stat_top_k must be >= 32")
+    if int(summary.get("min_corridor_stat_top_k") or 0) != MIN_CORRIDOR_STAT_TOP_K:
+        blockers.append("corridor_summary.min_corridor_stat_top_k mismatch")
+    if assignment_storage_kind != ASSIGNMENT_STORAGE_KIND:
+        blockers.append(
+            "corridor_summary.corridor_assignment_storage_kind must be packed_numpy_v1"
+        )
+    if assignment_count != positions_used:
+        blockers.append(
+            "corridor_summary.corridor_assignment_count must equal positions used"
+        )
+    if summary.get("selected_exemplars_linked_to_corridor_modes") is not True:
+        blockers.append(
+            "corridor_summary.selected_exemplars_linked_to_corridor_modes is not true"
+        )
     if mode_count > max_modes:
         blockers.append("corridor_summary.mode_count exceeds corridor_max_modes")
     if fingerprints.get("fingerprint_count") != fingerprint_count:
@@ -414,6 +457,8 @@ def validate_corridor_artifacts(
         blockers.append("corridor_modes.mode_policy must be stat_bands_v0")
     if modes.get("tracked_stats") != list(CORRIDOR_TRACKED_STATS):
         blockers.append("corridor_modes.tracked_stats mismatch")
+    if int(modes.get("corridor_stat_top_k") or 0) < MIN_CORRIDOR_STAT_TOP_K:
+        blockers.append("corridor_modes.corridor_stat_top_k must be >= 32")
     mode_ids = _validate_modes_payload(modes, blockers)
     if (
         expected_selected_count is not None
@@ -432,25 +477,36 @@ def validate_corridor_artifacts(
         source="payload",
         valid_mode_ids=mode_ids,
     )
-    assignment_items = assignments.get("assignments", [])
-    if not isinstance(assignment_items, list):
-        blockers.append("mode_assignments.assignments must be a list")
+    assignment_schema = assignments.get("schema_version")
+    if assignment_schema == CORRIDOR_ASSIGNMENTS_SCHEMA:
+        _validate_packed_assignment_manifest(
+            output_dir,
+            assignments,
+            mode_ids=mode_ids,
+            blockers=blockers,
+            expected_count=positions_used,
+            expected_examples=num_examples_scored,
+        )
+    elif assignment_schema == LEGACY_CORRIDOR_ASSIGNMENTS_SCHEMA:
+        warnings.append(
+            "corridor mode assignments use legacy giant-json storage; "
+            "packed_numpy_v1 is preferred"
+        )
+        assignment_items = assignments.get("assignments", [])
+        if not isinstance(assignment_items, list):
+            blockers.append("mode_assignments.assignments must be a list")
+        else:
+            if int(assignments.get("num_assignments") or -1) != len(assignment_items):
+                blockers.append("mode_assignments.num_assignments mismatch")
+            for item in assignment_items:
+                if not isinstance(item, dict):
+                    blockers.append("mode_assignments contains non-object assignment")
+                    break
+                if item.get("mode_id") not in mode_ids:
+                    blockers.append("mode_assignments references nonexistent mode_id")
+                    break
     else:
-        if assignments.get("schema_version") != CORRIDOR_ASSIGNMENTS_SCHEMA:
-            blockers.append("mode_assignments schema_version mismatch")
-        if assignments.get("assignment_policy") != ASSIGNMENT_POLICY:
-            blockers.append("mode_assignments.assignment_policy mismatch")
-        if assignments.get("full_assignment_retained") is not True:
-            blockers.append("mode_assignments.full_assignment_retained is not true")
-        if int(assignments.get("num_assignments") or -1) != len(assignment_items):
-            blockers.append("mode_assignments.num_assignments mismatch")
-        for item in assignment_items:
-            if not isinstance(item, dict):
-                blockers.append("mode_assignments contains non-object assignment")
-                break
-            if item.get("mode_id") not in mode_ids:
-                blockers.append("mode_assignments references nonexistent mode_id")
-                break
+        blockers.append("mode_assignments schema_version mismatch")
     corridor_artifact_ok = not blockers
     return CorridorArtifactValidationResult(
         blockers=tuple(blockers),
@@ -467,6 +523,13 @@ def validate_corridor_artifacts(
         corridor_positions_available=positions_available,
         corridor_positions_used=positions_used,
         corridor_mode_policy=mode_policy,
+        corridor_stat_top_k=corridor_stat_top_k,
+        corridor_assignment_storage_kind=(
+            str(assignment_storage_kind)
+            if assignment_storage_kind is not None
+            else None
+        ),
+        corridor_assignment_count=assignment_count,
     )
 
 
@@ -739,6 +802,13 @@ def _score_stat_at_position(
     return float(np.asarray(arrays[name])[row, position])
 
 
+def _store_corridor_stat_top_k(store: TeacherTargetStore) -> int:
+    raw = store.metadata.target_params.get("corridor_stat_top_k")
+    if raw is None:
+        return 0
+    return int(raw)
+
+
 def _fingerprints(
     observations: list[_Observation],
     *,
@@ -923,6 +993,86 @@ def _mode_assignments(
     return assignments
 
 
+def _write_packed_mode_assignments(
+    *,
+    output_dir: Path,
+    observations: list[_Observation],
+    observation_to_fingerprint: dict[tuple[str, int], str],
+    observation_to_mode: dict[tuple[str, int], int],
+    observation_basis: str,
+) -> dict[str, Any]:
+    assignments_dir = output_dir / "corridors" / "mode_assignments"
+    assignments_dir.mkdir(parents=True, exist_ok=True)
+    count = len(observations)
+    example_indices: dict[str, int] = {}
+    position_example_index = np.empty((count,), dtype=np.int32)
+    positions = np.empty((count,), dtype=np.int32)
+    mode_ids = np.empty((count,), dtype=np.int32)
+    weights = np.ones((count,), dtype=np.float32)
+    fingerprint_indices = np.full((count,), -1, dtype=np.int32)
+    fingerprint_id_to_index: dict[str, int] = {}
+    for index, observation in enumerate(observations):
+        example_index = example_indices.setdefault(
+            observation.example_id,
+            len(example_indices),
+        )
+        position_example_index[index] = example_index
+        positions[index] = observation.position
+        mode_ids[index] = observation_to_mode[observation.key]
+        fingerprint_id = observation_to_fingerprint.get(observation.key)
+        if fingerprint_id is not None:
+            fingerprint_indices[index] = fingerprint_id_to_index.setdefault(
+                fingerprint_id,
+                len(fingerprint_id_to_index),
+            )
+    arrays = {
+        "position_example_index": position_example_index,
+        "position": positions,
+        "mode_id": mode_ids,
+        "weight": weights,
+        "fingerprint_index": fingerprint_indices,
+    }
+    for name, array in arrays.items():
+        np.save(assignments_dir / f"{name}.npy", array)
+    metadata_path = assignments_dir / "examples_metadata.jsonl"
+    with metadata_path.open("w", encoding="utf-8") as handle:
+        for example_id, example_index in sorted(
+            example_indices.items(),
+            key=lambda item: item[1],
+        ):
+            handle.write(
+                json.dumps(
+                    {
+                        "example_index": example_index,
+                        "example_id": example_id,
+                    },
+                    sort_keys=True,
+                )
+                + "\n"
+            )
+    return {
+        "schema_version": CORRIDOR_ASSIGNMENTS_SCHEMA,
+        "assignment_policy": ASSIGNMENT_POLICY,
+        "storage_kind": ASSIGNMENT_STORAGE_KIND,
+        "corridor_observation_basis": observation_basis,
+        "full_assignment_retained": True,
+        "num_assignments": count,
+        "num_examples": len(example_indices),
+        "arrays": {
+            name: {
+                "path": f"corridors/mode_assignments/{name}.npy",
+                "dtype": str(array.dtype),
+                "shape": list(array.shape),
+            }
+            for name, array in arrays.items()
+        },
+        "examples_metadata": {
+            "path": "corridors/mode_assignments/examples_metadata.jsonl",
+            "num_examples": len(example_indices),
+        },
+    }
+
+
 def _stat_band_mode_key(stats: dict[str, float]) -> tuple[int, int, int]:
     return (
         _bin_index(stats["entropy"], DEFAULT_ENTROPY_BINS),
@@ -1008,6 +1158,82 @@ def _validate_modes_payload(
     return mode_ids
 
 
+def _validate_packed_assignment_manifest(
+    output_dir: Path,
+    manifest: dict[str, Any],
+    *,
+    mode_ids: set[Any],
+    blockers: list[str],
+    expected_count: int,
+    expected_examples: int,
+) -> None:
+    if manifest.get("assignment_policy") != ASSIGNMENT_POLICY:
+        blockers.append("mode_assignments.assignment_policy mismatch")
+    if manifest.get("storage_kind") != ASSIGNMENT_STORAGE_KIND:
+        blockers.append("mode_assignments.storage_kind must be packed_numpy_v1")
+    if manifest.get("full_assignment_retained") is not True:
+        blockers.append("mode_assignments.full_assignment_retained is not true")
+    num_assignments = int(manifest.get("num_assignments") or -1)
+    num_examples = int(manifest.get("num_examples") or -1)
+    if num_assignments != expected_count:
+        blockers.append("mode_assignments.num_assignments mismatch")
+    if num_examples != expected_examples:
+        blockers.append("mode_assignments.num_examples mismatch")
+    arrays = manifest.get("arrays")
+    if not isinstance(arrays, dict):
+        blockers.append("mode_assignments.arrays must be an object")
+        return
+    loaded: dict[str, np.ndarray] = {}
+    expected_arrays = {
+        "position_example_index": np.int32,
+        "position": np.int32,
+        "mode_id": np.int32,
+        "weight": np.float32,
+    }
+    for name, dtype in expected_arrays.items():
+        spec = arrays.get(name)
+        if not isinstance(spec, dict):
+            blockers.append(f"mode_assignments missing array spec: {name}")
+            continue
+        path = output_dir / str(spec.get("path", ""))
+        if not path.is_file():
+            blockers.append(f"mode_assignments array missing: {name}")
+            continue
+        array = np.load(path, allow_pickle=False)
+        loaded[name] = array
+        if array.dtype != np.dtype(dtype):
+            blockers.append(f"mode_assignments array dtype mismatch: {name}")
+        if tuple(array.shape) != (expected_count,):
+            blockers.append(f"mode_assignments array shape mismatch: {name}")
+        if spec.get("dtype") != str(np.dtype(dtype)):
+            blockers.append(f"mode_assignments manifest dtype mismatch: {name}")
+        if spec.get("shape") != [expected_count]:
+            blockers.append(f"mode_assignments manifest shape mismatch: {name}")
+    if set(expected_arrays).issubset(loaded):
+        if np.any(loaded["position"] < 0):
+            blockers.append("mode_assignments position contains negative values")
+        example_index = loaded["position_example_index"]
+        if np.any(example_index < 0) or np.any(example_index >= expected_examples):
+            blockers.append("mode_assignments position_example_index out of range")
+        if np.any(~np.isfinite(loaded["weight"])) or np.any(loaded["weight"] < 0.0):
+            blockers.append("mode_assignments weight must be finite and nonnegative")
+        valid_mode_ids = np.asarray(
+            sorted(int(item) for item in mode_ids),
+            dtype=np.int32,
+        )
+        if not np.isin(loaded["mode_id"], valid_mode_ids).all():
+            blockers.append("mode_assignments references nonexistent mode_id")
+    examples_metadata = manifest.get("examples_metadata")
+    if not isinstance(examples_metadata, dict):
+        blockers.append("mode_assignments.examples_metadata must be an object")
+        return
+    metadata_path = output_dir / str(examples_metadata.get("path", ""))
+    if not metadata_path.is_file():
+        blockers.append("mode_assignments examples_metadata missing")
+    if int(examples_metadata.get("num_examples") or -1) != expected_examples:
+        blockers.append("mode_assignments examples_metadata num_examples mismatch")
+
+
 def _entropy_bucket(value: float) -> str:
     if value < 1.0:
         return "low"
@@ -1048,6 +1274,7 @@ def _human_summary(
     degraded: bool,
     mode_count: int,
     mode_policy: str,
+    assignment_storage_kind: str,
     fingerprint_count: int,
     selected_count: int,
     selected_payload_retained: bool,
@@ -1061,6 +1288,7 @@ def _human_summary(
         f"  - {corridor_positions_used:,} corridor positions used for fingerprinting",
         f"  - {mode_count:,} discovered corridor modes",
         f"  - corridor mode policy: {mode_policy}",
+        f"  - corridor assignment storage: {assignment_storage_kind}",
         f"  - {fingerprint_count:,} corridor fingerprints",
         f"  - {selected_count:,} selected exemplars",
         "  - selected exemplar payloads retained: "

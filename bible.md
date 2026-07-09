@@ -775,3 +775,18 @@ default 256-mode cap. Mode records include min/max/mean bounds for the five
 tracked stats, full token-position mode assignments are retained, selected
 exemplars link to stat-band `corridor_mode_id` values, and validation rejects
 legacy `fingerprint_group_v1` pseudo-mode artifacts.
+
+## 2026-07-09 — P4.12 Corridor Stat Support and Packed Assignments
+
+Stat-band corridor export now requires real top-32 probability support before
+computing `top32_mass` and `tail_mass`. CPU and GPU corridor reducers use an
+internal top-32 stat source for corridor statistics while keeping selected
+exemplar payload top-k controls separate, and reports record both
+`corridor_stat_top_k` and `min_corridor_stat_top_k`.
+
+Full token-position corridor assignments now use `packed_numpy_v1` storage under
+`corridors/mode_assignments/` with int32 position/example/mode arrays and
+float32 weights. `mode_assignments.json` is a small manifest instead of a giant
+assignment list, and validation checks packed array paths, dtypes, shapes,
+mode-id ranges, position ranges, example-index ranges, and nonnegative finite
+weights.

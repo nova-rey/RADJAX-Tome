@@ -47,7 +47,7 @@ def _backend_selector_artifact(path: Path) -> Path:
             max_examples=3,
             sequence_length=5,
             batch_size=2,
-            vocab_size=11,
+            vocab_size=64,
             top_k=4,
             num_buckets=3,
             overwrite=True,
