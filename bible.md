@@ -745,3 +745,11 @@ reports, and the human corridor summary now state the observation basis,
 positions available, positions used, and whether the export is degraded.
 Score-selected-only corridor export is explicitly marked degraded and rejected
 by happy-path validation.
+
+## 2026-07-09 — P4.12 GPU Score-Pass Compact Branch Fix
+
+The GPU compact payload converter now distinguishes P4.12 score-pass payloads
+from full one-pass corridor/exemplar payloads. Score-pass payloads can include
+compact full-surface corridor arrays without requiring `corridor_top_probs` or
+`exemplar_source_*` candidate payload arrays, preserving the full-corpus
+corridor evidence while avoiding one-pass candidate retention.

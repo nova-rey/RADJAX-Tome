@@ -1982,8 +1982,26 @@ def _compact_score_payload_to_numpy(
     }
 
 
+def _is_full_corridor_exemplar_payload(payload: Mapping[str, Any]) -> bool:
+    return all(
+        name in payload
+        for name in (
+            "corridor_top_token_ids",
+            "corridor_top_probs",
+            "exemplar_positions",
+            "exemplar_source_top_token_ids",
+            "exemplar_source_top_probs",
+            "exemplar_source_bucket_masses",
+        )
+    )
+
+
 def _compact_payload_to_numpy(payload: dict[str, Any]) -> dict[str, np.ndarray]:
-    if "corridor_top_token_ids" in payload:
+    if "score_example_ids" in payload and not _is_full_corridor_exemplar_payload(
+        payload
+    ):
+        return _compact_score_payload_to_numpy(payload)
+    if _is_full_corridor_exemplar_payload(payload):
         compact = {
             "corridor_top_token_ids": _tensor_to_numpy(
                 payload["corridor_top_token_ids"],

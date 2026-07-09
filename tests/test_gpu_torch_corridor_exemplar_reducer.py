@@ -300,6 +300,9 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
         "score_source_policy_ids",
         "score_lengths",
     }
+    assert "corridor_top_probs" not in payload
+    assert "exemplar_source_top_token_ids" not in payload
+    assert "exemplar_source_bucket_masses" not in payload
     for field in (
         "corridor_lengths",
         "score_example_ids",
