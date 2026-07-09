@@ -275,6 +275,15 @@ def _content_entries(root: Path) -> list[dict[str, Any]]:
         _content_entry(root, "emission_config.json", "emission_config"),
         _content_entry(root, "validation_report.json", "validation_report"),
     ]
+    for relative_path, role in (
+        ("corridors/corridor_summary.json", "corridor_summary"),
+        ("corridors/corridor_fingerprints.json", "corridor_fingerprints"),
+        ("corridors/corridor_modes.json", "corridor_modes"),
+        ("corridors/mode_assignments.json", "corridor_mode_assignments"),
+        ("corridors/corridor_summary.txt", "corridor_human_summary"),
+    ):
+        if (root / relative_path).is_file():
+            entries.append(_content_entry(root, relative_path, role))
     entries.extend(
         _content_entry(root, path.relative_to(root).as_posix(), "target_shard")
         for path in _shard_files(root)

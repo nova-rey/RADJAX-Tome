@@ -818,10 +818,15 @@ def test_gpu_torch_corridor_two_pass_metadata_records_score_pass() -> None:
         )
     )
     compact_payload = {
+        "corridor_top_token_ids": np.zeros((2, 4), dtype=np.int32),
+        "corridor_teacher_entropy": np.zeros((2, 4), dtype=np.float32),
+        "corridor_confidence": np.ones((2, 4), dtype=np.float32),
+        "corridor_lengths": np.full((2,), 4, dtype=np.int32),
         "score_example_ids": np.arange(2, dtype=np.int32),
         "score_max_entropy": np.zeros((2,), dtype=np.float32),
         "score_mean_entropy": np.zeros((2,), dtype=np.float32),
         "score_selected_position": np.zeros((2,), dtype=np.int32),
+        "score_top_token_id": np.zeros((2,), dtype=np.int32),
         "score_selected_position_entropy": np.zeros((2,), dtype=np.float32),
         "score_confidence_at_selected_position": np.ones((2,), dtype=np.float32),
         "score_source_policy_ids": np.full((2,), 3, dtype=np.int32),
@@ -840,10 +845,15 @@ def test_gpu_torch_corridor_two_pass_metadata_records_score_pass() -> None:
     assert metadata["production_corridor_schema"] is False
     assert metadata["dense_logits_transferred_to_host"] is False
     assert metadata["compact_payload_arrays"] == [
+        "corridor_top_token_ids",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+        "corridor_lengths",
         "score_example_ids",
         "score_max_entropy",
         "score_mean_entropy",
         "score_selected_position",
+        "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
         "score_source_policy_ids",
@@ -856,7 +866,7 @@ def test_gpu_torch_corridor_two_pass_metadata_records_score_pass() -> None:
     assert metadata["exemplar_capture_mode_requested"] == "two_pass_sparse_exemplar"
     assert metadata["exemplar_capture_mode_effective"] == "two_pass_sparse_exemplar"
     assert metadata["exemplar_capture_stage"] == "score_pass"
-    assert metadata["exemplar_candidate_scope"] == "batch_score_summary_only"
+    assert metadata["exemplar_candidate_scope"] == ("batch_score_and_corridor_evidence")
     assert metadata["requires_second_pass_for_final_exemplars"] is True
     assert metadata["rerun_teacher_for_selected_examples"] is True
 
@@ -916,10 +926,15 @@ def test_gpu_torch_corridor_auto_metadata_chooses_two_pass_for_huge_estimate() -
         )
     )
     compact_payload = {
+        "corridor_top_token_ids": np.zeros((2, 64), dtype=np.int32),
+        "corridor_teacher_entropy": np.zeros((2, 64), dtype=np.float32),
+        "corridor_confidence": np.ones((2, 64), dtype=np.float32),
+        "corridor_lengths": np.full((2,), 64, dtype=np.int32),
         "score_example_ids": np.arange(2, dtype=np.int32),
         "score_max_entropy": np.zeros((2,), dtype=np.float32),
         "score_mean_entropy": np.zeros((2,), dtype=np.float32),
         "score_selected_position": np.zeros((2,), dtype=np.int32),
+        "score_top_token_id": np.zeros((2,), dtype=np.int32),
         "score_selected_position_entropy": np.zeros((2,), dtype=np.float32),
         "score_confidence_at_selected_position": np.ones((2,), dtype=np.float32),
         "score_source_policy_ids": np.full((2,), 3, dtype=np.int32),

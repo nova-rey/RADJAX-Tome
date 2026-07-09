@@ -28,6 +28,30 @@ def _config(**overrides: object) -> TeacherBackendConfig:
     return TeacherBackendConfig(**payload)
 
 
+def test_tensor_to_numpy_casts_bfloat16_floats_before_numpy_transfer() -> None:
+    if not _optional_torch_available():
+        pytest.skip("optional torch dependency is not installed")
+    torch = import_module("torch")
+    gpu_torch = import_module("radjax_tome.backends.gpu_torch")
+    tensor = torch.tensor([1.25, -2.5], dtype=torch.bfloat16)
+
+    converted = gpu_torch._tensor_to_numpy(tensor, np.float32)
+
+    assert converted.dtype == np.dtype("float32")
+    np.testing.assert_allclose(converted, np.asarray([1.25, -2.5], dtype=np.float32))
+
+
+def test_tensor_to_numpy_casts_floating_dtype_before_numpy_without_torch() -> None:
+    gpu_torch = import_module("radjax_tome.backends.gpu_torch")
+    tensor = _NumpyRejectingFloatTensor()
+
+    converted = gpu_torch._tensor_to_numpy(tensor, np.float32)
+
+    assert tensor.float_called is True
+    assert converted.dtype == np.dtype("float32")
+    np.testing.assert_allclose(converted, np.asarray([1.25], dtype=np.float32))
+
+
 @pytest.mark.parametrize(
     ("source_policy", "policy_id", "kind", "bucketed", "dynamic"),
     (
@@ -94,9 +118,23 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
         "exemplar_scores",
         "exemplar_selection_mask",
         "exemplar_source_policy_ids",
+        "exemplar_source_top_token_ids",
+        "exemplar_source_top_log_probs",
+        "exemplar_source_top_probs",
+        "exemplar_source_top_selection_mask",
         "exemplar_source_effective_top_k",
         "exemplar_source_top_mass",
         "exemplar_source_tail_mass",
+        "exemplar_source_bucket_masses",
+        "score_example_ids",
+        "score_max_entropy",
+        "score_mean_entropy",
+        "score_selected_position",
+        "score_top_token_id",
+        "score_selected_position_entropy",
+        "score_confidence_at_selected_position",
+        "score_source_policy_ids",
+        "score_lengths",
     }
     assert gpu_payload["corridor_top_token_ids"].shape == (2, 3)
     assert gpu_payload["corridor_top_probs"].shape == (2, 3)
@@ -107,10 +145,22 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
     assert gpu_payload["exemplar_scores"].shape == (2, 2)
     assert gpu_payload["exemplar_selection_mask"].shape == (2, 3)
     assert gpu_payload["exemplar_source_policy_ids"].shape == (2, 3)
+    assert gpu_payload["exemplar_source_top_token_ids"].shape[:2] == (2, 3)
+    assert gpu_payload["exemplar_source_top_log_probs"].shape[:2] == (2, 3)
+    assert gpu_payload["exemplar_source_top_probs"].shape[:2] == (2, 3)
+    assert gpu_payload["exemplar_source_top_selection_mask"].shape[:2] == (2, 3)
     assert gpu_payload["exemplar_source_effective_top_k"].shape == (2, 3)
     assert gpu_payload["exemplar_source_top_mass"].shape == (2, 3)
     assert gpu_payload["exemplar_source_tail_mass"].shape == (2, 3)
+    assert gpu_payload["exemplar_source_bucket_masses"].shape == (
+        2,
+        3,
+        config.num_buckets,
+    )
+    assert gpu_payload["score_max_entropy"].shape == (2,)
+    assert gpu_payload["score_selected_position"].shape == (2,)
     assert (gpu_payload["exemplar_source_policy_ids"] == policy_id).all()
+    assert (gpu_payload["score_source_policy_ids"] == policy_id).all()
     assert np.isfinite(gpu_payload["corridor_top_probs"]).all()
     assert np.isfinite(gpu_payload["corridor_teacher_entropy"]).all()
     assert np.isfinite(gpu_payload["corridor_confidence"]).all()
@@ -139,8 +189,15 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
         "corridor_teacher_entropy",
         "corridor_confidence",
         "exemplar_scores",
+        "exemplar_source_top_log_probs",
+        "exemplar_source_top_probs",
         "exemplar_source_top_mass",
         "exemplar_source_tail_mass",
+        "exemplar_source_bucket_masses",
+        "score_max_entropy",
+        "score_mean_entropy",
+        "score_selected_position_entropy",
+        "score_confidence_at_selected_position",
     ):
         np.testing.assert_allclose(
             gpu_payload[field],
@@ -152,6 +209,22 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
         gpu_payload["exemplar_source_effective_top_k"],
         cpu_payload["exemplar_source_effective_top_k"],
     )
+    np.testing.assert_array_equal(
+        gpu_payload["exemplar_source_top_token_ids"],
+        cpu_payload["exemplar_source_top_token_ids"],
+    )
+    np.testing.assert_array_equal(
+        gpu_payload["exemplar_source_top_selection_mask"],
+        cpu_payload["exemplar_source_top_selection_mask"],
+    )
+    for field in (
+        "score_example_ids",
+        "score_selected_position",
+        "score_top_token_id",
+        "score_source_policy_ids",
+        "score_lengths",
+    ):
+        np.testing.assert_array_equal(gpu_payload[field], cpu_payload[field])
     for row, positions in enumerate(gpu_payload["exemplar_positions"]):
         assert (gpu_payload["exemplar_selection_mask"][row, positions] == 1).all()
 
@@ -213,17 +286,42 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
     )
 
     assert set(payload) == {
+        "corridor_top_token_ids",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+        "corridor_lengths",
         "score_example_ids",
         "score_max_entropy",
         "score_mean_entropy",
         "score_selected_position",
+        "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
         "score_source_policy_ids",
         "score_lengths",
     }
-    for value in payload.values():
-        assert value.shape == (2,)
+    assert "corridor_top_probs" not in payload
+    assert "exemplar_source_top_token_ids" not in payload
+    assert "exemplar_source_bucket_masses" not in payload
+    for field in (
+        "corridor_lengths",
+        "score_example_ids",
+        "score_max_entropy",
+        "score_mean_entropy",
+        "score_selected_position",
+        "score_top_token_id",
+        "score_selected_position_entropy",
+        "score_confidence_at_selected_position",
+        "score_source_policy_ids",
+        "score_lengths",
+    ):
+        assert payload[field].shape == (2,)
+    for field in (
+        "corridor_top_token_ids",
+        "corridor_teacher_entropy",
+        "corridor_confidence",
+    ):
+        assert payload[field].shape == (2, 3)
     assert (payload["score_source_policy_ids"] == 3).all()
     assert (payload["score_lengths"] == 3).all()
     assert np.isfinite(payload["score_max_entropy"]).all()
@@ -237,9 +335,102 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
     assert selected["exemplar_positions"].shape == (2, 2)
 
 
+def test_compact_payload_to_numpy_keeps_mixed_corridor_source_and_score_fields() -> (
+    None
+):
+    gpu_torch = import_module("radjax_tome.backends.gpu_torch")
+    payload = {
+        "corridor_top_token_ids": _ArrayTensor(np.zeros((2, 3), dtype=np.int32)),
+        "corridor_top_probs": _ArrayTensor(np.ones((2, 3), dtype=np.float32)),
+        "corridor_teacher_entropy": _ArrayTensor(np.ones((2, 3), dtype=np.float32)),
+        "corridor_confidence": _ArrayTensor(np.ones((2, 3), dtype=np.float32)),
+        "corridor_lengths": _ArrayTensor(np.full(2, 3, dtype=np.int32)),
+        "exemplar_positions": _ArrayTensor(np.zeros((2, 2), dtype=np.int32)),
+        "exemplar_scores": _ArrayTensor(np.ones((2, 2), dtype=np.float32)),
+        "exemplar_selection_mask": _ArrayTensor(np.ones((2, 3), dtype=np.int32)),
+        "exemplar_source_policy_ids": _ArrayTensor(np.full((2, 3), 3, dtype=np.int32)),
+        "exemplar_source_top_token_ids": _ArrayTensor(
+            np.zeros((2, 3, 4), dtype=np.int32)
+        ),
+        "exemplar_source_top_log_probs": _ArrayTensor(
+            np.ones((2, 3, 4), dtype=np.float32)
+        ),
+        "exemplar_source_top_probs": _ArrayTensor(np.ones((2, 3, 4), dtype=np.float32)),
+        "exemplar_source_top_selection_mask": _ArrayTensor(
+            np.ones((2, 3, 4), dtype=np.bool_)
+        ),
+        "exemplar_source_effective_top_k": _ArrayTensor(
+            np.full((2, 3), 4, dtype=np.int32)
+        ),
+        "exemplar_source_top_mass": _ArrayTensor(np.ones((2, 3), dtype=np.float32)),
+        "exemplar_source_tail_mass": _ArrayTensor(np.zeros((2, 3), dtype=np.float32)),
+        "exemplar_source_bucket_masses": _ArrayTensor(
+            np.zeros((2, 3, 2), dtype=np.float32)
+        ),
+        "score_example_ids": _ArrayTensor(np.arange(2, dtype=np.int32)),
+        "score_max_entropy": _ArrayTensor(np.ones(2, dtype=np.float32)),
+        "score_mean_entropy": _ArrayTensor(np.ones(2, dtype=np.float32)),
+        "score_selected_position": _ArrayTensor(np.zeros(2, dtype=np.int32)),
+        "score_top_token_id": _ArrayTensor(np.zeros(2, dtype=np.int32)),
+        "score_selected_position_entropy": _ArrayTensor(np.ones(2, dtype=np.float32)),
+        "score_confidence_at_selected_position": _ArrayTensor(
+            np.ones(2, dtype=np.float32)
+        ),
+        "score_source_policy_ids": _ArrayTensor(np.full(2, 3, dtype=np.int32)),
+        "score_lengths": _ArrayTensor(np.full(2, 3, dtype=np.int32)),
+    }
+
+    compact = gpu_torch._compact_payload_to_numpy(payload)
+
+    assert "corridor_top_token_ids" in compact
+    assert "exemplar_source_top_probs" in compact
+    assert "score_example_ids" in compact
+    assert compact["exemplar_source_top_probs"].shape == (2, 3, 4)
+    assert compact["score_example_ids"].shape == (2,)
+
+
 def _optional_torch_available() -> bool:
     try:
         import_module("torch")
     except ImportError:
         return False
     return True
+
+
+class _ArrayTensor:
+    def __init__(self, array: np.ndarray) -> None:
+        self._array = array
+
+    def detach(self) -> _ArrayTensor:
+        return self
+
+    def float(self) -> _ArrayTensor:
+        return _ArrayTensor(self._array.astype(np.float32))
+
+    def to(self, device: str) -> _ArrayTensor:
+        assert device == "cpu"
+        return self
+
+    def numpy(self) -> np.ndarray:
+        return self._array
+
+
+class _NumpyRejectingFloatTensor:
+    def __init__(self) -> None:
+        self.float_called = False
+
+    def detach(self) -> _NumpyRejectingFloatTensor:
+        return self
+
+    def float(self) -> _NumpyRejectingFloatTensor:
+        self.float_called = True
+        return self
+
+    def to(self, device: str) -> _NumpyRejectingFloatTensor:
+        assert device == "cpu"
+        return self
+
+    def numpy(self) -> np.ndarray:
+        if not self.float_called:
+            raise TypeError("bfloat16 NumPy conversion is unsupported")
+        return np.asarray([1.25], dtype=np.float32)

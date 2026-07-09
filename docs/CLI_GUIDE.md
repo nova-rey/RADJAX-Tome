@@ -197,6 +197,34 @@ error-on-fallback behavior. It writes `run_plan.json` and
 `--parity-left BASELINE` for optional post-build parity. See
 `docs/PRODUCTION_BUILD.md`.
 
+Enable selected-only corridor/exemplar delivery explicitly when you want broad
+corridor scoring but compressed exemplar payloads only for selected winners:
+
+```bash
+radjax-tome production-build \
+  --teacher-model /models/MODEL \
+  --tokenizer-id /models/MODEL \
+  --dataset ./corpus_out/corpus.jsonl \
+  --corpus-manifest ./corpus_out/corpus_manifest.json \
+  --teacher-model-provenance ./teacher_model_provenance.json \
+  --output ./tome_out \
+  --target-policy corridor_exemplar_v1 \
+  --exemplar-selection-enabled \
+  --exemplar-delivery-path two_pass_rerun_selected \
+  --selected-exemplar-budget 1024 \
+  --no-retain-unselected-exemplar-payloads \
+  --track-delivery-timing
+```
+
+Compare selected-only Path A and Path B outputs with:
+
+```bash
+radjax-tome exemplar-delivery-parity \
+  --path-a ./path_a_artifact \
+  --path-b ./path_b_artifact \
+  --output parity_report.json
+```
+
 For experimental Path B candidate scheduling across explicit device IDs:
 
 ```bash

@@ -14,6 +14,7 @@ Recommended commands:
   validate
   inspect
   plan
+  exemplar-delivery-parity
   corpus
   pack
   unpack
@@ -373,7 +374,45 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument("--parity-report", type=Path)
     production.add_argument("--run-manifest", type=Path)
     production.add_argument("--progress-log", type=Path)
+    production.add_argument(
+        "--exemplar-delivery-path",
+        choices=("one_pass_pruned_candidate", "two_pass_rerun_selected"),
+    )
+    production.add_argument("--exemplar-selection-enabled", action="store_true")
+    production.add_argument("--exemplar-leaderboard-capacity", type=int, default=16)
+    production.add_argument("--selected-exemplar-budget", type=int)
+    production.add_argument("--selected-exemplar-fraction", type=float)
+    production.add_argument(
+        "--retain-unselected-exemplar-payloads",
+        dest="retain_unselected_exemplar_payloads",
+        action="store_true",
+        default=True,
+    )
+    production.add_argument(
+        "--no-retain-unselected-exemplar-payloads",
+        dest="retain_unselected_exemplar_payloads",
+        action="store_false",
+    )
+    production.add_argument(
+        "--exemplar-score-policy",
+        choices=("entropy_top_n_v1",),
+        default="entropy_top_n_v1",
+    )
+    production.add_argument("--track-delivery-timing", action="store_true")
     production.set_defaults(func=_cmd_production_build)
+
+    exemplar_delivery_parity = subparsers.add_parser(
+        "exemplar-delivery-parity",
+        help="Compare selected-only exemplar delivery artifacts.",
+        description=(
+            "Compare Path A and Path B selected exemplar delivery reports, "
+            "leaderboards, and compressed selected payload shapes."
+        ),
+    )
+    exemplar_delivery_parity.add_argument("--path-a", type=Path, required=True)
+    exemplar_delivery_parity.add_argument("--path-b", type=Path, required=True)
+    exemplar_delivery_parity.add_argument("--output", type=Path, required=True)
+    exemplar_delivery_parity.set_defaults(func=_cmd_exemplar_delivery_parity)
 
     multi_gpu = subparsers.add_parser(
         "multi-gpu-path-b",
@@ -919,10 +958,37 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
             parity_report_path=args.parity_report,
             run_manifest_path=args.run_manifest,
             progress_log_path=args.progress_log,
+            exemplar_delivery_path=args.exemplar_delivery_path,
+            exemplar_selection_enabled=args.exemplar_selection_enabled,
+            exemplar_leaderboard_capacity=args.exemplar_leaderboard_capacity,
+            selected_exemplar_budget=args.selected_exemplar_budget,
+            selected_exemplar_fraction=args.selected_exemplar_fraction,
+            retain_unselected_exemplar_payloads=(
+                args.retain_unselected_exemplar_payloads
+            ),
+            exemplar_score_policy=args.exemplar_score_policy,
+            track_delivery_timing=args.track_delivery_timing,
         )
     )
     for line in render_production_build_summary(report):
         print(line)
+    return 0 if report["status"] in {"pass", "warn"} else 1
+
+
+def _cmd_exemplar_delivery_parity(args: argparse.Namespace) -> int:
+    from radjax_tome.builder import compare_exemplar_delivery_artifacts
+
+    report = compare_exemplar_delivery_artifacts(
+        args.path_a,
+        args.path_b,
+        output=args.output,
+    )
+    print(f"status={report['status']} path_a={args.path_a} path_b={args.path_b}")
+    print(
+        "selected_example_ids_match="
+        f"{str(report['selected_example_ids_match']).lower()}"
+    )
+    print(f"selected_positions_match={str(report['selected_positions_match']).lower()}")
     return 0 if report["status"] in {"pass", "warn"} else 1
 
 

@@ -616,6 +616,22 @@ def _corridor_exemplar_payload(
     lengths = np.full((logits.shape[0],), logits.shape[1], dtype=np.int32)
     policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_source_policy]
     source_policy_ids = np.full(entropy.shape, policy_id, dtype=np.int32)
+    score_selected_position = np.argmax(entropy, axis=-1).astype(np.int32)
+    score_selected_entropy = np.take_along_axis(
+        entropy,
+        score_selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.float32)
+    score_selected_confidence = np.take_along_axis(
+        confidence,
+        score_selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.float32)
+    score_top_token_id = np.take_along_axis(
+        top_ids,
+        score_selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.int32)
     schema_metadata = _corridor_schema_metadata(config)
     corridor_records = {
         "policy": _CORRIDOR_POLICY,
@@ -662,9 +678,31 @@ def _corridor_exemplar_payload(
         "exemplar_scores": exemplar_scores,
         "exemplar_selection_mask": selection_mask,
         "exemplar_source_policy_ids": source_policy_ids,
+        "exemplar_source_top_token_ids": source["top_token_ids"].astype(np.int32),
+        "exemplar_source_top_log_probs": source["top_log_probs"].astype(np.float32),
+        "exemplar_source_top_probs": source["top_probs"].astype(np.float32),
+        "exemplar_source_top_selection_mask": _source_selection_mask(source),
         "exemplar_source_effective_top_k": source["effective_top_k"].astype(np.int32),
         "exemplar_source_top_mass": source["top_mass"].astype(np.float32),
         "exemplar_source_tail_mass": source["tail_mass"].astype(np.float32),
+        "exemplar_source_bucket_masses": _source_bucket_masses(
+            source,
+            logits_shape=logits.shape,
+            num_buckets=config.num_buckets,
+        ),
+        "score_example_ids": np.arange(logits.shape[0], dtype=np.int32),
+        "score_max_entropy": np.max(entropy, axis=-1).astype(np.float32),
+        "score_mean_entropy": np.mean(entropy, axis=-1, dtype=np.float32).astype(
+            np.float32
+        ),
+        "score_selected_position": score_selected_position,
+        "score_top_token_id": score_top_token_id,
+        "score_selected_position_entropy": score_selected_entropy,
+        "score_confidence_at_selected_position": score_selected_confidence,
+        "score_source_policy_ids": np.full(
+            (logits.shape[0],), policy_id, dtype=np.int32
+        ),
+        "score_lengths": lengths,
     }
 
 
@@ -681,6 +719,7 @@ def _corridor_exemplar_score_payload(
     )
     entropy = source["teacher_entropy"].astype(np.float32)
     confidence = source["top_probs"][..., 0].astype(np.float32)
+    top_ids = source["top_token_ids"][..., 0].astype(np.int32)
     selected_position = np.argmax(entropy, axis=-1).astype(np.int32)
     selected_entropy = np.take_along_axis(
         entropy,
@@ -692,6 +731,11 @@ def _corridor_exemplar_score_payload(
         selected_position[:, None],
         axis=-1,
     )[:, 0].astype(np.float32)
+    selected_top_token_id = np.take_along_axis(
+        top_ids,
+        selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.int32)
     policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_second_pass_source_policy]
     batch_size = int(logits.shape[0])
     fields = (
@@ -699,6 +743,7 @@ def _corridor_exemplar_score_payload(
         "score_max_entropy",
         "score_mean_entropy",
         "score_selected_position",
+        "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
         "score_source_policy_ids",
@@ -718,12 +763,17 @@ def _corridor_exemplar_score_payload(
         },
         "source_policy_summary": source_summary,
         "score_metadata": _corridor_score_pass_metadata(config),
+        "corridor_top_token_ids": top_ids,
+        "corridor_teacher_entropy": entropy,
+        "corridor_confidence": confidence,
+        "corridor_lengths": np.full((batch_size,), logits.shape[1], dtype=np.int32),
         "score_example_ids": np.arange(batch_size, dtype=np.int32),
         "score_max_entropy": np.max(entropy, axis=-1).astype(np.float32),
         "score_mean_entropy": np.mean(entropy, axis=-1, dtype=np.float32).astype(
             np.float32
         ),
         "score_selected_position": selected_position,
+        "score_top_token_id": selected_top_token_id,
         "score_selected_position_entropy": selected_entropy,
         "score_confidence_at_selected_position": selected_confidence,
         "score_source_policy_ids": np.full((batch_size,), policy_id, dtype=np.int32),
@@ -755,6 +805,23 @@ def _corridor_exemplar_selected_payload(
         source_payload=None,
     )
     return payload
+
+
+def _source_selection_mask(source: dict[str, np.ndarray]) -> np.ndarray:
+    if "top_selection_mask" in source:
+        return source["top_selection_mask"].astype(bool)
+    return np.ones(np.asarray(source["top_token_ids"]).shape, dtype=bool)
+
+
+def _source_bucket_masses(
+    source: dict[str, np.ndarray],
+    *,
+    logits_shape: tuple[int, ...],
+    num_buckets: int,
+) -> np.ndarray:
+    if "bucket_masses" in source:
+        return source["bucket_masses"].astype(np.float32)
+    return np.zeros((*logits_shape[:2], num_buckets), dtype=np.float32)
 
 
 def _second_pass_source_config(
@@ -994,7 +1061,7 @@ def _corridor_score_pass_metadata(
         **policy,
         "exemplar_capture_stage": "score_pass",
         "exemplar_capture_mode_policy": "explicit_two_pass_sparse_exemplar_v1",
-        "exemplar_candidate_scope": "batch_score_summary_only",
+        "exemplar_candidate_scope": "batch_score_and_corridor_evidence",
         "corpus_level_exemplar_finalization": False,
         "requires_second_pass_for_final_exemplars": True,
         "rerun_teacher_for_selected_examples": True,

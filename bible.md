@@ -614,3 +614,142 @@ must not introduce new heavy imports with `jax`, `torch`, or `transformers`
 prefixes. The assertion is isolated around the dry-run call so earlier tests or
 test harness setup that already imported a heavy module do not create a false
 failure. Production code is unchanged.
+
+## 2026-07-08 — P4.8B Selected-Only Exemplar Delivery Harness
+
+Spec P4.8B adds an opt-in selected-only delivery harness to
+`radjax-tome production-build` for `corridor_exemplar_v1`. The new CLI flags
+select Path A (`one_pass_pruned_candidate`) or Path B
+(`two_pass_rerun_selected`), enable selection, size leaderboards and budgets,
+and explicitly control non-selected exemplar payload retention.
+
+Selected-only runs materialize broad corridor evidence, shared leaderboards,
+`leaderboards/selected_exemplars.json`, compressed selected exemplar payload
+shards, and `delivery_report.json`. Production reports now surface
+`delivery_path`, `num_examples_scored`, `num_selected_exemplars`,
+`selected_exemplar_payload_retained`, and
+`non_selected_exemplar_payload_retained`.
+
+Validation now fails selected-only artifacts that claim non-selected payload
+retention, omit selected compressed payload fields, select zero exemplars when
+selection is enabled, report invalid Path B rerun counts, or retain temporary
+candidate payload directories. `radjax-tome exemplar-delivery-parity` compares
+Path A and Path B selected IDs, positions, ranks, scores, mode keys, selected
+payload shapes, retained bytes, rerun counts, and retention status.
+
+Defaults remain unchanged unless exemplar selection is explicitly enabled. This
+patch does not modify the experimental `multi-gpu-path-b` harness, does not
+claim student training quality, does not retain dense logits, and does not add
+silent CPU fallback.
+
+## 2026-07-08 — P4.8B Selected Rerun Payload Correction
+
+The selected-only delivery harness now treats Path B selected exemplar payloads
+as backend output, not local synthesis. After the score/corridor pass selects
+winners, production-build reruns the configured teacher backend only for the
+selected example IDs, using the planner-selected effective batch size, and
+requests `dynamic_cascaded_soft_labels_v1` emission for the selected pass.
+
+Final selected exemplar payload shards slice `top_token_ids`, `top_log_probs`,
+`top_probs`, `top_selection_mask`, `effective_top_k`, `top_mass`, `tail_mass`,
+`bucket_masses`, and `teacher_entropy` from that backend emission at the
+selected positions. Path B main artifacts remain score-pass artifacts and do
+not first retain broad per-example full exemplar payloads. Tests now fail if
+selected payload values are fabricated locally or if the selected rerun invokes
+the backend for examples other than the selected winners.
+
+## 2026-07-08 — P4.8B Path A Capture Parity Correction
+
+Path A selected-only delivery now materializes selected exemplar payloads from
+the already-captured one-pass candidate shard arrays instead of rerunning the
+teacher backend. The main pass captures dynamic top-k token IDs, log-probs,
+probs, selection masks, bucket masses, and related mass metadata long enough to
+slice selected winners, then prunes those broad candidate payload arrays from
+the final shards when non-selected retention is disabled.
+
+Path B keeps the selected backend rerun behavior. The parity harness and tests
+now prove Path A has `teacher_rerun_count=0`, Path B has
+`teacher_rerun_count=selected_example_count`, and selected IDs, positions,
+scores, and payload shapes match across both delivery paths.
+
+## 2026-07-08 — P4.8B GPU bfloat16 NumPy Transfer Guard
+
+The `gpu_torch` tensor-to-NumPy transfer helper now casts floating tensors to
+`float32` before moving through `.to("cpu").numpy()`. This prevents bfloat16
+teacher outputs, including Gemma 3 270M GPU tensors, from hitting NumPy's
+unsupported bfloat16 conversion path during compact payload materialization.
+
+## 2026-07-08 — P4.8B Canonical Parity Scoring and Path A Pruning
+
+Selected-only Path A now asks the selector for the same canonical score fields
+as Path B: selected-position entropy, max entropy, mean entropy, confidence,
+position bucket, length bucket, and source policy ID. Path A no longer lets
+tail-mass or effective-top-k-only boards participate in selected-only parity
+selection unless Path B emits matching score-pass fields.
+
+When non-selected exemplar retention is disabled, Path A now prunes all
+`exemplar_source_*` arrays from final shards after selected payloads are
+materialized. Validation fails selected-only artifacts that retain any
+`exemplar_source_*` broad candidate array. A 1000-example Path A/B parity test
+now covers selected IDs, positions, score ranks, mode keys, Path A zero reruns,
+Path B selected reruns, and final Path A shard pruning.
+
+## 2026-07-08 — P4.8B Score-Surface Parity and Timing Instrumentation
+
+Path A one-pass corridor shards now carry compact `score_*` fields alongside
+temporary captured exemplar payload arrays. Selected-only delivery builds both
+Path A and Path B leaderboards from the shared score-pass schema, eliminating
+rank drift caused by separate precision paths while keeping Path A payload
+materialization shard-backed and Path B payload materialization backend-rerun.
+
+`production-build --track-delivery-timing` now records optional informational
+timing in production, delivery, and exemplar-delivery parity reports. Timing
+fields include production/preflight/main-pass/selection/payload/pruning/rerun
+wall seconds, simple throughput rates, faster-path summaries, and explicit
+non-claims. Timing is environment-specific and never affects parity pass/fail
+without a future explicit performance gate.
+
+## 2026-07-08 — P4.8B Mixed GPU Compact Payload Preservation
+
+The GPU compact payload converter now handles mixed one-pass
+`corridor_exemplar_v1` payloads before score-only payloads. When a reducer emits
+both corridor/source capture arrays and canonical `score_*` fields, conversion
+returns the union so Path A can select from the shared score surface and still
+materialize selected payloads from one-pass `exemplar_source_*` candidate shard
+data before final pruning.
+
+## 2026-07-09 — P4.11 First-Class Corridor Artifact Export
+
+Selected-only `corridor_exemplar_v1` production builds now emit explicit
+`corridors/` artifacts: `corridor_fingerprints.json`, `corridor_modes.json`,
+`mode_assignments.json`, `corridor_summary.json`, and a human-readable
+`corridor_summary.txt`. Path A and Path B share the same logical artifact shape;
+Path A still uses captured one-pass payload arrays before pruning, while Path B
+reruns only selected examples for selected exemplar payloads.
+
+The corridor exporter groups canonical score-surface observations by top token,
+entropy bucket, confidence bucket, and position bucket. Reports and validation
+now expose direct corridor yes/no fields and counts, and selected exemplar
+records/payloads are linked back to corridor fingerprint and mode IDs.
+
+## 2026-07-09 — P4.12 Full-Corpus Corridor Observation Basis
+
+Fingerprint corridor export now prefers full per-token-position corridor arrays
+instead of score-selected rows. Two-pass score shards retain compact
+`corridor_top_token_ids`, `corridor_teacher_entropy`, `corridor_confidence`, and
+`corridor_lengths`, while still avoiding dense logits and broad non-selected
+exemplar payloads.
+
+`corridor_summary.json`, delivery reports, production reports, validation
+reports, and the human corridor summary now state the observation basis,
+positions available, positions used, and whether the export is degraded.
+Score-selected-only corridor export is explicitly marked degraded and rejected
+by happy-path validation.
+
+## 2026-07-09 — P4.12 GPU Score-Pass Compact Branch Fix
+
+The GPU compact payload converter now distinguishes P4.12 score-pass payloads
+from full one-pass corridor/exemplar payloads. Score-pass payloads can include
+compact full-surface corridor arrays without requiring `corridor_top_probs` or
+`exemplar_source_*` candidate payload arrays, preserving the full-corpus
+corridor evidence while avoiding one-pass candidate retention.

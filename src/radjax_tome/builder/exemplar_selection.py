@@ -134,6 +134,7 @@ def extract_one_pass_candidates(
     example_ids: tuple[str, ...],
     source_shard_id: int,
     capture_mode: str = "one_pass_candidate",
+    canonical_score_fields_only: bool = False,
 ) -> tuple[ExemplarCandidate, ...]:
     entropy = np.asarray(arrays["corridor_teacher_entropy"])
     confidence = np.asarray(arrays["corridor_confidence"])
@@ -156,14 +157,21 @@ def extract_one_pass_candidates(
                     else scores[row, position_index]
                 ),
                 "confidence": float(confidence[row, selected_position]),
-                "tail_mass": float(tail_mass[row, selected_position]),
-                "effective_top_k": float(effective_top_k[row, selected_position]),
                 "source_policy_id": float(source_policy_ids[row, selected_position]),
                 "position_bucket": float(
                     _position_bucket(selected_position, sequence_length)
                 ),
                 "length_bucket": float(_length_bucket(sequence_length)),
             }
+            if not canonical_score_fields_only:
+                score_fields.update(
+                    {
+                        "tail_mass": float(tail_mass[row, selected_position]),
+                        "effective_top_k": float(
+                            effective_top_k[row, selected_position]
+                        ),
+                    }
+                )
             candidates.append(
                 ExemplarCandidate(
                     example_id=example_id,
@@ -345,6 +353,8 @@ def build_exemplar_selection_manifest(
     budget_examples: int | None,
     budget_fraction: float | None,
     created_at: str,
+    canonical_score_fields_only: bool = False,
+    use_score_pass_fields: bool = False,
 ) -> dict[str, Any]:
     candidates: list[ExemplarCandidate] = []
     for shard_id in range(store.metadata.shard_count):
@@ -355,14 +365,25 @@ def build_exemplar_selection_manifest(
             example.example_id for example in examples[start : start + row_count]
         )
         if store.metadata.target_type == "corridor_exemplar_v1":
-            candidates.extend(
-                extract_one_pass_candidates(
-                    shard,
-                    example_ids=example_ids,
-                    source_shard_id=shard_id,
-                    capture_mode=capture_mode,
+            if use_score_pass_fields:
+                candidates.extend(
+                    extract_score_pass_candidates(
+                        shard,
+                        example_ids=example_ids,
+                        source_shard_id=shard_id,
+                        capture_mode=capture_mode,
+                    )
                 )
-            )
+            else:
+                candidates.extend(
+                    extract_one_pass_candidates(
+                        shard,
+                        example_ids=example_ids,
+                        source_shard_id=shard_id,
+                        capture_mode=capture_mode,
+                        canonical_score_fields_only=canonical_score_fields_only,
+                    )
+                )
         elif store.metadata.target_type == "corridor_exemplar_score_pass_v1":
             candidates.extend(
                 extract_score_pass_candidates(
