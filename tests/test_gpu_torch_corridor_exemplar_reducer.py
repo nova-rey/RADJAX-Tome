@@ -5,7 +5,7 @@ from importlib import import_module
 import numpy as np
 import pytest
 
-from radjax_tome.backends import TeacherBackendConfig
+from radjax_tome.backends import MIN_CORRIDOR_STAT_TOP_K, TeacherBackendConfig
 from radjax_tome.backends.cpu import _corridor_exemplar_payload
 
 
@@ -16,7 +16,7 @@ def _config(**overrides: object) -> TeacherBackendConfig:
         "target_policy": "corridor_exemplar_v1",
         "sequence_length": 3,
         "batch_size": 2,
-        "vocab_size": 6,
+        "vocab_size": MIN_CORRIDOR_STAT_TOP_K,
         "top_k": 3,
         "num_buckets": 2,
         "exemplar_top_n": 2,
@@ -26,6 +26,30 @@ def _config(**overrides: object) -> TeacherBackendConfig:
     }
     payload.update(overrides)
     return TeacherBackendConfig(**payload)
+
+
+def _corridor_logits_np() -> np.ndarray:
+    base = np.asarray(
+        [
+            [
+                [4.0, 1.0, 0.0, -1.0, -2.0, -3.0],
+                [0.5, 2.0, -0.5, -1.5, -2.0, -3.0],
+                [1.0, 0.0, 3.0, -2.0, -3.0, -4.0],
+            ],
+            [
+                [3.0, 2.0, 1.0, 0.0, -1.0, -2.0],
+                [0.0, 4.0, 1.0, -1.0, -2.0, -3.0],
+                [1.0, 2.0, 4.0, 0.0, -1.0, -2.0],
+            ],
+        ],
+        dtype=np.float32,
+    )
+    tail_width = MIN_CORRIDOR_STAT_TOP_K - base.shape[-1]
+    tail = np.linspace(-10.0, -35.0, tail_width, dtype=np.float32)
+    return np.concatenate(
+        [base, np.broadcast_to(tail, (*base.shape[:2], tail_width))],
+        axis=-1,
+    )
 
 
 def test_tensor_to_numpy_casts_bfloat16_floats_before_numpy_transfer() -> None:
@@ -92,21 +116,7 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
     torch = import_module("torch")
     gpu_torch = import_module("radjax_tome.backends.gpu_torch")
     config = _config(exemplar_source_policy=source_policy)
-    logits_np = np.asarray(
-        [
-            [
-                [4.0, 1.0, 0.0, -1.0, -2.0, -3.0],
-                [0.5, 2.0, -0.5, -1.5, -2.0, -3.0],
-                [1.0, 0.0, 3.0, -2.0, -3.0, -4.0],
-            ],
-            [
-                [3.0, 2.0, 1.0, 0.0, -1.0, -2.0],
-                [0.0, 4.0, 1.0, -1.0, -2.0, -3.0],
-                [1.0, 2.0, 4.0, 0.0, -1.0, -2.0],
-            ],
-        ],
-        dtype=np.float32,
-    )
+    logits_np = _corridor_logits_np()
     logits = torch.tensor(logits_np, dtype=torch.float32)
 
     gpu_payload = gpu_torch._compact_payload_to_numpy(
@@ -132,6 +142,11 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
         "corridor_top_token_ids",
         "corridor_top_probs",
         "corridor_teacher_entropy",
+        "corridor_entropy",
+        "corridor_top1_margin",
+        "corridor_top8_mass",
+        "corridor_top32_mass",
+        "corridor_tail_mass",
         "corridor_confidence",
         "corridor_lengths",
         "exemplar_positions",
@@ -159,6 +174,11 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
     assert gpu_payload["corridor_top_token_ids"].shape == (2, 3)
     assert gpu_payload["corridor_top_probs"].shape == (2, 3)
     assert gpu_payload["corridor_teacher_entropy"].shape == (2, 3)
+    assert gpu_payload["corridor_entropy"].shape == (2, 3)
+    assert gpu_payload["corridor_top1_margin"].shape == (2, 3)
+    assert gpu_payload["corridor_top8_mass"].shape == (2, 3)
+    assert gpu_payload["corridor_top32_mass"].shape == (2, 3)
+    assert gpu_payload["corridor_tail_mass"].shape == (2, 3)
     assert gpu_payload["corridor_confidence"].shape == (2, 3)
     assert gpu_payload["corridor_lengths"].shape == (2,)
     assert gpu_payload["exemplar_positions"].shape == (2, 2)
@@ -183,6 +203,11 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
     assert (gpu_payload["score_source_policy_ids"] == policy_id).all()
     assert np.isfinite(gpu_payload["corridor_top_probs"]).all()
     assert np.isfinite(gpu_payload["corridor_teacher_entropy"]).all()
+    assert np.isfinite(gpu_payload["corridor_entropy"]).all()
+    assert np.isfinite(gpu_payload["corridor_top1_margin"]).all()
+    assert np.isfinite(gpu_payload["corridor_top8_mass"]).all()
+    assert np.isfinite(gpu_payload["corridor_top32_mass"]).all()
+    assert np.isfinite(gpu_payload["corridor_tail_mass"]).all()
     assert np.isfinite(gpu_payload["corridor_confidence"]).all()
     assert np.isfinite(gpu_payload["exemplar_scores"]).all()
     assert np.isfinite(gpu_payload["exemplar_source_top_mass"]).all()
@@ -207,6 +232,11 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
     for field in (
         "corridor_top_probs",
         "corridor_teacher_entropy",
+        "corridor_entropy",
+        "corridor_top1_margin",
+        "corridor_top8_mass",
+        "corridor_top32_mass",
+        "corridor_tail_mass",
         "corridor_confidence",
         "exemplar_scores",
         "exemplar_source_top_log_probs",
@@ -284,21 +314,7 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
     torch = import_module("torch")
     gpu_torch = import_module("radjax_tome.backends.gpu_torch")
     config = _config(exemplar_capture_mode="two_pass_sparse_exemplar")
-    logits_np = np.asarray(
-        [
-            [
-                [4.0, 1.0, 0.0, -1.0, -2.0, -3.0],
-                [0.5, 2.0, -0.5, -1.5, -2.0, -3.0],
-                [1.0, 0.0, 3.0, -2.0, -3.0, -4.0],
-            ],
-            [
-                [3.0, 2.0, 1.0, 0.0, -1.0, -2.0],
-                [0.0, 4.0, 1.0, -1.0, -2.0, -3.0],
-                [1.0, 2.0, 4.0, 0.0, -1.0, -2.0],
-            ],
-        ],
-        dtype=np.float32,
-    )
+    logits_np = _corridor_logits_np()
     logits = torch.tensor(logits_np, dtype=torch.float32)
 
     payload = gpu_torch._compact_payload_to_numpy(
@@ -308,6 +324,11 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
     assert set(payload) == {
         "corridor_top_token_ids",
         "corridor_teacher_entropy",
+        "corridor_entropy",
+        "corridor_top1_margin",
+        "corridor_top8_mass",
+        "corridor_top32_mass",
+        "corridor_tail_mass",
         "corridor_confidence",
         "corridor_lengths",
         "score_example_ids",
@@ -339,6 +360,11 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
     for field in (
         "corridor_top_token_ids",
         "corridor_teacher_entropy",
+        "corridor_entropy",
+        "corridor_top1_margin",
+        "corridor_top8_mass",
+        "corridor_top32_mass",
+        "corridor_tail_mass",
         "corridor_confidence",
     ):
         assert payload[field].shape == (2, 3)

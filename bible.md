@@ -790,3 +790,10 @@ float32 weights. `mode_assignments.json` is a small manifest instead of a giant
 assignment list, and validation checks packed array paths, dtypes, shapes,
 mode-id ranges, position ranges, example-index ranges, and nonnegative finite
 weights.
+
+## 2026-07-09 — GPU Corridor Reducer Top-32 Test Fixtures
+
+GPU corridor reducer contract tests now use top-32-capable logits so optional
+Torch environments exercise the production corridor stat requirement instead of
+failing on under-depth fixtures. The explicit K<32 failure test remains the
+coverage for inputs that cannot compute real `top32_mass` and `tail_mass`.
