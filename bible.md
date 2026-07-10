@@ -806,3 +806,18 @@ report processed examples, throughput, elapsed time, ETA, and shard count;
 selected reruns report selected-example throughput; corridor export reports
 position counts, mode/fingerprint discovery, and assignment storage; validation
 and report writing also publish phase updates.
+
+## 2026-07-10 — P1.5 Production Tome Contract Alignment
+
+Cover-page v2 is now the complete semantic front door for production Tomes. It
+indexes every durable core, corridor, packed-assignment, and selected-exemplar
+file by role with deterministic paths, hashes, sizes, required flags, and file
+classifications. Generic corridor and exemplar surface declarations replace a
+single-payload assumption, and the recommended plan records corridor then
+exemplar as declarative checkpointed passes.
+
+A deterministic eight-example fake producer fixture exercises multiple
+stat-band modes, packed assignments, diagnostic fingerprints, and varying
+dynamic top-k exemplar payloads without network, JAX, Torch, or Transformers.
+Contract owns the canonical frozen fixture and shared interpretation; Tome owns
+the reproducible generation recipe and producer-side validation.

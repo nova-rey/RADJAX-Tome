@@ -77,7 +77,7 @@ def test_bundle_validation_passes_and_inspects_without_extraction(
     assert report.contents_ok
     assert report.deterministic_layout_ok
     assert summary["artifact_kind"] == "radjax_tome"
-    assert summary["cover_page_version"] == 1
+    assert summary["cover_page_version"] == 2
     assert summary["tome_version"] == 1
     assert summary["layout"] == "unpacked_directory"
     assert summary["target_type"] == "dense_logits"

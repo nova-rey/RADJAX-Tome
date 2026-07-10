@@ -53,6 +53,9 @@ shards/shard-00000.npz
 `cover_page.json` is the unpacked Tome front door added in Spec 3.1. See
 `docs/TOME_COVER_PAGE.md`.
 
+The canonical production consumer semantics are versioned by RADJAX-Contract in
+the [Tome/Student consumer handoff](https://github.com/nova-rey/RADJAX-Contract/blob/main/docs/reference/RADJAX_TOME_STUDENT_CONSUMER_HANDOFF.md).
+
 Portable `.rtome` bundles are deterministic tar archives added in Spec 3.2. See
 `docs/TOME_BUNDLE.md`.
 

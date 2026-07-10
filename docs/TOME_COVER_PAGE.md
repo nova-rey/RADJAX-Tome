@@ -28,7 +28,7 @@ deterministic tar packaging layer around the same cover-page-described files.
 ```json
 {
   "artifact_kind": "radjax_tome",
-  "cover_page_version": 1,
+  "cover_page_version": 2,
   "tome_version": 1,
   "layout": "unpacked_directory",
   "created_by": "radjax-tome.radjax_tome.tome.cover_page",
@@ -60,7 +60,9 @@ deterministic tar packaging layer around the same cover-page-described files.
       "path": "metadata.json",
       "role": "target_store_metadata",
       "sha256": "...",
-      "size_bytes": 123
+      "size_bytes": 123,
+      "required": true,
+      "classification": "integrity_or_provenance"
     }
   ],
   "validation": {
@@ -75,15 +77,23 @@ deterministic tar packaging layer around the same cover-page-described files.
 ## Contents And Hashes
 
 Every `contents` entry names a file relative to the artifact root, assigns a
-role, records its SHA-256 hash, and records its byte size. Spec 3.1 includes the
-existing sidecars and every file under `shards/`. The cover page does not hash
-itself, avoiding self-referential hashing in v1.
+semantic role and classification, states whether the entry is required, records
+its SHA-256 hash, and records its byte size. Cover-page v2 includes core
+sidecars, target shards, packed corridor assignment files, and selected
+exemplar files. The cover page does not hash itself.
+
+Cover-page v2 also declares generic `behavioral_surfaces` and a declarative
+`recommended_training_plan`. Current selected production Tomes declare a
+corridor pass followed by a checkpoint and an exemplar pass followed by a
+checkpoint. These are semantic references, not executable schedule classes.
 
 ## Validation Scope
 
-RADJAX-Tome validates that the cover page has required v1 fields, uses the
-`unpacked_directory` layout, lists required files, does not reference paths
-outside the artifact root, and has matching SHA-256 hashes for listed content.
+RADJAX-Tome validates that cover-page v2 uses the `unpacked_directory` layout,
+indexes every required durable role, keeps paths unique and inside the artifact,
+matches content hashes and sizes, resolves surface prerequisites, and emits a
+valid surface-referenced pass plan.
 
-RADJAX-Contract formal validation comes later. The cover page is the local Tome
-surface that later Contract and bundle work can target.
+RADJAX-Contract owns the independent production consumer schema and semantic
+validation. The canonical producer/consumer meaning is recorded in the
+[Tome/Student consumer handoff](https://github.com/nova-rey/RADJAX-Contract/blob/main/docs/reference/RADJAX_TOME_STUDENT_CONSUMER_HANDOFF.md).

@@ -387,5 +387,7 @@ def test_reports_and_cover_page_include_corridor_counts(tmp_path: Path) -> None:
     assert validation["corridor_positions_used"] == 25
     assert contents["corridors/corridor_summary.json"] == "corridor_summary"
     assert contents["corridors/corridor_fingerprints.json"] == ("corridor_fingerprints")
-    assert contents["corridors/corridor_modes.json"] == "corridor_modes"
-    assert contents["corridors/mode_assignments.json"] == ("corridor_mode_assignments")
+    assert contents["corridors/corridor_modes.json"] == "corridor_mode_table"
+    assert contents["corridors/mode_assignments.json"] == (
+        "corridor_assignment_manifest"
+    )

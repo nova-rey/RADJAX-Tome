@@ -267,7 +267,9 @@ def _validate_embedded_cover_page(cover_page: dict[str, Any]) -> list[str]:
     if cover_page.get("artifact_kind") != ARTIFACT_KIND:
         blockers.append("cover_page.json artifact_kind must be radjax_tome")
     if cover_page.get("cover_page_version") != COVER_PAGE_VERSION:
-        blockers.append("cover_page.json cover_page_version must be 1")
+        blockers.append(
+            f"cover_page.json cover_page_version must be {COVER_PAGE_VERSION}"
+        )
     if cover_page.get("tome_version") != TOME_VERSION:
         blockers.append("cover_page.json tome_version must be 1")
     return blockers
