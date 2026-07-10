@@ -241,7 +241,7 @@ def test_selected_payload_linkage_matches_score_pass_rows(tmp_path: Path) -> Non
     )
 
     assert build_production_gpu_tome(config)["status"] == "pass"
-    _assert_selected_linkage_invariants(config.output_dir)
+    _assert_selected_source_coordinate_invariants(config.output_dir)
     selected_path = config.output_dir / "leaderboards" / "selected_exemplars.json"
     selected = _json(selected_path)
     selected["selected_exemplars"][0]["selected_position"] += 1
@@ -251,8 +251,8 @@ def test_selected_payload_linkage_matches_score_pass_rows(tmp_path: Path) -> Non
 
     assert validation.status == "fail"
     assert (
-        "selected exemplar linkage mismatch: selected_position/score does not match "
-        "score-pass shard row"
+        "selected exemplar linkage mismatch: selected record/payload does not match "
+        "source candidate coordinate"
     ) in validation.blockers
 
 
@@ -275,6 +275,7 @@ def test_path_a_selected_only_delivery_prunes_temporary_candidates(
     assert delivery["pruned_candidate_payload_bytes"] > 0
     assert delivery["temporary_candidate_bytes"] > 0
     assert delivery["non_selected_exemplar_payload_retained"] is False
+    _assert_selected_source_coordinate_invariants(config.output_dir)
     with np.load(config.output_dir / "shards" / "shard-00000.npz") as shard:
         assert not any(key.startswith("exemplar_source_") for key in shard.files)
     assert not (config.output_dir / "temporary_candidates").exists()
@@ -656,7 +657,7 @@ def _score_rows_by_example_id(
     return rows
 
 
-def _assert_selected_linkage_invariants(output_dir: Path) -> None:
+def _assert_selected_source_coordinate_invariants(output_dir: Path) -> None:
     selected = _json(output_dir / "leaderboards" / "selected_exemplars.json")[
         "selected_exemplars"
     ]
@@ -666,30 +667,46 @@ def _assert_selected_linkage_invariants(output_dir: Path) -> None:
     for record, payload in zip(selected, payloads, strict=True):
         source_shard_id = int(record["source_shard_id"])
         source_row = int(record["source_row"])
-        selected_position = int(record["selected_position"])
+        source_position = int(record["source_position"])
         with np.load(
             output_dir / "shards" / f"shard-{source_shard_id:05d}.npz"
         ) as shard:
-            score_position = int(shard["score_selected_position"][source_row])
-            score_entropy = float(shard["score_selected_position_entropy"][source_row])
-            score_top_token_id = int(shard["score_top_token_id"][source_row])
-            assert selected_position == score_position
-            assert np.isclose(record["selected_score"], score_entropy)
-            assert np.isclose(payload["selected_score"], score_entropy)
-            assert np.isclose(payload["teacher_entropy"], score_entropy)
-            assert payload["top_token_ids"][0] == score_top_token_id
+            source_score = float(record["source_score"])
+            source_top_token_id = int(record["source_top_token_id"])
+            assert record["selected_position"] == source_position
+            assert payload["selected_position"] == source_position
+            assert np.isclose(record["selected_score"], source_score)
+            assert np.isclose(payload["selected_score"], source_score)
+            assert np.isclose(payload["source_score"], source_score)
+            assert np.isclose(payload["teacher_entropy"], source_score)
+            assert payload["top_token_ids"][0] == source_top_token_id
             assert np.isclose(
-                float(shard["corridor_entropy"][source_row, selected_position]),
-                score_entropy,
+                float(shard["corridor_entropy"][source_row, source_position]),
+                source_score,
             )
             assert (
-                int(shard["corridor_top_token_ids"][source_row, selected_position])
-                == score_top_token_id
+                int(shard["corridor_top_token_ids"][source_row, source_position])
+                == source_top_token_id
             )
+            if record["payload_ref"]["kind"] == "corridor_exemplar_score_pass_v1":
+                score_position = int(shard["score_selected_position"][source_row])
+                score_entropy = float(
+                    shard["score_selected_position_entropy"][source_row]
+                )
+                score_top_token_id = int(shard["score_top_token_id"][source_row])
+                assert source_position == score_position
+                assert np.isclose(source_score, score_entropy)
+                assert source_top_token_id == score_top_token_id
         for field in (
             "selected_example_id",
             "selected_position",
             "selected_score",
+            "source_shard_id",
+            "source_row",
+            "source_position",
+            "source_score",
+            "source_top_token_id",
+            "source_score_policy",
             "corridor_mode_id",
             "corridor_assignment_status",
         ):

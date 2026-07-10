@@ -35,8 +35,8 @@ EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA = "exemplar_delivery_parity_report_v1"
 LEADERBOARD_REPORT_FILENAME = "leaderboard_report.json"
 SELECTED_EXEMPLARS_FILENAME = "selected_exemplars.json"
 SELECTED_LINKAGE_MISMATCH = (
-    "selected exemplar linkage mismatch: selected_position/score does not match "
-    "score-pass shard row"
+    "selected exemplar linkage mismatch: selected record/payload does not match "
+    "source candidate coordinate"
 )
 
 ONE_PASS_PRUNED_CANDIDATE = "one_pass_pruned_candidate"
@@ -52,6 +52,10 @@ _REQUIRED_SELECTED_PAYLOAD_FIELDS = (
     "score_top_token_id",
     "source_shard_id",
     "source_row",
+    "source_position",
+    "source_score",
+    "source_top_token_id",
+    "source_score_policy",
     "selected_policy",
     "source_delivery_path",
     "top_token_ids",
@@ -135,7 +139,7 @@ def materialize_selected_exemplar_delivery(
         budget_fraction=config.selected_exemplar_fraction,
         created_at=created_at,
         canonical_score_fields_only=True,
-        use_score_pass_fields=True,
+        use_score_pass_fields=config.delivery_path == TWO_PASS_RERUN_SELECTED,
     )
     selected_records = _flatten_selected_records(
         manifest,
@@ -445,7 +449,7 @@ def _validate_selected_record_payload_linkage(
         except (OSError, ValueError, KeyError):
             blockers.append(SELECTED_LINKAGE_MISMATCH)
             return
-        if _score_shard_linkage_mismatch(
+        if _source_coordinate_linkage_mismatch(
             shard,
             row=source_row,
             record=record,
@@ -462,15 +466,23 @@ def _record_payload_tuple_mismatch(
     fields = (
         "selected_example_id",
         "selected_position",
+        "source_shard_id",
+        "source_row",
+        "source_position",
+        "source_top_token_id",
+        "source_score_policy",
         "corridor_mode_id",
         "corridor_assignment_status",
     )
     if any(record.get(field) != payload.get(field) for field in fields):
         return True
-    return not _close_float(record.get("selected_score"), payload.get("selected_score"))
+    return not (
+        _close_float(record.get("selected_score"), payload.get("selected_score"))
+        and _close_float(record.get("source_score"), payload.get("source_score"))
+    )
 
 
-def _score_shard_linkage_mismatch(
+def _source_coordinate_linkage_mismatch(
     shard: dict[str, np.ndarray],
     *,
     row: int,
@@ -479,31 +491,29 @@ def _score_shard_linkage_mismatch(
 ) -> bool:
     try:
         selected_position = int(record["selected_position"])
-        shard_position = int(np.asarray(shard["score_selected_position"])[row])
-        shard_score = float(np.asarray(shard["score_selected_position_entropy"])[row])
-        shard_top_token_id = int(np.asarray(shard["score_top_token_id"])[row])
+        source_position = int(record["source_position"])
+        source_score = float(record["source_score"])
+        source_top_token_id = int(record["source_top_token_id"])
     except (IndexError, KeyError, TypeError, ValueError):
         return True
-    if selected_position != shard_position:
+    if selected_position != source_position:
         return True
-    if not _close_float(record.get("selected_score"), shard_score):
+    if not _close_float(record.get("selected_score"), source_score):
         return True
-    if not _close_float(record.get("score_selected_position_entropy"), shard_score):
+    if not _close_float(payload.get("selected_score"), source_score):
         return True
-    if not _close_float(payload.get("selected_score"), shard_score):
+    if not _close_float(payload.get("source_score"), source_score):
         return True
-    if not _close_float(payload.get("teacher_entropy"), shard_score):
+    if not _close_float(payload.get("teacher_entropy"), source_score):
         return True
-    if not _close_float(payload.get("score_selected_position_entropy"), shard_score):
+    if int(payload.get("source_top_token_id", -1)) != source_top_token_id:
         return True
-    if int(record.get("score_top_token_id", -1)) != shard_top_token_id:
-        return True
-    if int(payload.get("score_top_token_id", -1)) != shard_top_token_id:
+    if not _path_b_score_pass_aliases_match(record, payload, shard, row=row):
         return True
     top_token_ids = payload.get("top_token_ids")
     if not isinstance(top_token_ids, list) or not top_token_ids:
         return True
-    if int(top_token_ids[0]) != shard_top_token_id:
+    if int(top_token_ids[0]) != source_top_token_id:
         return True
     entropy_key = (
         "corridor_entropy"
@@ -511,15 +521,44 @@ def _score_shard_linkage_mismatch(
         else "corridor_teacher_entropy"
     )
     try:
-        corridor_entropy = float(np.asarray(shard[entropy_key])[row, selected_position])
+        corridor_entropy = float(np.asarray(shard[entropy_key])[row, source_position])
         corridor_top_token_id = int(
-            np.asarray(shard["corridor_top_token_ids"])[row, selected_position]
+            np.asarray(shard["corridor_top_token_ids"])[row, source_position]
         )
     except (IndexError, KeyError, TypeError, ValueError):
         return True
     return not (
-        _close_float(corridor_entropy, shard_score)
-        and corridor_top_token_id == shard_top_token_id
+        _close_float(corridor_entropy, source_score)
+        and corridor_top_token_id == source_top_token_id
+    )
+
+
+def _path_b_score_pass_aliases_match(
+    record: dict[str, Any],
+    payload: dict[str, Any],
+    shard: dict[str, np.ndarray],
+    *,
+    row: int,
+) -> bool:
+    payload_ref = record.get("payload_ref", {})
+    if not isinstance(payload_ref, dict):
+        payload_ref = {}
+    if payload_ref.get("kind") != "corridor_exemplar_score_pass_v1":
+        return True
+    try:
+        shard_position = int(np.asarray(shard["score_selected_position"])[row])
+        shard_score = float(np.asarray(shard["score_selected_position_entropy"])[row])
+        shard_top_token_id = int(np.asarray(shard["score_top_token_id"])[row])
+    except (IndexError, KeyError, TypeError, ValueError):
+        return False
+    return (
+        int(record.get("source_position", -1)) == shard_position
+        and _close_float(record.get("source_score"), shard_score)
+        and int(record.get("source_top_token_id", -1)) == shard_top_token_id
+        and _close_float(record.get("score_selected_position_entropy"), shard_score)
+        and int(record.get("score_top_token_id", -1)) == shard_top_token_id
+        and _close_float(payload.get("score_selected_position_entropy"), shard_score)
+        and int(payload.get("score_top_token_id", -1)) == shard_top_token_id
     )
 
 
@@ -822,10 +861,7 @@ def _flatten_selected_records(
             selected_score = float(position_record["selected_score"])
             score_entropy = float(position_record["score_selected_position_entropy"])
             if not np.isclose(selected_score, score_entropy, rtol=1e-5, atol=1e-5):
-                raise ValueError(
-                    "selected exemplar linkage mismatch: selected_position/score "
-                    "does not match score-pass shard row"
-                )
+                raise ValueError(SELECTED_LINKAGE_MISMATCH)
             score_top_token_id = position_record.get("score_top_token_id")
             payload_ref = position_record.get("payload_ref", {})
             if not isinstance(payload_ref, dict):
@@ -839,20 +875,36 @@ def _flatten_selected_records(
             source_row = int(
                 position_record.get("source_row", payload_ref.get("source_row", -1))
             )
+            source_position = int(position_record.get("source_position", -1))
+            source_score = float(position_record.get("source_score", selected_score))
+            source_top_token_id = position_record.get("source_top_token_id")
+            if source_top_token_id is None:
+                source_top_token_id = score_top_token_id
+            source_score_policy = str(
+                position_record.get("source_score_policy", EXEMPLAR_SCORE_POLICY)
+            )
+            if source_position < 0:
+                source_position = int(position_record.get("selected_position", 0))
             records.append(
                 {
                     "rank": len(records) + 1,
                     "selected_example_id": str(example.get("example_id")),
-                    "selected_position": int(
-                        position_record.get("selected_position", 0)
-                    ),
-                    "selected_score": selected_score,
-                    "score_selected_position_entropy": score_entropy,
+                    "selected_position": source_position,
+                    "selected_score": source_score,
+                    "score_selected_position_entropy": source_score,
                     "score_top_token_id": (
                         None if score_top_token_id is None else int(score_top_token_id)
                     ),
                     "source_shard_id": source_shard_id,
                     "source_row": source_row,
+                    "source_position": source_position,
+                    "source_score": source_score,
+                    "source_top_token_id": (
+                        None
+                        if source_top_token_id is None
+                        else int(source_top_token_id)
+                    ),
+                    "source_score_policy": source_score_policy,
                     "selected_policy": EXEMPLAR_SCORE_POLICY,
                     "source_delivery_path": delivery_path,
                     "mode_key": assigned_board,
@@ -930,43 +982,53 @@ def _selected_payload_from_one_pass_shard(
     row: int,
     config: ExemplarDeliveryConfig,
 ) -> dict[str, Any]:
-    position = int(record["selected_position"])
+    position = int(record["source_position"])
+    payload_position = _one_pass_payload_position_index(
+        shard,
+        row=row,
+        source_position=position,
+        payload_ref=record.get("payload_ref", {}),
+    )
     top_selection_mask = _payload_slice(
         shard,
         "exemplar_source_top_selection_mask",
         row,
-        position,
+        payload_position,
     )
     effective_top_k = int(
-        _payload_scalar(shard, "exemplar_source_effective_top_k", row, position)
+        _payload_scalar(shard, "exemplar_source_effective_top_k", row, payload_position)
     )
     return {
         "selected_example_id": record["selected_example_id"],
         "selected_position": position,
-        "selected_score": record["selected_score"],
-        "score_selected_position_entropy": record["score_selected_position_entropy"],
-        "score_top_token_id": record["score_top_token_id"],
+        "selected_score": record["source_score"],
+        "score_selected_position_entropy": record["source_score"],
+        "score_top_token_id": record["source_top_token_id"],
         "source_shard_id": record["source_shard_id"],
         "source_row": record["source_row"],
+        "source_position": record["source_position"],
+        "source_score": record["source_score"],
+        "source_top_token_id": record["source_top_token_id"],
+        "source_score_policy": record["source_score_policy"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
         "top_token_ids": _payload_slice(
             shard,
             "exemplar_source_top_token_ids",
             row,
-            position,
+            payload_position,
         ),
         "top_log_probs": _payload_slice(
             shard,
             "exemplar_source_top_log_probs",
             row,
-            position,
+            payload_position,
         ),
         "top_probs": _payload_slice(
             shard,
             "exemplar_source_top_probs",
             row,
-            position,
+            payload_position,
         ),
         "top_selection_mask": top_selection_mask,
         "effective_top_k": effective_top_k,
@@ -974,19 +1036,19 @@ def _selected_payload_from_one_pass_shard(
             shard,
             "exemplar_source_top_mass",
             row,
-            position,
+            payload_position,
         ),
         "tail_mass": _payload_scalar(
             shard,
             "exemplar_source_tail_mass",
             row,
-            position,
+            payload_position,
         ),
         "bucket_masses": _payload_slice(
             shard,
             "exemplar_source_bucket_masses",
             row,
-            position,
+            payload_position,
         ),
         "teacher_entropy": _payload_scalar(
             shard,
@@ -1003,6 +1065,32 @@ def _selected_payload_from_one_pass_shard(
             source_payload="one_pass_candidate_shard",
         ),
     }
+
+
+def _one_pass_payload_position_index(
+    shard: dict[str, np.ndarray],
+    *,
+    row: int,
+    source_position: int,
+    payload_ref: object,
+) -> int:
+    positions = np.asarray(shard.get("exemplar_positions", ()))
+    candidate_rank = None
+    if isinstance(payload_ref, dict):
+        raw_rank = payload_ref.get("candidate_rank", payload_ref.get("position_index"))
+        if raw_rank is not None:
+            candidate_rank = int(raw_rank)
+    if positions.ndim == 2 and candidate_rank is not None:
+        if int(positions[row, candidate_rank]) != source_position:
+            raise ValueError(SELECTED_LINKAGE_MISMATCH)
+    source = np.asarray(shard["exemplar_source_top_token_ids"])
+    if source.ndim >= 3:
+        sequence_length = int(np.asarray(shard["corridor_teacher_entropy"]).shape[1])
+        if int(source.shape[1]) == sequence_length:
+            return source_position
+    if candidate_rank is None:
+        raise ValueError(SELECTED_LINKAGE_MISMATCH)
+    return candidate_rank
 
 
 def _selected_payloads_from_backend(
@@ -1126,20 +1214,27 @@ def _selected_payload_from_emission(
     row: int,
     config: ExemplarDeliveryConfig,
 ) -> dict[str, Any]:
-    position = int(record["selected_position"])
+    position = int(record["source_position"])
     top_selection_mask = _payload_slice(payload, "top_selection_mask", row, position)
     effective_top_k = int(_payload_scalar(payload, "effective_top_k", row, position))
+    top_token_ids = _payload_slice(payload, "top_token_ids", row, position)
+    if top_token_ids and int(top_token_ids[0]) != int(record["source_top_token_id"]):
+        raise ValueError(SELECTED_LINKAGE_MISMATCH)
     return {
         "selected_example_id": record["selected_example_id"],
         "selected_position": position,
-        "selected_score": record["selected_score"],
-        "score_selected_position_entropy": record["score_selected_position_entropy"],
-        "score_top_token_id": record["score_top_token_id"],
+        "selected_score": record["source_score"],
+        "score_selected_position_entropy": record["source_score"],
+        "score_top_token_id": record["source_top_token_id"],
         "source_shard_id": record["source_shard_id"],
         "source_row": record["source_row"],
+        "source_position": record["source_position"],
+        "source_score": record["source_score"],
+        "source_top_token_id": record["source_top_token_id"],
+        "source_score_policy": record["source_score_policy"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
-        "top_token_ids": _payload_slice(payload, "top_token_ids", row, position),
+        "top_token_ids": top_token_ids,
         "top_log_probs": _payload_slice(payload, "top_log_probs", row, position),
         "top_probs": _payload_slice(payload, "top_probs", row, position),
         "top_selection_mask": top_selection_mask,

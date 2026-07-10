@@ -191,6 +191,8 @@ def extract_one_pass_candidates(
                         "kind": "corridor_exemplar_v1",
                         "source_shard_id": source_shard_id,
                         "source_row": row,
+                        "source_position": int(selected_position),
+                        "candidate_rank": position_index,
                         "position_index": position_index,
                     },
                 )
@@ -244,6 +246,7 @@ def extract_score_pass_candidates(
                     "kind": "corridor_exemplar_score_pass_v1",
                     "source_shard_id": source_shard_id,
                     "source_row": row,
+                    "source_position": selected_position,
                 },
             )
         )
@@ -841,6 +844,12 @@ def _selected_position_manifest_record(
         ),
         "source_shard_id": candidate.source_shard_id,
         "source_row": candidate.source_row,
+        "source_position": candidate.selected_position,
+        "source_score": selected_score,
+        "source_top_token_id": (
+            None if source_top_token_id is None else int(source_top_token_id)
+        ),
+        "source_score_policy": "entropy_top_n_v1",
         "assigned_board": assigned_board,
         "winning_boards": position_record["winning_boards"],
         "suppressed_duplicate_boards": position_record["suppressed_duplicate_boards"],

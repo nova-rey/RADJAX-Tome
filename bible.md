@@ -837,3 +837,21 @@ can be validated like real teacher models: the same example produces the same
 teacher behavior regardless of selected-rerun batch placement. The deterministic
 production contract fixture was updated to emit the same linkage metadata and
 score-consistent selected payloads as production selected-only builds.
+
+## 2026-07-10 — Source-Coordinate Selected Exemplar Linkage
+
+Selected exemplar linkage validation now keys both Path A and Path B to the
+canonical source candidate coordinate instead of assuming every selected
+exemplar must equal `score_selected_position`. Selected records and payloads
+carry `source_shard_id`, `source_row`, `source_position`, `source_score`,
+`source_top_token_id`, and `source_score_policy`; `selected_position` and
+`selected_score` are aliases of that source coordinate for the retained
+candidate.
+
+Path A one-pass delivery now selects and materializes from one-pass candidate
+coordinates, including a guarded candidate-rank path for compact candidate
+layouts. Path B keeps the stricter score-pass alias check, where source
+position/score/top-token must also match `score_selected_position`,
+`score_selected_position_entropy`, and `score_top_token_id`. Validation now
+fails with a source-coordinate mismatch when records, payloads, or corridor
+arrays disagree.
