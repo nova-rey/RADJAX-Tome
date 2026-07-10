@@ -277,6 +277,10 @@ def extract_score_pass_candidates(
                     "source_shard_id": source_shard_id,
                     "source_row": row,
                     "source_position": selected_position,
+                    "source_score": float(
+                        np.asarray(arrays["score_selected_position_entropy"])[row]
+                    ),
+                    "source_top_token_id": int(selected_top_token_ids[row]),
                 },
             )
         )

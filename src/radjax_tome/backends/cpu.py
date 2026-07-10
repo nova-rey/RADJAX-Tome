@@ -727,7 +727,8 @@ def _corridor_exemplar_score_payload(
     )
     entropy = stat_source["teacher_entropy"].astype(np.float32)
     confidence = stat_source["top_probs"][..., 0].astype(np.float32)
-    top_ids = stat_source["top_token_ids"][..., 0].astype(np.int32)
+    # Path B score tokens must be drawn from the same source policy as reruns.
+    top_ids = source["top_token_ids"][..., 0].astype(np.int32)
     corridor_stats = _corridor_stat_arrays(stat_source)
     selected_position = np.argmax(entropy, axis=-1).astype(np.int32)
     selected_entropy = np.take_along_axis(

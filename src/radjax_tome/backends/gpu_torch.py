@@ -1445,6 +1445,12 @@ def _gpu_corridor_exemplar_score_reduce(
     vocab_chunk_size: int | None = None,
 ) -> dict[str, Any]:
     source_config = _second_pass_source_config(config)
+    source = _gpu_corridor_source_payload(
+        torch,
+        logits,
+        config=source_config,
+        vocab_chunk_size=vocab_chunk_size,
+    )
     stat_source = _gpu_corridor_stat_source_payload(
         torch,
         logits,
@@ -1452,7 +1458,8 @@ def _gpu_corridor_exemplar_score_reduce(
         vocab_chunk_size=vocab_chunk_size,
     )
     teacher_entropy = stat_source["teacher_entropy"]
-    corridor_top_token_ids = stat_source["top_token_ids"][..., 0]
+    # Path B score tokens must be drawn from the same source policy as reruns.
+    corridor_top_token_ids = source["top_token_ids"][..., 0]
     confidence = stat_source["top_probs"][..., 0]
     corridor_stats = _gpu_corridor_stat_tensors(torch, stat_source)
     score_selected_position = torch.argmax(teacher_entropy, dim=-1).to(torch.int32)

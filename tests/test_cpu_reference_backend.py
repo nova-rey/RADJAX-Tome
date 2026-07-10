@@ -518,6 +518,19 @@ def test_corridor_two_pass_score_payload_is_batch_scale() -> None:
     ):
         assert payload[field].shape == (2, 5)
 
+    rerun = create_backend(
+        _config(target_policy="dynamic_cascaded_soft_labels_v1")
+    ).emit_batch(_batch())
+    for row, position in enumerate(payload["score_selected_position"]):
+        assert (
+            payload["corridor_top_token_ids"][row, position]
+            == payload["score_top_token_id"][row]
+        )
+        assert (
+            rerun.payload["top_token_ids"][row, position, 0]
+            == payload["score_top_token_id"][row]
+        )
+
     one_pass = create_backend(_config(target_policy="corridor_exemplar_v1")).emit_batch(
         _batch()
     )

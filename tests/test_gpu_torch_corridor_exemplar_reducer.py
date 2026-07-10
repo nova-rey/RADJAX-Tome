@@ -379,6 +379,15 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
     )
     assert selected["corridor_teacher_entropy"].shape == (2, 3)
     assert selected["exemplar_positions"].shape == (2, 2)
+    for row, position in enumerate(payload["score_selected_position"]):
+        assert (
+            payload["corridor_top_token_ids"][row, position]
+            == payload["score_top_token_id"][row]
+        )
+        assert (
+            selected["exemplar_source_top_token_ids"][row, position, 0]
+            == payload["score_top_token_id"][row]
+        )
 
 
 def test_compact_payload_to_numpy_keeps_mixed_corridor_source_and_score_fields() -> (

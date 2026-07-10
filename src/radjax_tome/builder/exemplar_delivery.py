@@ -157,6 +157,8 @@ def materialize_selected_exemplar_delivery(
         manifest,
         delivery_path=config.delivery_path,
     )
+    if config.delivery_path == TWO_PASS_RERUN_SELECTED:
+        _validate_path_b_score_pass_records(selected_records, store=store)
     selected_example_count = len(
         {record["selected_example_id"] for record in selected_records}
     )
@@ -603,20 +605,223 @@ def _path_b_score_pass_aliases_match(
     if payload_ref.get("kind") != "corridor_exemplar_score_pass_v1":
         return True
     try:
+        shard_score = float(np.asarray(shard["score_selected_position_entropy"])[row])
+        shard_top_token_id = int(np.asarray(shard["score_top_token_id"])[row])
+    except (IndexError, KeyError, TypeError, ValueError):
+        return False
+    return (
+        _path_b_score_pass_record_matches(record, shard, row=row)
+        and _close_float(payload.get("score_selected_position_entropy"), shard_score)
+        and int(payload.get("score_top_token_id", -1)) == shard_top_token_id
+    )
+
+
+def _path_b_score_pass_record_matches(
+    record: dict[str, Any],
+    shard: dict[str, np.ndarray],
+    *,
+    row: int,
+) -> bool:
+    payload_ref = record.get("payload_ref", {})
+    if not isinstance(payload_ref, dict):
+        return False
+    try:
         shard_position = int(np.asarray(shard["score_selected_position"])[row])
         shard_score = float(np.asarray(shard["score_selected_position_entropy"])[row])
         shard_top_token_id = int(np.asarray(shard["score_top_token_id"])[row])
     except (IndexError, KeyError, TypeError, ValueError):
         return False
     return (
-        int(record.get("source_position", -1)) == shard_position
+        payload_ref.get("kind") == "corridor_exemplar_score_pass_v1"
+        and int(record.get("selected_position", -1)) == shard_position
+        and int(record.get("source_position", -1)) == shard_position
+        and _close_float(record.get("selected_score"), shard_score)
         and _close_float(record.get("source_score"), shard_score)
         and int(record.get("source_top_token_id", -1)) == shard_top_token_id
         and _close_float(record.get("score_selected_position_entropy"), shard_score)
         and int(record.get("score_top_token_id", -1)) == shard_top_token_id
-        and _close_float(payload.get("score_selected_position_entropy"), shard_score)
-        and int(payload.get("score_top_token_id", -1)) == shard_top_token_id
+        and _int_or_none(payload_ref.get("source_shard_id"))
+        == _int_or_none(record.get("source_shard_id"))
+        and _int_or_none(payload_ref.get("source_row"))
+        == _int_or_none(record.get("source_row"))
+        and _int_or_none(payload_ref.get("source_position")) == shard_position
+        and _close_float(payload_ref.get("source_score"), shard_score)
+        and _int_or_none(payload_ref.get("source_top_token_id")) == shard_top_token_id
     )
+
+
+def _validate_path_b_score_pass_records(
+    selected_records: list[dict[str, Any]],
+    *,
+    store: TeacherTargetStore,
+) -> None:
+    selected_record_order = [
+        str(record.get("selected_example_id", "")) for record in selected_records
+    ]
+    shard_cache: dict[int, dict[str, np.ndarray]] = {}
+    for record in selected_records:
+        try:
+            source_shard_id = int(record["source_shard_id"])
+            source_row = int(record["source_row"])
+            shard = shard_cache.setdefault(
+                source_shard_id,
+                store.read_shard(source_shard_id),
+            )
+        except (IndexError, KeyError, OSError, TypeError, ValueError) as exc:
+            raise _path_b_delivery_error(
+                record,
+                store=store,
+                failure_reason=(
+                    f"selected record cannot be resolved to a score-pass shard: {exc}"
+                ),
+                selected_record_order=selected_record_order,
+            ) from exc
+        if not _path_b_score_pass_record_matches(record, shard, row=source_row):
+            raise _path_b_delivery_error(
+                record,
+                store=store,
+                failure_reason=(
+                    "selected record does not match its score-pass shard tuple"
+                ),
+                selected_record_order=selected_record_order,
+            )
+
+
+def _path_b_rerun_payload_mismatch(
+    record: dict[str, Any],
+    payload: dict[str, Any],
+) -> list[str]:
+    mismatch_fields: list[str] = []
+    top_token_ids = payload.get("top_token_ids")
+    if not isinstance(top_token_ids, list) or not top_token_ids:
+        mismatch_fields.append("top_token_ids")
+    elif int(top_token_ids[0]) != int(record["source_top_token_id"]):
+        mismatch_fields.append("top_token_ids[0]")
+    if not _close_float(payload.get("teacher_entropy"), record.get("source_score")):
+        mismatch_fields.append("teacher_entropy")
+    if _record_payload_tuple_mismatch(record, payload):
+        mismatch_fields.append("record_payload_tuple")
+    return mismatch_fields
+
+
+def _path_b_delivery_error(
+    record: dict[str, Any],
+    *,
+    store: TeacherTargetStore,
+    failure_reason: str,
+    selected_record_order: list[str],
+    rerun_input_order: list[str] | None = None,
+    rerun_row_index: int | None = None,
+    rerun_payload: dict[str, Any] | None = None,
+    mismatch_fields: list[str] | None = None,
+) -> SelectedExemplarDeliveryError:
+    source_shard_id = _int_or_none(record.get("source_shard_id"))
+    source_row = _int_or_none(record.get("source_row"))
+    source_position = _int_or_none(record.get("source_position"))
+    shard: dict[str, np.ndarray] | None = None
+    if source_shard_id is not None:
+        try:
+            shard = store.read_shard(source_shard_id)
+        except (OSError, ValueError, KeyError):
+            shard = None
+    score_fields = _path_b_shard_diagnostic_fields(
+        shard,
+        row=source_row,
+        position=source_position,
+    )
+    record_matches_score_pass = (
+        shard is not None
+        and source_row is not None
+        and _path_b_score_pass_record_matches(record, shard, row=source_row)
+    )
+    diagnostic = {
+        "failure_stage": "selected_exemplar_delivery",
+        "delivery_path": TWO_PASS_RERUN_SELECTED,
+        "failure_reason": failure_reason,
+        "selected_example_id": record.get("selected_example_id"),
+        "rank": record.get("rank"),
+        "source_shard_id": source_shard_id,
+        "source_row": source_row,
+        "source_position": source_position,
+        "source_score": record.get("source_score"),
+        "source_top_token_id": record.get("source_top_token_id"),
+        "payload_ref": record.get("payload_ref"),
+        "selected_record": record,
+        "record_matches_score_pass_tuple": record_matches_score_pass,
+        "selected_record_order": selected_record_order,
+        "rerun_input_order": rerun_input_order,
+        "rerun_row_index": rerun_row_index,
+        "rerun_payload_top_token_id": _first_payload_token_id(rerun_payload or {}),
+        "rerun_payload_teacher_entropy": (
+            None if rerun_payload is None else rerun_payload.get("teacher_entropy")
+        ),
+        "mismatch_fields": mismatch_fields or [],
+        **score_fields,
+    }
+    return SelectedExemplarDeliveryError(diagnostic)
+
+
+def _path_b_shard_diagnostic_fields(
+    shard: dict[str, np.ndarray] | None,
+    *,
+    row: int | None,
+    position: int | None,
+) -> dict[str, Any]:
+    if shard is None or row is None or position is None:
+        return {
+            "score_selected_position": None,
+            "score_selected_position_entropy": None,
+            "score_top_token_id": None,
+            "corridor_entropy_at_source_position": None,
+            "corridor_top_token_id_at_source_position": None,
+        }
+    return {
+        "score_selected_position": _array_scalar_or_none(
+            shard,
+            "score_selected_position",
+            row,
+        ),
+        "score_selected_position_entropy": _array_scalar_or_none(
+            shard,
+            "score_selected_position_entropy",
+            row,
+        ),
+        "score_top_token_id": _array_scalar_or_none(
+            shard,
+            "score_top_token_id",
+            row,
+        ),
+        "corridor_entropy_at_source_position": _array_scalar_or_none(
+            shard,
+            "corridor_entropy",
+            row,
+            position,
+        ),
+        "corridor_top_token_id_at_source_position": _array_scalar_or_none(
+            shard,
+            "corridor_top_token_ids",
+            row,
+            position,
+        ),
+    }
+
+
+def _array_scalar_or_none(
+    shard: dict[str, np.ndarray],
+    key: str,
+    row: int,
+    position: int | None = None,
+) -> int | float | None:
+    try:
+        value = np.asarray(shard[key])[row]
+        if position is not None:
+            value = value[position]
+        scalar = value.item()
+    except (IndexError, KeyError, TypeError, ValueError):
+        return None
+    if isinstance(scalar, (int, np.integer)):
+        return int(scalar)
+    return float(scalar)
 
 
 def _close_float(left: Any, right: Any, *, atol: float = 1e-4) -> bool:
@@ -994,6 +1199,7 @@ def _selected_payloads(
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
         return _selected_payloads_from_backend(
             selected_records,
+            store=store,
             examples=examples,
             config=config,
         )
@@ -1431,6 +1637,7 @@ def _one_pass_payload_ref_mismatch(
 def _selected_payloads_from_backend(
     selected_records: list[dict[str, Any]],
     *,
+    store: TeacherTargetStore,
     examples: tuple[TinyTextExample, ...],
     config: ExemplarDeliveryConfig,
 ) -> list[dict[str, Any]]:
@@ -1452,6 +1659,9 @@ def _selected_payloads_from_backend(
     selected_examples = tuple(
         examples_by_id[example_id] for example_id in selected_example_ids
     )
+    selected_record_order = [
+        str(record["selected_example_id"]) for record in selected_records
+    ]
     batch_size = max(1, config.selected_rerun_batch_size)
     backend_config = replace(
         config.backend_config,
@@ -1477,12 +1687,44 @@ def _selected_payloads_from_backend(
                 example_id = str(record["selected_example_id"])
                 if example_id not in row_by_example_id:
                     continue
-                payloads_by_record[record_index] = _selected_payload_from_emission(
+                rerun_row = row_by_example_id[example_id]
+                try:
+                    selected_payload = _selected_payload_from_emission(
+                        record,
+                        payload=result.payload,
+                        row=rerun_row,
+                        config=config,
+                    )
+                except (IndexError, KeyError, TypeError, ValueError) as exc:
+                    raise _path_b_delivery_error(
+                        record,
+                        store=store,
+                        failure_reason=(
+                            f"selected rerun payload could not be materialized: {exc}"
+                        ),
+                        selected_record_order=selected_record_order,
+                        rerun_input_order=[example.example_id for example in chunk],
+                        rerun_row_index=rerun_row,
+                    ) from exc
+                mismatch_fields = _path_b_rerun_payload_mismatch(
                     record,
-                    payload=result.payload,
-                    row=row_by_example_id[example_id],
-                    config=config,
+                    selected_payload,
                 )
+                if mismatch_fields:
+                    raise _path_b_delivery_error(
+                        record,
+                        store=store,
+                        failure_reason=(
+                            "selected rerun payload does not match score-pass "
+                            "source tuple"
+                        ),
+                        selected_record_order=selected_record_order,
+                        rerun_input_order=[example.example_id for example in chunk],
+                        rerun_row_index=rerun_row,
+                        rerun_payload=selected_payload,
+                        mismatch_fields=mismatch_fields,
+                    )
+                payloads_by_record[record_index] = selected_payload
             _notify_delivery_progress(
                 config,
                 phase="selected_rerun",
@@ -1553,8 +1795,6 @@ def _selected_payload_from_emission(
     top_selection_mask = _payload_slice(payload, "top_selection_mask", row, position)
     effective_top_k = int(_payload_scalar(payload, "effective_top_k", row, position))
     top_token_ids = _payload_slice(payload, "top_token_ids", row, position)
-    if top_token_ids and int(top_token_ids[0]) != int(record["source_top_token_id"]):
-        raise ValueError(SELECTED_LINKAGE_MISMATCH)
     return {
         "selected_example_id": record["selected_example_id"],
         "selected_position": position,

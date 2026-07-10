@@ -211,6 +211,15 @@ def test_selector_extracts_path_b_score_pass_candidates(tmp_path: Path) -> None:
     assert len(candidates) == 2
     assert candidates[0].capture_mode == "two_pass_sparse_exemplar"
     assert candidates[0].payload_ref["kind"] == "corridor_exemplar_score_pass_v1"
+    assert candidates[0].payload_ref["source_position"] == int(
+        shard["score_selected_position"][0]
+    )
+    assert candidates[0].payload_ref["source_score"] == pytest.approx(
+        float(shard["score_selected_position_entropy"][0])
+    )
+    assert candidates[0].payload_ref["source_top_token_id"] == int(
+        shard["score_top_token_id"][0]
+    )
     assert "selected_position_entropy" in candidates[0].score_fields
     assert "confidence" in candidates[0].score_fields
 

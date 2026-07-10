@@ -707,6 +707,58 @@ def test_path_b_selected_rerun_invokes_backend_only_for_selected_examples(
     assert backend_configs[0].target_policy == "dynamic_cascaded_soft_labels_v1"
 
 
+def test_path_b_rerun_mismatch_reports_score_pass_coordinate_diagnostic(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    class DivergentBackend:
+        def __init__(self, config):
+            self.config = config
+
+        def emit_batch(self, batch):
+            return SimpleNamespace(payload=_marker_dynamic_payload(batch, self.config))
+
+        def close(self) -> None:
+            return None
+
+    monkeypatch.setattr(
+        exemplar_delivery,
+        "create_backend",
+        lambda backend_config: DivergentBackend(backend_config),
+    )
+    config = _config(
+        tmp_path,
+        output_name="path_b_rerun_diagnostic",
+        delivery_path="two_pass_rerun_selected",
+    )
+
+    report = build_production_gpu_tome(config)
+
+    diagnostic = report["selected_delivery_failure"]
+    assert report["status"] == "fail"
+    assert report["selected_delivery_status"] == "fail"
+    assert report["failure_stage"] == "selected_exemplar_delivery"
+    assert diagnostic["delivery_path"] == "two_pass_rerun_selected"
+    assert diagnostic["record_matches_score_pass_tuple"] is True
+    assert diagnostic["selected_example_id"]
+    assert diagnostic["source_shard_id"] is not None
+    assert diagnostic["source_row"] is not None
+    assert diagnostic["source_position"] is not None
+    assert diagnostic["source_score"] is not None
+    assert diagnostic["source_top_token_id"] is not None
+    assert diagnostic["score_selected_position"] is not None
+    assert diagnostic["score_selected_position_entropy"] is not None
+    assert diagnostic["score_top_token_id"] is not None
+    assert diagnostic["corridor_entropy_at_source_position"] is not None
+    assert diagnostic["corridor_top_token_id_at_source_position"] is not None
+    assert diagnostic["payload_ref"]["kind"] == "corridor_exemplar_score_pass_v1"
+    assert diagnostic["selected_record_order"]
+    assert diagnostic["rerun_input_order"]
+    assert diagnostic["rerun_row_index"] in range(len(diagnostic["rerun_input_order"]))
+    assert "top_token_ids[0]" in diagnostic["mismatch_fields"]
+    assert not (config.output_dir / "delivery_report.json").exists()
+
+
 def test_selected_payload_values_come_from_backend_emission(
     tmp_path: Path,
     monkeypatch,

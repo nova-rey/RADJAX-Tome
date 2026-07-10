@@ -903,3 +903,19 @@ Path A validation checks the emitted payload token against the payload-source
 array before pruning and no longer requires it to equal `corridor_top_token_ids`.
 Path B remains stricter: its score-pass token, corridor token, and rerun payload
 token must still agree.
+
+## 2026-07-10 — Path B Score-Pass Tuple and Rerun Diagnostics
+
+Path B score-pass candidates now retain the complete authoritative source tuple
+in `corridor_exemplar_score_pass_v1` payload references: shard, row, position,
+selected-position entropy, and top token. The score-pass reducer uses the same
+second-pass source policy for its corridor and score token IDs as the selected
+rerun uses for its compressed payload, while compact corridor statistics remain
+separate.
+
+Before any selected rerun starts, delivery verifies every selected record against
+its score-pass shard. After emission, it verifies the rerun payload token and
+entropy against that source tuple. A failure report now includes the selected
+record, score-pass shard values, corridor values, selected-record order, rerun
+input order, rerun row, and mismatched rerun values, so pre-rerun record drift is
+distinguished from actual backend-emission drift.
