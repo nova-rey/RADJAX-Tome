@@ -310,6 +310,58 @@ def test_path_a_materializes_payloads_from_capture_without_backend_rerun(
     assert len(selected_payload["bucket_masses"]) == config.num_buckets
 
 
+def test_path_a_one_pass_payload_uses_candidate_payload_ref_slot() -> None:
+    shard = _compact_one_pass_shard_for_slot_test()
+    record = _path_a_slot_record(candidate_rank=1)
+    config = SimpleNamespace(
+        sequence_length=5,
+        vocab_size=512,
+        num_buckets=3,
+        top_k=2,
+        score_policy="entropy_top_n_v1",
+        backend_config=None,
+    )
+
+    payload = exemplar_delivery._selected_payload_from_one_pass_shard(
+        record,
+        shard=shard,
+        row=0,
+        config=config,
+    )
+
+    assert payload["top_token_ids"][0] == 222
+    assert payload["selected_position"] == 2
+    assert payload["selected_score"] == 7.0
+    assert payload["teacher_entropy"] == 7.0
+    assert payload["payload_ref"] == record["payload_ref"]
+
+
+def test_path_a_one_pass_payload_searches_candidate_slot_when_ref_rank_is_stale() -> (
+    None
+):
+    shard = _compact_one_pass_shard_for_slot_test()
+    record = _path_a_slot_record(candidate_rank=0)
+    config = SimpleNamespace(
+        sequence_length=5,
+        vocab_size=512,
+        num_buckets=3,
+        top_k=2,
+        score_policy="entropy_top_n_v1",
+        backend_config=None,
+    )
+
+    payload = exemplar_delivery._selected_payload_from_one_pass_shard(
+        record,
+        shard=shard,
+        row=0,
+        config=config,
+    )
+
+    assert payload["top_token_ids"][0] == 222
+    assert np.allclose(payload["top_probs"], [0.7, 0.2])
+    assert payload["payload_ref"] == record["payload_ref"]
+
+
 def test_path_a_path_b_delivery_parity_matches_selection_and_scores(
     tmp_path: Path,
 ) -> None:
@@ -560,6 +612,89 @@ def test_validation_fails_when_non_selected_payload_retention_is_claimed(
     assert "non_selected_exemplar_payload_retained=true" in validation.blockers
 
 
+def test_path_a_validation_fails_when_compact_payload_ref_is_missing(
+    tmp_path: Path,
+) -> None:
+    config = _config(
+        tmp_path,
+        output_name="path_a_missing_payload_ref",
+        delivery_path="one_pass_pruned_candidate",
+    )
+    assert build_production_gpu_tome(config)["status"] == "pass"
+    selected_path = config.output_dir / "leaderboards" / "selected_exemplars.json"
+    selected = _json(selected_path)
+    selected["selected_exemplars"][0]["payload_ref"] = None
+    write_json(selected_path, selected)
+
+    validation = validate_teacher_textbook(config.output_dir)
+
+    assert validation.status == "fail"
+    assert (
+        "selected exemplar linkage mismatch: selected record/payload does not match "
+        "source candidate coordinate"
+    ) in validation.blockers
+
+
+def _compact_one_pass_shard_for_slot_test() -> dict[str, np.ndarray]:
+    return {
+        "exemplar_positions": np.asarray([[4, 2]], dtype=np.int32),
+        "exemplar_source_top_token_ids": np.asarray(
+            [[[111, 11], [222, 22]]],
+            dtype=np.int32,
+        ),
+        "exemplar_source_top_log_probs": np.asarray(
+            [[[-0.4, -1.4], [-0.2, -1.2]]],
+            dtype=np.float32,
+        ),
+        "exemplar_source_top_probs": np.asarray(
+            [[[0.6, 0.3], [0.7, 0.2]]],
+            dtype=np.float32,
+        ),
+        "exemplar_source_top_selection_mask": np.asarray(
+            [[[True, True], [True, True]]],
+            dtype=bool,
+        ),
+        "exemplar_source_effective_top_k": np.asarray([[2, 2]], dtype=np.int32),
+        "exemplar_source_top_mass": np.asarray([[0.9, 0.9]], dtype=np.float32),
+        "exemplar_source_tail_mass": np.asarray([[0.1, 0.1]], dtype=np.float32),
+        "exemplar_source_bucket_masses": np.asarray(
+            [[[0.03, 0.03, 0.04], [0.01, 0.04, 0.05]]],
+            dtype=np.float32,
+        ),
+        "corridor_teacher_entropy": np.asarray(
+            [[1.0, 2.0, 7.0, 3.0, 4.0]],
+            dtype=np.float32,
+        ),
+    }
+
+
+def _path_a_slot_record(*, candidate_rank: int) -> dict[str, object]:
+    payload_ref = {
+        "kind": "one_pass_candidate_v1",
+        "source_shard_id": 3,
+        "source_row": 0,
+        "source_position": 2,
+        "candidate_rank": candidate_rank,
+        "position_index": candidate_rank,
+        "source_top_token_id": 222,
+        "source_score": 7.0,
+    }
+    return {
+        "selected_example_id": "example-slot-b",
+        "selected_position": 2,
+        "selected_score": 7.0,
+        "source_shard_id": 3,
+        "source_row": 0,
+        "source_position": 2,
+        "source_score": 7.0,
+        "source_top_token_id": 222,
+        "source_score_policy": "entropy_top_n_v1",
+        "payload_ref": payload_ref,
+        "selected_policy": "entropy_top_n_v1",
+        "source_delivery_path": "one_pass_pruned_candidate",
+    }
+
+
 def _marker_dynamic_payload(batch, config) -> dict[str, np.ndarray]:
     batch_size = len(batch.example_ids)
     sequence_length = config.sequence_length
@@ -665,6 +800,9 @@ def _assert_selected_source_coordinate_invariants(output_dir: Path) -> None:
         output_dir / "selected_exemplars" / "selected-exemplars-00000.json"
     )["selected_exemplars"]
     for record, payload in zip(selected, payloads, strict=True):
+        assert isinstance(record["payload_ref"], dict)
+        assert record["payload_ref"]
+        assert payload["payload_ref"] == record["payload_ref"]
         source_shard_id = int(record["source_shard_id"])
         source_row = int(record["source_row"])
         source_position = int(record["source_position"])
@@ -707,6 +845,7 @@ def _assert_selected_source_coordinate_invariants(output_dir: Path) -> None:
             "source_score",
             "source_top_token_id",
             "source_score_policy",
+            "payload_ref",
             "corridor_mode_id",
             "corridor_assignment_status",
         ):

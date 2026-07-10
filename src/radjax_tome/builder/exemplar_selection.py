@@ -188,12 +188,20 @@ def extract_one_pass_candidates(
                     source_policy=str(int(source_policy_ids[row, selected_position])),
                     score_fields=score_fields,
                     payload_ref={
-                        "kind": "corridor_exemplar_v1",
+                        "kind": "one_pass_candidate_v1",
                         "source_shard_id": source_shard_id,
                         "source_row": row,
                         "source_position": int(selected_position),
                         "candidate_rank": position_index,
                         "position_index": position_index,
+                        "source_top_token_id": int(
+                            corridor_top_token_ids[row, selected_position]
+                        ),
+                        "source_score": float(
+                            entropy[row, selected_position]
+                            if selected_position < sequence_length
+                            else scores[row, position_index]
+                        ),
                     },
                 )
             )

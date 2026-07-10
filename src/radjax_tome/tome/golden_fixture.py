@@ -241,6 +241,14 @@ def _selected_exemplars() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             "source_score_policy": "entropy_top_n_v1",
             "selected_policy": "entropy_top_n_v1",
             "source_delivery_path": "two_pass_rerun_selected",
+            "payload_ref": {
+                "kind": "corridor_exemplar_score_pass_v1",
+                "source_shard_id": 0,
+                "source_row": example_index,
+                "source_position": position,
+                "source_top_token_id": score_top_token_id,
+                "source_score": selected_score,
+            },
         }
         payload = {
             **record,

@@ -56,6 +56,7 @@ _REQUIRED_SELECTED_PAYLOAD_FIELDS = (
     "source_score",
     "source_top_token_id",
     "source_score_policy",
+    "payload_ref",
     "selected_policy",
     "source_delivery_path",
     "top_token_ids",
@@ -463,6 +464,13 @@ def _record_payload_tuple_mismatch(
     record: dict[str, Any],
     payload: dict[str, Any],
 ) -> bool:
+    if record.get("source_delivery_path") == ONE_PASS_PRUNED_CANDIDATE and (
+        not isinstance(record.get("payload_ref"), dict)
+        or not record.get("payload_ref")
+        or not isinstance(payload.get("payload_ref"), dict)
+        or not payload.get("payload_ref")
+    ):
+        return True
     fields = (
         "selected_example_id",
         "selected_position",
@@ -471,6 +479,7 @@ def _record_payload_tuple_mismatch(
         "source_position",
         "source_top_token_id",
         "source_score_policy",
+        "payload_ref",
         "corridor_mode_id",
         "corridor_assignment_status",
     )
@@ -866,6 +875,8 @@ def _flatten_selected_records(
             payload_ref = position_record.get("payload_ref", {})
             if not isinstance(payload_ref, dict):
                 payload_ref = {}
+            if delivery_path == ONE_PASS_PRUNED_CANDIDATE and not payload_ref:
+                raise ValueError(SELECTED_LINKAGE_MISMATCH)
             source_shard_id = int(
                 position_record.get(
                     "source_shard_id",
@@ -987,6 +998,7 @@ def _selected_payload_from_one_pass_shard(
         shard,
         row=row,
         source_position=position,
+        source_top_token_id=int(record["source_top_token_id"]),
         payload_ref=record.get("payload_ref", {}),
     )
     top_selection_mask = _payload_slice(
@@ -998,7 +1010,7 @@ def _selected_payload_from_one_pass_shard(
     effective_top_k = int(
         _payload_scalar(shard, "exemplar_source_effective_top_k", row, payload_position)
     )
-    return {
+    payload = {
         "selected_example_id": record["selected_example_id"],
         "selected_position": position,
         "selected_score": record["source_score"],
@@ -1010,6 +1022,7 @@ def _selected_payload_from_one_pass_shard(
         "source_score": record["source_score"],
         "source_top_token_id": record["source_top_token_id"],
         "source_score_policy": record["source_score_policy"],
+        "payload_ref": record["payload_ref"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
         "top_token_ids": _payload_slice(
@@ -1065,6 +1078,9 @@ def _selected_payload_from_one_pass_shard(
             source_payload="one_pass_candidate_shard",
         ),
     }
+    if _path_a_selected_payload_mismatch(payload, record):
+        raise ValueError(SELECTED_LINKAGE_MISMATCH)
+    return payload
 
 
 def _one_pass_payload_position_index(
@@ -1072,25 +1088,103 @@ def _one_pass_payload_position_index(
     *,
     row: int,
     source_position: int,
+    source_top_token_id: int,
     payload_ref: object,
 ) -> int:
     positions = np.asarray(shard.get("exemplar_positions", ()))
+    source = np.asarray(shard["exemplar_source_top_token_ids"])
     candidate_rank = None
     if isinstance(payload_ref, dict):
         raw_rank = payload_ref.get("candidate_rank", payload_ref.get("position_index"))
         if raw_rank is not None:
             candidate_rank = int(raw_rank)
-    if positions.ndim == 2 and candidate_rank is not None:
-        if int(positions[row, candidate_rank]) != source_position:
-            raise ValueError(SELECTED_LINKAGE_MISMATCH)
-    source = np.asarray(shard["exemplar_source_top_token_ids"])
+    if candidate_rank is not None and _candidate_payload_slot_matches(
+        source,
+        positions=positions,
+        row=row,
+        candidate_rank=candidate_rank,
+        source_position=source_position,
+        source_top_token_id=source_top_token_id,
+    ):
+        return candidate_rank
     if source.ndim >= 3:
         sequence_length = int(np.asarray(shard["corridor_teacher_entropy"]).shape[1])
-        if int(source.shape[1]) == sequence_length:
+        if (
+            int(source.shape[1]) == sequence_length
+            and 0 <= source_position < int(source.shape[1])
+            and int(source[row, source_position, 0]) == source_top_token_id
+        ):
             return source_position
-    if candidate_rank is None:
+    rank = _find_matching_candidate_rank(
+        source,
+        positions=positions,
+        row=row,
+        source_position=source_position,
+        source_top_token_id=source_top_token_id,
+    )
+    if rank is None:
         raise ValueError(SELECTED_LINKAGE_MISMATCH)
-    return candidate_rank
+    return rank
+
+
+def _candidate_payload_slot_matches(
+    source_top_token_ids: np.ndarray,
+    *,
+    positions: np.ndarray,
+    row: int,
+    candidate_rank: int,
+    source_position: int,
+    source_top_token_id: int,
+) -> bool:
+    try:
+        if (
+            positions.ndim == 2
+            and int(positions[row, candidate_rank]) != source_position
+        ):
+            return False
+        return int(source_top_token_ids[row, candidate_rank, 0]) == source_top_token_id
+    except (IndexError, TypeError, ValueError):
+        return False
+
+
+def _find_matching_candidate_rank(
+    source_top_token_ids: np.ndarray,
+    *,
+    positions: np.ndarray,
+    row: int,
+    source_position: int,
+    source_top_token_id: int,
+) -> int | None:
+    if positions.ndim != 2:
+        return None
+    for candidate_rank, candidate_position in enumerate(positions[row].tolist()):
+        if int(candidate_position) != source_position:
+            continue
+        if _candidate_payload_slot_matches(
+            source_top_token_ids,
+            positions=positions,
+            row=row,
+            candidate_rank=candidate_rank,
+            source_position=source_position,
+            source_top_token_id=source_top_token_id,
+        ):
+            return candidate_rank
+    return None
+
+
+def _path_a_selected_payload_mismatch(
+    payload: dict[str, Any],
+    record: dict[str, Any],
+) -> bool:
+    top_token_ids = payload.get("top_token_ids")
+    return (
+        not isinstance(top_token_ids, list)
+        or not top_token_ids
+        or int(top_token_ids[0]) != int(record["source_top_token_id"])
+        or not _close_float(payload.get("teacher_entropy"), record["source_score"])
+        or int(payload.get("selected_position", -1)) != int(record["source_position"])
+        or not _close_float(payload.get("selected_score"), record["source_score"])
+    )
 
 
 def _selected_payloads_from_backend(
@@ -1232,6 +1326,7 @@ def _selected_payload_from_emission(
         "source_score": record["source_score"],
         "source_top_token_id": record["source_top_token_id"],
         "source_score_policy": record["source_score_policy"],
+        "payload_ref": record["payload_ref"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
         "top_token_ids": top_token_ids,

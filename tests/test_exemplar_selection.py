@@ -128,7 +128,11 @@ def test_selector_extracts_path_a_corridor_candidates(tmp_path: Path) -> None:
 
     assert candidates
     assert candidates[0].capture_mode == "one_pass_candidate"
-    assert candidates[0].payload_ref["kind"] == "corridor_exemplar_v1"
+    assert candidates[0].payload_ref["kind"] == "one_pass_candidate_v1"
+    assert candidates[0].payload_ref["candidate_rank"] == 0
+    assert (
+        candidates[0].payload_ref["source_position"] == candidates[0].selected_position
+    )
     assert "max_entropy" in candidates[0].score_fields
     assert "tail_mass" in candidates[0].score_fields
     assert "effective_top_k" in candidates[0].score_fields

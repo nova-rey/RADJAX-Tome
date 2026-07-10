@@ -855,3 +855,20 @@ position/score/top-token must also match `score_selected_position`,
 `score_selected_position_entropy`, and `score_top_token_id`. Validation now
 fails with a source-coordinate mismatch when records, payloads, or corridor
 arrays disagree.
+
+## 2026-07-10 — Path A Payload-Ref Candidate Slot Preservation
+
+Path A one-pass selected-only delivery now preserves a non-null
+`one_pass_candidate_v1` payload reference from candidate extraction through
+leaderboard records and selected payload materialization. The reference records
+the source shard, source row, source position, candidate rank, source top token,
+and source score so compact candidate payload arrays are sliced from the
+selected candidate slot rather than from leaderboard order or row-local rank
+accidentally.
+
+Selected payload materialization now verifies compact candidate slots by both
+source position and source top-token id, searches candidate ranks if a stored
+rank is stale, and raises the selected linkage mismatch when no slot matches.
+Path A validation also fails when compact selected records or payloads lose
+their payload reference, closing the real 1K mismatch where the record tuple was
+correct but `top_token_ids[0]` came from the wrong one-pass candidate slot.
