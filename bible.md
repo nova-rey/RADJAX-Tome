@@ -919,3 +919,23 @@ entropy against that source tuple. A failure report now includes the selected
 record, score-pass shard values, corridor values, selected-record order, rerun
 input order, rerun row, and mismatched rerun values, so pre-rerun record drift is
 distinguished from actual backend-emission drift.
+
+## 2026-07-10 — Adversarial Selected-Linkage Audit
+
+Selected exemplar artifacts now have a reusable strict linkage auditor and the
+`audit-selected-linkage` CLI. The audit treats each selected record as a source
+passport, verifies record and payload order across every selected payload shard,
+checks explicit source shard and row coordinates, applies Path A payload-source
+authority and Path B score-pass authority independently, and confirms every
+selected coordinate links to its packed stat-band corridor mode assignment.
+Errors retain the complete record, payload, source values, and mismatch fields
+instead of collapsing linkage failures into a boolean.
+
+The adversarial suite uses uneven source shards, misleading example IDs,
+candidate ranks that differ from token positions, duplicate scores and selected
+records, rerun input reordering and deduplication, split payload shards, and
+single-field mutations across the complete passport. Deterministic integration
+builds audit both delivery paths. Delivery parity now treats exact selected
+identity as an explicit controlled-fixture requirement while always enforcing
+artifact shape, mode-table, assignment-linkage, payload-shape, and retention
+compatibility.

@@ -837,25 +837,33 @@ def compare_exemplar_delivery_artifacts(
     *,
     output: Path | None = None,
     atol: float = 1e-6,
+    require_selection_match: bool = False,
 ) -> dict[str, Any]:
     left = _artifact_selection(path_a)
     right = _artifact_selection(path_b)
     blockers: list[str] = []
     warnings: list[str] = []
+    selection_differences: list[str] = []
     if left["ids"] != right["ids"]:
-        blockers.append("selected example IDs differ")
+        selection_differences.append("selected example IDs differ")
     if left["positions"] != right["positions"]:
-        blockers.append("selected positions differ")
+        selection_differences.append("selected positions differ")
     if left["ranks"] != right["ranks"]:
-        blockers.append("selected score ranks differ")
+        selection_differences.append("selected score ranks differ")
     for index, (left_score, right_score) in enumerate(
         zip(left["scores"], right["scores"], strict=False)
     ):
         if abs(left_score - right_score) > atol:
-            blockers.append(f"selected score differs at rank {index + 1}")
+            selection_differences.append(f"selected score differs at rank {index + 1}")
             break
     if left["mode_keys"] != right["mode_keys"]:
-        blockers.append("selected mode keys differ")
+        selection_differences.append("selected mode keys differ")
+    if require_selection_match:
+        blockers.extend(selection_differences)
+    elif selection_differences:
+        warnings.append(
+            "selected identities differ; structural parity checks remain authoritative"
+        )
     if not all(status == "linked" for status in left["assignment_statuses"]):
         blockers.append("Path A selected corridor assignments are not linked")
     if not all(status == "linked" for status in right["assignment_statuses"]):
@@ -900,6 +908,8 @@ def compare_exemplar_delivery_artifacts(
         "warnings": warnings,
         "path_a": str(path_a),
         "path_b": str(path_b),
+        "selection_match_required": require_selection_match,
+        "selection_differences": selection_differences,
         "selected_example_ids_match": left["ids"] == right["ids"],
         "selected_positions_match": left["positions"] == right["positions"],
         "selected_score_ranks_match": left["ranks"] == right["ranks"],

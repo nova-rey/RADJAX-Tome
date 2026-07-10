@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import json
 import platform
 import sys
 from pathlib import Path
@@ -15,6 +16,7 @@ Recommended commands:
   inspect
   plan
   exemplar-delivery-parity
+  audit-selected-linkage
   corpus
   pack
   unpack
@@ -428,7 +430,25 @@ def _build_parser() -> argparse.ArgumentParser:
     exemplar_delivery_parity.add_argument("--path-a", type=Path, required=True)
     exemplar_delivery_parity.add_argument("--path-b", type=Path, required=True)
     exemplar_delivery_parity.add_argument("--output", type=Path, required=True)
+    exemplar_delivery_parity.add_argument(
+        "--require-selection-match",
+        action="store_true",
+        help="Require identical selected IDs, positions, ranks, scores, and modes.",
+    )
     exemplar_delivery_parity.set_defaults(func=_cmd_exemplar_delivery_parity)
+
+    selected_linkage_audit = subparsers.add_parser(
+        "audit-selected-linkage",
+        help="Audit selected exemplar source-coordinate passports.",
+        description=(
+            "Validate selected records and payload shards against source shards, "
+            "delivery-path authority, and packed corridor mode assignments."
+        ),
+    )
+    selected_linkage_audit.add_argument("--artifact", type=Path, required=True)
+    selected_linkage_audit.add_argument("--strict", action="store_true")
+    selected_linkage_audit.add_argument("--output", type=Path)
+    selected_linkage_audit.set_defaults(func=_cmd_audit_selected_linkage)
 
     multi_gpu = subparsers.add_parser(
         "multi-gpu-path-b",
@@ -1002,6 +1022,7 @@ def _cmd_exemplar_delivery_parity(args: argparse.Namespace) -> int:
         args.path_a,
         args.path_b,
         output=args.output,
+        require_selection_match=args.require_selection_match,
     )
     print(f"status={report['status']} path_a={args.path_a} path_b={args.path_b}")
     print(
@@ -1010,6 +1031,19 @@ def _cmd_exemplar_delivery_parity(args: argparse.Namespace) -> int:
     )
     print(f"selected_positions_match={str(report['selected_positions_match']).lower()}")
     return 0 if report["status"] in {"pass", "warn"} else 1
+
+
+def _cmd_audit_selected_linkage(args: argparse.Namespace) -> int:
+    from radjax_tome.audit import (
+        audit_selected_linkage,
+        write_selected_linkage_audit,
+    )
+
+    report = audit_selected_linkage(args.artifact, strict=args.strict)
+    if args.output is not None:
+        write_selected_linkage_audit(report, args.output)
+    print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+    return 0 if report.status == "pass" else 1
 
 
 def _cmd_multi_gpu_path_b(args: argparse.Namespace) -> int:

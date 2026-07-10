@@ -126,6 +126,51 @@ def test_cli_exposes_selected_only_exemplar_delivery_flags() -> None:
     assert parity_help.returncode == 0, parity_help.stderr
     assert "--path-a" in parity_help.stdout
     assert "--path-b" in parity_help.stdout
+    assert "--require-selection-match" in parity_help.stdout
+
+
+def test_delivery_parity_selection_identity_is_opt_in(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def artifact_selection(path: Path) -> dict[str, object]:
+        selected_id = "path-a-example" if path.name == "a" else "path-b-example"
+        return {
+            "report": {
+                "corridor_artifact_built": True,
+                "corridor_modes_built": True,
+                "corridor_mode_count": 1,
+                "non_selected_exemplar_payload_retained": False,
+                "final_retained_bytes": 1,
+            },
+            "ids": [selected_id],
+            "positions": [1],
+            "ranks": [1],
+            "scores": [1.0],
+            "mode_keys": [0],
+            "assignment_statuses": ["linked"],
+            "payload_shapes": [{"top_token_ids": 1}],
+            "corridor_shape": ("corridors/corridor_summary.json",),
+            "corridor_mode_policy": "stat_bands_v0",
+            "corridor_mode_count": 1,
+            "corridor_tracked_stats": ["entropy"],
+            "corridor_mode_table": [{"mode_id": 0}],
+            "corridor_assignment_storage_kind": "packed_numpy_v1",
+        }
+
+    monkeypatch.setattr(exemplar_delivery, "_artifact_selection", artifact_selection)
+
+    structural = compare_exemplar_delivery_artifacts(Path("a"), Path("b"))
+    controlled = compare_exemplar_delivery_artifacts(
+        Path("a"), Path("b"), require_selection_match=True
+    )
+
+    assert structural["status"] == "warn"
+    assert structural["blockers"] == []
+    assert structural["selection_match_required"] is False
+    assert structural["selected_example_ids_match"] is False
+    assert controlled["status"] == "fail"
+    assert controlled["selection_match_required"] is True
+    assert "selected example IDs differ" in controlled["blockers"]
 
 
 def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retention(
