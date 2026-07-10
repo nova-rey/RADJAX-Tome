@@ -44,6 +44,17 @@ TWO_PASS_RERUN_SELECTED = "two_pass_rerun_selected"
 EXEMPLAR_SCORE_POLICY = "entropy_top_n_v1"
 DeliveryProgressCallback = Callable[[dict[str, Any]], None]
 
+
+class SelectedExemplarDeliveryError(ValueError):
+    """Preserves a machine-readable coordinate trace for delivery failures."""
+
+    def __init__(self, diagnostic: dict[str, Any]) -> None:
+        self.diagnostic = diagnostic
+        super().__init__(
+            f"{SELECTED_LINKAGE_MISMATCH}: {json.dumps(diagnostic, sort_keys=True)}"
+        )
+
+
 _REQUIRED_SELECTED_PAYLOAD_FIELDS = (
     "selected_example_id",
     "selected_position",
@@ -966,15 +977,27 @@ def _selected_payloads_from_one_pass_capture(
     shard_cache: dict[int, dict[str, np.ndarray]] = {}
     for record in selected_records:
         payload_ref = record.get("payload_ref", {})
-        if not isinstance(payload_ref, dict):
+        if not isinstance(payload_ref, dict) or not payload_ref:
             raise ValueError("selected record missing one-pass payload_ref")
-        source_shard_id = int(payload_ref.get("source_shard_id", -1))
-        source_row = int(payload_ref.get("source_row", -1))
+        source_shard_id = int(record.get("source_shard_id", -1))
+        source_row = int(record.get("source_row", -1))
         if source_shard_id < 0 or source_row < 0:
             raise ValueError("selected record has invalid one-pass payload_ref")
         shard = shard_cache.setdefault(
             source_shard_id, store.read_shard(source_shard_id)
         )
+        payload_ref_mismatch = _one_pass_payload_ref_mismatch(record, payload_ref)
+        if payload_ref_mismatch:
+            raise _one_pass_linkage_error(
+                record=record,
+                shard=shard,
+                row=source_row,
+                failure_reason=(
+                    "one-pass payload reference does not match selected record "
+                    "source coordinate"
+                ),
+                mismatch_fields=payload_ref_mismatch,
+            )
         payloads.append(
             _selected_payload_from_one_pass_shard(
                 record,
@@ -997,9 +1020,7 @@ def _selected_payload_from_one_pass_shard(
     payload_position = _one_pass_payload_position_index(
         shard,
         row=row,
-        source_position=position,
-        source_top_token_id=int(record["source_top_token_id"]),
-        payload_ref=record.get("payload_ref", {}),
+        record=record,
     )
     top_selection_mask = _payload_slice(
         shard,
@@ -1078,8 +1099,18 @@ def _selected_payload_from_one_pass_shard(
             source_payload="one_pass_candidate_shard",
         ),
     }
-    if _path_a_selected_payload_mismatch(payload, record):
-        raise ValueError(SELECTED_LINKAGE_MISMATCH)
+    mismatch = _path_a_selected_payload_mismatch(payload, record)
+    if mismatch:
+        raise _one_pass_linkage_error(
+            record=record,
+            shard=shard,
+            row=row,
+            failure_reason="materialized payload does not match its source coordinate",
+            payload_position=payload_position,
+            payload_top_token_id=_first_payload_token_id(payload),
+            payload_teacher_entropy=payload.get("teacher_entropy"),
+            mismatch_fields=mismatch,
+        )
     return payload
 
 
@@ -1087,34 +1118,40 @@ def _one_pass_payload_position_index(
     shard: dict[str, np.ndarray],
     *,
     row: int,
-    source_position: int,
-    source_top_token_id: int,
-    payload_ref: object,
+    record: dict[str, Any],
 ) -> int:
     positions = np.asarray(shard.get("exemplar_positions", ()))
     source = np.asarray(shard["exemplar_source_top_token_ids"])
+    source_position = int(record["source_position"])
+    source_top_token_id = int(record["source_top_token_id"])
+    payload_ref = record.get("payload_ref", {})
     candidate_rank = None
     if isinstance(payload_ref, dict):
         raw_rank = payload_ref.get("candidate_rank", payload_ref.get("position_index"))
         if raw_rank is not None:
-            candidate_rank = int(raw_rank)
-    if candidate_rank is not None and _candidate_payload_slot_matches(
-        source,
-        positions=positions,
-        row=row,
-        candidate_rank=candidate_rank,
-        source_position=source_position,
-        source_top_token_id=source_top_token_id,
-    ):
-        return candidate_rank
-    if source.ndim >= 3:
-        sequence_length = int(np.asarray(shard["corridor_teacher_entropy"]).shape[1])
-        if (
-            int(source.shape[1]) == sequence_length
-            and 0 <= source_position < int(source.shape[1])
-            and int(source[row, source_position, 0]) == source_top_token_id
-        ):
+            try:
+                candidate_rank = int(raw_rank)
+            except (TypeError, ValueError):
+                candidate_rank = None
+    storage_kind = _one_pass_payload_storage_kind(shard, source)
+    if storage_kind == "full_sequence":
+        full_sequence_top_token_id = _source_top_token_at(
+            source,
+            row=row,
+            position=source_position,
+        )
+        if full_sequence_top_token_id == source_top_token_id:
             return source_position
+        raise _one_pass_linkage_error(
+            record=record,
+            shard=shard,
+            row=row,
+            failure_reason=(
+                "full-sequence source payload top token does not match record"
+            ),
+            candidate_rank=candidate_rank,
+            full_sequence_top_token_id=full_sequence_top_token_id,
+        )
     rank = _find_matching_candidate_rank(
         source,
         positions=positions,
@@ -1123,8 +1160,42 @@ def _one_pass_payload_position_index(
         source_top_token_id=source_top_token_id,
     )
     if rank is None:
-        raise ValueError(SELECTED_LINKAGE_MISMATCH)
+        raise _one_pass_linkage_error(
+            record=record,
+            shard=shard,
+            row=row,
+            failure_reason=(
+                "no compact candidate payload slot matches source coordinate"
+            ),
+            candidate_rank=candidate_rank,
+        )
     return rank
+
+
+def _one_pass_payload_storage_kind(
+    shard: dict[str, np.ndarray],
+    source_top_token_ids: np.ndarray,
+) -> str:
+    entropy = np.asarray(shard.get("corridor_teacher_entropy", ()))
+    if (
+        source_top_token_ids.ndim >= 3
+        and entropy.ndim >= 2
+        and int(source_top_token_ids.shape[1]) == int(entropy.shape[1])
+    ):
+        return "full_sequence"
+    return "compact_candidate_rank"
+
+
+def _source_top_token_at(
+    source_top_token_ids: np.ndarray,
+    *,
+    row: int,
+    position: int,
+) -> int | None:
+    try:
+        return int(source_top_token_ids[row, position, 0])
+    except (IndexError, TypeError, ValueError):
+        return None
 
 
 def _candidate_payload_slot_matches(
@@ -1175,16 +1246,149 @@ def _find_matching_candidate_rank(
 def _path_a_selected_payload_mismatch(
     payload: dict[str, Any],
     record: dict[str, Any],
-) -> bool:
+) -> list[str]:
     top_token_ids = payload.get("top_token_ids")
-    return (
-        not isinstance(top_token_ids, list)
-        or not top_token_ids
-        or int(top_token_ids[0]) != int(record["source_top_token_id"])
-        or not _close_float(payload.get("teacher_entropy"), record["source_score"])
-        or int(payload.get("selected_position", -1)) != int(record["source_position"])
-        or not _close_float(payload.get("selected_score"), record["source_score"])
+    mismatch_fields: list[str] = []
+    if not isinstance(top_token_ids, list) or not top_token_ids:
+        mismatch_fields.append("top_token_ids")
+    elif int(top_token_ids[0]) != int(record["source_top_token_id"]):
+        mismatch_fields.append("top_token_ids[0]")
+    if not _close_float(payload.get("teacher_entropy"), record["source_score"]):
+        mismatch_fields.append("teacher_entropy")
+    if int(payload.get("selected_position", -1)) != int(record["source_position"]):
+        mismatch_fields.append("selected_position")
+    if not _close_float(payload.get("selected_score"), record["source_score"]):
+        mismatch_fields.append("selected_score")
+    return mismatch_fields
+
+
+def _first_payload_token_id(payload: dict[str, Any]) -> int | None:
+    top_token_ids = payload.get("top_token_ids")
+    if not isinstance(top_token_ids, list) or not top_token_ids:
+        return None
+    try:
+        return int(top_token_ids[0])
+    except (TypeError, ValueError):
+        return None
+
+
+def _one_pass_linkage_error(
+    *,
+    record: dict[str, Any],
+    shard: dict[str, np.ndarray],
+    row: int,
+    failure_reason: str,
+    candidate_rank: int | None = None,
+    full_sequence_top_token_id: int | None = None,
+    payload_position: int | None = None,
+    payload_top_token_id: int | None = None,
+    payload_teacher_entropy: Any = None,
+    mismatch_fields: list[str] | None = None,
+) -> SelectedExemplarDeliveryError:
+    positions = np.asarray(shard.get("exemplar_positions", ()))
+    source_top_token_ids = np.asarray(shard.get("exemplar_source_top_token_ids", ()))
+    storage_kind = _one_pass_payload_storage_kind(shard, source_top_token_ids)
+    source_position = _int_or_none(record.get("source_position"))
+    source_top_token_id = _int_or_none(record.get("source_top_token_id"))
+    payload_ref = record.get("payload_ref")
+    searched_ranks = (
+        []
+        if storage_kind == "full_sequence"
+        else _candidate_rank_diagnostics(
+            positions=positions,
+            source_top_token_ids=source_top_token_ids,
+            row=row,
+            source_position=source_position,
+            source_top_token_id=source_top_token_id,
+        )
     )
+    diagnostic = {
+        "failure_stage": "selected_exemplar_delivery",
+        "failure_reason": failure_reason,
+        "delivery_path": ONE_PASS_PRUNED_CANDIDATE,
+        "selected_example_id": record.get("selected_example_id"),
+        "rank": record.get("rank"),
+        "source_shard_id": record.get("source_shard_id"),
+        "source_row": record.get("source_row"),
+        "resolved_source_row": row,
+        "source_position": source_position,
+        "source_score": record.get("source_score"),
+        "source_top_token_id": source_top_token_id,
+        "payload_ref": payload_ref,
+        "candidate_rank": candidate_rank,
+        "exemplar_source_top_token_ids_shape": list(source_top_token_ids.shape),
+        "exemplar_positions_shape": list(positions.shape),
+        "payload_array_storage_kind": storage_kind,
+        "candidate_ranks_searched": searched_ranks,
+        "full_sequence_considered": storage_kind == "full_sequence",
+        "full_sequence_source_position": source_position,
+        "full_sequence_top_token_id": full_sequence_top_token_id,
+        "full_sequence_top_match": (
+            full_sequence_top_token_id == source_top_token_id
+            if full_sequence_top_token_id is not None
+            and source_top_token_id is not None
+            else None
+        ),
+        "payload_position": payload_position,
+        "payload_top_token_id": payload_top_token_id,
+        "payload_teacher_entropy": payload_teacher_entropy,
+        "mismatch_fields": mismatch_fields or [],
+    }
+    return SelectedExemplarDeliveryError(diagnostic)
+
+
+def _candidate_rank_diagnostics(
+    *,
+    positions: np.ndarray,
+    source_top_token_ids: np.ndarray,
+    row: int,
+    source_position: int | None,
+    source_top_token_id: int | None,
+) -> list[dict[str, Any]]:
+    if positions.ndim != 2 or not 0 <= row < positions.shape[0]:
+        return []
+    diagnostics: list[dict[str, Any]] = []
+    for candidate_rank, candidate_position in enumerate(positions[row].tolist()):
+        candidate_top_token_id = _source_top_token_at(
+            source_top_token_ids,
+            row=row,
+            position=candidate_rank,
+        )
+        diagnostics.append(
+            {
+                "candidate_rank": candidate_rank,
+                "exemplar_position": int(candidate_position),
+                "exemplar_source_top_token_id": candidate_top_token_id,
+                "position_match": int(candidate_position) == source_position,
+                "top_token_match": candidate_top_token_id == source_top_token_id,
+            }
+        )
+    return diagnostics
+
+
+def _int_or_none(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _one_pass_payload_ref_mismatch(
+    record: dict[str, Any],
+    payload_ref: dict[str, Any],
+) -> list[str]:
+    mismatch_fields: list[str] = []
+    for field in (
+        "source_shard_id",
+        "source_row",
+        "source_position",
+        "source_top_token_id",
+    ):
+        if _int_or_none(record.get(field)) != _int_or_none(payload_ref.get(field)):
+            mismatch_fields.append(f"payload_ref.{field}")
+    if not _close_float(record.get("source_score"), payload_ref.get("source_score")):
+        mismatch_fields.append("payload_ref.source_score")
+    return mismatch_fields
 
 
 def _selected_payloads_from_backend(

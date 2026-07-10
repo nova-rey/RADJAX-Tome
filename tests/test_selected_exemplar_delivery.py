@@ -5,8 +5,10 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
 import radjax_tome.builder.exemplar_delivery as exemplar_delivery
+import radjax_tome.builder.production as production
 from radjax_tome.builder import (
     ProductionBuildConfig,
     build_production_gpu_tome,
@@ -362,6 +364,132 @@ def test_path_a_one_pass_payload_searches_candidate_slot_when_ref_rank_is_stale(
     assert payload["payload_ref"] == record["payload_ref"]
 
 
+def test_path_a_one_pass_payload_uses_source_position_for_full_sequence_arrays() -> (
+    None
+):
+    shard = _full_sequence_one_pass_shard_for_slot_test()
+    record = _path_a_slot_record(candidate_rank=1)
+    config = SimpleNamespace(
+        sequence_length=5,
+        vocab_size=512,
+        num_buckets=3,
+        top_k=2,
+        score_policy="entropy_top_n_v1",
+        backend_config=None,
+    )
+
+    payload = exemplar_delivery._selected_payload_from_one_pass_shard(
+        record,
+        shard=shard,
+        row=0,
+        config=config,
+    )
+
+    assert payload["top_token_ids"][0] == 222
+    assert payload["selected_position"] == 2
+
+
+def test_path_a_slot_mismatch_includes_source_coordinate_diagnostic() -> None:
+    shard = _compact_one_pass_shard_for_slot_test()
+    shard["exemplar_source_top_token_ids"][0, 1, 0] = 999
+    record = _path_a_slot_record(candidate_rank=1)
+    config = SimpleNamespace(
+        sequence_length=5,
+        vocab_size=512,
+        num_buckets=3,
+        top_k=2,
+        score_policy="entropy_top_n_v1",
+        backend_config=None,
+    )
+
+    with pytest.raises(exemplar_delivery.SelectedExemplarDeliveryError) as raised:
+        exemplar_delivery._selected_payload_from_one_pass_shard(
+            record,
+            shard=shard,
+            row=0,
+            config=config,
+        )
+
+    diagnostic = raised.value.diagnostic
+    assert diagnostic["failure_stage"] == "selected_exemplar_delivery"
+    assert diagnostic["delivery_path"] == "one_pass_pruned_candidate"
+    assert diagnostic["source_position"] == 2
+    assert diagnostic["source_top_token_id"] == 222
+    assert diagnostic["payload_array_storage_kind"] == "compact_candidate_rank"
+    assert diagnostic["exemplar_source_top_token_ids_shape"] == [1, 2, 2]
+    assert diagnostic["exemplar_positions_shape"] == [1, 2]
+    assert diagnostic["candidate_ranks_searched"][1]["position_match"] is True
+    assert diagnostic["candidate_ranks_searched"][1]["top_token_match"] is False
+
+
+def test_path_a_rejects_payload_ref_coordinate_drift() -> None:
+    shard = _compact_one_pass_shard_for_slot_test()
+    record = _path_a_slot_record(candidate_rank=1)
+    record["source_row"] = 0
+    record["payload_ref"] = {
+        **record["payload_ref"],
+        "source_row": 1,
+    }
+    config = SimpleNamespace(
+        sequence_length=5,
+        vocab_size=512,
+        num_buckets=3,
+        top_k=2,
+        score_policy="entropy_top_n_v1",
+        backend_config=None,
+    )
+    store = SimpleNamespace(read_shard=lambda _shard_id: shard)
+
+    with pytest.raises(exemplar_delivery.SelectedExemplarDeliveryError) as raised:
+        exemplar_delivery._selected_payloads_from_one_pass_capture(
+            [record],
+            store=store,
+            config=config,
+        )
+
+    diagnostic = raised.value.diagnostic
+    assert diagnostic["source_row"] == 0
+    assert diagnostic["resolved_source_row"] == 0
+    assert diagnostic["payload_ref"]["source_row"] == 1
+    assert diagnostic["mismatch_fields"] == ["payload_ref.source_row"]
+
+
+def test_production_report_names_selected_delivery_failure(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    config = _config(
+        tmp_path,
+        output_name="path_a_delivery_failure",
+        delivery_path="one_pass_pruned_candidate",
+    )
+    diagnostic = {
+        "failure_stage": "selected_exemplar_delivery",
+        "delivery_path": "one_pass_pruned_candidate",
+        "selected_example_id": "example-3",
+        "source_row": 3,
+        "source_position": 2,
+    }
+
+    def fail_delivery(_config):
+        raise exemplar_delivery.SelectedExemplarDeliveryError(diagnostic)
+
+    monkeypatch.setattr(
+        production,
+        "materialize_selected_exemplar_delivery",
+        fail_delivery,
+    )
+
+    report = build_production_gpu_tome(config)
+
+    assert report["status"] == "fail"
+    assert report["validation_status"] == "pass"
+    assert report["selected_delivery_status"] == "fail"
+    assert report["failure_stage"] == "selected_exemplar_delivery"
+    assert report["selected_delivery_failure"] == diagnostic
+    assert not (config.output_dir / "delivery_report.json").exists()
+
+
 def test_path_a_path_b_delivery_parity_matches_selection_and_scores(
     tmp_path: Path,
 ) -> None:
@@ -661,6 +789,32 @@ def _compact_one_pass_shard_for_slot_test() -> dict[str, np.ndarray]:
             [[[0.03, 0.03, 0.04], [0.01, 0.04, 0.05]]],
             dtype=np.float32,
         ),
+        "corridor_teacher_entropy": np.asarray(
+            [[1.0, 2.0, 7.0, 3.0, 4.0]],
+            dtype=np.float32,
+        ),
+    }
+
+
+def _full_sequence_one_pass_shard_for_slot_test() -> dict[str, np.ndarray]:
+    top_token_ids = np.asarray(
+        [[[101, 11], [999, 99], [222, 22], [303, 33], [111, 44]]],
+        dtype=np.int32,
+    )
+    top_probs = np.asarray(
+        [[[0.6, 0.3], [0.7, 0.2], [0.7, 0.2], [0.6, 0.3], [0.5, 0.4]]],
+        dtype=np.float32,
+    )
+    return {
+        "exemplar_positions": np.asarray([[4, 2]], dtype=np.int32),
+        "exemplar_source_top_token_ids": top_token_ids,
+        "exemplar_source_top_log_probs": -top_probs,
+        "exemplar_source_top_probs": top_probs,
+        "exemplar_source_top_selection_mask": np.ones_like(top_token_ids, dtype=bool),
+        "exemplar_source_effective_top_k": np.full((1, 5), 2, dtype=np.int32),
+        "exemplar_source_top_mass": np.full((1, 5), 0.9, dtype=np.float32),
+        "exemplar_source_tail_mass": np.full((1, 5), 0.1, dtype=np.float32),
+        "exemplar_source_bucket_masses": np.full((1, 5, 3), 0.03, dtype=np.float32),
         "corridor_teacher_entropy": np.asarray(
             [[1.0, 2.0, 7.0, 3.0, 4.0]],
             dtype=np.float32,

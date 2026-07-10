@@ -17,6 +17,7 @@ from radjax_tome.builder.backend_textbook import (
 from radjax_tome.builder.exemplar_delivery import (
     EXEMPLAR_DELIVERY_REPORT_FILENAME,
     ExemplarDeliveryConfig,
+    SelectedExemplarDeliveryError,
     materialize_selected_exemplar_delivery,
 )
 from radjax_tome.builder.teacher_textbook import (
@@ -265,6 +266,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
     main_pass_wall_seconds = _elapsed(main_pass_started)
 
     delivery_report: dict[str, Any] | None = None
+    selected_delivery_failure: dict[str, Any] | None = None
     if _selected_exemplar_delivery_enabled(config):
         try:
             delivery_report = materialize_selected_exemplar_delivery(
@@ -274,7 +276,15 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
                     progress_callback=progress.handle_delivery_event,
                 )
             )
+        except SelectedExemplarDeliveryError as exc:
+            selected_delivery_failure = exc.diagnostic
+            blockers.append(str(exc))
         except Exception as exc:
+            selected_delivery_failure = {
+                "failure_stage": "selected_exemplar_delivery",
+                "failure_reason": str(exc),
+                "delivery_path": config.exemplar_delivery_path,
+            }
             blockers.append(str(exc))
     progress.validation_started()
     validation_started = perf_counter()
@@ -329,6 +339,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         validation_status=validation.status,
         build_status=getattr(build_report, "status", None),
         delivery_report=delivery_report,
+        selected_delivery_failure=selected_delivery_failure,
         timing=_production_timing_fields(
             config,
             started_at=created_at,
@@ -781,6 +792,7 @@ def _production_report(
     validation_status: str | None = None,
     build_status: str | None = None,
     delivery_report: dict[str, Any] | None = None,
+    selected_delivery_failure: dict[str, Any] | None = None,
     timing: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     artifact_summary = _artifact_summary(config.output_dir, run_plan)
@@ -817,6 +829,19 @@ def _production_report(
             if delivery_report is not None
             else config.exemplar_delivery_path
         ),
+        "selected_delivery_status": (
+            "fail"
+            if selected_delivery_failure is not None
+            else "pass"
+            if delivery_report is not None
+            else "not_enabled"
+        ),
+        "failure_stage": (
+            selected_delivery_failure.get("failure_stage")
+            if selected_delivery_failure is not None
+            else None
+        ),
+        "selected_delivery_failure": selected_delivery_failure,
         "num_examples_scored": (
             delivery_report.get("num_examples_scored")
             if delivery_report is not None

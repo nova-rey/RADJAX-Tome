@@ -872,3 +872,19 @@ rank is stale, and raises the selected linkage mismatch when no slot matches.
 Path A validation also fails when compact selected records or payloads lose
 their payload reference, closing the real 1K mismatch where the record tuple was
 correct but `top_token_ids[0]` came from the wrong one-pass candidate slot.
+
+## 2026-07-10 — Path A Source-Coordinate Diagnostics and Full-Sequence Resolution
+
+Path A selected delivery now classifies one-pass source arrays before resolving
+the payload coordinate. Full-sequence arrays are always sliced at the canonical
+`source_position`; only compact candidate-rank arrays use the preserved
+`candidate_rank` and rank search. The record source shard and row are now the
+authoritative shard coordinate, while `payload_ref` must agree with every source
+coordinate field before it can identify a compact payload slot.
+
+Any selected-delivery linkage failure now carries a structured diagnostic with
+the selected record, payload reference, array shapes, storage classification,
+full-sequence check, and compact candidate-slot checks. Production reports keep
+base `validation_status` separate from `selected_delivery_status`, and record
+the selected-delivery failure stage and diagnostic instead of reducing it to an
+opaque blocker.
