@@ -389,6 +389,47 @@ def test_path_a_one_pass_payload_uses_source_position_for_full_sequence_arrays()
     assert payload["selected_position"] == 2
 
 
+def test_path_a_payload_token_authority_can_differ_from_corridor_token() -> None:
+    shard = _full_sequence_one_pass_shard_for_slot_test()
+    shard["corridor_top_token_ids"] = np.asarray(
+        [[101, 999, 751, 303, 111]],
+        dtype=np.int32,
+    )
+    shard["exemplar_source_top_token_ids"][0, 2, 0] = 649
+    record = _path_a_slot_record(candidate_rank=1)
+    record["score_top_token_id"] = 751
+    record["source_top_token_id"] = 649
+    record["payload_ref"] = {
+        **record["payload_ref"],
+        "source_top_token_id": 649,
+    }
+    config = SimpleNamespace(
+        sequence_length=5,
+        vocab_size=512,
+        num_buckets=3,
+        top_k=2,
+        score_policy="entropy_top_n_v1",
+        backend_config=None,
+    )
+
+    payload = exemplar_delivery._selected_payload_from_one_pass_shard(
+        record,
+        shard=shard,
+        row=0,
+        config=config,
+    )
+
+    assert payload["score_top_token_id"] == 751
+    assert payload["source_top_token_id"] == 649
+    assert payload["top_token_ids"][0] == 649
+    assert not exemplar_delivery._source_coordinate_linkage_mismatch(
+        shard,
+        row=0,
+        record=record,
+        payload=payload,
+    )
+
+
 def test_path_a_slot_mismatch_includes_source_coordinate_diagnostic() -> None:
     shard = _compact_one_pass_shard_for_slot_test()
     shard["exemplar_source_top_token_ids"][0, 1, 0] = 999
@@ -837,6 +878,7 @@ def _path_a_slot_record(*, candidate_rank: int) -> dict[str, object]:
         "selected_example_id": "example-slot-b",
         "selected_position": 2,
         "selected_score": 7.0,
+        "score_top_token_id": 222,
         "source_shard_id": 3,
         "source_row": 0,
         "source_position": 2,
@@ -976,11 +1018,30 @@ def _assert_selected_source_coordinate_invariants(output_dir: Path) -> None:
                 float(shard["corridor_entropy"][source_row, source_position]),
                 source_score,
             )
-            assert (
-                int(shard["corridor_top_token_ids"][source_row, source_position])
-                == source_top_token_id
-            )
-            if record["payload_ref"]["kind"] == "corridor_exemplar_score_pass_v1":
+            if record["source_delivery_path"] == "one_pass_pruned_candidate":
+                if "exemplar_source_top_token_ids" in shard:
+                    payload_position = (
+                        exemplar_delivery._one_pass_payload_position_index(
+                            dict(shard),
+                            row=source_row,
+                            record=record,
+                        )
+                    )
+                    assert (
+                        int(
+                            shard["exemplar_source_top_token_ids"][
+                                source_row,
+                                payload_position,
+                                0,
+                            ]
+                        )
+                        == source_top_token_id
+                    )
+            elif record["payload_ref"]["kind"] == "corridor_exemplar_score_pass_v1":
+                assert (
+                    int(shard["corridor_top_token_ids"][source_row, source_position])
+                    == source_top_token_id
+                )
                 score_position = int(shard["score_selected_position"][source_row])
                 score_entropy = float(
                     shard["score_selected_position_entropy"][source_row]

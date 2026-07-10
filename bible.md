@@ -888,3 +888,18 @@ full-sequence check, and compact candidate-slot checks. Production reports keep
 base `validation_status` separate from `selected_delivery_status`, and record
 the selected-delivery failure stage and diagnostic instead of reducing it to an
 opaque blocker.
+
+## 2026-07-10 — Path A Payload Token Authority
+
+Path A now distinguishes corridor diagnostics from selected exemplar payload
+identity. `score_top_token_id` remains the corridor/stat token used for score
+metadata, while `source_top_token_id` is taken from
+`exemplar_source_top_token_ids` at the full-sequence source position or compact
+candidate rank that supplies the retained training payload. This permits the
+two reduction surfaces to diverge without making a valid selected exemplar fail
+linkage validation.
+
+Path A validation checks the emitted payload token against the payload-source
+array before pruning and no longer requires it to equal `corridor_top_token_ids`.
+Path B remains stricter: its score-pass token, corridor token, and rerun payload
+token must still agree.

@@ -139,6 +139,7 @@ def extract_one_pass_candidates(
     entropy = np.asarray(arrays["corridor_teacher_entropy"])
     confidence = np.asarray(arrays["corridor_confidence"])
     corridor_top_token_ids = np.asarray(arrays["corridor_top_token_ids"])
+    exemplar_source_top_token_ids = np.asarray(arrays["exemplar_source_top_token_ids"])
     positions = np.asarray(arrays["exemplar_positions"])
     scores = np.asarray(arrays["exemplar_scores"])
     effective_top_k = np.asarray(arrays["exemplar_source_effective_top_k"])
@@ -149,6 +150,13 @@ def extract_one_pass_candidates(
     for row, example_id in enumerate(example_ids):
         row_positions = tuple(int(value) for value in positions[row].tolist())
         for position_index, selected_position in enumerate(row_positions):
+            source_top_token_id = _one_pass_source_top_token_id(
+                exemplar_source_top_token_ids,
+                row=row,
+                selected_position=selected_position,
+                candidate_rank=position_index,
+                sequence_length=sequence_length,
+            )
             score_fields = {
                 "max_entropy": float(np.max(entropy[row])),
                 "mean_entropy": float(np.mean(entropy[row], dtype=np.float32)),
@@ -194,9 +202,7 @@ def extract_one_pass_candidates(
                         "source_position": int(selected_position),
                         "candidate_rank": position_index,
                         "position_index": position_index,
-                        "source_top_token_id": int(
-                            corridor_top_token_ids[row, selected_position]
-                        ),
+                        "source_top_token_id": source_top_token_id,
                         "source_score": float(
                             entropy[row, selected_position]
                             if selected_position < sequence_length
@@ -206,6 +212,22 @@ def extract_one_pass_candidates(
                 )
             )
     return tuple(candidates)
+
+
+def _one_pass_source_top_token_id(
+    exemplar_source_top_token_ids: np.ndarray,
+    *,
+    row: int,
+    selected_position: int,
+    candidate_rank: int,
+    sequence_length: int,
+) -> int:
+    if (
+        exemplar_source_top_token_ids.ndim >= 3
+        and int(exemplar_source_top_token_ids.shape[1]) == sequence_length
+    ):
+        return int(exemplar_source_top_token_ids[row, selected_position, 0])
+    return int(exemplar_source_top_token_ids[row, candidate_rank, 0])
 
 
 def extract_score_pass_candidates(
@@ -842,13 +864,17 @@ def _selected_position_manifest_record(
             position_record["scores_by_board"][assigned_board],
         )
     )
-    source_top_token_id = candidate.score_fields.get("score_top_token_id")
+    score_top_token_id = candidate.score_fields.get("score_top_token_id")
+    source_top_token_id = candidate.payload_ref.get(
+        "source_top_token_id",
+        score_top_token_id,
+    )
     return {
         "selected_position": candidate.selected_position,
         "selected_score": selected_score,
         "score_selected_position_entropy": selected_score,
         "score_top_token_id": (
-            None if source_top_token_id is None else int(source_top_token_id)
+            None if score_top_token_id is None else int(score_top_token_id)
         ),
         "source_shard_id": candidate.source_shard_id,
         "source_row": candidate.source_row,

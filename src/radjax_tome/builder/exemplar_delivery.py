@@ -485,6 +485,7 @@ def _record_payload_tuple_mismatch(
     fields = (
         "selected_example_id",
         "selected_position",
+        "score_top_token_id",
         "source_shard_id",
         "source_row",
         "source_position",
@@ -528,12 +529,19 @@ def _source_coordinate_linkage_mismatch(
         return True
     if int(payload.get("source_top_token_id", -1)) != source_top_token_id:
         return True
-    if not _path_b_score_pass_aliases_match(record, payload, shard, row=row):
-        return True
     top_token_ids = payload.get("top_token_ids")
     if not isinstance(top_token_ids, list) or not top_token_ids:
         return True
     if int(top_token_ids[0]) != source_top_token_id:
+        return True
+    source_delivery_path = record.get("source_delivery_path")
+    if source_delivery_path == ONE_PASS_PRUNED_CANDIDATE:
+        if _path_a_source_payload_token_mismatch(shard, row=row, record=record):
+            return True
+    elif source_delivery_path == TWO_PASS_RERUN_SELECTED:
+        if not _path_b_score_pass_aliases_match(record, payload, shard, row=row):
+            return True
+    else:
         return True
     entropy_key = (
         "corridor_entropy"
@@ -542,15 +550,44 @@ def _source_coordinate_linkage_mismatch(
     )
     try:
         corridor_entropy = float(np.asarray(shard[entropy_key])[row, source_position])
-        corridor_top_token_id = int(
-            np.asarray(shard["corridor_top_token_ids"])[row, source_position]
-        )
     except (IndexError, KeyError, TypeError, ValueError):
         return True
-    return not (
-        _close_float(corridor_entropy, source_score)
-        and corridor_top_token_id == source_top_token_id
-    )
+    if not _close_float(corridor_entropy, source_score):
+        return True
+    if source_delivery_path == TWO_PASS_RERUN_SELECTED:
+        try:
+            corridor_top_token_id = int(
+                np.asarray(shard["corridor_top_token_ids"])[row, source_position]
+            )
+        except (IndexError, KeyError, TypeError, ValueError):
+            return True
+        return corridor_top_token_id != source_top_token_id
+    return False
+
+
+def _path_a_source_payload_token_mismatch(
+    shard: dict[str, np.ndarray],
+    *,
+    row: int,
+    record: dict[str, Any],
+) -> bool:
+    if "exemplar_source_top_token_ids" not in shard:
+        # Candidate arrays are deliberately pruned after payload materialization.
+        return False
+    try:
+        payload_position = _one_pass_payload_position_index(
+            shard,
+            row=row,
+            record=record,
+        )
+        source_top_token_id = _source_top_token_at(
+            np.asarray(shard["exemplar_source_top_token_ids"]),
+            row=row,
+            position=payload_position,
+        )
+        return source_top_token_id != int(record["source_top_token_id"])
+    except (IndexError, KeyError, TypeError, ValueError):
+        return True
 
 
 def _path_b_score_pass_aliases_match(
@@ -1036,7 +1073,7 @@ def _selected_payload_from_one_pass_shard(
         "selected_position": position,
         "selected_score": record["source_score"],
         "score_selected_position_entropy": record["source_score"],
-        "score_top_token_id": record["source_top_token_id"],
+        "score_top_token_id": record["score_top_token_id"],
         "source_shard_id": record["source_shard_id"],
         "source_row": record["source_row"],
         "source_position": record["source_position"],
@@ -1523,7 +1560,7 @@ def _selected_payload_from_emission(
         "selected_position": position,
         "selected_score": record["source_score"],
         "score_selected_position_entropy": record["source_score"],
-        "score_top_token_id": record["source_top_token_id"],
+        "score_top_token_id": record["score_top_token_id"],
         "source_shard_id": record["source_shard_id"],
         "source_row": record["source_row"],
         "source_position": record["source_position"],

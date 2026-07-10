@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from radjax_tome.builder import (
@@ -136,6 +137,57 @@ def test_selector_extracts_path_a_corridor_candidates(tmp_path: Path) -> None:
     assert "max_entropy" in candidates[0].score_fields
     assert "tail_mass" in candidates[0].score_fields
     assert "effective_top_k" in candidates[0].score_fields
+
+
+def test_path_a_source_token_comes_from_emitted_payload_surface() -> None:
+    arrays = {
+        "corridor_teacher_entropy": np.asarray([[1.0, 7.0, 2.0]], dtype=np.float32),
+        "corridor_confidence": np.asarray([[0.8, 0.2, 0.6]], dtype=np.float32),
+        "corridor_top_token_ids": np.asarray([[100, 751, 300]], dtype=np.int32),
+        "exemplar_positions": np.asarray([[1]], dtype=np.int32),
+        "exemplar_scores": np.asarray([[7.0]], dtype=np.float32),
+        "exemplar_source_top_token_ids": np.asarray(
+            [[[100, 10], [649, 64], [300, 30]]],
+            dtype=np.int32,
+        ),
+        "exemplar_source_effective_top_k": np.asarray([[2, 2, 2]], dtype=np.int32),
+        "exemplar_source_tail_mass": np.asarray(
+            [[0.1, 0.2, 0.3]],
+            dtype=np.float32,
+        ),
+        "exemplar_source_policy_ids": np.asarray([[1, 1, 1]], dtype=np.int32),
+    }
+
+    candidate = extract_one_pass_candidates(
+        arrays,
+        example_ids=("divergent-token",),
+        source_shard_id=0,
+    )[0]
+    manifest = select_exemplars(
+        (candidate,),
+        capture_mode="one_pass_candidate",
+        fulfillment_policy="select_from_existing_capture",
+        board_capacity=1,
+        created_at="2026-07-10T00:00:00+00:00",
+    )
+    selected = manifest["selected_examples"][0]["selected_position_records"][0]
+
+    assert candidate.score_fields["score_top_token_id"] == 751.0
+    assert candidate.payload_ref["source_top_token_id"] == 649
+    assert selected["score_top_token_id"] == 751
+    assert selected["source_top_token_id"] == 649
+
+    arrays["exemplar_source_top_token_ids"] = np.asarray(
+        [[[649, 64]]],
+        dtype=np.int32,
+    )
+    compact_candidate = extract_one_pass_candidates(
+        arrays,
+        example_ids=("divergent-token",),
+        source_shard_id=0,
+    )[0]
+
+    assert compact_candidate.payload_ref["source_top_token_id"] == 649
 
 
 def test_selector_extracts_path_b_score_pass_candidates(tmp_path: Path) -> None:
