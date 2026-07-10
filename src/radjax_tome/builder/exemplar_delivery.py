@@ -34,6 +34,10 @@ EXEMPLAR_DELIVERY_REPORT_SCHEMA = "selected_exemplar_delivery_report_v1"
 EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA = "exemplar_delivery_parity_report_v1"
 LEADERBOARD_REPORT_FILENAME = "leaderboard_report.json"
 SELECTED_EXEMPLARS_FILENAME = "selected_exemplars.json"
+SELECTED_LINKAGE_MISMATCH = (
+    "selected exemplar linkage mismatch: selected_position/score does not match "
+    "score-pass shard row"
+)
 
 ONE_PASS_PRUNED_CANDIDATE = "one_pass_pruned_candidate"
 TWO_PASS_RERUN_SELECTED = "two_pass_rerun_selected"
@@ -44,6 +48,10 @@ _REQUIRED_SELECTED_PAYLOAD_FIELDS = (
     "selected_example_id",
     "selected_position",
     "selected_score",
+    "score_selected_position_entropy",
+    "score_top_token_id",
+    "source_shard_id",
+    "source_row",
     "selected_policy",
     "source_delivery_path",
     "top_token_ids",
@@ -313,6 +321,12 @@ def validate_selected_exemplar_delivery(
         blockers.append("selected_exemplars.json count does not match delivery report")
     if payloads and len(payloads) != expected_selected_count:
         blockers.append("selected payload count does not match delivery report")
+    _validate_selected_record_payload_linkage(
+        artifact_dir,
+        selected_records=selected,
+        selected_payloads=payloads,
+        blockers=blockers,
+    )
     sequence_length = _metadata_int(artifact_dir, "sequence_length")
     selected_ids = {str(item.get("selected_example_id")) for item in selected}
     payload_ids = {str(item.get("selected_example_id")) for item in payloads}
@@ -394,6 +408,126 @@ def _validate_selected_ids_against_dataset(
             "selected_exemplars.json references examples not present in dataset: "
             + ", ".join(sorted(missing))
         )
+
+
+def _validate_selected_record_payload_linkage(
+    artifact_dir: Path,
+    *,
+    selected_records: list[dict[str, Any]],
+    selected_payloads: list[dict[str, Any]],
+    blockers: list[str],
+) -> None:
+    if not selected_records or not selected_payloads:
+        return
+    if len(selected_records) != len(selected_payloads):
+        return
+    shard_cache: dict[int, dict[str, np.ndarray]] = {}
+    try:
+        store = TeacherTargetStore.open(artifact_dir)
+    except (OSError, ValueError):
+        blockers.append(SELECTED_LINKAGE_MISMATCH)
+        return
+    for record, payload in zip(selected_records, selected_payloads, strict=True):
+        if _record_payload_tuple_mismatch(record, payload):
+            blockers.append(SELECTED_LINKAGE_MISMATCH)
+            return
+        try:
+            source_shard_id = int(record["source_shard_id"])
+            source_row = int(record["source_row"])
+        except (KeyError, TypeError, ValueError):
+            blockers.append(SELECTED_LINKAGE_MISMATCH)
+            return
+        try:
+            shard = shard_cache.setdefault(
+                source_shard_id,
+                store.read_shard(source_shard_id),
+            )
+        except (OSError, ValueError, KeyError):
+            blockers.append(SELECTED_LINKAGE_MISMATCH)
+            return
+        if _score_shard_linkage_mismatch(
+            shard,
+            row=source_row,
+            record=record,
+            payload=payload,
+        ):
+            blockers.append(SELECTED_LINKAGE_MISMATCH)
+            return
+
+
+def _record_payload_tuple_mismatch(
+    record: dict[str, Any],
+    payload: dict[str, Any],
+) -> bool:
+    fields = (
+        "selected_example_id",
+        "selected_position",
+        "corridor_mode_id",
+        "corridor_assignment_status",
+    )
+    if any(record.get(field) != payload.get(field) for field in fields):
+        return True
+    return not _close_float(record.get("selected_score"), payload.get("selected_score"))
+
+
+def _score_shard_linkage_mismatch(
+    shard: dict[str, np.ndarray],
+    *,
+    row: int,
+    record: dict[str, Any],
+    payload: dict[str, Any],
+) -> bool:
+    try:
+        selected_position = int(record["selected_position"])
+        shard_position = int(np.asarray(shard["score_selected_position"])[row])
+        shard_score = float(np.asarray(shard["score_selected_position_entropy"])[row])
+        shard_top_token_id = int(np.asarray(shard["score_top_token_id"])[row])
+    except (IndexError, KeyError, TypeError, ValueError):
+        return True
+    if selected_position != shard_position:
+        return True
+    if not _close_float(record.get("selected_score"), shard_score):
+        return True
+    if not _close_float(record.get("score_selected_position_entropy"), shard_score):
+        return True
+    if not _close_float(payload.get("selected_score"), shard_score):
+        return True
+    if not _close_float(payload.get("teacher_entropy"), shard_score):
+        return True
+    if not _close_float(payload.get("score_selected_position_entropy"), shard_score):
+        return True
+    if int(record.get("score_top_token_id", -1)) != shard_top_token_id:
+        return True
+    if int(payload.get("score_top_token_id", -1)) != shard_top_token_id:
+        return True
+    top_token_ids = payload.get("top_token_ids")
+    if not isinstance(top_token_ids, list) or not top_token_ids:
+        return True
+    if int(top_token_ids[0]) != shard_top_token_id:
+        return True
+    entropy_key = (
+        "corridor_entropy"
+        if "corridor_entropy" in shard
+        else "corridor_teacher_entropy"
+    )
+    try:
+        corridor_entropy = float(np.asarray(shard[entropy_key])[row, selected_position])
+        corridor_top_token_id = int(
+            np.asarray(shard["corridor_top_token_ids"])[row, selected_position]
+        )
+    except (IndexError, KeyError, TypeError, ValueError):
+        return True
+    return not (
+        _close_float(corridor_entropy, shard_score)
+        and corridor_top_token_id == shard_top_token_id
+    )
+
+
+def _close_float(left: Any, right: Any, *, atol: float = 1e-4) -> bool:
+    try:
+        return bool(np.isclose(float(left), float(right), rtol=1e-5, atol=atol))
+    except (TypeError, ValueError):
+        return False
 
 
 def compare_exemplar_delivery_artifacts(
@@ -685,13 +819,25 @@ def _flatten_selected_records(
             if not isinstance(scores, dict):
                 scores = {}
             assigned_board = str(position_record.get("assigned_board", "entropy"))
-            shared_board = (
-                "global_max_entropy"
-                if "global_max_entropy" in scores
-                else assigned_board
+            selected_score = float(position_record["selected_score"])
+            score_entropy = float(position_record["score_selected_position_entropy"])
+            if not np.isclose(selected_score, score_entropy, rtol=1e-5, atol=1e-5):
+                raise ValueError(
+                    "selected exemplar linkage mismatch: selected_position/score "
+                    "does not match score-pass shard row"
+                )
+            score_top_token_id = position_record.get("score_top_token_id")
+            payload_ref = position_record.get("payload_ref", {})
+            if not isinstance(payload_ref, dict):
+                payload_ref = {}
+            source_shard_id = int(
+                position_record.get(
+                    "source_shard_id",
+                    payload_ref.get("source_shard_id", -1),
+                )
             )
-            selected_score = float(
-                scores.get(shared_board, scores.get(assigned_board, 0.0))
+            source_row = int(
+                position_record.get("source_row", payload_ref.get("source_row", -1))
             )
             records.append(
                 {
@@ -701,10 +847,16 @@ def _flatten_selected_records(
                         position_record.get("selected_position", 0)
                     ),
                     "selected_score": selected_score,
+                    "score_selected_position_entropy": score_entropy,
+                    "score_top_token_id": (
+                        None if score_top_token_id is None else int(score_top_token_id)
+                    ),
+                    "source_shard_id": source_shard_id,
+                    "source_row": source_row,
                     "selected_policy": EXEMPLAR_SCORE_POLICY,
                     "source_delivery_path": delivery_path,
-                    "mode_key": shared_board,
-                    "payload_ref": position_record.get("payload_ref", {}),
+                    "mode_key": assigned_board,
+                    "payload_ref": payload_ref,
                     "rank_by_board": position_record.get("rank_by_board", {}),
                     "scores_by_board": scores,
                 }
@@ -792,6 +944,10 @@ def _selected_payload_from_one_pass_shard(
         "selected_example_id": record["selected_example_id"],
         "selected_position": position,
         "selected_score": record["selected_score"],
+        "score_selected_position_entropy": record["score_selected_position_entropy"],
+        "score_top_token_id": record["score_top_token_id"],
+        "source_shard_id": record["source_shard_id"],
+        "source_row": record["source_row"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
         "top_token_ids": _payload_slice(
@@ -977,6 +1133,10 @@ def _selected_payload_from_emission(
         "selected_example_id": record["selected_example_id"],
         "selected_position": position,
         "selected_score": record["selected_score"],
+        "score_selected_position_entropy": record["score_selected_position_entropy"],
+        "score_top_token_id": record["score_top_token_id"],
+        "source_shard_id": record["source_shard_id"],
+        "source_row": record["source_row"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
         "top_token_ids": _payload_slice(payload, "top_token_ids", row, position),
@@ -1041,13 +1201,21 @@ def _payload_scalar(payload: Any, key: str, row: int, position: int) -> int | fl
 def _unique_selected_example_ids(selected_records: list[dict[str, Any]]) -> list[str]:
     seen: set[str] = set()
     ids: list[str] = []
-    for record in selected_records:
+    for record in sorted(selected_records, key=_selected_record_source_key):
         example_id = str(record["selected_example_id"])
         if example_id in seen:
             continue
         seen.add(example_id)
         ids.append(example_id)
     return ids
+
+
+def _selected_record_source_key(record: dict[str, Any]) -> tuple[int, int, str]:
+    return (
+        int(record.get("source_shard_id", 999_999_999)),
+        int(record.get("source_row", 999_999_999)),
+        str(record.get("selected_example_id", "")),
+    )
 
 
 def _materialize_path_a_temp_cache(

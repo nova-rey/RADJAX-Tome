@@ -821,3 +821,19 @@ stat-band modes, packed assignments, diagnostic fingerprints, and varying
 dynamic top-k exemplar payloads without network, JAX, Torch, or Transformers.
 Contract owns the canonical frozen fixture and shared interpretation; Tome owns
 the reproducible generation recipe and producer-side validation.
+
+## 2026-07-10 — Selected Exemplar Score-Pass Linkage
+
+Selected-only delivery now preserves the canonical score-pass tuple from
+candidate extraction through leaderboard records and selected payload shards:
+selected example id, selected position, selected-position entropy score,
+top-token id, source shard id, and source row. Path B selected rerun payloads
+are validated against those persisted score-pass shard fields, and validation
+fails with an explicit selected exemplar linkage mismatch when records or
+payloads drift from the source row.
+
+The CPU reference backend fixture is now row-invariant so selected-only reruns
+can be validated like real teacher models: the same example produces the same
+teacher behavior regardless of selected-rerun batch placement. The deterministic
+production contract fixture was updated to emit the same linkage metadata and
+score-consistent selected payloads as production selected-only builds.

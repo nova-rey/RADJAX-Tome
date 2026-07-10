@@ -138,6 +138,7 @@ def extract_one_pass_candidates(
 ) -> tuple[ExemplarCandidate, ...]:
     entropy = np.asarray(arrays["corridor_teacher_entropy"])
     confidence = np.asarray(arrays["corridor_confidence"])
+    corridor_top_token_ids = np.asarray(arrays["corridor_top_token_ids"])
     positions = np.asarray(arrays["exemplar_positions"])
     scores = np.asarray(arrays["exemplar_scores"])
     effective_top_k = np.asarray(arrays["exemplar_source_effective_top_k"])
@@ -157,6 +158,9 @@ def extract_one_pass_candidates(
                     else scores[row, position_index]
                 ),
                 "confidence": float(confidence[row, selected_position]),
+                "score_top_token_id": float(
+                    corridor_top_token_ids[row, selected_position]
+                ),
                 "source_policy_id": float(source_policy_ids[row, selected_position]),
                 "position_bucket": float(
                     _position_bucket(selected_position, sequence_length)
@@ -204,6 +208,7 @@ def extract_score_pass_candidates(
     selected_positions = np.asarray(arrays["score_selected_position"])
     sequence_lengths = np.asarray(arrays["score_lengths"])
     source_policy_ids = np.asarray(arrays["score_source_policy_ids"])
+    selected_top_token_ids = np.asarray(arrays["score_top_token_id"])
     candidates: list[ExemplarCandidate] = []
     for row, example_id in enumerate(example_ids):
         selected_position = int(selected_positions[row])
@@ -217,6 +222,7 @@ def extract_score_pass_candidates(
             "confidence": float(
                 np.asarray(arrays["score_confidence_at_selected_position"])[row]
             ),
+            "score_top_token_id": float(selected_top_token_ids[row]),
             "source_policy_id": float(source_policy_ids[row]),
             "position_bucket": float(
                 _position_bucket(selected_position, sequence_length)
@@ -356,14 +362,18 @@ def build_exemplar_selection_manifest(
     canonical_score_fields_only: bool = False,
     use_score_pass_fields: bool = False,
 ) -> dict[str, Any]:
+    if batch_size < 1:
+        raise ValueError("batch_size must be positive")
     candidates: list[ExemplarCandidate] = []
+    example_offset = 0
     for shard_id in range(store.metadata.shard_count):
         shard = store.read_shard(shard_id)
-        start = shard_id * batch_size
         row_count = int(np.asarray(shard["input_ids"]).shape[0])
         example_ids = tuple(
-            example.example_id for example in examples[start : start + row_count]
+            example.example_id
+            for example in examples[example_offset : example_offset + row_count]
         )
+        example_offset += row_count
         if store.metadata.target_type == "corridor_exemplar_v1":
             if use_score_pass_fields:
                 candidates.extend(
@@ -814,9 +824,24 @@ def _selected_position_manifest_record(
     position_record: Mapping[str, Any],
 ) -> dict[str, Any]:
     candidate = position_record["candidate"]
+    assigned_board = str(position_record["assigned_board"])
+    selected_score = float(
+        candidate.score_fields.get(
+            "selected_position_entropy",
+            position_record["scores_by_board"][assigned_board],
+        )
+    )
+    source_top_token_id = candidate.score_fields.get("score_top_token_id")
     return {
         "selected_position": candidate.selected_position,
-        "assigned_board": position_record["assigned_board"],
+        "selected_score": selected_score,
+        "score_selected_position_entropy": selected_score,
+        "score_top_token_id": (
+            None if source_top_token_id is None else int(source_top_token_id)
+        ),
+        "source_shard_id": candidate.source_shard_id,
+        "source_row": candidate.source_row,
+        "assigned_board": assigned_board,
         "winning_boards": position_record["winning_boards"],
         "suppressed_duplicate_boards": position_record["suppressed_duplicate_boards"],
         "rank_by_board": position_record["rank_by_board"],

@@ -233,6 +233,29 @@ def test_path_b_main_artifact_is_score_pass_without_broad_exemplar_payloads(
         assert "exemplar_source_top_mass" not in shard.files
 
 
+def test_selected_payload_linkage_matches_score_pass_rows(tmp_path: Path) -> None:
+    config = _config(
+        tmp_path,
+        output_name="path_b_linkage",
+        delivery_path="two_pass_rerun_selected",
+    )
+
+    assert build_production_gpu_tome(config)["status"] == "pass"
+    _assert_selected_linkage_invariants(config.output_dir)
+    selected_path = config.output_dir / "leaderboards" / "selected_exemplars.json"
+    selected = _json(selected_path)
+    selected["selected_exemplars"][0]["selected_position"] += 1
+    write_json(selected_path, selected)
+
+    validation = validate_teacher_textbook(config.output_dir)
+
+    assert validation.status == "fail"
+    assert (
+        "selected exemplar linkage mismatch: selected_position/score does not match "
+        "score-pass shard row"
+    ) in validation.blockers
+
+
 def test_path_a_selected_only_delivery_prunes_temporary_candidates(
     tmp_path: Path,
 ) -> None:
@@ -430,7 +453,14 @@ def test_path_b_selected_rerun_invokes_backend_only_for_selected_examples(
 
         def emit_batch(self, batch):
             invocations.append(tuple(batch.example_ids))
-            return SimpleNamespace(payload=_marker_dynamic_payload(batch, self.config))
+            payload = _marker_dynamic_payload(batch, self.config)
+            _patch_marker_payload_with_score_pass(
+                payload,
+                batch=batch,
+                dataset_path=config.dataset_path,
+                output_dir=config.output_dir,
+            )
+            return SimpleNamespace(payload=payload)
 
         def close(self) -> None:
             return None
@@ -464,7 +494,14 @@ def test_selected_payload_values_come_from_backend_emission(
             self.config = config
 
         def emit_batch(self, batch):
-            return SimpleNamespace(payload=_marker_dynamic_payload(batch, self.config))
+            payload = _marker_dynamic_payload(batch, self.config)
+            _patch_marker_payload_with_score_pass(
+                payload,
+                batch=batch,
+                dataset_path=config.dataset_path,
+                output_dir=config.output_dir,
+            )
+            return SimpleNamespace(payload=payload)
 
     monkeypatch.setattr(
         exemplar_delivery,
@@ -487,9 +524,11 @@ def test_selected_payload_values_come_from_backend_emission(
         selected_payload["selected_example_id"]
     )
     position = selected_payload["selected_position"]
+    score_top_token_id = selected_payload["score_top_token_id"]
 
     assert selected_payload["top_token_ids"][:3] == [
-        _marker_token(row, position, index) for index in range(3)
+        score_top_token_id,
+        *[_marker_token(row, position, index) for index in range(1, 3)],
     ]
     assert selected_payload["top_probs"][:3] == [
         _marker_prob(row, position, index) for index in range(3)
@@ -571,6 +610,90 @@ def _marker_dynamic_payload(batch, config) -> dict[str, np.ndarray]:
         "bucket_masses": bucket_masses,
         "teacher_entropy": teacher_entropy,
     }
+
+
+def _patch_marker_payload_with_score_pass(
+    payload: dict[str, np.ndarray],
+    *,
+    batch,
+    dataset_path: Path,
+    output_dir: Path,
+) -> None:
+    score_rows = _score_rows_by_example_id(
+        dataset_path=dataset_path,
+        output_dir=output_dir,
+    )
+    for row, example_id in enumerate(batch.example_ids):
+        score_row = score_rows[str(example_id)]
+        position = score_row["position"]
+        payload["teacher_entropy"][row, position] = score_row["entropy"]
+        payload["top_token_ids"][row, position, 0] = score_row["top_token_id"]
+
+
+def _score_rows_by_example_id(
+    *,
+    dataset_path: Path,
+    output_dir: Path,
+) -> dict[str, dict[str, int | float]]:
+    example_ids = [
+        str(json.loads(line)["example_id"])
+        for line in dataset_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    rows: dict[str, dict[str, int | float]] = {}
+    offset = 0
+    for shard_path in sorted((output_dir / "shards").glob("shard-*.npz")):
+        with np.load(shard_path) as shard:
+            row_count = int(shard["input_ids"].shape[0])
+            for row in range(row_count):
+                example_id = example_ids[offset + row]
+                rows[example_id] = {
+                    "position": int(shard["score_selected_position"][row]),
+                    "entropy": float(shard["score_selected_position_entropy"][row]),
+                    "top_token_id": int(shard["score_top_token_id"][row]),
+                }
+        offset += row_count
+    return rows
+
+
+def _assert_selected_linkage_invariants(output_dir: Path) -> None:
+    selected = _json(output_dir / "leaderboards" / "selected_exemplars.json")[
+        "selected_exemplars"
+    ]
+    payloads = _json(
+        output_dir / "selected_exemplars" / "selected-exemplars-00000.json"
+    )["selected_exemplars"]
+    for record, payload in zip(selected, payloads, strict=True):
+        source_shard_id = int(record["source_shard_id"])
+        source_row = int(record["source_row"])
+        selected_position = int(record["selected_position"])
+        with np.load(
+            output_dir / "shards" / f"shard-{source_shard_id:05d}.npz"
+        ) as shard:
+            score_position = int(shard["score_selected_position"][source_row])
+            score_entropy = float(shard["score_selected_position_entropy"][source_row])
+            score_top_token_id = int(shard["score_top_token_id"][source_row])
+            assert selected_position == score_position
+            assert np.isclose(record["selected_score"], score_entropy)
+            assert np.isclose(payload["selected_score"], score_entropy)
+            assert np.isclose(payload["teacher_entropy"], score_entropy)
+            assert payload["top_token_ids"][0] == score_top_token_id
+            assert np.isclose(
+                float(shard["corridor_entropy"][source_row, selected_position]),
+                score_entropy,
+            )
+            assert (
+                int(shard["corridor_top_token_ids"][source_row, selected_position])
+                == score_top_token_id
+            )
+        for field in (
+            "selected_example_id",
+            "selected_position",
+            "selected_score",
+            "corridor_mode_id",
+            "corridor_assignment_status",
+        ):
+            assert record[field] == payload[field]
 
 
 def _marker_token(row: int, position: int, index: int) -> int:

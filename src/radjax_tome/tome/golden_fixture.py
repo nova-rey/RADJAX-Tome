@@ -212,6 +212,8 @@ def _selected_exemplars() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         example_index = rank - 1
         position = example_index % SEQUENCE_LENGTH
         example_id = f"fixture-{example_index:02d}"
+        selected_score = 0.5 if example_index < (NUM_EXAMPLES // 2) else 3.0
+        score_top_token_id = (example_index * SEQUENCE_LENGTH + position) % VOCAB_SIZE
         mask = [index < effective_top_k for index in range(PAYLOAD_WIDTH)]
         probs = [
             float(value) if mask[index] else 0.0
@@ -228,14 +230,20 @@ def _selected_exemplars() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             "rank": rank,
             "selected_example_id": example_id,
             "selected_position": position,
-            "selected_score": float(10 - rank),
+            "selected_score": selected_score,
+            "score_selected_position_entropy": selected_score,
+            "score_top_token_id": score_top_token_id,
+            "source_shard_id": 0,
+            "source_row": example_index,
             "selected_policy": "entropy_top_n_v1",
             "source_delivery_path": "two_pass_rerun_selected",
         }
         payload = {
             **record,
             "top_token_ids": [
-                (example_index * PAYLOAD_WIDTH + index) % VOCAB_SIZE
+                score_top_token_id
+                if index == 0
+                else (example_index * PAYLOAD_WIDTH + index) % VOCAB_SIZE
                 for index in range(PAYLOAD_WIDTH)
             ],
             "top_log_probs": log_probs,
@@ -245,7 +253,7 @@ def _selected_exemplars() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             "top_mass": top_mass,
             "tail_mass": tail_mass,
             "bucket_masses": bucket_masses,
-            "teacher_entropy": float(2.0 + rank / 10.0),
+            "teacher_entropy": selected_score,
             "sequence_length": SEQUENCE_LENGTH,
             "vocab_size": VOCAB_SIZE,
             "num_buckets": BUCKET_COUNT,

@@ -401,7 +401,7 @@ def _encode_texts(
     attention_mask = np.zeros((len(texts), sequence_length), dtype=np.int32)
     for row, text in enumerate(texts):
         encoded = [
-            (ord(char) + (17 * row) + position) % vocab_size
+            (ord(char) + position) % vocab_size
             for position, char in enumerate(text[:sequence_length])
         ]
         if encoded:
@@ -412,12 +412,11 @@ def _encode_texts(
 
 def _deterministic_logits(input_ids: np.ndarray, *, vocab_size: int) -> np.ndarray:
     ids = np.asarray(input_ids, dtype=np.float32)
-    rows = np.arange(ids.shape[0], dtype=np.float32)[:, None, None]
     positions = np.arange(ids.shape[1], dtype=np.float32)[None, :, None]
     vocab = np.arange(vocab_size, dtype=np.float32)[None, None, :]
     logits = (
         np.sin(ids[:, :, None] * 0.13 + positions * 0.07 + vocab * 0.17)
-        + np.cos(rows * 0.19 + vocab * 0.11)
+        + np.cos(vocab * 0.11)
         + positions * 0.001
     )
     return logits.astype(np.float32)
