@@ -50,6 +50,22 @@ from radjax_tome.fingerprint.loader import load_fingerprint_artifact
 Use these explicit module paths when you need schema dataclasses, low-level
 read/write helpers, validation internals, provenance helpers, or loader details.
 
+## C1 Corridor Archetype Primitive
+
+The C1 pure scoring seam is available from the existing fingerprint package:
+
+```python
+from radjax_tome.fingerprint.corridor_archetypes import (
+    CorridorArchetypePolicy,
+    CorridorCandidateFeatures,
+    score_corridor_archetype_candidate,
+)
+```
+
+It performs corridor-core eligibility before difficulty scoring and returns a
+bounded deterministic utility only for eligible candidates. It does not build
+micro-leaderboards or change production selection; those begin in C2.
+
 ## What Is Not Public API
 
 The package root does not advertise every constant, dataclass, record type, or

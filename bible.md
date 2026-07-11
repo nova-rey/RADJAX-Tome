@@ -1043,3 +1043,12 @@ shards must recompute `long_tail_summary`, `selected_board_summary`, and grouped
 board records from the retained flat list. Package manifests, cover diagnostics,
 and selected-linkage audits therefore describe the same student-visible record
 set rather than producer-side counts.
+
+## 2026-07-11 — C1 Corridor Archetype Scoring
+
+C1 adds the pure `fingerprint.corridor_archetypes` contract: typed candidate
+features, validated thresholds and weights, ordered eligibility reason codes,
+bounded membership/centrality/difficulty components, and deterministic utility
+only for candidates that first pass corridor-core eligibility. It is deliberately
+not wired into production selection or artifact emission; C2 owns offline
+per-corridor micro-leaderboards.
