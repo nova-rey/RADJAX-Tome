@@ -294,8 +294,17 @@ def _materialize_package(source: Path, destination: Path, *, profile: str) -> No
     )
     _copy_optional(source, destination, "selected_exemplars", directory=True)
     _copy_optional(source, destination, "leaderboards/selected_exemplars.json")
+    _copy_optional(source, destination, "leaderboards/long_tail_uncertainty.json")
+    include_perverse = _include_perverse_tail_in_student(source)
+    if include_perverse:
+        _copy_optional(
+            source,
+            destination,
+            "leaderboards/perverse_tail_diagnostic.json",
+        )
     for optional in ("selected_linkage_audit.json", "student_validation_report.json"):
         _copy_optional(source, destination, optional)
+    _filter_student_selected_boards(destination, include_perverse=include_perverse)
     _export_student_inputs(source, destination)
     _sanitize_student_portability(destination)
 
@@ -335,6 +344,56 @@ def _copy_path(source: Path, destination: Path) -> None:
         shutil.copytree(source, destination, symlinks=False)
     else:
         shutil.copy2(source, destination)
+
+
+def _include_perverse_tail_in_student(source: Path) -> bool:
+    report = _optional_object(source / "delivery_report.json") or {}
+    return bool(report.get("include_perverse_tail_in_student"))
+
+
+def _filter_student_selected_boards(
+    root: Path,
+    *,
+    include_perverse: bool,
+) -> None:
+    if include_perverse:
+        return
+    allowed = {"primary", "long_tail_uncertainty"}
+    records_path = root / "leaderboards" / "selected_exemplars.json"
+    if records_path.is_file():
+        document = read_json_object(records_path)
+        records = document.get("selected_exemplars", [])
+        if isinstance(records, list):
+            document["selected_exemplars"] = [
+                record
+                for record in records
+                if isinstance(record, dict)
+                and str(record.get("selected_board") or "primary") in allowed
+            ]
+        boards = document.get("selected_exemplar_boards")
+        if isinstance(boards, dict):
+            document["selected_exemplar_boards"] = {
+                name: values for name, values in boards.items() if name in allowed
+            }
+        document["selected_board_summary"] = _selected_board_summary(
+            document.get("selected_exemplars", [])
+        )
+        write_json(records_path, document)
+    for path in sorted((root / "selected_exemplars").glob("*.json")):
+        document = read_json_object(path)
+        records = document.get("selected_exemplars", [])
+        if not isinstance(records, list):
+            continue
+        document["selected_exemplars"] = [
+            record
+            for record in records
+            if isinstance(record, dict)
+            and str(record.get("selected_board") or "primary") in allowed
+        ]
+        document["selected_board_summary"] = _selected_board_summary(
+            document["selected_exemplars"]
+        )
+        write_json(path, document)
 
 
 def _export_student_inputs(source: Path, destination: Path) -> None:
@@ -492,7 +551,10 @@ def _write_package_cover_page(root: Path, *, profile: str) -> None:
         selected_linkage_audit=_optional_object(root / "selected_linkage_audit.json"),
         validation_report=_optional_object(root / "validation_report.json"),
     )
-    diagnostics = {"long_tail_summary": (selected or {}).get("long_tail_summary", {})}
+    diagnostics = {
+        "long_tail_summary": (selected or {}).get("long_tail_summary", {}),
+        "selected_board_summary": (selected or {}).get("selected_board_summary", {}),
+    }
     claims_made, claims_not_made = _profile_claims(profile)
     cover = {
         "schema_version": PACKAGE_COVER_SCHEMA,
@@ -687,12 +749,46 @@ def _selected_payload_manifest(root: Path) -> dict[str, Any]:
                 "top_mass_max": max(mass, default=0.0),
             }
         )
+    selected_payloads = _read_selected_payloads(root)
     return {
         "schema_version": SELECTED_PAYLOAD_MANIFEST_SCHEMA,
         "selected_count": selected_count,
         "shard_count": len(shards),
         "payload_shards": shards,
-        "long_tail_summary": long_tail_summary(_read_selected_payloads(root)),
+        "long_tail_summary": long_tail_summary(selected_payloads),
+        "selected_board_summary": _selected_board_summary(selected_payloads),
+    }
+
+
+def _selected_board_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
+    boards = {
+        "primary": 0,
+        "long_tail_uncertainty": 0,
+        "perverse_tail_diagnostic": 0,
+    }
+    semantic_counts: dict[str, int] = {}
+    long_tail_counts: dict[str, int] = {}
+    source_score_board_counts: dict[str, int] = {}
+    for record in records:
+        board = str(record.get("selected_board") or "primary")
+        if board in boards:
+            boards[board] += 1
+        tag = str(record.get("semantic_tail_tag") or "unknown_open_class_tail")
+        semantic_counts[tag] = semantic_counts.get(tag, 0) + 1
+        long_tail_class = str(record.get("long_tail_class") or "normal")
+        long_tail_counts[long_tail_class] = long_tail_counts.get(long_tail_class, 0) + 1
+        source_board = str(record.get("mode_key") or "unassigned")
+        source_score_board_counts[source_board] = (
+            source_score_board_counts.get(source_board, 0) + 1
+        )
+    return {
+        "primary_count": boards["primary"],
+        "long_tail_uncertainty_count": boards["long_tail_uncertainty"],
+        "perverse_tail_diagnostic_count": boards["perverse_tail_diagnostic"],
+        "total_selected_count": len(records),
+        "semantic_tail_class_counts": dict(sorted(semantic_counts.items())),
+        "long_tail_class_counts": dict(sorted(long_tail_counts.items())),
+        "source_score_board_counts": dict(sorted(source_score_board_counts.items())),
     }
 
 
@@ -881,9 +977,9 @@ def _validate_selected_payload_manifest(
             blockers.append(f"selected payload shard invalid: {relative}")
             continue
         count += len(records)
-        if int(entry.get("record_count") or -1) != len(records):
+        if int(entry.get("record_count", -1)) != len(records):
             blockers.append(f"selected payload record_count mismatch: {relative}")
-    if int(manifest.get("selected_count") or -1) != count:
+    if int(manifest.get("selected_count", -1)) != count:
         blockers.append("selected payload manifest selected_count mismatch")
     return not any("selected payload" in item for item in blockers)
 

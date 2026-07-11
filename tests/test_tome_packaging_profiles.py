@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import tarfile
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -26,7 +27,11 @@ from tests.helpers.subprocess import run_cli
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _artifact(tmp_path: Path) -> Path:
+def _artifact(
+    tmp_path: Path,
+    **production_overrides: object,
+) -> Path:
+    tmp_path.mkdir(parents=True, exist_ok=True)
     sources = []
     for index in range(6):
         path = tmp_path / f"source-{index}.txt"
@@ -47,31 +52,30 @@ def _artifact(tmp_path: Path) -> Path:
         provenance,
     )
     output = tmp_path / "artifact"
-    report = build_production_gpu_tome(
-        ProductionBuildConfig(
-            teacher_model=str(model),
-            tokenizer_id=str(model),
-            dataset_path=corpus / "corpus.jsonl",
-            corpus_manifest_path=corpus / "corpus_manifest.json",
-            teacher_model_provenance_path=provenance,
-            output_dir=output,
-            teacher_backend="cpu_reference",
-            runtime_mode="cpu",
-            target_policy="corridor_exemplar_v1",
-            sequence_length=5,
-            vocab_size=64,
-            top_k=4,
-            num_buckets=3,
-            gpu_batch_size_mode="preset",
-            gpu_batch_size_preset=2,
-            shard_size_examples=2,
-            max_examples=6,
-            exemplar_selection_enabled=True,
-            exemplar_delivery_path="two_pass_rerun_selected",
-            selected_exemplar_budget=2,
-            retain_unselected_exemplar_payloads=False,
-        )
+    config = ProductionBuildConfig(
+        teacher_model=str(model),
+        tokenizer_id=str(model),
+        dataset_path=corpus / "corpus.jsonl",
+        corpus_manifest_path=corpus / "corpus_manifest.json",
+        teacher_model_provenance_path=provenance,
+        output_dir=output,
+        teacher_backend="cpu_reference",
+        runtime_mode="cpu",
+        target_policy="corridor_exemplar_v1",
+        sequence_length=5,
+        vocab_size=64,
+        top_k=4,
+        num_buckets=3,
+        gpu_batch_size_mode="preset",
+        gpu_batch_size_preset=2,
+        shard_size_examples=2,
+        max_examples=6,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        selected_exemplar_budget=2,
+        retain_unselected_exemplar_payloads=False,
     )
+    report = build_production_gpu_tome(replace(config, **production_overrides))
     assert report["status"] == "pass"
     return output
 
@@ -172,6 +176,70 @@ def test_student_package_is_self_contained_training_contract(
         "effective_top_k_fraction_of_vocab",
     } <= set(selected_payload)
     assert validate_tome_package(package, profile=STUDENT).ok
+
+
+@pytest.mark.parametrize("include_perverse", (False, True))
+def test_student_package_filters_perverse_tail_board_by_producer_opt_in(
+    tmp_path: Path,
+    include_perverse: bool,
+) -> None:
+    artifact = _artifact(
+        tmp_path / ("included" if include_perverse else "excluded"),
+        long_tail_warning_k=1,
+        very_long_tail_warning_k=2,
+        perverse_tail_warning_k=3,
+        include_perverse_tail_in_student=include_perverse,
+    )
+    package_name = "student-included" if include_perverse else "student-excluded"
+    package = tmp_path / package_name
+
+    package_tome_artifact(artifact, package, profile=STUDENT, overwrite=True)
+
+    selected = _json(package / "leaderboards" / "selected_exemplars.json")
+    payload_manifest = _json(package / "manifests" / "selected_payload_manifest.json")
+    boards = selected["selected_exemplar_boards"]
+    if include_perverse:
+        assert (package / "leaderboards" / "perverse_tail_diagnostic.json").is_file()
+        assert boards["perverse_tail_diagnostic"]
+        assert (
+            payload_manifest["selected_board_summary"]["perverse_tail_diagnostic_count"]
+            > 0
+        )
+    else:
+        assert not (package / "leaderboards" / "perverse_tail_diagnostic.json").exists()
+        assert "perverse_tail_diagnostic" not in boards
+        assert (
+            payload_manifest["selected_board_summary"]["perverse_tail_diagnostic_count"]
+            == 0
+        )
+    assert validate_tome_package(package, profile=STUDENT).ok
+
+
+def test_full_debug_package_retains_perverse_tail_board(tmp_path: Path) -> None:
+    artifact = _artifact(
+        tmp_path / "full-debug",
+        long_tail_warning_k=1,
+        very_long_tail_warning_k=2,
+        perverse_tail_warning_k=3,
+    )
+    package = tmp_path / "full-debug-package"
+
+    package_tome_artifact(
+        artifact,
+        package,
+        profile=FULL_DEBUG_PROVENANCE,
+        overwrite=True,
+    )
+
+    cover = _json(package / "cover_page.json")
+    selected = _json(package / "leaderboards" / "selected_exemplars.json")
+    assert (package / "leaderboards" / "perverse_tail_diagnostic.json").is_file()
+    assert selected["selected_exemplar_boards"]["perverse_tail_diagnostic"]
+    assert (
+        cover["diagnostics"]["selected_board_summary"]["perverse_tail_diagnostic_count"]
+        > 0
+    )
+    assert validate_tome_package(package, profile=FULL_DEBUG_PROVENANCE).ok
 
 
 def test_student_inputs_match_full_source_shards(

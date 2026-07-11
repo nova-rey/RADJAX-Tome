@@ -14,6 +14,18 @@ VERY_LONG_TAIL = "very_long_tail"
 SUSPICIOUS_FLAT = "suspicious_flat"
 FULL_VOCAB_OR_NEAR_FULL_VOCAB = "full_vocab_or_near_full_vocab"
 
+PROPER_NAME_TAIL = "proper_name_tail"
+NUMERIC_TAIL = "numeric_tail"
+URL_OR_MARKUP_TAIL = "url_or_markup_tail"
+WHITESPACE_OR_BOUNDARY_TAIL = "whitespace_or_boundary_tail"
+CODE_OR_SYMBOL_TAIL = "code_or_symbol_tail"
+UNKNOWN_OPEN_CLASS_TAIL = "unknown_open_class_tail"
+TRUE_FLAT_OR_UNCLASSIFIED_TAIL = "true_flat_or_unclassified_tail"
+
+LONG_TAIL_UNCERTAINTY_BOARD = "long_tail_uncertainty"
+PERVERSE_TAIL_DIAGNOSTIC_BOARD = "perverse_tail_diagnostic"
+PRIMARY_SELECTED_BOARD = "primary"
+
 
 @dataclass(frozen=True)
 class LongTailPolicy:
@@ -97,6 +109,82 @@ def is_perverse_long_tail(diagnostic: dict[str, Any]) -> bool:
         SUSPICIOUS_FLAT,
         FULL_VOCAB_OR_NEAR_FULL_VOCAB,
     }
+
+
+def selected_board_for_long_tail(
+    long_tail_class: str,
+    *,
+    include_long_tail_in_primary: bool = False,
+    include_perverse_tail_in_primary: bool = False,
+) -> str:
+    if long_tail_class == NORMAL:
+        return PRIMARY_SELECTED_BOARD
+    if long_tail_class in {LONG_TAIL, VERY_LONG_TAIL}:
+        return (
+            PRIMARY_SELECTED_BOARD
+            if include_long_tail_in_primary
+            else LONG_TAIL_UNCERTAINTY_BOARD
+        )
+    if long_tail_class in {SUSPICIOUS_FLAT, FULL_VOCAB_OR_NEAR_FULL_VOCAB}:
+        return (
+            PRIMARY_SELECTED_BOARD
+            if include_perverse_tail_in_primary
+            else PERVERSE_TAIL_DIAGNOSTIC_BOARD
+        )
+    raise ValueError(f"unsupported long_tail_class: {long_tail_class}")
+
+
+def semantic_tail_tag(
+    *,
+    long_tail_class: str,
+    top_token_texts: Iterable[str] = (),
+) -> str:
+    """Classify decoded top-token text when it is available to the producer.
+
+    Current compact artifacts intentionally retain token ids rather than a second
+    decoded-token surface. Callers without decoded pieces get a conservative
+    class-derived fallback instead of inventing text semantics from token ids.
+    """
+
+    pieces = [
+        str(value).replace("▁", " ").replace("Ġ", " ").strip()
+        for value in top_token_texts
+    ]
+    pieces = [piece for piece in pieces if piece]
+    if pieces:
+        labels = [_piece_tail_tag(piece) for piece in pieces]
+        for tag in (
+            PROPER_NAME_TAIL,
+            NUMERIC_TAIL,
+            URL_OR_MARKUP_TAIL,
+            WHITESPACE_OR_BOUNDARY_TAIL,
+            CODE_OR_SYMBOL_TAIL,
+        ):
+            if sum(label == tag for label in labels) * 2 >= len(labels):
+                return tag
+    if long_tail_class in {SUSPICIOUS_FLAT, FULL_VOCAB_OR_NEAR_FULL_VOCAB}:
+        return TRUE_FLAT_OR_UNCLASSIFIED_TAIL
+    return UNKNOWN_OPEN_CLASS_TAIL
+
+
+def _piece_tail_tag(piece: str) -> str:
+    if piece.startswith(("http", "www.", "<", "</", "#")) or any(
+        marker in piece for marker in ("://", "=", "/")
+    ):
+        return URL_OR_MARKUP_TAIL
+    if all(character.isdigit() or character in ".,:%+-/" for character in piece):
+        return NUMERIC_TAIL
+    if not piece.strip():
+        return WHITESPACE_OR_BOUNDARY_TAIL
+    if any(character in "{}[]()<>_=;`\\|~" for character in piece):
+        return CODE_OR_SYMBOL_TAIL
+    if (
+        (len(piece) == 1 and piece.isupper())
+        or (piece[:1].isupper() and piece[1:].isalpha())
+        or piece.startswith(("Mc", "Mac", "O'", "van", "de"))
+    ):
+        return PROPER_NAME_TAIL
+    return UNKNOWN_OPEN_CLASS_TAIL
 
 
 def long_tail_summary(items: Iterable[dict[str, Any]]) -> dict[str, Any]:

@@ -71,6 +71,12 @@ class ProductionBuildConfig:
     very_long_tail_warning_k: int = DEFAULT_VERY_LONG_TAIL_WARNING_K
     perverse_tail_warning_k: int = DEFAULT_PERVERSE_TAIL_WARNING_K
     reject_perverse_exemplars: bool = False
+    primary_selected_exemplar_budget: int | None = None
+    long_tail_side_board_cap: int = 128
+    perverse_tail_side_board_cap: int = 32
+    include_long_tail_in_primary: bool = False
+    include_perverse_tail_in_primary: bool = False
+    include_perverse_tail_in_student: bool = False
     gpu_batch_size_mode: str = "auto"
     gpu_batch_size_preset: int = 8
     gpu_batch_size_custom: int | None = None
@@ -861,6 +867,11 @@ def _production_report(
             if delivery_report is not None
             else None
         ),
+        "selected_board_summary": (
+            delivery_report.get("selected_board_summary")
+            if delivery_report is not None
+            else None
+        ),
         "selected_exemplar_payload_retained": (
             delivery_report.get("selected_exemplar_payload_retained")
             if delivery_report is not None
@@ -873,6 +884,16 @@ def _production_report(
         "very_long_tail_warning_k": config.very_long_tail_warning_k,
         "perverse_tail_warning_k": config.perverse_tail_warning_k,
         "reject_perverse_exemplars": config.reject_perverse_exemplars,
+        "primary_selected_exemplar_budget": (
+            config.primary_selected_exemplar_budget
+            if config.primary_selected_exemplar_budget is not None
+            else config.selected_exemplar_budget
+        ),
+        "long_tail_side_board_cap": config.long_tail_side_board_cap,
+        "perverse_tail_side_board_cap": config.perverse_tail_side_board_cap,
+        "include_long_tail_in_primary": config.include_long_tail_in_primary,
+        "include_perverse_tail_in_primary": config.include_perverse_tail_in_primary,
+        "include_perverse_tail_in_student": config.include_perverse_tail_in_student,
         "long_tail_summary": (
             delivery_report.get("long_tail_summary")
             if delivery_report is not None
@@ -1027,6 +1048,16 @@ def _inputs(config: ProductionBuildConfig) -> dict[str, Any]:
         "very_long_tail_warning_k": config.very_long_tail_warning_k,
         "perverse_tail_warning_k": config.perverse_tail_warning_k,
         "reject_perverse_exemplars": config.reject_perverse_exemplars,
+        "primary_selected_exemplar_budget": (
+            config.primary_selected_exemplar_budget
+            if config.primary_selected_exemplar_budget is not None
+            else config.selected_exemplar_budget
+        ),
+        "long_tail_side_board_cap": config.long_tail_side_board_cap,
+        "perverse_tail_side_board_cap": config.perverse_tail_side_board_cap,
+        "include_long_tail_in_primary": config.include_long_tail_in_primary,
+        "include_perverse_tail_in_primary": config.include_perverse_tail_in_primary,
+        "include_perverse_tail_in_student": config.include_perverse_tail_in_student,
         "allow_downloads": False,
         "local_files_only": True,
         "exemplar_selection_enabled": config.exemplar_selection_enabled,
@@ -1119,6 +1150,16 @@ def _exemplar_delivery_config(
         very_long_tail_warning_k=config.very_long_tail_warning_k,
         perverse_tail_warning_k=config.perverse_tail_warning_k,
         reject_perverse_exemplars=config.reject_perverse_exemplars,
+        primary_selected_exemplar_budget=(
+            config.primary_selected_exemplar_budget
+            if config.primary_selected_exemplar_budget is not None
+            else config.selected_exemplar_budget
+        ),
+        long_tail_side_board_cap=config.long_tail_side_board_cap,
+        perverse_tail_side_board_cap=config.perverse_tail_side_board_cap,
+        include_long_tail_in_primary=config.include_long_tail_in_primary,
+        include_perverse_tail_in_primary=config.include_perverse_tail_in_primary,
+        include_perverse_tail_in_student=config.include_perverse_tail_in_student,
         progress_callback=progress_callback,
     )
 

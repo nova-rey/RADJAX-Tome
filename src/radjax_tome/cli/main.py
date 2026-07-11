@@ -352,6 +352,12 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument("--very-long-tail-warning-k", type=int, default=32_768)
     production.add_argument("--perverse-tail-warning-k", type=int, default=65_536)
     production.add_argument("--reject-perverse-exemplars", action="store_true")
+    production.add_argument("--primary-selected-exemplar-budget", type=int)
+    production.add_argument("--long-tail-side-board-cap", type=int, default=128)
+    production.add_argument("--perverse-tail-side-board-cap", type=int, default=32)
+    production.add_argument("--include-long-tail-in-primary", action="store_true")
+    production.add_argument("--include-perverse-tail-in-primary", action="store_true")
+    production.add_argument("--include-perverse-tail-in-student", action="store_true")
     production.add_argument(
         "--gpu-batch-size-mode",
         choices=("preset", "custom", "auto"),
@@ -1019,6 +1025,12 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
             very_long_tail_warning_k=args.very_long_tail_warning_k,
             perverse_tail_warning_k=args.perverse_tail_warning_k,
             reject_perverse_exemplars=args.reject_perverse_exemplars,
+            primary_selected_exemplar_budget=args.primary_selected_exemplar_budget,
+            long_tail_side_board_cap=args.long_tail_side_board_cap,
+            perverse_tail_side_board_cap=args.perverse_tail_side_board_cap,
+            include_long_tail_in_primary=args.include_long_tail_in_primary,
+            include_perverse_tail_in_primary=args.include_perverse_tail_in_primary,
+            include_perverse_tail_in_student=args.include_perverse_tail_in_student,
             gpu_batch_size_mode=args.gpu_batch_size_mode,
             gpu_batch_size_preset=args.gpu_batch_size_preset,
             gpu_batch_size_custom=args.gpu_batch_size_custom,

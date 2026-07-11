@@ -1018,3 +1018,19 @@ Diagnostic `top_mass` is clamped to the valid probability range while preserving
 `raw_top_mass` and `top_mass_clamped`; numeric overshoot remains visible without
 presenting impossible mass as a normal probability or turning a valid build into
 a warning or failure.
+
+## 2026-07-11 — Selected Exemplar Curriculum Boards
+
+The existing rank-aware multi-score-board selector remains the sole selection
+mechanism. After it chooses candidates and long-tail diagnostics are attached,
+the delivery layer routes finished exemplars into curriculum boards: `primary`,
+`long_tail_uncertainty`, or `perverse_tail_diagnostic`. Score-board provenance
+is retained through `rank_by_board`, `scores_by_board`, and a board-summary
+count, so curriculum routing never replaces the selection policy or its
+deduplication behavior.
+
+Student packages retain primary and auxiliary long-tail records by default,
+while the perverse diagnostic board requires explicit producer opt-in. Every
+retained board record preserves the same source passport and corridor linkage as
+the flat selected-exemplar list, allowing the existing audit to validate the
+complete packaged curriculum without special-case trust paths.

@@ -42,6 +42,7 @@ _COMMON_FIELDS = (
     "payload_ref",
     "corridor_mode_id",
     "corridor_assignment_status",
+    "selected_board",
 )
 _FLOAT_FIELDS = {"selected_score", "source_score"}
 

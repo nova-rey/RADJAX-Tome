@@ -10,13 +10,18 @@ from radjax_tome.builder.exemplar_selection import (
 from radjax_tome.builder.long_tail import (
     FULL_VOCAB_OR_NEAR_FULL_VOCAB,
     LONG_TAIL,
+    LONG_TAIL_UNCERTAINTY_BOARD,
     NORMAL,
+    PERVERSE_TAIL_DIAGNOSTIC_BOARD,
+    PRIMARY_SELECTED_BOARD,
     SUSPICIOUS_FLAT,
     VERY_LONG_TAIL,
     LongTailPolicy,
     is_perverse_long_tail,
     long_tail_diagnostics,
     long_tail_summary,
+    selected_board_for_long_tail,
+    semantic_tail_tag,
 )
 
 POLICY = LongTailPolicy(
@@ -102,6 +107,57 @@ def test_long_tail_diagnostic_clamps_probability_mass_for_reporting() -> None:
     assert diagnostic["top_mass"] == 1.0
     assert diagnostic["raw_top_mass"] == pytest.approx(1.0078125)
     assert diagnostic["top_mass_clamped"] is True
+
+
+@pytest.mark.parametrize(
+    ("long_tail_class", "expected_board"),
+    (
+        (NORMAL, PRIMARY_SELECTED_BOARD),
+        (LONG_TAIL, LONG_TAIL_UNCERTAINTY_BOARD),
+        (VERY_LONG_TAIL, LONG_TAIL_UNCERTAINTY_BOARD),
+        (SUSPICIOUS_FLAT, PERVERSE_TAIL_DIAGNOSTIC_BOARD),
+        (FULL_VOCAB_OR_NEAR_FULL_VOCAB, PERVERSE_TAIL_DIAGNOSTIC_BOARD),
+    ),
+)
+def test_default_selected_board_routing(
+    long_tail_class: str,
+    expected_board: str,
+) -> None:
+    assert selected_board_for_long_tail(long_tail_class) == expected_board
+
+
+def test_primary_routing_overrides_are_explicit() -> None:
+    assert (
+        selected_board_for_long_tail(
+            LONG_TAIL,
+            include_long_tail_in_primary=True,
+        )
+        == PRIMARY_SELECTED_BOARD
+    )
+    assert (
+        selected_board_for_long_tail(
+            FULL_VOCAB_OR_NEAR_FULL_VOCAB,
+            include_perverse_tail_in_primary=True,
+        )
+        == PRIMARY_SELECTED_BOARD
+    )
+
+
+def test_semantic_tail_tags_use_decoded_token_pieces_when_available() -> None:
+    assert (
+        semantic_tail_tag(
+            long_tail_class=FULL_VOCAB_OR_NEAR_FULL_VOCAB,
+            top_token_texts=(" Ada", " Lovelace", " Grace"),
+        )
+        == "proper_name_tail"
+    )
+    assert (
+        semantic_tail_tag(
+            long_tail_class=LONG_TAIL,
+            top_token_texts=(" 2026", " 42", " 3.14"),
+        )
+        == "numeric_tail"
+    )
 
 
 def test_reject_perverse_filter_replaces_candidate_with_next_eligible() -> None:

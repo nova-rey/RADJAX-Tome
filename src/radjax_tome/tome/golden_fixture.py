@@ -9,7 +9,11 @@ from typing import Any
 import numpy as np
 
 from radjax_tome.builder.corridor_artifacts import build_corridor_artifacts
-from radjax_tome.builder.long_tail import LongTailPolicy, long_tail_diagnostics
+from radjax_tome.builder.long_tail import (
+    LongTailPolicy,
+    long_tail_diagnostics,
+    semantic_tail_tag,
+)
 from radjax_tome.builder.teacher_textbook import (
     EMISSION_CONFIG_FIELDS,
     TinyTextExample,
@@ -287,6 +291,10 @@ def _selected_exemplars() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             policy=LongTailPolicy(),
         )
         record.update(diagnostic)
+        record["selected_board"] = "primary"
+        record["semantic_tail_tag"] = semantic_tail_tag(
+            long_tail_class=str(diagnostic["long_tail_class"])
+        )
         record["dynamic_top_k"] = dict(payload["dynamic_top_k"])
         record["dynamic_top_k"].update(
             {
@@ -296,6 +304,8 @@ def _selected_exemplars() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
             }
         )
         payload.update(diagnostic)
+        payload["selected_board"] = record["selected_board"]
+        payload["semantic_tail_tag"] = record["semantic_tail_tag"]
         payload["dynamic_top_k"] = dict(record["dynamic_top_k"])
         records.append(record)
         payloads.append(payload)

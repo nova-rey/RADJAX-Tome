@@ -10,6 +10,7 @@ import pytest
 
 import radjax_tome.builder.exemplar_delivery as exemplar_delivery
 import radjax_tome.builder.production as production
+from radjax_tome.audit import audit_selected_linkage
 from radjax_tome.builder import (
     ProductionBuildConfig,
     build_production_gpu_tome,
@@ -128,6 +129,12 @@ def test_cli_exposes_selected_only_exemplar_delivery_flags() -> None:
     assert "--very-long-tail-warning-k" in production_help.stdout
     assert "--perverse-tail-warning-k" in production_help.stdout
     assert "--reject-perverse-exemplars" in production_help.stdout
+    assert "--primary-selected-exemplar-budget" in production_help.stdout
+    assert "--long-tail-side-board-cap" in production_help.stdout
+    assert "--perverse-tail-side-board-cap" in production_help.stdout
+    assert "--include-long-tail-in-primary" in production_help.stdout
+    assert "--include-perverse-tail-in-primary" in production_help.stdout
+    assert "--include-perverse-tail-in-student" in production_help.stdout
     assert parity_help.returncode == 0, parity_help.stderr
     assert "--path-a" in parity_help.stdout
     assert "--path-b" in parity_help.stdout
@@ -203,6 +210,12 @@ def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retent
     assert "timing_enabled" not in delivery
     assert "timing_enabled" not in report
     assert selected["selected_exemplars"]
+    assert set(selected["selected_exemplar_boards"]) == {
+        "primary",
+        "long_tail_uncertainty",
+        "perverse_tail_diagnostic",
+    }
+    assert selected["selected_board_summary"]["primary_count"] == 2
     selected_payload = payload["selected_exemplars"][0]
     selected_record = selected["selected_exemplars"][0]
     for field in (
@@ -240,6 +253,8 @@ def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retent
         "effective_top_k_fraction_of_vocab",
     ):
         assert selected_record[field] == selected_payload[field]
+    assert selected_record["selected_board"] == "primary"
+    assert selected_payload["selected_board"] == "primary"
     assert delivery["long_tail_summary"]["count"] == 2
     assert report["long_tail_summary"] == delivery["long_tail_summary"]
     assert not (output / "unselected_candidate_payloads").exists()
@@ -267,6 +282,53 @@ def test_long_tail_observations_do_not_promote_delivery_status(tmp_path: Path) -
     assert delivery["long_tail_summary"]["suspicious_flat_count"] > 0
     assert delivery["long_tail_observations"]
     assert report["long_tail_observations"] == delivery["long_tail_observations"]
+
+
+def test_long_tail_side_board_is_capped_and_auditable(tmp_path: Path) -> None:
+    config = replace(
+        _config(
+            tmp_path,
+            output_name="path_b_long_tail_side_board",
+            delivery_path="two_pass_rerun_selected",
+        ),
+        selected_exemplar_budget=1,
+        primary_selected_exemplar_budget=1,
+        long_tail_warning_k=1,
+        very_long_tail_warning_k=65,
+        perverse_tail_warning_k=66,
+        long_tail_side_board_cap=1,
+    )
+
+    report = build_production_gpu_tome(config)
+    selected = _json(config.output_dir / "leaderboards" / "selected_exemplars.json")
+    payload = _json(
+        config.output_dir / "selected_exemplars" / "selected-exemplars-00000.json"
+    )
+
+    assert report["status"] == "pass"
+    assert report["selected_board_summary"]["primary_count"] == 0
+    assert report["selected_board_summary"]["long_tail_uncertainty_count"] == 1
+    assert report["selected_board_summary"]["total_selected_count"] == 1
+    assert selected["selected_exemplar_boards"]["long_tail_uncertainty"]
+    assert selected["selected_exemplars"][0]["selected_board"] == (
+        "long_tail_uncertainty"
+    )
+    assert payload["selected_exemplars"][0]["selected_board"] == (
+        "long_tail_uncertainty"
+    )
+    assert {
+        "source_shard_id",
+        "source_row",
+        "source_position",
+        "source_top_token_id",
+        "selected_example_id",
+        "payload_ref",
+        "corridor_mode_id",
+        "corridor_fingerprint_id",
+        "long_tail_class",
+        "semantic_tail_tag",
+    } <= set(payload["selected_exemplars"][0])
+    assert audit_selected_linkage(config.output_dir, strict=True).status == "pass"
 
 
 def test_path_b_progress_sidecar_records_rerun_and_corridor_export(

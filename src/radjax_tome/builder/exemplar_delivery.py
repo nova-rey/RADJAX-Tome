@@ -29,10 +29,15 @@ from radjax_tome.builder.long_tail import (
     DEFAULT_LONG_TAIL_WARNING_K,
     DEFAULT_PERVERSE_TAIL_WARNING_K,
     DEFAULT_VERY_LONG_TAIL_WARNING_K,
+    LONG_TAIL_UNCERTAINTY_BOARD,
+    PERVERSE_TAIL_DIAGNOSTIC_BOARD,
+    PRIMARY_SELECTED_BOARD,
     LongTailPolicy,
     is_perverse_long_tail,
     long_tail_diagnostics,
     long_tail_summary,
+    selected_board_for_long_tail,
+    semantic_tail_tag,
 )
 from radjax_tome.builder.teacher_textbook import TinyTextExample
 from radjax_tome.io.json import read_json_object, write_json
@@ -43,6 +48,10 @@ EXEMPLAR_DELIVERY_REPORT_SCHEMA = "selected_exemplar_delivery_report_v1"
 EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA = "exemplar_delivery_parity_report_v1"
 LEADERBOARD_REPORT_FILENAME = "leaderboard_report.json"
 SELECTED_EXEMPLARS_FILENAME = "selected_exemplars.json"
+_SIDE_SELECTED_BOARD_IDS = (
+    LONG_TAIL_UNCERTAINTY_BOARD,
+    PERVERSE_TAIL_DIAGNOSTIC_BOARD,
+)
 SELECTED_LINKAGE_MISMATCH = (
     "selected exemplar linkage mismatch: selected record/payload does not match "
     "source candidate coordinate"
@@ -98,6 +107,8 @@ _REQUIRED_SELECTED_PAYLOAD_FIELDS = (
     "long_tail_class",
     "long_tail_warnings",
     "effective_top_k_fraction_of_vocab",
+    "semantic_tail_tag",
+    "selected_board",
     "corridor_mode_id",
     "corridor_fingerprint_id",
     "corridor_assignment_status",
@@ -139,6 +150,12 @@ class ExemplarDeliveryConfig:
     very_long_tail_warning_k: int = DEFAULT_VERY_LONG_TAIL_WARNING_K
     perverse_tail_warning_k: int = DEFAULT_PERVERSE_TAIL_WARNING_K
     reject_perverse_exemplars: bool = False
+    primary_selected_exemplar_budget: int | None = None
+    long_tail_side_board_cap: int = 128
+    perverse_tail_side_board_cap: int = 32
+    include_long_tail_in_primary: bool = False
+    include_perverse_tail_in_primary: bool = False
+    include_perverse_tail_in_student: bool = False
     progress_callback: DeliveryProgressCallback | None = None
 
 
@@ -159,13 +176,13 @@ def materialize_selected_exemplar_delivery(
         else PATH_A_FULFILLMENT_POLICY
     )
     long_tail_policy = _long_tail_policy(config)
+    selection_started = perf_counter()
     candidate_filter = None
     if config.reject_perverse_exemplars:
 
         def candidate_filter(candidate: Any) -> bool:
             return not _candidate_is_perverse(candidate, config=config)
 
-    selection_started = perf_counter()
     manifest = build_exemplar_selection_manifest(
         store,
         examples=examples,
@@ -173,9 +190,9 @@ def materialize_selected_exemplar_delivery(
         capture_mode=_capture_mode_for_delivery(config.delivery_path),
         fulfillment_policy=fulfillment_policy,
         board_capacity=config.leaderboard_capacity,
-        budget_examples=config.selected_exemplar_budget,
-        budget_fraction=config.selected_exemplar_fraction,
         created_at=created_at,
+        budget_examples=None,
+        budget_fraction=None,
         canonical_score_fields_only=True,
         use_score_pass_fields=config.delivery_path == TWO_PASS_RERUN_SELECTED,
         candidate_filter=candidate_filter,
@@ -185,15 +202,16 @@ def materialize_selected_exemplar_delivery(
             else None
         ),
     )
-    selected_records = _flatten_selected_records(
-        manifest,
-        delivery_path=config.delivery_path,
+    selected_records = _route_records_for_delivery(
+        _flatten_selected_records(manifest, delivery_path=config.delivery_path),
+        config=config,
     )
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
         _validate_path_b_score_pass_records(selected_records, store=store)
-    selected_example_count = len(
+    rerun_selected_example_count = len(
         {record["selected_example_id"] for record in selected_records}
     )
+    rerun_selected_example_ids = _unique_selected_example_ids(selected_records)
     selection_wall_seconds = _elapsed(selection_started)
     payload_started = perf_counter()
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
@@ -202,7 +220,7 @@ def materialize_selected_exemplar_delivery(
             phase="selected_rerun",
             event="started",
             selected_examples_processed=0,
-            selected_examples_total=selected_example_count,
+            selected_examples_total=rerun_selected_example_count,
         )
     selected_payloads = _selected_payloads(
         selected_records,
@@ -216,7 +234,20 @@ def materialize_selected_exemplar_delivery(
         config=config,
         policy=long_tail_policy,
     )
+    selected_records, selected_payloads = _route_materialized_selected_exemplars(
+        selected_records,
+        selected_payloads,
+        config=config,
+    )
+    selected_example_count = len(
+        {record["selected_example_id"] for record in selected_records}
+    )
     tail_summary = long_tail_summary(selected_payloads)
+    selected_board_summary = _selected_board_summary(
+        selected_payloads,
+        selected_records,
+    )
+    selected_records_by_board = _records_by_selected_board(selected_records)
     payload_wall_seconds = _elapsed(payload_started)
     output = config.artifact_dir
     corridors_dir = output / "corridors"
@@ -255,6 +286,7 @@ def materialize_selected_exemplar_delivery(
         config=config,
         created_at=created_at,
         long_tail_summary=tail_summary,
+        selected_board_summary=selected_board_summary,
     )
     selected_exemplars = {
         "schema_version": "selected_exemplars_v1",
@@ -263,15 +295,29 @@ def materialize_selected_exemplar_delivery(
         "score_policy": config.score_policy,
         "selected_exemplars": selected_records,
         "long_tail_summary": tail_summary,
+        "selected_board_summary": selected_board_summary,
+        "selected_exemplar_boards": selected_records_by_board,
     }
     write_json(leaderboards_dir / LEADERBOARD_REPORT_FILENAME, leaderboard_report)
     write_json(leaderboards_dir / SELECTED_EXEMPLARS_FILENAME, selected_exemplars)
+    for board_id in _SIDE_SELECTED_BOARD_IDS:
+        write_json(
+            leaderboards_dir / f"{board_id}.json",
+            {
+                "schema_version": "selected_exemplar_side_board_v1",
+                "delivery_path": config.delivery_path,
+                "selected_board": board_id,
+                "selected_exemplars": selected_records_by_board[board_id],
+                "selected_board_summary": selected_board_summary,
+            },
+        )
     write_json(
         selected_dir / "selected-exemplars-00000.json",
         {
             "schema_version": "selected_exemplar_payload_shard_v1",
             "delivery_path": config.delivery_path,
             "long_tail_summary": tail_summary,
+            "selected_board_summary": selected_board_summary,
             "selected_exemplars": selected_payloads,
         },
     )
@@ -294,19 +340,31 @@ def materialize_selected_exemplar_delivery(
         "num_positions_scored": store.metadata.num_examples
         * store.metadata.sequence_length,
         "num_selected_exemplars": len(selected_payloads),
+        "selected_board_summary": selected_board_summary,
+        "primary_selected_exemplar_budget": _primary_budget(config),
+        "long_tail_side_board_cap": config.long_tail_side_board_cap,
+        "perverse_tail_side_board_cap": config.perverse_tail_side_board_cap,
+        "include_long_tail_in_primary": config.include_long_tail_in_primary,
+        "include_perverse_tail_in_primary": config.include_perverse_tail_in_primary,
+        "include_perverse_tail_in_student": config.include_perverse_tail_in_student,
         "long_tail_summary": tail_summary,
         "selected_example_count": selected_example_count,
         "selected_rerun_example_ids": (
-            _unique_selected_example_ids(selected_records)
+            rerun_selected_example_ids
             if config.delivery_path == TWO_PASS_RERUN_SELECTED
             else []
+        ),
+        "selected_rerun_example_count": (
+            rerun_selected_example_count
+            if config.delivery_path == TWO_PASS_RERUN_SELECTED
+            else 0
         ),
         "selected_exemplar_payload_retained": bool(selected_payloads),
         "non_selected_exemplar_payload_retained": (
             config.retain_unselected_exemplar_payloads
         ),
         "teacher_rerun_count": (
-            selected_example_count
+            rerun_selected_example_count
             if config.delivery_path == TWO_PASS_RERUN_SELECTED
             else 0
         ),
@@ -413,9 +471,12 @@ def validate_selected_exemplar_delivery(
                 + ", ".join(missing)
             )
     if report.get("delivery_path") == TWO_PASS_RERUN_SELECTED:
-        if report.get("teacher_rerun_count") != report.get("selected_example_count"):
+        if report.get("teacher_rerun_count") != report.get(
+            "selected_rerun_example_count",
+            report.get("selected_example_count"),
+        ):
             blockers.append(
-                "Path B teacher_rerun_count does not match selected examples"
+                "Path B teacher_rerun_count does not match selected rerun examples"
             )
     for name in ("unselected_candidate_payloads", "temporary_candidates"):
         if (artifact_dir / name).exists():
@@ -542,6 +603,10 @@ def _record_payload_tuple_mismatch(
         "corridor_assignment_status",
     )
     if any(record.get(field) != payload.get(field) for field in fields):
+        return True
+    if "selected_board" in record and record.get("selected_board") != payload.get(
+        "selected_board"
+    ):
         return True
     return not (
         _close_float(record.get("selected_score"), payload.get("selected_score"))
@@ -1128,6 +1193,15 @@ def _validate_delivery_config(config: ExemplarDeliveryConfig) -> None:
         0.0 < config.selected_exemplar_fraction <= 1.0
     ):
         raise ValueError("selected_exemplar_fraction must be in (0, 1]")
+    if (
+        config.primary_selected_exemplar_budget is not None
+        and config.primary_selected_exemplar_budget < 1
+    ):
+        raise ValueError("primary_selected_exemplar_budget must be positive")
+    if config.long_tail_side_board_cap < 1:
+        raise ValueError("long_tail_side_board_cap must be positive")
+    if config.perverse_tail_side_board_cap < 1:
+        raise ValueError("perverse_tail_side_board_cap must be positive")
     _long_tail_policy(config)
 
 
@@ -1230,6 +1304,14 @@ def _flatten_selected_records(
                     "payload_ref": payload_ref,
                     "rank_by_board": position_record.get("rank_by_board", {}),
                     "scores_by_board": scores,
+                    "diagnostic_effective_top_k": position_record.get(
+                        "diagnostic_effective_top_k",
+                        1,
+                    ),
+                    "diagnostic_top_mass": position_record.get(
+                        "diagnostic_top_mass",
+                        0.0,
+                    ),
                 }
             )
     records.sort(
@@ -1344,6 +1426,10 @@ def _selected_payload_from_one_pass_shard(
         "payload_ref": record["payload_ref"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
+        "selected_board": record.get("selected_board", PRIMARY_SELECTED_BOARD),
+        "mode_key": record.get("mode_key"),
+        "rank_by_board": record.get("rank_by_board", {}),
+        "scores_by_board": record.get("scores_by_board", {}),
         "top_token_ids": _payload_slice(
             shard,
             "exemplar_source_top_token_ids",
@@ -1865,6 +1951,10 @@ def _selected_payload_from_emission(
         "payload_ref": record["payload_ref"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
+        "selected_board": record.get("selected_board", PRIMARY_SELECTED_BOARD),
+        "mode_key": record.get("mode_key"),
+        "rank_by_board": record.get("rank_by_board", {}),
+        "scores_by_board": record.get("scores_by_board", {}),
         "top_token_ids": top_token_ids,
         "top_log_probs": _payload_slice(payload, "top_log_probs", row, position),
         "top_probs": _payload_slice(payload, "top_probs", row, position),
@@ -1930,6 +2020,15 @@ def _candidate_is_perverse(
     *,
     config: ExemplarDeliveryConfig,
 ) -> bool:
+    diagnostic = _candidate_long_tail_diagnostic(candidate, config=config)
+    return is_perverse_long_tail(diagnostic)
+
+
+def _candidate_long_tail_diagnostic(
+    candidate: Any,
+    *,
+    config: ExemplarDeliveryConfig,
+) -> dict[str, Any]:
     effective_top_k = int(
         candidate.score_fields.get(
             "diagnostic_effective_top_k",
@@ -1951,7 +2050,165 @@ def _candidate_is_perverse(
         dynamic_top_k_max=_dynamic_top_k_max(config),
         policy=_long_tail_policy(config),
     )
-    return is_perverse_long_tail(diagnostic)
+    return diagnostic
+
+
+def _primary_budget(config: ExemplarDeliveryConfig) -> int | None:
+    return (
+        config.primary_selected_exemplar_budget
+        if config.primary_selected_exemplar_budget is not None
+        else config.selected_exemplar_budget
+    )
+
+
+def _records_by_selected_board(
+    records: list[dict[str, Any]],
+) -> dict[str, list[dict[str, Any]]]:
+    return {
+        board_id: [
+            record
+            for record in records
+            if str(record.get("selected_board") or PRIMARY_SELECTED_BOARD) == board_id
+        ]
+        for board_id in (
+            PRIMARY_SELECTED_BOARD,
+            LONG_TAIL_UNCERTAINTY_BOARD,
+            PERVERSE_TAIL_DIAGNOSTIC_BOARD,
+        )
+    }
+
+
+def _route_records_for_delivery(
+    records: list[dict[str, Any]],
+    *,
+    config: ExemplarDeliveryConfig,
+) -> list[dict[str, Any]]:
+    for record in records:
+        diagnostic = long_tail_diagnostics(
+            effective_top_k=max(1, int(record.get("diagnostic_effective_top_k") or 1)),
+            top_mass=float(record.get("diagnostic_top_mass") or 0.0),
+            vocab_size=config.vocab_size,
+            dynamic_mass_threshold=_dynamic_mass_threshold(config),
+            dynamic_top_k_max=_dynamic_top_k_max(config),
+            policy=_long_tail_policy(config),
+        )
+        record["selected_board"] = selected_board_for_long_tail(
+            str(diagnostic["long_tail_class"]),
+            include_long_tail_in_primary=config.include_long_tail_in_primary,
+            include_perverse_tail_in_primary=config.include_perverse_tail_in_primary,
+        )
+    return _cap_curriculum_records(records, config=config)
+
+
+def _route_materialized_selected_exemplars(
+    records: list[dict[str, Any]],
+    payloads: list[dict[str, Any]],
+    *,
+    config: ExemplarDeliveryConfig,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    routed: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    for record, payload in zip(records, payloads, strict=True):
+        board = selected_board_for_long_tail(
+            str(payload["long_tail_class"]),
+            include_long_tail_in_primary=config.include_long_tail_in_primary,
+            include_perverse_tail_in_primary=config.include_perverse_tail_in_primary,
+        )
+        record["selected_board"] = board
+        payload["selected_board"] = board
+        routed.append((record, payload))
+    selected_records = _cap_curriculum_records(
+        [record for record, _ in routed],
+        config=config,
+    )
+    selected_ids = {id(record) for record in selected_records}
+    selected_pairs = [pair for pair in routed if id(pair[0]) in selected_ids]
+    selected_pairs.sort(
+        key=lambda pair: (
+            -float(pair[0]["selected_score"]),
+            str(pair[0]["selected_example_id"]),
+            int(pair[0]["selected_position"]),
+        )
+    )
+    for rank, (record, _) in enumerate(selected_pairs, start=1):
+        record["rank"] = rank
+    return (
+        [record for record, _ in selected_pairs],
+        [payload for _, payload in selected_pairs],
+    )
+
+
+def _cap_curriculum_records(
+    records: list[dict[str, Any]],
+    *,
+    config: ExemplarDeliveryConfig,
+) -> list[dict[str, Any]]:
+    grouped = _records_by_selected_board(records)
+    primary_limit = _primary_budget(config)
+    if config.selected_exemplar_fraction is not None:
+        fraction_limit = max(
+            1,
+            int(
+                np.ceil(
+                    len(grouped[PRIMARY_SELECTED_BOARD])
+                    * config.selected_exemplar_fraction
+                )
+            ),
+        )
+        primary_limit = (
+            fraction_limit
+            if primary_limit is None
+            else min(primary_limit, fraction_limit)
+        )
+    limits = {
+        PRIMARY_SELECTED_BOARD: primary_limit,
+        LONG_TAIL_UNCERTAINTY_BOARD: config.long_tail_side_board_cap,
+        PERVERSE_TAIL_DIAGNOSTIC_BOARD: config.perverse_tail_side_board_cap,
+    }
+    return [
+        record
+        for board_id in (
+            PRIMARY_SELECTED_BOARD,
+            LONG_TAIL_UNCERTAINTY_BOARD,
+            PERVERSE_TAIL_DIAGNOSTIC_BOARD,
+        )
+        for record in grouped[board_id][: limits[board_id]]
+    ]
+
+
+def _selected_board_summary(
+    selected_payloads: list[dict[str, Any]],
+    selected_records: list[dict[str, Any]],
+) -> dict[str, Any]:
+    by_board = {
+        board_id: [
+            item for item in selected_payloads if item.get("selected_board") == board_id
+        ]
+        for board_id in (
+            PRIMARY_SELECTED_BOARD,
+            LONG_TAIL_UNCERTAINTY_BOARD,
+            PERVERSE_TAIL_DIAGNOSTIC_BOARD,
+        )
+    }
+    semantic_counts: dict[str, int] = {}
+    long_tail_counts: dict[str, int] = {}
+    source_score_board_counts: dict[str, int] = {}
+    for item in selected_payloads:
+        tag = str(item.get("semantic_tail_tag") or "unknown_open_class_tail")
+        semantic_counts[tag] = semantic_counts.get(tag, 0) + 1
+        long_tail_class = str(item.get("long_tail_class") or "normal")
+        long_tail_counts[long_tail_class] = long_tail_counts.get(long_tail_class, 0) + 1
+    for record in selected_records:
+        board = str(record.get("mode_key") or "unassigned")
+        source_score_board_counts[board] = source_score_board_counts.get(board, 0) + 1
+    return {
+        "primary_count": len(by_board[PRIMARY_SELECTED_BOARD]),
+        "long_tail_uncertainty_count": len(by_board[LONG_TAIL_UNCERTAINTY_BOARD]),
+        "perverse_tail_diagnostic_count": len(by_board[PERVERSE_TAIL_DIAGNOSTIC_BOARD]),
+        "total_selected_count": len(selected_payloads),
+        "semantic_tail_class_counts": dict(sorted(semantic_counts.items())),
+        "long_tail_class_counts": dict(sorted(long_tail_counts.items())),
+        "source_score_board_counts": dict(sorted(source_score_board_counts.items())),
+    }
 
 
 def _attach_long_tail_diagnostics(
@@ -1982,6 +2239,12 @@ def _attach_long_tail_diagnostics(
         )
         record.update(diagnostic)
         record["dynamic_top_k"] = dict(payload["dynamic_top_k"])
+        selected_board = str(record.get("selected_board") or PRIMARY_SELECTED_BOARD)
+        record["selected_board"] = selected_board
+        payload["selected_board"] = selected_board
+        tag = semantic_tail_tag(long_tail_class=str(diagnostic["long_tail_class"]))
+        record["semantic_tail_tag"] = tag
+        payload["semantic_tail_tag"] = tag
 
 
 def _long_tail_observations(summary: dict[str, Any]) -> list[str]:
@@ -2081,6 +2344,7 @@ def _leaderboard_report(
     config: ExemplarDeliveryConfig,
     created_at: str,
     long_tail_summary: dict[str, Any],
+    selected_board_summary: dict[str, Any],
 ) -> dict[str, Any]:
     return {
         "schema_version": "selected_exemplar_leaderboard_report_v1",
@@ -2095,6 +2359,12 @@ def _leaderboard_report(
         "num_board_winners": manifest.get("num_board_winners"),
         "num_selected_exemplars": len(selected_records),
         "long_tail_summary": long_tail_summary,
+        "selected_board_summary": selected_board_summary,
+        "primary_selected_exemplar_budget": _primary_budget(config),
+        "long_tail_side_board_cap": config.long_tail_side_board_cap,
+        "perverse_tail_side_board_cap": config.perverse_tail_side_board_cap,
+        "include_long_tail_in_primary": config.include_long_tail_in_primary,
+        "include_perverse_tail_in_primary": config.include_perverse_tail_in_primary,
         "reject_perverse_exemplars": config.reject_perverse_exemplars,
         "boards": manifest.get("boards", []),
     }

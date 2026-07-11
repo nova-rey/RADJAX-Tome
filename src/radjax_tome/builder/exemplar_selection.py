@@ -953,6 +953,14 @@ def _selected_position_manifest_record(
             None if source_top_token_id is None else int(source_top_token_id)
         ),
         "source_score_policy": "entropy_top_n_v1",
+        "diagnostic_effective_top_k": candidate.score_fields.get(
+            "diagnostic_effective_top_k",
+            candidate.score_fields.get("effective_top_k", 1.0),
+        ),
+        "diagnostic_top_mass": candidate.score_fields.get(
+            "diagnostic_top_mass",
+            candidate.score_fields.get("top_mass", 0.0),
+        ),
         "assigned_board": assigned_board,
         "winning_boards": position_record["winning_boards"],
         "suppressed_duplicate_boards": position_record["suppressed_duplicate_boards"],
