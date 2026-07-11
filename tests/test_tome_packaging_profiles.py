@@ -180,6 +180,61 @@ def test_student_inputs_match_full_source_shards(
         )
 
 
+@pytest.mark.parametrize("profile", (FULL_DEBUG_PROVENANCE, STUDENT))
+def test_packaged_cover_page_summary_uses_package_local_truth(
+    artifact: Path,
+    tmp_path: Path,
+    profile: str,
+) -> None:
+    package = tmp_path / profile
+    package_tome_artifact(artifact, package, profile=profile, overwrite=True)
+
+    cover = _json(package / "cover_page.json")
+    top = cover["top_level_summary"]
+    corridor = _json(package / "corridors" / "corridor_summary.json")
+    assignments = _json(package / "manifests" / "corridor_assignment_manifest.json")
+    selected = _json(package / "manifests" / "selected_payload_manifest.json")
+    audit = _json(package / "selected_linkage_audit.json")
+    validation = _json(package / "validation_report.json")
+
+    assert all(
+        top[key] is not None
+        for key in (
+            "num_examples_scored",
+            "num_positions_scored",
+            "num_selected_exemplars",
+            "corridor_mode_count",
+            "corridor_assignment_count",
+            "delivery_path",
+            "selected_linkage_audit_status",
+            "validation_status",
+            "package_profile",
+            "producer_shard_authority",
+        )
+    )
+    assert top["num_examples_scored"] == corridor["num_examples_scored"]
+    assert top["num_positions_scored"] == corridor["num_positions_scored"]
+    assert top["num_selected_exemplars"] == selected["selected_count"]
+    assert top["corridor_mode_count"] == corridor["mode_count"]
+    assert top["corridor_assignment_count"] == assignments["assignment_count"]
+    assert top["delivery_path"] == corridor["delivery_path"]
+    assert top["selected_linkage_audit_status"] == audit["status"]
+    assert top["validation_status"] == validation["status"]
+    assert top["package_profile"] == profile
+    expected_authority = (
+        "available"
+        if profile == FULL_DEBUG_PROVENANCE
+        else "not_available_in_student_profile"
+    )
+    assert top["producer_shard_authority"] == expected_authority
+    if profile == FULL_DEBUG_PROVENANCE:
+        production = _json(package / "production_build_report.json")
+        assert top["num_examples_scored"] == production["num_examples_scored"]
+        assert top["num_selected_exemplars"] == production["num_selected_exemplars"]
+    else:
+        assert not (package / "production_build_report.json").exists()
+
+
 @pytest.mark.parametrize("profile", (STUDENT, FULL_DEBUG_PROVENANCE))
 def test_package_hash_validation_fails_on_mutation(
     artifact: Path,

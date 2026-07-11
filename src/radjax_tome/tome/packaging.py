@@ -453,8 +453,12 @@ def _write_package_manifests(root: Path, *, profile: str) -> None:
 
 def _write_package_cover_page(root: Path, *, profile: str) -> None:
     metadata = read_json_object(root / "metadata.json")
-    summary = read_json_object(root / "corridors" / "corridor_summary.json")
+    corridor_summary = read_json_object(root / "corridors" / "corridor_summary.json")
     delivery = _optional_object(root / "delivery_report.json")
+    production = _optional_object(root / "production_build_report.json")
+    assignments = read_json_object(
+        root / _MANIFEST_FILES["corridor_assignment_manifest"]
+    )
     selected = _optional_object(root / "manifests" / "selected_payload_manifest.json")
     manifest_refs = {
         "content_manifest": _manifest_reference(
@@ -476,17 +480,17 @@ def _write_package_cover_page(root: Path, *, profile: str) -> None:
             root,
             _MANIFEST_FILES["shard_manifest"],
         )
-    selected_count = int((selected or {}).get("selected_count") or 0)
-    top_level_summary = {
-        "num_examples_scored": int(metadata.get("num_examples") or 0),
-        "num_positions_scored": int(summary.get("num_positions_scored") or 0),
-        "num_selected_exemplars": selected_count,
-        "corridor_mode_count": int(summary.get("mode_count") or 0),
-        "corridor_assignment_count": int(summary.get("corridor_assignment_count") or 0),
-        "delivery_path": (delivery or {}).get("delivery_path"),
-        "selected_linkage_audit_status": _audit_status(root),
-        "validation_status": _validation_status(root),
-    }
+    top_level_summary = _package_top_level_summary(
+        profile=profile,
+        metadata=metadata,
+        corridor_summary=corridor_summary,
+        corridor_assignment_manifest=assignments,
+        selected_payload_manifest=selected,
+        delivery_report=delivery,
+        production_build_report=production,
+        selected_linkage_audit=_optional_object(root / "selected_linkage_audit.json"),
+        validation_report=_optional_object(root / "validation_report.json"),
+    )
     claims_made, claims_not_made = _profile_claims(profile)
     cover = {
         "schema_version": PACKAGE_COVER_SCHEMA,
@@ -501,6 +505,96 @@ def _write_package_cover_page(root: Path, *, profile: str) -> None:
         "claims_not_made": claims_not_made,
     }
     write_json(root / "cover_page.json", cover)
+
+
+def _package_top_level_summary(
+    *,
+    profile: str,
+    metadata: dict[str, Any],
+    corridor_summary: dict[str, Any],
+    corridor_assignment_manifest: dict[str, Any],
+    selected_payload_manifest: dict[str, Any] | None,
+    delivery_report: dict[str, Any] | None,
+    production_build_report: dict[str, Any] | None,
+    selected_linkage_audit: dict[str, Any] | None,
+    validation_report: dict[str, Any] | None,
+) -> dict[str, Any]:
+    delivery = delivery_report or {}
+    production = production_build_report or {}
+    selected = selected_payload_manifest or {}
+    audit = selected_linkage_audit or {}
+    validation = validation_report or {}
+    return {
+        "num_examples_scored": _first_int(
+            delivery.get("num_examples_scored"),
+            production.get("num_examples_scored"),
+            corridor_summary.get("num_examples_scored"),
+            metadata.get("num_examples"),
+        ),
+        "num_positions_scored": _first_int(
+            delivery.get("num_positions_scored"),
+            production.get("num_positions_scored"),
+            corridor_summary.get("num_positions_scored"),
+        ),
+        "num_selected_exemplars": _first_int(
+            selected.get("selected_count"),
+            delivery.get("num_selected_exemplars"),
+            production.get("num_selected_exemplars"),
+            corridor_summary.get("selected_exemplar_count"),
+        ),
+        "corridor_mode_count": _first_int(
+            corridor_summary.get("mode_count"),
+            delivery.get("corridor_mode_count"),
+            production.get("corridor_mode_count"),
+        ),
+        "corridor_assignment_count": _first_int(
+            corridor_assignment_manifest.get("assignment_count"),
+            corridor_summary.get("corridor_assignment_count"),
+            delivery.get("corridor_assignment_count"),
+            production.get("corridor_assignment_count"),
+        ),
+        "delivery_path": _first_string(
+            delivery.get("delivery_path"),
+            production.get("delivery_path"),
+            corridor_summary.get("delivery_path"),
+            default="not_recorded",
+        ),
+        "selected_linkage_audit_status": _first_string(
+            audit.get("status"),
+            default="not_applicable",
+        ),
+        "validation_status": _first_string(
+            validation.get("status"),
+            default="not_recorded",
+        ),
+        "package_profile": profile,
+        "producer_shard_authority": _first_string(
+            audit.get("producer_shard_authority"),
+            default=(
+                "available"
+                if profile == FULL_DEBUG_PROVENANCE
+                else "not_available_in_student_profile"
+            ),
+        ),
+    }
+
+
+def _first_int(*values: Any) -> int:
+    for value in values:
+        if value is None:
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            continue
+    return 0
+
+
+def _first_string(*values: Any, default: str) -> str:
+    for value in values:
+        if value is not None and str(value):
+            return str(value)
+    return default
 
 
 def _content_manifest(root: Path, profile: str) -> dict[str, Any]:

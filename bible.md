@@ -960,3 +960,14 @@ directory, writes hash manifests and a manifest-oriented cover page, validates
 the staged result, then atomically publishes a directory or `.tgz` archive.
 Machine-local absolute paths are retained only as explicitly marked non-portable
 provenance fields in student packages.
+
+## 2026-07-11 — Package Cover Summary Truth
+
+Package cover pages now resolve their top-level summary only from files retained
+inside the package. Corridor totals and delivery-path fall back to
+`corridor_summary.json`, assignment totals come from the corridor-assignment
+manifest, selected counts come from the selected-payload manifest, and audit and
+validation statuses come from their packaged reports. Full/debug packages may
+also use their retained delivery and production reports, while student packages
+never depend on those omitted producer reports. Both profile summaries explicitly
+state their package profile and producer-shard authority.
