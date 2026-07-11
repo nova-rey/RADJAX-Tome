@@ -939,3 +939,24 @@ builds audit both delivery paths. Delivery parity now treats exact selected
 identity as an explicit controlled-fixture requirement while always enforcing
 artifact shape, mode-table, assignment-linkage, payload-shape, and retention
 compatibility.
+
+## 2026-07-10 — Tome Packaging Profiles and Student Trust Contract
+
+Completed producer artifacts can now be exported without changing production
+semantics through two explicit profiles. `full_debug_provenance` carries the
+full retained producer package, source shards, packed corridor targets, selected
+payloads, linkage audit, and externalized content, shard, corridor-assignment,
+and selected-payload manifests. `student` carries only the portable training
+contract: packed inputs and masks, packed corridor assignments and modes,
+selected exemplar payloads, provenance sidecars, and the same self-verifying
+manifests, with raw producer shards and debug surfaces excluded.
+
+Student packages export `examples_input_ids.npy` aligned with corridor example
+metadata, so corridor and exemplar batches can be built without reading source
+shards. The profile-specific linkage audit validates internal selected passports,
+mode assignments, and input resolvability while explicitly reporting that
+producer-shard authority is unavailable. Package creation stages into a temporary
+directory, writes hash manifests and a manifest-oriented cover page, validates
+the staged result, then atomically publishes a directory or `.tgz` archive.
+Machine-local absolute paths are retained only as explicitly marked non-portable
+provenance fields in student packages.

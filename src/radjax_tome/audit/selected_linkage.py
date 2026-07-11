@@ -12,6 +12,8 @@ from radjax_tome.io.json import read_json_object, write_json
 AUDIT_SCHEMA_VERSION = "selected_exemplar_linkage_audit_v1"
 PATH_A = "one_pass_pruned_candidate"
 PATH_B = "two_pass_rerun_selected"
+FULL_DEBUG_PROVENANCE = "full_debug_provenance"
+STUDENT = "student"
 
 _PASSPORT_FIELDS = (
     "selected_example_id",
@@ -56,6 +58,8 @@ class SelectedLinkageAuditReport:
     corridor_assignment_linkage: str
     errors: tuple[dict[str, Any], ...]
     warnings: tuple[str, ...] = ()
+    profile: str = FULL_DEBUG_PROVENANCE
+    producer_shard_authority: str = "available"
     schema_version: str = AUDIT_SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -69,7 +73,10 @@ def audit_selected_linkage(
     artifact_dir: Path,
     *,
     strict: bool = True,
+    profile: str = FULL_DEBUG_PROVENANCE,
 ) -> SelectedLinkageAuditReport:
+    if profile not in {FULL_DEBUG_PROVENANCE, STUDENT}:
+        raise ValueError("profile must be full_debug_provenance or student")
     root = artifact_dir.resolve()
     errors: list[dict[str, Any]] = []
     warnings: list[str] = []
@@ -85,7 +92,16 @@ def audit_selected_linkage(
         strict=strict,
     )
     shard_cache: dict[int, dict[str, np.ndarray]] = {}
-    shard_offsets = _shard_offsets(root, shard_cache, errors)
+    shard_offsets = (
+        _shard_offsets(root, shard_cache, errors)
+        if profile == FULL_DEBUG_PROVENANCE
+        else {}
+    )
+    student_inputs = (
+        _load_student_inputs(root, errors=errors, strict=strict)
+        if profile == STUDENT
+        else {}
+    )
     if not example_ids:
         example_ids = _dataset_example_ids(root, warnings)
 
@@ -116,10 +132,19 @@ def audit_selected_linkage(
         mismatch_fields: list[str] = []
         source_values: dict[str, Any] = {"selected_index": index}
         _check_common_record_payload(record, payload, mismatch_fields)
-        shard = _source_shard(root, record, shard_cache, mismatch_fields)
         row = _int_or_none(record.get("source_row"))
         position = _int_or_none(record.get("source_position"))
-        if shard is not None and row is not None and position is not None:
+        shard = (
+            _source_shard(root, record, shard_cache, mismatch_fields)
+            if profile == FULL_DEBUG_PROVENANCE
+            else None
+        )
+        if (
+            profile == FULL_DEBUG_PROVENANCE
+            and shard is not None
+            and row is not None
+            and position is not None
+        ):
             _check_source_coordinate(
                 record,
                 payload,
@@ -135,6 +160,14 @@ def audit_selected_linkage(
                 row=row,
                 shard_offsets=shard_offsets,
                 example_ids=example_ids,
+                mismatch_fields=mismatch_fields,
+                source_values=source_values,
+            )
+        elif profile == STUDENT:
+            _check_student_coordinate(
+                record,
+                payload,
+                student_inputs=student_inputs,
                 mismatch_fields=mismatch_fields,
                 source_values=source_values,
             )
@@ -176,6 +209,10 @@ def audit_selected_linkage(
         corridor_assignment_linkage=corridor_status,
         errors=tuple(errors),
         warnings=tuple(warnings),
+        profile=profile,
+        producer_shard_authority=(
+            "not_available_in_student_profile" if profile == STUDENT else "available"
+        ),
     )
 
 
@@ -358,6 +395,27 @@ def _check_source_coordinate(
         )
     else:
         mismatch_fields.append("source_delivery_path")
+
+
+def _check_student_coordinate(
+    record: dict[str, Any],
+    payload: dict[str, Any],
+    *,
+    student_inputs: dict[str, np.ndarray],
+    mismatch_fields: list[str],
+    source_values: dict[str, Any],
+) -> None:
+    example_id = str(record.get("selected_example_id"))
+    input_ids = student_inputs.get(example_id)
+    position = _int_or_none(record.get("source_position"))
+    if input_ids is None:
+        mismatch_fields.append("student_input_ids")
+        return
+    source_values["student_input_shape"] = list(input_ids.shape)
+    if position is None or not 0 <= position < input_ids.shape[0]:
+        mismatch_fields.append("source_position")
+    if _first_token(payload) != _int_or_none(record.get("source_top_token_id")):
+        mismatch_fields.append("top_token_ids[0]")
 
 
 def _check_path_a_authority(
@@ -622,6 +680,36 @@ def _load_selected_mode_assignments(
         if key in selected_keys:
             assignments[key] = int(mode_ids[index])
     return assignments, example_ids
+
+
+def _load_student_inputs(
+    root: Path,
+    *,
+    errors: list[dict[str, Any]],
+    strict: bool,
+) -> dict[str, np.ndarray]:
+    manifest_path = root / "corridors" / "mode_assignments.json"
+    try:
+        manifest = read_json_object(manifest_path)
+        metadata_spec = manifest["examples_metadata"]
+        example_ids = _read_example_metadata(root / str(metadata_spec["path"]))
+        input_path = root / "corridors" / "mode_assignments" / "examples_input_ids.npy"
+        input_ids = np.load(input_path, allow_pickle=False, mmap_mode="r")
+        if input_ids.ndim != 2 or input_ids.shape[0] != len(example_ids):
+            raise ValueError(
+                "examples_input_ids shape does not match examples_metadata"
+            )
+    except (IndexError, KeyError, OSError, TypeError, ValueError) as exc:
+        if strict:
+            _append_global_error(
+                errors,
+                mismatch_fields=["student_input_ids"],
+                source_values={"path": str(manifest_path), "error": str(exc)},
+            )
+        return {}
+    return {
+        example_id: input_ids[index] for index, example_id in enumerate(example_ids)
+    }
 
 
 def _read_example_metadata(path: Path) -> list[str]:

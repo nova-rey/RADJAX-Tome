@@ -17,6 +17,8 @@ Recommended commands:
   plan
   exemplar-delivery-parity
   audit-selected-linkage
+  package-artifact
+  validate-package
   corpus
   pack
   unpack
@@ -447,8 +449,39 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     selected_linkage_audit.add_argument("--artifact", type=Path, required=True)
     selected_linkage_audit.add_argument("--strict", action="store_true")
+    selected_linkage_audit.add_argument(
+        "--profile",
+        choices=("full_debug_provenance", "student"),
+        default="full_debug_provenance",
+    )
     selected_linkage_audit.add_argument("--output", type=Path)
     selected_linkage_audit.set_defaults(func=_cmd_audit_selected_linkage)
+
+    package_artifact = subparsers.add_parser(
+        "package-artifact",
+        help="Export a full-debug or student-consumable Tome package.",
+    )
+    package_artifact.add_argument("--input", type=Path, required=True)
+    package_artifact.add_argument("--output", type=Path, required=True)
+    package_artifact.add_argument(
+        "--profile",
+        choices=("full_debug_provenance", "student"),
+        required=True,
+    )
+    package_artifact.add_argument("--archive", choices=("none", "tgz"), default="none")
+    package_artifact.add_argument("--overwrite", action="store_true")
+    package_artifact.set_defaults(func=_cmd_package_artifact)
+
+    validate_package = subparsers.add_parser(
+        "validate-package",
+        help="Validate a packaged full-debug or student Tome.",
+    )
+    validate_package.add_argument("--artifact", type=Path, required=True)
+    validate_package.add_argument(
+        "--profile",
+        choices=("full_debug_provenance", "student"),
+    )
+    validate_package.set_defaults(func=_cmd_validate_package)
 
     multi_gpu = subparsers.add_parser(
         "multi-gpu-path-b",
@@ -1039,10 +1072,44 @@ def _cmd_audit_selected_linkage(args: argparse.Namespace) -> int:
         write_selected_linkage_audit,
     )
 
-    report = audit_selected_linkage(args.artifact, strict=args.strict)
+    report = audit_selected_linkage(
+        args.artifact,
+        strict=args.strict,
+        profile=args.profile,
+    )
     if args.output is not None:
         write_selected_linkage_audit(report, args.output)
     print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+    return 0 if report.status == "pass" else 1
+
+
+def _cmd_package_artifact(args: argparse.Namespace) -> int:
+    from radjax_tome.tome import package_tome_artifact
+
+    result = package_tome_artifact(
+        args.input,
+        args.output,
+        profile=args.profile,
+        archive=args.archive,
+        overwrite=args.overwrite,
+    )
+    print(
+        f"status=pass package={result.output_path} profile={result.profile} "
+        f"archive={result.archive}"
+    )
+    return 0
+
+
+def _cmd_validate_package(args: argparse.Namespace) -> int:
+    from radjax_tome.tome import validate_tome_package
+
+    report = validate_tome_package(args.artifact, profile=args.profile)
+    print(
+        f"status={report.status} profile={report.profile} "
+        f"blockers={len(report.blockers)} warnings={len(report.warnings)}"
+    )
+    for blocker in report.blockers:
+        print(f"blocker={blocker}")
     return 0 if report.status == "pass" else 1
 
 
