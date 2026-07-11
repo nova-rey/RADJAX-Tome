@@ -168,8 +168,6 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
         "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
-        "score_effective_top_k",
-        "score_top_mass",
         "score_source_policy_ids",
         "score_lengths",
     }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -239,6 +240,28 @@ def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retent
     assert report["long_tail_summary"] == delivery["long_tail_summary"]
     assert not (output / "unselected_candidate_payloads").exists()
     assert validate_teacher_textbook(output).status == "pass"
+
+
+def test_long_tail_observations_do_not_promote_delivery_status(tmp_path: Path) -> None:
+    config = replace(
+        _config(
+            tmp_path,
+            output_name="path_b_long_tail_observations",
+            delivery_path="two_pass_rerun_selected",
+        ),
+        long_tail_warning_k=1,
+        very_long_tail_warning_k=2,
+        perverse_tail_warning_k=3,
+    )
+
+    report = build_production_gpu_tome(config)
+    delivery = _json(config.output_dir / "delivery_report.json")
+
+    assert report["status"] == "pass"
+    assert delivery["status"] == "pass"
+    assert delivery["warnings"] == []
+    assert delivery["long_tail_summary"]["suspicious_flat_count"] > 0
+    assert delivery["long_tail_observations"]
 
 
 def test_path_b_progress_sidecar_records_rerun_and_corridor_export(

@@ -989,6 +989,20 @@ candidates before selection, so the selector promotes the next eligible
 candidate without changing Path A capture, Path B rerun semantics, corridor
 modes, or selected-linkage authority.
 
+## 2026-07-11 — Long-Tail Observations Are Not Build Warnings
+
+Long-tail classes are experimental diagnostic observations, not quality verdicts.
+Delivery and production reports remain `pass` when linkage, validation, and
+retention contracts are clean, even if selected exemplars are classified as
+long-tail, suspicious-flat, or full-vocabulary. Their aggregate messages live
+under `long_tail_observations`, while `warnings` remains reserved for actual
+artifact, selection-budget, metadata, or validation defects.
+
+The compact GPU two-pass score helper remains the only score payload contract
+that carries `score_effective_top_k` and `score_top_mass`; the full
+corridor/exemplar production reducer intentionally does not claim those
+score-pass-only fields.
+
 ## 2026-07-11 — GPU Score-Pass Long-Tail Test Contract
 
 The compact GPU two-pass score payload contract explicitly includes

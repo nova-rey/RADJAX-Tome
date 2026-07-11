@@ -282,7 +282,8 @@ def materialize_selected_exemplar_delivery(
         "schema_version": EXEMPLAR_DELIVERY_REPORT_SCHEMA,
         "status": "pass",
         "blockers": [],
-        "warnings": _long_tail_report_warnings(tail_summary),
+        "warnings": [],
+        "long_tail_observations": _long_tail_observations(tail_summary),
         "created_at": created_at,
         "completed_at": _now(),
         "selection_enabled": config.selection_enabled,
@@ -332,8 +333,6 @@ def materialize_selected_exemplar_delivery(
         },
     }
     report.update(corridor_result.report_fields())
-    if report["warnings"]:
-        report["status"] = "warn"
     if config.retain_unselected_exemplar_payloads:
         report["status"] = "fail"
         report["blockers"] = ["non-selected exemplar payload retention is enabled"]
@@ -1985,8 +1984,8 @@ def _attach_long_tail_diagnostics(
         record["dynamic_top_k"] = dict(payload["dynamic_top_k"])
 
 
-def _long_tail_report_warnings(summary: dict[str, Any]) -> list[str]:
-    warnings: list[str] = []
+def _long_tail_observations(summary: dict[str, Any]) -> list[str]:
+    observations: list[str] = []
     for class_name, key in (
         ("long_tail", "long_tail_count"),
         ("very_long_tail", "very_long_tail_count"),
@@ -1998,8 +1997,8 @@ def _long_tail_report_warnings(summary: dict[str, Any]) -> list[str]:
     ):
         count = int(summary.get(key) or 0)
         if count:
-            warnings.append(f"selected exemplars classified {class_name}: {count}")
-    return warnings
+            observations.append(f"selected exemplars classified {class_name}: {count}")
+    return observations
 
 
 def _payload_slice(payload: Any, key: str, row: int, position: int) -> list[Any]:
