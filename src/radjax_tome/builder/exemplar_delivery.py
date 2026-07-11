@@ -157,6 +157,8 @@ class ExemplarDeliveryConfig:
     include_perverse_tail_in_primary: bool = False
     include_perverse_tail_in_student: bool = False
     progress_callback: DeliveryProgressCallback | None = None
+    authoritative_selection: bool = False
+    authoritative_records: tuple[dict[str, Any], ...] | None = None
 
 
 def materialize_selected_exemplar_delivery(
@@ -183,29 +185,39 @@ def materialize_selected_exemplar_delivery(
         def candidate_filter(candidate: Any) -> bool:
             return not _candidate_is_perverse(candidate, config=config)
 
-    manifest = build_exemplar_selection_manifest(
-        store,
-        examples=examples,
-        batch_size=_batch_size_from_store(store),
-        capture_mode=_capture_mode_for_delivery(config.delivery_path),
-        fulfillment_policy=fulfillment_policy,
-        board_capacity=config.leaderboard_capacity,
-        created_at=created_at,
-        budget_examples=None,
-        budget_fraction=None,
-        canonical_score_fields_only=True,
-        use_score_pass_fields=config.delivery_path == TWO_PASS_RERUN_SELECTED,
-        candidate_filter=candidate_filter,
-        candidate_filter_name=(
-            "reject_perverse_dynamic_top_k"
-            if config.reject_perverse_exemplars
-            else None
-        ),
-    )
-    selected_records = _route_records_for_delivery(
-        _flatten_selected_records(manifest, delivery_path=config.delivery_path),
-        config=config,
-    )
+    if config.authoritative_records is not None:
+        manifest = {
+            "selection_policy": "radjax.multi_role_selected_exemplar.v1",
+            "fulfillment_policy": fulfillment_policy,
+            "num_candidates_seen": len(config.authoritative_records),
+            "num_board_winners": len(config.authoritative_records),
+            "boards": [],
+        }
+        selected_records = [dict(item) for item in config.authoritative_records]
+    else:
+        manifest = build_exemplar_selection_manifest(
+            store,
+            examples=examples,
+            batch_size=_batch_size_from_store(store),
+            capture_mode=_capture_mode_for_delivery(config.delivery_path),
+            fulfillment_policy=fulfillment_policy,
+            board_capacity=config.leaderboard_capacity,
+            created_at=created_at,
+            budget_examples=None,
+            budget_fraction=None,
+            canonical_score_fields_only=True,
+            use_score_pass_fields=config.delivery_path == TWO_PASS_RERUN_SELECTED,
+            candidate_filter=candidate_filter,
+            candidate_filter_name=(
+                "reject_perverse_dynamic_top_k"
+                if config.reject_perverse_exemplars
+                else None
+            ),
+        )
+        selected_records = _route_records_for_delivery(
+            _flatten_selected_records(manifest, delivery_path=config.delivery_path),
+            config=config,
+        )
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
         _validate_path_b_score_pass_records(selected_records, store=store)
     rerun_selected_example_count = len(
@@ -2116,19 +2128,22 @@ def _route_materialized_selected_exemplars(
         record["selected_board"] = board
         payload["selected_board"] = board
         routed.append((record, payload))
-    selected_records = _cap_curriculum_records(
-        [record for record, _ in routed],
-        config=config,
-    )
-    selected_ids = {id(record) for record in selected_records}
-    selected_pairs = [pair for pair in routed if id(pair[0]) in selected_ids]
-    selected_pairs.sort(
-        key=lambda pair: (
-            -float(pair[0]["selected_score"]),
-            str(pair[0]["selected_example_id"]),
-            int(pair[0]["selected_position"]),
+    if config.authoritative_selection:
+        selected_pairs = routed
+    else:
+        selected_records = _cap_curriculum_records(
+            [record for record, _ in routed],
+            config=config,
         )
-    )
+        selected_ids = {id(record) for record in selected_records}
+        selected_pairs = [pair for pair in routed if id(pair[0]) in selected_ids]
+        selected_pairs.sort(
+            key=lambda pair: (
+                -float(pair[0]["selected_score"]),
+                str(pair[0]["selected_example_id"]),
+                int(pair[0]["selected_position"]),
+            )
+        )
     for rank, (record, _) in enumerate(selected_pairs, start=1):
         record["rank"] = rank
     return (

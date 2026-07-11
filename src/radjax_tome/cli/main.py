@@ -15,6 +15,7 @@ Recommended commands:
   build-fingerprint-corridor-leaderboards
   allocate-fingerprint-corridor-coverage
   claim-corridor-and-backfill-global
+  export-production-global-board-supply
   production-build
   validate
   inspect
@@ -232,6 +233,22 @@ def _build_parser() -> argparse.ArgumentParser:
     claims.add_argument("--overwrite", action="store_true")
     claims.set_defaults(func=_cmd_claim_corridor_and_backfill_global)
 
+    global_supply = subparsers.add_parser(
+        "export-production-global-board-supply",
+        help="Export validated ranked supply from the real global selector.",
+        description=(
+            "Convert an explicitly production-grade selector manifest into the "
+            "stable C4 global-board supply contract. Development manifests are "
+            "rejected."
+        ),
+    )
+    global_supply.add_argument("--selector-manifest", type=Path, required=True)
+    global_supply.add_argument("--source-artifact-id", required=True)
+    global_supply.add_argument("--source-artifact-hash", required=True)
+    global_supply.add_argument("--output", type=Path, required=True)
+    global_supply.add_argument("--overwrite", action="store_true")
+    global_supply.set_defaults(func=_cmd_export_production_global_board_supply)
+
     multi_role = subparsers.add_parser(
         "build-multi-role-selected-exemplars",
         help="Build durable C5 multi-role records from a validated C4 artifact.",
@@ -390,6 +407,27 @@ def _build_parser() -> argparse.ArgumentParser:
     plan.add_argument("--fallback-policy", choices=("error", "auto"), default="error")
     plan.add_argument("--exemplar-selection-enabled", action="store_true")
     plan.add_argument(
+        "--selection-integration-policy",
+        choices=("global_only_v1", "corridor_first_global_backfill_v1"),
+        default="global_only_v1",
+    )
+    plan.add_argument("--total-selected-exemplar-budget", type=int)
+    plan.add_argument("--fingerprint-corridor-budget-fraction", default="0.50")
+    plan.add_argument("--fingerprint-corridor-budget-max", type=int)
+    plan.add_argument("--fingerprint-corridor-mode-cap", type=int, default=10)
+    plan.add_argument("--fingerprint-corridor-candidate-pool-cap", type=int, default=4)
+    plan.add_argument(
+        "--require-full-selected-budget",
+        dest="require_full_selected_budget",
+        action="store_true",
+        default=True,
+    )
+    plan.add_argument(
+        "--allow-selected-underfill",
+        dest="require_full_selected_budget",
+        action="store_false",
+    )
+    plan.add_argument(
         "--exemplar-fulfillment-policy",
         choices=("auto", "select_from_existing_capture", "rerun_selected_capture"),
         default="auto",
@@ -508,6 +546,39 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=("one_pass_pruned_candidate", "two_pass_rerun_selected"),
     )
     production.add_argument("--exemplar-selection-enabled", action="store_true")
+    production.add_argument(
+        "--selection-integration-policy",
+        choices=("global_only_v1", "corridor_first_global_backfill_v1"),
+        default="global_only_v1",
+    )
+    production.add_argument("--total-selected-exemplar-budget", type=int)
+    production.add_argument(
+        "--fingerprint-corridor-budget-fraction",
+        default="0.50",
+    )
+    production.add_argument("--fingerprint-corridor-budget-max", type=int)
+    production.add_argument("--fingerprint-corridor-mode-cap", type=int, default=10)
+    production.add_argument(
+        "--fingerprint-corridor-candidate-pool-cap",
+        type=int,
+        default=4,
+    )
+    production.add_argument(
+        "--require-full-selected-budget",
+        dest="require_full_selected_budget",
+        action="store_true",
+        default=True,
+    )
+    production.add_argument(
+        "--allow-selected-underfill",
+        dest="require_full_selected_budget",
+        action="store_false",
+    )
+    production.add_argument("--corridor-feature-jsonl", type=Path)
+    production.add_argument("--global-board-supply", type=Path)
+    production.add_argument("--c4-claims", type=Path)
+    production.add_argument("--c5-selection", type=Path)
+    production.add_argument("--source-passports", type=Path)
     production.add_argument("--exemplar-leaderboard-capacity", type=int, default=16)
     production.add_argument("--selected-exemplar-budget", type=int)
     production.add_argument("--selected-exemplar-fraction", type=float)
@@ -972,6 +1043,40 @@ def _cmd_claim_corridor_and_backfill_global(args: argparse.Namespace) -> int:
     return 0 if validation.status in {"pass", "warn"} else 1
 
 
+def _cmd_export_production_global_board_supply(args: argparse.Namespace) -> int:
+    from radjax_tome.builder.c6_integration import (
+        C6IntegrationError,
+        export_production_global_board_supply,
+    )
+    from radjax_tome.io.json import read_json_object, write_json
+
+    try:
+        manifest = read_json_object(args.selector_manifest)
+        supply = export_production_global_board_supply(
+            manifest,
+            source_artifact_id=args.source_artifact_id,
+            source_artifact_hash=args.source_artifact_hash,
+        )
+        if args.output.exists() and not args.overwrite:
+            raise C6IntegrationError(f"output exists: {args.output}")
+        write_json(args.output, supply)
+    except (C6IntegrationError, OSError, TypeError, ValueError) as exc:
+        print(f"status=fail error={exc}", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "status": "pass",
+                "output": str(args.output),
+                "schema_version": supply["schema_version"],
+                "board_count": len(supply["boards"]),
+            },
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
 def _cmd_build_multi_role_selected_exemplars(args: argparse.Namespace) -> int:
     from radjax_tome.fingerprint.corridor_claims import (
         CorridorClaimError,
@@ -1383,6 +1488,15 @@ def _cmd_plan(args: argparse.Namespace) -> int:
         strict_provenance=args.strict_provenance,
         max_artifact_bytes=args.max_artifact_bytes,
         fail_on_warnings=args.fail_on_warnings,
+        selection_integration_policy=args.selection_integration_policy,
+        total_selected_exemplar_budget=args.total_selected_exemplar_budget,
+        fingerprint_corridor_budget_fraction=args.fingerprint_corridor_budget_fraction,
+        fingerprint_corridor_budget_max=args.fingerprint_corridor_budget_max,
+        fingerprint_corridor_mode_cap=args.fingerprint_corridor_mode_cap,
+        fingerprint_corridor_candidate_pool_cap=(
+            args.fingerprint_corridor_candidate_pool_cap
+        ),
+        require_full_selected_budget=args.require_full_selected_budget,
     )
     plan = build_gpu_run_plan(plan_config)
     write_gpu_run_plan(plan, args.output)
@@ -1456,6 +1570,22 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
             ),
             exemplar_score_policy=args.exemplar_score_policy,
             track_delivery_timing=args.track_delivery_timing,
+            selection_integration_policy=args.selection_integration_policy,
+            total_selected_exemplar_budget=args.total_selected_exemplar_budget,
+            fingerprint_corridor_budget_fraction=(
+                args.fingerprint_corridor_budget_fraction
+            ),
+            fingerprint_corridor_budget_max=args.fingerprint_corridor_budget_max,
+            fingerprint_corridor_mode_cap=args.fingerprint_corridor_mode_cap,
+            fingerprint_corridor_candidate_pool_cap=(
+                args.fingerprint_corridor_candidate_pool_cap
+            ),
+            require_full_selected_budget=args.require_full_selected_budget,
+            corridor_feature_jsonl_path=args.corridor_feature_jsonl,
+            global_board_supply_path=args.global_board_supply,
+            c4_claims_path=args.c4_claims,
+            c5_selection_path=args.c5_selection,
+            source_passports_path=args.source_passports,
         )
     )
     for line in render_production_build_summary(report):

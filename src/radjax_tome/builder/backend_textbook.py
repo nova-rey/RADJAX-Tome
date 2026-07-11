@@ -104,6 +104,8 @@ class BackendTeacherTextbookBuildConfig:
     run_manifest_path: Path | None = None
     fail_fast: bool = True
     progress_callback: StreamingProgressCallback | None = None
+    selection_integration_policy: str = "global_only_v1"
+    selection_integration_config_hash: str | None = None
 
 
 def build_backend_teacher_textbook(
@@ -1050,6 +1052,8 @@ def _resume_config_payload(
         "gpu_batch_size_auto_max": config.gpu_batch_size_auto_max,
         "local_files_only": config.local_files_only,
         "allow_downloads": config.allow_downloads,
+        "selection_integration_policy": config.selection_integration_policy,
+        "selection_integration_config_hash": config.selection_integration_config_hash,
     }
 
 
@@ -1146,6 +1150,8 @@ def _write_streaming_backend_sidecars(
         "shard_size_examples": shard_size_examples,
         "resume_config_hash": resume_config_hash,
         "atomic_shard_write_policy": "tmp_file_fsync_rename_v1",
+        "selection_integration_policy": config.selection_integration_policy,
+        "selection_integration_config_hash": config.selection_integration_config_hash,
     }
     write_json(
         config.output_dir / "teacher_manifest.json",
@@ -1206,6 +1212,10 @@ def _write_streaming_backend_sidecars(
             "exemplar_selection_enabled": config.exemplar_selection_enabled,
             "exemplar_selector_policy": config.exemplar_selector_policy,
             "exemplar_selection_manifest": None,
+            "selection_integration_policy": config.selection_integration_policy,
+            "selection_integration_config_hash": (
+                config.selection_integration_config_hash
+            ),
             "corpus_provenance": corpus_provenance or None,
             "teacher_model_provenance": teacher_model_provenance or None,
             **streaming_fields,
@@ -1510,6 +1520,10 @@ def _write_backend_sidecars(
                 EXEMPLAR_SELECTION_MANIFEST_FILENAME
                 if selection_manifest is not None
                 else None
+            ),
+            "selection_integration_policy": config.selection_integration_policy,
+            "selection_integration_config_hash": (
+                config.selection_integration_config_hash
             ),
             "corpus_provenance": corpus_provenance or None,
             "teacher_model_provenance": teacher_model_provenance or None,

@@ -1122,3 +1122,19 @@ coordinate payload identity marked `not_materialized_in_c5`. A deterministic
 legacy flat projection remains available for existing consumers. C5 does not
 rerun selection, change production output, route curriculum boards, or
 materialize teacher targets; C6 owns those integrations.
+
+## 2026-07-11 — C6 Corridor-First Production Integration
+
+C6 adds the opt-in `corridor_first_global_backfill_v1` production integration.
+C5 rich records are the authoritative unique coordinate set for delivery,
+reports, audit, curriculum projection, cover metadata, and package summaries.
+The strict integration validator compares those surfaces and requires real
+source passports, while global-only production remains the default. A
+production-grade ranked global-board exporter now emits the stable C4 supply
+contract and rejects development selector manifests; strict C2 JSONL features
+remain incremental and disk-backed with compatibility proxies rejected in
+production. Policy and budget settings are included in plans, emission metadata,
+streaming resume hashes, and production reports. C6 coverage and validation
+reports are copied into full-debug/student packages and surfaced in cover-page
+diagnostics. The T4 runbook is documented, but no real T4 rehearsal was
+executed in this change.

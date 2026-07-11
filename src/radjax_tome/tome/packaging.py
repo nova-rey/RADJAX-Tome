@@ -38,6 +38,10 @@ _STUDENT_CORRIDOR_FILES = (
     "corridors/corridor_modes.json",
     "corridors/mode_assignments.json",
 )
+_C6_OPTIONAL_FILES = (
+    "reports/fingerprint_corridor_coverage.json",
+    "reports/c6_integrated_selection_validation.json",
+)
 _MANIFEST_FILES = {
     "content_manifest": "manifests/content_manifest.json",
     "corridor_assignment_manifest": "manifests/corridor_assignment_manifest.json",
@@ -295,6 +299,9 @@ def _materialize_package(source: Path, destination: Path, *, profile: str) -> No
     _copy_optional(source, destination, "selected_exemplars", directory=True)
     _copy_optional(source, destination, "leaderboards/selected_exemplars.json")
     _copy_optional(source, destination, "leaderboards/long_tail_uncertainty.json")
+    _copy_optional(source, destination, "c6", directory=True)
+    for relative_path in _C6_OPTIONAL_FILES:
+        _copy_optional(source, destination, relative_path)
     include_perverse = _include_perverse_tail_in_student(source)
     if include_perverse:
         _copy_optional(
@@ -529,6 +536,7 @@ def _write_package_cover_page(root: Path, *, profile: str) -> None:
         root / _MANIFEST_FILES["corridor_assignment_manifest"]
     )
     selected = _optional_object(root / "manifests" / "selected_payload_manifest.json")
+    coverage = _optional_object(root / "reports" / "fingerprint_corridor_coverage.json")
     manifest_refs = {
         "content_manifest": _manifest_reference(
             root,
@@ -559,10 +567,12 @@ def _write_package_cover_page(root: Path, *, profile: str) -> None:
         production_build_report=production,
         selected_linkage_audit=_optional_object(root / "selected_linkage_audit.json"),
         validation_report=_optional_object(root / "validation_report.json"),
+        coverage_report=coverage,
     )
     diagnostics = {
         "long_tail_summary": (selected or {}).get("long_tail_summary", {}),
         "selected_board_summary": (selected or {}).get("selected_board_summary", {}),
+        "fingerprint_corridor_coverage": coverage or {},
     }
     claims_made, claims_not_made = _profile_claims(profile)
     cover = {
@@ -592,12 +602,14 @@ def _package_top_level_summary(
     production_build_report: dict[str, Any] | None,
     selected_linkage_audit: dict[str, Any] | None,
     validation_report: dict[str, Any] | None,
+    coverage_report: dict[str, Any] | None,
 ) -> dict[str, Any]:
     delivery = delivery_report or {}
     production = production_build_report or {}
     selected = selected_payload_manifest or {}
     audit = selected_linkage_audit or {}
     validation = validation_report or {}
+    coverage = coverage_report or {}
     return {
         "num_examples_scored": _first_int(
             delivery.get("num_examples_scored"),
@@ -649,6 +661,25 @@ def _package_top_level_summary(
                 if profile == FULL_DEBUG_PROVENANCE
                 else "not_available_in_student_profile"
             ),
+        ),
+        "selection_integration_policy": _first_string(
+            coverage.get("selection_integration_policy"),
+            production.get("selection_integration_policy"),
+            default="global_only_v1",
+        ),
+        "selected_unique_count": _first_int(
+            coverage.get("selected_unique_count"),
+            selected.get("selected_count"),
+            delivery.get("num_selected_exemplars"),
+        ),
+        "selected_obligation_count": _first_int(
+            coverage.get("selected_obligation_count"),
+        ),
+        "selected_multi_role_count": _first_int(
+            coverage.get("multi_role_coordinate_count"),
+        ),
+        "corridor_coverage_report_path": (
+            "reports/fingerprint_corridor_coverage.json" if coverage else None
         ),
     }
 

@@ -79,6 +79,20 @@ _CORRIDOR_FILE_SPECS = (
         "human_readable",
     ),
 )
+_INTEGRATION_FILE_SPECS = (
+    (
+        "reports/fingerprint_corridor_coverage.json",
+        "fingerprint_corridor_coverage",
+        False,
+        "diagnostic",
+    ),
+    (
+        "reports/c6_integrated_selection_validation.json",
+        "c6_integrated_selection_validation",
+        False,
+        "integrity_or_provenance",
+    ),
+)
 _ASSIGNMENT_ARRAY_ROLES = {
     "position_example_index": "corridor_assignment_position_example_index",
     "position": "corridor_assignment_position",
@@ -112,7 +126,14 @@ _EXEMPLAR_OPTIONAL_ROLES = (
     "exemplar_leaderboard_report",
 )
 _SINGLETON_ROLES = frozenset(
-    {role for _, role, _, _ in (*_CORE_CONTENT_SPECS, *_CORRIDOR_FILE_SPECS)}
+    {
+        role
+        for _, role, _, _ in (
+            *_CORE_CONTENT_SPECS,
+            *_CORRIDOR_FILE_SPECS,
+            *_INTEGRATION_FILE_SPECS,
+        )
+    }
     | {
         "corridor_assignment_position_example_index",
         "corridor_assignment_position",
@@ -237,6 +258,28 @@ def build_cover_page(tome_root: str | Path) -> dict[str, Any]:
             ),
             "tokenizer_hash": teacher_model_provenance.get("tokenizer_hash"),
             "weights_hash": teacher_model_provenance.get("weights_hash"),
+        }
+    coverage_path = root / "reports" / "fingerprint_corridor_coverage.json"
+    if coverage_path.is_file():
+        coverage = read_json_object(coverage_path)
+        validation_path = root / "reports" / "c6_integrated_selection_validation.json"
+        integrated_validation = (
+            read_json_object(validation_path) if validation_path.is_file() else {}
+        )
+        cover_page["selection_integration"] = {
+            "selection_integration_policy": coverage.get(
+                "selection_integration_policy"
+            ),
+            "selected_unique_count": coverage.get("selected_unique_count"),
+            "selected_obligation_count": coverage.get("selected_obligation_count"),
+            "selected_multi_role_count": coverage.get("multi_role_coordinate_count"),
+            "corridor_budget_actual": coverage.get("corridor_budget_actual"),
+            "corridor_modes_covered": coverage.get("corridor_modes_fulfilled"),
+            "global_backfill_count": coverage.get("global_backfill_count"),
+            "multi_role_schema_version": coverage.get("c5_schema_version"),
+            "coverage_report_path": "reports/fingerprint_corridor_coverage.json",
+            "coverage_report_sha256": _file_sha256(coverage_path),
+            "integrated_validation_status": integrated_validation.get("status"),
         }
     target_params = metadata.get("target_params", {})
     if (
@@ -376,6 +419,11 @@ def validate_tome_cover_page(tome_root: str | Path) -> CoverPageValidationReport
 def _content_entries(root: Path) -> list[dict[str, Any]]:
     entries = [_content_entry(root, *spec) for spec in _CORE_CONTENT_SPECS]
     for relative_path, role, required, classification in _CORRIDOR_FILE_SPECS:
+        if (root / relative_path).is_file():
+            entries.append(
+                _content_entry(root, relative_path, role, required, classification)
+            )
+    for relative_path, role, required, classification in _INTEGRATION_FILE_SPECS:
         if (root / relative_path).is_file():
             entries.append(
                 _content_entry(root, relative_path, role, required, classification)

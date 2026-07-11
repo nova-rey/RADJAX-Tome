@@ -409,6 +409,41 @@ def inspect_multi_role_selection_artifact(path: str | Path) -> dict[str, Any]:
     }
 
 
+def payload_key_for_coordinate(example_id: str, position: int) -> str:
+    """Return the stable C5 payload identity for one canonical coordinate."""
+
+    return _payload_key(example_id, position)
+
+
+def load_source_passport_index(
+    path: str | Path,
+) -> dict[tuple[str, int], dict[str, Any]]:
+    """Load a JSON passport index for strict production linkage checks."""
+
+    payload = read_json_object(Path(path))
+    rows = payload.get("passports", payload)
+    if isinstance(rows, Mapping):
+        rows = list(rows.values())
+    if not isinstance(rows, list):
+        raise MultiRoleSelectionError("source passport index must contain passports")
+    result: dict[tuple[str, int], dict[str, Any]] = {}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            raise MultiRoleSelectionError("source passport row must be an object")
+        try:
+            key = (str(row["example_id"]), int(row["position"]))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise MultiRoleSelectionError(
+                "source passport requires example_id and position"
+            ) from exc
+        if key in result:
+            raise MultiRoleSelectionError(
+                f"duplicate source passport: {key[0]}:{key[1]}"
+            )
+        result[key] = dict(row)
+    return result
+
+
 def _validate_artifact_object(
     artifact: MultiRoleSelectionArtifact,
     *,

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -13,6 +15,14 @@ from radjax_tome.backends import TeacherBackendConfig
 from radjax_tome.builder.backend_textbook import (
     BackendTeacherTextbookBuildConfig,
     build_streaming_backend_teacher_textbook,
+)
+from radjax_tome.builder.c6_integration import (
+    C6_SELECTION_INTEGRATION_POLICY,
+    GLOBAL_ONLY_SELECTION_POLICY,
+    build_corridor_coverage_report,
+    c5_records_for_delivery,
+    validate_integrated_selection_contract,
+    write_corridor_coverage_report,
 )
 from radjax_tome.builder.exemplar_delivery import (
     EXEMPLAR_DELIVERY_REPORT_FILENAME,
@@ -30,6 +40,33 @@ from radjax_tome.builder.teacher_textbook import (
     write_teacher_textbook_validation_report,
 )
 from radjax_tome.corpora import validate_corpus_artifact
+from radjax_tome.fingerprint.corridor_budget import (
+    CorridorBudgetPolicy,
+    allocate_corridor_coverage,
+    inspect_corridor_coverage_plan,
+    write_corridor_coverage_plan,
+)
+from radjax_tome.fingerprint.corridor_claims import (
+    CorridorGlobalClaimPolicy,
+    claim_corridor_then_backfill_global,
+    load_corridor_global_claim_result,
+    load_global_board_input,
+    write_corridor_global_claim_result,
+)
+from radjax_tome.fingerprint.corridor_leaderboards import (
+    CorridorLeaderboardPolicy,
+    build_corridor_candidate_leaderboards,
+    inspect_corridor_candidate_leaderboards,
+    load_candidate_records_jsonl,
+    write_corridor_candidate_leaderboards,
+)
+from radjax_tome.fingerprint.multi_role_selection import (
+    build_multi_role_selected_exemplars,
+    load_multi_role_selection_artifact,
+    load_source_passport_index,
+    validate_multi_role_selection_artifact,
+    write_multi_role_selection_artifact,
+)
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.provenance import validate_teacher_model_provenance
 from radjax_tome.reports import (
@@ -105,6 +142,18 @@ class ProductionBuildConfig:
     retain_unselected_exemplar_payloads: bool = True
     exemplar_score_policy: str = "entropy_top_n_v1"
     track_delivery_timing: bool = False
+    selection_integration_policy: str = GLOBAL_ONLY_SELECTION_POLICY
+    total_selected_exemplar_budget: int | None = None
+    fingerprint_corridor_budget_fraction: str = "0.50"
+    fingerprint_corridor_budget_max: int | None = None
+    fingerprint_corridor_mode_cap: int = 10
+    fingerprint_corridor_candidate_pool_cap: int = 4
+    require_full_selected_budget: bool = True
+    corridor_feature_jsonl_path: Path | None = None
+    global_board_supply_path: Path | None = None
+    c4_claims_path: Path | None = None
+    c5_selection_path: Path | None = None
+    source_passports_path: Path | None = None
 
 
 def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
@@ -122,6 +171,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
     progress.start()
     blockers: list[str] = []
     warnings: list[str] = []
+    c6_context: dict[str, Any] | None = None
     already_complete = _already_complete(config)
 
     _validate_required_inputs(config, blockers)
@@ -216,6 +266,17 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             strict_provenance=config.strict_provenance,
             max_artifact_bytes=config.max_artifact_bytes,
             fail_on_warnings=config.fail_on_plan_warnings,
+            selection_integration_policy=config.selection_integration_policy,
+            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
+            fingerprint_corridor_budget_fraction=(
+                config.fingerprint_corridor_budget_fraction
+            ),
+            fingerprint_corridor_budget_max=config.fingerprint_corridor_budget_max,
+            fingerprint_corridor_mode_cap=config.fingerprint_corridor_mode_cap,
+            fingerprint_corridor_candidate_pool_cap=(
+                config.fingerprint_corridor_candidate_pool_cap
+            ),
+            require_full_selected_budget=config.require_full_selected_budget,
         )
     )
     write_gpu_run_plan(plan, run_plan_path)
@@ -245,6 +306,28 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             parity_status="not_run",
         )
         return _finalize_production_report(report, report_path, progress)
+
+    if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
+        try:
+            c6_context = _prepare_c6_selection(config)
+        except (OSError, TypeError, ValueError, KeyError) as exc:
+            blockers.append(f"C6 selection integration preflight failed: {exc}")
+            report = _production_report(
+                config,
+                created_at=created_at,
+                completed_at=_now(),
+                status="fail",
+                blockers=blockers,
+                warnings=warnings,
+                doctor_report=doctor_report,
+                run_plan_path=run_plan_path,
+                run_plan=plan,
+                effective_batch_size=effective_batch_size,
+                already_complete=already_complete,
+                parity_report_path=parity_report_path,
+                parity_status="not_run",
+            )
+            return _finalize_production_report(report, report_path, progress)
 
     preflight_wall_seconds = _elapsed(preflight_started)
     main_pass_started = perf_counter()
@@ -289,6 +372,11 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
                     config,
                     effective_batch_size,
                     progress_callback=progress.handle_delivery_event,
+                    authoritative_records=(
+                        None
+                        if c6_context is None
+                        else tuple(c6_context["delivery_records"])
+                    ),
                 )
             )
         except SelectedExemplarDeliveryError as exc:
@@ -308,9 +396,26 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         validation,
         config.output_dir / "validation_report.json",
     )
-    write_cover_page(config.output_dir)
     validation_wall_seconds = _elapsed(validation_started)
     progress.validation_completed(validation.status)
+    if c6_context is not None:
+        c6_validation, c6_coverage = _finalize_c6_selection(
+            config,
+            c6_context,
+            delivery_report=delivery_report,
+        )
+        (config.output_dir / "reports").mkdir(parents=True, exist_ok=True)
+        write_json(
+            config.output_dir / "reports" / "c6_integrated_selection_validation.json",
+            c6_validation,
+        )
+        if c6_validation["status"] == "fail":
+            blockers.extend(c6_validation["blockers"])
+        write_corridor_coverage_report(
+            c6_coverage,
+            config.output_dir / "reports" / "fingerprint_corridor_coverage.json",
+        )
+    write_cover_page(config.output_dir)
     parity_status = "not_run"
     if config.parity_left is not None and validation.status == "pass":
         parity_report = compare_tome_artifacts(
@@ -689,6 +794,40 @@ def _validate_required_inputs(
     config: ProductionBuildConfig,
     blockers: list[str],
 ) -> None:
+    if config.selection_integration_policy not in {
+        GLOBAL_ONLY_SELECTION_POLICY,
+        C6_SELECTION_INTEGRATION_POLICY,
+    }:
+        blockers.append(
+            "unsupported selection_integration_policy: "
+            f"{config.selection_integration_policy}"
+        )
+    if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
+        if config.total_selected_exemplar_budget is None:
+            blockers.append("C6 requires total_selected_exemplar_budget")
+        if config.source_passports_path is None:
+            blockers.append("C6 production requires source_passports_path")
+        elif not config.source_passports_path.is_file():
+            blockers.append(
+                f"source passports path missing: {config.source_passports_path}"
+            )
+        if config.c5_selection_path is None and config.c4_claims_path is None:
+            if config.corridor_feature_jsonl_path is None:
+                blockers.append("C6 requires corridor_feature_jsonl_path")
+            elif not config.corridor_feature_jsonl_path.is_file():
+                blockers.append(
+                    "corridor feature path missing: "
+                    f"{config.corridor_feature_jsonl_path}"
+                )
+            if config.global_board_supply_path is None:
+                blockers.append("C6 requires global_board_supply_path")
+            elif not config.global_board_supply_path.is_file():
+                blockers.append(
+                    "global board supply path missing: "
+                    f"{config.global_board_supply_path}"
+                )
+        if config.c4_claims_path is None and config.c5_selection_path is not None:
+            blockers.append("C6 c5_selection_path requires c4_claims_path")
     if (
         config.exemplar_selection_enabled
         and config.target_policy != "corridor_exemplar_v1"
@@ -715,6 +854,178 @@ def _validate_required_inputs(
             f"teacher model provenance invalid: {item}"
             for item in teacher_report.blockers
         )
+
+
+def _prepare_c6_selection(config: ProductionBuildConfig) -> dict[str, Any]:
+    """Build/load the production-grade C4/C5 authority before delivery."""
+
+    if config.total_selected_exemplar_budget is None:
+        raise ValueError("C6 total_selected_exemplar_budget is required")
+    source_passports = load_source_passport_index(config.source_passports_path)  # type: ignore[arg-type]
+    c6_root = config.output_dir / "c6"
+    c6_root.mkdir(parents=True, exist_ok=True)
+    c2_summary: dict[str, Any] = {}
+    c3_summary: dict[str, Any] = {}
+    global_supply: dict[str, Any] | None = None
+
+    if config.c4_claims_path is not None:
+        claims = load_corridor_global_claim_result(
+            config.c4_claims_path,
+            production_grade=True,
+        )
+        if config.c5_selection_path is not None:
+            selected = load_multi_role_selection_artifact(
+                config.c5_selection_path,
+                production_grade=True,
+            )
+            selected_validation = validate_multi_role_selection_artifact(
+                selected,
+                claims=claims,
+                production_grade=True,
+            )
+            if selected_validation.status == "fail":
+                raise ValueError(
+                    "C5 selection does not match C4: "
+                    + "; ".join(selected_validation.blockers)
+                )
+        else:
+            selected = build_multi_role_selected_exemplars(
+                claims,
+                source_passports=source_passports,
+            )
+            write_multi_role_selection_artifact(
+                selected,
+                c6_root / "multi-role-selection",
+                overwrite=True,
+            )
+    else:
+        feature_records = load_candidate_records_jsonl(
+            config.corridor_feature_jsonl_path,  # type: ignore[arg-type]
+            source_artifact_id=str(config.corridor_feature_jsonl_path),
+        )
+        leaderboards = build_corridor_candidate_leaderboards(
+            feature_records,
+            CorridorLeaderboardPolicy(
+                candidate_pool_cap=config.fingerprint_corridor_candidate_pool_cap,
+            ),
+        )
+        c2_path = write_corridor_candidate_leaderboards(
+            leaderboards,
+            c6_root / "corridor-leaderboards",
+            overwrite=True,
+        )
+        c2_summary = inspect_corridor_candidate_leaderboards(c2_path)
+        plan = allocate_corridor_coverage(
+            leaderboards,
+            CorridorBudgetPolicy(
+                total_selected_exemplar_budget=config.total_selected_exemplar_budget,
+                corridor_budget_fraction=config.fingerprint_corridor_budget_fraction,
+                corridor_budget_max=config.fingerprint_corridor_budget_max,
+                corridor_mode_cap=config.fingerprint_corridor_mode_cap,
+            ),
+            source_leaderboard_provenance=c2_summary,
+        )
+        c3_path = write_corridor_coverage_plan(
+            plan,
+            c6_root / "coverage-plan",
+            overwrite=True,
+        )
+        c3_summary = inspect_corridor_coverage_plan(c3_path)
+        global_input = load_global_board_input(
+            config.global_board_supply_path,  # type: ignore[arg-type]
+            production_grade=True,
+        )
+        global_supply = global_input.to_dict()
+        claims = claim_corridor_then_backfill_global(
+            leaderboards,
+            plan,
+            global_input,
+            CorridorGlobalClaimPolicy(
+                total_selected_exemplar_budget=config.total_selected_exemplar_budget,
+                require_full_budget=config.require_full_selected_budget,
+            ),
+        )
+        write_corridor_global_claim_result(
+            claims,
+            c6_root / "claims",
+            overwrite=True,
+        )
+        selected = build_multi_role_selected_exemplars(
+            claims,
+            source_passports=source_passports,
+        )
+        write_multi_role_selection_artifact(
+            selected,
+            c6_root / "multi-role-selection",
+            overwrite=True,
+        )
+    delivery_path = config.exemplar_delivery_path or "one_pass_pruned_candidate"
+    delivery_records = c5_records_for_delivery(
+        selected,
+        delivery_path=delivery_path,
+    )
+    return {
+        "claims": claims,
+        "selected": selected,
+        "source_passports": list(source_passports.values()),
+        "delivery_records": delivery_records,
+        "c2_summary": c2_summary,
+        "c3_summary": c3_summary,
+        "global_supply": global_supply,
+    }
+
+
+def _finalize_c6_selection(
+    config: ProductionBuildConfig,
+    context: dict[str, Any],
+    *,
+    delivery_report: dict[str, Any] | None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    claims = context["claims"]
+    selected = context["selected"]
+    legacy: list[Mapping[str, Any]] = []
+    payloads: list[Mapping[str, Any]] = []
+    selected_path = config.output_dir / "leaderboards" / "selected_exemplars.json"
+    payload_path = (
+        config.output_dir / "selected_exemplars" / "selected-exemplars-00000.json"
+    )
+    if selected_path.is_file():
+        legacy_payload = read_json_object(selected_path)
+        legacy = list(legacy_payload.get("selected_exemplars") or [])
+    if payload_path.is_file():
+        payload_payload = read_json_object(payload_path)
+        payloads = list(payload_payload.get("selected_exemplars") or [])
+    if delivery_report is None:
+        validation = {
+            "schema_version": "radjax.c6_integrated_selection_validation.v1",
+            "status": "fail",
+            "blockers": ["C6 selected delivery did not complete"],
+            "warnings": [],
+        }
+    else:
+        validation = validate_integrated_selection_contract(
+            claims,
+            selected,
+            legacy_records=legacy,
+            payload_records=payloads,
+            source_passports=context["source_passports"],
+            curriculum_records=legacy,
+            audit_report=None,
+            production_grade=True,
+        )
+    coverage = build_corridor_coverage_report(
+        claims,
+        selected,
+        c2_summary=context.get("c2_summary"),
+        c3_summary=context.get("c3_summary"),
+        global_supply=context.get("global_supply"),
+        delivery_report=delivery_report,
+    )
+    coverage["integrated_validation_status"] = validation["status"]
+    coverage["integrated_validation_path"] = (
+        "reports/c6_integrated_selection_validation.json"
+    )
+    return validation, coverage
 
 
 def _backend_config(config: ProductionBuildConfig) -> TeacherBackendConfig:
@@ -786,6 +1097,8 @@ def _streaming_config(
         progress_log_path=config.progress_log_path,
         run_manifest_path=config.run_manifest_path,
         progress_callback=progress_callback,
+        selection_integration_policy=config.selection_integration_policy,
+        selection_integration_config_hash=_selection_integration_hash(config),
     )
 
 
@@ -1024,6 +1337,7 @@ def _production_report(
     }
     if timing is not None:
         report.update(timing)
+    report.update(_c6_report_fields(config.output_dir, config))
     return report
 
 
@@ -1071,6 +1385,35 @@ def _inputs(config: ProductionBuildConfig) -> dict[str, Any]:
         "exemplar_score_policy": config.exemplar_score_policy,
         "track_delivery_timing": config.track_delivery_timing,
         "progress": config.progress,
+        "selection_integration_policy": config.selection_integration_policy,
+        "total_selected_exemplar_budget": config.total_selected_exemplar_budget,
+        "fingerprint_corridor_budget_fraction": (
+            config.fingerprint_corridor_budget_fraction
+        ),
+        "fingerprint_corridor_budget_max": config.fingerprint_corridor_budget_max,
+        "fingerprint_corridor_mode_cap": config.fingerprint_corridor_mode_cap,
+        "fingerprint_corridor_candidate_pool_cap": (
+            config.fingerprint_corridor_candidate_pool_cap
+        ),
+        "require_full_selected_budget": config.require_full_selected_budget,
+        "corridor_feature_jsonl_path": (
+            str(config.corridor_feature_jsonl_path)
+            if config.corridor_feature_jsonl_path
+            else None
+        ),
+        "global_board_supply_path": (
+            str(config.global_board_supply_path)
+            if config.global_board_supply_path
+            else None
+        ),
+        "c4_claims_path": str(config.c4_claims_path) if config.c4_claims_path else None,
+        "c5_selection_path": (
+            str(config.c5_selection_path) if config.c5_selection_path else None
+        ),
+        "source_passports_path": (
+            str(config.source_passports_path) if config.source_passports_path else None
+        ),
+        "selection_integration_config_hash": _selection_integration_hash(config),
     }
 
 
@@ -1087,6 +1430,37 @@ def _doctor_summary(report: dict[str, Any]) -> dict[str, Any]:
             "cuda_available",
             "mps_available",
         )
+    }
+
+
+def _c6_report_fields(
+    output_dir: Path,
+    config: ProductionBuildConfig,
+) -> dict[str, Any]:
+    coverage_path = output_dir / "reports" / "fingerprint_corridor_coverage.json"
+    validation_path = output_dir / "reports" / "c6_integrated_selection_validation.json"
+    coverage = read_json_object(coverage_path) if coverage_path.is_file() else {}
+    validation = read_json_object(validation_path) if validation_path.is_file() else {}
+    return {
+        "selection_integration_policy": config.selection_integration_policy,
+        "selection_integration_config_hash": _selection_integration_hash(config),
+        "selection_integration_status": (
+            validation.get("status")
+            if validation
+            else "not_enabled"
+            if config.selection_integration_policy == GLOBAL_ONLY_SELECTION_POLICY
+            else "not_run"
+        ),
+        "c5_selection_path": (
+            str(output_dir / "c6" / "multi-role-selection")
+            if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
+            else None
+        ),
+        "corridor_coverage_report_path": (
+            str(coverage_path) if coverage_path.is_file() else None
+        ),
+        "corridor_coverage_report": coverage or None,
+        "c6_integrated_validation": validation or None,
     }
 
 
@@ -1127,6 +1501,7 @@ def _exemplar_delivery_config(
     effective_batch_size: int,
     *,
     progress_callback: Any = None,
+    authoritative_records: tuple[dict[str, Any], ...] | None = None,
 ) -> ExemplarDeliveryConfig:
     return ExemplarDeliveryConfig(
         artifact_dir=config.output_dir,
@@ -1161,6 +1536,8 @@ def _exemplar_delivery_config(
         include_perverse_tail_in_primary=config.include_perverse_tail_in_primary,
         include_perverse_tail_in_student=config.include_perverse_tail_in_student,
         progress_callback=progress_callback,
+        authoritative_selection=authoritative_records is not None,
+        authoritative_records=authoritative_records,
     )
 
 
@@ -1323,3 +1700,26 @@ def _parity_report_path(config: ProductionBuildConfig) -> Path:
 
 def _now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat()
+
+
+def _selection_integration_hash(config: ProductionBuildConfig) -> str:
+    payload = {
+        "selection_integration_policy": config.selection_integration_policy,
+        "total_selected_exemplar_budget": config.total_selected_exemplar_budget,
+        "fingerprint_corridor_budget_fraction": (
+            config.fingerprint_corridor_budget_fraction
+        ),
+        "fingerprint_corridor_budget_max": config.fingerprint_corridor_budget_max,
+        "fingerprint_corridor_mode_cap": config.fingerprint_corridor_mode_cap,
+        "fingerprint_corridor_candidate_pool_cap": (
+            config.fingerprint_corridor_candidate_pool_cap
+        ),
+        "require_full_selected_budget": config.require_full_selected_budget,
+        "c2_schema": "radjax.c2_corridor_candidate_leaderboards.v1",
+        "c3_schema": "radjax.c3_corridor_coverage_plan.v1",
+        "c4_schema": "radjax.c4_corridor_global_claims.v1",
+        "c5_schema": "radjax.multi_role_selected_exemplar.v1",
+        "delivery_path": config.exemplar_delivery_path,
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()

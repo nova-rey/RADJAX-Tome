@@ -49,6 +49,13 @@ class GPURunPlanConfig:
     strict_provenance: bool = False
     max_artifact_bytes: int | None = None
     fail_on_warnings: bool = False
+    selection_integration_policy: str = "global_only_v1"
+    total_selected_exemplar_budget: int | None = None
+    fingerprint_corridor_budget_fraction: str = "0.50"
+    fingerprint_corridor_budget_max: int | None = None
+    fingerprint_corridor_mode_cap: int = 10
+    fingerprint_corridor_candidate_pool_cap: int = 4
+    require_full_selected_budget: bool = True
 
 
 def build_gpu_run_plan(

@@ -90,14 +90,18 @@ class _Board:
     def pool(self) -> tuple[_BoardEntry, ...]:
         return tuple(self._pool)
 
-    def to_manifest(self) -> dict[str, object]:
+    def to_manifest(
+        self,
+        *,
+        production_global_selector: bool = False,
+    ) -> dict[str, object]:
         cutoff_score = (
             self.assigned_winners[-1].score if self.assigned_winners else None
         )
         assigned_identities = {
             entry.candidate.position_key for entry in self.assigned_winners
         }
-        return {
+        manifest = {
             "board_id": self.board_id,
             "score_policy": self.score_policy,
             "capacity": self.capacity,
@@ -118,6 +122,17 @@ class _Board:
                 for entry in self.assigned_winners
             ],
         }
+        if production_global_selector:
+            manifest["ranked_candidates"] = [
+                {
+                    "example_id": entry.candidate.example_id,
+                    "selected_position": entry.candidate.selected_position,
+                    "score": entry.score,
+                    "eligible": True,
+                }
+                for entry in self._pool
+            ]
+        return manifest
 
     def _sort_key(self, entry: _BoardEntry) -> tuple[float, str, int, str]:
         return (
@@ -330,6 +345,7 @@ def select_exemplars(
     created_at: str | None = None,
     candidate_filter: Callable[[ExemplarCandidate], bool] | None = None,
     candidate_filter_name: str | None = None,
+    production_global_selector: bool = False,
 ) -> dict[str, Any]:
     if board_capacity < 1:
         raise ValueError("exemplar_selection_board_capacity must be positive")
@@ -413,14 +429,14 @@ def select_exemplars(
         "budget_applied": budget_result["budget_applied"],
         "budget_trimmed_example_count": budget_result["trimmed_example_count"],
         "budget_trimmed_position_count": budget_result["trimmed_position_count"],
-        "production_global_selector": False,
+        "production_global_selector": production_global_selector,
         "semantic_diversity_used": False,
         "utility_calibrated": False,
         "retention_policy": retention_policy,
         "created_at": created_at
         or datetime.now(UTC).replace(microsecond=0).isoformat(),
         "boards": [
-            board.to_manifest()
+            board.to_manifest(production_global_selector=production_global_selector)
             for board in sorted(boards.values(), key=lambda item: item.board_id)
         ],
         "selected_examples": selected_examples,
@@ -450,6 +466,7 @@ def build_exemplar_selection_manifest(
     use_score_pass_fields: bool = False,
     candidate_filter: Callable[[ExemplarCandidate], bool] | None = None,
     candidate_filter_name: str | None = None,
+    production_global_selector: bool = False,
 ) -> dict[str, Any]:
     if batch_size < 1:
         raise ValueError("batch_size must be positive")
@@ -511,6 +528,7 @@ def build_exemplar_selection_manifest(
         budget_examples=budget_examples,
         budget_fraction=budget_fraction,
         created_at=created_at,
+        production_global_selector=production_global_selector,
     )
     if candidate_filter is not None:
         manifest["candidate_filter"] = candidate_filter_name or "custom"
@@ -576,8 +594,8 @@ def validate_exemplar_selection_manifest(manifest: Mapping[str, Any]) -> None:
         raise ValueError("unsupported exemplar deduplication policy")
     if manifest["budget_trimming_policy"] != SCORE_AWARE_BUDGET_TRIMMING_POLICY:
         raise ValueError("unsupported exemplar budget trimming policy")
-    if manifest["production_global_selector"] is not False:
-        raise ValueError("manifest must not claim production global selection")
+    if not isinstance(manifest["production_global_selector"], bool):
+        raise ValueError("production_global_selector must be boolean")
     if manifest["semantic_diversity_used"] is not False:
         raise ValueError("manifest must not claim semantic diversity")
     if manifest["utility_calibrated"] is not False:
@@ -586,6 +604,27 @@ def validate_exemplar_selection_manifest(manifest: Mapping[str, Any]) -> None:
         raise ValueError("manifest boards must be a list")
     if not isinstance(manifest["selected_examples"], list):
         raise ValueError("manifest selected_examples must be a list")
+    for board in manifest["boards"]:
+        if not isinstance(board, Mapping):
+            raise ValueError("manifest board must be an object")
+        ranked = board.get("ranked_candidates")
+        if manifest["production_global_selector"]:
+            if not isinstance(ranked, list) or not ranked:
+                raise ValueError("production selector boards require ranked_candidates")
+            previous_score: float | None = None
+            for rank, candidate in enumerate(ranked, start=1):
+                if not isinstance(candidate, Mapping):
+                    raise ValueError("ranked candidate must be an object")
+                if not candidate.get("example_id"):
+                    raise ValueError("ranked candidate example_id is required")
+                score = float(candidate["score"])
+                if not np.isfinite(score):
+                    raise ValueError("ranked candidate score must be finite")
+                if previous_score is not None and score > previous_score:
+                    raise ValueError("ranked candidates must be score descending")
+                previous_score = score
+                if candidate.get("rank") is not None and int(candidate["rank"]) != rank:
+                    raise ValueError("ranked candidate ranks must be contiguous")
 
 
 def _scores_for_candidate(
