@@ -1100,3 +1100,14 @@ boards then backfill the remaining budget while preserving collision
 obligations and replacement lineage. The artifact is atomic, hash-validated,
 JSONL-based, and payload-free. C4 does not modify production selection, run
 teacher inference, or define the C5 multi-role training schema.
+
+## 2026-07-11 — C4.1 FIFO Backfill Lineage
+
+C4.1 makes global backfill lineage one-to-one and auditable. Pending collision
+and ineligible events are held in FIFO order; each accepted replacement consumes
+at most one pending event, while any remaining events are explicitly unresolved.
+Validation rejects repeated skipped ranks, repeated replacement seats, and
+replacement references that do not correspond to selected global claims. The
+stable global-board supply remains an offline contract; production integration
+must provide a production-grade exporter rather than routing through the
+development selector-manifest adapter.

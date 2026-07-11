@@ -8,6 +8,7 @@ import math
 import os
 import shutil
 import tempfile
+from collections import deque
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -513,7 +514,7 @@ def claim_corridor_then_backfill_global(
         remaining_global = global_budget - len(global_claims)
         target = min(board.requested_slots, max(0, remaining_global))
         fulfilled = 0
-        pending: list[tuple[GlobalBoardCandidate, str]] = []
+        pending: deque[tuple[GlobalBoardCandidate, str]] = deque()
         collision_count = 0
         skipped_ineligible = 0
         for candidate in board.candidates:
@@ -580,7 +581,8 @@ def claim_corridor_then_backfill_global(
                 )
             )
             fulfilled += 1
-            for skipped, reason in pending:
+            if pending:
+                skipped, reason = pending.popleft()
                 lineage.append(
                     BackfillLineage(
                         board_id=board.board_id,
@@ -591,7 +593,6 @@ def claim_corridor_then_backfill_global(
                         replacement_coordinate=candidate.coordinate,
                     )
                 )
-            pending.clear()
         for skipped, reason in pending:
             lineage.append(
                 BackfillLineage(
@@ -722,6 +723,7 @@ def validate_corridor_global_claim_result(
         blockers.append("claim summary arithmetic is inconsistent")
     _validate_claim_order(result, blockers)
     _validate_obligations(result, blockers)
+    _validate_backfill_lineage(result, blockers)
     if leaderboards is not None and coverage_plan is not None:
         try:
             _validate_c4_sources(
@@ -1164,6 +1166,49 @@ def _validate_obligations(
         _reject_payload_fields(
             {"obligations": [ob.to_dict() for ob in item.obligations]}
         )
+
+
+def _validate_backfill_lineage(
+    result: CorridorGlobalClaimResult, blockers: list[str]
+) -> None:
+    """Ensure every skipped event has at most one replacement seat."""
+
+    global_claims = {
+        (claim.board_id, claim.global_rank): claim.coordinate
+        for claim in result.global_claims
+    }
+    seen_skips: set[tuple[str, int]] = set()
+    seen_replacements: set[tuple[str, int]] = set()
+    for lineage in result.backfill_lineage:
+        skip_key = (lineage.board_id, lineage.skipped_rank)
+        if skip_key in seen_skips:
+            blockers.append(
+                "backfill lineage repeats a skipped board rank: "
+                f"{lineage.board_id}:{lineage.skipped_rank}"
+            )
+        seen_skips.add(skip_key)
+        if lineage.replacement_rank is None:
+            if lineage.replacement_coordinate is not None:
+                blockers.append("unresolved lineage has a replacement coordinate")
+            continue
+        replacement_key = (lineage.board_id, lineage.replacement_rank)
+        if replacement_key in seen_replacements:
+            blockers.append(
+                "backfill lineage maps multiple skipped events to one replacement: "
+                f"{lineage.board_id}:{lineage.replacement_rank}"
+            )
+        seen_replacements.add(replacement_key)
+        selected_coordinate = global_claims.get(replacement_key)
+        if selected_coordinate is None:
+            blockers.append(
+                "backfill lineage replacement is not a selected global claim: "
+                f"{lineage.board_id}:{lineage.replacement_rank}"
+            )
+        elif lineage.replacement_coordinate != selected_coordinate:
+            blockers.append(
+                "backfill lineage replacement coordinate does not match its claim: "
+                f"{lineage.board_id}:{lineage.replacement_rank}"
+            )
 
 
 def _claim_summary(result: CorridorGlobalClaimResult) -> dict[str, Any]:

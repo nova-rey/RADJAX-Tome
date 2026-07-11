@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -22,6 +23,7 @@ from radjax_tome.fingerprint.corridor_claims import (
     claim_corridor_then_backfill_global,
     inspect_corridor_global_claim_artifact,
     validate_corridor_global_claim_artifact,
+    validate_corridor_global_claim_result,
     write_corridor_global_claim_result,
 )
 from radjax_tome.fingerprint.corridor_leaderboards import (
@@ -187,11 +189,12 @@ def test_multiple_global_collisions_backfill_in_rank_order() -> None:
     board = GlobalBoard(
         board_id="global_max_entropy",
         priority=0,
-        requested_slots=2,
+        requested_slots=4,
         candidates=(
             GlobalBoardCandidate("corridor-0-0", 0, 1, 10.0),
             GlobalBoardCandidate("corridor-1-0", 0, 2, 9.0),
-            GlobalBoardCandidate("replacement", 0, 3, 8.0),
+            GlobalBoardCandidate("replacement-1", 0, 3, 8.0),
+            GlobalBoardCandidate("replacement-2", 0, 4, 7.0),
         ),
     )
     global_input = ExistingGlobalBoardInput(
@@ -207,9 +210,145 @@ def test_multiple_global_collisions_backfill_in_rank_order() -> None:
     )
 
     assert len(result.collision_obligations) == 2
-    assert len(result.global_claims) == 1
-    assert result.global_claims[0].example_id == "replacement"
+    assert len(result.global_claims) == 2
+    assert [claim.example_id for claim in result.global_claims] == [
+        "replacement-1",
+        "replacement-2",
+    ]
     assert [item.skipped_rank for item in result.backfill_lineage] == [1, 2]
+    assert [item.replacement_rank for item in result.backfill_lineage] == [3, 4]
+
+
+def test_collision_ineligible_then_two_replacements_pair_fifo() -> None:
+    leaderboards, plan, _, _ = _inputs()
+    global_input = ExistingGlobalBoardInput(
+        boards=(
+            GlobalBoard(
+                "global_max_entropy",
+                0,
+                4,
+                (
+                    GlobalBoardCandidate("corridor-0-0", 0, 1, 10.0),
+                    GlobalBoardCandidate("skipped", 0, 2, 9.0, eligible=False),
+                    GlobalBoardCandidate("replacement-1", 0, 3, 8.0),
+                    GlobalBoardCandidate("replacement-2", 0, 4, 7.0),
+                ),
+            ),
+        ),
+        source_provenance={"source_artifact_id": "global", "production_grade": True},
+    )
+    result = claim_corridor_then_backfill_global(
+        leaderboards,
+        plan,
+        global_input,
+        CorridorGlobalClaimPolicy(
+            total_selected_exemplar_budget=5,
+            require_full_budget=False,
+        ),
+    )
+
+    assert [item.skipped_rank for item in result.backfill_lineage] == [1, 2]
+    assert [item.replacement_rank for item in result.backfill_lineage] == [3, 4]
+
+
+def test_more_skips_than_replacements_leave_fifo_tail_unresolved() -> None:
+    leaderboards, plan, _, _ = _inputs()
+    global_input = ExistingGlobalBoardInput(
+        boards=(
+            GlobalBoard(
+                "global_max_entropy",
+                0,
+                2,
+                (
+                    GlobalBoardCandidate("corridor-0-0", 0, 1, 10.0),
+                    GlobalBoardCandidate("corridor-1-0", 0, 2, 9.0),
+                    GlobalBoardCandidate("replacement", 0, 3, 8.0),
+                ),
+            ),
+        ),
+        source_provenance={"source_artifact_id": "global", "production_grade": True},
+    )
+    result = claim_corridor_then_backfill_global(
+        leaderboards,
+        plan,
+        global_input,
+        CorridorGlobalClaimPolicy(
+            total_selected_exemplar_budget=5,
+            require_full_budget=False,
+        ),
+    )
+
+    assert [item.skipped_rank for item in result.backfill_lineage] == [1, 2]
+    assert [item.replacement_rank for item in result.backfill_lineage] == [3, None]
+
+
+def test_more_replacements_than_skips_have_no_unmatched_lineage() -> None:
+    leaderboards, plan, _, _ = _inputs()
+    global_input = ExistingGlobalBoardInput(
+        boards=(
+            GlobalBoard(
+                "global_max_entropy",
+                0,
+                3,
+                (
+                    GlobalBoardCandidate("corridor-0-0", 0, 1, 10.0),
+                    GlobalBoardCandidate("replacement-1", 0, 2, 9.0),
+                    GlobalBoardCandidate("replacement-2", 0, 3, 8.0),
+                ),
+            ),
+        ),
+        source_provenance={"source_artifact_id": "global", "production_grade": True},
+    )
+    result = claim_corridor_then_backfill_global(
+        leaderboards,
+        plan,
+        global_input,
+        CorridorGlobalClaimPolicy(
+            total_selected_exemplar_budget=5,
+            require_full_budget=False,
+        ),
+    )
+
+    assert len(result.global_claims) == 2
+    assert len(result.backfill_lineage) == 1
+    assert result.backfill_lineage[0].replacement_rank == 2
+
+
+def test_validation_rejects_many_to_one_replacement_lineage() -> None:
+    leaderboards, plan, _, policy = _inputs()
+    result = claim_corridor_then_backfill_global(
+        leaderboards,
+        plan,
+        ExistingGlobalBoardInput(
+            boards=(
+                GlobalBoard(
+                    "global_max_entropy",
+                    0,
+                    2,
+                    (
+                        GlobalBoardCandidate("corridor-0-0", 0, 1, 10.0),
+                        GlobalBoardCandidate("replacement-1", 0, 2, 9.0),
+                    ),
+                ),
+            ),
+            source_provenance={
+                "source_artifact_id": "global",
+                "production_grade": True,
+            },
+        ),
+        replace(policy, require_full_budget=False),
+    )
+    original = result.backfill_lineage[0]
+    duplicate = replace(
+        original,
+        skipped_rank=99,
+        skipped_coordinate=("another-skipped", 0),
+    )
+    invalid = replace(result, backfill_lineage=(original, duplicate))
+
+    validation = validate_corridor_global_claim_result(invalid)
+    assert validation.status == "fail"
+    assert any("one replacement" in blocker for blocker in validation.blockers)
 
 
 def test_cross_global_collision_preserves_both_board_obligations() -> None:
