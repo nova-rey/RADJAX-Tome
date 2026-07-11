@@ -127,6 +127,10 @@ def test_student_package_is_self_contained_training_contract(
     exemplar = reader.exemplar_batch(0)
     cover = _json(package / "cover_page.json")
     emission = _json(package / "emission_config.json")
+    payload_manifest = _json(package / "manifests" / "selected_payload_manifest.json")
+    selected_payload = _json(
+        sorted((package / "selected_exemplars").glob("selected-exemplars-*.json"))[0]
+    )["selected_exemplars"][0]
     audit = audit_selected_linkage(package, strict=True, profile=STUDENT)
     audit_cli = run_cli(
         ROOT,
@@ -154,6 +158,19 @@ def test_student_package_is_self_contained_training_contract(
     assert cover["claims_made"]["student_batches_constructible"] is True
     assert cover["claims_not_made"]["does_not_include_full_producer_shards"] is True
     assert "non_portable_source_path" in emission["dataset_source"]
+    assert payload_manifest["long_tail_summary"]["count"] == 2
+    assert (
+        cover["diagnostics"]["long_tail_summary"]
+        == payload_manifest["long_tail_summary"]
+    )
+    assert {
+        "dynamic_mass_threshold",
+        "dynamic_top_k_max",
+        "top_k_saturated",
+        "long_tail_class",
+        "long_tail_warnings",
+        "effective_top_k_fraction_of_vocab",
+    } <= set(selected_payload)
     assert validate_tome_package(package, profile=STUDENT).ok
 
 

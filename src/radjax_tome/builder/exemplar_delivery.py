@@ -25,6 +25,15 @@ from radjax_tome.builder.exemplar_selection import (
     PATH_B_FULFILLMENT_POLICY,
     build_exemplar_selection_manifest,
 )
+from radjax_tome.builder.long_tail import (
+    DEFAULT_LONG_TAIL_WARNING_K,
+    DEFAULT_PERVERSE_TAIL_WARNING_K,
+    DEFAULT_VERY_LONG_TAIL_WARNING_K,
+    LongTailPolicy,
+    is_perverse_long_tail,
+    long_tail_diagnostics,
+    long_tail_summary,
+)
 from radjax_tome.builder.teacher_textbook import TinyTextExample
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.targets.store import TeacherTargetStore
@@ -83,6 +92,12 @@ _REQUIRED_SELECTED_PAYLOAD_FIELDS = (
     "vocab_size",
     "num_buckets",
     "dynamic_top_k",
+    "dynamic_mass_threshold",
+    "dynamic_top_k_max",
+    "top_k_saturated",
+    "long_tail_class",
+    "long_tail_warnings",
+    "effective_top_k_fraction_of_vocab",
     "corridor_mode_id",
     "corridor_fingerprint_id",
     "corridor_assignment_status",
@@ -120,6 +135,10 @@ class ExemplarDeliveryConfig:
     backend_config: TeacherBackendConfig | None = None
     selected_rerun_batch_size: int = 1
     track_timing: bool = False
+    long_tail_warning_k: int = DEFAULT_LONG_TAIL_WARNING_K
+    very_long_tail_warning_k: int = DEFAULT_VERY_LONG_TAIL_WARNING_K
+    perverse_tail_warning_k: int = DEFAULT_PERVERSE_TAIL_WARNING_K
+    reject_perverse_exemplars: bool = False
     progress_callback: DeliveryProgressCallback | None = None
 
 
@@ -139,6 +158,13 @@ def materialize_selected_exemplar_delivery(
         if config.delivery_path == TWO_PASS_RERUN_SELECTED
         else PATH_A_FULFILLMENT_POLICY
     )
+    long_tail_policy = _long_tail_policy(config)
+    candidate_filter = None
+    if config.reject_perverse_exemplars:
+
+        def candidate_filter(candidate: Any) -> bool:
+            return not _candidate_is_perverse(candidate, config=config)
+
     selection_started = perf_counter()
     manifest = build_exemplar_selection_manifest(
         store,
@@ -152,6 +178,12 @@ def materialize_selected_exemplar_delivery(
         created_at=created_at,
         canonical_score_fields_only=True,
         use_score_pass_fields=config.delivery_path == TWO_PASS_RERUN_SELECTED,
+        candidate_filter=candidate_filter,
+        candidate_filter_name=(
+            "reject_perverse_dynamic_top_k"
+            if config.reject_perverse_exemplars
+            else None
+        ),
     )
     selected_records = _flatten_selected_records(
         manifest,
@@ -178,6 +210,13 @@ def materialize_selected_exemplar_delivery(
         examples=examples,
         config=config,
     )
+    _attach_long_tail_diagnostics(
+        selected_records,
+        selected_payloads,
+        config=config,
+        policy=long_tail_policy,
+    )
+    tail_summary = long_tail_summary(selected_payloads)
     payload_wall_seconds = _elapsed(payload_started)
     output = config.artifact_dir
     corridors_dir = output / "corridors"
@@ -215,6 +254,7 @@ def materialize_selected_exemplar_delivery(
         selected_records=selected_records,
         config=config,
         created_at=created_at,
+        long_tail_summary=tail_summary,
     )
     selected_exemplars = {
         "schema_version": "selected_exemplars_v1",
@@ -222,6 +262,7 @@ def materialize_selected_exemplar_delivery(
         "delivery_path": config.delivery_path,
         "score_policy": config.score_policy,
         "selected_exemplars": selected_records,
+        "long_tail_summary": tail_summary,
     }
     write_json(leaderboards_dir / LEADERBOARD_REPORT_FILENAME, leaderboard_report)
     write_json(leaderboards_dir / SELECTED_EXEMPLARS_FILENAME, selected_exemplars)
@@ -230,6 +271,7 @@ def materialize_selected_exemplar_delivery(
         {
             "schema_version": "selected_exemplar_payload_shard_v1",
             "delivery_path": config.delivery_path,
+            "long_tail_summary": tail_summary,
             "selected_exemplars": selected_payloads,
         },
     )
@@ -240,7 +282,7 @@ def materialize_selected_exemplar_delivery(
         "schema_version": EXEMPLAR_DELIVERY_REPORT_SCHEMA,
         "status": "pass",
         "blockers": [],
-        "warnings": [],
+        "warnings": _long_tail_report_warnings(tail_summary),
         "created_at": created_at,
         "completed_at": _now(),
         "selection_enabled": config.selection_enabled,
@@ -251,6 +293,7 @@ def materialize_selected_exemplar_delivery(
         "num_positions_scored": store.metadata.num_examples
         * store.metadata.sequence_length,
         "num_selected_exemplars": len(selected_payloads),
+        "long_tail_summary": tail_summary,
         "selected_example_count": selected_example_count,
         "selected_rerun_example_ids": (
             _unique_selected_example_ids(selected_records)
@@ -289,6 +332,8 @@ def materialize_selected_exemplar_delivery(
         },
     }
     report.update(corridor_result.report_fields())
+    if report["warnings"]:
+        report["status"] = "warn"
     if config.retain_unselected_exemplar_payloads:
         report["status"] = "fail"
         report["blockers"] = ["non-selected exemplar payload retention is enabled"]
@@ -1084,6 +1129,7 @@ def _validate_delivery_config(config: ExemplarDeliveryConfig) -> None:
         0.0 < config.selected_exemplar_fraction <= 1.0
     ):
         raise ValueError("selected_exemplar_fraction must be in (0, 1]")
+    _long_tail_policy(config)
 
 
 def _load_examples(path: Path, *, max_examples: int) -> tuple[TinyTextExample, ...]:
@@ -1852,9 +1898,108 @@ def _dynamic_top_k_metadata(
         else "mass_threshold_v1",
         "requested_top_k": config.top_k,
         "effective_top_k": effective_top_k,
+        "dynamic_mass_threshold": _dynamic_mass_threshold(config),
+        "dynamic_top_k_max": _dynamic_top_k_max(config),
         "score_policy": config.score_policy,
         "source_payload": source_payload,
     }
+
+
+def _long_tail_policy(config: ExemplarDeliveryConfig) -> LongTailPolicy:
+    return LongTailPolicy(
+        long_tail_warning_k=config.long_tail_warning_k,
+        very_long_tail_warning_k=config.very_long_tail_warning_k,
+        perverse_tail_warning_k=config.perverse_tail_warning_k,
+        reject_perverse_exemplars=config.reject_perverse_exemplars,
+    )
+
+
+def _dynamic_top_k_max(config: ExemplarDeliveryConfig) -> int:
+    if config.backend_config is None:
+        return config.top_k
+    return int(config.backend_config.dynamic_top_k_max)
+
+
+def _dynamic_mass_threshold(config: ExemplarDeliveryConfig) -> float:
+    if config.backend_config is None:
+        return 0.95
+    return float(config.backend_config.dynamic_mass_threshold)
+
+
+def _candidate_is_perverse(
+    candidate: Any,
+    *,
+    config: ExemplarDeliveryConfig,
+) -> bool:
+    effective_top_k = int(
+        candidate.score_fields.get(
+            "diagnostic_effective_top_k",
+            candidate.score_fields.get("effective_top_k", 1),
+        )
+        or 1
+    )
+    diagnostic = long_tail_diagnostics(
+        effective_top_k=effective_top_k,
+        top_mass=float(
+            candidate.score_fields.get(
+                "diagnostic_top_mass",
+                candidate.score_fields.get("top_mass", 0.0),
+            )
+            or 0.0
+        ),
+        vocab_size=config.vocab_size,
+        dynamic_mass_threshold=_dynamic_mass_threshold(config),
+        dynamic_top_k_max=_dynamic_top_k_max(config),
+        policy=_long_tail_policy(config),
+    )
+    return is_perverse_long_tail(diagnostic)
+
+
+def _attach_long_tail_diagnostics(
+    selected_records: list[dict[str, Any]],
+    selected_payloads: list[dict[str, Any]],
+    *,
+    config: ExemplarDeliveryConfig,
+    policy: LongTailPolicy,
+) -> None:
+    if len(selected_records) != len(selected_payloads):
+        raise ValueError("selected record/payload count mismatch")
+    for record, payload in zip(selected_records, selected_payloads, strict=True):
+        diagnostic = long_tail_diagnostics(
+            effective_top_k=int(payload["effective_top_k"]),
+            top_mass=float(payload["top_mass"]),
+            vocab_size=int(payload["vocab_size"]),
+            dynamic_mass_threshold=_dynamic_mass_threshold(config),
+            dynamic_top_k_max=_dynamic_top_k_max(config),
+            policy=policy,
+        )
+        payload.update(diagnostic)
+        payload["dynamic_top_k"].update(
+            {
+                "dynamic_mass_threshold": diagnostic["dynamic_mass_threshold"],
+                "dynamic_top_k_max": diagnostic["dynamic_top_k_max"],
+                "top_k_saturated": diagnostic["top_k_saturated"],
+            }
+        )
+        record.update(diagnostic)
+        record["dynamic_top_k"] = dict(payload["dynamic_top_k"])
+
+
+def _long_tail_report_warnings(summary: dict[str, Any]) -> list[str]:
+    warnings: list[str] = []
+    for class_name, key in (
+        ("long_tail", "long_tail_count"),
+        ("very_long_tail", "very_long_tail_count"),
+        ("suspicious_flat", "suspicious_flat_count"),
+        (
+            "full_vocab_or_near_full_vocab",
+            "full_vocab_or_near_full_vocab_count",
+        ),
+    ):
+        count = int(summary.get(key) or 0)
+        if count:
+            warnings.append(f"selected exemplars classified {class_name}: {count}")
+    return warnings
 
 
 def _payload_slice(payload: Any, key: str, row: int, position: int) -> list[Any]:
@@ -1936,6 +2081,7 @@ def _leaderboard_report(
     selected_records: list[dict[str, Any]],
     config: ExemplarDeliveryConfig,
     created_at: str,
+    long_tail_summary: dict[str, Any],
 ) -> dict[str, Any]:
     return {
         "schema_version": "selected_exemplar_leaderboard_report_v1",
@@ -1949,6 +2095,8 @@ def _leaderboard_report(
         "num_candidates_seen": manifest.get("num_candidates_seen"),
         "num_board_winners": manifest.get("num_board_winners"),
         "num_selected_exemplars": len(selected_records),
+        "long_tail_summary": long_tail_summary,
+        "reject_perverse_exemplars": config.reject_perverse_exemplars,
         "boards": manifest.get("boards", []),
     }
 

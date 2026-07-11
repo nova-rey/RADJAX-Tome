@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 
 from radjax_tome.audit import audit_selected_linkage, write_selected_linkage_audit
+from radjax_tome.builder.long_tail import long_tail_summary
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.provenance.hashes import sha256_file
 
@@ -491,6 +492,7 @@ def _write_package_cover_page(root: Path, *, profile: str) -> None:
         selected_linkage_audit=_optional_object(root / "selected_linkage_audit.json"),
         validation_report=_optional_object(root / "validation_report.json"),
     )
+    diagnostics = {"long_tail_summary": (selected or {}).get("long_tail_summary", {})}
     claims_made, claims_not_made = _profile_claims(profile)
     cover = {
         "schema_version": PACKAGE_COVER_SCHEMA,
@@ -501,6 +503,7 @@ def _write_package_cover_page(root: Path, *, profile: str) -> None:
         "created_by": "radjax_tome.tome.packaging",
         **manifest_refs,
         "top_level_summary": top_level_summary,
+        "diagnostics": diagnostics,
         "claims_made": claims_made,
         "claims_not_made": claims_not_made,
     }
@@ -689,6 +692,7 @@ def _selected_payload_manifest(root: Path) -> dict[str, Any]:
         "selected_count": selected_count,
         "shard_count": len(shards),
         "payload_shards": shards,
+        "long_tail_summary": long_tail_summary(_read_selected_payloads(root)),
     }
 
 

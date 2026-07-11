@@ -971,3 +971,20 @@ validation statuses come from their packaged reports. Full/debug packages may
 also use their retained delivery and production reports, while student packages
 never depend on those omitted producer reports. Both profile summaries explicitly
 state their package profile and producer-shard authority.
+
+## 2026-07-11 — Dynamic Top-K Long-Tail Diagnostics
+
+Selected exemplars now retain a dynamic top-k diagnostic passport in both the
+leaderboard record and compressed payload: effective support, top mass, dynamic
+mass threshold and cap, saturation state, vocab fraction, a classified tail
+shape, and deterministic warnings. Delivery, production, selected-payload
+manifests, and package cover diagnostics aggregate the same distribution into a
+long-tail summary so a larger dynamic cap can be evaluated per exemplar rather
+than treated as a static global target shape.
+
+The default is observational. Long and suspicious tails are retained with
+warnings, leaving the existing canonical selection surface intact. The explicit
+`reject_perverse_exemplars` control filters only suspicious-flat or full-vocab
+candidates before selection, so the selector promotes the next eligible
+candidate without changing Path A capture, Path B rerun semantics, corridor
+modes, or selected-linkage authority.

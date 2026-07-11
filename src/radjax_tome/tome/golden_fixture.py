@@ -9,6 +9,7 @@ from typing import Any
 import numpy as np
 
 from radjax_tome.builder.corridor_artifacts import build_corridor_artifacts
+from radjax_tome.builder.long_tail import LongTailPolicy, long_tail_diagnostics
 from radjax_tome.builder.teacher_textbook import (
     EMISSION_CONFIG_FIELDS,
     TinyTextExample,
@@ -277,6 +278,25 @@ def _selected_exemplars() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
                 "source_payload": "deterministic_fixture",
             },
         }
+        diagnostic = long_tail_diagnostics(
+            effective_top_k=effective_top_k,
+            top_mass=top_mass,
+            vocab_size=VOCAB_SIZE,
+            dynamic_mass_threshold=0.95,
+            dynamic_top_k_max=5,
+            policy=LongTailPolicy(),
+        )
+        record.update(diagnostic)
+        record["dynamic_top_k"] = dict(payload["dynamic_top_k"])
+        record["dynamic_top_k"].update(
+            {
+                "dynamic_mass_threshold": diagnostic["dynamic_mass_threshold"],
+                "dynamic_top_k_max": diagnostic["dynamic_top_k_max"],
+                "top_k_saturated": diagnostic["top_k_saturated"],
+            }
+        )
+        payload.update(diagnostic)
+        payload["dynamic_top_k"] = dict(record["dynamic_top_k"])
         records.append(record)
         payloads.append(payload)
     return records, payloads

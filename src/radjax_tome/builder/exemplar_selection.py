@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -174,6 +174,10 @@ def extract_one_pass_candidates(
                     _position_bucket(selected_position, sequence_length)
                 ),
                 "length_bucket": float(_length_bucket(sequence_length)),
+                "diagnostic_effective_top_k": float(
+                    effective_top_k[row, selected_position]
+                ),
+                "diagnostic_top_mass": 0.0,
             }
             if not canonical_score_fields_only:
                 score_fields.update(
@@ -260,6 +264,22 @@ def extract_score_pass_candidates(
                 _position_bucket(selected_position, sequence_length)
             ),
             "length_bucket": float(_length_bucket(sequence_length)),
+            "diagnostic_effective_top_k": float(
+                _score_field_or_default(
+                    arrays,
+                    "score_effective_top_k",
+                    row=row,
+                    default=1,
+                )
+            ),
+            "diagnostic_top_mass": float(
+                _score_field_or_default(
+                    arrays,
+                    "score_top_mass",
+                    row=row,
+                    default=0.0,
+                )
+            ),
         }
         candidates.append(
             ExemplarCandidate(
@@ -287,6 +307,18 @@ def extract_score_pass_candidates(
     return tuple(candidates)
 
 
+def _score_field_or_default(
+    arrays: Mapping[str, np.ndarray],
+    name: str,
+    *,
+    row: int,
+    default: int | float,
+) -> int | float:
+    if name not in arrays:
+        return default
+    return np.asarray(arrays[name])[row].item()
+
+
 def select_exemplars(
     candidates: Iterable[ExemplarCandidate],
     *,
@@ -296,12 +328,24 @@ def select_exemplars(
     budget_examples: int | None = None,
     budget_fraction: float | None = None,
     created_at: str | None = None,
+    candidate_filter: Callable[[ExemplarCandidate], bool] | None = None,
+    candidate_filter_name: str | None = None,
 ) -> dict[str, Any]:
     if board_capacity < 1:
         raise ValueError("exemplar_selection_board_capacity must be positive")
     _validate_budget_request(
         budget_examples=budget_examples,
         budget_fraction=budget_fraction,
+    )
+    candidates_before_filter = list(candidates)
+    candidates = (
+        [
+            candidate
+            for candidate in candidates_before_filter
+            if candidate_filter(candidate)
+        ]
+        if candidate_filter is not None
+        else candidates_before_filter
     )
     boards: dict[str, _Board] = {}
     num_candidates_seen = 0
@@ -381,6 +425,12 @@ def select_exemplars(
         ],
         "selected_examples": selected_examples,
     }
+    if candidate_filter is not None:
+        manifest["candidate_filter"] = candidate_filter_name or "custom"
+        manifest["candidate_filter_rejected_count"] = len(
+            candidates_before_filter
+        ) - len(candidates)
+        manifest["num_candidates_seen_before_filter"] = len(candidates_before_filter)
     validate_exemplar_selection_manifest(manifest)
     return manifest
 
@@ -398,6 +448,8 @@ def build_exemplar_selection_manifest(
     created_at: str,
     canonical_score_fields_only: bool = False,
     use_score_pass_fields: bool = False,
+    candidate_filter: Callable[[ExemplarCandidate], bool] | None = None,
+    candidate_filter_name: str | None = None,
 ) -> dict[str, Any]:
     if batch_size < 1:
         raise ValueError("batch_size must be positive")
@@ -445,8 +497,14 @@ def build_exemplar_selection_manifest(
                 "exemplar selection requires corridor_exemplar_v1 or "
                 "corridor_exemplar_score_pass_v1 target artifacts"
             )
-    return select_exemplars(
-        candidates,
+    candidates_seen = len(candidates)
+    filtered_candidates = (
+        [candidate for candidate in candidates if candidate_filter(candidate)]
+        if candidate_filter is not None
+        else candidates
+    )
+    manifest = select_exemplars(
+        filtered_candidates,
         capture_mode=capture_mode,
         fulfillment_policy=fulfillment_policy,
         board_capacity=board_capacity,
@@ -454,6 +512,13 @@ def build_exemplar_selection_manifest(
         budget_fraction=budget_fraction,
         created_at=created_at,
     )
+    if candidate_filter is not None:
+        manifest["candidate_filter"] = candidate_filter_name or "custom"
+        manifest["candidate_filter_rejected_count"] = candidates_seen - len(
+            filtered_candidates
+        )
+        manifest["num_candidates_seen_before_filter"] = candidates_seen
+    return manifest
 
 
 def write_exemplar_selection_manifest(

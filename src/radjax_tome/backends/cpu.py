@@ -746,6 +746,16 @@ def _corridor_exemplar_score_payload(
         selected_position[:, None],
         axis=-1,
     )[:, 0].astype(np.int32)
+    selected_effective_top_k = np.take_along_axis(
+        np.asarray(source["effective_top_k"], dtype=np.int32),
+        selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.int32)
+    selected_top_mass = np.take_along_axis(
+        np.asarray(source["top_mass"], dtype=np.float32),
+        selected_position[:, None],
+        axis=-1,
+    )[:, 0].astype(np.float32)
     policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_second_pass_source_policy]
     batch_size = int(logits.shape[0])
     fields = (
@@ -756,6 +766,8 @@ def _corridor_exemplar_score_payload(
         "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
+        "score_effective_top_k",
+        "score_top_mass",
         "score_source_policy_ids",
         "score_lengths",
     )
@@ -791,6 +803,8 @@ def _corridor_exemplar_score_payload(
         "score_top_token_id": selected_top_token_id,
         "score_selected_position_entropy": selected_entropy,
         "score_confidence_at_selected_position": selected_confidence,
+        "score_effective_top_k": selected_effective_top_k,
+        "score_top_mass": selected_top_mass,
         "score_source_policy_ids": np.full((batch_size,), policy_id, dtype=np.int32),
         "score_lengths": np.full((batch_size,), logits.shape[1], dtype=np.int32),
     }

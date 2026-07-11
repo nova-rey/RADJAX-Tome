@@ -348,6 +348,10 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument("--dynamic-top-k-min", type=int, default=1)
     production.add_argument("--dynamic-top-k-max", type=int, default=32)
     production.add_argument("--dynamic-mass-threshold", type=float, default=0.95)
+    production.add_argument("--long-tail-warning-k", type=int, default=8_192)
+    production.add_argument("--very-long-tail-warning-k", type=int, default=32_768)
+    production.add_argument("--perverse-tail-warning-k", type=int, default=65_536)
+    production.add_argument("--reject-perverse-exemplars", action="store_true")
     production.add_argument(
         "--gpu-batch-size-mode",
         choices=("preset", "custom", "auto"),
@@ -1011,6 +1015,10 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
             dynamic_top_k_min=args.dynamic_top_k_min,
             dynamic_top_k_max=args.dynamic_top_k_max,
             dynamic_mass_threshold=args.dynamic_mass_threshold,
+            long_tail_warning_k=args.long_tail_warning_k,
+            very_long_tail_warning_k=args.very_long_tail_warning_k,
+            perverse_tail_warning_k=args.perverse_tail_warning_k,
+            reject_perverse_exemplars=args.reject_perverse_exemplars,
             gpu_batch_size_mode=args.gpu_batch_size_mode,
             gpu_batch_size_preset=args.gpu_batch_size_preset,
             gpu_batch_size_custom=args.gpu_batch_size_custom,

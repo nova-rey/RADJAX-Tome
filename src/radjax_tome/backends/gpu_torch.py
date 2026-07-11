@@ -1479,6 +1479,16 @@ def _gpu_corridor_exemplar_score_reduce(
         -1,
         gather_positions,
     ).squeeze(-1)
+    selected_effective_top_k = torch.gather(
+        source["effective_top_k"],
+        -1,
+        gather_positions,
+    ).squeeze(-1)
+    selected_top_mass = torch.gather(
+        source["top_mass"],
+        -1,
+        gather_positions,
+    ).squeeze(-1)
     batch_size = int(logits.shape[0])
     sequence_length = int(logits.shape[1])
     policy_id = _EXEMPLAR_SOURCE_POLICIES[config.exemplar_second_pass_source_policy]
@@ -1508,6 +1518,8 @@ def _gpu_corridor_exemplar_score_reduce(
         "score_top_token_id": selected_top_token_id.to(torch.int32),
         "score_selected_position_entropy": selected_entropy,
         "score_confidence_at_selected_position": selected_confidence,
+        "score_effective_top_k": selected_effective_top_k.to(torch.int32),
+        "score_top_mass": selected_top_mass,
         "score_source_policy_ids": torch.full(
             (batch_size,),
             policy_id,
@@ -2055,6 +2067,8 @@ _SCORE_PAYLOAD_DTYPES: Mapping[str, type[np.generic]] = {
     "score_top_token_id": np.int32,
     "score_selected_position_entropy": np.float32,
     "score_confidence_at_selected_position": np.float32,
+    "score_effective_top_k": np.int32,
+    "score_top_mass": np.float32,
     "score_source_policy_ids": np.int32,
     "score_lengths": np.int32,
 }
@@ -2066,6 +2080,7 @@ def _compact_score_payload_to_numpy(
     return {
         name: _tensor_to_numpy(payload[name], dtype)
         for name, dtype in _SCORE_PAYLOAD_DTYPES.items()
+        if name in payload
     }
 
 

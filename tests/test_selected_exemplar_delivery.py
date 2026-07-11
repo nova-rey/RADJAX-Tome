@@ -123,6 +123,10 @@ def test_cli_exposes_selected_only_exemplar_delivery_flags() -> None:
     assert "--no-retain-unselected-exemplar-payloads" in production_help.stdout
     assert "--exemplar-score-policy" in production_help.stdout
     assert "--track-delivery-timing" in production_help.stdout
+    assert "--long-tail-warning-k" in production_help.stdout
+    assert "--very-long-tail-warning-k" in production_help.stdout
+    assert "--perverse-tail-warning-k" in production_help.stdout
+    assert "--reject-perverse-exemplars" in production_help.stdout
     assert parity_help.returncode == 0, parity_help.stderr
     assert "--path-a" in parity_help.stdout
     assert "--path-b" in parity_help.stdout
@@ -199,6 +203,7 @@ def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retent
     assert "timing_enabled" not in report
     assert selected["selected_exemplars"]
     selected_payload = payload["selected_exemplars"][0]
+    selected_record = selected["selected_exemplars"][0]
     for field in (
         "selected_example_id",
         "selected_position",
@@ -209,8 +214,29 @@ def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retent
         "top_selection_mask",
         "bucket_masses",
         "dynamic_top_k",
+        "dynamic_mass_threshold",
+        "dynamic_top_k_max",
+        "top_k_saturated",
+        "long_tail_class",
+        "long_tail_warnings",
+        "effective_top_k_fraction_of_vocab",
     ):
         assert field in selected_payload
+    for field in (
+        "selected_example_id",
+        "selected_position",
+        "selected_score",
+        "dynamic_top_k",
+        "dynamic_mass_threshold",
+        "dynamic_top_k_max",
+        "top_k_saturated",
+        "long_tail_class",
+        "long_tail_warnings",
+        "effective_top_k_fraction_of_vocab",
+    ):
+        assert selected_record[field] == selected_payload[field]
+    assert delivery["long_tail_summary"]["count"] == 2
+    assert report["long_tail_summary"] == delivery["long_tail_summary"]
     assert not (output / "unselected_candidate_payloads").exists()
     assert validate_teacher_textbook(output).status == "pass"
 

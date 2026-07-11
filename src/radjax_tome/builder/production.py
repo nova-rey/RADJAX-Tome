@@ -20,6 +20,11 @@ from radjax_tome.builder.exemplar_delivery import (
     SelectedExemplarDeliveryError,
     materialize_selected_exemplar_delivery,
 )
+from radjax_tome.builder.long_tail import (
+    DEFAULT_LONG_TAIL_WARNING_K,
+    DEFAULT_PERVERSE_TAIL_WARNING_K,
+    DEFAULT_VERY_LONG_TAIL_WARNING_K,
+)
 from radjax_tome.builder.teacher_textbook import (
     validate_teacher_textbook,
     write_teacher_textbook_validation_report,
@@ -62,6 +67,10 @@ class ProductionBuildConfig:
     dynamic_top_k_min: int = 1
     dynamic_top_k_max: int = 32
     dynamic_mass_threshold: float = 0.95
+    long_tail_warning_k: int = DEFAULT_LONG_TAIL_WARNING_K
+    very_long_tail_warning_k: int = DEFAULT_VERY_LONG_TAIL_WARNING_K
+    perverse_tail_warning_k: int = DEFAULT_PERVERSE_TAIL_WARNING_K
+    reject_perverse_exemplars: bool = False
     gpu_batch_size_mode: str = "auto"
     gpu_batch_size_preset: int = 8
     gpu_batch_size_custom: int | None = None
@@ -860,6 +869,15 @@ def _production_report(
         "dynamic_top_k_min": config.dynamic_top_k_min,
         "dynamic_top_k_max": config.dynamic_top_k_max,
         "dynamic_mass_threshold": config.dynamic_mass_threshold,
+        "long_tail_warning_k": config.long_tail_warning_k,
+        "very_long_tail_warning_k": config.very_long_tail_warning_k,
+        "perverse_tail_warning_k": config.perverse_tail_warning_k,
+        "reject_perverse_exemplars": config.reject_perverse_exemplars,
+        "long_tail_summary": (
+            delivery_report.get("long_tail_summary")
+            if delivery_report is not None
+            else None
+        ),
         "non_selected_exemplar_payload_retained": (
             delivery_report.get("non_selected_exemplar_payload_retained")
             if delivery_report is not None
@@ -1000,6 +1018,10 @@ def _inputs(config: ProductionBuildConfig) -> dict[str, Any]:
         "dynamic_top_k_min": config.dynamic_top_k_min,
         "dynamic_top_k_max": config.dynamic_top_k_max,
         "dynamic_mass_threshold": config.dynamic_mass_threshold,
+        "long_tail_warning_k": config.long_tail_warning_k,
+        "very_long_tail_warning_k": config.very_long_tail_warning_k,
+        "perverse_tail_warning_k": config.perverse_tail_warning_k,
+        "reject_perverse_exemplars": config.reject_perverse_exemplars,
         "allow_downloads": False,
         "local_files_only": True,
         "exemplar_selection_enabled": config.exemplar_selection_enabled,
@@ -1088,6 +1110,10 @@ def _exemplar_delivery_config(
         backend_config=_backend_config(config),
         selected_rerun_batch_size=effective_batch_size,
         track_timing=config.track_delivery_timing,
+        long_tail_warning_k=config.long_tail_warning_k,
+        very_long_tail_warning_k=config.very_long_tail_warning_k,
+        perverse_tail_warning_k=config.perverse_tail_warning_k,
+        reject_perverse_exemplars=config.reject_perverse_exemplars,
         progress_callback=progress_callback,
     )
 
