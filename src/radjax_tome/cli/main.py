@@ -5,6 +5,7 @@ import importlib.util
 import json
 import platform
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 HELP_DESCRIPTION = """RADJAX-Tome produces teacher-side distillation artifacts.
@@ -230,6 +231,23 @@ def _build_parser() -> argparse.ArgumentParser:
     claims.set_defaults(require_full_budget=True)
     claims.add_argument("--overwrite", action="store_true")
     claims.set_defaults(func=_cmd_claim_corridor_and_backfill_global)
+
+    multi_role = subparsers.add_parser(
+        "build-multi-role-selected-exemplars",
+        help="Build durable C5 multi-role records from a validated C4 artifact.",
+        description=(
+            "Project a C4 claim artifact into one durable record per coordinate "
+            "with lossless obligations and a legacy flat projection. This is "
+            "offline and does not materialize teacher payloads."
+        ),
+    )
+    multi_role.add_argument("--claims", type=Path, required=True)
+    multi_role.add_argument("--source-passports", type=Path)
+    multi_role.add_argument("--output", type=Path, required=True)
+    multi_role.add_argument("--allow-nonproduction-sources", action="store_true")
+    multi_role.add_argument("--nonproduction-override-reason")
+    multi_role.add_argument("--overwrite", action="store_true")
+    multi_role.set_defaults(func=_cmd_build_multi_role_selected_exemplars)
 
     validate = subparsers.add_parser(
         "validate",
@@ -952,6 +970,93 @@ def _cmd_claim_corridor_and_backfill_global(args: argparse.Namespace) -> int:
         )
     )
     return 0 if validation.status in {"pass", "warn"} else 1
+
+
+def _cmd_build_multi_role_selected_exemplars(args: argparse.Namespace) -> int:
+    from radjax_tome.fingerprint.corridor_claims import (
+        CorridorClaimError,
+        load_corridor_global_claim_result,
+    )
+    from radjax_tome.fingerprint.multi_role_selection import (
+        MultiRoleSelectionError,
+        build_multi_role_selected_exemplars,
+        inspect_multi_role_selection_artifact,
+        validate_multi_role_selection_artifact,
+        write_multi_role_selection_artifact,
+    )
+
+    try:
+        if args.allow_nonproduction_sources and not args.nonproduction_override_reason:
+            raise MultiRoleSelectionError(
+                "nonproduction override reason is required when allowing sources"
+            )
+        production_grade = not args.allow_nonproduction_sources
+        claims = load_corridor_global_claim_result(
+            args.claims,
+            production_grade=production_grade,
+        )
+        source_passports = None
+        if args.source_passports is not None:
+            source_passports = _load_c5_source_passports(args.source_passports)
+        artifact = build_multi_role_selected_exemplars(
+            claims,
+            source_passports=source_passports,
+        )
+        output = write_multi_role_selection_artifact(
+            artifact,
+            args.output,
+            overwrite=args.overwrite,
+        )
+        validation = validate_multi_role_selection_artifact(
+            output,
+            claims=claims,
+            production_grade=production_grade,
+        )
+        inspection = inspect_multi_role_selection_artifact(output)
+    except (
+        CorridorClaimError,
+        MultiRoleSelectionError,
+        OSError,
+        ValueError,
+        TypeError,
+        json.JSONDecodeError,
+    ) as exc:
+        print(f"status=fail error={exc}", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "status": validation.status,
+                "output": str(output),
+                "validation": validation.to_dict(),
+                "inspection": inspection,
+            },
+            sort_keys=True,
+        )
+    )
+    return 0 if validation.status in {"pass", "warn"} else 1
+
+
+def _load_c5_source_passports(path: Path) -> dict[tuple[str, int], dict[str, object]]:
+    from radjax_tome.io.json import read_json_object
+
+    payload = read_json_object(path)
+    rows = payload.get("passports", payload)
+    if isinstance(rows, Mapping):
+        rows = list(rows.values())
+    if not isinstance(rows, list):
+        raise ValueError("source passport index must contain a passports list")
+    result: dict[tuple[str, int], dict[str, object]] = {}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            raise ValueError("source passport row must be an object")
+        example_id = str(row["example_id"])
+        position = int(row["position"])
+        key = (example_id, position)
+        if key in result:
+            raise ValueError(f"duplicate source passport: {example_id}:{position}")
+        result[key] = dict(row)
+    return result
 
 
 def _cmd_build(args: argparse.Namespace) -> int:

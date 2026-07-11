@@ -124,6 +124,24 @@ are accepted only as explicitly non-production development adapters. C4 is
 offline and does not alter production selection; the claim obligations are
 reserved for the later multi-role curriculum schema.
 
+## C5 Durable Multi-Role Records
+
+C5 converts a validated C4 claim result into one durable record per unique
+coordinate while preserving every C4 obligation:
+
+```python
+from radjax_tome.fingerprint.multi_role_selection import (
+    build_multi_role_selected_exemplars,
+    project_legacy_selected_exemplars,
+    validate_multi_role_selection_artifact,
+    write_multi_role_selection_artifact,
+)
+```
+
+The projection is offline, payload-free, and does not change production
+selection. See `docs/MULTI_ROLE_SELECTION_C5.md` for the schema, artifact
+layout, source-passport contract, and C6 handoff boundary.
+
 ## What Is Not Public API
 
 The package root does not advertise every constant, dataclass, record type, or

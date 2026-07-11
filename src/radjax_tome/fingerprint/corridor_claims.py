@@ -874,6 +874,27 @@ def validate_corridor_global_claim_artifact(
         )
 
 
+def load_corridor_global_claim_result(
+    path: str | Path,
+    *,
+    production_grade: bool = True,
+) -> CorridorGlobalClaimResult:
+    """Load a hash-validated C4 claim result for downstream offline stages."""
+
+    root = Path(path)
+    validation = validate_corridor_global_claim_artifact(
+        root,
+        production_grade=production_grade,
+    )
+    if validation.status == "fail":
+        raise CorridorClaimError(
+            "cannot load invalid corridor claim artifact: "
+            + "; ".join(validation.blockers)
+        )
+    manifest = read_json_object(root / CLAIM_MANIFEST_FILENAME)
+    return _result_from_artifact(root, manifest)
+
+
 def inspect_corridor_global_claim_artifact(path: str | Path) -> dict[str, Any]:
     validation = validate_corridor_global_claim_artifact(path, production_grade=False)
     manifest = read_json_object(Path(path) / CLAIM_MANIFEST_FILENAME)

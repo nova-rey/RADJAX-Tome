@@ -332,6 +332,20 @@ not run teacher inference or emit training payloads. Use `--allow-underfill`
 only for an intentionally incomplete supply, and use the explicit
 non-production override flags for development artifacts.
 
+Project C4 claims into durable C5 multi-role records with:
+
+```bash
+radjax-tome build-multi-role-selected-exemplars \
+  --claims ./corridor_claims \
+  --output ./multi-role-selection \
+  --overwrite
+```
+
+This creates rich JSONL records plus a backward-compatible flat projection.
+It preserves one payload identity per coordinate and records
+`not_materialized_in_c5`; it does not alter `production-build`. C6 owns
+production audit, report, packaging, and payload integration.
+
 | Script | Classification | Use when |
 |---|---|---|
 | `scripts/build_teacher_textbook.py` | recommended wrapper / legacy-compatible | You need the current TeacherTextbook builder directly. |

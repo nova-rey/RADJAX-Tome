@@ -1111,3 +1111,14 @@ replacement references that do not correspond to selected global claims. The
 stable global-board supply remains an offline contract; production integration
 must provide a production-grade exporter rather than routing through the
 development selector-manifest adapter.
+
+## 2026-07-11 — C5 Durable Multi-Role Selected-Exemplar Records
+
+C5 adds a payload-free offline projection from validated C4 claims to one rich
+record per unique coordinate. Records preserve every C4 obligation, retain the
+C4 primary claim and canonical selection order, derive corridor/global role
+lists independently, carry a verified source passport, and expose one stable
+coordinate payload identity marked `not_materialized_in_c5`. A deterministic
+legacy flat projection remains available for existing consumers. C5 does not
+rerun selection, change production output, route curriculum boards, or
+materialize teacher targets; C6 owns those integrations.
