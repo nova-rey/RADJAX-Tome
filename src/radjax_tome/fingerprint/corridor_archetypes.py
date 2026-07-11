@@ -136,7 +136,12 @@ class CorridorCandidateFeatures:
         proxy for full membership, zero core distance, and one supported mode.
         """
 
-        status = str(payload.get("corridor_assignment_status", "missing"))
+        status = str(
+            payload.get(
+                "corridor_assignment_status",
+                payload.get("assignment_status", "missing"),
+            )
+        )
         linked = status in LINKED_ASSIGNMENT_STATUSES
         return cls(
             candidate_id=str(

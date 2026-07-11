@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import random
+import tracemalloc
 from pathlib import Path
 
 import pytest
@@ -187,6 +188,21 @@ def test_proxy_features_fail_by_default_and_are_conspicuous_when_allowed() -> No
     assert artifact.warnings
 
 
+def test_proxy_override_does_not_downgrade_all_explicit_features() -> None:
+    policy = CorridorLeaderboardPolicy(
+        allow_compatibility_proxies=True,
+        proxy_override_reason="unit test only",
+    )
+
+    artifact = build_corridor_candidate_leaderboards(
+        [_record("real", provenance=PROVENANCE)], policy
+    )
+
+    assert artifact.summary["production_grade"] is True
+    assert artifact.summary["compatibility_proxy_used"] is False
+    assert artifact.warnings == ()
+
+
 def test_provenance_must_be_shared_and_real_features_are_explicit() -> None:
     other = CorridorFeatureProvenance(
         source_artifact_schema="other",
@@ -255,8 +271,172 @@ def test_candidate_jsonl_loader_preserves_source_hash(tmp_path: Path) -> None:
     )
 
     records = load_candidate_records_jsonl(path)
-    assert records[0].features.candidate_id == "current-0"
-    assert records[0].feature_provenance.source_artifact_hash
+    record = next(records)
+    assert record.features.candidate_id == "current-0"
+    assert record.feature_provenance.source_artifact_hash
+
+
+@pytest.mark.parametrize(
+    "missing_field",
+    ("membership_strength", "core_distance", "mode_support", "difficulty_score"),
+)
+def test_explicit_loader_rejects_missing_real_feature_fields(
+    tmp_path: Path,
+    missing_field: str,
+) -> None:
+    features = {
+        "candidate_id": "missing-field",
+        "position": 0,
+        "corridor_mode_id": 1,
+        "assignment_status": "linked",
+        "membership_strength": 0.8,
+        "core_distance": 0.2,
+        "mode_support": 2,
+        "difficulty_score": 0.7,
+    }
+    del features[missing_field]
+    path = tmp_path / "missing.jsonl"
+    path.write_text(json.dumps({"features": features, "fidelity": "explicit"}) + "\n")
+
+    with pytest.raises(CorridorLeaderboardError, match="require explicit fields"):
+        next(load_candidate_records_jsonl(path))
+
+
+def test_derived_loader_requires_derivation_metadata(tmp_path: Path) -> None:
+    path = tmp_path / "derived.jsonl"
+    path.write_text(
+        json.dumps(
+            {
+                "features": {
+                    "candidate_id": "derived",
+                    "position": 0,
+                    "corridor_mode_id": 1,
+                    "assignment_status": "linked",
+                    "membership_strength": 0.8,
+                    "core_distance": 0.2,
+                    "mode_support": 2,
+                    "difficulty_score": 0.7,
+                },
+                "fidelity": "derived",
+            }
+        )
+        + "\n"
+    )
+
+    with pytest.raises(CorridorLeaderboardError, match="derivation metadata"):
+        next(load_candidate_records_jsonl(path))
+
+
+def test_compatibility_proxy_loader_is_the_only_defaulting_path(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "proxy.jsonl"
+    path.write_text(
+        json.dumps(
+            {
+                "features": {
+                    "candidate_id": "proxy",
+                    "position": 0,
+                    "corridor_mode_id": 1,
+                    "corridor_assignment_status": "linked",
+                    "difficulty_score": 0.7,
+                },
+                "fidelity": "compatibility_proxy",
+                "compatibility_proxy_used": True,
+            }
+        )
+        + "\n"
+    )
+
+    record = next(load_candidate_records_jsonl(path))
+    assert record.features.membership_strength == 1.0
+    assert record.feature_provenance.fidelity == "compatibility_proxy"
+
+
+def test_loader_requires_explicit_fidelity(tmp_path: Path) -> None:
+    path = tmp_path / "undeclared.jsonl"
+    path.write_text(
+        json.dumps(
+            {
+                "features": {
+                    "candidate_id": "undeclared",
+                    "position": 0,
+                    "corridor_mode_id": 1,
+                    "assignment_status": "linked",
+                    "membership_strength": 0.8,
+                    "core_distance": 0.2,
+                    "mode_support": 2,
+                    "difficulty_score": 0.7,
+                }
+            }
+        )
+        + "\n"
+    )
+
+    with pytest.raises(CorridorLeaderboardError, match="fidelity must be explicitly"):
+        next(load_candidate_records_jsonl(path))
+
+
+def test_proxy_override_artifact_is_warned_only_when_proxy_is_observed(
+    tmp_path: Path,
+) -> None:
+    proxy = CorridorFeatureProvenance(
+        source_artifact_schema="synthetic",
+        source_artifact_id="test-only",
+        fidelity="compatibility_proxy",
+        compatibility_proxy_used=True,
+    )
+    policy = CorridorLeaderboardPolicy(
+        allow_compatibility_proxies=True,
+        proxy_override_reason="unit test only",
+    )
+    output = write_corridor_candidate_leaderboards(
+        build_corridor_candidate_leaderboards(
+            [_record("proxy", provenance=proxy)], policy
+        ),
+        tmp_path / "proxy-leaderboards",
+    )
+
+    validation = validate_corridor_candidate_leaderboards(
+        output, production_grade=False
+    )
+    assert validation.status == "warn"
+    assert any("compatibility_proxy" in warning for warning in validation.warnings)
+
+
+def test_jsonl_loader_and_builder_keep_working_state_bounded(tmp_path: Path) -> None:
+    path = tmp_path / "stream.jsonl"
+    with path.open("w", encoding="utf-8") as handle:
+        for index in range(4096):
+            handle.write(
+                json.dumps(
+                    {
+                        "features": {
+                            "candidate_id": f"candidate-{index}",
+                            "position": 0,
+                            "corridor_mode_id": index % 4,
+                            "assignment_status": "linked",
+                            "membership_strength": 0.8,
+                            "core_distance": 0.2,
+                            "mode_support": 4,
+                            "difficulty_score": 0.7,
+                        },
+                        "fidelity": "explicit",
+                    }
+                )
+                + "\n"
+            )
+
+    records = load_candidate_records_jsonl(path)
+    assert iter(records) is records
+    tracemalloc.start()
+    build_corridor_candidate_leaderboards(
+        records, CorridorLeaderboardPolicy(candidate_pool_cap=2)
+    )
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    assert peak < 8_000_000
 
 
 def test_retained_state_is_bounded_by_modes_times_cap() -> None:

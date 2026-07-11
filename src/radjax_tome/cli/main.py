@@ -735,14 +735,15 @@ def _cmd_build_fingerprint_corridor_leaderboards(
             allow_compatibility_proxies=args.allow_compatibility_proxies,
             proxy_override_reason=args.proxy_override_reason,
         )
+        leaderboard_artifact = build_corridor_candidate_leaderboards(records, policy)
         output = write_corridor_candidate_leaderboards(
-            build_corridor_candidate_leaderboards(records, policy),
+            leaderboard_artifact,
             args.output,
             overwrite=args.overwrite,
         )
         validation = validate_corridor_candidate_leaderboards(
             output,
-            production_grade=policy.production_grade,
+            production_grade=leaderboard_artifact.production_grade,
         )
         inspection = inspect_corridor_candidate_leaderboards(output)
     except (CorridorLeaderboardError, OSError, ValueError, TypeError) as exc:

@@ -7,9 +7,11 @@ import json
 import math
 import os
 import shutil
+import sqlite3
 import tempfile
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -66,6 +68,10 @@ class CorridorFeatureProvenance:
             raise ValueError(
                 "compatibility_proxy_used requires compatibility_proxy fidelity"
             )
+        if not isinstance(self.compatibility_proxy_used, bool):
+            raise TypeError("compatibility_proxy_used must be a boolean")
+        if not isinstance(self.normalization_parameters, Mapping):
+            raise TypeError("normalization_parameters must be an object")
         object.__setattr__(
             self,
             "normalization_parameters",
@@ -119,8 +125,8 @@ class CorridorLeaderboardPolicy:
             raise ValueError("policy_id must be nonempty")
 
     @property
-    def production_grade(self) -> bool:
-        return not self.allow_compatibility_proxies
+    def compatibility_proxy_override_enabled(self) -> bool:
+        return self.allow_compatibility_proxies
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -130,7 +136,9 @@ class CorridorLeaderboardPolicy:
             "archetype_policy": self.archetype_policy.to_dict(),
             "allow_compatibility_proxies": self.allow_compatibility_proxies,
             "proxy_override_reason": self.proxy_override_reason,
-            "production_grade": self.production_grade,
+            "compatibility_proxy_override_enabled": (
+                self.compatibility_proxy_override_enabled
+            ),
         }
 
 
@@ -200,6 +208,12 @@ class CorridorLeaderboardArtifact:
     summary: Mapping[str, Any]
     warnings: tuple[str, ...] = ()
 
+    @property
+    def production_grade(self) -> bool:
+        """Whether observed feature provenance is production-grade."""
+
+        return bool(self.summary.get("production_grade", False))
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "schema_version": CORRIDOR_LEADERBOARD_SCHEMA,
@@ -255,7 +269,6 @@ def build_corridor_candidate_leaderboards(
 
     policy = policy or CorridorLeaderboardPolicy()
     states: dict[int, _ModeState] = {}
-    identities: dict[tuple[str, int], CorridorCandidateRecord] = {}
     provenance: CorridorFeatureProvenance | None = None
     candidates_seen = 0
     candidates_eligible = 0
@@ -263,69 +276,90 @@ def build_corridor_candidate_leaderboards(
     duplicate_modes: Counter[int] = Counter()
     rejection_counts: Counter[str] = Counter()
 
-    for record in candidates:
-        if not isinstance(record, CorridorCandidateRecord):
-            raise TypeError("candidates must contain CorridorCandidateRecord values")
-        candidates_seen += 1
-        record_provenance = record.feature_provenance
-        if record_provenance.fidelity == "compatibility_proxy":
-            if not policy.allow_compatibility_proxies:
+    with _temporary_coordinate_index() as connection:
+        for record in candidates:
+            if not isinstance(record, CorridorCandidateRecord):
+                raise TypeError(
+                    "candidates must contain CorridorCandidateRecord values"
+                )
+            candidates_seen += 1
+            record_provenance = record.feature_provenance
+            if record_provenance.fidelity == "compatibility_proxy" and not (
+                policy.allow_compatibility_proxies
+            ):
                 raise CorridorLeaderboardError(
                     "real corridor features are required; compatibility_proxy "
                     "is disabled by default; provide explicit developer override"
                 )
-        if provenance is None:
-            provenance = record_provenance
-        elif provenance != record_provenance:
-            raise CorridorLeaderboardError(
-                "all candidates must share one feature provenance manifest"
-            )
-        identity = record.coordinate
-        previous = identities.get(identity)
-        if previous is not None:
-            if previous.to_dict() != record.to_dict():
+            if provenance is None:
+                provenance = record_provenance
+            elif provenance != record_provenance:
                 raise CorridorLeaderboardError(
-                    "conflicting duplicate candidate coordinate: "
-                    f"{identity[0]}:{identity[1]}"
+                    "all candidates must share one feature provenance manifest"
                 )
-            duplicates += 1
-            if previous.features.corridor_mode_id is not None:
-                duplicate_modes[previous.features.corridor_mode_id] += 1
-            continue
-        identities[identity] = record
-
-        mode_id = record.features.corridor_mode_id
-        state = None
-        if mode_id is not None and mode_id >= 0:
-            state = states.setdefault(
-                mode_id,
-                _ModeState(mode_support=record.features.mode_support),
+            identity = record.coordinate
+            serialized_record = json.dumps(
+                record.to_dict(), sort_keys=True, separators=(",", ":")
             )
-            if state.mode_support != record.features.mode_support:
-                raise CorridorLeaderboardError(
-                    f"conflicting mode support for corridor mode {mode_id}"
-                )
-            state.candidates_seen += 1
+            previous = connection.execute(
+                "SELECT record_json, mode_id FROM coordinates "
+                "WHERE candidate_id = ? AND position = ?",
+                identity,
+            ).fetchone()
+            if previous is not None:
+                if previous[0] != serialized_record:
+                    raise CorridorLeaderboardError(
+                        "conflicting duplicate candidate coordinate: "
+                        f"{identity[0]}:{identity[1]}"
+                    )
+                duplicates += 1
+                if previous[1] is not None:
+                    duplicate_modes[int(previous[1])] += 1
+                continue
+            connection.execute(
+                "INSERT INTO coordinates "
+                "(candidate_id, position, record_json, mode_id) VALUES (?, ?, ?, ?)",
+                (
+                    identity[0],
+                    identity[1],
+                    serialized_record,
+                    record.features.corridor_mode_id,
+                ),
+            )
 
-        score = score_corridor_archetype_candidate(
-            record.features,
-            policy.archetype_policy,
-        )
-        if not score.eligible:
-            if state is not None:
-                state.candidates_rejected += 1
-            rejection_counts.update(score.eligibility_reasons)
-            if state is not None:
-                state.rejection_counts.update(score.eligibility_reasons)
-            continue
-        candidates_eligible += 1
-        if state is None:
-            rejection_counts["unassigned_corridor"] += 1
-            continue
-        state.candidates_eligible += 1
-        state.pool.append(score)
-        state.pool.sort(key=_score_sort_key)
-        del state.pool[policy.candidate_pool_cap :]
+            mode_id = record.features.corridor_mode_id
+            state = None
+            if mode_id is not None and mode_id >= 0:
+                state = states.setdefault(
+                    mode_id,
+                    _ModeState(mode_support=record.features.mode_support),
+                )
+                if state.mode_support != record.features.mode_support:
+                    raise CorridorLeaderboardError(
+                        f"conflicting mode support for corridor mode {mode_id}"
+                    )
+                state.candidates_seen += 1
+
+            score = score_corridor_archetype_candidate(
+                record.features,
+                policy.archetype_policy,
+            )
+            if not score.eligible:
+                if state is not None:
+                    state.candidates_rejected += 1
+                rejection_counts.update(score.eligibility_reasons)
+                if state is not None:
+                    state.rejection_counts.update(score.eligibility_reasons)
+                continue
+            candidates_eligible += 1
+            if state is None:
+                rejection_counts["unassigned_corridor"] += 1
+                continue
+            state.candidates_eligible += 1
+            state.pool.append(score)
+            state.pool.sort(key=_score_sort_key)
+            del state.pool[policy.candidate_pool_cap :]
+        connection.commit()
 
     for mode_id, state in states.items():
         state.duplicate_count = duplicate_modes[mode_id]
@@ -354,12 +388,14 @@ def build_corridor_candidate_leaderboards(
         "modes_observed": len(modes),
         "modes_with_eligible_candidates": modes_with_eligible,
         "modes_with_empty_pools": len(modes) - modes_with_eligible,
-        "production_grade": policy.production_grade,
-        "compatibility_proxy_used": not policy.production_grade,
+        "production_grade": provenance is None
+        or provenance.fidelity != "compatibility_proxy",
+        "compatibility_proxy_used": provenance is not None
+        and provenance.fidelity == "compatibility_proxy",
     }
     warnings = (
         ("compatibility_proxy_used: non-production developer override",)
-        if not policy.production_grade
+        if summary["compatibility_proxy_used"]
         else ()
     )
     return CorridorLeaderboardArtifact(
@@ -383,7 +419,7 @@ def write_corridor_candidate_leaderboards(
     if output.exists() and not overwrite:
         raise ValueError(f"leaderboard output exists: {output}")
     validation = _validate_artifact(artifact, production_grade=True)
-    if not validation.ok and artifact.policy.production_grade:
+    if not validation.ok and artifact.production_grade:
         raise CorridorLeaderboardError(
             "cannot write invalid leaderboard artifact: "
             + "; ".join(validation.blockers)
@@ -467,7 +503,7 @@ def load_candidate_records_jsonl(
     path: str | Path,
     *,
     source_artifact_id: str | None = None,
-) -> tuple[CorridorCandidateRecord, ...]:
+) -> Iterator[CorridorCandidateRecord]:
     """Load explicit feature records for offline/developer workflows."""
 
     source = Path(path)
@@ -475,58 +511,68 @@ def load_candidate_records_jsonl(
         raise CorridorLeaderboardError(f"candidate feature file missing: {source}")
     artifact_id = source_artifact_id or source.name
     artifact_hash = _sha256(source)
-    records: list[CorridorCandidateRecord] = []
-    with source.open("r", encoding="utf-8") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            if not line.strip():
-                continue
-            try:
-                payload = json.loads(line)
-                features = CorridorCandidateFeatures.from_mapping(payload["features"])
-                provenance = CorridorFeatureProvenance(
-                    source_artifact_schema=str(
-                        payload.get(
-                            "source_artifact_schema", "candidate_features_jsonl_v1"
-                        )
-                    ),
-                    source_artifact_id=artifact_id,
-                    source_artifact_hash=artifact_hash,
-                    membership_derivation=str(
-                        payload.get(
-                            "membership_derivation", "provided_normalized_membership"
-                        )
-                    ),
-                    core_distance_derivation=str(
-                        payload.get(
-                            "core_distance_derivation",
-                            "provided_normalized_core_distance",
-                        )
-                    ),
-                    difficulty_derivation=str(
-                        payload.get(
-                            "difficulty_derivation", "provided_normalized_difficulty"
-                        )
-                    ),
-                    fidelity=str(payload.get("fidelity", "explicit")),
-                    compatibility_proxy_used=_strict_bool(
-                        payload.get("compatibility_proxy_used", False),
-                        "compatibility_proxy_used",
-                    ),
-                    normalization_parameters=payload.get(
-                        "normalization_parameters", {}
-                    ),
-                )
-                records.append(
-                    CorridorCandidateRecord(
+
+    def _records() -> Iterator[CorridorCandidateRecord]:
+        with source.open("r", encoding="utf-8") as handle:
+            for line_number, line in enumerate(handle, start=1):
+                if not line.strip():
+                    continue
+                try:
+                    payload = json.loads(line)
+                    if not isinstance(payload, dict):
+                        raise TypeError("record must be an object")
+                    feature_payload = payload["features"]
+                    if not isinstance(feature_payload, Mapping):
+                        raise TypeError("features must be an object")
+                    fidelity = _require_fidelity(payload)
+                    _validate_loader_feature_contract(
+                        feature_payload,
+                        payload,
+                        fidelity,
+                    )
+                    features = CorridorCandidateFeatures.from_mapping(feature_payload)
+                    provenance = CorridorFeatureProvenance(
+                        source_artifact_schema=str(
+                            payload.get(
+                                "source_artifact_schema", "candidate_features_jsonl_v1"
+                            )
+                        ),
+                        source_artifact_id=artifact_id,
+                        source_artifact_hash=artifact_hash,
+                        membership_derivation=str(
+                            payload.get(
+                                "membership_derivation",
+                                "provided_normalized_membership",
+                            )
+                        ),
+                        core_distance_derivation=str(
+                            payload.get(
+                                "core_distance_derivation",
+                                "provided_normalized_core_distance",
+                            )
+                        ),
+                        difficulty_derivation=str(
+                            payload.get(
+                                "difficulty_derivation",
+                                "provided_normalized_difficulty",
+                            )
+                        ),
+                        fidelity=fidelity,
+                        compatibility_proxy_used=(fidelity == "compatibility_proxy"),
+                        normalization_parameters=payload.get(
+                            "normalization_parameters", {}
+                        ),
+                    )
+                    yield CorridorCandidateRecord(
                         features=features,
                         feature_provenance=provenance,
                     )
-                )
-            except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
-                raise CorridorLeaderboardError(
-                    f"invalid candidate feature record at line {line_number}: {exc}"
-                ) from exc
-    return tuple(records)
+                except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+                    raise CorridorLeaderboardError(
+                        f"invalid candidate feature record at line {line_number}: {exc}"
+                    ) from exc
+
+    return _records()
 
 
 def _validate_directory(
@@ -645,15 +691,27 @@ def _validate_directory(
         ):
             blockers.append("summary candidate count arithmetic mismatch")
         provenance = manifest.get("feature_provenance")
+        observed_proxy = (
+            isinstance(provenance, dict)
+            and provenance.get("fidelity") == "compatibility_proxy"
+        )
         if not isinstance(provenance, dict):
             if modes:
                 blockers.append("feature provenance is missing")
-        elif provenance.get("fidelity") == "compatibility_proxy":
+        elif observed_proxy:
             message = "leaderboard uses compatibility_proxy features"
             if production_grade:
                 blockers.append(message)
             else:
                 warnings.append(message)
+        if summary.get("production_grade") != (not observed_proxy):
+            blockers.append(
+                "summary production_grade does not match observed provenance"
+            )
+        if summary.get("compatibility_proxy_used") != observed_proxy:
+            blockers.append(
+                "summary compatibility_proxy_used does not match observed provenance"
+            )
         if (
             not blockers
             and not production_grade
@@ -718,6 +776,16 @@ def _validate_artifact(
             blockers.append(message)
         else:
             warnings.append(message)
+    observed_proxy = (
+        artifact.feature_provenance is not None
+        and artifact.feature_provenance.fidelity == "compatibility_proxy"
+    )
+    if artifact.summary.get("production_grade") != (not observed_proxy):
+        blockers.append("summary production_grade does not match observed provenance")
+    if artifact.summary.get("compatibility_proxy_used") != observed_proxy:
+        blockers.append(
+            "summary compatibility_proxy_used does not match observed provenance"
+        )
     if artifact.summary.get("retained_candidate_count") != retained:
         blockers.append("summary retained_candidate_count mismatch")
     if artifact.summary.get("modes_observed") != len(artifact.modes):
@@ -795,6 +863,99 @@ def _bounded_finite(value: Any) -> bool:
         return math.isfinite(float(value)) and 0.0 <= float(value) <= 1.0
     except (TypeError, ValueError):
         return False
+
+
+def _require_fidelity(payload: Mapping[str, Any]) -> str:
+    fidelity = payload.get("fidelity")
+    if not isinstance(fidelity, str) or fidelity not in FEATURE_FIDELITIES:
+        raise ValueError(
+            "fidelity must be explicitly declared as explicit, derived, "
+            "or compatibility_proxy"
+        )
+    return fidelity
+
+
+def _validate_loader_feature_contract(
+    features: Mapping[str, Any],
+    record: Mapping[str, Any],
+    fidelity: str,
+) -> None:
+    if fidelity == "compatibility_proxy":
+        if (
+            _strict_bool(
+                record.get("compatibility_proxy_used"), "compatibility_proxy_used"
+            )
+            is not True
+        ):
+            raise ValueError(
+                "compatibility_proxy records must set compatibility_proxy_used=true"
+            )
+        return
+
+    required_features = (
+        "membership_strength",
+        "core_distance",
+        "mode_support",
+        "difficulty_score",
+    )
+    missing = [name for name in required_features if name not in features]
+    if missing:
+        raise ValueError(
+            f"{fidelity} feature records require explicit fields: " + ", ".join(missing)
+        )
+    for name in ("membership_strength", "core_distance", "difficulty_score"):
+        value = features[name]
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"{fidelity} field {name} must be numeric")
+        if not math.isfinite(float(value)):
+            raise ValueError(f"{fidelity} field {name} must be finite")
+    mode_support = features["mode_support"]
+    if isinstance(mode_support, bool) or not isinstance(mode_support, int):
+        raise ValueError(f"{fidelity} field mode_support must be an integer")
+    if mode_support < 0:
+        raise ValueError(f"{fidelity} field mode_support must be nonnegative")
+    if fidelity == "derived":
+        for name in (
+            "membership_derivation",
+            "core_distance_derivation",
+            "difficulty_derivation",
+        ):
+            value = record.get(name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(
+                    "derived feature records require nonempty derivation metadata: "
+                    + name
+                )
+    if "compatibility_proxy_used" in record and _strict_bool(
+        record["compatibility_proxy_used"], "compatibility_proxy_used"
+    ):
+        raise ValueError(
+            f"{fidelity} feature records cannot set compatibility_proxy_used=true"
+        )
+
+
+@contextmanager
+def _temporary_coordinate_index():
+    """Yield a disk-backed coordinate index for duplicate detection."""
+
+    with tempfile.TemporaryDirectory(prefix="radjax-c2-coordinate-index-") as root:
+        database = Path(root) / "coordinates.sqlite3"
+        connection = sqlite3.connect(database)
+        try:
+            connection.execute("PRAGMA journal_mode = OFF")
+            connection.execute("PRAGMA synchronous = OFF")
+            connection.execute(
+                "CREATE TABLE coordinates ("
+                "candidate_id TEXT NOT NULL, "
+                "position INTEGER NOT NULL, "
+                "record_json TEXT NOT NULL, "
+                "mode_id INTEGER, "
+                "PRIMARY KEY (candidate_id, position)"
+                ")"
+            )
+            yield connection
+        finally:
+            connection.close()
 
 
 def _strict_bool(value: Any, name: str) -> bool:

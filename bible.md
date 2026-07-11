@@ -1065,3 +1065,15 @@ arithmetic are validated. The offline CLI accepts explicit compact candidate
 JSONL and fails closed rather than fabricating features from selected payloads.
 C2 stops before global corridor budgets, production selection, curriculum, and
 payload materialization; C3 owns final corridor budgeting.
+
+## 2026-07-11 — C2.1 Strict Provenance and Streaming State
+
+C2.1 closes two acceptance blockers. JSONL feature loading is incremental and
+fidelity-aware: explicit and derived records must carry real numeric corridor
+features, derived records must identify their derivations, and only explicitly
+marked compatibility proxies may use C1 adapter defaults. The builder detects
+duplicate and conflicting coordinates through a temporary disk-backed SQLite
+index, retaining only bounded per-mode pools and compact counters in memory.
+Artifact `production_grade` now reflects observed provenance, so enabling a
+proxy override does not downgrade a run that contains only real explicit or
+derived features; actual proxy observations remain warned/non-production.
