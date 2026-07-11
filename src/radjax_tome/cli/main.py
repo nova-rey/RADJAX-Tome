@@ -11,6 +11,7 @@ HELP_DESCRIPTION = """RADJAX-Tome produces teacher-side distillation artifacts.
 
 Recommended commands:
   build
+  build-fingerprint-corridor-leaderboards
   production-build
   validate
   inspect
@@ -149,6 +150,35 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     build.add_argument("--overwrite", action="store_true")
     build.set_defaults(func=_cmd_build)
+
+    leaderboard = subparsers.add_parser(
+        "build-fingerprint-corridor-leaderboards",
+        help="Build offline bounded fingerprint-corridor candidate pools.",
+        description=(
+            "Build deterministic C2 per-mode candidate micro-leaderboards from "
+            "an explicit compact feature JSONL file."
+        ),
+    )
+    leaderboard.add_argument(
+        "--artifact",
+        type=Path,
+        required=True,
+        help="Source artifact directory used for provenance and feature discovery.",
+    )
+    leaderboard.add_argument(
+        "--candidate-jsonl",
+        type=Path,
+        help=(
+            "Explicit real compact candidate feature JSONL. If omitted, look "
+            "for corridors/candidate_features.jsonl or candidate_features.jsonl."
+        ),
+    )
+    leaderboard.add_argument("--candidate-pool-cap", type=int, default=4)
+    leaderboard.add_argument("--output", type=Path, required=True)
+    leaderboard.add_argument("--allow-compatibility-proxies", action="store_true")
+    leaderboard.add_argument("--proxy-override-reason")
+    leaderboard.add_argument("--overwrite", action="store_true")
+    leaderboard.set_defaults(func=_cmd_build_fingerprint_corridor_leaderboards)
 
     validate = subparsers.add_parser(
         "validate",
@@ -662,6 +692,74 @@ def _build_parser() -> argparse.ArgumentParser:
     doctor.set_defaults(func=_cmd_doctor)
 
     return parser
+
+
+def _cmd_build_fingerprint_corridor_leaderboards(
+    args: argparse.Namespace,
+) -> int:
+    from radjax_tome.fingerprint.corridor_leaderboards import (
+        CorridorLeaderboardError,
+        CorridorLeaderboardPolicy,
+        build_corridor_candidate_leaderboards,
+        inspect_corridor_candidate_leaderboards,
+        load_candidate_records_jsonl,
+        validate_corridor_candidate_leaderboards,
+        write_corridor_candidate_leaderboards,
+    )
+
+    artifact = args.artifact
+    candidate_path = args.candidate_jsonl
+    if candidate_path is None:
+        candidates = (
+            artifact / "corridors" / "candidate_features.jsonl",
+            artifact / "candidate_features.jsonl",
+        )
+        candidate_path = next((path for path in candidates if path.is_file()), None)
+    if candidate_path is None:
+        print(
+            "real compact corridor feature fields are missing; provide "
+            "--candidate-jsonl PATH",
+            file=sys.stderr,
+        )
+        return 1
+    if not artifact.exists():
+        print(f"source artifact is missing: {artifact}", file=sys.stderr)
+        return 1
+    try:
+        records = load_candidate_records_jsonl(
+            candidate_path,
+            source_artifact_id=artifact.name,
+        )
+        policy = CorridorLeaderboardPolicy(
+            candidate_pool_cap=args.candidate_pool_cap,
+            allow_compatibility_proxies=args.allow_compatibility_proxies,
+            proxy_override_reason=args.proxy_override_reason,
+        )
+        output = write_corridor_candidate_leaderboards(
+            build_corridor_candidate_leaderboards(records, policy),
+            args.output,
+            overwrite=args.overwrite,
+        )
+        validation = validate_corridor_candidate_leaderboards(
+            output,
+            production_grade=policy.production_grade,
+        )
+        inspection = inspect_corridor_candidate_leaderboards(output)
+    except (CorridorLeaderboardError, OSError, ValueError, TypeError) as exc:
+        print(f"status=fail error={exc}", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "status": validation.status,
+                "output": str(output),
+                "validation": validation.to_dict(),
+                "inspection": inspection,
+            },
+            sort_keys=True,
+        )
+    )
+    return 0 if validation.status in {"pass", "warn"} else 1
 
 
 def _cmd_build(args: argparse.Namespace) -> int:

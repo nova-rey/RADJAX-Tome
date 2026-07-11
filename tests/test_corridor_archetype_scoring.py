@@ -190,6 +190,48 @@ def test_current_corridor_record_mapping_uses_existing_fields() -> None:
     assert result.corridor_mode_id == 3
 
 
+@pytest.mark.parametrize("mode_id", (True, False, 1.0, "1"))
+def test_features_reject_non_integer_corridor_mode_ids(mode_id: object) -> None:
+    with pytest.raises(ValueError):
+        _features(corridor_mode_id=mode_id)
+
+
+@pytest.mark.parametrize("mode_support", (True, False, 1.0, "1", -1))
+def test_features_reject_invalid_mode_support(mode_support: object) -> None:
+    with pytest.raises(ValueError):
+        _features(mode_support=mode_support)
+
+
+@pytest.mark.parametrize("position_valid", ("false", "FALSE", "true", "TRUE"))
+def test_mapping_parses_only_explicit_position_valid_strings(
+    position_valid: str,
+) -> None:
+    features = CorridorCandidateFeatures.from_mapping(
+        {
+            "candidate_id": "candidate",
+            "position": 1,
+            "corridor_mode_id": 1,
+            "assignment_status": "linked",
+            "position_valid": position_valid,
+        }
+    )
+
+    assert features.position_valid is (position_valid.lower() == "true")
+
+
+def test_mapping_rejects_ambiguous_position_valid_values() -> None:
+    with pytest.raises(ValueError):
+        CorridorCandidateFeatures.from_mapping(
+            {
+                "candidate_id": "candidate",
+                "position": 1,
+                "corridor_mode_id": 1,
+                "assignment_status": "linked",
+                "position_valid": "yes",
+            }
+        )
+
+
 def test_serialization_is_json_safe_and_ineligible_utility_is_null() -> None:
     result = score_corridor_archetype_candidate(
         _features(membership_strength=0.0, difficulty_score=1.0), POLICY

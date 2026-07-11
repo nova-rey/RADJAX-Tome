@@ -1052,3 +1052,16 @@ bounded membership/centrality/difficulty components, and deterministic utility
 only for candidates that first pass corridor-core eligibility. It is deliberately
 not wired into production selection or artifact emission; C2 owns offline
 per-corridor micro-leaderboards.
+
+## 2026-07-11 — C2 Offline Corridor Micro-Leaderboards
+
+C2 adds a deterministic offline fingerprint-corridor candidate leaderboard
+artifact. Explicit feature provenance is required for production-grade output;
+compatibility proxies require a visible developer override. Each observed mode
+retains a bounded pool ranked by utility, membership, centrality, useful
+difficulty, and stable coordinate. Duplicate/conflicting coordinates, mode
+support conflicts, malformed scores, pool overflow, hashes, and count
+arithmetic are validated. The offline CLI accepts explicit compact candidate
+JSONL and fails closed rather than fabricating features from selected payloads.
+C2 stops before global corridor budgets, production selection, curriculum, and
+payload materialization; C3 owns final corridor budgeting.

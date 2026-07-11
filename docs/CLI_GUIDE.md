@@ -28,6 +28,22 @@ radjax-tome inspect --path artifacts/cli_happy_path_fake_tome
 Fake mode is CPU-only, offline, and does not require PyTorch, Transformers, JAX,
 or network access.
 
+Build offline fingerprint-corridor candidate micro-leaderboards from explicit
+compact feature records:
+
+```bash
+radjax-tome build-fingerprint-corridor-leaderboards \
+  --artifact ./corridor_tome \
+  --candidate-jsonl ./corridor_tome/candidate_features.jsonl \
+  --output ./corridor_tome/fingerprint_leaderboards \
+  --candidate-pool-cap 4 \
+  --overwrite
+```
+
+This command fails closed when real compact feature fields are unavailable. It
+does not infer corridor features from selected payloads. See
+`docs/CORRIDOR_LEADERBOARDS_C2.md`.
+
 Builds now write an unpacked Tome `cover_page.json`; `validate` checks it when
 present, and `inspect` prints its summary fields. See `docs/TOME_COVER_PAGE.md`.
 

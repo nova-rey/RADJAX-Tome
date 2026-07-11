@@ -111,6 +111,17 @@ class CorridorCandidateFeatures:
             raise ValueError("candidate_id must be nonempty")
         if not isinstance(self.position, int) or isinstance(self.position, bool):
             raise ValueError("position must be an integer")
+        if self.corridor_mode_id is not None and (
+            isinstance(self.corridor_mode_id, bool)
+            or not isinstance(self.corridor_mode_id, int)
+        ):
+            raise ValueError("corridor_mode_id must be an integer or None")
+        if isinstance(self.mode_support, bool) or not isinstance(
+            self.mode_support, int
+        ):
+            raise ValueError("mode_support must be a nonnegative integer")
+        if self.mode_support < 0:
+            raise ValueError("mode_support must be a nonnegative integer")
         if not isinstance(self.assignment_status, str) or not self.assignment_status:
             raise ValueError("assignment_status must be nonempty")
         if not isinstance(self.position_valid, bool):
@@ -135,15 +146,19 @@ class CorridorCandidateFeatures:
                 or ""
             ),
             position=int(payload.get("position", payload.get("selected_position", -1))),
-            corridor_mode_id=_optional_int(
-                payload.get("corridor_mode_id", payload.get("mode_id"))
+            corridor_mode_id=_strict_optional_int(
+                payload.get("corridor_mode_id", payload.get("mode_id")),
+                "corridor_mode_id",
             ),
             assignment_status=status,
             membership_strength=float(
                 payload.get("membership_strength", 1.0 if linked else 0.0)
             ),
             core_distance=float(payload.get("core_distance", 0.0 if linked else 1.0)),
-            mode_support=int(payload.get("mode_support", 1 if linked else 0)),
+            mode_support=_strict_int(
+                payload.get("mode_support", 1 if linked else 0),
+                "mode_support",
+            ),
             difficulty_score=float(
                 payload.get(
                     "difficulty_score",
@@ -160,7 +175,10 @@ class CorridorCandidateFeatures:
                 if payload.get("corridor_fingerprint_id") is None
                 else str(payload["corridor_fingerprint_id"])
             ),
-            position_valid=bool(payload.get("position_valid", True)),
+            position_valid=_strict_bool(
+                payload.get("position_valid", True),
+                "position_valid",
+            ),
         )
 
 
@@ -218,7 +236,7 @@ def score_corridor_archetype_candidate(
 
     if not features.position_valid or features.position < 0:
         reasons.append("invalid_position")
-    if features.corridor_mode_id is None:
+    if features.corridor_mode_id is None or features.corridor_mode_id < 0:
         reasons.append("unassigned_corridor")
     elif features.assignment_status in UNASSIGNED_STATUSES:
         reasons.append("unassigned_corridor")
@@ -318,7 +336,25 @@ def _bounded(value: float) -> float:
     return min(1.0, max(0.0, float(value)))
 
 
-def _optional_int(value: Any) -> int | None:
+def _strict_optional_int(value: Any, name: str) -> int | None:
     if value is None:
         return None
-    return int(value)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{name} must be an integer or None")
+    return value
+
+
+def _strict_int(value: Any, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{name} must be an integer")
+    if value < 0:
+        raise ValueError(f"{name} must be nonnegative")
+    return value
+
+
+def _strict_bool(value: Any, name: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value.lower() in {"true", "false"}:
+        return value.lower() == "true"
+    raise ValueError(f"{name} must be a boolean or explicit true/false string")

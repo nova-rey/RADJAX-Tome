@@ -66,6 +66,26 @@ It performs corridor-core eligibility before difficulty scoring and returns a
 bounded deterministic utility only for eligible candidates. It does not build
 micro-leaderboards or change production selection; those begin in C2.
 
+## C2 Offline Corridor Micro-Leaderboards
+
+C2 builds deterministic bounded candidate pools from explicit compact feature
+records:
+
+```python
+from radjax_tome.fingerprint.corridor_leaderboards import (
+    CorridorLeaderboardPolicy,
+    build_corridor_candidate_leaderboards,
+    validate_corridor_candidate_leaderboards,
+    write_corridor_candidate_leaderboards,
+)
+```
+
+The default pool cap is four candidates per observed corridor mode. Production
+grade builds reject compatibility-proxy feature provenance; developer fixtures
+must opt in with an explicit override reason. C2 is offline and does not alter
+production selection or payloads. See `docs/CORRIDOR_LEADERBOARDS_C2.md` for
+the input, ranking, artifact, validation, and CLI contracts.
+
 ## What Is Not Public API
 
 The package root does not advertise every constant, dataclass, record type, or

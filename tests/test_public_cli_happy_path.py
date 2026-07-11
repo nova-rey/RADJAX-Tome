@@ -16,6 +16,7 @@ def test_public_cli_top_level_help() -> None:
     assert "Recommended commands:" in result.stdout
     for command in (
         "build",
+        "build-fingerprint-corridor-leaderboards",
         "validate",
         "inspect",
         "pack",
@@ -26,7 +27,14 @@ def test_public_cli_top_level_help() -> None:
 
 
 def test_public_cli_command_help() -> None:
-    for command in ("build", "validate", "inspect", "pack", "unpack"):
+    for command in (
+        "build",
+        "build-fingerprint-corridor-leaderboards",
+        "validate",
+        "inspect",
+        "pack",
+        "unpack",
+    ):
         result = run_cli(ROOT, command, "--help")
 
         assert result.returncode == 0
