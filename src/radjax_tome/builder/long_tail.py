@@ -59,9 +59,13 @@ def long_tail_diagnostics(
         dynamic_top_k_max=dynamic_top_k_max,
         saturated=saturated,
     )
+    raw_top_mass = float(top_mass)
+    reported_top_mass = min(max(raw_top_mass, 0.0), 1.0)
     return {
         "effective_top_k": effective_top_k,
-        "top_mass": float(top_mass),
+        "top_mass": reported_top_mass,
+        "raw_top_mass": raw_top_mass,
+        "top_mass_clamped": reported_top_mass != raw_top_mass,
         "dynamic_mass_threshold": float(dynamic_mass_threshold),
         "dynamic_top_k_max": int(dynamic_top_k_max),
         "top_k_saturated": saturated,

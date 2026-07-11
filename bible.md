@@ -1009,3 +1009,12 @@ The compact GPU two-pass score payload contract explicitly includes
 `score_effective_top_k` and `score_top_mass`. The reducer test asserts both
 scalar-per-example shapes and integer/float dtypes so long-tail diagnostics keep
 their compact score-pass inputs without expanding the payload into dense targets.
+
+## 2026-07-11 — Long-Tail Mass Reporting Polish
+
+Production reports now copy `long_tail_observations` from the completed delivery
+report, keeping build-level and delivery-level experiment diagnostics aligned.
+Diagnostic `top_mass` is clamped to the valid probability range while preserving
+`raw_top_mass` and `top_mass_clamped`; numeric overshoot remains visible without
+presenting impossible mass as a normal probability or turning a valid build into
+a warning or failure.

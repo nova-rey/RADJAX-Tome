@@ -89,6 +89,21 @@ def test_long_tail_summary_counts_classes_correctly() -> None:
     }
 
 
+def test_long_tail_diagnostic_clamps_probability_mass_for_reporting() -> None:
+    diagnostic = long_tail_diagnostics(
+        effective_top_k=100,
+        top_mass=1.0078125,
+        vocab_size=100,
+        dynamic_mass_threshold=0.95,
+        dynamic_top_k_max=100,
+        policy=POLICY,
+    )
+
+    assert diagnostic["top_mass"] == 1.0
+    assert diagnostic["raw_top_mass"] == pytest.approx(1.0078125)
+    assert diagnostic["top_mass_clamped"] is True
+
+
 def test_reject_perverse_filter_replaces_candidate_with_next_eligible() -> None:
     perverse = _candidate("perverse", score=10.0, effective_top_k=32)
     eligible = _candidate("eligible", score=9.0, effective_top_k=7)

@@ -878,6 +878,11 @@ def _production_report(
             if delivery_report is not None
             else None
         ),
+        "long_tail_observations": (
+            delivery_report.get("long_tail_observations")
+            if delivery_report is not None
+            else None
+        ),
         "non_selected_exemplar_payload_retained": (
             delivery_report.get("non_selected_exemplar_payload_retained")
             if delivery_report is not None

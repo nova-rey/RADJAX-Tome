@@ -218,6 +218,8 @@ def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retent
         "dynamic_mass_threshold",
         "dynamic_top_k_max",
         "top_k_saturated",
+        "raw_top_mass",
+        "top_mass_clamped",
         "long_tail_class",
         "long_tail_warnings",
         "effective_top_k_fraction_of_vocab",
@@ -231,6 +233,8 @@ def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retent
         "dynamic_mass_threshold",
         "dynamic_top_k_max",
         "top_k_saturated",
+        "raw_top_mass",
+        "top_mass_clamped",
         "long_tail_class",
         "long_tail_warnings",
         "effective_top_k_fraction_of_vocab",
@@ -262,6 +266,7 @@ def test_long_tail_observations_do_not_promote_delivery_status(tmp_path: Path) -
     assert delivery["warnings"] == []
     assert delivery["long_tail_summary"]["suspicious_flat_count"] > 0
     assert delivery["long_tail_observations"]
+    assert report["long_tail_observations"] == delivery["long_tail_observations"]
 
 
 def test_path_b_progress_sidecar_records_rerun_and_corridor_export(
