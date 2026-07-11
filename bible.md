@@ -1034,3 +1034,12 @@ while the perverse diagnostic board requires explicit producer opt-in. Every
 retained board record preserves the same source passport and corridor linkage as
 the flat selected-exemplar list, allowing the existing audit to validate the
 complete packaged curriculum without special-case trust paths.
+
+## 2026-07-11 — Student Board Summary Truth
+
+Student package filtering is a content transformation, not only a file copy.
+After removing excluded curriculum boards, leaderboard documents and payload
+shards must recompute `long_tail_summary`, `selected_board_summary`, and grouped
+board records from the retained flat list. Package manifests, cover diagnostics,
+and selected-linkage audits therefore describe the same student-visible record
+set rather than producer-side counts.

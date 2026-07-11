@@ -197,7 +197,22 @@ def test_student_package_filters_perverse_tail_board_by_producer_opt_in(
 
     selected = _json(package / "leaderboards" / "selected_exemplars.json")
     payload_manifest = _json(package / "manifests" / "selected_payload_manifest.json")
+    cover = _json(package / "cover_page.json")
+    audit = _json(package / "selected_linkage_audit.json")
     boards = selected["selected_exemplar_boards"]
+    retained_count = len(selected["selected_exemplars"])
+    assert selected["long_tail_summary"] == payload_manifest["long_tail_summary"]
+    assert selected["long_tail_summary"] == cover["diagnostics"]["long_tail_summary"]
+    assert (
+        selected["selected_board_summary"] == payload_manifest["selected_board_summary"]
+    )
+    assert (
+        selected["selected_board_summary"]
+        == cover["diagnostics"]["selected_board_summary"]
+    )
+    assert selected["selected_board_summary"]["total_selected_count"] == retained_count
+    assert audit["selected_count"] == retained_count
+    assert audit["status"] == "pass"
     if include_perverse:
         assert (package / "leaderboards" / "perverse_tail_diagnostic.json").is_file()
         assert boards["perverse_tail_diagnostic"]

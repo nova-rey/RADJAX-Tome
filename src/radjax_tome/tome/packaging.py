@@ -356,43 +356,52 @@ def _filter_student_selected_boards(
     *,
     include_perverse: bool,
 ) -> None:
-    if include_perverse:
-        return
     allowed = {"primary", "long_tail_uncertainty"}
-    records_path = root / "leaderboards" / "selected_exemplars.json"
-    if records_path.is_file():
+    if include_perverse:
+        allowed.add("perverse_tail_diagnostic")
+
+    for records_path in sorted((root / "leaderboards").glob("*.json")):
         document = read_json_object(records_path)
-        records = document.get("selected_exemplars", [])
-        if isinstance(records, list):
-            document["selected_exemplars"] = [
-                record
-                for record in records
-                if isinstance(record, dict)
-                and str(record.get("selected_board") or "primary") in allowed
-            ]
-        boards = document.get("selected_exemplar_boards")
-        if isinstance(boards, dict):
-            document["selected_exemplar_boards"] = {
-                name: values for name, values in boards.items() if name in allowed
-            }
-        document["selected_board_summary"] = _selected_board_summary(
-            document.get("selected_exemplars", [])
-        )
-        write_json(records_path, document)
-    for path in sorted((root / "selected_exemplars").glob("*.json")):
-        document = read_json_object(path)
         records = document.get("selected_exemplars", [])
         if not isinstance(records, list):
             continue
-        document["selected_exemplars"] = [
+        retained = [
             record
             for record in records
             if isinstance(record, dict)
             and str(record.get("selected_board") or "primary") in allowed
         ]
-        document["selected_board_summary"] = _selected_board_summary(
-            document["selected_exemplars"]
-        )
+        document["selected_exemplars"] = retained
+        boards = document.get("selected_exemplar_boards")
+        if isinstance(boards, dict):
+            document["selected_exemplar_boards"] = {
+                name: [
+                    record
+                    for record in values
+                    if isinstance(record, dict)
+                    and str(record.get("selected_board") or name) in allowed
+                ]
+                for name, values in boards.items()
+                if name in allowed and isinstance(values, list)
+            }
+        document["long_tail_summary"] = long_tail_summary(retained)
+        document["selected_board_summary"] = _selected_board_summary(retained)
+        write_json(records_path, document)
+
+    for path in sorted((root / "selected_exemplars").glob("*.json")):
+        document = read_json_object(path)
+        records = document.get("selected_exemplars", [])
+        if not isinstance(records, list):
+            continue
+        retained = [
+            record
+            for record in records
+            if isinstance(record, dict)
+            and str(record.get("selected_board") or "primary") in allowed
+        ]
+        document["selected_exemplars"] = retained
+        document["long_tail_summary"] = long_tail_summary(retained)
+        document["selected_board_summary"] = _selected_board_summary(retained)
         write_json(path, document)
 
 
