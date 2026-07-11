@@ -168,6 +168,8 @@ def test_gpu_corridor_exemplar_helper_matches_cpu_production_contract(
         "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
+        "score_effective_top_k",
+        "score_top_mass",
         "score_source_policy_ids",
         "score_lengths",
     }
@@ -338,6 +340,8 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
         "score_top_token_id",
         "score_selected_position_entropy",
         "score_confidence_at_selected_position",
+        "score_effective_top_k",
+        "score_top_mass",
         "score_source_policy_ids",
         "score_lengths",
     }
@@ -370,6 +374,10 @@ def test_gpu_corridor_two_pass_score_helper_is_batch_scale() -> None:
         assert payload[field].shape == (2, 3)
     assert (payload["score_source_policy_ids"] == 3).all()
     assert (payload["score_lengths"] == 3).all()
+    assert payload["score_effective_top_k"].shape == (logits.shape[0],)
+    assert payload["score_top_mass"].shape == (logits.shape[0],)
+    assert np.issubdtype(payload["score_effective_top_k"].dtype, np.integer)
+    assert np.issubdtype(payload["score_top_mass"].dtype, np.floating)
     assert np.isfinite(payload["score_max_entropy"]).all()
     assert np.isfinite(payload["score_mean_entropy"]).all()
     assert np.isfinite(payload["score_confidence_at_selected_position"]).all()

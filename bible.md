@@ -988,3 +988,10 @@ warnings, leaving the existing canonical selection surface intact. The explicit
 candidates before selection, so the selector promotes the next eligible
 candidate without changing Path A capture, Path B rerun semantics, corridor
 modes, or selected-linkage authority.
+
+## 2026-07-11 — GPU Score-Pass Long-Tail Test Contract
+
+The compact GPU two-pass score payload contract explicitly includes
+`score_effective_top_k` and `score_top_mass`. The reducer test asserts both
+scalar-per-example shapes and integer/float dtypes so long-tail diagnostics keep
+their compact score-pass inputs without expanding the payload into dense targets.
