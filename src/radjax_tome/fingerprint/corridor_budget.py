@@ -569,6 +569,26 @@ def validate_corridor_coverage_plan(
         )
 
 
+def load_corridor_coverage_plan(
+    path: str | Path,
+    *,
+    production_grade: bool = True,
+) -> CorridorCoveragePlan:
+    """Load and validate a serialized C3 coverage plan for downstream stages."""
+
+    root = Path(path)
+    plan = _plan_from_dict(read_json_object(root / COVERAGE_PLAN_FILENAME))
+    validation = validate_corridor_coverage_plan(
+        root,
+        production_grade=production_grade,
+    )
+    if validation.status == "fail":
+        raise CorridorBudgetError(
+            "invalid corridor coverage plan: " + "; ".join(validation.blockers)
+        )
+    return plan
+
+
 def inspect_corridor_coverage_plan(path: str | Path) -> dict[str, Any]:
     """Return a compact human/machine-readable C3 plan summary."""
 

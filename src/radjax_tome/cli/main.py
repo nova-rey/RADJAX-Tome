@@ -13,6 +13,7 @@ Recommended commands:
   build
   build-fingerprint-corridor-leaderboards
   allocate-fingerprint-corridor-coverage
+  claim-corridor-and-backfill-global
   production-build
   validate
   inspect
@@ -199,6 +200,36 @@ def _build_parser() -> argparse.ArgumentParser:
     coverage.add_argument("--output", type=Path, required=True)
     coverage.add_argument("--overwrite", action="store_true")
     coverage.set_defaults(func=_cmd_allocate_fingerprint_corridor_coverage)
+
+    claims = subparsers.add_parser(
+        "claim-corridor-and-backfill-global",
+        help="Claim C3 corridor coordinates, then backfill from ranked global boards.",
+        description=(
+            "Run the offline C4 corridor-first global backfill selection stage. "
+            "This command emits claims and obligations only; it does not emit "
+            "teacher payloads or alter production selection."
+        ),
+    )
+    claims.add_argument("--leaderboards", type=Path, required=True)
+    claims.add_argument("--coverage-plan", type=Path, required=True)
+    claims.add_argument(
+        "--global-leaderboards",
+        type=Path,
+        required=True,
+        help="JSON global board supply using radjax.c4_global_board_supply.v1.",
+    )
+    claims.add_argument("--output", type=Path, required=True)
+    claims.add_argument("--allow-nonproduction-sources", action="store_true")
+    claims.add_argument("--nonproduction-override-reason")
+    claims.add_argument(
+        "--allow-underfill",
+        dest="require_full_budget",
+        action="store_false",
+        help="Permit the ranked supply to leave the requested budget underfilled.",
+    )
+    claims.set_defaults(require_full_budget=True)
+    claims.add_argument("--overwrite", action="store_true")
+    claims.set_defaults(func=_cmd_claim_corridor_and_backfill_global)
 
     validate = subparsers.add_parser(
         "validate",
@@ -829,6 +860,84 @@ def _cmd_allocate_fingerprint_corridor_coverage(
         )
         inspection = inspect_corridor_coverage_plan(output)
     except (CorridorBudgetError, OSError, ValueError, TypeError) as exc:
+        print(f"status=fail error={exc}", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "status": validation.status,
+                "output": str(output),
+                "validation": validation.to_dict(),
+                "inspection": inspection,
+            },
+            sort_keys=True,
+        )
+    )
+    return 0 if validation.status in {"pass", "warn"} else 1
+
+
+def _cmd_claim_corridor_and_backfill_global(args: argparse.Namespace) -> int:
+    from radjax_tome.fingerprint.corridor_budget import (
+        CorridorBudgetError,
+        load_corridor_coverage_plan,
+    )
+    from radjax_tome.fingerprint.corridor_claims import (
+        CorridorClaimError,
+        CorridorGlobalClaimPolicy,
+        claim_corridor_then_backfill_global,
+        inspect_corridor_global_claim_artifact,
+        load_global_board_input,
+        validate_corridor_global_claim_artifact,
+        write_corridor_global_claim_result,
+    )
+    from radjax_tome.fingerprint.corridor_leaderboards import (
+        CorridorLeaderboardError,
+        load_corridor_candidate_leaderboards,
+    )
+
+    try:
+        production_grade = not args.allow_nonproduction_sources
+        leaderboards = load_corridor_candidate_leaderboards(
+            args.leaderboards,
+            production_grade=production_grade,
+        )
+        coverage_plan = load_corridor_coverage_plan(
+            args.coverage_plan,
+            production_grade=production_grade,
+        )
+        global_input = load_global_board_input(
+            args.global_leaderboards,
+            production_grade=production_grade,
+        )
+        policy = CorridorGlobalClaimPolicy(
+            total_selected_exemplar_budget=(
+                coverage_plan.policy.total_selected_exemplar_budget
+            ),
+            require_full_budget=args.require_full_budget,
+            allow_nonproduction_sources=args.allow_nonproduction_sources,
+            nonproduction_override_reason=args.nonproduction_override_reason,
+        )
+        result = claim_corridor_then_backfill_global(
+            leaderboards,
+            coverage_plan,
+            global_input,
+            policy,
+        )
+        output = write_corridor_global_claim_result(
+            result,
+            args.output,
+            overwrite=args.overwrite,
+        )
+        validation = validate_corridor_global_claim_artifact(output)
+        inspection = inspect_corridor_global_claim_artifact(output)
+    except (
+        CorridorBudgetError,
+        CorridorClaimError,
+        CorridorLeaderboardError,
+        OSError,
+        ValueError,
+        TypeError,
+    ) as exc:
         print(f"status=fail error={exc}", file=sys.stderr)
         return 1
     print(

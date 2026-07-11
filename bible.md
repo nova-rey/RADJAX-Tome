@@ -1090,3 +1090,13 @@ index, retaining only bounded per-mode pools and compact counters in memory.
 Artifact `production_grade` now reflects observed provenance, so enabling a
 proxy override does not downgrade a run that contains only real explicit or
 derived features; actual proxy observations remain warned/non-production.
+
+## 2026-07-11 — C4 Corridor-First Claims and Global Backfill
+
+C4 adds an offline, deterministic coordinate-claim stage over validated C2
+leaderboards, a validated C3 coverage plan, and an explicit ranked global-board
+supply. Corridor representatives are claimed first in mode order; global
+boards then backfill the remaining budget while preserving collision
+obligations and replacement lineage. The artifact is atomic, hash-validated,
+JSONL-based, and payload-free. C4 does not modify production selection, run
+teacher inference, or define the C5 multi-role training schema.

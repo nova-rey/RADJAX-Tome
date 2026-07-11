@@ -103,6 +103,27 @@ The allocator uses Decimal floor arithmetic, breadth-first round-robin filling,
 and deterministic top-candidate priority only for first-round oversubscription.
 See `docs/CORRIDOR_BUDGET_C3.md` for the plan schema and CLI.
 
+## C4 Corridor-First Claims
+
+C4 consumes validated C2 leaderboards, a validated C3 coverage plan, and an
+explicit ranked global-board supply. It claims corridor coordinates first and
+records global collisions and backfill lineage without producing payloads:
+
+```python
+from radjax_tome.fingerprint.corridor_claims import (
+    CorridorGlobalClaimPolicy,
+    claim_corridor_then_backfill_global,
+    validate_corridor_global_claim_result,
+    write_corridor_global_claim_result,
+)
+```
+
+`load_global_board_input` accepts the stable
+`radjax.c4_global_board_supply.v1` input contract. Existing selector manifests
+are accepted only as explicitly non-production development adapters. C4 is
+offline and does not alter production selection; the claim obligations are
+reserved for the later multi-role curriculum schema.
+
 ## What Is Not Public API
 
 The package root does not advertise every constant, dataclass, record type, or

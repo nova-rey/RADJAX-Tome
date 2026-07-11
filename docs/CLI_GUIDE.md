@@ -314,6 +314,24 @@ equally user-facing.
 
 For fingerprint API imports, see `docs/FINGERPRINT_API.md`.
 
+For the offline C4 coordinate-claim stage, run:
+
+```bash
+radjax-tome claim-corridor-and-backfill-global \
+  --leaderboards ./corridor_leaderboards \
+  --coverage-plan ./coverage_plan \
+  --global-leaderboards ./global_board_supply.json \
+  --output ./corridor_claims \
+  --overwrite
+```
+
+The global input uses `radjax.c4_global_board_supply.v1`. C4 claims the
+validated C3 corridor representatives before consuming ranked global supply;
+collisions and replacement lineage are written to JSONL claim files. It does
+not run teacher inference or emit training payloads. Use `--allow-underfill`
+only for an intentionally incomplete supply, and use the explicit
+non-production override flags for development artifacts.
+
 | Script | Classification | Use when |
 |---|---|---|
 | `scripts/build_teacher_textbook.py` | recommended wrapper / legacy-compatible | You need the current TeacherTextbook builder directly. |
