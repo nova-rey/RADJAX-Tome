@@ -12,6 +12,7 @@ HELP_DESCRIPTION = """RADJAX-Tome produces teacher-side distillation artifacts.
 Recommended commands:
   build
   build-fingerprint-corridor-leaderboards
+  allocate-fingerprint-corridor-coverage
   production-build
   validate
   inspect
@@ -179,6 +180,25 @@ def _build_parser() -> argparse.ArgumentParser:
     leaderboard.add_argument("--proxy-override-reason")
     leaderboard.add_argument("--overwrite", action="store_true")
     leaderboard.set_defaults(func=_cmd_build_fingerprint_corridor_leaderboards)
+
+    coverage = subparsers.add_parser(
+        "allocate-fingerprint-corridor-coverage",
+        help="Allocate a bounded offline corridor coverage plan.",
+        description=(
+            "Allocate corridor representative slots from a validated C2 "
+            "leaderboard artifact without claiming candidate coordinates."
+        ),
+    )
+    coverage.add_argument("--leaderboards", type=Path, required=True)
+    coverage.add_argument("--total-selected-exemplar-budget", type=int, required=True)
+    coverage.add_argument("--corridor-budget-fraction", default="0.50")
+    coverage.add_argument("--corridor-budget-max", type=int)
+    coverage.add_argument("--corridor-mode-cap", type=int, default=10)
+    coverage.add_argument("--allow-nonproduction-leaderboards", action="store_true")
+    coverage.add_argument("--nonproduction-override-reason")
+    coverage.add_argument("--output", type=Path, required=True)
+    coverage.add_argument("--overwrite", action="store_true")
+    coverage.set_defaults(func=_cmd_allocate_fingerprint_corridor_coverage)
 
     validate = subparsers.add_parser(
         "validate",
@@ -747,6 +767,68 @@ def _cmd_build_fingerprint_corridor_leaderboards(
         )
         inspection = inspect_corridor_candidate_leaderboards(output)
     except (CorridorLeaderboardError, OSError, ValueError, TypeError) as exc:
+        print(f"status=fail error={exc}", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "status": validation.status,
+                "output": str(output),
+                "validation": validation.to_dict(),
+                "inspection": inspection,
+            },
+            sort_keys=True,
+        )
+    )
+    return 0 if validation.status in {"pass", "warn"} else 1
+
+
+def _cmd_allocate_fingerprint_corridor_coverage(
+    args: argparse.Namespace,
+) -> int:
+    from radjax_tome.fingerprint.corridor_budget import (
+        CorridorBudgetError,
+        CorridorBudgetPolicy,
+        allocate_corridor_coverage,
+        inspect_corridor_coverage_plan,
+        validate_corridor_coverage_plan,
+        write_corridor_coverage_plan,
+    )
+    from radjax_tome.fingerprint.corridor_leaderboards import (
+        inspect_corridor_candidate_leaderboards,
+        load_corridor_candidate_leaderboards,
+    )
+
+    try:
+        leaderboards = load_corridor_candidate_leaderboards(
+            args.leaderboards,
+            production_grade=not args.allow_nonproduction_leaderboards,
+        )
+        source = inspect_corridor_candidate_leaderboards(args.leaderboards)
+        policy = CorridorBudgetPolicy(
+            total_selected_exemplar_budget=args.total_selected_exemplar_budget,
+            corridor_budget_fraction=args.corridor_budget_fraction,
+            corridor_budget_max=args.corridor_budget_max,
+            corridor_mode_cap=args.corridor_mode_cap,
+            allow_nonproduction_leaderboards=args.allow_nonproduction_leaderboards,
+            nonproduction_override_reason=args.nonproduction_override_reason,
+        )
+        plan = allocate_corridor_coverage(
+            leaderboards,
+            policy,
+            source_leaderboard_provenance=source,
+        )
+        output = write_corridor_coverage_plan(
+            plan,
+            args.output,
+            overwrite=args.overwrite,
+        )
+        validation = validate_corridor_coverage_plan(
+            output,
+            production_grade=plan.production_grade,
+        )
+        inspection = inspect_corridor_coverage_plan(output)
+    except (CorridorBudgetError, OSError, ValueError, TypeError) as exc:
         print(f"status=fail error={exc}", file=sys.stderr)
         return 1
     print(

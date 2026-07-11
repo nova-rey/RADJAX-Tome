@@ -44,6 +44,21 @@ This command fails closed when real compact feature fields are unavailable. It
 does not infer corridor features from selected payloads. See
 `docs/CORRIDOR_LEADERBOARDS_C2.md`.
 
+Allocate a bounded corridor coverage plan from a C2 leaderboard artifact:
+
+```bash
+radjax-tome allocate-fingerprint-corridor-coverage \
+  --leaderboards ./corridor_tome/fingerprint_leaderboards \
+  --total-selected-exemplar-budget 5000 \
+  --corridor-budget-fraction 0.50 \
+  --corridor-mode-cap 10 \
+  --output ./corridor_tome/corridor_coverage_plan \
+  --overwrite
+```
+
+C3 allocates slots only. It does not claim candidate coordinates or alter
+production selection. See `docs/CORRIDOR_BUDGET_C3.md`.
+
 Builds now write an unpacked Tome `cover_page.json`; `validate` checks it when
 present, and `inspect` prints its summary fields. See `docs/TOME_COVER_PAGE.md`.
 

@@ -473,6 +473,105 @@ def validate_corridor_candidate_leaderboards(
     return _validate_directory(Path(path), production_grade=production_grade)
 
 
+def validate_corridor_candidate_leaderboard_artifact(
+    artifact: CorridorLeaderboardArtifact,
+    *,
+    production_grade: bool = True,
+) -> CorridorLeaderboardValidationResult:
+    """Validate an in-memory C2 artifact using the canonical C2 rules."""
+
+    if not isinstance(artifact, CorridorLeaderboardArtifact):
+        raise TypeError("artifact must be a CorridorLeaderboardArtifact")
+    return _validate_artifact(artifact, production_grade=production_grade)
+
+
+def load_corridor_candidate_leaderboards(
+    path: str | Path,
+    *,
+    production_grade: bool = True,
+) -> CorridorLeaderboardArtifact:
+    """Load a validated C2 artifact without exposing its storage format."""
+
+    root = Path(path)
+    validation = validate_corridor_candidate_leaderboards(
+        root, production_grade=production_grade
+    )
+    if validation.status == "fail":
+        raise CorridorLeaderboardError(
+            "cannot load invalid corridor leaderboard artifact: "
+            + "; ".join(validation.blockers)
+        )
+    manifest = read_json_object(root / CORRIDOR_LEADERBOARD_MANIFEST)
+    policy_payload = manifest.get("policy") or {}
+    archetype_payload = policy_payload.get("archetype_policy") or {}
+    try:
+        archetype_policy = CorridorArchetypePolicy(
+            policy_id=str(archetype_payload["policy_id"]),
+            minimum_membership_strength=float(
+                archetype_payload["minimum_membership_strength"]
+            ),
+            maximum_core_distance=float(archetype_payload["maximum_core_distance"]),
+            minimum_mode_support=int(archetype_payload["minimum_mode_support"]),
+            membership_weight=float(archetype_payload["membership_weight"]),
+            centrality_weight=float(archetype_payload["centrality_weight"]),
+            difficulty_weight=float(archetype_payload["difficulty_weight"]),
+            quality_weight=float(archetype_payload["quality_weight"]),
+        )
+        policy = CorridorLeaderboardPolicy(
+            candidate_pool_cap=int(policy_payload["candidate_pool_cap"]),
+            archetype_policy=archetype_policy,
+            allow_compatibility_proxies=_strict_bool(
+                policy_payload.get("allow_compatibility_proxies", False),
+                "allow_compatibility_proxies",
+            ),
+            proxy_override_reason=policy_payload.get("proxy_override_reason"),
+            policy_id=str(policy_payload["policy_id"]),
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise CorridorLeaderboardError(
+            f"invalid C2 policy in leaderboard manifest: {exc}"
+        ) from exc
+
+    provenance_payload = manifest.get("feature_provenance")
+    provenance = (
+        None
+        if provenance_payload is None
+        else _provenance_from_dict(provenance_payload)
+    )
+    modes: list[CorridorModeLeaderboard] = []
+    for mode_payload in _read_modes(root / CORRIDOR_MODE_LEADERBOARDS):
+        try:
+            candidates = tuple(
+                _score_from_dict(candidate_payload)
+                for candidate_payload in mode_payload["candidates"]
+            )
+            modes.append(
+                CorridorModeLeaderboard(
+                    corridor_mode_id=int(mode_payload["corridor_mode_id"]),
+                    mode_support=int(mode_payload["mode_support"]),
+                    candidates=candidates,
+                    candidates_seen=int(mode_payload["candidates_seen"]),
+                    candidates_eligible=int(mode_payload["candidates_eligible"]),
+                    candidates_rejected=int(mode_payload["candidates_rejected"]),
+                    rejection_counts_by_reason=dict(
+                        mode_payload.get("rejection_counts_by_reason", {})
+                    ),
+                    duplicate_count=int(mode_payload.get("duplicate_count", 0)),
+                )
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise CorridorLeaderboardError(
+                f"invalid C2 mode leaderboard payload: {exc}"
+            ) from exc
+    return CorridorLeaderboardArtifact(
+        policy=policy,
+        feature_provenance=provenance,
+        modes=tuple(modes),
+        summary=dict(manifest.get("summary") or {}),
+        warnings=tuple(manifest.get("warnings") or ()),
+    )
+
+
 def inspect_corridor_candidate_leaderboards(path: str | Path) -> dict[str, Any]:
     result = validate_corridor_candidate_leaderboards(path, production_grade=False)
     manifest = read_json_object(Path(path) / CORRIDOR_LEADERBOARD_MANIFEST)
@@ -496,6 +595,15 @@ def inspect_corridor_candidate_leaderboards(path: str | Path) -> dict[str, Any]:
             "fidelity"
         ),
         "compatibility_proxy_used": summary.get("compatibility_proxy_used", False),
+        "production_grade": summary.get("production_grade"),
+        "c2_policy_id": (manifest.get("policy", {}) or {}).get("policy_id"),
+        "leaderboard_artifact_id": str(Path(path).resolve()),
+        "leaderboard_manifest_sha256": _sha256(
+            Path(path) / CORRIDOR_LEADERBOARD_MANIFEST
+        ),
+        "mode_leaderboards_sha256": (
+            manifest.get("files", {}).get(CORRIDOR_MODE_LEADERBOARDS, {}).get("sha256")
+        ),
     }
 
 
@@ -816,6 +924,58 @@ def _read_modes(path: Path) -> list[dict[str, Any]]:
                 )
             modes.append(payload)
     return modes
+
+
+def _provenance_from_dict(payload: Mapping[str, Any]) -> CorridorFeatureProvenance:
+    try:
+        return CorridorFeatureProvenance(
+            feature_schema_version=str(payload["schema_version"]),
+            source_artifact_schema=str(payload["source_artifact_schema"]),
+            source_artifact_id=str(payload["source_artifact_id"]),
+            source_artifact_hash=payload.get("source_artifact_hash"),
+            membership_derivation=str(payload["membership_derivation"]),
+            core_distance_derivation=str(payload["core_distance_derivation"]),
+            difficulty_derivation=str(payload["difficulty_derivation"]),
+            fidelity=str(payload["fidelity"]),
+            compatibility_proxy_used=_strict_bool(
+                payload["compatibility_proxy_used"],
+                "compatibility_proxy_used",
+            ),
+            normalization_parameters=payload.get("normalization_parameters", {}),
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise CorridorLeaderboardError(
+            f"invalid C2 feature provenance payload: {exc}"
+        ) from exc
+
+
+def _score_from_dict(payload: Mapping[str, Any]) -> CorridorArchetypeScore:
+    try:
+        reasons = payload.get("eligibility_reasons", ())
+        if not isinstance(reasons, list | tuple):
+            raise TypeError("eligibility_reasons must be a list")
+        return CorridorArchetypeScore(
+            candidate_id=str(payload["candidate_id"]),
+            position=int(payload["position"]),
+            corridor_mode_id=payload.get("corridor_mode_id"),
+            corridor_fingerprint_id=payload.get("corridor_fingerprint_id"),
+            eligible=bool(payload["eligible"]),
+            eligibility_reasons=tuple(str(reason) for reason in reasons),
+            membership_score=float(payload["membership_score"]),
+            centrality_score=float(payload["centrality_score"]),
+            useful_difficulty_score=float(payload["useful_difficulty_score"]),
+            quality_score=float(payload["quality_score"]),
+            corridor_training_utility=(
+                None
+                if payload.get("corridor_training_utility") is None
+                else float(payload["corridor_training_utility"])
+            ),
+            policy_id=str(payload["policy_id"]),
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise CorridorLeaderboardError(
+            f"invalid C2 candidate score payload: {exc}"
+        ) from exc
 
 
 def _score_sort_key(score: CorridorArchetypeScore) -> tuple[Any, ...]:

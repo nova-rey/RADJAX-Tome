@@ -86,6 +86,23 @@ must opt in with an explicit override reason. C2 is offline and does not alter
 production selection or payloads. See `docs/CORRIDOR_LEADERBOARDS_C2.md` for
 the input, ranking, artifact, validation, and CLI contracts.
 
+## C3 Bounded Corridor Coverage
+
+C3 consumes a validated C2 `CorridorLeaderboardArtifact` and allocates bounded
+representative slots without selecting coordinates:
+
+```python
+from radjax_tome.fingerprint.corridor_budget import (
+    CorridorBudgetPolicy,
+    allocate_corridor_coverage,
+    write_corridor_coverage_plan,
+)
+```
+
+The allocator uses Decimal floor arithmetic, breadth-first round-robin filling,
+and deterministic top-candidate priority only for first-round oversubscription.
+See `docs/CORRIDOR_BUDGET_C3.md` for the plan schema and CLI.
+
 ## What Is Not Public API
 
 The package root does not advertise every constant, dataclass, record type, or

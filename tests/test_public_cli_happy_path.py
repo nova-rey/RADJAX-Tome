@@ -17,6 +17,7 @@ def test_public_cli_top_level_help() -> None:
     for command in (
         "build",
         "build-fingerprint-corridor-leaderboards",
+        "allocate-fingerprint-corridor-coverage",
         "validate",
         "inspect",
         "pack",
@@ -30,6 +31,7 @@ def test_public_cli_command_help() -> None:
     for command in (
         "build",
         "build-fingerprint-corridor-leaderboards",
+        "allocate-fingerprint-corridor-coverage",
         "validate",
         "inspect",
         "pack",

@@ -1066,6 +1066,19 @@ JSONL and fails closed rather than fabricating features from selected payloads.
 C2 stops before global corridor budgets, production selection, curriculum, and
 payload materialization; C3 owns final corridor budgeting.
 
+## 2026-07-11 — C3 Bounded Corridor Coverage Budget
+
+C3 adds a deterministic offline allocator over validated C2 mode pools. It
+floors Decimal budget fractions, applies an optional hard maximum, limits each
+mode by its retained eligible capacity and mode cap, and preserves the exact
+remaining global budget. Breadth-first round-robin water filling precedes
+per-mode depth; severe first-round oversubscription uses top utility,
+membership, centrality, support, and mode-ID priority. Every observed mode and
+zero-allocation reason remains visible. Coverage plans retain C2 provenance and
+hashes, contain no candidate coordinate claims or payloads, and are independently
+hash-validated. C4 owns coordinate claims, collision handling, and global
+backfill.
+
 ## 2026-07-11 — C2.1 Strict Provenance and Streaming State
 
 C2.1 closes two acceptance blockers. JSONL feature loading is incremental and
