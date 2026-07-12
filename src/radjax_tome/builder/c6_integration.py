@@ -35,6 +35,7 @@ GLOBAL_ONLY_SELECTION_POLICY = "global_only_v1"
 C6_COVERAGE_REPORT_SCHEMA = "radjax.fingerprint_corridor_coverage.v1"
 C6_VALIDATION_SCHEMA = "radjax.c6_integrated_selection_validation.v1"
 C6_FEATURE_EXPORT_SCHEMA = "radjax.c6_corridor_feature_export.v1"
+C6_SOURCE_PASSPORTS_SCHEMA = "radjax.c6_source_passports.v1"
 CURRICULUM_ROUTES_SCHEMA = "selected_exemplar_curriculum_routes_v1"
 
 
@@ -151,6 +152,127 @@ def export_corridor_candidate_features(
     }
     write_json(output_dir / "manifest.json", manifest)
     return destination
+
+
+def export_production_source_passports(
+    *,
+    artifact_dir: Path,
+    output_path: Path,
+    score_pass_authority_hash: str,
+) -> Path:
+    """Export production delivery passports from packed corridor assignments.
+
+    The exported JSON document is a small, hashable index over a JSONL stream.
+    This keeps the producer side bounded by a shard plus memory-mapped assignment
+    arrays while retaining a passport for every coordinate C2 or C4 can select.
+    """
+
+    assignments = read_json_object(artifact_dir / "corridors" / "mode_assignments.json")
+    arrays = assignments.get("arrays")
+    metadata = assignments.get("examples_metadata")
+    if not isinstance(arrays, Mapping) or not isinstance(metadata, Mapping):
+        raise C6IntegrationError("corridor assignments are missing packed metadata")
+    required = ("position_example_index", "position", "mode_id")
+    if any(name not in arrays for name in required):
+        raise C6IntegrationError("corridor assignments are missing required arrays")
+    metadata_path = metadata.get("path")
+    if not isinstance(metadata_path, str) or not metadata_path:
+        raise C6IntegrationError("corridor assignments are missing examples metadata")
+
+    example_ids = _assignment_example_ids(artifact_dir / metadata_path)
+    position_examples = np_load(artifact_dir, arrays, "position_example_index")
+    positions = np_load(artifact_dir, arrays, "position")
+    mode_ids = np_load(artifact_dir, arrays, "mode_id")
+    if not (len(position_examples) == len(positions) == len(mode_ids)):
+        raise C6IntegrationError(
+            "packed corridor assignment arrays have mismatched lengths"
+        )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    records_path = output_path.with_suffix(".jsonl")
+    temporary = records_path.with_name(f".{records_path.name}.tmp")
+    store = TeacherTargetStore.open(artifact_dir)
+    shard_ranges = _shard_ranges(store)
+    cached_shard_id: int | None = None
+    cached_shard: dict[str, np.ndarray] | None = None
+    previous_coordinate: tuple[str, int] | None = None
+    with temporary.open("w", encoding="utf-8") as handle:
+        for assignment_index in range(len(mode_ids)):
+            example_index = int(position_examples[assignment_index])
+            position = int(positions[assignment_index])
+            mode_id = int(mode_ids[assignment_index])
+            if example_index < 0 or example_index >= len(example_ids) or position < 0:
+                raise C6IntegrationError("corridor assignment identity is invalid")
+            example_id = example_ids[example_index]
+            coordinate = (example_id, position)
+            # The packed assignment validator guarantees global uniqueness.
+            # Preserve bounded export state and still catch a malformed stream
+            # that repeats an immediately adjacent coordinate.
+            if coordinate == previous_coordinate:
+                raise C6IntegrationError(
+                    f"duplicate source passport coordinate: {example_id}:{position}"
+                )
+            previous_coordinate = coordinate
+            shard_id, row = _source_row_for_example(shard_ranges, example_index)
+            if cached_shard_id != shard_id:
+                cached_shard_id = shard_id
+                cached_shard = store.read_shard(shard_id)
+            if cached_shard is None:  # pragma: no cover - guarded above
+                raise C6IntegrationError("corridor source shard is unavailable")
+            entropy = np.asarray(cached_shard["corridor_entropy"])
+            top_tokens = np.asarray(
+                cached_shard.get(
+                    "exemplar_source_top_token_ids",
+                    cached_shard["corridor_top_token_ids"],
+                )
+            )
+            top_token_id = int(
+                top_tokens[row, position, 0]
+                if top_tokens.ndim == 3
+                else top_tokens[row, position]
+            )
+            record = {
+                "example_id": example_id,
+                "position": position,
+                "source_shard_id": shard_id,
+                "source_row": row,
+                "source_position": position,
+                "source_score": float(entropy[row, position]),
+                "source_top_token_id": top_token_id,
+                "source_score_policy": "entropy_top_n_v1",
+                "corridor_mode_id": mode_id,
+                "corridor_assignment_status": "linked",
+                "payload_slot": {
+                    "storage_kind": "full_sequence",
+                    "source_shard_id": shard_id,
+                    "source_row": row,
+                    "source_position": position,
+                },
+                "score_pass_authority_hash": score_pass_authority_hash,
+            }
+            handle.write(
+                json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n"
+            )
+    os.replace(temporary, records_path)
+    manifest = {
+        "schema_version": C6_SOURCE_PASSPORTS_SCHEMA,
+        "storage_kind": "jsonl_v1",
+        "records_path": records_path.name,
+        "records_sha256": _sha256(records_path),
+        "record_count": int(len(position_examples)),
+        "unique_coordinate_count": int(len(position_examples)),
+        "score_pass_authority_hash": score_pass_authority_hash,
+        "target_store_metadata_sha256": _sha256(artifact_dir / "metadata.json"),
+        "assignment_manifest_sha256": _sha256(
+            artifact_dir / "corridors" / "mode_assignments.json"
+        ),
+        "mode_artifact_sha256": _sha256(
+            artifact_dir / "corridors" / "corridor_modes.json"
+        ),
+        "production_grade": True,
+    }
+    write_json(output_path, manifest)
+    return output_path
 
 
 def load_curriculum_route_records(artifact_dir: Path) -> list[dict[str, Any]]:

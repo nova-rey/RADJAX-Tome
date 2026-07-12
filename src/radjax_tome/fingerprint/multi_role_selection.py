@@ -418,10 +418,33 @@ def payload_key_for_coordinate(example_id: str, position: int) -> str:
 def load_source_passport_index(
     path: str | Path,
 ) -> dict[tuple[str, int], dict[str, Any]]:
-    """Load a JSON passport index for strict production linkage checks."""
+    """Load a JSON or manifest-backed JSONL passport index.
 
-    payload = read_json_object(Path(path))
-    rows = payload.get("passports", payload)
+    C6.2 writes passports as a small manifest plus a deterministic JSONL stream
+    so producing the authority artifact does not require a giant JSON array.
+    The C5 selection surface remains a coordinate index because it only runs
+    after C2-C4 have bounded the final selected set.
+    """
+
+    source = Path(path)
+    payload = read_json_object(source)
+    if payload.get("storage_kind") == "jsonl_v1":
+        records_path = payload.get("records_path")
+        if not isinstance(records_path, str) or not records_path:
+            raise MultiRoleSelectionError("source passport JSONL path is missing")
+        rows: Any = []
+        with (source.parent / records_path).open("r", encoding="utf-8") as handle:
+            for line_number, line in enumerate(handle, start=1):
+                if not line.strip():
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except json.JSONDecodeError as exc:
+                    raise MultiRoleSelectionError(
+                        f"invalid source passport JSONL row {line_number}"
+                    ) from exc
+    else:
+        rows = payload.get("passports", payload)
     if isinstance(rows, Mapping):
         rows = list(rows.values())
     if not isinstance(rows, list):
@@ -441,6 +464,55 @@ def load_source_passport_index(
                 f"duplicate source passport: {key[0]}:{key[1]}"
             )
         result[key] = dict(row)
+    return result
+
+
+def load_source_passports_for_coordinates(
+    path: str | Path,
+    coordinates: set[tuple[str, int]],
+) -> dict[tuple[str, int], dict[str, Any]]:
+    """Load only requested passports from a manifest-backed JSONL authority."""
+
+    source = Path(path)
+    payload = read_json_object(source)
+    if payload.get("storage_kind") != "jsonl_v1":
+        index = load_source_passport_index(source)
+        missing = coordinates - set(index)
+        if missing:
+            example_id, position = sorted(missing)[0]
+            raise MultiRoleSelectionError(
+                f"missing source passport for {example_id}:{position}"
+            )
+        return {coordinate: index[coordinate] for coordinate in coordinates}
+
+    records_path = payload.get("records_path")
+    if not isinstance(records_path, str) or not records_path:
+        raise MultiRoleSelectionError("source passport JSONL path is missing")
+    result: dict[tuple[str, int], dict[str, Any]] = {}
+    with (source.parent / records_path).open("r", encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+                coordinate = (str(row["example_id"]), int(row["position"]))
+            except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+                raise MultiRoleSelectionError(
+                    f"invalid source passport JSONL row {line_number}"
+                ) from exc
+            if coordinate not in coordinates:
+                continue
+            if coordinate in result:
+                raise MultiRoleSelectionError(
+                    f"duplicate source passport: {coordinate[0]}:{coordinate[1]}"
+                )
+            result[coordinate] = dict(row)
+    missing = coordinates - set(result)
+    if missing:
+        example_id, position = sorted(missing)[0]
+        raise MultiRoleSelectionError(
+            f"missing source passport for {example_id}:{position}"
+        )
     return result
 
 

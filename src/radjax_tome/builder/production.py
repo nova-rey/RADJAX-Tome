@@ -23,6 +23,8 @@ from radjax_tome.builder.c6_integration import (
     build_corridor_coverage_report,
     c5_records_for_delivery,
     export_corridor_candidate_features,
+    export_production_global_board_supply,
+    export_production_source_passports,
     load_curriculum_route_records,
     validate_integrated_selection_contract,
     write_corridor_coverage_report,
@@ -34,6 +36,7 @@ from radjax_tome.builder.exemplar_delivery import (
     SelectedExemplarDeliveryError,
     materialize_selected_exemplar_delivery,
 )
+from radjax_tome.builder.exemplar_selection import build_exemplar_selection_manifest
 from radjax_tome.builder.long_tail import (
     DEFAULT_LONG_TAIL_WARNING_K,
     DEFAULT_PERVERSE_TAIL_WARNING_K,
@@ -66,7 +69,7 @@ from radjax_tome.fingerprint.corridor_leaderboards import (
 )
 from radjax_tome.fingerprint.multi_role_selection import (
     build_multi_role_selected_exemplars,
-    load_source_passport_index,
+    load_source_passports_for_coordinates,
     write_multi_role_selection_artifact,
 )
 from radjax_tome.io.json import read_json_object, write_json
@@ -215,7 +218,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             parity_status="not_run",
         )
         return _finalize_production_report(report, report_path, progress)
-    if already_complete:
+    if already_complete and not _c6_finalization_pending(config):
         validation = validate_teacher_textbook(config.output_dir)
         if validation.status == "pass":
             report = _production_report(
@@ -346,6 +349,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
 
     if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
         try:
+            progress.stage("fingerprint_corridor_export")
             store = TeacherTargetStore.open(config.output_dir)
             examples = load_text_examples(
                 config.dataset_path,
@@ -363,7 +367,10 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
                     config.retain_unselected_exemplar_payloads
                 ),
             )
-            c6_context = _prepare_c6_selection(config)
+            progress.stage("selection_authority_export")
+            authorities = _export_c6_selection_authorities(config)
+            progress.stage("corridor_global_selection")
+            c6_context = _prepare_c6_selection(config, authorities)
         except (OSError, TypeError, ValueError, KeyError) as exc:
             blockers.append(f"C6 selection integration failed: {exc}")
             report = _production_report(
@@ -589,6 +596,19 @@ class _ProductionProgressReporter:
         }
         self._write()
         self._emit_score(force=True)
+
+    def stage(self, phase: str) -> None:
+        """Publish a lightweight orchestration checkpoint to the sidecar."""
+
+        if not self.enabled:
+            return
+        self.payload["phase"] = phase
+        self.payload[phase] = {
+            "status": "running",
+            "elapsed_seconds": round(_elapsed(self.started_at), 3),
+        }
+        self._write()
+        self._emit(f"phase={phase} status=running", force=True)
 
     def handle_streaming_event(self, event: dict[str, object]) -> None:
         if not self.enabled:
@@ -839,18 +859,15 @@ def _validate_required_inputs(
     if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
         if config.total_selected_exemplar_budget is None:
             blockers.append("C6 requires total_selected_exemplar_budget")
-        if config.source_passports_path is None:
-            blockers.append("C6 production requires source_passports_path")
-        elif not config.source_passports_path.is_file():
-            blockers.append(
-                f"source passports path missing: {config.source_passports_path}"
-            )
-        if config.global_board_supply_path is None:
-            blockers.append("C6 requires global_board_supply_path")
-        elif not config.global_board_supply_path.is_file():
-            blockers.append(
-                f"global board supply path missing: {config.global_board_supply_path}"
-            )
+        # Normal C6.2 production derives global ranked supply and passports
+        # from this run's score surface.  Supplied files are only fail-closed
+        # checkpoints and are compared after Stage 2 has an authority hash.
+        for label, path in (
+            ("source passports", config.source_passports_path),
+            ("global board supply", config.global_board_supply_path),
+        ):
+            if path is not None and not path.is_file():
+                blockers.append(f"{label} override path missing: {path}")
         if config.corridor_feature_jsonl_path is not None:
             blockers.append(
                 "C6 derives strict corridor features from the current packed "
@@ -889,22 +906,171 @@ def _validate_required_inputs(
         )
 
 
-def _prepare_c6_selection(config: ProductionBuildConfig) -> dict[str, Any]:
-    """Build/load the production-grade C4/C5 authority before delivery."""
+def _export_c6_selection_authorities(
+    config: ProductionBuildConfig,
+) -> dict[str, Path | str | bool]:
+    """Derive every C6 authority from the completed Stage 1 score surface."""
 
     if config.total_selected_exemplar_budget is None:
         raise ValueError("C6 total_selected_exemplar_budget is required")
-    source_passports = load_source_passport_index(config.source_passports_path)  # type: ignore[arg-type]
+    c6_root = config.output_dir / "c6"
+    c6_root.mkdir(parents=True, exist_ok=True)
+    store = TeacherTargetStore.open(config.output_dir)
+    examples = load_text_examples(
+        config.dataset_path,
+        max_examples=store.metadata.num_examples,
+    )
+    selector_manifest = build_exemplar_selection_manifest(
+        store,
+        examples=examples,
+        batch_size=max(1, config.shard_size_examples),
+        capture_mode=_exemplar_capture_mode(config),
+        fulfillment_policy=(
+            "rerun_selected_capture"
+            if config.exemplar_delivery_path == "two_pass_rerun_selected"
+            else "select_from_existing_capture"
+        ),
+        # Capacity is distinct from the C3 allocation.  Retaining it at least
+        # as deep as the final budget leaves ranked supply for C4 backfill.
+        board_capacity=max(
+            config.total_selected_exemplar_budget,
+            config.exemplar_leaderboard_capacity,
+        ),
+        budget_examples=None,
+        budget_fraction=None,
+        created_at=_now(),
+        canonical_score_fields_only=True,
+        use_score_pass_fields=True,
+        production_global_selector=True,
+    )
+    selector_path = c6_root / "production_global_selector.json"
+    write_json(selector_path, selector_manifest)
+    score_pass_authority_hash = _hash_payload(
+        {
+            "metadata_sha256": _file_sha256(config.output_dir / "metadata.json"),
+            "assignment_manifest_sha256": _file_sha256(
+                config.output_dir / "corridors" / "mode_assignments.json"
+            ),
+            "modes_sha256": _file_sha256(
+                config.output_dir / "corridors" / "corridor_modes.json"
+            ),
+            "selector_sha256": _file_sha256(selector_path),
+            "selection_integration_config_hash": _selection_integration_hash(config),
+        }
+    )
+    global_supply = export_production_global_board_supply(
+        selector_manifest,
+        source_artifact_id=str(config.output_dir),
+        source_artifact_hash=score_pass_authority_hash,
+    )
+    global_supply["source_provenance"]["score_pass_authority_hash"] = (
+        score_pass_authority_hash
+    )
+    global_path = c6_root / "global-board-supply.json"
+    write_json(global_path, global_supply)
+    passports_path = export_production_source_passports(
+        artifact_dir=config.output_dir,
+        output_path=c6_root / "source-passports.json",
+        score_pass_authority_hash=score_pass_authority_hash,
+    )
+    feature_path = export_corridor_candidate_features(
+        artifact_dir=config.output_dir,
+        output_dir=c6_root / "corridor-features",
+    )
+    feature_manifest_path = c6_root / "corridor-features" / "manifest.json"
+    feature_manifest = read_json_object(feature_manifest_path)
+    feature_manifest["score_pass_authority_hash"] = score_pass_authority_hash
+    write_json(feature_manifest_path, feature_manifest)
+    authority_manifest_path = c6_root / "authority_manifest.json"
+    run_manifest = read_json_object(config.output_dir / "run_manifest.json")
+    authority_manifest = {
+        "schema_version": "radjax.c6_selection_authority.v1",
+        "score_pass_authority_hash": score_pass_authority_hash,
+        "target_store_metadata_sha256": _file_sha256(
+            config.output_dir / "metadata.json"
+        ),
+        "corpus_hash": run_manifest.get("corpus_hash"),
+        "score_pass_config_hash": run_manifest.get("emission_config_hash"),
+        "score_pass_resume_hash": run_manifest.get("resume_config_hash"),
+        "selection_integration_config_hash": _selection_integration_hash(config),
+        "delivery_path": config.exemplar_delivery_path,
+        "paths": {
+            "selector": selector_path.relative_to(config.output_dir).as_posix(),
+            "global_board_supply": global_path.relative_to(
+                config.output_dir
+            ).as_posix(),
+            "source_passports": passports_path.relative_to(
+                config.output_dir
+            ).as_posix(),
+            "corridor_features": feature_path.relative_to(config.output_dir).as_posix(),
+        },
+        "hashes": {
+            "selector_sha256": _file_sha256(selector_path),
+            "global_board_supply_sha256": _file_sha256(global_path),
+            "source_passports_manifest_sha256": _file_sha256(passports_path),
+            "corridor_features_sha256": _file_sha256(feature_path),
+        },
+        "external_authority_override_used": False,
+        "production_grade": True,
+    }
+    write_json(authority_manifest_path, authority_manifest)
+    _validate_external_c6_overrides(
+        config,
+        score_pass_authority_hash=score_pass_authority_hash,
+    )
+    return {
+        "feature_path": feature_path,
+        "global_board_supply_path": global_path,
+        "source_passports_path": passports_path,
+        "authority_manifest_path": authority_manifest_path,
+        "score_pass_authority_hash": score_pass_authority_hash,
+        "external_authority_override_used": False,
+    }
+
+
+def _validate_external_c6_overrides(
+    config: ProductionBuildConfig,
+    *,
+    score_pass_authority_hash: str,
+) -> None:
+    """Fail closed when an optional checkpoint is not tied to this score pass."""
+
+    for label, path in (
+        ("global board supply", config.global_board_supply_path),
+        ("source passports", config.source_passports_path),
+    ):
+        if path is None:
+            continue
+        if not path.is_file():
+            raise ValueError(f"{label} override path missing: {path}")
+        payload = read_json_object(path)
+        provenance = payload.get("source_provenance", payload)
+        observed = (
+            provenance.get("score_pass_authority_hash")
+            if isinstance(provenance, Mapping)
+            else None
+        )
+        if observed != score_pass_authority_hash:
+            raise ValueError(
+                f"{label} override does not match the current score-pass authority hash"
+            )
+
+
+def _prepare_c6_selection(
+    config: ProductionBuildConfig,
+    authorities: Mapping[str, Path | str | bool],
+) -> dict[str, Any]:
+    """Run C2-C5 from the internally exported production authorities."""
+
+    if config.total_selected_exemplar_budget is None:
+        raise ValueError("C6 total_selected_exemplar_budget is required")
     c6_root = config.output_dir / "c6"
     c6_root.mkdir(parents=True, exist_ok=True)
     c2_summary: dict[str, Any] = {}
     c3_summary: dict[str, Any] = {}
     global_supply: dict[str, Any] | None = None
 
-    feature_path = export_corridor_candidate_features(
-        artifact_dir=config.output_dir,
-        output_dir=c6_root / "corridor-features",
-    )
+    feature_path = Path(str(authorities["feature_path"]))
     feature_records = load_candidate_records_jsonl(
         feature_path,
         source_artifact_id=str(feature_path),
@@ -946,7 +1112,7 @@ def _prepare_c6_selection(config: ProductionBuildConfig) -> dict[str, Any]:
         for mode in plan.modes
     ]
     global_input = load_global_board_input(
-        config.global_board_supply_path,  # type: ignore[arg-type]
+        Path(str(authorities["global_board_supply_path"])),
         production_grade=True,
     )
     global_provenance = global_input.source_provenance
@@ -973,6 +1139,13 @@ def _prepare_c6_selection(config: ProductionBuildConfig) -> dict[str, Any]:
         c6_root / "claims",
         overwrite=True,
     )
+    source_passports = load_source_passports_for_coordinates(
+        Path(str(authorities["source_passports_path"])),
+        {
+            (coordinate.example_id, coordinate.position)
+            for coordinate in claims.selected_coordinates
+        },
+    )
     selected = build_multi_role_selected_exemplars(
         claims,
         source_passports=source_passports,
@@ -990,11 +1163,16 @@ def _prepare_c6_selection(config: ProductionBuildConfig) -> dict[str, Any]:
     return {
         "claims": claims,
         "selected": selected,
-        "source_passports": list(source_passports.values()),
+        # C6 final validation needs passports for the C5 set, not the whole
+        # full-corpus authority stream.
+        "source_passports": [
+            dict(record.source_passport) for record in selected.records
+        ],
         "delivery_records": delivery_records,
         "c2_summary": c2_summary,
         "c3_summary": c3_summary,
         "global_supply": global_supply,
+        "authorities": dict(authorities),
     }
 
 
@@ -1209,6 +1387,19 @@ def _production_report(
         ),
         "num_selected_exemplars": (
             delivery_report.get("num_selected_exemplars")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_teacher_rerun_count": (
+            1
+            if delivery_report is not None
+            and delivery_report.get("delivery_path") == "two_pass_rerun_selected"
+            else 0
+            if delivery_report is not None
+            else None
+        ),
+        "selected_teacher_rerun_example_count": (
+            delivery_report.get("teacher_rerun_count")
             if delivery_report is not None
             else None
         ),
@@ -1473,6 +1664,8 @@ def _c6_report_fields(
     validation_path = output_dir / "reports" / "c6_integrated_selection_validation.json"
     coverage = read_json_object(coverage_path) if coverage_path.is_file() else {}
     validation = read_json_object(validation_path) if validation_path.is_file() else {}
+    authority_path = output_dir / "c6" / "authority_manifest.json"
+    authority = read_json_object(authority_path) if authority_path.is_file() else {}
     return {
         "selection_integration_policy": config.selection_integration_policy,
         "selection_integration_config_hash": _selection_integration_hash(config),
@@ -1493,6 +1686,17 @@ def _c6_report_fields(
         ),
         "corridor_coverage_report": coverage or None,
         "c6_integrated_validation": validation or None,
+        "c6_authority_manifest_path": str(authority_path) if authority else None,
+        "c6_authority_manifest": authority or None,
+        "score_pass_authority_hash": authority.get("score_pass_authority_hash"),
+        "external_authority_override_used": authority.get(
+            "external_authority_override_used"
+        ),
+        "full_teacher_pass_count": (
+            1
+            if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
+            else None
+        ),
     }
 
 
@@ -1691,6 +1895,19 @@ def _already_complete(config: ProductionBuildConfig) -> bool:
     return read_json_object(manifest_path).get("status") == "complete"
 
 
+def _c6_finalization_pending(config: ProductionBuildConfig) -> bool:
+    """A completed score pass may still need C2-C5 or selected delivery."""
+
+    if config.selection_integration_policy != C6_SELECTION_INTEGRATION_POLICY:
+        return False
+    validation_path = (
+        config.output_dir / "reports" / "c6_integrated_selection_validation.json"
+    )
+    if not validation_path.is_file():
+        return True
+    return read_json_object(validation_path).get("status") != "pass"
+
+
 def _has_existing_artifact(config: ProductionBuildConfig) -> bool:
     output_dir = config.output_dir
     return any(
@@ -1737,6 +1954,18 @@ def _now() -> str:
 def _selection_integration_hash(config: ProductionBuildConfig) -> str:
     payload = {
         "selection_integration_policy": config.selection_integration_policy,
+        "teacher_model": config.teacher_model,
+        "tokenizer_id": config.tokenizer_id or config.teacher_model,
+        "dataset_path": str(config.dataset_path),
+        "corpus_manifest_path": str(config.corpus_manifest_path),
+        "target_policy": config.target_policy,
+        "sequence_length": config.sequence_length,
+        "vocab_size": config.vocab_size,
+        "top_k": config.top_k,
+        "num_buckets": config.num_buckets,
+        "dynamic_top_k_min": config.dynamic_top_k_min,
+        "dynamic_top_k_max": config.dynamic_top_k_max,
+        "dynamic_mass_threshold": config.dynamic_mass_threshold,
         "total_selected_exemplar_budget": config.total_selected_exemplar_budget,
         "fingerprint_corridor_budget_fraction": (
             config.fingerprint_corridor_budget_fraction
@@ -1753,5 +1982,17 @@ def _selection_integration_hash(config: ProductionBuildConfig) -> str:
         "c5_schema": "radjax.multi_role_selected_exemplar.v1",
         "delivery_path": config.exemplar_delivery_path,
     }
+    return _hash_payload(payload)
+
+
+def _hash_payload(payload: Mapping[str, Any]) -> str:
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()

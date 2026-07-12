@@ -1154,3 +1154,19 @@ packaging now revalidates C5, legacy, payload, passport, curriculum, and audit
 parity locally, including zero-byte C4 lineage files. C6 coverage includes
 zero-allocation modes and explicit reasons, reports a direct T4 status of
 `not_executed`, and the T4 runbook reserves `--resume` for recovery only.
+
+## 2026-07-12 — C6.2 Native Path B Authority Orchestration
+
+C6.2 makes `corridor_first_global_backfill_v1` a native one-command
+production flow. After its single full score/discovery pass, production builds
+the packed corridor artifact, exports strict C2 features, a production ranked
+global supply, and a hash-bound source-passport JSONL authority from the same
+score surface. C2-C5 then consume those internal authorities before Path B
+reruns only the final selected examples and emits one payload per C5
+coordinate. Global supply and passports are no longer normal-path CLI
+prerequisites; supplied files are fail-closed checkpoints tied to the current
+score-pass authority hash. The authority manifest records producer hashes and
+selection configuration, source-passport export is bounded through C4 by
+loading only final C5 coordinates, and production reports distinguish the
+full-pass and selected-rerun work. Global-only behavior and C1-C5 semantics
+remain unchanged. The T4 rehearsal remains `not_executed`.

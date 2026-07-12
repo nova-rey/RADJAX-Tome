@@ -187,24 +187,6 @@ def test_c6_cpu_path_generates_features_audit_and_curriculum(
     tmp_path: Path,
     delivery_path: str,
 ) -> None:
-    base = _config(
-        tmp_path / "base",
-        target_policy="corridor_exemplar_v1",
-        vocab_size=64,
-        top_k=32,
-        exemplar_selection_enabled=True,
-        exemplar_delivery_path="one_pass_pruned_candidate",
-        selected_exemplar_budget=4,
-        retain_unselected_exemplar_payloads=True,
-    )
-    build_production_gpu_tome(base)
-    assert (base.output_dir / "metadata.json").is_file()
-    passports, supply = _c6_source_inputs(base.output_dir)
-    passport_path = tmp_path / "passports.json"
-    supply_path = tmp_path / "global_supply.json"
-    write_json(passport_path, {"passports": passports})
-    write_json(supply_path, supply)
-
     config = _config(
         tmp_path / "c6",
         target_policy="corridor_exemplar_v1",
@@ -215,8 +197,6 @@ def test_c6_cpu_path_generates_features_audit_and_curriculum(
         retain_unselected_exemplar_payloads=False,
         selection_integration_policy="corridor_first_global_backfill_v1",
         total_selected_exemplar_budget=4,
-        global_board_supply_path=supply_path,
-        source_passports_path=passport_path,
     )
     report = build_production_gpu_tome(config)
 
@@ -240,6 +220,31 @@ def test_c6_cpu_path_generates_features_audit_and_curriculum(
         == 4
     )
     assert (config.output_dir / "c6" / "corridor-features" / "manifest.json").is_file()
+    authority = _json(config.output_dir / "c6" / "authority_manifest.json")
+    assert authority["production_grade"] is True
+    assert authority["score_pass_authority_hash"]
+    assert (config.output_dir / "c6" / "global-board-supply.json").is_file()
+    assert (config.output_dir / "c6" / "source-passports.json").is_file()
+    global_supply = _json(config.output_dir / "c6" / "global-board-supply.json")
+    passports = _json(config.output_dir / "c6" / "source-passports.json")
+    features = _json(config.output_dir / "c6" / "corridor-features" / "manifest.json")
+    authority_hash = authority["score_pass_authority_hash"]
+    assert (
+        global_supply["source_provenance"]["score_pass_authority_hash"]
+        == authority_hash
+    )
+    assert passports["score_pass_authority_hash"] == authority_hash
+    assert features["score_pass_authority_hash"] == authority_hash
+    assert report["full_teacher_pass_count"] == 1
+    assert report["external_authority_override_used"] is False
+    if delivery_path == "two_pass_rerun_selected":
+        assert report["selected_teacher_rerun_count"] == 1
+        # One rerun input can satisfy multiple selected positions from the
+        # same example; payload count remains the C5 coordinate count.
+        assert 0 < report["selected_teacher_rerun_example_count"] <= 4
+        assert report["num_selected_exemplars"] == 4
+    else:
+        assert report["selected_teacher_rerun_count"] == 0
     package = tmp_path / f"student-{delivery_path}"
     package_tome_artifact(config.output_dir, package, profile=STUDENT, overwrite=True)
     assert validate_tome_package(package, profile=STUDENT).ok
