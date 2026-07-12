@@ -48,6 +48,8 @@ EXEMPLAR_DELIVERY_REPORT_SCHEMA = "selected_exemplar_delivery_report_v1"
 EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA = "exemplar_delivery_parity_report_v1"
 LEADERBOARD_REPORT_FILENAME = "leaderboard_report.json"
 SELECTED_EXEMPLARS_FILENAME = "selected_exemplars.json"
+CURRICULUM_ROUTES_FILENAME = "selected_routes.json"
+CURRICULUM_ROUTES_SCHEMA = "selected_exemplar_curriculum_routes_v1"
 _SIDE_SELECTED_BOARD_IDS = (
     LONG_TAIL_UNCERTAINTY_BOARD,
     PERVERSE_TAIL_DIAGNOSTIC_BOARD,
@@ -219,7 +221,11 @@ def materialize_selected_exemplar_delivery(
             config=config,
         )
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
-        _validate_path_b_score_pass_records(selected_records, store=store)
+        _validate_path_b_score_pass_records(
+            selected_records,
+            store=store,
+            require_score_pass_tuple=not config.authoritative_selection,
+        )
     rerun_selected_example_count = len(
         {record["selected_example_id"] for record in selected_records}
     )
@@ -265,8 +271,10 @@ def materialize_selected_exemplar_delivery(
     corridors_dir = output / "corridors"
     leaderboards_dir = output / "leaderboards"
     selected_dir = output / "selected_exemplars"
+    curriculum_dir = output / "curriculum"
     leaderboards_dir.mkdir(parents=True, exist_ok=True)
     selected_dir.mkdir(parents=True, exist_ok=True)
+    curriculum_dir.mkdir(parents=True, exist_ok=True)
 
     corridor_result = build_corridor_artifacts(
         output_dir=output,
@@ -312,6 +320,10 @@ def materialize_selected_exemplar_delivery(
     }
     write_json(leaderboards_dir / LEADERBOARD_REPORT_FILENAME, leaderboard_report)
     write_json(leaderboards_dir / SELECTED_EXEMPLARS_FILENAME, selected_exemplars)
+    curriculum_summary = _write_curriculum_routes(
+        curriculum_dir / CURRICULUM_ROUTES_FILENAME,
+        selected_records,
+    )
     for board_id in _SIDE_SELECTED_BOARD_IDS:
         write_json(
             leaderboards_dir / f"{board_id}.json",
@@ -395,6 +407,11 @@ def materialize_selected_exemplar_delivery(
         "final_retained_bytes": retained_bytes,
         "leaderboard_report_path": str(leaderboards_dir / LEADERBOARD_REPORT_FILENAME),
         "selected_exemplars_path": str(leaderboards_dir / SELECTED_EXEMPLARS_FILENAME),
+        "curriculum_routes_path": str(curriculum_dir / CURRICULUM_ROUTES_FILENAME),
+        "curriculum_route_count": curriculum_summary["route_count"],
+        "curriculum_unique_coordinate_count": curriculum_summary[
+            "unique_coordinate_count"
+        ],
         "selected_payload_shard_count": 1,
         "claims_not_made": {
             "no_dense_logits_retained": True,
@@ -601,7 +618,7 @@ def _record_payload_tuple_mismatch(
         or not payload.get("payload_ref")
     ):
         return True
-    fields = (
+    fields = [
         "selected_example_id",
         "selected_position",
         "score_top_token_id",
@@ -611,9 +628,9 @@ def _record_payload_tuple_mismatch(
         "source_top_token_id",
         "source_score_policy",
         "payload_ref",
-        "corridor_mode_id",
-        "corridor_assignment_status",
-    )
+    ]
+    if not bool(record.get("c5_authoritative_coordinate")):
+        fields.extend(("corridor_mode_id", "corridor_assignment_status"))
     if any(record.get(field) != payload.get(field) for field in fields):
         return True
     if "selected_board" in record and record.get("selected_board") != payload.get(
@@ -662,7 +679,14 @@ def _source_coordinate_linkage_mismatch(
         if _path_a_source_payload_token_mismatch(shard, row=row, record=record):
             return True
     elif source_delivery_path == TWO_PASS_RERUN_SELECTED:
-        if not _path_b_score_pass_aliases_match(record, payload, shard, row=row):
+        if not bool(
+            record.get("c5_authoritative_coordinate")
+        ) and not _path_b_score_pass_aliases_match(
+            record,
+            payload,
+            shard,
+            row=row,
+        ):
             return True
     else:
         return True
@@ -677,7 +701,9 @@ def _source_coordinate_linkage_mismatch(
         return True
     if not _close_float(corridor_entropy, source_score):
         return True
-    if source_delivery_path == TWO_PASS_RERUN_SELECTED:
+    if source_delivery_path == TWO_PASS_RERUN_SELECTED and not bool(
+        record.get("c5_authoritative_coordinate")
+    ):
         try:
             corridor_top_token_id = int(
                 np.asarray(shard["corridor_top_token_ids"])[row, source_position]
@@ -775,6 +801,7 @@ def _validate_path_b_score_pass_records(
     selected_records: list[dict[str, Any]],
     *,
     store: TeacherTargetStore,
+    require_score_pass_tuple: bool = True,
 ) -> None:
     selected_record_order = [
         str(record.get("selected_example_id", "")) for record in selected_records
@@ -797,7 +824,11 @@ def _validate_path_b_score_pass_records(
                 ),
                 selected_record_order=selected_record_order,
             ) from exc
-        if not _path_b_score_pass_record_matches(record, shard, row=source_row):
+        if require_score_pass_tuple and not _path_b_score_pass_record_matches(
+            record,
+            shard,
+            row=source_row,
+        ):
             raise _path_b_delivery_error(
                 record,
                 store=store,
@@ -2224,6 +2255,39 @@ def _selected_board_summary(
         "long_tail_class_counts": dict(sorted(long_tail_counts.items())),
         "source_score_board_counts": dict(sorted(source_score_board_counts.items())),
     }
+
+
+def _write_curriculum_routes(
+    path: Path,
+    selected_records: list[dict[str, Any]],
+) -> dict[str, int]:
+    """Persist the current consumption-board routes independently of selection."""
+
+    routes = [
+        {
+            "selected_example_id": record["selected_example_id"],
+            "selected_position": record["selected_position"],
+            "payload_key": (record.get("payload_identity") or {}).get("payload_key"),
+            "curriculum_board": record.get("selected_board", PRIMARY_SELECTED_BOARD),
+            "selection_roles": list(record.get("selection_roles") or ()),
+        }
+        for record in selected_records
+    ]
+    unique = {
+        (str(route["selected_example_id"]), int(route["selected_position"]))
+        for route in routes
+    }
+    write_json(
+        path,
+        {
+            "schema_version": CURRICULUM_ROUTES_SCHEMA,
+            "route_policy": "selected_board_consumption_v1",
+            "routes": routes,
+            "route_count": len(routes),
+            "unique_coordinate_count": len(unique),
+        },
+    )
+    return {"route_count": len(routes), "unique_coordinate_count": len(unique)}
 
 
 def _attach_long_tail_diagnostics(

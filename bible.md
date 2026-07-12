@@ -1138,3 +1138,19 @@ streaming resume hashes, and production reports. C6 coverage and validation
 reports are copied into full-debug/student packages and surfaced in cover-page
 diagnostics. The T4 runbook is documented, but no real T4 rehearsal was
 executed in this change.
+
+## 2026-07-12 — C6.1 Integrated Evidence Closure
+
+C6.1 replaces placeholder integration evidence with actual producer surfaces.
+The production path now derives strict C2 features from the current packed
+corridor assignments, mode bounds, and shard statistics, recording hashes and
+normalization derivations instead of accepting a free-standing feature JSONL.
+It writes `curriculum/selected_routes.json` from current consumption-board
+routing, validates the coordinate union separately from route multiplicity, and
+extends the selected-linkage audit with C5-aware parity. Both Path A and Path B
+materialize the C5 coordinate set; Path B recognizes an authoritative C5 source
+coordinate without pretending it was the score-pass argmax. Student/full-debug
+packaging now revalidates C5, legacy, payload, passport, curriculum, and audit
+parity locally, including zero-byte C4 lineage files. C6 coverage includes
+zero-allocation modes and explicit reasons, reports a direct T4 status of
+`not_executed`, and the T4 runbook reserves `--resume` for recovery only.

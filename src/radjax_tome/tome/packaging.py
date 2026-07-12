@@ -12,7 +12,7 @@ from typing import Any
 
 import numpy as np
 
-from radjax_tome.audit import audit_selected_linkage, write_selected_linkage_audit
+from radjax_tome.audit import audit_selected_linkage
 from radjax_tome.builder.long_tail import long_tail_summary
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.provenance.hashes import sha256_file
@@ -218,6 +218,11 @@ def validate_tome_package(
                 blockers.append(
                     "selected linkage audit failed: " + _audit_summary(audit)
                 )
+            c6 = _validate_c6_package_parity(root, audit_report=audit.to_dict())
+            if c6 is not None and c6["status"] == "fail":
+                blockers.append(
+                    "C6 package parity failed: " + "; ".join(c6["blockers"])
+                )
     return TomePackageValidationReport(
         status="pass" if not blockers else "fail",
         profile=actual_profile,
@@ -297,12 +302,15 @@ def _materialize_package(source: Path, destination: Path, *, profile: str) -> No
         directory=True,
     )
     _copy_optional(source, destination, "selected_exemplars", directory=True)
+    _copy_optional(source, destination, "curriculum", directory=True)
     _copy_optional(source, destination, "leaderboards/selected_exemplars.json")
     _copy_optional(source, destination, "leaderboards/long_tail_uncertainty.json")
     _copy_optional(source, destination, "c6", directory=True)
     for relative_path in _C6_OPTIONAL_FILES:
         _copy_optional(source, destination, relative_path)
-    include_perverse = _include_perverse_tail_in_student(source)
+    include_perverse = _include_perverse_tail_in_student(source) or _is_c6_artifact(
+        source
+    )
     if include_perverse:
         _copy_optional(
             source,
@@ -358,6 +366,16 @@ def _include_perverse_tail_in_student(source: Path) -> bool:
     return bool(report.get("include_perverse_tail_in_student"))
 
 
+def _is_c6_artifact(source: Path) -> bool:
+    coverage = (
+        _optional_object(source / "reports" / "fingerprint_corridor_coverage.json")
+        or {}
+    )
+    return coverage.get("selection_integration_policy") == (
+        "corridor_first_global_backfill_v1"
+    )
+
+
 def _filter_student_selected_boards(
     root: Path,
     *,
@@ -410,6 +428,28 @@ def _filter_student_selected_boards(
         document["long_tail_summary"] = long_tail_summary(retained)
         document["selected_board_summary"] = _selected_board_summary(retained)
         write_json(path, document)
+    routes_path = root / "curriculum" / "selected_routes.json"
+    if routes_path.is_file():
+        document = read_json_object(routes_path)
+        routes = document.get("routes", [])
+        if isinstance(routes, list):
+            document["routes"] = [
+                route
+                for route in routes
+                if isinstance(route, dict)
+                and str(route.get("curriculum_board") or "primary") in allowed
+            ]
+            document["route_count"] = len(document["routes"])
+            document["unique_coordinate_count"] = len(
+                {
+                    (
+                        str(route.get("selected_example_id")),
+                        int(route.get("selected_position")),
+                    )
+                    for route in document["routes"]
+                }
+            )
+            write_json(routes_path, document)
 
 
 def _export_student_inputs(source: Path, destination: Path) -> None:
@@ -505,9 +545,15 @@ def _write_package_audit(root: Path, *, profile: str) -> None:
     if not _has_selected_payloads(root):
         return
     audit = audit_selected_linkage(root, strict=True, profile=profile)
-    write_selected_linkage_audit(audit, root / "selected_linkage_audit.json")
+    payload = audit.to_dict()
+    c6 = _validate_c6_package_parity(root, audit_report=payload)
+    if c6 is not None:
+        payload["c6_integration"] = c6
+    write_json(root / "selected_linkage_audit.json", payload)
     if audit.status != "pass":
         raise ValueError("selected linkage audit failed: " + _audit_summary(audit))
+    if c6 is not None and c6["status"] == "fail":
+        raise ValueError("C6 package parity failed: " + "; ".join(c6["blockers"]))
 
 
 def _write_package_manifests(root: Path, *, profile: str) -> None:
@@ -1127,7 +1173,8 @@ def _validate_hashed_file(
         return
     if entry.get("sha256") != _sha256(path):
         blockers.append(f"{label} hash mismatch: {relative}")
-    if int(entry.get("size_bytes") or -1) != path.stat().st_size:
+    size_bytes = entry.get("size_bytes")
+    if size_bytes is None or int(size_bytes) != path.stat().st_size:
         blockers.append(f"{label} size mismatch: {relative}")
 
 
@@ -1186,6 +1233,40 @@ def _content_role(relative: str) -> str:
     if relative.startswith("leaderboards/"):
         return "selected_exemplar_index"
     return Path(relative).stem
+
+
+def _validate_c6_package_parity(
+    root: Path,
+    *,
+    audit_report: dict[str, Any],
+) -> dict[str, Any] | None:
+    c5_root = root / "c6" / "multi-role-selection"
+    if not c5_root.is_dir():
+        return None
+    from radjax_tome.builder.c6_integration import (
+        load_curriculum_route_records,
+        validate_integrated_selection_contract,
+    )
+    from radjax_tome.fingerprint.multi_role_selection import (
+        load_multi_role_selection_artifact,
+    )
+
+    selected = load_multi_role_selection_artifact(c5_root, production_grade=False)
+    leaderboard = read_json_object(root / "leaderboards" / "selected_exemplars.json")
+    records = list(leaderboard.get("selected_exemplars") or [])
+    payloads = _read_selected_payloads(root)
+    routes = load_curriculum_route_records(root)
+    return validate_integrated_selection_contract(
+        None,
+        selected,
+        legacy_records=records,
+        payload_records=payloads,
+        source_passports=[dict(record.source_passport) for record in selected.records],
+        curriculum_records=routes,
+        package_records=records,
+        audit_report=audit_report,
+        production_grade=False,
+    )
 
 
 def _profile_claims(profile: str) -> tuple[dict[str, Any], dict[str, Any]]:

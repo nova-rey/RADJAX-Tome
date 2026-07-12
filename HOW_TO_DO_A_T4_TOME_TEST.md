@@ -8,7 +8,7 @@ successful code/test run must not be reported as a successful T4 run.
 1. Install RADJAX-Tome with the GPU teacher and development extras.
 2. Install a CUDA-enabled PyTorch wheel compatible with the T4 driver.
 3. Keep the teacher model, tokenizer, corpus, corpus manifest, source
-   passports, strict corridor features, and production global-board supply
+   passports, and production global-board supply
    local. Production mode does not download or verify over the network.
 4. Run `radjax-tome doctor` for the teacher/backend configuration and confirm
    CUDA is available, the selected device is a T4, and the intended model and
@@ -25,12 +25,11 @@ radjax-tome production-build \
   --teacher-backend gpu_torch --runtime-mode cpu_gpu \
   --selection-integration-policy corridor_first_global_backfill_v1 \
   --total-selected-exemplar-budget 1024 \
-  --corridor-feature-jsonl /path/to/strict-corridor-features.jsonl \
   --global-board-supply /path/to/production-global-supply.json \
   --source-passports /path/to/source-passports.json \
   --exemplar-delivery-path two_pass_rerun_selected \
   --exemplar-selection-enabled --no-retain-unselected-exemplar-payloads \
-  --resume --progress \
+  --progress \
   --teacher-model /path/to/model --tokenizer-id /path/to/tokenizer \
   --dataset /path/to/corpus.jsonl \
   --corpus-manifest /path/to/corpus_manifest.json \
@@ -67,8 +66,9 @@ Preserve `production_progress.json`, `run_manifest.json`, failure reports, and
 the C6 checkpoint directory for diagnosis. Resume only with the identical
 selection policy, C1-C5 inputs, budget configuration, delivery path, and
 source hashes. A changed policy/configuration must be rejected by the resume
-hash. Remove an intentionally abandoned output only after preserving its
-reports and recording the reason.
+hash. Add `--resume` only to that recovery command, not to a fresh build.
+Remove an intentionally abandoned output only after preserving its reports and
+recording the reason.
 
 This rehearsal is PyTorch CPU/NVIDIA GPU producer validation. TPU/JAX execution
 is outside RADJAX-Tome and is not part of this test.

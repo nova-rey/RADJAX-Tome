@@ -9,16 +9,20 @@ authoritative for delivery and package-visible selection surfaces.
 selection path. `corridor_first_global_backfill_v1` requires all of the
 following production inputs:
 
-- a strict C2 candidate-feature JSONL artifact with explicit or reproducibly
-  derived membership, core distance, mode support, and difficulty fields;
 - a production-grade ranked global-board supply artifact;
-- a C4 claims artifact or enough inputs to build C2 through C4;
-- a C5 selection artifact or enough inputs to build C5;
 - a real source-passport index containing shard/row/position and payload lookup
   information.
 
+C6.1 derives strict C2 candidate features itself from the current build's packed
+corridor assignments, mode bounds, and shard statistics. The generated stream
+records the assignment and mode hashes, normalization derivations, and feature
+file hash in `c6/corridor-features/`. External C2 JSONL and C4/C5 checkpoints
+are intentionally rejected in the integrated production policy because they
+cannot prove linkage to the current score surface.
+
 Compatibility-proxy C2 records, development selector manifests, and synthesized
-passports are rejected by the production path.
+passports are rejected by the production path. The global supply must carry the
+selector policy/schema provenance emitted by the production exporter.
 
 ## Production invocation
 
@@ -42,7 +46,9 @@ resume hash, `production_build_report.json`, and
 
 C5 rich records are the authoritative unique coordinate set. The integrated
 validator compares that set with the legacy selected projection, delivered
-payloads, source passports, curriculum projection, audit, and package surfaces.
+payloads, source passports, the actual `curriculum/selected_routes.json` union,
+audit, and package surfaces. Route count is distinct from unique coordinate
+count, so legitimate multi-board routes do not inflate selected payload counts.
 The coverage report distinguishes unique selected records from selection
 obligations and multi-role counts.
 
@@ -57,8 +63,9 @@ not accepted.
 Path A materializes one payload per C5 coordinate from the captured source
 payload. Path B reruns exactly the unique C5 coordinate set. Multi-role records
 never duplicate payload storage. Full-debug and student packages copy the C6
-coverage and validation reports when present and recompute package-local
-selected summaries.
+coverage and validation reports when present, retain the curriculum route
+artifact, and block publication if package-local C5/legacy/payload/passport/
+curriculum/audit parity fails.
 
 ## Scope boundary
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -8,13 +9,16 @@ from radjax_tome.builder.c6_integration import (
     C6IntegrationError,
     build_corridor_coverage_report,
     c5_records_for_delivery,
+    export_corridor_candidate_features,
     export_production_global_board_supply,
     validate_integrated_selection_contract,
 )
 from radjax_tome.builder.exemplar_selection import ExemplarCandidate, select_exemplars
+from radjax_tome.fingerprint.corridor_leaderboards import load_candidate_records_jsonl
 from radjax_tome.fingerprint.multi_role_selection import (
     build_multi_role_selected_exemplars,
 )
+from radjax_tome.tome.golden_fixture import build_production_contract_fixture
 from tests.helpers.subprocess import run_cli
 from tests.test_multi_role_selected_exemplars import _claims
 
@@ -39,12 +43,21 @@ def test_c6_strict_contract_compares_legacy_payload_and_curriculum_sets() -> Non
     claims = _claims()
     selected = build_multi_role_selected_exemplars(claims)
     legacy = list(selected.legacy_records)
+    curriculum = [
+        {
+            "selected_example_id": item["selected_example_id"],
+            "selected_position": item["selected_position"],
+            "curriculum_board": "primary",
+            "payload_key": item["payload_identity"]["payload_key"],
+        }
+        for item in legacy
+    ]
     result = validate_integrated_selection_contract(
         claims,
         selected,
         legacy_records=legacy,
         payload_records=legacy,
-        curriculum_records=legacy,
+        curriculum_records=curriculum,
         package_records=legacy,
         production_grade=False,
     )
@@ -61,6 +74,39 @@ def test_c6_strict_contract_compares_legacy_payload_and_curriculum_sets() -> Non
     )
     assert failed["status"] == "fail"
     assert any("duplicate" in item or "count" in item for item in failed["blockers"])
+
+
+def test_c6_curriculum_routes_allow_multi_board_routes_but_reject_duplicates() -> None:
+    claims = _claims()
+    selected = build_multi_role_selected_exemplars(claims)
+    legacy = list(selected.legacy_records)
+    routes = [
+        {
+            "selected_example_id": item["selected_example_id"],
+            "selected_position": item["selected_position"],
+            "curriculum_board": "primary",
+        }
+        for item in legacy
+    ]
+    routes.append({**routes[0], "curriculum_board": "auxiliary"})
+    passed = validate_integrated_selection_contract(
+        claims,
+        selected,
+        legacy_records=legacy,
+        payload_records=legacy,
+        curriculum_records=routes,
+        production_grade=False,
+    )
+    assert passed["status"] == "pass"
+
+    failed = validate_integrated_selection_contract(
+        claims,
+        selected,
+        curriculum_records=[*routes, routes[0]],
+        production_grade=False,
+    )
+    assert failed["status"] == "fail"
+    assert any("duplicate board routes" in item for item in failed["blockers"])
 
 
 def test_production_contract_requires_real_passports() -> None:
@@ -194,3 +240,23 @@ def test_cli_exposes_production_global_supply_exporter() -> None:
     assert result.returncode == 0, result.stderr
     assert "--selector-manifest" in result.stdout
     assert "Development manifests are rejected" in result.stdout
+
+
+def test_c6_exports_strict_features_from_current_corridor_artifact(
+    tmp_path: Path,
+) -> None:
+    artifact = build_production_contract_fixture(tmp_path / "artifact")
+    features = export_corridor_candidate_features(
+        artifact_dir=artifact,
+        output_dir=artifact / "c6" / "corridor-features",
+    )
+    records = list(load_candidate_records_jsonl(features))
+
+    assert features.is_file()
+    assert records
+    assert records[0].feature_provenance.fidelity == "derived"
+    assert 0.0 <= records[0].features.membership_strength <= 1.0
+    assert 0.0 <= records[0].features.core_distance <= 1.0
+    manifest = json.loads((features.parent / "manifest.json").read_text())
+    assert manifest["assignment_manifest_sha256"].startswith("sha256:")
+    assert manifest["modes_sha256"].startswith("sha256:")

@@ -7,12 +7,16 @@ surfaces without changing C1-C5 selection math.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 import os
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 from radjax_tome.fingerprint.corridor_claims import (
     GLOBAL_BOARD_SUPPLY_SCHEMA,
@@ -23,16 +27,206 @@ from radjax_tome.fingerprint.multi_role_selection import (
     payload_key_for_coordinate,
     validate_multi_role_selection_artifact,
 )
-from radjax_tome.io.json import write_json
+from radjax_tome.io.json import read_json_object, write_json
+from radjax_tome.targets.store import TeacherTargetStore
 
 C6_SELECTION_INTEGRATION_POLICY = "corridor_first_global_backfill_v1"
 GLOBAL_ONLY_SELECTION_POLICY = "global_only_v1"
 C6_COVERAGE_REPORT_SCHEMA = "radjax.fingerprint_corridor_coverage.v1"
 C6_VALIDATION_SCHEMA = "radjax.c6_integrated_selection_validation.v1"
+C6_FEATURE_EXPORT_SCHEMA = "radjax.c6_corridor_feature_export.v1"
+CURRICULUM_ROUTES_SCHEMA = "selected_exemplar_curriculum_routes_v1"
 
 
 class C6IntegrationError(ValueError):
     """Actionable C6 provenance, parity, or package-integration error."""
+
+
+def export_corridor_candidate_features(
+    *,
+    artifact_dir: Path,
+    output_dir: Path,
+) -> Path:
+    """Stream strict C2 features from this Tome's packed corridor artifact."""
+
+    assignments = read_json_object(artifact_dir / "corridors" / "mode_assignments.json")
+    modes_payload = read_json_object(artifact_dir / "corridors" / "corridor_modes.json")
+    arrays = assignments.get("arrays")
+    if not isinstance(arrays, Mapping):
+        raise C6IntegrationError("corridor assignments are missing packed arrays")
+    required = ("position_example_index", "position", "mode_id")
+    if any(name not in arrays for name in required):
+        raise C6IntegrationError("corridor assignments are missing required arrays")
+    metadata = assignments.get("examples_metadata")
+    if not isinstance(metadata, Mapping) or not metadata.get("path"):
+        raise C6IntegrationError("corridor assignments are missing examples metadata")
+    example_ids = _assignment_example_ids(artifact_dir / str(metadata["path"]))
+    mode_specs = {
+        int(item["mode_id"]): item
+        for item in modes_payload.get("modes", [])
+        if isinstance(item, Mapping) and item.get("mode_id") is not None
+    }
+    if not mode_specs:
+        raise C6IntegrationError("corridor modes are missing")
+    position_examples = np_load(artifact_dir, arrays, "position_example_index")
+    positions = np_load(artifact_dir, arrays, "position")
+    mode_ids = np_load(artifact_dir, arrays, "mode_id")
+    if not (len(position_examples) == len(positions) == len(mode_ids)):
+        raise C6IntegrationError(
+            "packed corridor assignment arrays have mismatched lengths"
+        )
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    destination = output_dir / "candidate_features.jsonl"
+    temporary = output_dir / ".candidate_features.jsonl.tmp"
+    store = TeacherTargetStore.open(artifact_dir)
+    shard_ranges = _shard_ranges(store)
+    cached_shard_id: int | None = None
+    cached_shard: dict[str, np.ndarray] | None = None
+    with temporary.open("w", encoding="utf-8") as handle:
+        for assignment_index in range(len(mode_ids)):
+            example_index = int(position_examples[assignment_index])
+            position = int(positions[assignment_index])
+            mode_id = int(mode_ids[assignment_index])
+            if example_index < 0 or example_index >= len(example_ids):
+                raise C6IntegrationError("corridor assignment example index is invalid")
+            mode = mode_specs.get(mode_id)
+            if mode is None:
+                raise C6IntegrationError("corridor assignment references unknown mode")
+            shard_id, row = _source_row_for_example(shard_ranges, example_index)
+            if cached_shard_id != shard_id:
+                cached_shard_id = shard_id
+                cached_shard = store.read_shard(shard_id)
+            if cached_shard is None:  # pragma: no cover - guarded above
+                raise C6IntegrationError("corridor source shard is unavailable")
+            shard = cached_shard
+            entropy = float(np.asarray(shard["corridor_entropy"])[row, position])
+            membership = _entropy_membership(entropy, mode)
+            record = {
+                "features": {
+                    "candidate_id": example_ids[example_index],
+                    "position": position,
+                    "corridor_mode_id": mode_id,
+                    "assignment_status": "linked",
+                    "membership_strength": membership,
+                    "core_distance": 1.0 - membership,
+                    "mode_support": int(mode.get("record_count") or 0),
+                    "difficulty_score": _entropy_difficulty(
+                        entropy,
+                        vocab_size=store.metadata.vocab_size,
+                    ),
+                },
+                "fidelity": "derived",
+                "source_artifact_schema": "radjax.corridor_artifact.v3",
+                "membership_derivation": "mode_entropy_center_distance_v1",
+                "core_distance_derivation": "one_minus_membership_strength_v1",
+                "difficulty_derivation": "entropy_over_log_vocab_v1",
+                "normalization_parameters": {
+                    "membership": "abs(entropy-mode_mean)/max(mode_half_width,1e-6)",
+                    "difficulty": "clamp(entropy/log(vocab_size),0,1)",
+                    "assignment_manifest_sha256": _sha256(
+                        artifact_dir / "corridors" / "mode_assignments.json"
+                    ),
+                    "modes_sha256": _sha256(
+                        artifact_dir / "corridors" / "corridor_modes.json"
+                    ),
+                },
+            }
+            handle.write(
+                json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n"
+            )
+    os.replace(temporary, destination)
+    manifest = {
+        "schema_version": C6_FEATURE_EXPORT_SCHEMA,
+        "feature_path": destination.name,
+        "feature_sha256": _sha256(destination),
+        "assignment_manifest_sha256": _sha256(
+            artifact_dir / "corridors" / "mode_assignments.json"
+        ),
+        "modes_sha256": _sha256(artifact_dir / "corridors" / "corridor_modes.json"),
+        "source_artifact": str(artifact_dir),
+        "record_count": int(len(mode_ids)),
+        "fidelity": "derived",
+        "production_grade": True,
+    }
+    write_json(output_dir / "manifest.json", manifest)
+    return destination
+
+
+def load_curriculum_route_records(artifact_dir: Path) -> list[dict[str, Any]]:
+    """Load the explicit delivery-produced curriculum routes."""
+
+    payload = read_json_object(artifact_dir / "curriculum" / "selected_routes.json")
+    if payload.get("schema_version") != CURRICULUM_ROUTES_SCHEMA:
+        raise C6IntegrationError("curriculum routes schema is unsupported")
+    routes = payload.get("routes")
+    if not isinstance(routes, list) or any(
+        not isinstance(item, dict) for item in routes
+    ):
+        raise C6IntegrationError("curriculum routes must be an object list")
+    return [dict(item) for item in routes]
+
+
+def _assignment_example_ids(path: Path) -> list[str]:
+    rows: list[str] = []
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            payload = json.loads(line)
+            rows.append(str(payload["example_id"]))
+    return rows
+
+
+def np_load(root: Path, arrays: Mapping[str, Any], name: str) -> np.ndarray:
+    descriptor = arrays[name]
+    if not isinstance(descriptor, Mapping) or not descriptor.get("path"):
+        raise C6IntegrationError(f"corridor assignment array is invalid: {name}")
+    return np.load(root / str(descriptor["path"]), allow_pickle=False, mmap_mode="r")
+
+
+def _shard_ranges(store: TeacherTargetStore) -> list[tuple[int, int, int]]:
+    offset = 0
+    ranges: list[tuple[int, int, int]] = []
+    for shard_id in range(store.metadata.shard_count):
+        count = int(np.asarray(store.read_shard(shard_id)["input_ids"]).shape[0])
+        ranges.append((offset, offset + count, shard_id))
+        offset += count
+    return ranges
+
+
+def _source_row_for_example(
+    shard_ranges: Sequence[tuple[int, int, int]],
+    example_index: int,
+) -> tuple[int, int]:
+    for start, end, shard_id in shard_ranges:
+        if start <= example_index < end:
+            return shard_id, example_index - start
+    raise C6IntegrationError("corridor assignment references unavailable example")
+
+
+def _entropy_membership(entropy: float, mode: Mapping[str, Any]) -> float:
+    bounds = mode.get("bounds")
+    if not isinstance(bounds, Mapping):
+        raise C6IntegrationError("corridor mode is missing bounds")
+    entropy_bounds = bounds.get("entropy")
+    if not isinstance(entropy_bounds, Mapping):
+        raise C6IntegrationError("corridor mode is missing entropy bounds")
+    minimum = float(entropy_bounds["min"])
+    maximum = float(entropy_bounds["max"])
+    mean = float(entropy_bounds["mean"])
+    width = max(abs(mean - minimum), abs(maximum - mean), 1e-6)
+    return max(0.0, min(1.0, 1.0 - (abs(entropy - mean) / width)))
+
+
+def _entropy_difficulty(entropy: float, *, vocab_size: int) -> float:
+    return max(0.0, min(1.0, entropy / max(math.log(max(vocab_size, 2)), 1e-6)))
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
 
 
 def c5_records_for_delivery(
@@ -78,6 +272,7 @@ def c5_records_for_delivery(
                 "source_position": source_position,
                 "source_score": source_score,
                 "source_top_token_id": source_top_token_id,
+                "c5_authoritative_coordinate": True,
             }
         )
         rank_by_board: dict[str, int] = {}
@@ -105,6 +300,7 @@ def c5_records_for_delivery(
                     "source_score_policy", "entropy_top_n_v1"
                 ),
                 "payload_ref": payload_ref,
+                "c5_authoritative_coordinate": True,
                 "selected_policy": passport.get(
                     "source_score_policy", "entropy_top_n_v1"
                 ),
@@ -164,8 +360,17 @@ def build_corridor_coverage_report(
     global_claims = claims.global_claims
     mode_counts = Counter(str(item.corridor_mode_id) for item in corridor_claims)
     board_counts = Counter(item.board_id for item in global_claims)
-    mode_ids = sorted(mode_counts, key=lambda item: int(item))
     c3 = dict(c3_summary or {})
+    allocation_rows = c3.get("mode_allocations", [])
+    allocation_by_mode = {
+        str(item["mode_id"]): dict(item)
+        for item in allocation_rows
+        if isinstance(item, Mapping) and item.get("mode_id") is not None
+    }
+    mode_ids = sorted(
+        set(mode_counts) | set(allocation_by_mode),
+        key=lambda item: int(item),
+    )
     c2 = dict(c2_summary or {})
     requested_budget = claims.policy.total_selected_exemplar_budget
     corridor_budget = len(corridor_claims)
@@ -193,14 +398,36 @@ def build_corridor_coverage_report(
         "corridor_modes_capacity_positive": int(
             c3.get("modes_with_positive_capacity", len(mode_ids))
         ),
-        "corridor_modes_allocated": len(mode_ids),
-        "corridor_modes_fulfilled": len(mode_ids),
-        "corridor_modes_uncovered": list(c3.get("uncovered_modes", [])),
+        "corridor_modes_allocated": sum(
+            int(item.get("allocated_slots") or 0) > 0
+            for item in allocation_by_mode.values()
+        ),
+        "corridor_modes_fulfilled": sum(count > 0 for count in mode_counts.values()),
+        "corridor_modes_uncovered": [
+            {
+                "mode_id": int(mode_id),
+                "reason": allocation_by_mode.get(mode_id, {}).get(
+                    "zero_allocation_reason", "unfulfilled"
+                ),
+            }
+            for mode_id in mode_ids
+            if mode_counts[mode_id] == 0
+        ],
         "coverage_fraction": (
             0.0 if requested_budget == 0 else corridor_budget / requested_budget
         ),
         "claims_by_mode": {
-            mode: {"claimed_count": mode_counts[mode], "fulfilled": True}
+            mode: {
+                "allocated_slots": int(
+                    allocation_by_mode.get(mode, {}).get("allocated_slots") or 0
+                ),
+                "claimed_count": mode_counts[mode],
+                "fulfilled": mode_counts[mode]
+                == int(allocation_by_mode.get(mode, {}).get("allocated_slots") or 0),
+                "zero_allocation_reason": allocation_by_mode.get(mode, {}).get(
+                    "zero_allocation_reason"
+                ),
+            }
             for mode in mode_ids
         },
         "candidate_pool_occupancy": c2.get("pool_occupancy", {}),
@@ -240,6 +467,7 @@ def build_corridor_coverage_report(
             "t4_rehearsal_executed": True,
             "tpu_jax_execution": True,
         },
+        "t4_rehearsal_status": "not_executed",
     }
     if global_supply is not None:
         report["global_supply_schema_version"] = global_supply.get("schema_version")
@@ -250,7 +478,7 @@ def build_corridor_coverage_report(
 
 
 def validate_integrated_selection_contract(
-    claims: CorridorGlobalClaimResult,
+    claims: CorridorGlobalClaimResult | None,
     selected: MultiRoleSelectionArtifact,
     *,
     legacy_records: Sequence[Mapping[str, Any]] | None = None,
@@ -276,13 +504,15 @@ def validate_integrated_selection_contract(
     if len(expected) != len(selected.records):
         blockers.append("C5 coordinate set is not unique")
     if production_grade:
-        if not claims.production_grade or not selected.production_grade:
+        if claims is not None and not claims.production_grade:
+            blockers.append("production C6 requires production-grade C4/C5 sources")
+        if not selected.production_grade:
             blockers.append("production C6 requires production-grade C4/C5 sources")
         if not source_passports:
             blockers.append("production C6 requires real source passports")
     _compare_surface("legacy projection", expected, legacy_records, blockers)
     _compare_surface("payload manifest", expected, payload_records, blockers)
-    _compare_surface("curriculum union", expected, curriculum_records, blockers)
+    _validate_curriculum_routes(expected, curriculum_records, blockers)
     _compare_surface("package selected set", expected, package_records, blockers)
     if payload_records is not None:
         payload_keys: list[str] = []
@@ -312,8 +542,8 @@ def validate_integrated_selection_contract(
             if coordinate in expected:
                 if not all(field in passport for field in ("example_id", "position")):
                     blockers.append("source passport identity is incomplete")
-        if passport_coordinates != expected:
-            blockers.append("source passport coordinate set does not match C5")
+        if not expected.issubset(passport_coordinates):
+            blockers.append("source passport index does not cover the C5 set")
         if len(passport_coordinates) != len(source_passports):
             blockers.append("source passports contain duplicates")
         for record in selected.records:
@@ -360,6 +590,9 @@ def validate_integrated_selection_contract(
             "multi_role_coordinate_count", 0
         ),
         "coordinate_set_authority": "c5",
+        "curriculum_route_count": (
+            len(curriculum_records) if curriculum_records is not None else None
+        ),
     }
 
 
@@ -491,6 +724,41 @@ def _compare_surface(
         blockers.append(f"{label} coordinate set does not match C5")
     if len(records) != len(expected) and label != "curriculum union":
         blockers.append(f"{label} count does not match C5 unique count")
+
+
+def _validate_curriculum_routes(
+    expected: set[tuple[str, int]],
+    routes: Sequence[Mapping[str, Any]] | None,
+    blockers: list[str],
+) -> None:
+    if routes is None:
+        return
+    coordinates = [_coordinate(route) for route in routes]
+    if any(coordinate is None for coordinate in coordinates):
+        blockers.append("curriculum routes contain a record without canonical identity")
+        return
+    actual = {coordinate for coordinate in coordinates if coordinate is not None}
+    if actual != expected:
+        blockers.append("curriculum route coordinate union does not match C5")
+    route_keys: set[tuple[str, int, str]] = set()
+    for route, coordinate in zip(routes, coordinates, strict=True):
+        if coordinate is None:
+            continue
+        board = route.get("curriculum_board")
+        if not isinstance(board, str) or not board:
+            blockers.append("curriculum route is missing curriculum_board")
+            continue
+        route_key = (*coordinate, board)
+        if route_key in route_keys:
+            blockers.append("curriculum routes contain duplicate board routes")
+        route_keys.add(route_key)
+        payload_key = route.get("payload_key")
+        if payload_key is not None and payload_key != payload_key_for_coordinate(
+            *coordinate
+        ):
+            blockers.append("curriculum route payload identity does not match C5")
+    if len(routes) < len(expected):
+        blockers.append("curriculum route count is below C5 unique count")
 
 
 def _coordinate(item: Mapping[str, Any]) -> tuple[str, int] | None:

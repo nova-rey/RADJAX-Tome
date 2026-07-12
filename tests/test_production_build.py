@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 import radjax_tome.builder.production as production
@@ -15,6 +16,8 @@ from radjax_tome.corpora import CorpusBuildConfig, build_corpus_artifact
 from radjax_tome.io.json import write_json
 from radjax_tome.provenance import inspect_teacher_model, write_teacher_model_provenance
 from radjax_tome.reports import TomeParityReport
+from radjax_tome.targets.store import TeacherTargetStore
+from radjax_tome.tome import STUDENT, package_tome_artifact, validate_tome_package
 from tests.helpers.subprocess import run_cli
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -109,6 +112,8 @@ def test_production_build_writes_plan_report_cover_and_valid_artifact(
     assert (output / "run_manifest.json").is_file()
     assert (output / "progress_log.jsonl").is_file()
     assert _json(output / "run_manifest.json")["status"] == "complete"
+    assert report["selection_integration_policy"] == "global_only_v1"
+    assert not (output / "c6").exists()
 
 
 def test_production_build_progress_sidecar_reaches_complete(tmp_path: Path) -> None:
@@ -146,6 +151,190 @@ def test_production_config_passes_dynamic_top_k_controls_to_backend(
     assert backend_config.dynamic_top_k_min == 3
     assert backend_config.dynamic_top_k_max == 128
     assert backend_config.dynamic_mass_threshold == 0.975
+
+
+def test_c6_resume_hash_changes_for_every_policy_input(tmp_path: Path) -> None:
+    baseline = _config(
+        tmp_path / "baseline",
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=8,
+    )
+    baseline_hash = production._selection_integration_hash(baseline)
+    mutations = (
+        {"fingerprint_corridor_budget_fraction": "0.25"},
+        {"fingerprint_corridor_budget_max": 3},
+        {"fingerprint_corridor_mode_cap": 2},
+        {"fingerprint_corridor_candidate_pool_cap": 8},
+        {"require_full_selected_budget": False},
+        {"exemplar_delivery_path": "two_pass_rerun_selected"},
+    )
+
+    for index, mutation in enumerate(mutations):
+        changed = _config(
+            tmp_path / f"changed-{index}",
+            selection_integration_policy="corridor_first_global_backfill_v1",
+            total_selected_exemplar_budget=8,
+            **mutation,
+        )
+        assert production._selection_integration_hash(changed) != baseline_hash
+
+
+@pytest.mark.parametrize(
+    "delivery_path",
+    ("one_pass_pruned_candidate", "two_pass_rerun_selected"),
+)
+def test_c6_cpu_path_generates_features_audit_and_curriculum(
+    tmp_path: Path,
+    delivery_path: str,
+) -> None:
+    base = _config(
+        tmp_path / "base",
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="one_pass_pruned_candidate",
+        selected_exemplar_budget=4,
+        retain_unselected_exemplar_payloads=True,
+    )
+    build_production_gpu_tome(base)
+    assert (base.output_dir / "metadata.json").is_file()
+    passports, supply = _c6_source_inputs(base.output_dir)
+    passport_path = tmp_path / "passports.json"
+    supply_path = tmp_path / "global_supply.json"
+    write_json(passport_path, {"passports": passports})
+    write_json(supply_path, supply)
+
+    config = _config(
+        tmp_path / "c6",
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path=delivery_path,
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+        global_board_supply_path=supply_path,
+        source_passports_path=passport_path,
+    )
+    report = build_production_gpu_tome(config)
+
+    assert report["status"] == "pass", report["blockers"]
+    assert (
+        _json(
+            config.output_dir / "reports" / "c6_integrated_selection_validation.json"
+        )["status"]
+        == "pass"
+    )
+    assert (
+        _json(config.output_dir / "selected_linkage_audit.json")["c6_integration"][
+            "status"
+        ]
+        == "pass"
+    )
+    assert (
+        _json(config.output_dir / "curriculum" / "selected_routes.json")[
+            "unique_coordinate_count"
+        ]
+        == 4
+    )
+    assert (config.output_dir / "c6" / "corridor-features" / "manifest.json").is_file()
+    package = tmp_path / f"student-{delivery_path}"
+    package_tome_artifact(config.output_dir, package, profile=STUDENT, overwrite=True)
+    assert validate_tome_package(package, profile=STUDENT).ok
+    assert (
+        _json(package / "selected_linkage_audit.json")["c6_integration"]["status"]
+        == "pass"
+    )
+
+
+def _c6_source_inputs(
+    artifact: Path,
+) -> tuple[list[dict[str, object]], dict[str, object]]:
+    assignments = _json(artifact / "corridors" / "mode_assignments.json")
+    metadata_path = artifact / assignments["examples_metadata"]["path"]
+    example_ids = [
+        json.loads(line)["example_id"]
+        for line in metadata_path.read_text(encoding="utf-8").splitlines()
+    ]
+    arrays = assignments["arrays"]
+    example_index = np.load(
+        artifact / arrays["position_example_index"]["path"], allow_pickle=False
+    )
+    positions = np.load(artifact / arrays["position"]["path"], allow_pickle=False)
+    mode_ids = np.load(artifact / arrays["mode_id"]["path"], allow_pickle=False)
+    mode_by_coordinate = {
+        (example_ids[int(index)], int(position)): int(mode_id)
+        for index, position, mode_id in zip(
+            example_index, positions, mode_ids, strict=True
+        )
+    }
+    store = TeacherTargetStore.open(artifact)
+    passports: list[dict[str, object]] = []
+    candidates: list[dict[str, object]] = []
+    offset = 0
+    for shard_id in range(store.metadata.shard_count):
+        shard = store.read_shard(shard_id)
+        rows = int(np.asarray(shard["input_ids"]).shape[0])
+        for row in range(rows):
+            example_id = example_ids[offset + row]
+            for position in range(store.metadata.sequence_length):
+                entropy = float(np.asarray(shard["corridor_entropy"])[row, position])
+                passports.append(
+                    {
+                        "example_id": example_id,
+                        "position": position,
+                        "source_shard_id": shard_id,
+                        "source_row": row,
+                        "source_position": position,
+                        "source_score": entropy,
+                        "source_top_token_id": int(
+                            np.asarray(shard["exemplar_source_top_token_ids"])[
+                                row, position, 0
+                            ]
+                        ),
+                        "source_score_policy": "entropy_top_n_v1",
+                        "corridor_mode_id": mode_by_coordinate[(example_id, position)],
+                        "corridor_assignment_status": "linked",
+                    }
+                )
+                candidates.append(
+                    {
+                        "example_id": example_id,
+                        "position": position,
+                        "rank": len(candidates) + 1,
+                        "score": entropy,
+                        "eligible": True,
+                    }
+                )
+        offset += rows
+    candidates.sort(
+        key=lambda item: (
+            -float(item["score"]),
+            str(item["example_id"]),
+            int(item["position"]),
+        )
+    )
+    for rank, candidate in enumerate(candidates, start=1):
+        candidate["rank"] = rank
+    return passports, {
+        "schema_version": "radjax.c4_global_board_supply.v1",
+        "source_provenance": {
+            "production_grade": True,
+            "source_artifact_id": "test",
+            "selector_policy": "multi_leaderboard_exemplar_selector_v1",
+            "selector_schema_version": "exemplar_selection_manifest_v1",
+        },
+        "boards": [
+            {
+                "board_id": "global_max_entropy",
+                "priority": 0,
+                "requested_slots": 4,
+                "candidates": candidates,
+            }
+        ],
+    }
 
 
 def test_production_build_stops_on_planner_failure(tmp_path: Path) -> None:

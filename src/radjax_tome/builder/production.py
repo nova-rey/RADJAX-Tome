@@ -11,6 +11,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any
 
+from radjax_tome.audit import audit_selected_linkage, write_selected_linkage_audit
 from radjax_tome.backends import TeacherBackendConfig
 from radjax_tome.builder.backend_textbook import (
     BackendTeacherTextbookBuildConfig,
@@ -21,9 +22,12 @@ from radjax_tome.builder.c6_integration import (
     GLOBAL_ONLY_SELECTION_POLICY,
     build_corridor_coverage_report,
     c5_records_for_delivery,
+    export_corridor_candidate_features,
+    load_curriculum_route_records,
     validate_integrated_selection_contract,
     write_corridor_coverage_report,
 )
+from radjax_tome.builder.corridor_artifacts import build_corridor_artifacts
 from radjax_tome.builder.exemplar_delivery import (
     EXEMPLAR_DELIVERY_REPORT_FILENAME,
     ExemplarDeliveryConfig,
@@ -36,6 +40,7 @@ from radjax_tome.builder.long_tail import (
     DEFAULT_VERY_LONG_TAIL_WARNING_K,
 )
 from radjax_tome.builder.teacher_textbook import (
+    load_text_examples,
     validate_teacher_textbook,
     write_teacher_textbook_validation_report,
 )
@@ -49,7 +54,6 @@ from radjax_tome.fingerprint.corridor_budget import (
 from radjax_tome.fingerprint.corridor_claims import (
     CorridorGlobalClaimPolicy,
     claim_corridor_then_backfill_global,
-    load_corridor_global_claim_result,
     load_global_board_input,
     write_corridor_global_claim_result,
 )
@@ -62,9 +66,7 @@ from radjax_tome.fingerprint.corridor_leaderboards import (
 )
 from radjax_tome.fingerprint.multi_role_selection import (
     build_multi_role_selected_exemplars,
-    load_multi_role_selection_artifact,
     load_source_passport_index,
-    validate_multi_role_selection_artifact,
     write_multi_role_selection_artifact,
 )
 from radjax_tome.io.json import read_json_object, write_json
@@ -78,6 +80,7 @@ from radjax_tome.reports import (
     write_gpu_run_plan,
     write_tome_parity_report,
 )
+from radjax_tome.targets.store import TeacherTargetStore
 from radjax_tome.tome import write_cover_page
 
 PRODUCTION_BUILD_REPORT_SCHEMA = "production_build_report_v1"
@@ -307,28 +310,6 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         )
         return _finalize_production_report(report, report_path, progress)
 
-    if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
-        try:
-            c6_context = _prepare_c6_selection(config)
-        except (OSError, TypeError, ValueError, KeyError) as exc:
-            blockers.append(f"C6 selection integration preflight failed: {exc}")
-            report = _production_report(
-                config,
-                created_at=created_at,
-                completed_at=_now(),
-                status="fail",
-                blockers=blockers,
-                warnings=warnings,
-                doctor_report=doctor_report,
-                run_plan_path=run_plan_path,
-                run_plan=plan,
-                effective_batch_size=effective_batch_size,
-                already_complete=already_complete,
-                parity_report_path=parity_report_path,
-                parity_status="not_run",
-            )
-            return _finalize_production_report(report, report_path, progress)
-
     preflight_wall_seconds = _elapsed(preflight_started)
     main_pass_started = perf_counter()
     progress.start_score_pass(
@@ -362,6 +343,45 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         )
         return _finalize_production_report(report, report_path, progress)
     main_pass_wall_seconds = _elapsed(main_pass_started)
+
+    if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
+        try:
+            store = TeacherTargetStore.open(config.output_dir)
+            examples = load_text_examples(
+                config.dataset_path,
+                max_examples=store.metadata.num_examples,
+            )
+            build_corridor_artifacts(
+                output_dir=config.output_dir,
+                examples=examples,
+                selected_records=[],
+                selected_payloads=[],
+                delivery_path=(
+                    config.exemplar_delivery_path or "one_pass_pruned_candidate"
+                ),
+                non_selected_exemplar_payload_retained=(
+                    config.retain_unselected_exemplar_payloads
+                ),
+            )
+            c6_context = _prepare_c6_selection(config)
+        except (OSError, TypeError, ValueError, KeyError) as exc:
+            blockers.append(f"C6 selection integration failed: {exc}")
+            report = _production_report(
+                config,
+                created_at=created_at,
+                completed_at=_now(),
+                status="fail",
+                blockers=blockers,
+                warnings=warnings,
+                doctor_report=doctor_report,
+                run_plan_path=run_plan_path,
+                run_plan=plan,
+                effective_batch_size=effective_batch_size,
+                already_complete=already_complete,
+                parity_report_path=parity_report_path,
+                parity_status="not_run",
+            )
+            return _finalize_production_report(report, report_path, progress)
 
     delivery_report: dict[str, Any] | None = None
     selected_delivery_failure: dict[str, Any] | None = None
@@ -399,11 +419,25 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
     validation_wall_seconds = _elapsed(validation_started)
     progress.validation_completed(validation.status)
     if c6_context is not None:
+        linkage_audit = audit_selected_linkage(config.output_dir, strict=True)
+        write_selected_linkage_audit(
+            linkage_audit,
+            config.output_dir / "selected_linkage_audit.json",
+        )
         c6_validation, c6_coverage = _finalize_c6_selection(
             config,
             c6_context,
             delivery_report=delivery_report,
+            audit_report=linkage_audit.to_dict(),
         )
+        audit_payload = linkage_audit.to_dict()
+        audit_payload["c6_integration"] = {
+            "status": c6_validation["status"],
+            "selected_unique_count": c6_validation["selected_unique_count"],
+            "selected_obligation_count": c6_validation["selected_obligation_count"],
+            "coordinate_set_authority": "c5",
+        }
+        write_json(config.output_dir / "selected_linkage_audit.json", audit_payload)
         (config.output_dir / "reports").mkdir(parents=True, exist_ok=True)
         write_json(
             config.output_dir / "reports" / "c6_integrated_selection_validation.json",
@@ -811,23 +845,22 @@ def _validate_required_inputs(
             blockers.append(
                 f"source passports path missing: {config.source_passports_path}"
             )
-        if config.c5_selection_path is None and config.c4_claims_path is None:
-            if config.corridor_feature_jsonl_path is None:
-                blockers.append("C6 requires corridor_feature_jsonl_path")
-            elif not config.corridor_feature_jsonl_path.is_file():
-                blockers.append(
-                    "corridor feature path missing: "
-                    f"{config.corridor_feature_jsonl_path}"
-                )
-            if config.global_board_supply_path is None:
-                blockers.append("C6 requires global_board_supply_path")
-            elif not config.global_board_supply_path.is_file():
-                blockers.append(
-                    "global board supply path missing: "
-                    f"{config.global_board_supply_path}"
-                )
-        if config.c4_claims_path is None and config.c5_selection_path is not None:
-            blockers.append("C6 c5_selection_path requires c4_claims_path")
+        if config.global_board_supply_path is None:
+            blockers.append("C6 requires global_board_supply_path")
+        elif not config.global_board_supply_path.is_file():
+            blockers.append(
+                f"global board supply path missing: {config.global_board_supply_path}"
+            )
+        if config.corridor_feature_jsonl_path is not None:
+            blockers.append(
+                "C6 derives strict corridor features from the current packed "
+                "corridor artifact; --corridor-feature-jsonl is not accepted"
+            )
+        if config.c4_claims_path is not None or config.c5_selection_path is not None:
+            blockers.append(
+                "C6 production rebuilds C4/C5 from the current artifact; "
+                "external C4/C5 checkpoints are not accepted"
+            )
     if (
         config.exemplar_selection_enabled
         and config.target_policy != "corridor_exemplar_v1"
@@ -868,97 +901,87 @@ def _prepare_c6_selection(config: ProductionBuildConfig) -> dict[str, Any]:
     c3_summary: dict[str, Any] = {}
     global_supply: dict[str, Any] | None = None
 
-    if config.c4_claims_path is not None:
-        claims = load_corridor_global_claim_result(
-            config.c4_claims_path,
-            production_grade=True,
+    feature_path = export_corridor_candidate_features(
+        artifact_dir=config.output_dir,
+        output_dir=c6_root / "corridor-features",
+    )
+    feature_records = load_candidate_records_jsonl(
+        feature_path,
+        source_artifact_id=str(feature_path),
+    )
+    leaderboards = build_corridor_candidate_leaderboards(
+        feature_records,
+        CorridorLeaderboardPolicy(
+            candidate_pool_cap=config.fingerprint_corridor_candidate_pool_cap,
+        ),
+    )
+    c2_path = write_corridor_candidate_leaderboards(
+        leaderboards,
+        c6_root / "corridor-leaderboards",
+        overwrite=True,
+    )
+    c2_summary = inspect_corridor_candidate_leaderboards(c2_path)
+    plan = allocate_corridor_coverage(
+        leaderboards,
+        CorridorBudgetPolicy(
+            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
+            corridor_budget_fraction=config.fingerprint_corridor_budget_fraction,
+            corridor_budget_max=config.fingerprint_corridor_budget_max,
+            corridor_mode_cap=config.fingerprint_corridor_mode_cap,
+        ),
+        source_leaderboard_provenance=c2_summary,
+    )
+    c3_path = write_corridor_coverage_plan(
+        plan,
+        c6_root / "coverage-plan",
+        overwrite=True,
+    )
+    c3_summary = inspect_corridor_coverage_plan(c3_path)
+    c3_summary["mode_allocations"] = [
+        {
+            "mode_id": mode.corridor_mode_id,
+            "allocated_slots": mode.allocated_slots,
+            "zero_allocation_reason": mode.zero_allocation_reason,
+        }
+        for mode in plan.modes
+    ]
+    global_input = load_global_board_input(
+        config.global_board_supply_path,  # type: ignore[arg-type]
+        production_grade=True,
+    )
+    global_provenance = global_input.source_provenance
+    if global_provenance.get("selector_policy") != (
+        "multi_leaderboard_exemplar_selector_v1"
+    ) or global_provenance.get("selector_schema_version") != (
+        "exemplar_selection_manifest_v1"
+    ):
+        raise ValueError(
+            "C6 global board supply must be exported by the production global selector"
         )
-        if config.c5_selection_path is not None:
-            selected = load_multi_role_selection_artifact(
-                config.c5_selection_path,
-                production_grade=True,
-            )
-            selected_validation = validate_multi_role_selection_artifact(
-                selected,
-                claims=claims,
-                production_grade=True,
-            )
-            if selected_validation.status == "fail":
-                raise ValueError(
-                    "C5 selection does not match C4: "
-                    + "; ".join(selected_validation.blockers)
-                )
-        else:
-            selected = build_multi_role_selected_exemplars(
-                claims,
-                source_passports=source_passports,
-            )
-            write_multi_role_selection_artifact(
-                selected,
-                c6_root / "multi-role-selection",
-                overwrite=True,
-            )
-    else:
-        feature_records = load_candidate_records_jsonl(
-            config.corridor_feature_jsonl_path,  # type: ignore[arg-type]
-            source_artifact_id=str(config.corridor_feature_jsonl_path),
-        )
-        leaderboards = build_corridor_candidate_leaderboards(
-            feature_records,
-            CorridorLeaderboardPolicy(
-                candidate_pool_cap=config.fingerprint_corridor_candidate_pool_cap,
-            ),
-        )
-        c2_path = write_corridor_candidate_leaderboards(
-            leaderboards,
-            c6_root / "corridor-leaderboards",
-            overwrite=True,
-        )
-        c2_summary = inspect_corridor_candidate_leaderboards(c2_path)
-        plan = allocate_corridor_coverage(
-            leaderboards,
-            CorridorBudgetPolicy(
-                total_selected_exemplar_budget=config.total_selected_exemplar_budget,
-                corridor_budget_fraction=config.fingerprint_corridor_budget_fraction,
-                corridor_budget_max=config.fingerprint_corridor_budget_max,
-                corridor_mode_cap=config.fingerprint_corridor_mode_cap,
-            ),
-            source_leaderboard_provenance=c2_summary,
-        )
-        c3_path = write_corridor_coverage_plan(
-            plan,
-            c6_root / "coverage-plan",
-            overwrite=True,
-        )
-        c3_summary = inspect_corridor_coverage_plan(c3_path)
-        global_input = load_global_board_input(
-            config.global_board_supply_path,  # type: ignore[arg-type]
-            production_grade=True,
-        )
-        global_supply = global_input.to_dict()
-        claims = claim_corridor_then_backfill_global(
-            leaderboards,
-            plan,
-            global_input,
-            CorridorGlobalClaimPolicy(
-                total_selected_exemplar_budget=config.total_selected_exemplar_budget,
-                require_full_budget=config.require_full_selected_budget,
-            ),
-        )
-        write_corridor_global_claim_result(
-            claims,
-            c6_root / "claims",
-            overwrite=True,
-        )
-        selected = build_multi_role_selected_exemplars(
-            claims,
-            source_passports=source_passports,
-        )
-        write_multi_role_selection_artifact(
-            selected,
-            c6_root / "multi-role-selection",
-            overwrite=True,
-        )
+    global_supply = global_input.to_dict()
+    claims = claim_corridor_then_backfill_global(
+        leaderboards,
+        plan,
+        global_input,
+        CorridorGlobalClaimPolicy(
+            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
+            require_full_budget=config.require_full_selected_budget,
+        ),
+    )
+    write_corridor_global_claim_result(
+        claims,
+        c6_root / "claims",
+        overwrite=True,
+    )
+    selected = build_multi_role_selected_exemplars(
+        claims,
+        source_passports=source_passports,
+    )
+    write_multi_role_selection_artifact(
+        selected,
+        c6_root / "multi-role-selection",
+        overwrite=True,
+    )
     delivery_path = config.exemplar_delivery_path or "one_pass_pruned_candidate"
     delivery_records = c5_records_for_delivery(
         selected,
@@ -980,6 +1003,7 @@ def _finalize_c6_selection(
     context: dict[str, Any],
     *,
     delivery_report: dict[str, Any] | None,
+    audit_report: dict[str, Any] | None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     claims = context["claims"]
     selected = context["selected"]
@@ -995,12 +1019,20 @@ def _finalize_c6_selection(
     if payload_path.is_file():
         payload_payload = read_json_object(payload_path)
         payloads = list(payload_payload.get("selected_exemplars") or [])
+    curriculum_records: list[Mapping[str, Any]] = []
+    try:
+        curriculum_records = load_curriculum_route_records(config.output_dir)
+    except (OSError, TypeError, ValueError) as exc:
+        curriculum_records = [{"curriculum_load_error": str(exc)}]
     if delivery_report is None:
         validation = {
             "schema_version": "radjax.c6_integrated_selection_validation.v1",
             "status": "fail",
             "blockers": ["C6 selected delivery did not complete"],
             "warnings": [],
+            "selected_unique_count": len(selected.records),
+            "selected_obligation_count": selected.summary.get("obligation_count", 0),
+            "coordinate_set_authority": "c5",
         }
     else:
         validation = validate_integrated_selection_contract(
@@ -1009,8 +1041,8 @@ def _finalize_c6_selection(
             legacy_records=legacy,
             payload_records=payloads,
             source_passports=context["source_passports"],
-            curriculum_records=legacy,
-            audit_report=None,
+            curriculum_records=curriculum_records,
+            audit_report=audit_report,
             production_grade=True,
         )
     coverage = build_corridor_coverage_report(

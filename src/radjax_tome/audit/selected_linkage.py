@@ -512,6 +512,28 @@ def _check_path_b_authority(
     mismatch_fields: list[str],
     source_values: dict[str, Any],
 ) -> None:
+    if bool(record.get("c5_authoritative_coordinate")):
+        source_top_token_id = _int_or_none(record.get("source_top_token_id"))
+        source_values["payload_top_token_id"] = _first_token(payload)
+        if corridor_top_token_id != source_top_token_id:
+            mismatch_fields.append("corridor_top_token_id")
+        if _first_token(payload) != source_top_token_id:
+            mismatch_fields.append("top_token_ids[0]")
+        payload_ref = record.get("payload_ref")
+        if not isinstance(payload_ref, dict):
+            mismatch_fields.append("payload_ref")
+            return
+        for field in (
+            "source_shard_id",
+            "source_row",
+            "source_position",
+            "source_top_token_id",
+        ):
+            if payload_ref.get(field) != record.get(field):
+                mismatch_fields.append(f"payload_ref.{field}")
+        if not _close(payload_ref.get("source_score"), record.get("source_score")):
+            mismatch_fields.append("payload_ref.source_score")
+        return
     score_position = _array_value(shard, "score_selected_position", row)
     score = _array_value(shard, "score_selected_position_entropy", row)
     score_top_token_id = _array_value(shard, "score_top_token_id", row)
