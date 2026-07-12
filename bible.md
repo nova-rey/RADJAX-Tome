@@ -1193,3 +1193,16 @@ also record phase-level RSS checkpoints, C6 budget/overlap diagnostics, zero
 legacy reruns, and one native rerun when delivery succeeds. An interrupted
 running progress sidecar is marked stale on the next invocation; the T4
 rehearsal remains `not_executed`.
+
+## 2026-07-12 — C6.3 Rerun Batching and Payload Lifetime Correction
+
+Native Path B selected reruns now have an explicit
+`--selected-rerun-batch-size` independent of score-pass batch policy, recorded
+in selection hashes and delivery/production reports. Native C6 serializes each
+compressed selected payload to its own shard as it is produced, keeps only
+scalar payload summaries and references in memory, indexes records by example
+within each batch, and releases batch emissions immediately. C6 final
+reconciliation consumes the scalar payload index rather than a full payload
+shard. Budget diagnostics now use canonical coordinate sets for unique corridor
+and global supply, overlap, within-role duplication, requested allocation, and
+Jaccard arithmetic. No T4 rehearsal was executed by this corrective patch.

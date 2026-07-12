@@ -583,6 +583,11 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument("--selected-exemplar-budget", type=int)
     production.add_argument("--selected-exemplar-fraction", type=float)
     production.add_argument(
+        "--selected-rerun-batch-size",
+        type=int,
+        help="Override score-pass batching for selected-only Path B teacher reruns.",
+    )
+    production.add_argument(
         "--retain-unselected-exemplar-payloads",
         dest="retain_unselected_exemplar_payloads",
         action="store_true",
@@ -1569,6 +1574,7 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
                 args.retain_unselected_exemplar_payloads
             ),
             exemplar_score_policy=args.exemplar_score_policy,
+            selected_rerun_batch_size=args.selected_rerun_batch_size,
             track_delivery_timing=args.track_delivery_timing,
             selection_integration_policy=args.selection_integration_policy,
             total_selected_exemplar_budget=args.total_selected_exemplar_budget,

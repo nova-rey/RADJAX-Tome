@@ -245,18 +245,27 @@ def materialize_selected_exemplar_delivery(
             selected_examples_processed=0,
             selected_examples_total=rerun_selected_example_count,
         )
+    output = config.artifact_dir
+    corridors_dir = output / "corridors"
+    leaderboards_dir = output / "leaderboards"
+    selected_dir = output / "selected_exemplars"
+    curriculum_dir = output / "curriculum"
+    leaderboards_dir.mkdir(parents=True, exist_ok=True)
+    selected_dir.mkdir(parents=True, exist_ok=True)
+    curriculum_dir.mkdir(parents=True, exist_ok=True)
     selected_payloads = _selected_payloads(
         selected_records,
         store=store,
         examples=examples,
         config=config,
     )
-    _attach_long_tail_diagnostics(
-        selected_records,
-        selected_payloads,
-        config=config,
-        policy=long_tail_policy,
-    )
+    if not _native_streamed_payloads(config):
+        _attach_long_tail_diagnostics(
+            selected_records,
+            selected_payloads,
+            config=config,
+            policy=long_tail_policy,
+        )
     selected_records, selected_payloads = _route_materialized_selected_exemplars(
         selected_records,
         selected_payloads,
@@ -272,15 +281,6 @@ def materialize_selected_exemplar_delivery(
     )
     selected_records_by_board = _records_by_selected_board(selected_records)
     payload_wall_seconds = _elapsed(payload_started)
-    output = config.artifact_dir
-    corridors_dir = output / "corridors"
-    leaderboards_dir = output / "leaderboards"
-    selected_dir = output / "selected_exemplars"
-    curriculum_dir = output / "curriculum"
-    leaderboards_dir.mkdir(parents=True, exist_ok=True)
-    selected_dir.mkdir(parents=True, exist_ok=True)
-    curriculum_dir.mkdir(parents=True, exist_ok=True)
-
     corridor_result = build_corridor_artifacts(
         output_dir=output,
         examples=examples,
@@ -292,6 +292,11 @@ def materialize_selected_exemplar_delivery(
         ),
         progress_callback=config.progress_callback,
     )
+    if _native_streamed_payloads(config):
+        _synchronize_native_payload_shards(
+            selected_dir,
+            selected_records=selected_records,
+        )
     pruning_started = perf_counter()
     pruned_candidate_payload_bytes = _prune_path_a_candidate_payload_arrays(
         store,
@@ -325,6 +330,23 @@ def materialize_selected_exemplar_delivery(
     }
     write_json(leaderboards_dir / LEADERBOARD_REPORT_FILENAME, leaderboard_report)
     write_json(leaderboards_dir / SELECTED_EXEMPLARS_FILENAME, selected_exemplars)
+    if _native_streamed_payloads(config):
+        write_json(
+            selected_dir / "payload_index.json",
+            {
+                "schema_version": "selected_exemplar_payload_index_v1",
+                "delivery_path": config.delivery_path,
+                "storage_kind": "one_record_json_shards_v1",
+                "selected_exemplars": [
+                    {
+                        key: value
+                        for key, value in item.items()
+                        if key != "_record_index"
+                    }
+                    for item in selected_payloads
+                ],
+            },
+        )
     curriculum_summary = _write_curriculum_routes(
         curriculum_dir / CURRICULUM_ROUTES_FILENAME,
         selected_records,
@@ -340,16 +362,17 @@ def materialize_selected_exemplar_delivery(
                 "selected_board_summary": selected_board_summary,
             },
         )
-    write_json(
-        selected_dir / "selected-exemplars-00000.json",
-        {
-            "schema_version": "selected_exemplar_payload_shard_v1",
-            "delivery_path": config.delivery_path,
-            "long_tail_summary": tail_summary,
-            "selected_board_summary": selected_board_summary,
-            "selected_exemplars": selected_payloads,
-        },
-    )
+    if not _native_streamed_payloads(config):
+        write_json(
+            selected_dir / "selected-exemplars-00000.json",
+            {
+                "schema_version": "selected_exemplar_payload_shard_v1",
+                "delivery_path": config.delivery_path,
+                "long_tail_summary": tail_summary,
+                "selected_board_summary": selected_board_summary,
+                "selected_exemplars": selected_payloads,
+            },
+        )
 
     retained_bytes = _tree_bytes(corridors_dir) + _tree_bytes(leaderboards_dir)
     retained_bytes += _tree_bytes(selected_dir)
@@ -443,7 +466,9 @@ def materialize_selected_exemplar_delivery(
         "curriculum_unique_coordinate_count": curriculum_summary[
             "unique_coordinate_count"
         ],
-        "selected_payload_shard_count": 1,
+        "selected_payload_shard_count": (
+            int((config.rerun_metrics or {}).get("selected_payload_shard_count", 1))
+        ),
         "claims_not_made": {
             "no_dense_logits_retained": True,
             "no_student_training_quality_claim": True,
@@ -1895,6 +1920,13 @@ def _selected_payloads_from_backend(
     )
     backend = create_backend(backend_config)
     payloads_by_record: dict[int, dict[str, Any]] = {}
+    native_streaming = _native_streamed_payloads(config)
+    payload_summaries: list[dict[str, Any]] = []
+    records_by_example_id: dict[str, list[tuple[int, dict[str, Any]]]] = {}
+    for record_index, record in enumerate(selected_records):
+        records_by_example_id.setdefault(str(record["selected_example_id"]), []).append(
+            (record_index, record)
+        )
     teacher_seconds = 0.0
     compression_seconds = 0.0
     peak_host_memory_bytes = _host_rss_bytes()
@@ -1914,48 +1946,76 @@ def _selected_payloads_from_backend(
             row_by_example_id = {
                 example.example_id: row for row, example in enumerate(chunk)
             }
-            for record_index, record in enumerate(selected_records):
-                example_id = str(record["selected_example_id"])
-                if example_id not in row_by_example_id:
-                    continue
-                rerun_row = row_by_example_id[example_id]
-                try:
-                    selected_payload = _selected_payload_from_emission(
+            for example_id, rerun_row in row_by_example_id.items():
+                for record_index, record in records_by_example_id[example_id]:
+                    try:
+                        selected_payload = _selected_payload_from_emission(
+                            record,
+                            payload=result.payload,
+                            row=rerun_row,
+                            config=config,
+                        )
+                    except (IndexError, KeyError, TypeError, ValueError) as exc:
+                        raise _path_b_delivery_error(
+                            record,
+                            store=store,
+                            failure_reason=(
+                                "selected rerun payload could not be materialized: "
+                                f"{exc}"
+                            ),
+                            selected_record_order=selected_record_order,
+                            rerun_input_order=[example.example_id for example in chunk],
+                            rerun_row_index=rerun_row,
+                        ) from exc
+                    mismatch_fields = _path_b_rerun_payload_mismatch(
                         record,
-                        payload=result.payload,
-                        row=rerun_row,
-                        config=config,
+                        selected_payload,
                     )
-                except (IndexError, KeyError, TypeError, ValueError) as exc:
-                    raise _path_b_delivery_error(
-                        record,
-                        store=store,
-                        failure_reason=(
-                            f"selected rerun payload could not be materialized: {exc}"
-                        ),
-                        selected_record_order=selected_record_order,
-                        rerun_input_order=[example.example_id for example in chunk],
-                        rerun_row_index=rerun_row,
-                    ) from exc
-                mismatch_fields = _path_b_rerun_payload_mismatch(
-                    record,
-                    selected_payload,
-                )
-                if mismatch_fields:
-                    raise _path_b_delivery_error(
-                        record,
-                        store=store,
-                        failure_reason=(
-                            "selected rerun payload does not match score-pass "
-                            "source tuple"
-                        ),
-                        selected_record_order=selected_record_order,
-                        rerun_input_order=[example.example_id for example in chunk],
-                        rerun_row_index=rerun_row,
-                        rerun_payload=selected_payload,
-                        mismatch_fields=mismatch_fields,
-                    )
-                payloads_by_record[record_index] = selected_payload
+                    if mismatch_fields:
+                        raise _path_b_delivery_error(
+                            record,
+                            store=store,
+                            failure_reason=(
+                                "selected rerun payload does not match score-pass "
+                                "source tuple"
+                            ),
+                            selected_record_order=selected_record_order,
+                            rerun_input_order=[example.example_id for example in chunk],
+                            rerun_row_index=rerun_row,
+                            rerun_payload=selected_payload,
+                            mismatch_fields=mismatch_fields,
+                        )
+                    if native_streaming:
+                        _attach_long_tail_diagnostics(
+                            [record],
+                            [selected_payload],
+                            config=config,
+                            policy=_long_tail_policy(config),
+                        )
+                        selected_board = selected_board_for_long_tail(
+                            str(selected_payload["long_tail_class"]),
+                            include_long_tail_in_primary=config.include_long_tail_in_primary,
+                            include_perverse_tail_in_primary=(
+                                config.include_perverse_tail_in_primary
+                            ),
+                        )
+                        record["selected_board"] = selected_board
+                        selected_payload["selected_board"] = selected_board
+                        _write_native_payload_shard(
+                            config.artifact_dir / "selected_exemplars",
+                            record_index=record_index,
+                            payload=selected_payload,
+                            delivery_path=config.delivery_path,
+                        )
+                        payload_summaries.append(
+                            _payload_scalar_summary(
+                                selected_payload,
+                                record_index=record_index,
+                            )
+                        )
+                        del selected_payload
+                    else:
+                        payloads_by_record[record_index] = selected_payload
             compression_seconds += _elapsed(compression_started)
             batch_count += 1
             peak_host_memory_bytes = max(peak_host_memory_bytes, _host_rss_bytes())
@@ -1966,6 +2026,7 @@ def _selected_payloads_from_backend(
                 selected_examples_processed=start + len(chunk),
                 selected_examples_total=len(selected_examples),
             )
+            del result
     finally:
         close = getattr(backend, "close", None)
         if callable(close):
@@ -1984,9 +2045,90 @@ def _selected_payloads_from_backend(
                 ),
                 "selected_rerun_peak_host_memory_bytes": peak_host_memory_bytes,
                 "selected_rerun_peak_device_memory_bytes": _device_peak_memory_bytes(),
+                "selected_payload_shard_count": (
+                    len(payload_summaries) if native_streaming else 1
+                ),
             }
         )
+    if native_streaming:
+        return sorted(payload_summaries, key=lambda item: int(item["_record_index"]))
     return [payloads_by_record[index] for index in range(len(selected_records))]
+
+
+def _native_streamed_payloads(config: ExemplarDeliveryConfig) -> bool:
+    return config.execution_mode == NATIVE_C6_PATH_B_EXECUTION
+
+
+def _write_native_payload_shard(
+    selected_dir: Path,
+    *,
+    record_index: int,
+    payload: dict[str, Any],
+    delivery_path: str,
+) -> None:
+    selected_dir.mkdir(parents=True, exist_ok=True)
+    write_json(
+        selected_dir / f"selected-exemplars-{record_index:05d}.json",
+        {
+            "schema_version": "selected_exemplar_payload_shard_v1",
+            "delivery_path": delivery_path,
+            "selected_exemplars": [payload],
+        },
+    )
+
+
+def _payload_scalar_summary(
+    payload: dict[str, Any],
+    *,
+    record_index: int,
+) -> dict[str, Any]:
+    summary = {
+        key: value
+        for key, value in payload.items()
+        if key
+        not in {
+            "top_token_ids",
+            "top_log_probs",
+            "top_probs",
+            "top_selection_mask",
+            "bucket_masses",
+        }
+    }
+    summary["_record_index"] = record_index
+    return summary
+
+
+def _synchronize_native_payload_shards(
+    selected_dir: Path,
+    *,
+    selected_records: list[dict[str, Any]],
+) -> None:
+    linkage = {
+        (str(record["selected_example_id"]), int(record["selected_position"])): record
+        for record in selected_records
+    }
+    for path in sorted(selected_dir.glob("selected-exemplars-*.json")):
+        payload = read_json_object(path)
+        records = payload.get("selected_exemplars")
+        if not isinstance(records, list) or len(records) != 1:
+            raise ValueError(f"native payload shard is invalid: {path.name}")
+        item = records[0]
+        if not isinstance(item, dict):
+            raise ValueError(f"native payload shard record is invalid: {path.name}")
+        record = linkage.get(
+            (str(item["selected_example_id"]), int(item["selected_position"]))
+        )
+        if record is None:
+            raise ValueError(f"native payload shard is not selected: {path.name}")
+        for key in (
+            "corridor_fingerprint_id",
+            "corridor_mode_id",
+            "corridor_assignment_status",
+            "selected_board",
+            "semantic_tail_tag",
+        ):
+            item[key] = record.get(key)
+        write_json(path, payload)
 
 
 def _host_rss_bytes() -> int:
@@ -2555,7 +2697,7 @@ def _read_selected_payloads(
         blockers.append("selected_exemplars directory missing")
         return []
     payloads: list[dict[str, Any]] = []
-    for path in sorted(selected_dir.glob("*.json")):
+    for path in sorted(selected_dir.glob("selected-exemplars-*.json")):
         try:
             payload = read_json_object(path)
         except (OSError, ValueError) as exc:

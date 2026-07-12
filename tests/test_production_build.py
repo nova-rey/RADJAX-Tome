@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -303,6 +304,94 @@ def test_c6_underfilled_budget_stops_before_native_selected_rerun(
     assert diagnostics["budget_shortfall"] > 0
     assert diagnostics["budget_shortfall_reason"]
     assert not (config.output_dir / "delivery_report.json").exists()
+
+
+def test_c6_selected_rerun_batch_override_is_independent_of_score_batch(
+    tmp_path: Path,
+) -> None:
+    config = _config(
+        tmp_path,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        gpu_batch_size_preset=1,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+        selected_rerun_batch_size=2,
+    )
+
+    report = build_production_gpu_tome(config)
+    delivery = _json(config.output_dir / "delivery_report.json")
+
+    assert report["status"] == "pass", report["blockers"]
+    assert report["effective_batch_size"] == 1
+    assert delivery["selected_rerun_batch_size"] == 2
+    assert delivery["selected_rerun_batch_count"] == 1
+    assert delivery["selected_payload_shard_count"] == 4
+    shards = sorted(
+        (config.output_dir / "selected_exemplars").glob("selected-exemplars-*.json")
+    )
+    assert len(shards) == 4
+    assert all(len(_json(path)["selected_exemplars"]) == 1 for path in shards)
+    assert (config.output_dir / "selected_exemplars" / "payload_index.json").is_file()
+
+
+def test_c6_budget_diagnostics_use_unique_coordinate_sets() -> None:
+    config = SimpleNamespace(total_selected_exemplar_budget=4)
+    claims = SimpleNamespace(
+        selected_coordinates=(object(), object(), object()),
+        corridor_claims=(
+            SimpleNamespace(example_id="a", position=0),
+            SimpleNamespace(example_id="b", position=0),
+        ),
+        global_claims=(SimpleNamespace(example_id="c", position=0, global_rank=3),),
+        collision_obligations=(object(),),
+        summary={"board_summaries": []},
+    )
+    leaderboards = SimpleNamespace(
+        modes=(
+            SimpleNamespace(
+                candidates=(
+                    SimpleNamespace(candidate_id="a", position=0),
+                    SimpleNamespace(candidate_id="b", position=0),
+                )
+            ),
+        )
+    )
+    plan = SimpleNamespace(modes=(SimpleNamespace(allocated_slots=2),))
+    global_supply = {
+        "boards": [
+            {
+                "candidates": [
+                    {"example_id": "b", "position": 0},
+                    {"example_id": "c", "position": 0},
+                ]
+            },
+            {"candidates": [{"example_id": "b", "position": 0}]},
+        ]
+    }
+
+    diagnostics = production._c6_budget_diagnostics(
+        config,
+        claims=claims,
+        leaderboards=leaderboards,
+        plan=plan,
+        global_supply=global_supply,
+    )
+
+    assert diagnostics["fingerprint_corridor_budget_requested"] == 2
+    assert diagnostics["fingerprint_corridor_candidates_eligible_unique"] == 2
+    assert diagnostics["global_supply_exported"] == 2
+    assert diagnostics["within_role_duplicate_count"] == 1
+    assert diagnostics["cross_role_duplicate_count"] == 1
+    assert diagnostics["fingerprint_corridor_global_jaccard"] == pytest.approx(1 / 3)
+    assert (
+        diagnostics["budget_shortfall_reason"]
+        == "insufficient_eligible_unique_candidates"
+    )
 
 
 def _c6_source_inputs(

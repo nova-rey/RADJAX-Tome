@@ -160,6 +160,7 @@ class ProductionBuildConfig:
     selected_exemplar_fraction: float | None = None
     retain_unselected_exemplar_payloads: bool = True
     exemplar_score_policy: str = "entropy_top_n_v1"
+    selected_rerun_batch_size: int | None = None
     track_delivery_timing: bool = False
     selection_integration_policy: str = GLOBAL_ONLY_SELECTION_POLICY
     total_selected_exemplar_budget: int | None = None
@@ -939,6 +940,11 @@ def _validate_required_inputs(
         blockers.append(
             "selected exemplar delivery requires target_policy='corridor_exemplar_v1'"
         )
+    if (
+        config.selected_rerun_batch_size is not None
+        and config.selected_rerun_batch_size < 1
+    ):
+        blockers.append("selected_rerun_batch_size must be positive")
     for label, path in (
         ("dataset", config.dataset_path),
         ("corpus manifest", config.corpus_manifest_path),
@@ -1249,6 +1255,7 @@ def _prepare_c6_selection(
         config,
         claims=claims,
         leaderboards=leaderboards,
+        plan=plan,
         global_supply=global_supply,
     )
     write_json(c6_root / "selection_budget_diagnostics.json", budget_diagnostics)
@@ -1297,16 +1304,34 @@ def _c6_budget_diagnostics(
     *,
     claims: Any,
     leaderboards: Any,
+    plan: Any,
     global_supply: Mapping[str, Any],
 ) -> dict[str, Any]:
     requested = int(config.total_selected_exemplar_budget or 0)
     final_count = len(claims.selected_coordinates)
-    corridor_candidates = sum(len(mode.candidates) for mode in leaderboards.modes)
-    global_candidates = sum(
-        len(board.get("candidates") or [])
+    corridor_candidate_entries = [
+        (candidate.candidate_id, candidate.position)
+        for mode in leaderboards.modes
+        for candidate in mode.candidates
+    ]
+    corridor_candidates = set(corridor_candidate_entries)
+    global_candidate_entries = [
+        (str(candidate["example_id"]), int(candidate["position"]))
         for board in global_supply.get("boards", [])
         if isinstance(board, Mapping)
-    )
+        for candidate in board.get("candidates", [])
+        if isinstance(candidate, Mapping)
+    ]
+    global_candidates = set(global_candidate_entries)
+    corridor_claim_set = {
+        (claim.example_id, claim.position) for claim in claims.corridor_claims
+    }
+    global_claim_set = {
+        (claim.example_id, claim.position) for claim in claims.global_claims
+    }
+    intersection = corridor_claim_set & global_candidates
+    union = corridor_claim_set | global_candidates
+    corridor_budget_requested = sum(int(mode.allocated_slots) for mode in plan.modes)
     global_claims = len(claims.global_claims)
     corridor_claims = len(claims.corridor_claims)
     collisions = list(claims.collision_obligations)
@@ -1318,7 +1343,7 @@ def _c6_budget_diagnostics(
     shortfall = max(0, requested - final_count)
     if not shortfall:
         reason = None
-    elif corridor_candidates + global_candidates < requested:
+    elif len(corridor_candidates | global_candidates) < requested:
         reason = "insufficient_eligible_unique_candidates"
     elif global_claims < requested - corridor_claims:
         reason = "global_ranked_supply_exhaustion"
@@ -1328,22 +1353,28 @@ def _c6_budget_diagnostics(
         reason = "fingerprint_corridor_allocation_or_cap_exhaustion"
     return {
         "total_budget_requested": requested,
-        "fingerprint_corridor_budget_requested": len(claims.corridor_claims),
-        "fingerprint_corridor_candidates_eligible_unique": corridor_candidates,
-        "fingerprint_corridor_claims_before_dedup": corridor_claims,
+        "fingerprint_corridor_budget_requested": corridor_budget_requested,
+        "fingerprint_corridor_candidates_eligible_unique": len(corridor_candidates),
+        "fingerprint_corridor_claims_before_dedup": len(corridor_claim_set),
         "fingerprint_corridor_claims_accepted": corridor_claims,
-        "global_supply_exported": global_candidates,
+        "global_supply_exported": len(global_candidates),
         "global_candidates_examined": global_examined,
         "global_claims_accepted": global_claims,
-        "cross_role_duplicate_count": len(collisions),
-        "within_role_duplicate_count": 0,
+        "cross_role_duplicate_count": len(intersection),
+        "accepted_cross_role_overlap": len(corridor_claim_set & global_claim_set),
+        "within_role_duplicate_count": (
+            len(corridor_candidate_entries)
+            - len(corridor_candidates)
+            + len(global_candidate_entries)
+            - len(global_candidates)
+        ),
         "final_unique_selected_count": final_count,
         "budget_shortfall": shortfall,
         "budget_shortfall_reason": reason,
-        "global_supply_remaining": max(0, global_candidates - global_examined),
-        "fingerprint_corridor_global_intersection_size": len(collisions),
+        "global_supply_remaining": max(0, len(global_candidates) - global_examined),
+        "fingerprint_corridor_global_intersection_size": len(intersection),
         "fingerprint_corridor_global_jaccard": (
-            float(len(collisions)) / float(max(final_count, 1))
+            float(len(intersection)) / float(max(len(union), 1))
         ),
         "accepted_global_rank_depth": max(
             (claim.global_rank for claim in claims.global_claims), default=0
@@ -1363,15 +1394,20 @@ def _finalize_c6_selection(
     legacy: list[Mapping[str, Any]] = []
     payloads: list[Mapping[str, Any]] = []
     selected_path = config.output_dir / "leaderboards" / "selected_exemplars.json"
-    payload_path = (
-        config.output_dir / "selected_exemplars" / "selected-exemplars-00000.json"
-    )
+    payload_path = config.output_dir / "selected_exemplars" / "payload_index.json"
     if selected_path.is_file():
         legacy_payload = read_json_object(selected_path)
         legacy = list(legacy_payload.get("selected_exemplars") or [])
     if payload_path.is_file():
         payload_payload = read_json_object(payload_path)
         payloads = list(payload_payload.get("selected_exemplars") or [])
+    else:
+        legacy_payload_path = (
+            config.output_dir / "selected_exemplars" / "selected-exemplars-00000.json"
+        )
+        if legacy_payload_path.is_file():
+            payload_payload = read_json_object(legacy_payload_path)
+            payloads = list(payload_payload.get("selected_exemplars") or [])
     curriculum_records: list[Mapping[str, Any]] = []
     try:
         curriculum_records = load_curriculum_route_records(config.output_dir)
@@ -1833,6 +1869,7 @@ def _inputs(config: ProductionBuildConfig) -> dict[str, Any]:
             config.retain_unselected_exemplar_payloads
         ),
         "exemplar_score_policy": config.exemplar_score_policy,
+        "selected_rerun_batch_size": config.selected_rerun_batch_size,
         "track_delivery_timing": config.track_delivery_timing,
         "progress": config.progress,
         "selection_integration_policy": config.selection_integration_policy,
@@ -1986,7 +2023,9 @@ def _exemplar_delivery_config(
         num_buckets=config.num_buckets,
         max_examples=config.max_examples,
         backend_config=_backend_config(config),
-        selected_rerun_batch_size=effective_batch_size,
+        selected_rerun_batch_size=(
+            config.selected_rerun_batch_size or effective_batch_size
+        ),
         track_timing=config.track_delivery_timing,
         long_tail_warning_k=config.long_tail_warning_k,
         very_long_tail_warning_k=config.very_long_tail_warning_k,
@@ -2217,6 +2256,7 @@ def _selection_integration_hash(config: ProductionBuildConfig) -> str:
         "dynamic_top_k_min": config.dynamic_top_k_min,
         "dynamic_top_k_max": config.dynamic_top_k_max,
         "dynamic_mass_threshold": config.dynamic_mass_threshold,
+        "selected_rerun_batch_size": config.selected_rerun_batch_size,
         "total_selected_exemplar_budget": config.total_selected_exemplar_budget,
         "fingerprint_corridor_budget_fraction": (
             config.fingerprint_corridor_budget_fraction

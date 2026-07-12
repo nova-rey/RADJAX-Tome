@@ -122,6 +122,7 @@ def test_cli_exposes_selected_only_exemplar_delivery_flags() -> None:
     assert "--exemplar-delivery-path" in production_help.stdout
     assert "--exemplar-selection-enabled" in production_help.stdout
     assert "--selected-exemplar-budget" in production_help.stdout
+    assert "--selected-rerun-batch-size" in production_help.stdout
     assert "--no-retain-unselected-exemplar-payloads" in production_help.stdout
     assert "--exemplar-score-policy" in production_help.stdout
     assert "--track-delivery-timing" in production_help.stdout
