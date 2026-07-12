@@ -1014,17 +1014,25 @@ def _export_c6_selection_authorities(
         "production_grade": True,
     }
     write_json(authority_manifest_path, authority_manifest)
-    _validate_external_c6_overrides(
+    external_override_used = _validate_external_c6_overrides(
         config,
         score_pass_authority_hash=score_pass_authority_hash,
     )
+    selected_global_path = config.global_board_supply_path or global_path
+    selected_passports_path = config.source_passports_path or passports_path
+    authority_manifest["authority_paths_used"] = {
+        "global_board_supply": str(selected_global_path),
+        "source_passports": str(selected_passports_path),
+    }
+    authority_manifest["external_authority_override_used"] = external_override_used
+    write_json(authority_manifest_path, authority_manifest)
     return {
         "feature_path": feature_path,
-        "global_board_supply_path": global_path,
-        "source_passports_path": passports_path,
+        "global_board_supply_path": selected_global_path,
+        "source_passports_path": selected_passports_path,
         "authority_manifest_path": authority_manifest_path,
         "score_pass_authority_hash": score_pass_authority_hash,
-        "external_authority_override_used": False,
+        "external_authority_override_used": external_override_used,
     }
 
 
@@ -1032,9 +1040,10 @@ def _validate_external_c6_overrides(
     config: ProductionBuildConfig,
     *,
     score_pass_authority_hash: str,
-) -> None:
+) -> bool:
     """Fail closed when an optional checkpoint is not tied to this score pass."""
 
+    used = False
     for label, path in (
         ("global board supply", config.global_board_supply_path),
         ("source passports", config.source_passports_path),
@@ -1054,6 +1063,8 @@ def _validate_external_c6_overrides(
             raise ValueError(
                 f"{label} override does not match the current score-pass authority hash"
             )
+        used = True
+    return used
 
 
 def _prepare_c6_selection(

@@ -1170,3 +1170,12 @@ selection configuration, source-passport export is bounded through C4 by
 loading only final C5 coordinates, and production reports distinguish the
 full-pass and selected-rerun work. Global-only behavior and C1-C5 semantics
 remain unchanged. The T4 rehearsal remains `not_executed`.
+
+## 2026-07-12 — C6.2 Checkpoint Override Truth
+
+Optional C6 global-supply and source-passport checkpoints now become the
+authority actually consumed by C2-C5 only after exact comparison with the
+current score-pass authority hash. The authority manifest records the paths in
+use and whether an external override was used; a mismatched checkpoint fails
+closed. The normal production path continues to use the internally generated
+Stage 2 authorities.
