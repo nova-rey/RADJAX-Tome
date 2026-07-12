@@ -1273,3 +1273,15 @@ explicit finalization-only, skipped-accelerator, and CPU-finalization fields.
 Incomplete or configuration-mismatched artifacts remain fail-closed and use
 the normal accelerator-required resume path. No T4 rehearsal was executed by
 this corrective patch.
+
+## 2026-07-12 — C6.3.5.1 Legacy Native Metadata Compatibility
+
+Legacy native-C6 delivery surfaces are now recognized by their explicit
+native execution, envelope, index schema, and shard structure. Before CPU-only
+finalization, migration verifies the canonical score-pass authority, every
+existing shard envelope hash and payload authority, then atomically backfills
+missing exact-coordinate payload-index hashes and delivery metadata. Authority
+manifests record the rewritten index hash. Corrupt shards fail closed without
+index, delivery, or payload-body changes. Migration records its source schema,
+backfill count, zero payload-body modifications, and zero teacher work. No T4
+rehearsal was executed by this corrective patch.

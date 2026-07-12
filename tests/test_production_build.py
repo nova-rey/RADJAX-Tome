@@ -379,9 +379,14 @@ def test_c6_finalization_probe_rejects_incomplete_delivery_before_doctor(
         raise RuntimeError("accelerator preflight required")
 
     monkeypatch.setattr(production, "build_runtime_doctor_report", doctor_probe)
-    with pytest.raises(RuntimeError, match="accelerator preflight required"):
-        build_production_gpu_tome(resume_config)
-    assert doctor_called
+    resumed = build_production_gpu_tome(resume_config)
+    assert resumed["status"] == "fail"
+    assert doctor_called is False
+    assert resumed["compatibility_migration"]["applied"] is False
+    assert any(
+        "metadata compatibility migration failed" in blocker
+        for blocker in resumed["blockers"]
+    )
     assert first["status"] == "pass"
 
 
@@ -433,6 +438,156 @@ def test_c6_finalization_probe_rejects_configuration_mismatch(
     with pytest.raises(RuntimeError, match="accelerator preflight required"):
         build_production_gpu_tome(resume_config)
     assert doctor_called
+
+
+def test_c6_3_5_1_migrates_legacy_native_metadata_without_payload_writes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(
+        tmp_path,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+    assert build_production_gpu_tome(config)["status"] == "pass"
+    payload_dir = config.output_dir / "selected_exemplars"
+    payload_paths = sorted(payload_dir.glob("selected-exemplars-*.json"))
+    payload_bodies_before = {
+        path.name: json.dumps(_json(path)["selected_exemplars"], sort_keys=True)
+        for path in payload_paths
+    }
+    index_path = payload_dir / "payload_index.json"
+    index = _json(index_path)
+    for record in index["selected_exemplars"]:
+        record.pop("payload_hash", None)
+    write_json(index_path, index)
+    delivery_path = config.output_dir / "delivery_report.json"
+    delivery = _json(delivery_path)
+    for field in (
+        "delivery_authority_hash",
+        "score_pass_authority_hash",
+        "selection_integration_config_hash",
+    ):
+        delivery.pop(field, None)
+    write_json(delivery_path, delivery)
+    (config.output_dir / "reports" / "c6_integrated_selection_validation.json").unlink()
+
+    resume_config = _config(
+        tmp_path,
+        output_dir=config.output_dir,
+        resume=True,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+
+    def fail_teacher_work(*args, **kwargs):
+        raise AssertionError("metadata migration must not perform teacher work")
+
+    monkeypatch.setattr(
+        production, "build_streaming_backend_teacher_textbook", fail_teacher_work
+    )
+    monkeypatch.setattr(production, "build_runtime_doctor_report", fail_teacher_work)
+    monkeypatch.setattr(production, "build_gpu_run_plan", fail_teacher_work)
+    monkeypatch.setattr(
+        production, "materialize_selected_exemplar_delivery", fail_teacher_work
+    )
+    report = build_production_gpu_tome(resume_config)
+
+    assert report["status"] == "pass", report["blockers"]
+    assert report["compatibility_migration_applied"] is True
+    assert report["compatibility_migration_from"] == "pre_c6_3_4_native_streamed_v1"
+    assert report["payload_index_hashes_backfilled"] == 4
+    assert report["payload_bodies_modified"] is False
+    assert report["teacher_work_performed"] is False
+    assert report["resume_finalization_only"] is True
+    assert report["teacher_pass_resumed"] is False
+    assert production.probe_c6_finalization_only_resume(resume_config).eligible
+    migrated_delivery = _json(delivery_path)
+    assert (
+        migrated_delivery["delivery_authority_hash"]
+        == _json(config.output_dir / "c6" / "authority_manifest.json")[
+            "score_pass_authority_hash"
+        ]
+    )
+    assert migrated_delivery["payload_index_hashes_backfilled"] == 4
+    assert migrated_delivery["payload_bodies_modified"] is False
+    assert migrated_delivery["teacher_work_performed"] is False
+    assert {
+        path.name: json.dumps(_json(path)["selected_exemplars"], sort_keys=True)
+        for path in payload_paths
+    } == payload_bodies_before
+    assert all(
+        "payload_hash" in record for record in _json(index_path)["selected_exemplars"]
+    )
+
+
+def test_c6_3_5_1_corrupt_legacy_shard_fails_closed(
+    tmp_path: Path,
+) -> None:
+    config = _config(
+        tmp_path,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+    assert build_production_gpu_tome(config)["status"] == "pass"
+    payload_dir = config.output_dir / "selected_exemplars"
+    index_path = payload_dir / "payload_index.json"
+    delivery_path = config.output_dir / "delivery_report.json"
+    index = _json(index_path)
+    for record in index["selected_exemplars"]:
+        record.pop("payload_hash", None)
+    write_json(index_path, index)
+    delivery = _json(delivery_path)
+    delivery.pop("score_pass_authority_hash", None)
+    delivery.pop("selection_integration_config_hash", None)
+    write_json(delivery_path, delivery)
+    corrupt_path = next(payload_dir.glob("selected-exemplars-*.json"))
+    corrupt = _json(corrupt_path)
+    corrupt["selected_exemplars"][0]["teacher_entropy"] += 1.0
+    write_json(corrupt_path, corrupt)
+    index_before = index_path.read_bytes()
+    delivery_before = delivery_path.read_bytes()
+    resume_config = _config(
+        tmp_path,
+        output_dir=config.output_dir,
+        resume=True,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+
+    result = production.migrate_c6_3_5_1_metadata(resume_config)
+
+    assert result.applicable is True
+    assert result.applied is False
+    assert any(
+        "payload_shard_authority_or_hash_invalid" in reason for reason in result.reasons
+    )
+    assert index_path.read_bytes() == index_before
+    assert delivery_path.read_bytes() == delivery_before
 
 
 def test_c6_underfilled_budget_stops_before_native_selected_rerun(

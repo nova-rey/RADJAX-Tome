@@ -191,6 +191,29 @@ class FinalizationResumeEligibility:
         return {"eligible": self.eligible, "reasons": list(self.reasons)}
 
 
+@dataclass(frozen=True)
+class CompatibilityMigrationResult:
+    applicable: bool
+    applied: bool = False
+    reasons: tuple[str, ...] = ()
+    from_schema: str | None = None
+    payload_index_hashes_backfilled: int = 0
+    payload_bodies_modified: bool = False
+    teacher_work_performed: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "applicable": self.applicable,
+            "applied": self.applied,
+            "reasons": list(self.reasons),
+            "compatibility_migration_applied": self.applied,
+            "compatibility_migration_from": self.from_schema,
+            "payload_index_hashes_backfilled": self.payload_index_hashes_backfilled,
+            "payload_bodies_modified": self.payload_bodies_modified,
+            "teacher_work_performed": self.teacher_work_performed,
+        }
+
+
 def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
     created_at = _now()
     production_started = perf_counter()
@@ -229,7 +252,6 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         )
         return _finalize_production_report(report, report_path, progress)
 
-    finalization_probe = probe_c6_finalization_only_resume(config)
     c6_resume_requested = (
         config.resume
         and config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
@@ -237,6 +259,33 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         and config.exemplar_selection_enabled
         and config.exemplar_delivery_path == "two_pass_rerun_selected"
     )
+    compatibility_migration = CompatibilityMigrationResult(False)
+    if c6_resume_requested:
+        progress.stage("compatibility_migration")
+        compatibility_migration = migrate_c6_3_5_1_metadata(config)
+        if compatibility_migration.applicable and not compatibility_migration.applied:
+            blockers.append(
+                "C6.3.5.1 metadata compatibility migration failed: "
+                + "; ".join(compatibility_migration.reasons)
+            )
+            report = _production_report(
+                config,
+                created_at=created_at,
+                completed_at=_now(),
+                status="fail",
+                blockers=blockers,
+                warnings=warnings,
+                doctor_report={},
+                run_plan_path=run_plan_path,
+                run_plan={"status": "not_run"},
+                effective_batch_size=None,
+                already_complete=already_complete,
+                parity_report_path=parity_report_path,
+                parity_status="not_run",
+            )
+            report["compatibility_migration"] = compatibility_migration.to_dict()
+            return _finalize_production_report(report, report_path, progress)
+    finalization_probe = probe_c6_finalization_only_resume(config)
     output_has_artifact = _has_existing_artifact(config)
     if output_has_artifact and not (config.resume or config.overwrite):
         blockers.append("output exists; use --resume or --overwrite")
@@ -1065,6 +1114,244 @@ def _validate_required_inputs(
             f"teacher model provenance invalid: {item}"
             for item in teacher_report.blockers
         )
+
+
+def migrate_c6_3_5_1_metadata(
+    config: ProductionBuildConfig,
+) -> CompatibilityMigrationResult:
+    """Upgrade the legacy native payload/index metadata without body writes."""
+
+    output = config.output_dir
+    delivery_path = output / "delivery_report.json"
+    index_path = output / "selected_exemplars" / "payload_index.json"
+    authority_path = output / "c6" / "authority_manifest.json"
+    try:
+        delivery = read_json_object(delivery_path)
+        payload_index = read_json_object(index_path)
+        authority = read_json_object(authority_path)
+    except (OSError, TypeError, ValueError, KeyError, json.JSONDecodeError):
+        return CompatibilityMigrationResult(False)
+
+    shard_paths = sorted(
+        (output / "selected_exemplars").glob("selected-exemplars-*.json")
+    )
+    if not _is_legacy_native_c6_signature(delivery, payload_index, shard_paths):
+        return CompatibilityMigrationResult(False)
+
+    from_schema = "pre_c6_3_4_native_streamed_v1"
+    reasons: list[str] = []
+    expected_authority = authority.get("score_pass_authority_hash")
+    if not expected_authority:
+        reasons.append("score_pass_authority_missing")
+    selection_hash = authority.get("selection_integration_config_hash")
+    if not selection_hash:
+        reasons.append("selection_integration_config_hash_missing")
+    if delivery.get("delivery_authority_hash") not in {None, expected_authority}:
+        reasons.append("delivery_authority_mismatch")
+    if delivery.get("score_pass_authority_hash") not in {None, expected_authority}:
+        reasons.append("delivery_score_pass_authority_mismatch")
+    if delivery.get("selection_integration_config_hash") not in {
+        None,
+        selection_hash,
+    }:
+        reasons.append("delivery_selection_config_mismatch")
+    if reasons:
+        return _failed_compatibility_migration(from_schema, reasons)
+
+    shard_by_coordinate: dict[tuple[str, int], dict[str, Any]] = {}
+    for path in shard_paths:
+        try:
+            shard = read_json_object(path)
+        except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            reasons.append(f"payload_shard_invalid:{path.name}:{exc}")
+            continue
+        items = shard.get("selected_exemplars")
+        if (
+            shard.get("delivery_authority_hash") != expected_authority
+            or shard.get("payload_hash") != _native_payload_hash_for_probe(shard)
+            or not isinstance(items, list)
+            or len(items) != 1
+        ):
+            reasons.append(f"payload_shard_authority_or_hash_invalid:{path.name}")
+            continue
+        item = items[0]
+        coordinate = _probe_coordinate(item)
+        if coordinate is None or coordinate in shard_by_coordinate:
+            reasons.append(f"payload_shard_coordinate_invalid:{path.name}")
+            continue
+        if item.get("delivery_authority_hash") != expected_authority:
+            reasons.append(f"payload_record_authority_mismatch:{path.name}")
+            continue
+        shard_by_coordinate[coordinate] = {
+            "path": path,
+            "payload_hash": shard["payload_hash"],
+            "payload_ref": item.get("payload_ref"),
+        }
+
+    indexed_records = payload_index.get("selected_exemplars")
+    if not isinstance(indexed_records, list):
+        reasons.append("payload_index_incomplete")
+        indexed_records = []
+    updated_index_records: list[dict[str, Any]] = []
+    backfilled = 0
+    seen_index_coordinates: set[tuple[str, int]] = set()
+    for raw_record in indexed_records:
+        if not isinstance(raw_record, dict):
+            reasons.append("payload_index_record_invalid")
+            continue
+        record = dict(raw_record)
+        coordinate = _probe_coordinate(record)
+        if coordinate is None or coordinate in seen_index_coordinates:
+            reasons.append("payload_index_coordinate_invalid")
+            continue
+        seen_index_coordinates.add(coordinate)
+        shard_info = shard_by_coordinate.get(coordinate)
+        if shard_info is None:
+            reasons.append(f"payload_index_coordinate_missing:{coordinate}")
+            continue
+        shard_hash = shard_info["payload_hash"]
+        if record.get("payload_hash") is None:
+            record["payload_hash"] = shard_hash
+            backfilled += 1
+        elif record.get("payload_hash") != shard_hash:
+            reasons.append(f"payload_index_hash_mismatch:{coordinate}")
+        if record.get("payload_ref") != shard_info["payload_ref"]:
+            reasons.append(f"payload_index_ref_mismatch:{coordinate}")
+        if record.get("delivery_authority_hash") not in {None, expected_authority}:
+            reasons.append(f"payload_index_authority_mismatch:{coordinate}")
+        updated_index_records.append(record)
+
+    if len(shard_by_coordinate) != len(indexed_records) or (
+        set(shard_by_coordinate) != seen_index_coordinates
+    ):
+        reasons.append("payload_coordinate_set_mismatch")
+    if reasons:
+        return _failed_compatibility_migration(from_schema, reasons)
+
+    updated_index = dict(payload_index)
+    updated_index["selected_exemplars"] = updated_index_records
+    migration_metadata = {
+        "schema_version": "c6_metadata_compatibility_migration_v1",
+        "applied": True,
+        "from": from_schema,
+        "payload_index_hashes_backfilled": backfilled,
+        "payload_bodies_modified": False,
+        "teacher_work_performed": False,
+    }
+    updated_authority = dict(authority)
+    updated_authority["payload_index_sha256"] = _hash_json_file_after_write(
+        index_path, updated_index
+    )
+    updated_authority["metadata_compatibility_migration"] = migration_metadata
+    updated_delivery = dict(delivery)
+    updated_delivery.update(
+        {
+            "delivery_authority_hash": expected_authority,
+            "score_pass_authority_hash": expected_authority,
+            "selection_integration_config_hash": selection_hash,
+            "metadata_compatibility_migration": migration_metadata,
+            "compatibility_migration_applied": True,
+            "compatibility_migration_from": from_schema,
+            "payload_index_hashes_backfilled": backfilled,
+            "payload_bodies_modified": False,
+            "teacher_work_performed": False,
+        }
+    )
+
+    try:
+        _write_json_atomic_metadata(index_path, updated_index)
+        _write_json_atomic_metadata(authority_path, updated_authority)
+        updated_delivery["authority_manifest_sha256"] = _file_sha256(authority_path)
+        updated_delivery["payload_index_sha256"] = _file_sha256(index_path)
+        _write_json_atomic_metadata(delivery_path, updated_delivery)
+    except (OSError, TypeError, ValueError) as exc:
+        return _failed_compatibility_migration(
+            from_schema,
+            [f"metadata_migration_write_failed:{exc}"],
+        )
+    return CompatibilityMigrationResult(
+        applicable=True,
+        applied=True,
+        from_schema=from_schema,
+        payload_index_hashes_backfilled=backfilled,
+    )
+
+
+def _is_legacy_native_c6_signature(
+    delivery: Mapping[str, Any],
+    payload_index: Mapping[str, Any],
+    shard_paths: list[Path],
+) -> bool:
+    """Use the positive legacy envelope/index shape, not missing metadata alone."""
+
+    indexed_records = payload_index.get("selected_exemplars")
+    index_hashes_missing = isinstance(indexed_records, list) and any(
+        isinstance(record, dict) and "payload_hash" not in record
+        for record in indexed_records
+    )
+    delivery_metadata_missing = any(
+        field not in delivery
+        for field in (
+            "delivery_authority_hash",
+            "score_pass_authority_hash",
+            "selection_integration_config_hash",
+        )
+    )
+    return bool(
+        delivery.get("execution_mode") == "native_c6_path_b_v1"
+        and delivery.get("delivery_path") == "two_pass_rerun_selected"
+        and payload_index.get("schema_version") == "selected_exemplar_payload_index_v1"
+        and payload_index.get("storage_kind") == "one_record_json_shards_v1"
+        and shard_paths
+        and delivery.get("metadata_compatibility_migration") is None
+        and (index_hashes_missing or delivery_metadata_missing)
+        and all(
+            path.name.startswith("selected-exemplars-")
+            and path.suffix == ".json"
+            and _has_native_shard_structure(path)
+            for path in shard_paths
+        )
+    )
+
+
+def _has_native_shard_structure(path: Path) -> bool:
+    try:
+        shard = read_json_object(path)
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return False
+    return (
+        shard.get("schema_version") == "selected_exemplar_payload_shard_v1"
+        and "delivery_authority_hash" in shard
+        and "record_index" in shard
+        and "payload_hash" in shard
+        and isinstance(shard.get("selected_exemplars"), list)
+    )
+
+
+def _failed_compatibility_migration(
+    from_schema: str,
+    reasons: list[str],
+) -> CompatibilityMigrationResult:
+    return CompatibilityMigrationResult(
+        applicable=True,
+        applied=False,
+        reasons=tuple(dict.fromkeys(reasons)),
+        from_schema=from_schema,
+    )
+
+
+def _hash_json_file_after_write(path: Path, payload: dict[str, Any]) -> str:
+    body = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+    return "sha256:" + hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+
+def _write_json_atomic_metadata(path: Path, payload: dict[str, Any]) -> None:
+    temporary = path.with_name(f".{path.name}.compatibility.tmp")
+    try:
+        write_json(temporary, payload)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def probe_c6_finalization_only_resume(
@@ -2352,6 +2639,31 @@ def _production_report(
         ),
         "selected_exemplars_linked_to_corridor_modes": (
             delivery_report.get("selected_exemplars_linked_to_corridor_modes")
+            if delivery_report is not None
+            else None
+        ),
+        "compatibility_migration_applied": (
+            delivery_report.get("compatibility_migration_applied")
+            if delivery_report is not None
+            else None
+        ),
+        "compatibility_migration_from": (
+            delivery_report.get("compatibility_migration_from")
+            if delivery_report is not None
+            else None
+        ),
+        "payload_index_hashes_backfilled": (
+            delivery_report.get("payload_index_hashes_backfilled")
+            if delivery_report is not None
+            else 0
+        ),
+        "payload_bodies_modified": (
+            delivery_report.get("payload_bodies_modified")
+            if delivery_report is not None
+            else False
+        ),
+        "teacher_work_performed": (
+            delivery_report.get("teacher_work_performed")
             if delivery_report is not None
             else None
         ),
