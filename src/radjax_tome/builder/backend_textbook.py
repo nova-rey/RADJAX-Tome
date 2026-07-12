@@ -106,6 +106,7 @@ class BackendTeacherTextbookBuildConfig:
     progress_callback: StreamingProgressCallback | None = None
     selection_integration_policy: str = "global_only_v1"
     selection_integration_config_hash: str | None = None
+    native_c6_path_b_execution: bool = False
 
 
 def build_backend_teacher_textbook(
@@ -617,7 +618,7 @@ def _validate_streaming_build_config(
         raise ValueError("shard_size_examples must be positive")
     if (config.shard_size_examples or config.batch_size) < config.batch_size:
         raise ValueError("shard_size_examples must be >= batch_size")
-    if config.exemplar_selection_enabled:
+    if config.exemplar_selection_enabled and not config.native_c6_path_b_execution:
         raise ValueError(
             "streaming backend build does not support corpus-global exemplar "
             "selection yet; rerun without --exemplar-selection-enabled"
@@ -1116,6 +1117,7 @@ def _streaming_target_params(
         "num_examples_completed": str(num_examples_completed),
         "resume_config_hash": resume_config_hash,
         "atomic_shard_write_policy": "tmp_file_fsync_rename_v1",
+        "native_c6_path_b_execution": str(config.native_c6_path_b_execution).lower(),
     }
 
 

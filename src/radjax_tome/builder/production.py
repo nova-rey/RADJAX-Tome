@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import platform
+import resource
 import shutil
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -90,6 +92,17 @@ PRODUCTION_BUILD_REPORT_SCHEMA = "production_build_report_v1"
 PRODUCTION_BUILD_REPORT_FILENAME = "production_build_report.json"
 PRODUCTION_PROGRESS_SCHEMA = "production_progress_v1"
 PRODUCTION_PROGRESS_FILENAME = "production_progress.json"
+
+
+class C6BudgetShortfallError(ValueError):
+    """Stops native Path B before teacher pass two with retained diagnostics."""
+
+    def __init__(self, diagnostic: dict[str, Any]) -> None:
+        self.diagnostic = diagnostic
+        super().__init__(
+            "C6 selected budget underfilled before selected rerun: "
+            + json.dumps(diagnostic, sort_keys=True)
+        )
 
 
 @dataclass(frozen=True)
@@ -181,6 +194,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
     already_complete = _already_complete(config)
 
     _validate_required_inputs(config, blockers)
+    progress.memory_checkpoint("preflight_complete")
     if blockers:
         report = _production_report(
             config,
@@ -346,6 +360,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         )
         return _finalize_production_report(report, report_path, progress)
     main_pass_wall_seconds = _elapsed(main_pass_started)
+    progress.memory_checkpoint("score_pass_complete")
 
     if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
         try:
@@ -369,8 +384,29 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             )
             progress.stage("selection_authority_export")
             authorities = _export_c6_selection_authorities(config)
+            progress.memory_checkpoint("authority_export_complete")
             progress.stage("corridor_global_selection")
             c6_context = _prepare_c6_selection(config, authorities)
+            progress.memory_checkpoint("c2_c5_selection_complete")
+        except C6BudgetShortfallError as exc:
+            blockers.append(str(exc))
+            report = _production_report(
+                config,
+                created_at=created_at,
+                completed_at=_now(),
+                status="fail",
+                blockers=blockers,
+                warnings=warnings,
+                doctor_report=doctor_report,
+                run_plan_path=run_plan_path,
+                run_plan=plan,
+                effective_batch_size=effective_batch_size,
+                already_complete=already_complete,
+                parity_report_path=parity_report_path,
+                parity_status="not_run",
+                build_status="selection_underfilled_before_selected_rerun",
+            )
+            return _finalize_production_report(report, report_path, progress)
         except (OSError, TypeError, ValueError, KeyError) as exc:
             blockers.append(f"C6 selection integration failed: {exc}")
             report = _production_report(
@@ -424,6 +460,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         config.output_dir / "validation_report.json",
     )
     validation_wall_seconds = _elapsed(validation_started)
+    progress.memory_checkpoint("validation_complete")
     progress.validation_completed(validation.status)
     if c6_context is not None:
         linkage_audit = audit_selected_linkage(config.output_dir, strict=True)
@@ -524,6 +561,8 @@ def _finalize_production_report(
     path: Path,
     progress: _ProductionProgressReporter,
 ) -> dict[str, Any]:
+    progress.memory_checkpoint("finalization")
+    report["phase_host_memory_bytes"] = dict(progress.memory_points)
     progress.report_writing_started()
     write_production_build_report(report, path)
     progress.complete(str(report.get("status") or "unknown"))
@@ -557,6 +596,7 @@ class _ProductionProgressReporter:
         self.last_emit_at = 0.0
         self.last_score_examples = 0
         self.score_emit_interval_examples = 1
+        self.memory_points: dict[str, int] = {}
         self.payload: dict[str, Any] = {
             "schema_version": PRODUCTION_PROGRESS_SCHEMA,
             "status": "running",
@@ -567,10 +607,24 @@ class _ProductionProgressReporter:
         }
 
     def start(self) -> None:
+        if self.path.is_file():
+            try:
+                previous = read_json_object(self.path)
+            except (OSError, ValueError):
+                previous = {}
+            if previous.get("status") == "running":
+                self.payload["interrupted_previous_phase"] = previous.get("phase")
+                self.payload["previous_progress_status"] = "stale_running"
         if not self.enabled:
             return
         self._write()
         self._emit("phase=preflight status=running", force=True)
+
+    def memory_checkpoint(self, phase: str) -> None:
+        self.memory_points[phase] = _host_rss_bytes()
+        if self.enabled:
+            self.payload["phase_host_memory_bytes"] = dict(self.memory_points)
+            self._write()
 
     def start_score_pass(
         self,
@@ -1014,6 +1068,11 @@ def _export_c6_selection_authorities(
         "production_grade": True,
     }
     write_json(authority_manifest_path, authority_manifest)
+    _mark_native_c6_score_pass_artifact(
+        config,
+        selector_path=selector_path,
+        authority_manifest_path=authority_manifest_path,
+    )
     external_override_used = _validate_external_c6_overrides(
         config,
         score_pass_authority_hash=score_pass_authority_hash,
@@ -1034,6 +1093,40 @@ def _export_c6_selection_authorities(
         "score_pass_authority_hash": score_pass_authority_hash,
         "external_authority_override_used": external_override_used,
     }
+
+
+def _mark_native_c6_score_pass_artifact(
+    config: ProductionBuildConfig,
+    *,
+    selector_path: Path,
+    authority_manifest_path: Path,
+) -> None:
+    """Correct the score-pass sidecar once native C6 authority exists."""
+
+    if not _native_c6_path_b_enabled(config):
+        return
+    path = config.output_dir / "emission_config.json"
+    payload = read_json_object(path)
+    claims = [
+        str(item)
+        for item in payload.get("claims_not_made", ())
+        if str(item) != "no_production_global_two_pass_selector"
+    ]
+    payload.update(
+        {
+            "exemplar_selection_enabled": True,
+            "exemplar_selection_manifest": selector_path.relative_to(
+                config.output_dir
+            ).as_posix(),
+            "selection_integration_policy": C6_SELECTION_INTEGRATION_POLICY,
+            "native_execution_mode": "native_c6_path_b_v1",
+            "selection_authority_manifest": authority_manifest_path.relative_to(
+                config.output_dir
+            ).as_posix(),
+            "claims_not_made": claims,
+        }
+    )
+    write_json(path, payload)
 
 
 def _validate_external_c6_overrides(
@@ -1142,7 +1235,9 @@ def _prepare_c6_selection(
         global_input,
         CorridorGlobalClaimPolicy(
             total_selected_exemplar_budget=config.total_selected_exemplar_budget,
-            require_full_budget=config.require_full_selected_budget,
+            # Preserve the complete claim/backfill artifact before enforcing a
+            # production budget failure at the Path B teacher boundary.
+            require_full_budget=False,
         ),
     )
     write_corridor_global_claim_result(
@@ -1150,6 +1245,15 @@ def _prepare_c6_selection(
         c6_root / "claims",
         overwrite=True,
     )
+    budget_diagnostics = _c6_budget_diagnostics(
+        config,
+        claims=claims,
+        leaderboards=leaderboards,
+        global_supply=global_supply,
+    )
+    write_json(c6_root / "selection_budget_diagnostics.json", budget_diagnostics)
+    if config.require_full_selected_budget and budget_diagnostics["budget_shortfall"]:
+        raise C6BudgetShortfallError(budget_diagnostics)
     source_passports = load_source_passports_for_coordinates(
         Path(str(authorities["source_passports_path"])),
         {
@@ -1183,7 +1287,67 @@ def _prepare_c6_selection(
         "c2_summary": c2_summary,
         "c3_summary": c3_summary,
         "global_supply": global_supply,
+        "budget_diagnostics": budget_diagnostics,
         "authorities": dict(authorities),
+    }
+
+
+def _c6_budget_diagnostics(
+    config: ProductionBuildConfig,
+    *,
+    claims: Any,
+    leaderboards: Any,
+    global_supply: Mapping[str, Any],
+) -> dict[str, Any]:
+    requested = int(config.total_selected_exemplar_budget or 0)
+    final_count = len(claims.selected_coordinates)
+    corridor_candidates = sum(len(mode.candidates) for mode in leaderboards.modes)
+    global_candidates = sum(
+        len(board.get("candidates") or [])
+        for board in global_supply.get("boards", [])
+        if isinstance(board, Mapping)
+    )
+    global_claims = len(claims.global_claims)
+    corridor_claims = len(claims.corridor_claims)
+    collisions = list(claims.collision_obligations)
+    global_examined = sum(
+        int(item.get("candidate_count_seen") or 0)
+        for item in (claims.summary or {}).get("board_summaries", [])
+        if isinstance(item, Mapping)
+    )
+    shortfall = max(0, requested - final_count)
+    if not shortfall:
+        reason = None
+    elif corridor_candidates + global_candidates < requested:
+        reason = "insufficient_eligible_unique_candidates"
+    elif global_claims < requested - corridor_claims:
+        reason = "global_ranked_supply_exhaustion"
+    elif collisions:
+        reason = "deduplication_overlap_exhaustion"
+    else:
+        reason = "fingerprint_corridor_allocation_or_cap_exhaustion"
+    return {
+        "total_budget_requested": requested,
+        "fingerprint_corridor_budget_requested": len(claims.corridor_claims),
+        "fingerprint_corridor_candidates_eligible_unique": corridor_candidates,
+        "fingerprint_corridor_claims_before_dedup": corridor_claims,
+        "fingerprint_corridor_claims_accepted": corridor_claims,
+        "global_supply_exported": global_candidates,
+        "global_candidates_examined": global_examined,
+        "global_claims_accepted": global_claims,
+        "cross_role_duplicate_count": len(collisions),
+        "within_role_duplicate_count": 0,
+        "final_unique_selected_count": final_count,
+        "budget_shortfall": shortfall,
+        "budget_shortfall_reason": reason,
+        "global_supply_remaining": max(0, global_candidates - global_examined),
+        "fingerprint_corridor_global_intersection_size": len(collisions),
+        "fingerprint_corridor_global_jaccard": (
+            float(len(collisions)) / float(max(final_count, 1))
+        ),
+        "accepted_global_rank_depth": max(
+            (claim.global_rank for claim in claims.global_claims), default=0
+        ),
     }
 
 
@@ -1320,6 +1484,8 @@ def _streaming_config(
         progress_callback=progress_callback,
         selection_integration_policy=config.selection_integration_policy,
         selection_integration_config_hash=_selection_integration_hash(config),
+        exemplar_selection_enabled=_native_c6_path_b_enabled(config),
+        native_c6_path_b_execution=_native_c6_path_b_enabled(config),
     )
 
 
@@ -1411,6 +1577,56 @@ def _production_report(
         ),
         "selected_teacher_rerun_example_count": (
             delivery_report.get("teacher_rerun_count")
+            if delivery_report is not None
+            else None
+        ),
+        "legacy_selected_teacher_rerun_count": (
+            0 if _native_c6_path_b_enabled(config) else None
+        ),
+        "native_c6_selected_teacher_rerun_count": (
+            1
+            if _native_c6_path_b_enabled(config) and delivery_report is not None
+            else 0
+            if _native_c6_path_b_enabled(config)
+            else None
+        ),
+        "selected_rerun_batch_size": (
+            delivery_report.get("selected_rerun_batch_size")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_rerun_batch_count": (
+            delivery_report.get("selected_rerun_batch_count")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_rerun_examples_per_second": (
+            delivery_report.get("selected_rerun_examples_per_second")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_rerun_teacher_seconds": (
+            delivery_report.get("selected_rerun_teacher_seconds")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_rerun_compression_seconds": (
+            delivery_report.get("selected_rerun_compression_seconds")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_rerun_io_seconds": (
+            delivery_report.get("selected_rerun_io_seconds")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_rerun_peak_host_memory_bytes": (
+            delivery_report.get("selected_rerun_peak_host_memory_bytes")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_rerun_peak_device_memory_bytes": (
+            delivery_report.get("selected_rerun_peak_device_memory_bytes")
             if delivery_report is not None
             else None
         ),
@@ -1676,7 +1892,9 @@ def _c6_report_fields(
     coverage = read_json_object(coverage_path) if coverage_path.is_file() else {}
     validation = read_json_object(validation_path) if validation_path.is_file() else {}
     authority_path = output_dir / "c6" / "authority_manifest.json"
+    budget_path = output_dir / "c6" / "selection_budget_diagnostics.json"
     authority = read_json_object(authority_path) if authority_path.is_file() else {}
+    budget = read_json_object(budget_path) if budget_path.is_file() else {}
     return {
         "selection_integration_policy": config.selection_integration_policy,
         "selection_integration_config_hash": _selection_integration_hash(config),
@@ -1708,6 +1926,8 @@ def _c6_report_fields(
             if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
             else None
         ),
+        "selection_budget_diagnostics_path": str(budget_path) if budget else None,
+        "selection_budget_diagnostics": budget or None,
     }
 
 
@@ -1785,6 +2005,12 @@ def _exemplar_delivery_config(
         progress_callback=progress_callback,
         authoritative_selection=authoritative_records is not None,
         authoritative_records=authoritative_records,
+        execution_mode=(
+            "native_c6_path_b_v1"
+            if authoritative_records is not None and _native_c6_path_b_enabled(config)
+            else "legacy_delivery_v1"
+        ),
+        rerun_metrics={},
     )
 
 
@@ -1792,6 +2018,15 @@ def _exemplar_capture_mode(config: ProductionBuildConfig) -> str:
     if config.exemplar_delivery_path == "two_pass_rerun_selected":
         return "two_pass_sparse_exemplar"
     return "one_pass_candidate"
+
+
+def _native_c6_path_b_enabled(config: ProductionBuildConfig) -> bool:
+    return (
+        config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
+        and config.target_policy == "corridor_exemplar_v1"
+        and config.exemplar_selection_enabled
+        and config.exemplar_delivery_path == "two_pass_rerun_selected"
+    )
 
 
 def _filter_fulfilled_delivery_warnings(warnings: list[str]) -> list[str]:
@@ -1882,6 +2117,11 @@ def _format_eta(value: object) -> str:
 
 def _elapsed(started_at: float) -> float:
     return max(0.0, perf_counter() - started_at)
+
+
+def _host_rss_bytes() -> int:
+    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    return value if platform.system() == "Darwin" else value * 1024
 
 
 def _effective_batch_size(plan: dict[str, Any]) -> int | None:

@@ -1179,3 +1179,17 @@ current score-pass authority hash. The authority manifest records the paths in
 use and whether an external override was used; a mismatched checkpoint fails
 closed. The normal production path continues to use the internally generated
 Stage 2 authorities.
+
+## 2026-07-12 — C6.3 Native Path B Execution Boundary
+
+Native C6 Path B now declares `native_c6_path_b_v1` from its score pass through
+delivery. The score pass produces only the bounded authority surfaces needed by
+C2-C5; it does not run a legacy selected-payload selector or pre-rerun. C5
+coordinates are frozen and checked for the required unique budget before a
+second-pass backend is created. The selected rerun is batched, keeps canonical
+passport order after batch processing, and reports teacher/compression timing,
+batch counts, and host/device memory peaks. Production and progress reports
+also record phase-level RSS checkpoints, C6 budget/overlap diagnostics, zero
+legacy reruns, and one native rerun when delivery succeeds. An interrupted
+running progress sidecar is marked stale on the next invocation; the T4
+rehearsal remains `not_executed`.

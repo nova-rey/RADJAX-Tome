@@ -239,10 +239,26 @@ def test_c6_cpu_path_generates_features_audit_and_curriculum(
     assert report["external_authority_override_used"] is False
     if delivery_path == "two_pass_rerun_selected":
         assert report["selected_teacher_rerun_count"] == 1
+        assert report["legacy_selected_teacher_rerun_count"] == 0
+        assert report["native_c6_selected_teacher_rerun_count"] == 1
         # One rerun input can satisfy multiple selected positions from the
         # same example; payload count remains the C5 coordinate count.
         assert 0 < report["selected_teacher_rerun_example_count"] <= 4
         assert report["num_selected_exemplars"] == 4
+        emission = _json(config.output_dir / "emission_config.json")
+        delivery = _json(config.output_dir / "delivery_report.json")
+        assert emission["exemplar_selection_enabled"] is True
+        assert emission["selection_integration_policy"] == (
+            "corridor_first_global_backfill_v1"
+        )
+        assert emission["exemplar_selection_manifest"] == (
+            "c6/production_global_selector.json"
+        )
+        assert delivery["execution_mode"] == "native_c6_path_b_v1"
+        assert delivery["selected_rerun_batch_count"] == 1
+        assert delivery["selected_rerun_peak_host_memory_bytes"] > 0
+        assert "score_pass_complete" in report["phase_host_memory_bytes"]
+        assert "c2_c5_selection_complete" in report["phase_host_memory_bytes"]
     else:
         assert report["selected_teacher_rerun_count"] == 0
     package = tmp_path / f"student-{delivery_path}"
@@ -252,6 +268,41 @@ def test_c6_cpu_path_generates_features_audit_and_curriculum(
         _json(package / "selected_linkage_audit.json")["c6_integration"]["status"]
         == "pass"
     )
+
+
+def test_c6_underfilled_budget_stops_before_native_selected_rerun(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(
+        tmp_path,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=99,
+        require_full_selected_budget=True,
+    )
+
+    def unexpected_delivery(*args, **kwargs):
+        raise AssertionError("native selected rerun must not start under budget")
+
+    monkeypatch.setattr(
+        production,
+        "materialize_selected_exemplar_delivery",
+        unexpected_delivery,
+    )
+    report = build_production_gpu_tome(config)
+
+    assert report["status"] == "fail"
+    assert report["build_status"] == "selection_underfilled_before_selected_rerun"
+    diagnostics = _json(config.output_dir / "c6" / "selection_budget_diagnostics.json")
+    assert diagnostics["budget_shortfall"] > 0
+    assert diagnostics["budget_shortfall_reason"]
+    assert not (config.output_dir / "delivery_report.json").exists()
 
 
 def _c6_source_inputs(

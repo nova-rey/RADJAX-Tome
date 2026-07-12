@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import platform
+import resource
 import shutil
 from collections.abc import Callable
 from dataclasses import dataclass, replace
@@ -61,6 +63,7 @@ SELECTED_LINKAGE_MISMATCH = (
 
 ONE_PASS_PRUNED_CANDIDATE = "one_pass_pruned_candidate"
 TWO_PASS_RERUN_SELECTED = "two_pass_rerun_selected"
+NATIVE_C6_PATH_B_EXECUTION = "native_c6_path_b_v1"
 EXEMPLAR_SCORE_POLICY = "entropy_top_n_v1"
 DeliveryProgressCallback = Callable[[dict[str, Any]], None]
 
@@ -161,6 +164,8 @@ class ExemplarDeliveryConfig:
     progress_callback: DeliveryProgressCallback | None = None
     authoritative_selection: bool = False
     authoritative_records: tuple[dict[str, Any], ...] | None = None
+    execution_mode: str = "legacy_delivery_v1"
+    rerun_metrics: dict[str, Any] | None = None
 
 
 def materialize_selected_exemplar_delivery(
@@ -348,6 +353,7 @@ def materialize_selected_exemplar_delivery(
 
     retained_bytes = _tree_bytes(corridors_dir) + _tree_bytes(leaderboards_dir)
     retained_bytes += _tree_bytes(selected_dir)
+    rerun_metrics = dict(config.rerun_metrics or {})
     report = {
         "schema_version": EXEMPLAR_DELIVERY_REPORT_SCHEMA,
         "status": "pass",
@@ -358,6 +364,7 @@ def materialize_selected_exemplar_delivery(
         "completed_at": _now(),
         "selection_enabled": config.selection_enabled,
         "delivery_path": config.delivery_path,
+        "execution_mode": config.execution_mode,
         "dataset_path": str(config.dataset_path),
         "score_policy": config.score_policy,
         "num_examples_scored": store.metadata.num_examples,
@@ -393,9 +400,33 @@ def materialize_selected_exemplar_delivery(
             else 0
         ),
         "selected_rerun_batch_size": (
-            config.selected_rerun_batch_size
+            rerun_metrics.get(
+                "selected_rerun_batch_size", config.selected_rerun_batch_size
+            )
             if config.delivery_path == TWO_PASS_RERUN_SELECTED
             else None
+        ),
+        "selected_rerun_batch_count": rerun_metrics.get(
+            "selected_rerun_batch_count", 0
+        ),
+        "selected_rerun_examples": rerun_metrics.get(
+            "selected_rerun_examples", rerun_selected_example_count
+        ),
+        "selected_rerun_examples_per_second": rerun_metrics.get(
+            "selected_rerun_examples_per_second"
+        ),
+        "selected_rerun_teacher_seconds": rerun_metrics.get(
+            "selected_rerun_teacher_seconds"
+        ),
+        "selected_rerun_compression_seconds": rerun_metrics.get(
+            "selected_rerun_compression_seconds"
+        ),
+        "selected_rerun_io_seconds": rerun_metrics.get("selected_rerun_io_seconds"),
+        "selected_rerun_peak_host_memory_bytes": rerun_metrics.get(
+            "selected_rerun_peak_host_memory_bytes"
+        ),
+        "selected_rerun_peak_device_memory_bytes": rerun_metrics.get(
+            "selected_rerun_peak_device_memory_bytes"
         ),
         "selected_payload_source": (
             "backend_dynamic_cascaded_soft_labels_v1"
@@ -1245,6 +1276,15 @@ def _validate_delivery_config(config: ExemplarDeliveryConfig) -> None:
         raise ValueError("long_tail_side_board_cap must be positive")
     if config.perverse_tail_side_board_cap < 1:
         raise ValueError("perverse_tail_side_board_cap must be positive")
+    if config.execution_mode == NATIVE_C6_PATH_B_EXECUTION:
+        if config.delivery_path != TWO_PASS_RERUN_SELECTED:
+            raise ValueError("native C6 execution requires two_pass_rerun_selected")
+        if not config.authoritative_selection or not config.authoritative_records:
+            raise ValueError(
+                "native C6 execution requires frozen authoritative C5 records"
+            )
+    elif config.execution_mode != "legacy_delivery_v1":
+        raise ValueError("unsupported selected exemplar delivery execution_mode")
     _long_tail_policy(config)
 
 
@@ -1855,15 +1895,22 @@ def _selected_payloads_from_backend(
     )
     backend = create_backend(backend_config)
     payloads_by_record: dict[int, dict[str, Any]] = {}
+    teacher_seconds = 0.0
+    compression_seconds = 0.0
+    peak_host_memory_bytes = _host_rss_bytes()
+    batch_count = 0
     try:
         for start in range(0, len(selected_examples), batch_size):
             chunk = selected_examples[start : start + batch_size]
+            teacher_started = perf_counter()
             result = backend.emit_batch(
                 TeacherBatchInput(
                     example_ids=tuple(example.example_id for example in chunk),
                     texts=tuple(example.text for example in chunk),
                 )
             )
+            teacher_seconds += _elapsed(teacher_started)
+            compression_started = perf_counter()
             row_by_example_id = {
                 example.example_id: row for row, example in enumerate(chunk)
             }
@@ -1909,6 +1956,9 @@ def _selected_payloads_from_backend(
                         mismatch_fields=mismatch_fields,
                     )
                 payloads_by_record[record_index] = selected_payload
+            compression_seconds += _elapsed(compression_started)
+            batch_count += 1
+            peak_host_memory_bytes = max(peak_host_memory_bytes, _host_rss_bytes())
             _notify_delivery_progress(
                 config,
                 phase="selected_rerun",
@@ -1920,7 +1970,39 @@ def _selected_payloads_from_backend(
         close = getattr(backend, "close", None)
         if callable(close):
             close()
+    if config.rerun_metrics is not None:
+        config.rerun_metrics.update(
+            {
+                "selected_rerun_examples": len(selected_examples),
+                "selected_rerun_batch_size": batch_size,
+                "selected_rerun_batch_count": batch_count,
+                "selected_rerun_teacher_seconds": teacher_seconds,
+                "selected_rerun_compression_seconds": compression_seconds,
+                "selected_rerun_io_seconds": 0.0,
+                "selected_rerun_examples_per_second": _rate(
+                    len(selected_examples), teacher_seconds
+                ),
+                "selected_rerun_peak_host_memory_bytes": peak_host_memory_bytes,
+                "selected_rerun_peak_device_memory_bytes": _device_peak_memory_bytes(),
+            }
+        )
     return [payloads_by_record[index] for index in range(len(selected_records))]
+
+
+def _host_rss_bytes() -> int:
+    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    return value if platform.system() == "Darwin" else value * 1024
+
+
+def _device_peak_memory_bytes() -> int | None:
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            return int(torch.cuda.max_memory_allocated())
+    except (ImportError, RuntimeError):
+        pass
+    return None
 
 
 def _notify_delivery_progress(
