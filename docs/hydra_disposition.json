@@ -32,14 +32,6 @@
     }
   ],
   "records": {
-    "docs/hydra_disposition.json": {
-      "archive_or_removal_condition": null,
-      "kind": "top-level-doc",
-      "owning_milestone": "M1",
-      "rationale": "Machine-readable M1 disposition authority.",
-      "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
-      "status": "canonical"
-    },
     "cli:allocate-fingerprint-corridor-coverage": {
       "archive_or_removal_condition": "M2 parity and M3 archive pointer.",
       "kind": "public-cli-command",
@@ -143,6 +135,38 @@
       "rationale": "Expert global supply command.",
       "replacement_or_target_boundary": "M9 supported command surface or research namespace.",
       "status": "remove-after-parity"
+    },
+    "cli:golden": {
+      "archive_or_removal_condition": null,
+      "kind": "public-cli-command",
+      "owning_milestone": "M2",
+      "rationale": "Engineering golden-contract command group.",
+      "replacement_or_target_boundary": "M2 engineering contract surface.",
+      "status": "supporting"
+    },
+    "cli:golden capture": {
+      "archive_or_removal_condition": null,
+      "kind": "public-cli-command",
+      "owning_milestone": "M2",
+      "rationale": "Read-only terminal artifact capture.",
+      "replacement_or_target_boundary": "M2 engineering contract surface.",
+      "status": "supporting"
+    },
+    "cli:golden compare": {
+      "archive_or_removal_condition": null,
+      "kind": "public-cli-command",
+      "owning_milestone": "M2",
+      "rationale": "Offline semantic parity comparison.",
+      "replacement_or_target_boundary": "M2 engineering contract surface.",
+      "status": "supporting"
+    },
+    "cli:golden validate": {
+      "archive_or_removal_condition": null,
+      "kind": "public-cli-command",
+      "owning_milestone": "M2",
+      "rationale": "Offline fixture validation.",
+      "replacement_or_target_boundary": "M2 engineering contract surface.",
+      "status": "supporting"
     },
     "cli:inspect": {
       "archive_or_removal_condition": "M2 parity and M3 archive pointer.",
@@ -351,6 +375,14 @@
       "rationale": "Historical, experimental, or chronological documentation.",
       "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
       "status": "research-frozen"
+    },
+    "docs/GOLDEN_1K_CAPTURE.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M2",
+      "rationale": "M2A capture-pending status and rental procedure.",
+      "replacement_or_target_boundary": "M2 golden contract procedure.",
+      "status": "canonical"
     },
     "docs/GPU_INSTALL.md": {
       "archive_or_removal_condition": null,
@@ -583,6 +615,14 @@
       "rationale": "Historical, experimental, or chronological documentation.",
       "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
       "status": "research-frozen"
+    },
+    "docs/hydra_disposition.json": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M1",
+      "rationale": "Machine-readable M1 disposition authority.",
+      "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
+      "status": "canonical"
     },
     "scripts/ab_compare_teacher_textbook.py": {
       "archive_or_removal_condition": "M2 parity and M3 preservation gates.",
@@ -1225,6 +1265,38 @@
       "rationale": "Historical experiment; preserve outside the supported mainline.",
       "replacement_or_target_boundary": "Research namespace or documented archive pointer.",
       "status": "research-frozen"
+    },
+    "src/radjax_tome/golden/__init__.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M2",
+      "rationale": "Golden contract public API.",
+      "replacement_or_target_boundary": "M2 golden contract boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/golden/compare.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M2",
+      "rationale": "Offline semantic parity comparison.",
+      "replacement_or_target_boundary": "M2 golden contract boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/golden/contract.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M2",
+      "rationale": "Versioned semantic contract and digest authority.",
+      "replacement_or_target_boundary": "M2 golden contract boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/golden/projection.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M2",
+      "rationale": "Read-only terminal-artifact semantic projection.",
+      "replacement_or_target_boundary": "M2 golden contract boundary.",
+      "status": "canonical"
     },
     "src/radjax_tome/io/__init__.py": {
       "archive_or_removal_condition": null,

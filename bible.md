@@ -1293,3 +1293,11 @@ Recorded the native two-pass fingerprint-corridor Path B direction, the golden
 research-status map. This documentation-only milestone preserves research and
 records existing package-initializer imports of research modules as M3/M6
 dependency-boundary remediation; it makes no runtime import changes.
+
+## 2026-07-12 — M2A Golden 1K Contract Machinery
+
+Added an offline semantic contract, read-only terminal-artifact capture,
+fixture validation, and quantization-aware comparison tooling for the native
+two-pass fingerprint-corridor Path B golden run. The repository intentionally
+contains no fabricated T4 coordinates, passports, or payload semantics: M2
+remains capture_pending until the authoritative rental artifact is exported.

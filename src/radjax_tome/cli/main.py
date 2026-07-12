@@ -780,6 +780,32 @@ def _build_parser() -> argparse.ArgumentParser:
     model_discover.add_argument("--search-path", type=Path, required=True)
     model_discover.set_defaults(func=_cmd_model_discover)
 
+    golden = subparsers.add_parser(
+        "golden",
+        help="Engineering commands for the offline golden behavioral contract.",
+    )
+    golden_subparsers = golden.add_subparsers(dest="golden_command", required=True)
+    golden_capture = golden_subparsers.add_parser(
+        "capture",
+        help="Capture a compact semantic contract from a terminal artifact.",
+    )
+    golden_capture.add_argument("--artifact", type=Path, required=True)
+    golden_capture.add_argument("--output", type=Path, required=True)
+    golden_capture.set_defaults(func=_cmd_golden_capture)
+    golden_validate = golden_subparsers.add_parser(
+        "validate",
+        help="Validate a committed or newly captured golden contract fixture.",
+    )
+    golden_validate.add_argument("--fixture", type=Path, required=True)
+    golden_validate.set_defaults(func=_cmd_golden_validate)
+    golden_compare = golden_subparsers.add_parser(
+        "compare",
+        help="Compare a terminal artifact with a golden semantic contract fixture.",
+    )
+    golden_compare.add_argument("--fixture", type=Path, required=True)
+    golden_compare.add_argument("--artifact", type=Path, required=True)
+    golden_compare.set_defaults(func=_cmd_golden_compare)
+
     doctor = subparsers.add_parser(
         "doctor",
         help="Show environment and command recommendations.",
@@ -1822,6 +1848,29 @@ def _cmd_model_discover(args: argparse.Namespace) -> int:
             f"has_weights={str(candidate['has_weights']).lower()}"
         )
     return 0
+
+
+def _cmd_golden_capture(args: argparse.Namespace) -> int:
+    from radjax_tome.golden import capture_golden_contract
+
+    report = capture_golden_contract(args.artifact, args.output)
+    print(json.dumps(report, sort_keys=True))
+    return 0
+
+
+def _cmd_golden_validate(args: argparse.Namespace) -> int:
+    from radjax_tome.golden import validate_fixture
+
+    print(json.dumps(validate_fixture(args.fixture), sort_keys=True))
+    return 0
+
+
+def _cmd_golden_compare(args: argparse.Namespace) -> int:
+    from radjax_tome.golden import compare_fixture_artifact
+
+    report = compare_fixture_artifact(args.fixture, args.artifact)
+    print(json.dumps(report, sort_keys=True))
+    return 0 if report["status"] == "pass" else 1
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:
