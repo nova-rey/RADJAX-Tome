@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -413,7 +414,10 @@ def _filter_student_selected_boards(
         document["selected_board_summary"] = _selected_board_summary(retained)
         write_json(records_path, document)
 
-    for path in sorted((root / "selected_exemplars").glob("*.json")):
+    selected_dir = root / "selected_exemplars"
+    for path in sorted(selected_dir.glob("*.json")):
+        if path.name == "payload_index.json":
+            continue
         document = read_json_object(path)
         records = document.get("selected_exemplars", [])
         if not isinstance(records, list):
@@ -427,7 +431,44 @@ def _filter_student_selected_boards(
         document["selected_exemplars"] = retained
         document["long_tail_summary"] = long_tail_summary(retained)
         document["selected_board_summary"] = _selected_board_summary(retained)
+        if document.get("payload_hash") is not None:
+            document["payload_hash"] = _native_payload_hash(document)
         write_json(path, document)
+
+    payload_index_path = selected_dir / "payload_index.json"
+    if payload_index_path.is_file():
+        document = read_json_object(payload_index_path)
+        records = document.get("selected_exemplars", [])
+        if isinstance(records, list):
+            retained = [
+                record
+                for record in records
+                if isinstance(record, dict)
+                and str(record.get("selected_board") or "primary") in allowed
+            ]
+            payload_hashes: dict[tuple[str, int], str] = {}
+            for shard_path in sorted(selected_dir.glob("selected-exemplars-*.json")):
+                shard = read_json_object(shard_path)
+                shard_hash = shard.get("payload_hash")
+                for record in shard.get("selected_exemplars", []):
+                    if isinstance(record, dict) and shard_hash is not None:
+                        payload_hashes[
+                            (
+                                str(record.get("selected_example_id")),
+                                int(record.get("selected_position", -1)),
+                            )
+                        ] = str(shard_hash)
+            for record in retained:
+                coordinate = (
+                    str(record.get("selected_example_id")),
+                    int(record.get("selected_position", -1)),
+                )
+                if coordinate in payload_hashes:
+                    record["payload_hash"] = payload_hashes[coordinate]
+            document["selected_exemplars"] = retained
+            document["long_tail_summary"] = long_tail_summary(retained)
+            document["selected_board_summary"] = _selected_board_summary(retained)
+            write_json(payload_index_path, document)
     routes_path = root / "curriculum" / "selected_routes.json"
     if routes_path.is_file():
         document = read_json_object(routes_path)
@@ -450,6 +491,13 @@ def _filter_student_selected_boards(
                 }
             )
             write_json(routes_path, document)
+
+
+def _native_payload_hash(payload: dict[str, Any]) -> str:
+    body = {key: value for key, value in payload.items() if key != "payload_hash"}
+    return hashlib.sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
 
 
 def _export_student_inputs(source: Path, destination: Path) -> None:

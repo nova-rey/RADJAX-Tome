@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+import tracemalloc
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -298,6 +299,85 @@ def test_deterministic_builder_artifacts_pass_strict_audit_for_both_paths(
     assert path_b_audit.checked_count == 4
 
 
+def test_selected_linkage_audit_accepts_one_quantization_step_entropy_deltas(
+    tmp_path: Path,
+) -> None:
+    artifact = _build_synthetic_artifact(tmp_path / "quantized", delivery_path=PATH_A)
+    payload_paths = sorted(
+        (artifact / "selected_exemplars").glob("selected-exemplars-*.json")
+    )
+    remaining = 8
+    for path in payload_paths:
+        document = read_json_object(path)
+        for payload in document["selected_exemplars"]:
+            if remaining <= 0:
+                break
+            payload["teacher_entropy"] += 0.00390625
+            remaining -= 1
+        write_json(path, document)
+
+    report = audit_selected_linkage(artifact, strict=True)
+
+    assert report.status == "pass", report.to_dict()
+    assert report.entropy_absolute_delta == 0.00390625
+    assert report.entropy_allowed_tolerance == 0.00390625
+    assert report.entropy_parity_status == "pass"
+
+
+@pytest.mark.parametrize("delta", (0.00390625 * 2, float("nan")))
+def test_selected_linkage_audit_rejects_large_or_nonfinite_entropy_deltas(
+    tmp_path: Path,
+    delta: float,
+) -> None:
+    artifact = _build_synthetic_artifact(tmp_path / str(delta), delivery_path=PATH_A)
+    path = next((artifact / "selected_exemplars").glob("selected-exemplars-*.json"))
+    document = read_json_object(path)
+    document["selected_exemplars"][0]["teacher_entropy"] += delta
+    write_json(path, document)
+
+    report = audit_selected_linkage(artifact, strict=True)
+
+    assert report.status == "fail"
+    assert any("teacher_entropy" in error["mismatch_fields"] for error in report.errors)
+    assert report.entropy_parity_status == "fail"
+
+
+def test_score_pass_diagnostic_lookup_uses_exact_coordinate_for_duplicate_example(
+    tmp_path: Path,
+) -> None:
+    from radjax_tome.builder.exemplar_delivery import _resolve_score_pass_evidence_row
+
+    shard = {
+        "score_example_ids": np.asarray([b"same", b"same"]),
+        "score_selected_position": np.asarray([2, 7], dtype=np.int32),
+    }
+
+    assert (
+        _resolve_score_pass_evidence_row(
+            shard,
+            {"selected_example_id": "same", "source_row": 1, "source_position": 7},
+        )
+        == 1
+    )
+
+
+def test_selected_linkage_audit_streams_256_payload_shards(
+    tmp_path: Path,
+) -> None:
+    artifact = _build_many_shard_audit_artifact(tmp_path / "256-shards", count=256)
+    tracemalloc.start()
+    report = audit_selected_linkage(artifact, strict=True)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    assert report.status == "pass", report.to_dict()
+    assert report.selected_count == 256
+    assert report.checked_count == 256
+    # Payload records are streamed one shard at a time; the test payloads are
+    # deliberately large enough to catch retaining every record dictionary.
+    assert peak < 32 * 1024 * 1024
+
+
 def _build_synthetic_artifact(root: Path, *, delivery_path: str) -> Path:
     (root / "shards").mkdir(parents=True)
     (root / "leaderboards").mkdir(parents=True)
@@ -417,6 +497,138 @@ def _build_synthetic_artifact(root: Path, *, delivery_path: str) -> Path:
         {"status": "pass", "delivery_path": delivery_path},
     )
     _write_mode_assignments(root)
+    return root
+
+
+def _build_many_shard_audit_artifact(root: Path, *, count: int) -> Path:
+    (root / "shards").mkdir(parents=True)
+    (root / "leaderboards").mkdir()
+    (root / "selected_exemplars").mkdir()
+    records: list[dict[str, object]] = []
+    metadata: list[dict[str, object]] = []
+    for index in range(count):
+        example_id = f"stream_{index:06d}"
+        score = float(2.0 + (index % 13) / 10.0)
+        token = 10_000 + index
+        entropy = np.full((1, SEQUENCE_LENGTH), score, dtype=np.float32)
+        top_tokens = np.full((1, SEQUENCE_LENGTH), token, dtype=np.int32)
+        source_tokens = np.zeros((1, SEQUENCE_LENGTH, TOP_K), dtype=np.int32)
+        source_tokens[:, :, 0] = token
+        np.savez(
+            root / "shards" / f"shard-{index:05d}.npz",
+            input_ids=np.zeros((1, SEQUENCE_LENGTH), dtype=np.int32),
+            corridor_entropy=entropy,
+            corridor_teacher_entropy=entropy,
+            corridor_top_token_ids=top_tokens,
+            exemplar_positions=np.zeros((1, TOP_K), dtype=np.int32),
+            exemplar_source_top_token_ids=source_tokens,
+        )
+        payload_ref = {
+            "kind": "one_pass_candidate_v1",
+            "source_shard_id": index,
+            "source_row": 0,
+            "source_position": 0,
+            "candidate_rank": 0,
+            "source_score": score,
+            "source_top_token_id": token,
+        }
+        record = {
+            "rank": index + 1,
+            "selected_example_id": example_id,
+            "selected_position": 0,
+            "selected_score": score,
+            "score_selected_position_entropy": score,
+            "score_top_token_id": token,
+            "source_shard_id": index,
+            "source_row": 0,
+            "source_position": 0,
+            "source_score": score,
+            "source_top_token_id": token,
+            "source_score_policy": "entropy_top_n_v1",
+            "selected_policy": "entropy_top_n_v1",
+            "source_delivery_path": PATH_A,
+            "payload_ref": payload_ref,
+            "corridor_mode_id": 0,
+            "corridor_fingerprint_id": "fp-0",
+            "corridor_assignment_status": "linked",
+            "selected_board": "primary",
+        }
+        payload = copy.deepcopy(record)
+        payload.update(
+            {
+                "top_token_ids": [token, *range(1, 1024)],
+                "top_log_probs": [-0.1] * 1024,
+                "top_probs": [1.0 / 1024] * 1024,
+                "top_selection_mask": [True] * 1024,
+                "effective_top_k": 1024,
+                "top_mass": 1.0,
+                "tail_mass": 0.0,
+                "bucket_masses": [0.25] * 4,
+                "teacher_entropy": score,
+                "sequence_length": SEQUENCE_LENGTH,
+                "vocab_size": 1024,
+                "num_buckets": 4,
+                "dynamic_top_k": {"policy": "mass_threshold_v1"},
+            }
+        )
+        records.append(record)
+        metadata.append({"example_index": index, "example_id": example_id})
+        write_json(
+            root / "selected_exemplars" / f"selected-exemplars-{index:05d}.json",
+            {
+                "schema_version": "selected_exemplar_payload_shard_v1",
+                "delivery_path": PATH_A,
+                "selected_exemplars": [payload],
+            },
+        )
+    write_json(
+        root / "leaderboards" / "selected_exemplars.json",
+        {
+            "schema_version": "selected_exemplars_v1",
+            "delivery_path": PATH_A,
+            "selected_exemplars": records,
+        },
+    )
+    write_json(
+        root / "delivery_report.json",
+        {"status": "pass", "delivery_path": PATH_A},
+    )
+    assignment_dir = root / "corridors" / "mode_assignments"
+    assignment_dir.mkdir(parents=True)
+    arrays = {
+        "position_example_index": np.arange(count, dtype=np.int32),
+        "position": np.zeros(count, dtype=np.int32),
+        "mode_id": np.zeros(count, dtype=np.int32),
+        "weight": np.ones(count, dtype=np.float32),
+    }
+    for name, array in arrays.items():
+        np.save(assignment_dir / f"{name}.npy", array)
+    metadata_path = assignment_dir / "examples_metadata.jsonl"
+    metadata_path.write_text(
+        "".join(json.dumps(row) + "\n" for row in metadata),
+        encoding="utf-8",
+    )
+    write_json(
+        root / "corridors" / "mode_assignments.json",
+        {
+            "schema_version": "corridor_mode_assignments_v3",
+            "storage_kind": "packed_numpy_v1",
+            "num_assignments": count,
+            "num_examples": count,
+            "arrays": {
+                name: {
+                    "path": f"corridors/mode_assignments/{name}.npy",
+                    "dtype": str(array.dtype),
+                    "shape": list(array.shape),
+                }
+                for name, array in arrays.items()
+            },
+            "examples_metadata": {
+                "path": "corridors/mode_assignments/examples_metadata.jsonl",
+                "num_examples": count,
+            },
+        },
+    )
     return root
 
 

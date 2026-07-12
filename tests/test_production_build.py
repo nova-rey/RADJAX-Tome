@@ -271,6 +271,53 @@ def test_c6_cpu_path_generates_features_audit_and_curriculum(
     )
 
 
+def test_c6_resume_finalization_reuses_complete_delivery_without_teacher(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(
+        tmp_path,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+    first = build_production_gpu_tome(config)
+    (config.output_dir / "reports" / "c6_integrated_selection_validation.json").unlink()
+
+    def fail_if_teacher_runs(*args, **kwargs):
+        raise AssertionError("teacher pass must not run during finalization resume")
+
+    monkeypatch.setattr(
+        production, "build_streaming_backend_teacher_textbook", fail_if_teacher_runs
+    )
+    resumed = build_production_gpu_tome(
+        _config(
+            tmp_path,
+            output_dir=config.output_dir,
+            resume=True,
+            target_policy="corridor_exemplar_v1",
+            vocab_size=64,
+            top_k=32,
+            exemplar_selection_enabled=True,
+            exemplar_delivery_path="two_pass_rerun_selected",
+            retain_unselected_exemplar_payloads=False,
+            selection_integration_policy="corridor_first_global_backfill_v1",
+            total_selected_exemplar_budget=4,
+        )
+    )
+
+    assert first["status"] == "pass"
+    assert resumed["status"] == "pass", resumed["blockers"]
+    assert resumed["resume_finalization_only"] is True
+    assert resumed["teacher_pass_resumed"] is False
+    assert resumed["selected_delivery_status"] == "pass"
+
+
 def test_c6_underfilled_budget_stops_before_native_selected_rerun(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

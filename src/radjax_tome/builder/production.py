@@ -275,6 +275,15 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             build_status="already_complete_invalid",
         )
         return _finalize_production_report(report, report_path, progress)
+    if already_complete and _completed_selected_delivery(config):
+        return _resume_c6_finalization(
+            config,
+            created_at=created_at,
+            production_started=production_started,
+            report_path=report_path,
+            parity_report_path=parity_report_path,
+            progress=progress,
+        )
     if output_has_artifact and config.overwrite:
         shutil.rmtree(config.output_dir)
 
@@ -2345,6 +2354,155 @@ def _c6_finalization_pending(config: ProductionBuildConfig) -> bool:
     if not validation_path.is_file():
         return True
     return read_json_object(validation_path).get("status") != "pass"
+
+
+def _completed_selected_delivery(config: ProductionBuildConfig) -> bool:
+    if not _selected_exemplar_delivery_enabled(config):
+        return False
+    try:
+        report = read_json_object(config.output_dir / "delivery_report.json")
+    except (OSError, ValueError):
+        return False
+    if report.get("status") != "pass":
+        return False
+    return (
+        config.output_dir / "leaderboards" / "selected_exemplars.json"
+    ).is_file() and any(
+        (config.output_dir / "selected_exemplars").glob("selected-exemplars-*.json")
+    )
+
+
+def _resume_c6_finalization(
+    config: ProductionBuildConfig,
+    *,
+    created_at: str,
+    production_started: float,
+    report_path: Path,
+    parity_report_path: Path,
+    progress: Any,
+) -> dict[str, Any]:
+    """Finish C6 from a complete score/delivery surface without teacher work."""
+
+    blockers: list[str] = []
+    warnings: list[str] = []
+    output = config.output_dir
+    try:
+        authority_payload = read_json_object(output / "c6" / "authority_manifest.json")
+        paths = authority_payload["paths"]
+        authorities = {
+            "feature_path": output / str(paths["corridor_features"]),
+            "global_board_supply_path": output / str(paths["global_board_supply"]),
+            "source_passports_path": output / str(paths["source_passports"]),
+            "authority_manifest_path": output / "c6" / "authority_manifest.json",
+            "score_pass_authority_hash": authority_payload["score_pass_authority_hash"],
+            "external_authority_override_used": authority_payload.get(
+                "external_authority_override_used", False
+            ),
+        }
+        progress.stage("c6_finalization_resume")
+        context = _prepare_c6_selection(config, authorities)
+        delivery_report = read_json_object(output / "delivery_report.json")
+        validation = validate_teacher_textbook(output)
+        write_teacher_textbook_validation_report(
+            validation,
+            output / "validation_report.json",
+        )
+        if validation.status != "pass":
+            blockers.extend(validation.blockers)
+        linkage_audit = audit_selected_linkage(output, strict=True)
+        write_selected_linkage_audit(
+            linkage_audit,
+            output / "selected_linkage_audit.json",
+        )
+        c6_validation, c6_coverage = _finalize_c6_selection(
+            config,
+            context,
+            delivery_report=delivery_report,
+            audit_report=linkage_audit.to_dict(),
+        )
+        audit_payload = linkage_audit.to_dict()
+        audit_payload["c6_integration"] = {
+            "status": c6_validation["status"],
+            "selected_unique_count": c6_validation["selected_unique_count"],
+            "selected_obligation_count": c6_validation["selected_obligation_count"],
+            "coordinate_set_authority": "c5",
+        }
+        write_json(output / "selected_linkage_audit.json", audit_payload)
+        (output / "reports").mkdir(parents=True, exist_ok=True)
+        write_json(
+            output / "reports" / "c6_integrated_selection_validation.json",
+            c6_validation,
+        )
+        write_corridor_coverage_report(
+            c6_coverage,
+            output / "reports" / "fingerprint_corridor_coverage.json",
+        )
+        if c6_validation["status"] == "fail":
+            blockers.extend(str(item) for item in c6_validation["blockers"])
+        if linkage_audit.status != "pass":
+            blockers.append("selected-linkage audit status is fail")
+        if validation.status == "pass" and not blockers:
+            write_cover_page(output)
+        existing_report = read_json_object(report_path) if report_path.is_file() else {}
+        run_plan_path = _run_plan_path(config)
+        run_plan = (
+            read_json_object(run_plan_path)
+            if run_plan_path.is_file()
+            else {"status": "not_run"}
+        )
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail" if blockers else "pass",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report=existing_report.get("doctor_report", {}),
+            run_plan_path=run_plan_path,
+            run_plan=run_plan,
+            effective_batch_size=existing_report.get("effective_batch_size"),
+            already_complete=True,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+            validation_status=validation.status,
+            build_status="resumed_finalization",
+            delivery_report=delivery_report,
+            timing=_production_timing_fields(
+                config,
+                started_at=created_at,
+                completed_at=_now(),
+                production_wall_seconds=_elapsed(production_started),
+                preflight_wall_seconds=0.0,
+                main_pass_wall_seconds=0.0,
+                validation_wall_seconds=0.0,
+                delivery_report=delivery_report,
+            ),
+        )
+        report["teacher_pass_resumed"] = False
+        report["resume_finalization_only"] = True
+        return _finalize_production_report(report, report_path, progress)
+    except (OSError, TypeError, ValueError, KeyError) as exc:
+        blockers.append(f"C6 finalization resume failed: {exc}")
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report={},
+            run_plan_path=_run_plan_path(config),
+            run_plan={"status": "not_run"},
+            effective_batch_size=None,
+            already_complete=True,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+            validation_status="not_run",
+            build_status="resume_finalization_failed",
+        )
+        report["teacher_pass_resumed"] = False
+        report["resume_finalization_only"] = True
+        return _finalize_production_report(report, report_path, progress)
 
 
 def _has_existing_artifact(config: ProductionBuildConfig) -> bool:

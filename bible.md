@@ -1247,3 +1247,16 @@ meaningful divergence remain hard failures. Failure diagnostics expose the
 live entropy delta, allowed tolerance, and parity status. Regression coverage
 now exercises the live record-versus-rerun comparison directly. No T4
 rehearsal was executed by this corrective patch.
+
+## 2026-07-12 — C6.3.4 Streaming Linkage Audit and Finalization Resume
+
+Selected-linkage auditing now shares one quantization-aware entropy helper
+with live Path B rerun validation. Audits retain exact selected coordinates,
+source passport fields, authority hashes, top-token identity, and payload
+hashes while reporting per-record entropy deltas and tolerance. Payload shards
+are read one at a time and reconciled against the coordinate-keyed payload
+index; diagnostics retain scalar linkage state instead of full probability
+arrays. Student package board filtering recomputes native shard and payload
+index hashes after filtering. A completed score and selected-delivery surface
+can resume C6 finalization without invoking the teacher again. No T4 rehearsal
+was executed by this corrective patch.

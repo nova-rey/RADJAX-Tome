@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -8,6 +9,11 @@ from typing import Any
 import numpy as np
 
 from radjax_tome.io.json import read_json_object, write_json
+from radjax_tome.quantization import (
+    ENTROPY_PARITY_QUANTIZATION_STEP,
+    entropy_absolute_delta,
+    entropy_parity_close,
+)
 
 AUDIT_SCHEMA_VERSION = "selected_exemplar_linkage_audit_v1"
 PATH_A = "one_pass_pruned_candidate"
@@ -61,6 +67,9 @@ class SelectedLinkageAuditReport:
     warnings: tuple[str, ...] = ()
     profile: str = FULL_DEBUG_PROVENANCE
     producer_shard_authority: str = "available"
+    entropy_absolute_delta: float | None = None
+    entropy_allowed_tolerance: float = ENTROPY_PARITY_QUANTIZATION_STEP
+    entropy_parity_status: str = "pass"
     schema_version: str = AUDIT_SCHEMA_VERSION
 
     def to_dict(self) -> dict[str, Any]:
@@ -82,8 +91,10 @@ def audit_selected_linkage(
     errors: list[dict[str, Any]] = []
     warnings: list[str] = []
     records = _read_selected_records(root, errors)
-    payloads = _read_selected_payloads(root, errors)
-    delivery_path = _delivery_path(root, records, payloads)
+    delivery_report = _read_delivery_report(root)
+    expected_authority = delivery_report.get("delivery_authority_hash")
+    payload_index = _read_payload_index(root, errors)
+    delivery_path = _delivery_path(root, records, [])
     selected_count = len(records)
     assignment_modes, example_ids = _load_selected_mode_assignments(
         root,
@@ -106,32 +117,86 @@ def audit_selected_linkage(
     if not example_ids:
         example_ids = _dataset_example_ids(root, warnings)
 
-    checked_count = min(len(records), len(payloads))
-    if len(records) != len(payloads):
-        _append_global_error(
-            errors,
-            mismatch_fields=["selected_payload_count"],
-            source_values={
-                "record_count": len(records),
-                "payload_count": len(payloads),
-            },
-        )
-    for index in range(max(len(records), len(payloads))):
-        record = records[index] if index < len(records) else None
-        payload = payloads[index] if index < len(payloads) else None
-        if record is None or payload is None:
+    records_by_coordinate = {
+        _coordinate_key(record): (index, record) for index, record in enumerate(records)
+    }
+    records_by_example_id: dict[str, list[tuple[int, dict[str, Any]]]] = {}
+    for index, record in enumerate(records):
+        records_by_example_id.setdefault(
+            str(record.get("selected_example_id")), []
+        ).append((index, record))
+    seen_coordinates: set[tuple[str, int]] = set()
+    payload_count = 0
+    entropy_deltas: list[float] = []
+    for payload, envelope in _iter_selected_payloads(root, errors):
+        payload_count += 1
+        coordinate = _coordinate_key(payload)
+        record_entry = records_by_coordinate.get(coordinate)
+        if record_entry is None:
+            candidates = records_by_example_id.get(
+                str(payload.get("selected_example_id")), []
+            )
+            if len(candidates) == 1:
+                record_entry = candidates[0]
+        record = None if record_entry is None else record_entry[1]
+        if record is None:
+            _append_record_error(
+                errors,
+                record=None,
+                payload=payload,
+                mismatch_fields=["record_missing"],
+                source_values={"coordinate": list(coordinate)},
+            )
+            continue
+        if coordinate in seen_coordinates:
             _append_record_error(
                 errors,
                 record=record,
                 payload=payload,
-                mismatch_fields=[
-                    "record_missing" if record is None else "payload_missing"
-                ],
-                source_values={"selected_index": index},
+                mismatch_fields=["duplicate_payload_coordinate"],
+                source_values={"coordinate": list(coordinate)},
             )
             continue
+        seen_coordinates.add(coordinate)
         mismatch_fields: list[str] = []
-        source_values: dict[str, Any] = {"selected_index": index}
+        source_values: dict[str, Any] = {"coordinate": list(coordinate)}
+        expected_index = record_entry[0]
+        envelope_record_index = envelope.get("record_index")
+        if envelope_record_index is not None:
+            if _int_or_none(envelope_record_index) != expected_index:
+                mismatch_fields.append("selected_example_id")
+        elif expected_index != payload_count - 1:
+            mismatch_fields.append("selected_example_id")
+        entropy_delta = _entropy_delta(
+            payload.get("teacher_entropy"), record.get("source_score")
+        )
+        if entropy_delta is not None:
+            entropy_deltas.append(entropy_delta)
+        source_values.update(
+            {
+                "entropy_absolute_delta": entropy_delta,
+                "entropy_allowed_tolerance": ENTROPY_PARITY_QUANTIZATION_STEP,
+                "entropy_parity_status": (
+                    "pass"
+                    if entropy_delta is not None
+                    and entropy_delta <= ENTROPY_PARITY_QUANTIZATION_STEP
+                    else "fail"
+                ),
+                "payload_hash": envelope.get("payload_hash"),
+            }
+        )
+        _check_payload_index_reconciliation(
+            payload,
+            payload_index=payload_index,
+            envelope=envelope,
+            mismatch_fields=mismatch_fields,
+        )
+        _check_payload_envelope(
+            payload,
+            envelope=envelope,
+            expected_authority=expected_authority,
+            mismatch_fields=mismatch_fields,
+        )
         _check_common_record_payload(record, payload, mismatch_fields)
         row = _int_or_none(record.get("source_row"))
         position = _int_or_none(record.get("source_position"))
@@ -187,6 +252,27 @@ def audit_selected_linkage(
                 source_values=source_values,
             )
 
+    missing_coordinates = set(records_by_coordinate).difference(seen_coordinates)
+    if missing_coordinates:
+        for coordinate in sorted(missing_coordinates):
+            _append_record_error(
+                errors,
+                record=records_by_coordinate[coordinate][1],
+                payload=None,
+                mismatch_fields=["payload_missing"],
+                source_values={"coordinate": list(coordinate)},
+            )
+    checked_count = min(len(records), payload_count)
+    if payload_count != len(records):
+        _append_global_error(
+            errors,
+            mismatch_fields=["selected_payload_count"],
+            source_values={
+                "record_count": len(records),
+                "payload_count": payload_count,
+            },
+        )
+
     path_a_status = _authority_status(records, errors, PATH_A)
     path_b_status = _authority_status(records, errors, PATH_B)
     corridor_status = (
@@ -213,6 +299,16 @@ def audit_selected_linkage(
         profile=profile,
         producer_shard_authority=(
             "not_available_in_student_profile" if profile == STUDENT else "available"
+        ),
+        entropy_absolute_delta=max(entropy_deltas, default=None),
+        entropy_allowed_tolerance=ENTROPY_PARITY_QUANTIZATION_STEP,
+        entropy_parity_status=(
+            "pass"
+            if not any(
+                error.get("source_values", {}).get("entropy_parity_status") == "fail"
+                for error in errors
+            )
+            else "fail"
         ),
     )
 
@@ -293,6 +389,168 @@ def _read_selected_payloads(
     return payloads
 
 
+def _selected_payload_paths(root: Path, errors: list[dict[str, Any]]) -> list[Path]:
+    selected_dir = root / "selected_exemplars"
+    paths = sorted(selected_dir.glob("selected-exemplars-*.json"))
+    if not paths:
+        _append_global_error(
+            errors,
+            mismatch_fields=["selected_payload_shards_missing"],
+            source_values={"path": str(selected_dir)},
+        )
+    return paths
+
+
+def _iter_selected_payloads(
+    root: Path,
+    errors: list[dict[str, Any]],
+):
+    for shard_index, path in enumerate(_selected_payload_paths(root, errors)):
+        try:
+            shard = read_json_object(path)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            _append_global_error(
+                errors,
+                mismatch_fields=["selected_payload_shard_invalid"],
+                source_values={"path": str(path), "error": str(exc)},
+            )
+            continue
+        items = shard.get("selected_exemplars")
+        if not isinstance(items, list) or any(
+            not isinstance(item, dict) for item in items
+        ):
+            _append_global_error(
+                errors,
+                mismatch_fields=["selected_payload_shard_records_invalid"],
+                source_values={"path": str(path)},
+            )
+            continue
+        envelope = {
+            "path": str(path),
+            "shard_index": shard_index,
+            "record_index": shard.get("record_index"),
+            "delivery_authority_hash": shard.get("delivery_authority_hash"),
+            "payload_hash": shard.get("payload_hash"),
+            "payload_hash_valid": (
+                shard.get("payload_hash") == _payload_hash(shard)
+                if shard.get("payload_hash") is not None
+                else None
+            ),
+            "native": shard.get("payload_hash") is not None,
+        }
+        for shard_row, item in enumerate(items):
+            payload = dict(item)
+            payload.setdefault("_audit_payload_shard_index", shard_index)
+            payload.setdefault("_audit_payload_shard_row", shard_row)
+            yield payload, envelope
+
+
+def _read_payload_index(
+    root: Path,
+    errors: list[dict[str, Any]],
+) -> dict[tuple[str, int], dict[str, Any]]:
+    path = root / "selected_exemplars" / "payload_index.json"
+    if not path.is_file():
+        return {}
+    try:
+        payload = read_json_object(path)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        _append_global_error(
+            errors,
+            mismatch_fields=["payload_index_invalid"],
+            source_values={"path": str(path), "error": str(exc)},
+        )
+        return {}
+    items = payload.get("selected_exemplars")
+    if not isinstance(items, list):
+        _append_global_error(
+            errors,
+            mismatch_fields=["payload_index_records_invalid"],
+            source_values={"path": str(path)},
+        )
+        return {}
+    index: dict[tuple[str, int], dict[str, Any]] = {}
+    for item in items:
+        if not isinstance(item, dict):
+            _append_global_error(
+                errors,
+                mismatch_fields=["payload_index_record_invalid"],
+                source_values={"path": str(path)},
+            )
+            continue
+        coordinate = _coordinate_key(item)
+        if coordinate in index:
+            _append_global_error(
+                errors,
+                mismatch_fields=["payload_index_duplicate_coordinate"],
+                source_values={"coordinate": list(coordinate)},
+            )
+            continue
+        index[coordinate] = item
+    return index
+
+
+def _coordinate_key(item: dict[str, Any]) -> tuple[str, int]:
+    position = _int_or_none(item.get("selected_position"))
+    return str(item.get("selected_example_id")), -1 if position is None else position
+
+
+def _check_payload_index_reconciliation(
+    payload: dict[str, Any],
+    *,
+    payload_index: dict[tuple[str, int], dict[str, Any]],
+    envelope: dict[str, Any],
+    mismatch_fields: list[str],
+) -> None:
+    if not payload_index:
+        return
+    indexed = payload_index.get(_coordinate_key(payload))
+    if indexed is None:
+        mismatch_fields.append("payload_index.coordinate")
+        return
+    if indexed.get("payload_ref") != payload.get("payload_ref"):
+        mismatch_fields.append("payload_index.payload_ref")
+    indexed_hash = indexed.get("payload_hash")
+    if indexed_hash is not None and indexed_hash != envelope.get("payload_hash"):
+        mismatch_fields.append("payload_index.payload_hash")
+
+
+def _check_payload_envelope(
+    payload: dict[str, Any],
+    *,
+    envelope: dict[str, Any],
+    expected_authority: Any,
+    mismatch_fields: list[str],
+) -> None:
+    if expected_authority is not None:
+        # Native C6 shards carry the authority on the shard envelope.  The
+        # legacy Path A JSON shard carries it on each selected payload record;
+        # require whichever authority surface the artifact actually exposes.
+        if (
+            envelope.get("native")
+            and envelope.get("delivery_authority_hash") != expected_authority
+        ):
+            mismatch_fields.append("delivery_authority_hash")
+        if payload.get("delivery_authority_hash") != expected_authority:
+            mismatch_fields.append("payload.delivery_authority_hash")
+    if envelope.get("native") and envelope.get("payload_hash_valid") is not True:
+        mismatch_fields.append("payload_hash")
+
+
+def _payload_hash(payload: dict[str, Any]) -> str:
+    body = {key: value for key, value in payload.items() if key != "payload_hash"}
+    return hashlib.sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def _read_delivery_report(root: Path) -> dict[str, Any]:
+    try:
+        return read_json_object(root / "delivery_report.json")
+    except (OSError, ValueError, json.JSONDecodeError):
+        return {}
+
+
 def _delivery_path(
     root: Path,
     records: list[dict[str, Any]],
@@ -336,7 +594,7 @@ def _check_common_record_payload(
         mismatch_fields.append("selected_position")
     if not _close(record.get("selected_score"), record.get("source_score")):
         mismatch_fields.append("selected_score")
-    if not _close(payload.get("teacher_entropy"), record.get("source_score")):
+    if not _entropy_close(payload.get("teacher_entropy"), record.get("source_score")):
         mismatch_fields.append("teacher_entropy")
 
 
@@ -368,7 +626,7 @@ def _check_source_coordinate(
             "corridor_top_token_id": corridor_top_token_id,
         }
     )
-    if corridor_entropy is None or not _close(
+    if corridor_entropy is None or not _entropy_close(
         corridor_entropy, record.get("source_score")
     ):
         mismatch_fields.append("source_score")
@@ -829,6 +1087,14 @@ def _close(left: Any, right: Any, *, atol: float = 1e-4) -> bool:
         return False
 
 
+def _entropy_delta(left: Any, right: Any) -> float | None:
+    return entropy_absolute_delta(left, right)
+
+
+def _entropy_close(left: Any, right: Any) -> bool:
+    return entropy_parity_close(left, right)
+
+
 def _int_or_none(value: Any) -> int | None:
     try:
         return int(value)
@@ -856,10 +1122,34 @@ def _append_record_error(
             "source_position": source.get("source_position"),
             "mismatch_fields": sorted(set(mismatch_fields)),
             "record": record,
-            "payload": payload,
+            "payload": _audit_payload_scalars(payload),
             "source_values": source_values,
         }
     )
+
+
+def _audit_payload_scalars(payload: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Keep failure diagnostics bounded by dropping full probability arrays."""
+
+    if payload is None:
+        return None
+    scalar = {
+        key: value
+        for key, value in payload.items()
+        if key
+        not in {
+            "top_token_ids",
+            "top_log_probs",
+            "top_probs",
+            "top_selection_mask",
+            "bucket_masses",
+        }
+    }
+    if isinstance(payload.get("top_token_ids"), list):
+        scalar["payload_top_token_id"] = (
+            payload["top_token_ids"][0] if payload["top_token_ids"] else None
+        )
+    return scalar
 
 
 def _append_global_error(

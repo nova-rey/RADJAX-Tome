@@ -45,12 +45,16 @@ from radjax_tome.builder.long_tail import (
 )
 from radjax_tome.builder.teacher_textbook import TinyTextExample
 from radjax_tome.io.json import read_json_object, write_json
+from radjax_tome.quantization import (
+    ENTROPY_PARITY_QUANTIZATION_STEP,
+    entropy_absolute_delta,
+    entropy_parity_close,
+)
 from radjax_tome.targets.store import TeacherTargetStore
 
 EXEMPLAR_DELIVERY_REPORT_FILENAME = "delivery_report.json"
 EXEMPLAR_DELIVERY_REPORT_SCHEMA = "selected_exemplar_delivery_report_v1"
 EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA = "exemplar_delivery_parity_report_v1"
-ENTROPY_PARITY_QUANTIZATION_STEP = 0.00390625
 LEADERBOARD_REPORT_FILENAME = "leaderboard_report.json"
 SELECTED_EXEMPLARS_FILENAME = "selected_exemplars.json"
 CURRICULUM_ROUTES_FILENAME = "selected_routes.json"
@@ -328,11 +332,15 @@ def materialize_selected_exemplar_delivery(
         progress_callback=config.progress_callback,
     )
     if _native_streamed_payloads(config):
-        _synchronize_native_payload_shards(
+        native_payload_hashes = _synchronize_native_payload_shards(
             _native_payload_stage_dir(config),
             selected_records=selected_records,
         )
         _promote_native_payload_shards(config)
+        for summary in selected_payloads:
+            record_index = int(summary.get("_record_index", -1))
+            if record_index in native_payload_hashes:
+                summary["payload_hash"] = native_payload_hashes[record_index]
     pruning_started = perf_counter()
     pruned_candidate_payload_bytes = _prune_path_a_candidate_payload_arrays(
         store,
@@ -424,6 +432,7 @@ def materialize_selected_exemplar_delivery(
         "selection_enabled": config.selection_enabled,
         "delivery_path": config.delivery_path,
         "execution_mode": config.execution_mode,
+        "delivery_authority_hash": config.delivery_authority_hash,
         "dataset_path": str(config.dataset_path),
         "score_policy": config.score_policy,
         "entropy_quantization_step": ENTROPY_PARITY_QUANTIZATION_STEP,
@@ -597,7 +606,7 @@ def validate_selected_exemplar_delivery(
             blockers.append("selected exemplar count is zero")
     selected_path = leaderboards_dir / SELECTED_EXEMPLARS_FILENAME
     selected = _read_selected_exemplars(selected_path, blockers)
-    payloads = _read_selected_payloads(selected_dir, blockers)
+    payloads = _read_selected_payload_summaries(selected_dir, blockers)
     expected_selected_count = int(report.get("num_selected_exemplars") or 0)
     if selected and len(selected) != expected_selected_count:
         blockers.append("selected_exemplars.json count does not match delivery report")
@@ -1182,19 +1191,11 @@ def _close_float(left: Any, right: Any, *, atol: float = 1e-4) -> bool:
 
 
 def _entropy_absolute_delta(left: Any, right: Any) -> float | None:
-    try:
-        left_value = float(left)
-        right_value = float(right)
-    except (TypeError, ValueError):
-        return None
-    if not np.isfinite(left_value) or not np.isfinite(right_value):
-        return None
-    return abs(left_value - right_value)
+    return entropy_absolute_delta(left, right)
 
 
 def _entropy_parity_close(left: Any, right: Any) -> bool:
-    delta = _entropy_absolute_delta(left, right)
-    return delta is not None and delta <= ENTROPY_PARITY_QUANTIZATION_STEP
+    return entropy_parity_close(left, right)
 
 
 def compare_exemplar_delivery_artifacts(
@@ -2318,18 +2319,18 @@ def _selected_payloads_from_backend(
                         )
                         record["selected_board"] = selected_board
                         selected_payload["selected_board"] = selected_board
-                        _write_native_payload_shard(
+                        payload_hash = _write_native_payload_shard(
                             _native_payload_stage_dir(config),
                             record_index=record_index,
                             payload=selected_payload,
                             delivery_path=config.delivery_path,
                         )
-                        payload_summaries.append(
-                            _payload_scalar_summary(
-                                selected_payload,
-                                record_index=record_index,
-                            )
+                        payload_summary = _payload_scalar_summary(
+                            selected_payload,
+                            record_index=record_index,
                         )
+                        payload_summary["payload_hash"] = payload_hash
+                        payload_summaries.append(payload_summary)
                         coordinates_committed += 1
                         del selected_payload
                     else:
@@ -2411,7 +2412,7 @@ def _write_native_payload_shard(
     record_index: int,
     payload: dict[str, Any],
     delivery_path: str,
-) -> None:
+) -> str:
     selected_dir.mkdir(parents=True, exist_ok=True)
     shard = {
         "schema_version": "selected_exemplar_payload_shard_v1",
@@ -2424,6 +2425,7 @@ def _write_native_payload_shard(
     _write_json_atomic(
         selected_dir / f"selected-exemplars-{record_index:05d}.json", shard
     )
+    return str(shard["payload_hash"])
 
 
 def _payload_scalar_summary(
@@ -2443,6 +2445,9 @@ def _payload_scalar_summary(
             "bucket_masses",
         }
     }
+    top_token_ids = payload.get("top_token_ids")
+    if isinstance(top_token_ids, list) and top_token_ids:
+        summary["payload_top_token_id"] = top_token_ids[0]
     summary["_record_index"] = record_index
     return summary
 
@@ -2451,11 +2456,12 @@ def _synchronize_native_payload_shards(
     selected_dir: Path,
     *,
     selected_records: list[dict[str, Any]],
-) -> None:
+) -> dict[int, str]:
     linkage = {
         (str(record["selected_example_id"]), int(record["selected_position"])): record
         for record in selected_records
     }
+    hashes: dict[int, str] = {}
     for path in sorted(selected_dir.glob("selected-exemplars-*.json")):
         payload = read_json_object(path)
         records = payload.get("selected_exemplars")
@@ -2479,6 +2485,8 @@ def _synchronize_native_payload_shards(
             item[key] = record.get(key)
         payload["payload_hash"] = _native_payload_hash(payload)
         _write_json_atomic(path, payload)
+        hashes[int(payload["record_index"])] = str(payload["payload_hash"])
+    return hashes
 
 
 def _native_payload_stage_dir(config: ExemplarDeliveryConfig) -> Path:
@@ -2518,10 +2526,12 @@ def _prepare_native_payload_staging(
             os.replace(path, quarantine_dir / path.name)
             quarantined += 1
             continue
-        completed[record_index] = _payload_scalar_summary(
+        summary = _payload_scalar_summary(
             item,
             record_index=record_index,
         )
+        summary["payload_hash"] = payload["payload_hash"]
+        completed[record_index] = summary
     if config.rerun_metrics is not None:
         config.rerun_metrics.update(
             {
@@ -3247,6 +3257,53 @@ def _read_selected_payloads(
     if not payloads:
         blockers.append("selected exemplar payloads are missing")
     return payloads
+
+
+def _read_selected_payload_summaries(
+    selected_dir: Path,
+    blockers: list[str],
+) -> list[dict[str, Any]]:
+    """Validate payload shards one at a time, retaining only scalar state."""
+
+    if not selected_dir.is_dir():
+        blockers.append("selected_exemplars directory missing")
+        return []
+    summaries: list[dict[str, Any]] = []
+    for path in sorted(selected_dir.glob("selected-exemplars-*.json")):
+        try:
+            envelope = read_json_object(path)
+        except (OSError, ValueError) as exc:
+            blockers.append(f"{path.name} invalid: {exc}")
+            continue
+        records = envelope.get("selected_exemplars", [])
+        if not isinstance(records, list):
+            blockers.append(f"{path.name} selected_exemplars is invalid")
+            continue
+        for item in records:
+            if not isinstance(item, dict):
+                blockers.append(f"{path.name} selected exemplar is invalid")
+                continue
+            summary = _payload_scalar_summary(
+                item,
+                record_index=int(envelope.get("record_index", len(summaries))),
+            )
+            summary["payload_hash"] = envelope.get("payload_hash")
+            top_token_id = item.get("top_token_ids", [None])
+            if isinstance(top_token_id, list):
+                summary["top_token_ids"] = top_token_id[:1]
+            for key in (
+                "top_log_probs",
+                "top_probs",
+                "top_selection_mask",
+                "bucket_masses",
+            ):
+                if key in item:
+                    value = item[key]
+                    summary[key] = value[:1] if key != "bucket_masses" else value
+            summaries.append(summary)
+    if not summaries:
+        blockers.append("selected exemplar payloads are missing")
+    return summaries
 
 
 def _metadata_int(artifact_dir: Path, key: str) -> int | None:
