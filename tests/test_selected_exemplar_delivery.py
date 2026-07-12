@@ -207,6 +207,47 @@ def test_delivery_parity_reports_quantization_aware_entropy_metrics(
     assert report["coordinate_exact_match"] is True
 
 
+def test_live_path_b_rerun_entropy_accepts_one_quantization_step() -> None:
+    record = {
+        "selected_example_id": "same-example",
+        "selected_position": 1,
+        "source_position": 1,
+        "source_score": 4.0,
+        "source_top_token_id": 7,
+        "source_shard_id": 0,
+        "source_row": 0,
+        "payload_ref": {},
+        "source_delivery_path": "two_pass_rerun_selected",
+    }
+    payload = {
+        "selected_example_id": "same-example",
+        "selected_position": 1,
+        "selected_score": 4.0,
+        "source_score": 4.0,
+        "source_top_token_id": 7,
+        "top_token_ids": [7],
+        "teacher_entropy": 4.00390625,
+        "payload_ref": {},
+    }
+
+    mismatch_fields = exemplar_delivery._path_b_rerun_payload_mismatch(record, payload)
+    assert "teacher_entropy" not in mismatch_fields
+
+
+def test_live_path_b_rerun_entropy_rejects_meaningful_divergence() -> None:
+    record = {
+        "source_score": 4.0,
+        "source_top_token_id": 7,
+        "source_delivery_path": "two_pass_rerun_selected",
+        "payload_ref": {},
+    }
+    payload = {"top_token_ids": [7], "teacher_entropy": 4.01, "payload_ref": {}}
+
+    assert "teacher_entropy" in exemplar_delivery._path_b_rerun_payload_mismatch(
+        record, payload
+    )
+
+
 @pytest.mark.parametrize(
     "right_score",
     (4.0039062501, 4.1),

@@ -1237,3 +1237,13 @@ one example, and preserve the score evidence row in failures. Native resumable
 delivery retains authority-bound valid staged shards, quarantines invalid
 staged files with explicit paths/counts, and reports preserved and quarantined
 staging evidence after failure. No T4 rehearsal was executed by this patch.
+
+## 2026-07-12 — C6.3.3 Live Rerun Entropy Gate Correction
+
+The live Path B selected-rerun validator now uses the same documented entropy
+quantization tolerance as artifact parity. A one-step `0.00390625` teacher
+entropy difference passes the rerun payload gate, while nonfinite values and
+meaningful divergence remain hard failures. Failure diagnostics expose the
+live entropy delta, allowed tolerance, and parity status. Regression coverage
+now exercises the live record-versus-rerun comparison directly. No T4
+rehearsal was executed by this corrective patch.

@@ -798,7 +798,7 @@ def _source_coordinate_linkage_mismatch(
         return True
     if not _close_float(payload.get("source_score"), source_score):
         return True
-    if not _close_float(payload.get("teacher_entropy"), source_score):
+    if not _entropy_parity_close(payload.get("teacher_entropy"), source_score):
         return True
     if int(payload.get("source_top_token_id", -1)) != source_top_token_id:
         return True
@@ -982,7 +982,9 @@ def _path_b_rerun_payload_mismatch(
         mismatch_fields.append("top_token_ids")
     elif int(top_token_ids[0]) != int(record["source_top_token_id"]):
         mismatch_fields.append("top_token_ids[0]")
-    if not _close_float(payload.get("teacher_entropy"), record.get("source_score")):
+    if not _entropy_parity_close(
+        payload.get("teacher_entropy"), record.get("source_score")
+    ):
         mismatch_fields.append("teacher_entropy")
     if _record_payload_tuple_mismatch(record, payload):
         mismatch_fields.append("record_payload_tuple")
@@ -1043,6 +1045,19 @@ def _path_b_delivery_error(
         "rerun_payload_top_token_id": _first_payload_token_id(rerun_payload or {}),
         "rerun_payload_teacher_entropy": (
             None if rerun_payload is None else rerun_payload.get("teacher_entropy")
+        ),
+        "entropy_absolute_delta": _entropy_absolute_delta(
+            None if rerun_payload is None else rerun_payload.get("teacher_entropy"),
+            record.get("source_score"),
+        ),
+        "entropy_allowed_tolerance": ENTROPY_PARITY_QUANTIZATION_STEP,
+        "entropy_parity_status": (
+            "pass"
+            if rerun_payload is not None
+            and _entropy_parity_close(
+                rerun_payload.get("teacher_entropy"), record.get("source_score")
+            )
+            else "fail"
         ),
         "mismatch_fields": mismatch_fields or [],
         **score_fields,
@@ -1164,6 +1179,22 @@ def _close_float(left: Any, right: Any, *, atol: float = 1e-4) -> bool:
         return bool(np.isclose(float(left), float(right), rtol=1e-5, atol=atol))
     except (TypeError, ValueError):
         return False
+
+
+def _entropy_absolute_delta(left: Any, right: Any) -> float | None:
+    try:
+        left_value = float(left)
+        right_value = float(right)
+    except (TypeError, ValueError):
+        return None
+    if not np.isfinite(left_value) or not np.isfinite(right_value):
+        return None
+    return abs(left_value - right_value)
+
+
+def _entropy_parity_close(left: Any, right: Any) -> bool:
+    delta = _entropy_absolute_delta(left, right)
+    return delta is not None and delta <= ENTROPY_PARITY_QUANTIZATION_STEP
 
 
 def compare_exemplar_delivery_artifacts(
