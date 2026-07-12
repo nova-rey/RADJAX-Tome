@@ -1309,3 +1309,10 @@ multi-role authority, join native streamed `payload_index.selected_exemplars`,
 and bind C2-C5 allocation, claims, dedupe/backfill, coverage, budget, and C6
 authority records. The capture remains read-only and capture_pending until the
 real terminal T4 artifact supplies the authoritative 256-coordinate fixture.
+
+## 2026-07-12 — M2A Native C6 Projection Correction II
+
+Aligned the C3 reader with `coverage_plan.json` plus its validation report,
+made selection index authoritative across C5 obligation, passport, and payload
+records, and removed absolute model/tokenizer paths from semantic identity in
+favor of provenance and corpus-policy fields. Capture remains capture_pending.

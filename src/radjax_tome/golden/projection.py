@@ -212,7 +212,7 @@ def _payload_semantics(row: dict[str, Any], index: int) -> dict[str, Any]:
 def _project(row: dict[str, Any], index: int, *keys: str) -> dict[str, Any]:
     example_id, position = _coordinate(row)
     projected = {
-        "selection_index": int(row.get("rank", row.get("selection_index", index))),
+        "selection_index": int(row.get("selection_index", row.get("rank", index))),
         "selected_example_id": example_id,
         "selected_position": position,
     }
@@ -232,15 +232,29 @@ def _coordinate(row: dict[str, Any]) -> tuple[str, int]:
 
 def _input_identity(root: Path) -> dict[str, Any]:
     metadata = _read_object(root / "metadata.json")
+    run = _read_object(root / "run_manifest.json")
+    teacher = run.get("teacher_model_provenance") or {}
     return {
-        key: metadata.get(key)
-        for key in (
-            "model_id",
-            "tokenizer_id",
-            "vocab_size",
-            "sequence_length",
-            "num_examples",
-        )
+        "teacher_identity": {
+            key: teacher.get(key)
+            for key in (
+                "model_family",
+                "model_revision",
+                "config_hash",
+                "tokenizer_hash",
+                "weights_hash",
+                "model_directory_hash",
+            )
+        },
+        "tokenizer_identity": teacher.get("tokenizer_hash"),
+        "vocab_size": metadata.get("vocab_size"),
+        "sequence_length": metadata.get("sequence_length"),
+        "num_examples": metadata.get("num_examples"),
+        "corpus_hash": run.get("corpus_hash"),
+        "corpus_manifest_hash": run.get("corpus_manifest_hash"),
+        "normalization_policy": run.get("source_corpus_normalization_policy"),
+        "chunking_policy": run.get("source_corpus_chunking_policy"),
+        "deduplication_policy": run.get("source_corpus_deduplication_policy"),
     }
 
 
@@ -278,7 +292,8 @@ def _authority_summary(root: Path, authority: dict[str, Any]) -> dict[str, Any]:
     paths = authority.get("paths") or {}
     required = {
         "c2": root / "c6" / "corridor-leaderboards" / "manifest.json",
-        "c3": root / "c6" / "coverage-plan" / "manifest.json",
+        "c3": root / "c6" / "coverage-plan" / "coverage_plan.json",
+        "c3_validation": root / "c6" / "coverage-plan" / "validation_report.json",
         "c4": root / "c6" / "claims" / "claim_manifest.json",
         "c5": root / "c6" / "multi-role-selection" / "manifest.json",
         "coverage": root / "reports" / "fingerprint_corridor_coverage.json",

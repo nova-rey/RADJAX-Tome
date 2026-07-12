@@ -120,6 +120,14 @@ def validate_contract(
         raise ValueError("selected obligations and source passports do not join")
     if selected_coordinates != payload_coordinates:
         raise ValueError("selected obligations and payload semantics do not join")
+    obligation_indices = {
+        _coordinate(row): row["selection_index"]
+        for row in collections["selected_obligations"]
+    }
+    for name in ("source_passports", "payload_semantics"):
+        for row in collections[name]:
+            if row["selection_index"] != obligation_indices[_coordinate(row)]:
+                raise ValueError(f"{name} selection_index does not match obligations")
 
 
 def _validate_collection(name: str, rows: Sequence[Mapping[str, Any]]) -> None:

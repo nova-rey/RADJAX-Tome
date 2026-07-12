@@ -36,6 +36,13 @@ def test_contract_rejects_duplicate_coordinates_and_unknown_schema() -> None:
         validate_contract(contract, collections=rows)
 
 
+def test_contract_rejects_selection_index_mismatch() -> None:
+    rows = _rows()
+    rows["payload_semantics"][0]["selection_index"] = 9
+    with pytest.raises(ValueError, match="selection_index"):
+        _contract(rows)
+
+
 def _contract(
     rows: dict[str, list[dict[str, object]]], **kwargs: object
 ) -> dict[str, object]:
