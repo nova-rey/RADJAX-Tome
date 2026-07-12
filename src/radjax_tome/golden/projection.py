@@ -233,7 +233,14 @@ def _coordinate(row: dict[str, Any]) -> tuple[str, int]:
 def _input_identity(root: Path) -> dict[str, Any]:
     metadata = _read_object(root / "metadata.json")
     run = _read_object(root / "run_manifest.json")
-    teacher = run.get("teacher_model_provenance") or {}
+    teacher_manifest = _read_object(root / "teacher_manifest.json")
+    emission = _read_object(root / "emission_config.json")
+    teacher = teacher_manifest.get("teacher_model_provenance") or emission.get(
+        "teacher_model_provenance", {}
+    )
+    corpus = teacher_manifest.get("corpus_provenance") or emission.get(
+        "corpus_provenance", {}
+    )
     return {
         "teacher_identity": {
             key: teacher.get(key)
@@ -250,11 +257,12 @@ def _input_identity(root: Path) -> dict[str, Any]:
         "vocab_size": metadata.get("vocab_size"),
         "sequence_length": metadata.get("sequence_length"),
         "num_examples": metadata.get("num_examples"),
-        "corpus_hash": run.get("corpus_hash"),
-        "corpus_manifest_hash": run.get("corpus_manifest_hash"),
-        "normalization_policy": run.get("source_corpus_normalization_policy"),
-        "chunking_policy": run.get("source_corpus_chunking_policy"),
-        "deduplication_policy": run.get("source_corpus_deduplication_policy"),
+        "teacher_model_hashes": run.get("teacher_model_hashes"),
+        "corpus_hash": corpus.get("corpus_hash", run.get("corpus_hash")),
+        "corpus_manifest_hash": corpus.get("manifest_hash"),
+        "normalization_policy": corpus.get("normalization_policy"),
+        "chunking_policy": corpus.get("chunking_policy"),
+        "deduplication_policy": corpus.get("deduplication_policy"),
     }
 
 
@@ -299,11 +307,25 @@ def _authority_summary(root: Path, authority: dict[str, Any]) -> dict[str, Any]:
         "coverage": root / "reports" / "fingerprint_corridor_coverage.json",
         "budget": root / "c6" / "selection_budget_diagnostics.json",
     }
+    claim_manifest = _read_object(root / "c6" / "claims" / "claim_manifest.json")
+    claim_rows = {
+        name: _read_jsonl(root / "c6" / "claims" / name)
+        for name in (
+            "corridor_claims.jsonl",
+            "global_claims.jsonl",
+            "collision_obligations.jsonl",
+            "selected_coordinates.jsonl",
+            "backfill_lineage.jsonl",
+        )
+    }
     return _semantic_board_summary(
         {
             "authority": authority,
             "paths": paths,
             **{name: _read_object(path) for name, path in required.items()},
+            "c4_claim_policy": claim_manifest.get("claim_policy"),
+            "c4_source_provenance": claim_manifest.get("source_provenance"),
+            "c4_semantic_records": claim_rows,
         }
     )
 

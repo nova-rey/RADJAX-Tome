@@ -1316,3 +1316,11 @@ Aligned the C3 reader with `coverage_plan.json` plus its validation report,
 made selection index authoritative across C5 obligation, passport, and payload
 records, and removed absolute model/tokenizer paths from semantic identity in
 favor of provenance and corpus-policy fields. Capture remains capture_pending.
+
+## 2026-07-12 — M2A Native Authority Projection Correction III
+
+Golden input identity now reads teacher and corpus provenance from the native
+teacher manifest or emission configuration, while the run manifest contributes
+only corroborating hashes. C4 corridor/global claims, collisions, selected
+coordinates, and backfill lineage are projected from their JSONL authorities.
+No real golden fixture was created; status remains capture_pending.

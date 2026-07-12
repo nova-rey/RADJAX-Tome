@@ -77,6 +77,29 @@ def test_compare_rejects_c5_role_and_passport_drift(tmp_path: Path) -> None:
     obligations.write_text(json.dumps(row) + "\n", encoding="utf-8")
     assert compare_contracts(expected, observed)["status"] == "fail"
 
+
+@pytest.mark.parametrize(
+    ("collection", "field", "value"),
+    [
+        ("selected_obligations", "represented_fingerprint_corridor_ids", [99]),
+        ("selected_obligations", "selection_obligations", []),
+        ("selected_obligations", "selection_index", 8),
+        ("payload_semantics", "effective_top_k", 99),
+        ("payload_semantics", "bucket_masses", [0.9]),
+        ("payload_semantics", "semantic_authority_hash", "sha256:changed"),
+    ],
+)
+def test_compare_rejects_semantic_field_drift(
+    tmp_path: Path, collection: str, field: str, value: object
+) -> None:
+    expected = _write_fixture(tmp_path / "expected")
+    observed = _write_fixture(tmp_path / "observed")
+    path = observed / f"{collection}.jsonl"
+    row = json.loads(path.read_text(encoding="utf-8"))
+    row[field] = value
+    path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    assert compare_contracts(expected, observed)["status"] == "fail"
+
     observed = _write_fixture(tmp_path / "passport", position=3)
     passports = observed / "source_passports.jsonl"
     row = json.loads(passports.read_text(encoding="utf-8"))
