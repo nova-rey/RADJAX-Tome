@@ -289,33 +289,150 @@ def test_c6_resume_finalization_reuses_complete_delivery_without_teacher(
     first = build_production_gpu_tome(config)
     (config.output_dir / "reports" / "c6_integrated_selection_validation.json").unlink()
 
+    resume_config = _config(
+        tmp_path,
+        output_dir=config.output_dir,
+        resume=True,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+    eligibility = production.probe_c6_finalization_only_resume(resume_config)
+    assert eligibility.eligible, eligibility.to_dict()
+
     def fail_if_teacher_runs(*args, **kwargs):
         raise AssertionError("teacher pass must not run during finalization resume")
 
     monkeypatch.setattr(
         production, "build_streaming_backend_teacher_textbook", fail_if_teacher_runs
     )
-    resumed = build_production_gpu_tome(
-        _config(
-            tmp_path,
-            output_dir=config.output_dir,
-            resume=True,
-            target_policy="corridor_exemplar_v1",
-            vocab_size=64,
-            top_k=32,
-            exemplar_selection_enabled=True,
-            exemplar_delivery_path="two_pass_rerun_selected",
-            retain_unselected_exemplar_payloads=False,
-            selection_integration_policy="corridor_first_global_backfill_v1",
-            total_selected_exemplar_budget=4,
-        )
+    monkeypatch.setattr(
+        production,
+        "build_runtime_doctor_report",
+        fail_if_teacher_runs,
     )
+    monkeypatch.setattr(production, "build_gpu_run_plan", fail_if_teacher_runs)
+    monkeypatch.setattr(
+        production,
+        "materialize_selected_exemplar_delivery",
+        fail_if_teacher_runs,
+    )
+    resumed = build_production_gpu_tome(resume_config)
 
     assert first["status"] == "pass"
     assert resumed["status"] == "pass", resumed["blockers"]
     assert resumed["resume_finalization_only"] is True
     assert resumed["teacher_pass_resumed"] is False
     assert resumed["selected_delivery_status"] == "pass"
+
+
+def test_c6_finalization_probe_rejects_incomplete_delivery_before_doctor(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(
+        tmp_path,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+    first = build_production_gpu_tome(config)
+    (config.output_dir / "reports" / "c6_integrated_selection_validation.json").unlink()
+    payload_path = next(
+        (config.output_dir / "selected_exemplars").glob("selected-exemplars-*.json")
+    )
+    payload_path.unlink()
+    resume_config = _config(
+        tmp_path,
+        output_dir=config.output_dir,
+        resume=True,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+    eligibility = production.probe_c6_finalization_only_resume(resume_config)
+    assert eligibility.eligible is False
+    assert any(
+        "payload_shard_count_mismatch" in reason for reason in eligibility.reasons
+    )
+
+    doctor_called = False
+
+    def doctor_probe(_config):
+        nonlocal doctor_called
+        doctor_called = True
+        raise RuntimeError("accelerator preflight required")
+
+    monkeypatch.setattr(production, "build_runtime_doctor_report", doctor_probe)
+    with pytest.raises(RuntimeError, match="accelerator preflight required"):
+        build_production_gpu_tome(resume_config)
+    assert doctor_called
+    assert first["status"] == "pass"
+
+
+def test_c6_finalization_probe_rejects_configuration_mismatch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = _config(
+        tmp_path,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+    first = build_production_gpu_tome(config)
+    assert first["status"] == "pass", first["blockers"]
+    resume_config = _config(
+        tmp_path,
+        output_dir=config.output_dir,
+        resume=True,
+        dynamic_top_k_max=128,
+        target_policy="corridor_exemplar_v1",
+        vocab_size=64,
+        top_k=32,
+        exemplar_selection_enabled=True,
+        exemplar_delivery_path="two_pass_rerun_selected",
+        retain_unselected_exemplar_payloads=False,
+        selection_integration_policy="corridor_first_global_backfill_v1",
+        total_selected_exemplar_budget=4,
+    )
+
+    eligibility = production.probe_c6_finalization_only_resume(resume_config)
+
+    assert eligibility.eligible is False
+    assert any("dynamic_top_k_max_mismatch" in reason for reason in eligibility.reasons)
+
+    doctor_called = False
+
+    def doctor_probe(_config):
+        nonlocal doctor_called
+        doctor_called = True
+        raise RuntimeError("accelerator preflight required")
+
+    monkeypatch.setattr(production, "build_runtime_doctor_report", doctor_probe)
+    with pytest.raises(RuntimeError, match="accelerator preflight required"):
+        build_production_gpu_tome(resume_config)
+    assert doctor_called
 
 
 def test_c6_underfilled_budget_stops_before_native_selected_rerun(

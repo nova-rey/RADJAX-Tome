@@ -52,7 +52,10 @@ from radjax_tome.builder.teacher_textbook import (
     validate_teacher_textbook,
     write_teacher_textbook_validation_report,
 )
-from radjax_tome.corpora import validate_corpus_artifact
+from radjax_tome.corpora import (
+    corpus_provenance_from_manifest,
+    validate_corpus_artifact,
+)
 from radjax_tome.fingerprint.corridor_budget import (
     CorridorBudgetPolicy,
     allocate_corridor_coverage,
@@ -179,6 +182,15 @@ class ProductionBuildConfig:
     source_passports_path: Path | None = None
 
 
+@dataclass(frozen=True)
+class FinalizationResumeEligibility:
+    eligible: bool
+    reasons: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"eligible": self.eligible, "reasons": list(self.reasons)}
+
+
 def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
     created_at = _now()
     production_started = perf_counter()
@@ -217,6 +229,14 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         )
         return _finalize_production_report(report, report_path, progress)
 
+    finalization_probe = probe_c6_finalization_only_resume(config)
+    c6_resume_requested = (
+        config.resume
+        and config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
+        and config.target_policy == "corridor_exemplar_v1"
+        and config.exemplar_selection_enabled
+        and config.exemplar_delivery_path == "two_pass_rerun_selected"
+    )
     output_has_artifact = _has_existing_artifact(config)
     if output_has_artifact and not (config.resume or config.overwrite):
         blockers.append("output exists; use --resume or --overwrite")
@@ -236,7 +256,11 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             parity_status="not_run",
         )
         return _finalize_production_report(report, report_path, progress)
-    if already_complete and not _c6_finalization_pending(config):
+    if (
+        already_complete
+        and not _c6_finalization_pending(config)
+        and not c6_resume_requested
+    ):
         validation = validate_teacher_textbook(config.output_dir)
         if validation.status == "pass":
             report = _production_report(
@@ -275,7 +299,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
             build_status="already_complete_invalid",
         )
         return _finalize_production_report(report, report_path, progress)
-    if already_complete and _completed_selected_delivery(config):
+    if finalization_probe.eligible:
         return _resume_c6_finalization(
             config,
             created_at=created_at,
@@ -1043,6 +1067,390 @@ def _validate_required_inputs(
         )
 
 
+def probe_c6_finalization_only_resume(
+    config: ProductionBuildConfig,
+) -> FinalizationResumeEligibility:
+    """Check a completed native delivery before any accelerator preflight."""
+
+    reasons: list[str] = []
+    if not config.resume:
+        reasons.append("resume_not_requested")
+    if config.selection_integration_policy != C6_SELECTION_INTEGRATION_POLICY:
+        reasons.append("selection_integration_policy_not_c6")
+    if config.target_policy != "corridor_exemplar_v1":
+        reasons.append("target_policy_not_corridor_exemplar_v1")
+    if not config.exemplar_selection_enabled:
+        reasons.append("exemplar_selection_disabled")
+    if config.exemplar_delivery_path != "two_pass_rerun_selected":
+        reasons.append("delivery_path_not_two_pass_rerun_selected")
+    if reasons:
+        return FinalizationResumeEligibility(False, tuple(reasons))
+
+    def require_file(path: Path, reason: str) -> None:
+        if not path.is_file():
+            reasons.append(f"{reason}: {path}")
+
+    output = config.output_dir
+    manifest_path = _run_manifest_path(config)
+    for path, reason in (
+        (output / "metadata.json", "metadata_missing"),
+        (manifest_path, "run_manifest_missing"),
+        (output / "emission_config.json", "emission_config_missing"),
+        (output / "teacher_manifest.json", "teacher_manifest_missing"),
+        (output / "corridors" / "corridor_modes.json", "corridor_modes_missing"),
+        (
+            output / "corridors" / "mode_assignments.json",
+            "corridor_assignments_missing",
+        ),
+        (output / "c6" / "authority_manifest.json", "authority_manifest_missing"),
+        (
+            output / "c6" / "selection_budget_diagnostics.json",
+            "selection_budget_diagnostics_missing",
+        ),
+        (
+            output / "c6" / "coverage-plan" / "coverage_plan.json",
+            "coverage_plan_missing",
+        ),
+        (
+            output / "c6" / "claims" / "claim_manifest.json",
+            "claim_artifact_missing",
+        ),
+        (
+            output / "c6" / "multi-role-selection" / "manifest.json",
+            "selected_coordinate_artifact_missing",
+        ),
+        (output / "delivery_report.json", "delivery_report_missing"),
+        (
+            output / "leaderboards" / "selected_exemplars.json",
+            "selected_records_missing",
+        ),
+        (
+            output / "selected_exemplars" / "payload_index.json",
+            "payload_index_missing",
+        ),
+    ):
+        require_file(path, reason)
+    if reasons:
+        return FinalizationResumeEligibility(False, tuple(reasons))
+
+    try:
+        run_manifest = read_json_object(manifest_path)
+        emission = read_json_object(output / "emission_config.json")
+        teacher_manifest = read_json_object(output / "teacher_manifest.json")
+        authority = read_json_object(output / "c6" / "authority_manifest.json")
+        delivery = read_json_object(output / "delivery_report.json")
+        selected_doc = read_json_object(
+            output / "leaderboards" / "selected_exemplars.json"
+        )
+        payload_index = read_json_object(
+            output / "selected_exemplars" / "payload_index.json"
+        )
+        budget = read_json_object(output / "c6" / "selection_budget_diagnostics.json")
+    except (OSError, TypeError, ValueError, KeyError, json.JSONDecodeError) as exc:
+        return FinalizationResumeEligibility(False, (f"artifact_json_invalid: {exc}",))
+
+    if run_manifest.get("status") != "complete":
+        reasons.append("score_pass_incomplete")
+    if run_manifest.get("num_examples_completed") != run_manifest.get(
+        "num_examples_planned"
+    ):
+        reasons.append("score_pass_example_checkpoint_incomplete")
+    if run_manifest.get("num_shards_completed") != run_manifest.get(
+        "num_shards_planned"
+    ):
+        reasons.append("score_pass_shard_checkpoint_incomplete")
+    if delivery.get("status") != "pass":
+        reasons.append("delivery_report_missing_or_failed")
+    if delivery.get("execution_mode") != "native_c6_path_b_v1":
+        reasons.append("delivery_not_native_c6_path_b")
+
+    selected_records = selected_doc.get("selected_exemplars")
+    indexed_records = payload_index.get("selected_exemplars")
+    if not isinstance(selected_records, list):
+        reasons.append("selected_records_invalid")
+        selected_records = []
+    if not isinstance(indexed_records, list):
+        reasons.append("payload_index_incomplete")
+        indexed_records = []
+    expected_count = len(selected_records)
+    if config.total_selected_exemplar_budget is not None and (
+        expected_count != config.total_selected_exemplar_budget
+    ):
+        reasons.append(
+            "selected_coordinate_count_mismatch: "
+            f"stored={expected_count} requested={config.total_selected_exemplar_budget}"
+        )
+    if expected_count == 0:
+        reasons.append("selected_coordinate_count_zero")
+    if len(indexed_records) != expected_count:
+        reasons.append(
+            "payload_index_count_mismatch: "
+            f"stored={len(indexed_records)} expected={expected_count}"
+        )
+
+    selected_coordinates = _probe_coordinates(selected_records)
+    indexed_coordinates = _probe_coordinates(indexed_records)
+    if len(selected_coordinates) != expected_count:
+        reasons.append("selected_coordinate_duplicates")
+    if len(indexed_coordinates) != len(indexed_records):
+        reasons.append("payload_index_duplicate_coordinates")
+    if selected_coordinates != indexed_coordinates:
+        reasons.append("payload_coordinate_set_mismatch")
+
+    authority_hash = authority.get("score_pass_authority_hash")
+    if not authority_hash:
+        reasons.append("score_pass_authority_missing")
+    if delivery.get("delivery_authority_hash") != authority_hash:
+        reasons.append("delivery_authority_mismatch")
+    if authority.get("score_pass_config_hash") != run_manifest.get(
+        "emission_config_hash"
+    ):
+        reasons.append("score_pass_config_hash_mismatch")
+    if authority.get("score_pass_resume_hash") != run_manifest.get(
+        "resume_config_hash"
+    ):
+        reasons.append("score_pass_resume_hash_mismatch")
+    if authority.get("target_store_metadata_sha256") != _file_sha256(
+        output / "metadata.json"
+    ):
+        reasons.append("target_store_metadata_hash_mismatch")
+    if authority.get("delivery_path") != config.exemplar_delivery_path:
+        reasons.append("authority_delivery_path_mismatch")
+    if authority.get(
+        "selection_integration_config_hash"
+    ) != _selection_integration_hash(config):
+        reasons.append("selection_config_mismatch")
+    if emission.get("selection_integration_config_hash") != _selection_integration_hash(
+        config
+    ):
+        reasons.append("emission_selection_config_hash_mismatch")
+    if budget.get("total_budget_requested") != config.total_selected_exemplar_budget:
+        reasons.append("selection_budget_mismatch")
+
+    _probe_configuration_bindings(
+        config,
+        run_manifest,
+        emission,
+        teacher_manifest,
+        indexed_records,
+        reasons,
+    )
+    _probe_authority_files(output, authority, reasons)
+    _probe_payload_transaction(
+        output,
+        expected_count=expected_count,
+        selected_records=selected_records,
+        indexed_records=indexed_records,
+        expected_authority=authority_hash,
+        reasons=reasons,
+    )
+    return FinalizationResumeEligibility(not reasons, tuple(reasons))
+
+
+def _probe_configuration_bindings(
+    config: ProductionBuildConfig,
+    run_manifest: Mapping[str, Any],
+    emission: Mapping[str, Any],
+    teacher_manifest: Mapping[str, Any],
+    indexed_records: list[Any],
+    reasons: list[str],
+) -> None:
+    expected = {
+        "teacher_backend": config.teacher_backend,
+        "runtime_mode": config.runtime_mode,
+        "target_policy": config.target_policy,
+        "sequence_length": config.sequence_length,
+        "vocab_size": config.vocab_size,
+        "top_k": config.top_k,
+        "num_buckets": config.num_buckets,
+        "dynamic_top_k_min": config.dynamic_top_k_min,
+        "dynamic_top_k_max": config.dynamic_top_k_max,
+        "dynamic_mass_threshold": config.dynamic_mass_threshold,
+        "selection_integration_policy": config.selection_integration_policy,
+    }
+    stored = {
+        **{
+            key: run_manifest.get(key)
+            for key in ("teacher_backend", "runtime_mode", "target_policy")
+        },
+        **{
+            key: emission.get(key)
+            for key in (
+                "sequence_length",
+                "top_k",
+                "dynamic_top_k_min",
+                "dynamic_top_k_max",
+                "dynamic_mass_threshold",
+                "selection_integration_policy",
+            )
+        },
+        "vocab_size": teacher_manifest.get("vocab_size"),
+        "num_buckets": (
+            indexed_records[0].get("num_buckets")
+            if indexed_records and isinstance(indexed_records[0], dict)
+            else None
+        ),
+    }
+    for key, expected_value in expected.items():
+        if stored.get(key) != expected_value:
+            reasons.append(
+                f"{key}_mismatch: stored={stored.get(key)!r} "
+                f"requested={expected_value!r}"
+            )
+    if teacher_manifest.get("teacher_model_id") != config.teacher_model:
+        reasons.append("teacher_model_identity_mismatch")
+    if teacher_manifest.get("tokenizer_id") != (
+        config.tokenizer_id or config.teacher_model
+    ):
+        reasons.append("tokenizer_identity_mismatch")
+    if run_manifest.get("dataset_hash") != _file_sha256(config.dataset_path):
+        reasons.append("dataset_hash_mismatch")
+    try:
+        current_corpus_hash = corpus_provenance_from_manifest(
+            config.corpus_manifest_path
+        )["source_corpus_hash"]
+    except (OSError, TypeError, ValueError, KeyError) as exc:
+        reasons.append(f"corpus_hash_unavailable: {exc}")
+    else:
+        if run_manifest.get("corpus_hash") != current_corpus_hash:
+            reasons.append("corpus_hash_mismatch")
+    try:
+        provenance = read_json_object(config.teacher_model_provenance_path)
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        reasons.append(f"teacher_model_provenance_unavailable: {exc}")
+    else:
+        for key in (
+            "config_hash",
+            "tokenizer_hash",
+            "weights_hash",
+            "model_directory_hash",
+        ):
+            if run_manifest.get("teacher_model_hashes", {}).get(key) != provenance.get(
+                key
+            ):
+                reasons.append(f"teacher_model_{key}_mismatch")
+
+
+def _probe_authority_files(
+    output: Path,
+    authority: Mapping[str, Any],
+    reasons: list[str],
+) -> None:
+    paths = authority.get("paths", {})
+    hashes = authority.get("hashes", {})
+    for path_key, hash_key in (
+        ("selector", "selector_sha256"),
+        ("global_board_supply", "global_board_supply_sha256"),
+        ("source_passports", "source_passports_manifest_sha256"),
+        ("corridor_features", "corridor_features_sha256"),
+    ):
+        relative = paths.get(path_key)
+        expected_hash = hashes.get(hash_key)
+        if not relative or not expected_hash:
+            reasons.append(f"authority_{path_key}_binding_missing")
+            continue
+        path = output / str(relative)
+        if not path.is_file():
+            reasons.append(f"authority_{path_key}_missing")
+        elif _file_sha256(path) != expected_hash:
+            reasons.append(f"authority_{path_key}_hash_mismatch")
+
+
+def _probe_payload_transaction(
+    output: Path,
+    *,
+    expected_count: int,
+    selected_records: list[Any],
+    indexed_records: list[Any],
+    expected_authority: Any,
+    reasons: list[str],
+) -> None:
+    selected_by_coordinate = {
+        coordinate: record
+        for record in selected_records
+        if isinstance(record, dict)
+        and (coordinate := _probe_coordinate(record)) is not None
+    }
+    indexed_by_coordinate = {
+        coordinate: record
+        for record in indexed_records
+        if isinstance(record, dict)
+        and (coordinate := _probe_coordinate(record)) is not None
+    }
+    if (
+        len(list((output / "selected_exemplars").glob("selected-exemplars-*.json")))
+        != expected_count
+    ):
+        reasons.append("payload_shard_count_mismatch")
+    seen: set[tuple[str, int]] = set()
+    for path in sorted(
+        (output / "selected_exemplars").glob("selected-exemplars-*.json")
+    ):
+        try:
+            shard = read_json_object(path)
+        except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            reasons.append(f"payload_shard_invalid: {path.name}: {exc}")
+            continue
+        items = shard.get("selected_exemplars")
+        if (
+            shard.get("schema_version") != "selected_exemplar_payload_shard_v1"
+            or shard.get("delivery_authority_hash") != expected_authority
+            or not isinstance(items, list)
+            or len(items) != 1
+            or shard.get("payload_hash") != _native_payload_hash_for_probe(shard)
+        ):
+            reasons.append(f"payload_envelope_invalid: {path.name}")
+            continue
+        item = items[0]
+        coordinate = _probe_coordinate(item)
+        if coordinate is None or coordinate in seen:
+            reasons.append(f"payload_coordinate_set_mismatch: {path.name}")
+            continue
+        seen.add(coordinate)
+        if (
+            coordinate not in selected_by_coordinate
+            or coordinate not in indexed_by_coordinate
+        ):
+            reasons.append(f"payload_foreign_coordinate: {path.name}")
+            continue
+        if item.get("delivery_authority_hash") != expected_authority:
+            reasons.append(f"payload_authority_mismatch: {path.name}")
+        indexed = indexed_by_coordinate[coordinate]
+        selected = selected_by_coordinate[coordinate]
+        if item.get("payload_ref") != indexed.get("payload_ref"):
+            reasons.append(f"payload_index_ref_mismatch: {path.name}")
+        if item.get("payload_ref") != selected.get("payload_ref"):
+            reasons.append(f"payload_selection_ref_mismatch: {path.name}")
+        if indexed.get("payload_hash") != shard.get("payload_hash"):
+            reasons.append(f"payload_index_hash_mismatch: {path.name}")
+    if seen != set(selected_by_coordinate):
+        reasons.append("payload_coordinate_set_mismatch")
+
+
+def _probe_coordinate(item: Any) -> tuple[str, int] | None:
+    if not isinstance(item, dict):
+        return None
+    try:
+        return str(item["selected_example_id"]), int(item["selected_position"])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _probe_coordinates(items: list[Any]) -> set[tuple[str, int]]:
+    return {
+        coordinate
+        for item in items
+        if (coordinate := _probe_coordinate(item)) is not None
+    }
+
+
+def _native_payload_hash_for_probe(payload: Mapping[str, Any]) -> str:
+    body = {key: value for key, value in payload.items() if key != "payload_hash"}
+    return hashlib.sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
 def _export_c6_selection_authorities(
     config: ProductionBuildConfig,
 ) -> dict[str, Path | str | bool]:
@@ -1641,6 +2049,11 @@ def _production_report(
         "streaming_build": True,
         "resume_requested": config.resume,
         "already_complete": already_complete,
+        "finalization_resume_probe": (
+            probe_c6_finalization_only_resume(config).to_dict()
+            if config.resume
+            else None
+        ),
         "run_manifest_path": str(_run_manifest_path(config)),
         "progress_log_path": str(_progress_log_path(config)),
         "production_progress_path": str(_production_progress_path(config)),
@@ -2402,6 +2815,7 @@ def _resume_c6_finalization(
         progress.stage("c6_finalization_resume")
         context = _prepare_c6_selection(config, authorities)
         delivery_report = read_json_object(output / "delivery_report.json")
+        progress.validation_started()
         validation = validate_teacher_textbook(output)
         write_teacher_textbook_validation_report(
             validation,
@@ -2409,6 +2823,8 @@ def _resume_c6_finalization(
         )
         if validation.status != "pass":
             blockers.extend(validation.blockers)
+        progress.validation_completed(validation.status)
+        progress.stage("selected_linkage_audit")
         linkage_audit = audit_selected_linkage(output, strict=True)
         write_selected_linkage_audit(
             linkage_audit,
@@ -2420,6 +2836,7 @@ def _resume_c6_finalization(
             delivery_report=delivery_report,
             audit_report=linkage_audit.to_dict(),
         )
+        progress.stage("c6_integration_reconciliation")
         audit_payload = linkage_audit.to_dict()
         audit_payload["c6_integration"] = {
             "status": c6_validation["status"],
@@ -2442,8 +2859,10 @@ def _resume_c6_finalization(
         if linkage_audit.status != "pass":
             blockers.append("selected-linkage audit status is fail")
         if validation.status == "pass" and not blockers:
+            progress.stage("cover_page")
             write_cover_page(output)
         existing_report = read_json_object(report_path) if report_path.is_file() else {}
+        original_manifest = read_json_object(output / "run_manifest.json")
         run_plan_path = _run_plan_path(config)
         run_plan = (
             read_json_object(run_plan_path)
@@ -2457,7 +2876,7 @@ def _resume_c6_finalization(
             status="fail" if blockers else "pass",
             blockers=blockers,
             warnings=warnings,
-            doctor_report=existing_report.get("doctor_report", {}),
+            doctor_report=existing_report.get("doctor_summary", {}),
             run_plan_path=run_plan_path,
             run_plan=run_plan,
             effective_batch_size=existing_report.get("effective_batch_size"),
@@ -2480,9 +2899,32 @@ def _resume_c6_finalization(
         )
         report["teacher_pass_resumed"] = False
         report["resume_finalization_only"] = True
+        report.update(
+            {
+                "selected_rerun_resumed": False,
+                "accelerator_required_for_resume": False,
+                "accelerator_probe_status": "skipped_finalization_only",
+                "doctor_status": "skipped_finalization_only",
+                "run_plan_status": "reused_existing_artifact_plan",
+                "finalization_runtime_mode": "cpu",
+                "original_teacher_runtime_mode": original_manifest.get(
+                    "runtime_mode", config.runtime_mode
+                ),
+                "original_teacher_backend": original_manifest.get(
+                    "teacher_backend", config.teacher_backend
+                ),
+            }
+        )
         return _finalize_production_report(report, report_path, progress)
     except (OSError, TypeError, ValueError, KeyError) as exc:
         blockers.append(f"C6 finalization resume failed: {exc}")
+        progress.failure(
+            "c6_finalization_resume",
+            {
+                "failure_stage": "c6_finalization_resume",
+                "failure_reason": str(exc),
+            },
+        )
         report = _production_report(
             config,
             created_at=created_at,
@@ -2502,6 +2944,18 @@ def _resume_c6_finalization(
         )
         report["teacher_pass_resumed"] = False
         report["resume_finalization_only"] = True
+        report.update(
+            {
+                "selected_rerun_resumed": False,
+                "accelerator_required_for_resume": False,
+                "accelerator_probe_status": "skipped_finalization_only",
+                "doctor_status": "skipped_finalization_only",
+                "run_plan_status": "reused_existing_artifact_plan",
+                "finalization_runtime_mode": "cpu",
+                "original_teacher_runtime_mode": config.runtime_mode,
+                "original_teacher_backend": config.teacher_backend,
+            }
+        )
         return _finalize_production_report(report, report_path, progress)
 
 

@@ -1260,3 +1260,16 @@ arrays. Student package board filtering recomputes native shard and payload
 index hashes after filtering. A completed score and selected-delivery surface
 can resume C6 finalization without invoking the teacher again. No T4 rehearsal
 was executed by this corrective patch.
+
+## 2026-07-12 — C6.3.5 CPU-Only Finalization Resume Gate
+
+Resumable native C6 Path B artifacts now undergo a read-only, authority-bound
+complete-delivery probe before accelerator doctor and run-plan construction.
+Eligible resumes validate score completion, C6 authorities, configuration
+bindings, coordinate sets, payload-index references, per-shard authority, and
+payload hashes, then finalize on CPU without model loading, teacher work, or
+selected reruns. Reports preserve original teacher/backend provenance and add
+explicit finalization-only, skipped-accelerator, and CPU-finalization fields.
+Incomplete or configuration-mismatched artifacts remain fail-closed and use
+the normal accelerator-required resume path. No T4 rehearsal was executed by
+this corrective patch.
