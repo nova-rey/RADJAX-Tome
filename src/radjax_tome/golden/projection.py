@@ -19,20 +19,30 @@ _REQUIRED_REPORTS = (
 def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, Any]:
     artifact = artifact_dir.resolve()
     _validate_terminal_artifact(artifact)
-    selected = _selected_records(artifact)
+    selected = _c5_records(artifact)
+    payload_index = _payload_index(artifact)
     payloads = _payload_records(artifact)
-    if len(selected) != 256 or len(payloads) != 256:
+    if len(selected) != 256 or len(payloads) != 256 or len(payload_index) != 256:
         raise ValueError("golden capture requires exactly 256 selected coordinates")
+    _require_coordinate_join(selected, payload_index, payloads)
     obligations = [
         _obligation(row, index) for index, row in enumerate(selected, start=1)
     ]
     passports = [_passport(row, index) for index, row in enumerate(selected, start=1)]
+    payload_by_coordinate = {_coordinate(row): row for row in payloads}
     payload_rows = [
-        _payload_semantics(row, index) for index, row in enumerate(payloads, start=1)
+        _payload_semantics(
+            {
+                **payload_by_coordinate[_coordinate(record)],
+                "selection_index": record["selection_index"],
+                "payload_identity": record["payload_identity"],
+            },
+            index,
+        )
+        for index, record in enumerate(selected, start=1)
     ]
-    board_summary = _semantic_board_summary(
-        _read_object(artifact / "leaderboards" / "leaderboard_report.json")
-    )
+    authority = _read_object(artifact / "c6" / "authority_manifest.json")
+    board_summary = _authority_summary(artifact, authority)
     reports = {name: _read_object(artifact / name) for name in _REQUIRED_REPORTS}
     reconciliation = _read_object(
         artifact / "reports" / "c6_integrated_selection_validation.json"
@@ -49,7 +59,7 @@ def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, A
             "canonical_pipeline": "native_two_pass_fingerprint_corridor_path_b",
         },
         input_identity=_input_identity(artifact),
-        semantic_policy=_semantic_policy(reports),
+        semantic_policy=_semantic_policy(artifact, reports, authority),
         stage_summary=[
             {"stage": name.removesuffix(".json"), "status": report.get("status")}
             for name, report in reports.items()
@@ -97,9 +107,7 @@ def _validate_terminal_artifact(root: Path) -> None:
         report = _read_object(root / name)
         if report.get("status") != "pass" or report.get("blockers"):
             raise ValueError(f"golden capture requires terminal pass report: {name}")
-    index = _read_object(root / "selected_exemplars" / "payload_index.json")
-    if not isinstance(index.get("records"), list):
-        raise ValueError("golden capture requires selected payload index records")
+    _payload_index(root)
     reconciliation = _read_object(
         root / "reports" / "c6_integrated_selection_validation.json"
     )
@@ -107,12 +115,23 @@ def _validate_terminal_artifact(root: Path) -> None:
         raise ValueError("golden capture requires passing C6 selection reconciliation")
 
 
-def _selected_records(root: Path) -> list[dict[str, Any]]:
-    document = _read_object(root / "leaderboards" / "selected_exemplars.json")
-    records = document.get("selected_exemplars")
-    if not isinstance(records, list):
-        raise ValueError("golden capture selected_exemplars records are missing")
-    return [dict(row) for row in records if isinstance(row, dict)]
+def _c5_records(root: Path) -> list[dict[str, Any]]:
+    path = root / "c6" / "multi-role-selection" / "selected_exemplars.jsonl"
+    rows = _read_jsonl(path)
+    if not rows:
+        raise ValueError("golden capture C5 rich selected records are missing")
+    return rows
+
+
+def _payload_index(root: Path) -> dict[tuple[str, int], dict[str, Any]]:
+    index = _read_object(root / "selected_exemplars" / "payload_index.json")
+    rows = index.get("selected_exemplars")
+    if not isinstance(rows, list):
+        raise ValueError("golden capture payload index selected_exemplars are missing")
+    result = {_coordinate(row): dict(row) for row in rows if isinstance(row, dict)}
+    if len(result) != len(rows):
+        raise ValueError("golden capture payload index has duplicate coordinates")
+    return result
 
 
 def _payload_records(root: Path) -> list[dict[str, Any]]:
@@ -125,38 +144,47 @@ def _payload_records(root: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def _require_coordinate_join(
+    selected: list[dict[str, Any]],
+    payload_index: dict[tuple[str, int], dict[str, Any]],
+    payloads: list[dict[str, Any]],
+) -> None:
+    c5 = {_coordinate(row) for row in selected}
+    payload = {_coordinate(row) for row in payloads}
+    if len(c5) != len(selected) or c5 != set(payload_index) or c5 != payload:
+        raise ValueError(
+            "golden capture C5, payload index, and payload coordinates do not join"
+        )
+
+
 def _obligation(row: dict[str, Any], index: int) -> dict[str, Any]:
-    return _project(
+    projected = _project(
         row,
         index,
-        "selected_board",
         "primary_role",
-        "fulfilled_roles",
-        "corridor_mode_id",
-        "corridor_fingerprint_id",
-        "source_shard_id",
-        "source_row",
-        "source_score",
-        "source_top_token_id",
-        "score_pass_authority_hash",
-        "delivery_authority_hash",
+        "primary_claim",
+        "selection_roles",
+        "selection_obligations",
+        "represented_fingerprint_corridor_ids",
+        "global_board_ids",
+        "source_passport",
+        "payload_identity",
     )
+    projected["selected_example_id"] = str(row["example_id"])
+    projected["selected_position"] = int(row["position"])
+    return projected
 
 
 def _passport(row: dict[str, Any], index: int) -> dict[str, Any]:
-    return _project(
-        row,
-        index,
-        "source_shard_id",
-        "source_row",
-        "source_position",
-        "source_score",
-        "source_top_token_id",
-        "source_score_policy",
-        "payload_ref",
-        "score_pass_authority_hash",
-        "delivery_authority_hash",
+    passport = dict(row.get("source_passport") or {})
+    passport.update(
+        {
+            "selection_index": int(row["selection_index"]),
+            "selected_example_id": str(row["example_id"]),
+            "selected_position": int(row["position"]),
+        }
     )
+    return passport
 
 
 def _payload_semantics(row: dict[str, Any], index: int) -> dict[str, Any]:
@@ -177,19 +205,29 @@ def _payload_semantics(row: dict[str, Any], index: int) -> dict[str, Any]:
         "dynamic_mass_threshold",
         "source_policy",
         "semantic_authority_hash",
+        "payload_identity",
     )
 
 
 def _project(row: dict[str, Any], index: int, *keys: str) -> dict[str, Any]:
+    example_id, position = _coordinate(row)
     projected = {
         "selection_index": int(row.get("rank", row.get("selection_index", index))),
-        "selected_example_id": row["selected_example_id"],
-        "selected_position": int(row["selected_position"]),
+        "selected_example_id": example_id,
+        "selected_position": position,
     }
     for key in keys:
         if key in row:
             projected[key] = row[key]
     return projected
+
+
+def _coordinate(row: dict[str, Any]) -> tuple[str, int]:
+    example_id = row.get("selected_example_id", row.get("example_id"))
+    position = row.get("selected_position", row.get("position"))
+    if not isinstance(example_id, str) or not isinstance(position, int):
+        raise ValueError("golden capture record has invalid coordinate")
+    return example_id, position
 
 
 def _input_identity(root: Path) -> dict[str, Any]:
@@ -206,19 +244,53 @@ def _input_identity(root: Path) -> dict[str, Any]:
     }
 
 
-def _semantic_policy(reports: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    delivery = reports["delivery_report.json"]
+def _semantic_policy(
+    root: Path, reports: dict[str, dict[str, Any]], authority: dict[str, Any]
+) -> dict[str, Any]:
+    emission = _read_object(root / "emission_config.json")
+    run = _read_object(root / "run_manifest.json")
+    keys = (
+        "teacher_backend",
+        "runtime_mode",
+        "target_policy",
+        "native_execution_mode",
+        "selection_integration_policy",
+        "exemplar_delivery_path",
+        "dynamic_top_k_min",
+        "dynamic_top_k_max",
+        "dynamic_mass_threshold",
+        "num_buckets",
+        "selected_rerun_batch_size",
+        "retain_unselected_exemplar_payloads",
+    )
     return {
-        key: delivery.get(key)
-        for key in (
-            "delivery_path",
-            "dynamic_top_k_min",
-            "dynamic_top_k_max",
-            "dynamic_mass_threshold",
-            "num_buckets",
-            "selection_integration_policy",
-        )
+        key: emission.get(key, reports["delivery_report.json"].get(key)) for key in keys
+    } | {
+        "score_pass_config_hash": authority.get("score_pass_config_hash"),
+        "selection_integration_config_hash": authority.get(
+            "selection_integration_config_hash"
+        ),
+        "run_manifest_hash": run.get("resume_config_hash"),
     }
+
+
+def _authority_summary(root: Path, authority: dict[str, Any]) -> dict[str, Any]:
+    paths = authority.get("paths") or {}
+    required = {
+        "c2": root / "c6" / "corridor-leaderboards" / "manifest.json",
+        "c3": root / "c6" / "coverage-plan" / "manifest.json",
+        "c4": root / "c6" / "claims" / "claim_manifest.json",
+        "c5": root / "c6" / "multi-role-selection" / "manifest.json",
+        "coverage": root / "reports" / "fingerprint_corridor_coverage.json",
+        "budget": root / "c6" / "selection_budget_diagnostics.json",
+    }
+    return _semantic_board_summary(
+        {
+            "authority": authority,
+            "paths": paths,
+            **{name: _read_object(path) for name, path in required.items()},
+        }
+    )
 
 
 def _semantic_board_summary(value: Any) -> Any:

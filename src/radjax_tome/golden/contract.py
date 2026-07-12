@@ -123,7 +123,7 @@ def validate_contract(
 
 
 def _validate_collection(name: str, rows: Sequence[Mapping[str, Any]]) -> None:
-    previous_index = 0
+    previous_index = -1
     coordinates: set[tuple[str, int]] = set()
     for row in rows:
         coordinate = _coordinate(row)
@@ -131,7 +131,7 @@ def _validate_collection(name: str, rows: Sequence[Mapping[str, Any]]) -> None:
             raise ValueError(f"{name} contains duplicate selected coordinates")
         coordinates.add(coordinate)
         index = row.get("selection_index")
-        if not isinstance(index, int) or index <= previous_index:
+        if not isinstance(index, int) or index < 0 or index <= previous_index:
             raise ValueError(f"{name} selection_index is not strictly ordered")
         previous_index = index
 

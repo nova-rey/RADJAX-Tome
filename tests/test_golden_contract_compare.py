@@ -7,7 +7,7 @@ import pytest
 
 from radjax_tome.golden.compare import compare_contracts
 from radjax_tome.golden.contract import build_contract
-from radjax_tome.golden.projection import capture_golden_contract
+from radjax_tome.golden.projection import _payload_index, capture_golden_contract
 from radjax_tome.tome.golden_fixture import build_production_contract_fixture
 
 
@@ -47,6 +47,44 @@ def test_capture_refuses_nonterminal_artifact_without_modifying_it(
     assert not output.exists()
 
 
+def test_payload_index_uses_native_selected_exemplars_field(tmp_path: Path) -> None:
+    selected = tmp_path / "selected_exemplars"
+    selected.mkdir()
+    (selected / "payload_index.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "selected_exemplar_payload_index_v1",
+                "selected_exemplars": [
+                    {"selected_example_id": "one", "selected_position": 3}
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert _payload_index(tmp_path) == {
+        ("one", 3): {"selected_example_id": "one", "selected_position": 3}
+    }
+
+
+def test_compare_rejects_c5_role_and_passport_drift(tmp_path: Path) -> None:
+    expected = _write_fixture(tmp_path / "expected")
+    observed = _write_fixture(tmp_path / "observed")
+
+    obligations = observed / "selected_obligations.jsonl"
+    row = json.loads(obligations.read_text(encoding="utf-8"))
+    row["primary_claim"] = "global"
+    obligations.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    assert compare_contracts(expected, observed)["status"] == "fail"
+
+    observed = _write_fixture(tmp_path / "passport", position=3)
+    passports = observed / "source_passports.jsonl"
+    row = json.loads(passports.read_text(encoding="utf-8"))
+    row["source_row"] = 99
+    passports.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    assert compare_contracts(expected, observed)["status"] == "fail"
+
+
 def _write_fixture(root: Path, *, entropy: float = 1.0, position: int = 3) -> Path:
     obligations = [
         {
@@ -54,6 +92,13 @@ def _write_fixture(root: Path, *, entropy: float = 1.0, position: int = 3) -> Pa
             "selected_example_id": "one",
             "selected_position": position,
             "primary_role": "corridor",
+            "primary_claim": "corridor",
+            "selection_roles": ["corridor"],
+            "selection_obligations": [{"role": "corridor", "rank": 1}],
+            "represented_fingerprint_corridor_ids": [7],
+            "global_board_ids": ["entropy"],
+            "source_passport": {"source_row": 7},
+            "payload_identity": {"payload_key": "one:3"},
         }
     ]
     passports = [

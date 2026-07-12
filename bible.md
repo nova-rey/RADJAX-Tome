@@ -1301,3 +1301,11 @@ fixture validation, and quantization-aware comparison tooling for the native
 two-pass fingerprint-corridor Path B golden run. The repository intentionally
 contains no fabricated T4 coordinates, passports, or payload semantics: M2
 remains capture_pending until the authoritative rental artifact is exported.
+
+## 2026-07-12 — M2A Native C6 Projection Correction
+
+Corrected golden capture to derive selected obligations from the rich C5
+multi-role authority, join native streamed `payload_index.selected_exemplars`,
+and bind C2-C5 allocation, claims, dedupe/backfill, coverage, budget, and C6
+authority records. The capture remains read-only and capture_pending until the
+real terminal T4 artifact supplies the authoritative 256-coordinate fixture.
