@@ -33,11 +33,13 @@ from radjax_tome.builder.c6_integration import (
 )
 from radjax_tome.builder.corridor_artifacts import build_corridor_artifacts
 from radjax_tome.builder.exemplar_delivery import (
+    ENTROPY_PARITY_QUANTIZATION_STEP,
     EXEMPLAR_DELIVERY_REPORT_FILENAME,
     ExemplarDeliveryConfig,
     SelectedExemplarDeliveryError,
     SelectedRerunCudaOOMError,
     materialize_selected_exemplar_delivery,
+    selected_delivery_staging_diagnostic,
 )
 from radjax_tome.builder.exemplar_selection import build_exemplar_selection_manifest
 from radjax_tome.builder.long_tail import (
@@ -455,22 +457,34 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
                 )
             )
         except SelectedExemplarDeliveryError as exc:
-            selected_delivery_failure = exc.diagnostic
+            selected_delivery_failure = _selected_delivery_failure_with_staging(
+                config,
+                c6_context,
+                exc.diagnostic,
+            )
             blockers.append(str(exc))
         except SelectedRerunCudaOOMError as exc:
-            selected_delivery_failure = {
-                "failure_stage": "selected_rerun",
-                "failure_reason": str(exc),
-                "delivery_path": config.exemplar_delivery_path,
-                **exc.diagnostic,
-            }
+            selected_delivery_failure = _selected_delivery_failure_with_staging(
+                config,
+                c6_context,
+                {
+                    "failure_stage": "selected_rerun",
+                    "failure_reason": str(exc),
+                    "delivery_path": config.exemplar_delivery_path,
+                    **exc.diagnostic,
+                },
+            )
             blockers.append(str(exc))
         except Exception as exc:
-            selected_delivery_failure = {
-                "failure_stage": "selected_exemplar_delivery",
-                "failure_reason": str(exc),
-                "delivery_path": config.exemplar_delivery_path,
-            }
+            selected_delivery_failure = _selected_delivery_failure_with_staging(
+                config,
+                c6_context,
+                {
+                    "failure_stage": "selected_exemplar_delivery",
+                    "failure_reason": str(exc),
+                    "delivery_path": config.exemplar_delivery_path,
+                },
+            )
             blockers.append(str(exc))
     validation_status = "not_run"
     validation_wall_seconds = 0.0
@@ -1647,6 +1661,21 @@ def _production_report(
             else None
         ),
         "selected_delivery_failure": selected_delivery_failure,
+        "staging_directory": (
+            selected_delivery_failure.get("staging_directory")
+            if selected_delivery_failure is not None
+            else None
+        ),
+        "staging_payload_count": (
+            selected_delivery_failure.get("staging_payload_count", 0)
+            if selected_delivery_failure is not None
+            else None
+        ),
+        "staging_preserved": (
+            selected_delivery_failure.get("staging_preserved", False)
+            if selected_delivery_failure is not None
+            else None
+        ),
         "num_examples_scored": (
             delivery_report.get("num_examples_scored")
             if delivery_report is not None
@@ -1773,6 +1802,8 @@ def _production_report(
         "dynamic_top_k_min": config.dynamic_top_k_min,
         "dynamic_top_k_max": config.dynamic_top_k_max,
         "dynamic_mass_threshold": config.dynamic_mass_threshold,
+        "entropy_quantization_step": ENTROPY_PARITY_QUANTIZATION_STEP,
+        "entropy_parity_tolerance": ENTROPY_PARITY_QUANTIZATION_STEP,
         "long_tail_warning_k": config.long_tail_warning_k,
         "very_long_tail_warning_k": config.very_long_tail_warning_k,
         "perverse_tail_warning_k": config.perverse_tail_warning_k,
@@ -2092,6 +2123,28 @@ def _selected_exemplar_delivery_enabled(config: ProductionBuildConfig) -> bool:
         config.exemplar_selection_enabled
         and config.target_policy == "corridor_exemplar_v1"
     )
+
+
+def _selected_delivery_failure_with_staging(
+    config: ProductionBuildConfig,
+    c6_context: dict[str, Any] | None,
+    diagnostic: dict[str, Any],
+) -> dict[str, Any]:
+    if config.exemplar_delivery_path != "two_pass_rerun_selected":
+        return diagnostic
+    authority_hash = None
+    if c6_context is not None:
+        authority_hash = str(
+            (c6_context.get("authorities") or {}).get("score_pass_authority_hash") or ""
+        )
+    failure = dict(diagnostic)
+    failure.update(
+        selected_delivery_staging_diagnostic(
+            config.output_dir,
+            delivery_authority_hash=authority_hash,
+        )
+    )
+    return failure
 
 
 def _exemplar_delivery_config(

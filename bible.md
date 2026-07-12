@@ -1223,3 +1223,17 @@ validation, linkage audit, or cover generation when selected delivery fails,
 and the progress sidecar records the structured failure. CPU and GPU backends
 share the selected-position request semantics, while legacy delivery remains
 compatible. No T4 rehearsal was executed by this corrective patch.
+
+## 2026-07-12 — C6.3.3 Quantization-Aware Parity and Resume Evidence
+
+Selected delivery parity now requires exact selected identity, source
+coordinates, source passport coordinates, and top-token identity while allowing
+the documented `0.00390625` entropy quantization step. Parity reports expose
+the absolute entropy delta, allowed tolerance, parity status, coordinate exact
+match, and top-token exact match; nonfinite or materially divergent entropy
+still fails. Path B score-pass diagnostics resolve evidence by the exact
+selected position and source passport row, including multiple positions from
+one example, and preserve the score evidence row in failures. Native resumable
+delivery retains authority-bound valid staged shards, quarantines invalid
+staged files with explicit paths/counts, and reports preserved and quarantined
+staging evidence after failure. No T4 rehearsal was executed by this patch.

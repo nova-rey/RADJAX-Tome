@@ -186,6 +186,214 @@ def test_delivery_parity_selection_identity_is_opt_in(
     assert "selected example IDs differ" in controlled["blockers"]
 
 
+def test_delivery_parity_reports_quantization_aware_entropy_metrics(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def artifact_selection(path: Path) -> dict[str, object]:
+        score = 4.0 if path.name == "a" else 4.00390625
+        return _parity_artifact_selection(score)
+
+    monkeypatch.setattr(exemplar_delivery, "_artifact_selection", artifact_selection)
+
+    report = compare_exemplar_delivery_artifacts(
+        Path("a"), Path("b"), require_selection_match=True
+    )
+
+    assert report["status"] == "pass"
+    assert report["entropy_absolute_delta"] == pytest.approx(0.00390625)
+    assert report["entropy_allowed_tolerance"] == pytest.approx(0.00390625)
+    assert report["entropy_parity_status"] == "pass"
+    assert report["top_token_exact_match"] is True
+    assert report["coordinate_exact_match"] is True
+
+
+@pytest.mark.parametrize(
+    "right_score",
+    (4.0039062501, 4.1),
+)
+def test_delivery_parity_rejects_entropy_beyond_quantization_tolerance(
+    monkeypatch: pytest.MonkeyPatch,
+    right_score: float,
+) -> None:
+    def artifact_selection(path: Path) -> dict[str, object]:
+        return _parity_artifact_selection(4.0 if path.name == "a" else right_score)
+
+    monkeypatch.setattr(exemplar_delivery, "_artifact_selection", artifact_selection)
+
+    report = compare_exemplar_delivery_artifacts(
+        Path("a"), Path("b"), require_selection_match=True
+    )
+
+    assert report["status"] == "fail"
+    assert report["entropy_parity_status"] == "fail"
+    assert (
+        "selected entropy parity exceeds quantization tolerance" in report["blockers"]
+    )
+
+
+def test_delivery_parity_keeps_same_example_positions_distinct(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def artifact_selection(path: Path) -> dict[str, object]:
+        item = _parity_artifact_selection(4.0)
+        if path.name == "a":
+            item["positions"] = [1, 5]
+            item["source_coordinates"] = [[0, 0, 1], [0, 0, 5]]
+        else:
+            item["positions"] = [1, 4]
+            item["source_coordinates"] = [[0, 0, 1], [0, 0, 4]]
+        item["ids"] = ["same-example", "same-example"]
+        item["ranks"] = [1, 2]
+        item["scores"] = [4.0, 3.0]
+        item["top_token_ids"] = [7, 8]
+        return item
+
+    monkeypatch.setattr(exemplar_delivery, "_artifact_selection", artifact_selection)
+
+    report = compare_exemplar_delivery_artifacts(
+        Path("a"), Path("b"), require_selection_match=True
+    )
+
+    assert report["coordinate_exact_match"] is False
+    assert report["selected_positions_match"] is False
+    assert report["status"] == "fail"
+
+
+def test_score_pass_diagnostic_lookup_uses_exact_example_and_position() -> None:
+    shard = {
+        "score_example_ids": np.asarray(["same-example", "same-example"]),
+        "score_selected_position": np.asarray([1, 5], dtype=np.int32),
+        "score_selected_position_entropy": np.asarray([2.0, 5.0], dtype=np.float32),
+        "score_top_token_id": np.asarray([11, 55], dtype=np.int32),
+        "corridor_entropy": np.asarray(
+            [[2.0] * 6, [3.0, 3.0, 3.0, 3.0, 3.0, 5.0]], dtype=np.float32
+        ),
+        "corridor_top_token_ids": np.asarray(
+            [[11] * 6, [22, 22, 22, 22, 22, 55]], dtype=np.int32
+        ),
+    }
+    record = {
+        "selected_example_id": "same-example",
+        "source_row": 1,
+        "source_position": 5,
+    }
+
+    row = exemplar_delivery._resolve_score_pass_evidence_row(shard, record)
+    fields = exemplar_delivery._path_b_shard_diagnostic_fields(
+        shard,
+        row=row,
+        position=5,
+    )
+
+    assert row == 1
+    assert fields["score_selected_position"] == 5
+    assert fields["score_top_token_id"] == 55
+
+
+def test_native_staging_preserves_valid_payload_for_resume(tmp_path: Path) -> None:
+    record = {
+        "selected_example_id": "resume-example",
+        "selected_position": 2,
+    }
+    payload = {
+        **record,
+        "selected_score": 4.0,
+        "score_selected_position_entropy": 4.0,
+        "score_top_token_id": 7,
+        "source_shard_id": 0,
+        "source_row": 0,
+        "source_position": 2,
+        "source_score": 4.0,
+        "source_top_token_id": 7,
+        "source_score_policy": "entropy_top_n_v1",
+        "payload_ref": {"kind": "corridor_exemplar_score_pass_v1"},
+        "selected_policy": "entropy_top_n_v1",
+        "source_delivery_path": "two_pass_rerun_selected",
+        "top_token_ids": [7],
+        "top_log_probs": [-0.1],
+        "top_probs": [0.9],
+        "top_selection_mask": [True],
+        "effective_top_k": 1,
+        "top_mass": 0.9,
+        "tail_mass": 0.1,
+        "bucket_masses": [0.1, 0.0],
+        "teacher_entropy": 4.0,
+        "sequence_length": 5,
+        "vocab_size": 64,
+        "num_buckets": 2,
+        "dynamic_top_k": {},
+        "dynamic_mass_threshold": 0.95,
+        "dynamic_top_k_max": 32,
+        "top_k_saturated": False,
+        "long_tail_class": "normal",
+        "long_tail_warnings": [],
+        "effective_top_k_fraction_of_vocab": 1 / 64,
+        "semantic_tail_tag": "unknown_open_class_tail",
+        "selected_board": "primary",
+        "corridor_mode_id": 0,
+        "corridor_fingerprint_id": "fp_0",
+        "corridor_assignment_status": "linked",
+        "delivery_authority_hash": "authority-1",
+    }
+    config = SimpleNamespace(
+        artifact_dir=tmp_path,
+        delivery_authority_hash="authority-1",
+        rerun_metrics={},
+    )
+    exemplar_delivery._write_native_payload_shard(
+        exemplar_delivery._native_payload_stage_dir(config),
+        record_index=0,
+        payload=payload,
+        delivery_path="two_pass_rerun_selected",
+    )
+    public = tmp_path / "selected_exemplars"
+    public.mkdir()
+    (public / "selected-exemplars-00000.json").write_text("{}", encoding="utf-8")
+    (public / "payload_index.json").write_text("{}", encoding="utf-8")
+
+    completed = exemplar_delivery._prepare_native_payload_staging(
+        config,
+        selected_records=[record],
+    )
+
+    assert set(completed) == {0}
+    assert config.rerun_metrics["staging_preserved"] is True
+    assert (
+        exemplar_delivery._native_payload_stage_dir(config)
+        / "selected-exemplars-00000.json"
+    ).is_file()
+    assert not (public / "selected-exemplars-00000.json").exists()
+    assert not (public / "payload_index.json").exists()
+
+
+def _parity_artifact_selection(score: float) -> dict[str, object]:
+    return {
+        "report": {
+            "corridor_artifact_built": True,
+            "corridor_modes_built": True,
+            "corridor_mode_count": 1,
+            "non_selected_exemplar_payload_retained": False,
+            "final_retained_bytes": 1,
+            "entropy_quantization_step": 0.00390625,
+        },
+        "ids": ["same-example"],
+        "positions": [1],
+        "ranks": [1],
+        "scores": [score],
+        "top_token_ids": [7],
+        "source_coordinates": [[0, 0, 1]],
+        "mode_keys": [0],
+        "assignment_statuses": ["linked"],
+        "payload_shapes": [{"top_token_ids": 1}],
+        "corridor_shape": ("corridors/corridor_summary.json",),
+        "corridor_mode_policy": "stat_bands_v0",
+        "corridor_mode_count": 1,
+        "corridor_tracked_stats": ["entropy"],
+        "corridor_mode_table": [{"mode_id": 0}],
+        "corridor_assignment_storage_kind": "packed_numpy_v1",
+    }
+
+
 def test_path_b_selected_only_delivery_writes_payloads_without_unselected_retention(
     tmp_path: Path,
 ) -> None:

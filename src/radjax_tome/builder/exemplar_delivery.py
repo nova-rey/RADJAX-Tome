@@ -50,6 +50,7 @@ from radjax_tome.targets.store import TeacherTargetStore
 EXEMPLAR_DELIVERY_REPORT_FILENAME = "delivery_report.json"
 EXEMPLAR_DELIVERY_REPORT_SCHEMA = "selected_exemplar_delivery_report_v1"
 EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA = "exemplar_delivery_parity_report_v1"
+ENTROPY_PARITY_QUANTIZATION_STEP = 0.00390625
 LEADERBOARD_REPORT_FILENAME = "leaderboard_report.json"
 SELECTED_EXEMPLARS_FILENAME = "selected_exemplars.json"
 CURRICULUM_ROUTES_FILENAME = "selected_routes.json"
@@ -425,6 +426,8 @@ def materialize_selected_exemplar_delivery(
         "execution_mode": config.execution_mode,
         "dataset_path": str(config.dataset_path),
         "score_policy": config.score_policy,
+        "entropy_quantization_step": ENTROPY_PARITY_QUANTIZATION_STEP,
+        "entropy_parity_tolerance": ENTROPY_PARITY_QUANTIZATION_STEP,
         "num_examples_scored": store.metadata.num_examples,
         "num_positions_scored": store.metadata.num_examples
         * store.metadata.sequence_length,
@@ -508,6 +511,13 @@ def materialize_selected_exemplar_delivery(
         ),
         "selected_row_gather_seconds": rerun_metrics.get("selected_row_gather_seconds"),
         "payload_write_seconds": rerun_metrics.get("payload_write_seconds"),
+        "staging_directory": rerun_metrics.get("staging_directory"),
+        "staging_preserved": rerun_metrics.get("staging_preserved", False),
+        "staging_payload_count": rerun_metrics.get("staging_payload_count", 0),
+        "staging_quarantined_count": rerun_metrics.get("staging_quarantined_count", 0),
+        "staging_quarantine_directory": rerun_metrics.get(
+            "staging_quarantine_directory"
+        ),
         "cuda_oom_retry_count": rerun_metrics.get("cuda_oom_retry_count", 0),
         "cuda_oom_retry_batch_transitions": rerun_metrics.get(
             "cuda_oom_retry_batch_transitions", []
@@ -999,14 +1009,16 @@ def _path_b_delivery_error(
             shard = store.read_shard(source_shard_id)
         except (OSError, ValueError, KeyError):
             shard = None
+    evidence_row = _resolve_score_pass_evidence_row(shard, record)
     score_fields = _path_b_shard_diagnostic_fields(
         shard,
-        row=source_row,
+        row=evidence_row if evidence_row is not None else source_row,
         position=source_position,
     )
     record_matches_score_pass = (
         shard is not None
         and source_row is not None
+        and evidence_row == source_row
         and _path_b_score_pass_record_matches(record, shard, row=source_row)
     )
     diagnostic = {
@@ -1023,6 +1035,8 @@ def _path_b_delivery_error(
         "payload_ref": record.get("payload_ref"),
         "selected_record": record,
         "record_matches_score_pass_tuple": record_matches_score_pass,
+        "score_pass_evidence_row": evidence_row,
+        "score_pass_evidence_coordinate_match": evidence_row == source_row,
         "selected_record_order": selected_record_order,
         "rerun_input_order": rerun_input_order,
         "rerun_row_index": rerun_row_index,
@@ -1068,7 +1082,9 @@ def _path_b_shard_diagnostic_fields(
         ),
         "corridor_entropy_at_source_position": _array_scalar_or_none(
             shard,
-            "corridor_entropy",
+            "corridor_entropy"
+            if "corridor_entropy" in shard
+            else "corridor_teacher_entropy",
             row,
             position,
         ),
@@ -1079,6 +1095,50 @@ def _path_b_shard_diagnostic_fields(
             position,
         ),
     }
+
+
+def _resolve_score_pass_evidence_row(
+    shard: dict[str, np.ndarray] | None,
+    record: Mapping[str, Any],
+) -> int | None:
+    """Resolve score evidence by exact ID/position, then verify the passport row."""
+
+    if shard is None:
+        return None
+    example_id = str(record.get("selected_example_id", ""))
+    source_position = _int_or_none(record.get("source_position"))
+    source_row = _int_or_none(record.get("source_row"))
+    if source_position is None:
+        return None
+    try:
+        example_ids = np.asarray(shard["score_example_ids"]).reshape(-1)
+        positions = np.asarray(shard["score_selected_position"]).reshape(-1)
+    except (KeyError, TypeError, ValueError):
+        return source_row
+    if np.issubdtype(example_ids.dtype, np.integer):
+        matches = [
+            index
+            for index, candidate_position in enumerate(positions.tolist())
+            if index == source_row and int(candidate_position) == source_position
+        ]
+    else:
+        matches = [
+            index
+            for index, (candidate_id, candidate_position) in enumerate(
+                zip(example_ids.tolist(), positions.tolist(), strict=False)
+            )
+            if _score_pass_example_id(candidate_id) == example_id
+            and int(candidate_position) == source_position
+        ]
+    if len(matches) != 1:
+        return source_row
+    return matches[0]
+
+
+def _score_pass_example_id(value: Any) -> str:
+    if isinstance(value, bytes):
+        return value.decode("utf-8")
+    return str(value)
 
 
 def _array_scalar_or_none(
@@ -1119,6 +1179,41 @@ def compare_exemplar_delivery_artifacts(
     blockers: list[str] = []
     warnings: list[str] = []
     selection_differences: list[str] = []
+    entropy_allowed_tolerance = max(
+        float(atol),
+        _artifact_entropy_tolerance(left),
+        _artifact_entropy_tolerance(right),
+    )
+    entropy_deltas = [
+        abs(float(left_score) - float(right_score))
+        for left_score, right_score in zip(
+            left["scores"], right["scores"], strict=False
+        )
+        if np.isfinite(left_score) and np.isfinite(right_score)
+    ]
+    entropy_absolute_delta = max(entropy_deltas, default=None)
+    entropy_parity_status = "pass"
+    if len(left["scores"]) != len(right["scores"]):
+        entropy_parity_status = "fail"
+    elif any(
+        not np.isfinite(left_score) or not np.isfinite(right_score)
+        for left_score, right_score in zip(
+            left["scores"], right["scores"], strict=False
+        )
+    ):
+        entropy_parity_status = "fail"
+    elif entropy_absolute_delta is not None and (
+        entropy_absolute_delta > entropy_allowed_tolerance
+    ):
+        entropy_parity_status = "fail"
+    coordinate_exact_match = (
+        left["ids"] == right["ids"]
+        and left["positions"] == right["positions"]
+        and left.get("source_coordinates", []) == right.get("source_coordinates", [])
+    )
+    top_token_exact_match = left.get("top_token_ids", []) == right.get(
+        "top_token_ids", []
+    )
     if left["ids"] != right["ids"]:
         selection_differences.append("selected example IDs differ")
     if left["positions"] != right["positions"]:
@@ -1128,11 +1223,34 @@ def compare_exemplar_delivery_artifacts(
     for index, (left_score, right_score) in enumerate(
         zip(left["scores"], right["scores"], strict=False)
     ):
-        if abs(left_score - right_score) > atol:
+        if not np.isfinite(left_score) or not np.isfinite(right_score):
+            selection_differences.append(
+                f"selected score is nonfinite at rank {index + 1}"
+            )
+            break
+        if abs(left_score - right_score) > entropy_allowed_tolerance:
             selection_differences.append(f"selected score differs at rank {index + 1}")
             break
+    if not coordinate_exact_match:
+        selection_differences.append("selected source coordinates differ")
+    if not top_token_exact_match:
+        selection_differences.append("selected top-token identities differ")
     if left["mode_keys"] != right["mode_keys"]:
         selection_differences.append("selected mode keys differ")
+    if entropy_parity_status == "fail":
+        blockers.append("selected entropy parity exceeds quantization tolerance")
+    if not coordinate_exact_match and (
+        require_selection_match
+        or left.get("source_coordinates")
+        or right.get("source_coordinates")
+    ):
+        blockers.append("selected source coordinates do not match exactly")
+    if not top_token_exact_match and (
+        require_selection_match
+        or left.get("top_token_ids")
+        or right.get("top_token_ids")
+    ):
+        blockers.append("selected top-token identities do not match exactly")
     if require_selection_match:
         blockers.extend(selection_differences)
     elif selection_differences:
@@ -1188,6 +1306,12 @@ def compare_exemplar_delivery_artifacts(
         "selected_example_ids_match": left["ids"] == right["ids"],
         "selected_positions_match": left["positions"] == right["positions"],
         "selected_score_ranks_match": left["ranks"] == right["ranks"],
+        "coordinate_exact_match": coordinate_exact_match,
+        "top_token_exact_match": top_token_exact_match,
+        "entropy_absolute_delta": entropy_absolute_delta,
+        "entropy_allowed_tolerance": entropy_allowed_tolerance,
+        "entropy_parity_status": entropy_parity_status,
+        "entropy_deltas": entropy_deltas,
         "selected_mode_keys_match": left["mode_keys"] == right["mode_keys"],
         "selected_corridor_mode_ids_match": left["mode_keys"] == right["mode_keys"],
         "selected_corridor_assignments_linked": all(
@@ -2343,6 +2467,8 @@ def _prepare_native_payload_staging(
         path.unlink()
     (public / "payload_index.json").unlink(missing_ok=True)
     completed: dict[int, dict[str, Any]] = {}
+    quarantined = 0
+    quarantine_dir: Path | None = None
     for path in sorted(stage.glob("selected-exemplars-*.json")):
         try:
             record_index = int(path.stem.rsplit("-", 1)[1])
@@ -2355,13 +2481,57 @@ def _prepare_native_payload_staging(
                 expected_authority=config.delivery_authority_hash,
             )
         except (OSError, TypeError, ValueError, KeyError):
-            path.unlink(missing_ok=True)
+            if quarantine_dir is None:
+                quarantine_dir = stage.parent / f"quarantine-{_now().replace(':', '-')}"
+                quarantine_dir.mkdir(parents=True, exist_ok=True)
+            os.replace(path, quarantine_dir / path.name)
+            quarantined += 1
             continue
         completed[record_index] = _payload_scalar_summary(
             item,
             record_index=record_index,
         )
+    if config.rerun_metrics is not None:
+        config.rerun_metrics.update(
+            {
+                "staging_directory": str(stage),
+                "staging_preserved": bool(completed),
+                "staging_payload_count": len(completed),
+                "staging_quarantined_count": quarantined,
+                "staging_quarantine_directory": (
+                    str(quarantine_dir) if quarantine_dir is not None else None
+                ),
+            }
+        )
     return completed
+
+
+def selected_delivery_staging_diagnostic(
+    artifact_dir: Path,
+    *,
+    delivery_authority_hash: str | None,
+) -> dict[str, Any]:
+    stage = (
+        artifact_dir
+        / ".staging-native-c6"
+        / ((delivery_authority_hash or "unbound").replace(":", "-"))
+    )
+    files = sorted(stage.glob("selected-exemplars-*.json"))
+    quarantine_dirs = sorted(stage.parent.glob("quarantine-*"))
+    quarantined_files = sorted(
+        path
+        for directory in quarantine_dirs
+        for path in directory.glob("selected-exemplars-*.json")
+    )
+    return {
+        "staging_directory": str(stage),
+        "staging_authority_hash": delivery_authority_hash,
+        "staging_payload_count": len(files),
+        "staging_payload_files": [path.name for path in files],
+        "staging_preserved": bool(files),
+        "staging_quarantine_directories": [str(path) for path in quarantine_dirs],
+        "staging_quarantined_payload_count": len(quarantined_files),
+    }
 
 
 def _promote_native_payload_shards(config: ExemplarDeliveryConfig) -> None:
@@ -3071,6 +3241,15 @@ def _artifact_selection(path: Path) -> dict[str, Any]:
         "positions": [item.get("selected_position") for item in selected],
         "ranks": [item.get("rank") for item in selected],
         "scores": [float(item.get("selected_score") or 0.0) for item in selected],
+        "top_token_ids": [item.get("source_top_token_id") for item in selected],
+        "source_coordinates": [
+            [
+                item.get("source_shard_id"),
+                item.get("source_row"),
+                item.get("source_position"),
+            ]
+            for item in selected
+        ],
         "mode_keys": [item.get("corridor_mode_id") for item in selected],
         "assignment_statuses": [
             item.get("corridor_assignment_status") for item in selected
@@ -3084,7 +3263,22 @@ def _artifact_selection(path: Path) -> dict[str, Any]:
         "corridor_assignment_storage_kind": report.get(
             "corridor_assignment_storage_kind"
         ),
+        "entropy_quantization_step": report.get(
+            "entropy_quantization_step",
+            ENTROPY_PARITY_QUANTIZATION_STEP,
+        ),
     }
+
+
+def _artifact_entropy_tolerance(artifact: Mapping[str, Any]) -> float:
+    value = artifact.get("entropy_quantization_step")
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return ENTROPY_PARITY_QUANTIZATION_STEP
+    if not np.isfinite(numeric) or numeric < 0.0:
+        return ENTROPY_PARITY_QUANTIZATION_STEP
+    return numeric
 
 
 def _corridor_artifact_shape(path: Path) -> tuple[str, ...]:
