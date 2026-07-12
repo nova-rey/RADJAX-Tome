@@ -239,6 +239,7 @@ class GPUTorchTeacherEmissionBackend:
             ) from exc
         logits = output.logits
         effective_vocab_size = int(logits.shape[-1])
+        reduction_logits = _gpu_selected_position_logits(torch, logits, batch)
         estimated_dense_logits_dtype = _logits_dtype_name(logits)
         chunking_plan = _vocab_chunking_plan(self.config, self.config.target_policy)
         if self.config.target_policy == "dense_logits":
@@ -253,7 +254,7 @@ class GPUTorchTeacherEmissionBackend:
             try:
                 compact_payload = _gpu_cascaded_reduce(
                     torch,
-                    logits,
+                    reduction_logits,
                     top_k=self.config.top_k,
                     num_buckets=self.config.num_buckets,
                     vocab_chunk_size=chunking_plan.effective_size,
@@ -270,7 +271,7 @@ class GPUTorchTeacherEmissionBackend:
             try:
                 compact_payload = _gpu_dynamic_cascaded_reduce(
                     torch,
-                    logits,
+                    reduction_logits,
                     dynamic_top_k_min=self.config.dynamic_top_k_min,
                     dynamic_top_k_max=self.config.dynamic_top_k_max,
                     dynamic_mass_threshold=self.config.dynamic_mass_threshold,
@@ -297,14 +298,14 @@ class GPUTorchTeacherEmissionBackend:
                 ):
                     compact_payload = _gpu_corridor_exemplar_score_reduce(
                         torch,
-                        logits,
+                        reduction_logits,
                         config=self.config,
                         vocab_chunk_size=chunking_plan.effective_size,
                     )
                 else:
                     compact_payload = _gpu_corridor_exemplar_reduce(
                         torch,
-                        logits,
+                        reduction_logits,
                         config=self.config,
                         vocab_chunk_size=chunking_plan.effective_size,
                     )
@@ -347,7 +348,7 @@ class GPUTorchTeacherEmissionBackend:
             try:
                 compact_payload = _gpu_topk_tail_reduce(
                     torch,
-                    logits,
+                    reduction_logits,
                     top_k=self.config.top_k,
                     vocab_chunk_size=chunking_plan.effective_size,
                 )
@@ -2233,6 +2234,25 @@ def _tensor_to_numpy(tensor: Any, dtype: type[np.generic]) -> np.ndarray:
     if np.issubdtype(np.dtype(dtype), np.floating):
         detached = detached.float()
     return detached.to("cpu").numpy().astype(dtype)
+
+
+def _gpu_selected_position_logits(
+    torch: Any, logits: Any, batch: TeacherBatchInput
+) -> Any:
+    """Gather selected token rows before any vocabulary reduction."""
+
+    if batch.selected_positions_by_example is None:
+        return logits
+    selected_rows: list[Any] = []
+    for row, positions in enumerate(batch.selected_positions_by_example):
+        if any(position >= int(logits.shape[1]) for position in positions):
+            raise ValueError("selected position outside sequence length")
+        if positions:
+            indices = torch.tensor(positions, dtype=torch.int64, device=logits.device)
+            selected_rows.append(logits[row].index_select(0, indices))
+    if not selected_rows:
+        raise ValueError("selected-position batch contains no positions")
+    return torch.cat(selected_rows, dim=0).unsqueeze(0)
 
 
 def _estimate_dense_logits_bytes(

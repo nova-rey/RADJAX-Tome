@@ -1206,3 +1206,20 @@ reconciliation consumes the scalar payload index rather than a full payload
 shard. Budget diagnostics now use canonical coordinate sets for unique corridor
 and global supply, overlap, within-role duplication, requested allocation, and
 Jaccard arithmetic. No T4 rehearsal was executed by this corrective patch.
+
+## 2026-07-12 — C6.3.2 Selected-Position Transactional Delivery
+
+Native C6 selected delivery now carries frozen selected positions through the
+teacher batch contract and gathers only those rows before dynamic compression.
+Path B has an independently configurable selected-rerun batch size, recognizes
+only recoverable CUDA out-of-memory failures for deterministic retry, and
+records retry, batch, memory, source-example, and selected-coordinate
+telemetry. Native payloads are written incrementally to authority- and
+coordinate-bound staging shards, validated by payload hash, resumable when
+valid, and promoted only after the exact selected-coordinate set is complete;
+public partial shards and indexes are cleared on a new attempt. Payload indexes
+and delivery reports use atomic replacement. Production stops before artifact
+validation, linkage audit, or cover generation when selected delivery fails,
+and the progress sidecar records the structured failure. CPU and GPU backends
+share the selected-position request semantics, while legacy delivery remains
+compatible. No T4 rehearsal was executed by this corrective patch.

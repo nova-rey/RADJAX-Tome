@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import platform
 import resource
 import shutil
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -75,6 +77,17 @@ class SelectedExemplarDeliveryError(ValueError):
         self.diagnostic = diagnostic
         super().__init__(
             f"{SELECTED_LINKAGE_MISMATCH}: {json.dumps(diagnostic, sort_keys=True)}"
+        )
+
+
+class SelectedRerunCudaOOMError(RuntimeError):
+    """Native selected rerun exhausted the final microbatch size."""
+
+    def __init__(self, diagnostic: dict[str, Any]) -> None:
+        self.diagnostic = diagnostic
+        super().__init__(
+            "selected rerun CUDA OOM at batch size 1: "
+            + json.dumps(diagnostic, sort_keys=True)
         )
 
 
@@ -166,6 +179,7 @@ class ExemplarDeliveryConfig:
     authoritative_records: tuple[dict[str, Any], ...] | None = None
     execution_mode: str = "legacy_delivery_v1"
     rerun_metrics: dict[str, Any] | None = None
+    delivery_authority_hash: str | None = None
 
 
 def materialize_selected_exemplar_delivery(
@@ -244,6 +258,8 @@ def materialize_selected_exemplar_delivery(
             event="started",
             selected_examples_processed=0,
             selected_examples_total=rerun_selected_example_count,
+            selected_coordinates_committed=0,
+            selected_coordinates_total=len(selected_records),
         )
     output = config.artifact_dir
     corridors_dir = output / "corridors"
@@ -252,13 +268,31 @@ def materialize_selected_exemplar_delivery(
     curriculum_dir = output / "curriculum"
     leaderboards_dir.mkdir(parents=True, exist_ok=True)
     selected_dir.mkdir(parents=True, exist_ok=True)
+    staged_payload_summaries: dict[int, dict[str, Any]] = {}
+    if _native_streamed_payloads(config):
+        staged_payload_summaries = _prepare_native_payload_staging(
+            config,
+            selected_records=selected_records,
+        )
     curriculum_dir.mkdir(parents=True, exist_ok=True)
     selected_payloads = _selected_payloads(
         selected_records,
         store=store,
         examples=examples,
         config=config,
+        completed_record_indices=set(staged_payload_summaries),
+        existing_payload_summaries=staged_payload_summaries,
     )
+    if config.delivery_path == TWO_PASS_RERUN_SELECTED:
+        _notify_delivery_progress(
+            config,
+            phase="selected_rerun",
+            event="complete",
+            selected_examples_processed=rerun_selected_example_count,
+            selected_examples_total=rerun_selected_example_count,
+            selected_coordinates_committed=len(selected_payloads),
+            selected_coordinates_total=len(selected_records),
+        )
     if not _native_streamed_payloads(config):
         _attach_long_tail_diagnostics(
             selected_records,
@@ -294,9 +328,10 @@ def materialize_selected_exemplar_delivery(
     )
     if _native_streamed_payloads(config):
         _synchronize_native_payload_shards(
-            selected_dir,
+            _native_payload_stage_dir(config),
             selected_records=selected_records,
         )
+        _promote_native_payload_shards(config)
     pruning_started = perf_counter()
     pruned_candidate_payload_bytes = _prune_path_a_candidate_payload_arrays(
         store,
@@ -331,7 +366,7 @@ def materialize_selected_exemplar_delivery(
     write_json(leaderboards_dir / LEADERBOARD_REPORT_FILENAME, leaderboard_report)
     write_json(leaderboards_dir / SELECTED_EXEMPLARS_FILENAME, selected_exemplars)
     if _native_streamed_payloads(config):
-        write_json(
+        _write_json_atomic(
             selected_dir / "payload_index.json",
             {
                 "schema_version": "selected_exemplar_payload_index_v1",
@@ -451,6 +486,38 @@ def materialize_selected_exemplar_delivery(
         "selected_rerun_peak_device_memory_bytes": rerun_metrics.get(
             "selected_rerun_peak_device_memory_bytes"
         ),
+        "selected_rerun_requested_batch_size": rerun_metrics.get(
+            "selected_rerun_requested_batch_size"
+        ),
+        "selected_rerun_effective_batch_sizes": rerun_metrics.get(
+            "selected_rerun_effective_batch_sizes"
+        ),
+        "selected_source_example_count": rerun_metrics.get(
+            "selected_source_example_count"
+        ),
+        "selected_coordinate_count": rerun_metrics.get(
+            "selected_coordinate_count", len(selected_records)
+        ),
+        "requested_source_batch_size": rerun_metrics.get("requested_source_batch_size"),
+        "effective_source_batch_sizes": rerun_metrics.get(
+            "effective_source_batch_sizes"
+        ),
+        "source_batch_count": rerun_metrics.get("source_batch_count"),
+        "coordinate_compression_batch_count": rerun_metrics.get(
+            "coordinate_compression_batch_count"
+        ),
+        "selected_row_gather_seconds": rerun_metrics.get("selected_row_gather_seconds"),
+        "payload_write_seconds": rerun_metrics.get("payload_write_seconds"),
+        "cuda_oom_retry_count": rerun_metrics.get("cuda_oom_retry_count", 0),
+        "cuda_oom_retry_batch_transitions": rerun_metrics.get(
+            "cuda_oom_retry_batch_transitions", []
+        ),
+        "cuda_oom_failure_stage_counts": rerun_metrics.get(
+            "cuda_oom_failure_stage_counts", {}
+        ),
+        "coordinates_committed_before_each_retry": rerun_metrics.get(
+            "coordinates_committed_before_each_retry", []
+        ),
         "selected_payload_source": (
             "backend_dynamic_cascaded_soft_labels_v1"
             if config.delivery_path == TWO_PASS_RERUN_SELECTED
@@ -493,7 +560,7 @@ def materialize_selected_exemplar_delivery(
                 pruning_wall_seconds=pruning_wall_seconds,
             )
         )
-    write_json(output / EXEMPLAR_DELIVERY_REPORT_FILENAME, report)
+    _write_json_atomic(output / EXEMPLAR_DELIVERY_REPORT_FILENAME, report)
     return report
 
 
@@ -1440,6 +1507,8 @@ def _selected_payloads(
     store: TeacherTargetStore,
     examples: tuple[TinyTextExample, ...],
     config: ExemplarDeliveryConfig,
+    completed_record_indices: set[int] | None = None,
+    existing_payload_summaries: Mapping[int, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
         return _selected_payloads_from_backend(
@@ -1447,6 +1516,8 @@ def _selected_payloads(
             store=store,
             examples=examples,
             config=config,
+            completed_record_indices=completed_record_indices,
+            existing_payload_summaries=existing_payload_summaries,
         )
     return _selected_payloads_from_one_pass_capture(
         selected_records,
@@ -1534,6 +1605,7 @@ def _selected_payload_from_one_pass_shard(
         "payload_ref": record["payload_ref"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
+        "delivery_authority_hash": getattr(config, "delivery_authority_hash", None),
         "selected_board": record.get("selected_board", PRIMARY_SELECTED_BOARD),
         "mode_key": record.get("mode_key"),
         "rank_by_board": record.get("rank_by_board", {}),
@@ -1889,12 +1961,24 @@ def _selected_payloads_from_backend(
     store: TeacherTargetStore,
     examples: tuple[TinyTextExample, ...],
     config: ExemplarDeliveryConfig,
+    completed_record_indices: set[int] | None = None,
+    existing_payload_summaries: Mapping[int, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     if not selected_records:
         return []
     if config.backend_config is None:
         raise ValueError("selected exemplar delivery requires backend_config")
-    selected_example_ids = _unique_selected_example_ids(selected_records)
+    completed_record_indices = completed_record_indices or set()
+    existing_payload_summaries = existing_payload_summaries or {}
+    pending_records = [
+        (record_index, record)
+        for record_index, record in enumerate(selected_records)
+        if record_index not in completed_record_indices
+    ]
+    selected_example_ids = _unique_selected_example_ids(
+        [record for _, record in pending_records]
+    )
+    all_selected_example_ids = _unique_selected_example_ids(selected_records)
     examples_by_id = {example.example_id: example for example in examples}
     missing = [
         example_id
@@ -1919,28 +2003,100 @@ def _selected_payloads_from_backend(
         batch_size=batch_size,
     )
     backend = create_backend(backend_config)
-    payloads_by_record: dict[int, dict[str, Any]] = {}
+    payloads_by_record: dict[int, dict[str, Any]] = {
+        int(record_index): dict(summary)
+        for record_index, summary in existing_payload_summaries.items()
+    }
     native_streaming = _native_streamed_payloads(config)
-    payload_summaries: list[dict[str, Any]] = []
+    payload_summaries: list[dict[str, Any]] = [
+        dict(existing_payload_summaries[index])
+        for index in sorted(existing_payload_summaries)
+    ]
     records_by_example_id: dict[str, list[tuple[int, dict[str, Any]]]] = {}
-    for record_index, record in enumerate(selected_records):
+    for record_index, record in pending_records:
         records_by_example_id.setdefault(str(record["selected_example_id"]), []).append(
             (record_index, record)
         )
+    positions_by_example_id = {
+        example_id: tuple(
+            dict.fromkeys(int(record["source_position"]) for _, record in records)
+        )
+        for example_id, records in records_by_example_id.items()
+    }
+    selected_row_by_record: dict[int, int] = {}
+    selected_row_offset = 0
+    for example_id in selected_example_ids:
+        for record_index, _ in records_by_example_id[example_id]:
+            selected_row_by_record[record_index] = selected_row_offset
+            selected_row_offset += 1
     teacher_seconds = 0.0
     compression_seconds = 0.0
     peak_host_memory_bytes = _host_rss_bytes()
     batch_count = 0
+    requested_batch_size = batch_size
+    effective_batch_sizes: list[int] = []
+    cuda_oom_retry_count = 0
+    cuda_oom_retry_transitions: list[dict[str, int]] = []
+    cuda_oom_failure_stage_counts: dict[str, int] = {}
+    coordinates_committed = len(completed_record_indices)
+    committed_before_retries: list[int] = []
+    start = 0
     try:
-        for start in range(0, len(selected_examples), batch_size):
+        while start < len(selected_examples):
             chunk = selected_examples[start : start + batch_size]
-            teacher_started = perf_counter()
-            result = backend.emit_batch(
-                TeacherBatchInput(
-                    example_ids=tuple(example.example_id for example in chunk),
-                    texts=tuple(example.text for example in chunk),
-                )
+            batch_selected_row_offset = sum(
+                len(positions_by_example_id[example_id])
+                for example_id in selected_example_ids[:start]
             )
+            teacher_started = perf_counter()
+            try:
+                result = backend.emit_batch(
+                    TeacherBatchInput(
+                        example_ids=tuple(example.example_id for example in chunk),
+                        texts=tuple(example.text for example in chunk),
+                        selected_positions_by_example=(
+                            tuple(
+                                positions_by_example_id[example.example_id]
+                                for example in chunk
+                            )
+                            if native_streaming
+                            else None
+                        ),
+                    )
+                )
+            except RuntimeError as exc:
+                if not _is_recoverable_cuda_oom(exc):
+                    raise
+                cuda_oom_failure_stage_counts["teacher_or_selected_reduction"] = (
+                    cuda_oom_failure_stage_counts.get(
+                        "teacher_or_selected_reduction", 0
+                    )
+                    + 1
+                )
+                next_batch_size = _next_rerun_batch_size(batch_size)
+                if next_batch_size is None:
+                    raise SelectedRerunCudaOOMError(
+                        {
+                            "failure_stage": "selected_rerun",
+                            "requested_batch_size": requested_batch_size,
+                            "failed_batch_size": batch_size,
+                            "coordinates_committed": coordinates_committed,
+                            "coordinates_total": len(selected_records),
+                            "cuda_oom_retry_count": cuda_oom_retry_count,
+                        }
+                    ) from exc
+                cuda_oom_retry_count += 1
+                committed_before_retries.append(coordinates_committed)
+                cuda_oom_retry_transitions.append(
+                    {"from": batch_size, "to": next_batch_size}
+                )
+                close = getattr(backend, "close", None)
+                if callable(close):
+                    close()
+                batch_size = next_batch_size
+                backend = create_backend(replace(backend_config, batch_size=batch_size))
+                continue
+            effective_batch_sizes.append(batch_size)
             teacher_seconds += _elapsed(teacher_started)
             compression_started = perf_counter()
             row_by_example_id = {
@@ -1952,8 +2108,14 @@ def _selected_payloads_from_backend(
                         selected_payload = _selected_payload_from_emission(
                             record,
                             payload=result.payload,
-                            row=rerun_row,
+                            row=0 if native_streaming else rerun_row,
                             config=config,
+                            position_index=(
+                                selected_row_by_record[record_index]
+                                - batch_selected_row_offset
+                                if native_streaming
+                                else None
+                            ),
                         )
                     except (IndexError, KeyError, TypeError, ValueError) as exc:
                         raise _path_b_delivery_error(
@@ -2002,7 +2164,7 @@ def _selected_payloads_from_backend(
                         record["selected_board"] = selected_board
                         selected_payload["selected_board"] = selected_board
                         _write_native_payload_shard(
-                            config.artifact_dir / "selected_exemplars",
+                            _native_payload_stage_dir(config),
                             record_index=record_index,
                             payload=selected_payload,
                             delivery_path=config.delivery_path,
@@ -2013,6 +2175,7 @@ def _selected_payloads_from_backend(
                                 record_index=record_index,
                             )
                         )
+                        coordinates_committed += 1
                         del selected_payload
                     else:
                         payloads_by_record[record_index] = selected_payload
@@ -2024,9 +2187,12 @@ def _selected_payloads_from_backend(
                 phase="selected_rerun",
                 event="progress",
                 selected_examples_processed=start + len(chunk),
-                selected_examples_total=len(selected_examples),
+                selected_examples_total=len(all_selected_example_ids),
+                selected_coordinates_committed=coordinates_committed,
+                selected_coordinates_total=len(selected_records),
             )
             del result
+            start += len(chunk)
     finally:
         close = getattr(backend, "close", None)
         if callable(close):
@@ -2034,7 +2200,15 @@ def _selected_payloads_from_backend(
     if config.rerun_metrics is not None:
         config.rerun_metrics.update(
             {
-                "selected_rerun_examples": len(selected_examples),
+                "selected_rerun_examples": len(all_selected_example_ids),
+                "selected_source_example_count": len(all_selected_example_ids),
+                "selected_coordinate_count": len(selected_records),
+                "requested_source_batch_size": requested_batch_size,
+                "effective_source_batch_sizes": effective_batch_sizes,
+                "source_batch_count": batch_count,
+                "coordinate_compression_batch_count": batch_count,
+                "selected_row_gather_seconds": None,
+                "payload_write_seconds": 0.0,
                 "selected_rerun_batch_size": batch_size,
                 "selected_rerun_batch_count": batch_count,
                 "selected_rerun_teacher_seconds": teacher_seconds,
@@ -2048,6 +2222,12 @@ def _selected_payloads_from_backend(
                 "selected_payload_shard_count": (
                     len(payload_summaries) if native_streaming else 1
                 ),
+                "selected_rerun_requested_batch_size": requested_batch_size,
+                "selected_rerun_effective_batch_sizes": effective_batch_sizes,
+                "cuda_oom_retry_count": cuda_oom_retry_count,
+                "cuda_oom_retry_batch_transitions": cuda_oom_retry_transitions,
+                "cuda_oom_failure_stage_counts": cuda_oom_failure_stage_counts,
+                "coordinates_committed_before_each_retry": committed_before_retries,
             }
         )
     if native_streaming:
@@ -2059,6 +2239,17 @@ def _native_streamed_payloads(config: ExemplarDeliveryConfig) -> bool:
     return config.execution_mode == NATIVE_C6_PATH_B_EXECUTION
 
 
+def _is_recoverable_cuda_oom(exc: BaseException) -> bool:
+    text = str(exc).lower()
+    return "out of memory" in text or "nv_err_no_memory" in text
+
+
+def _next_rerun_batch_size(batch_size: int) -> int | None:
+    if batch_size <= 1:
+        return None
+    return max(1, batch_size // 2)
+
+
 def _write_native_payload_shard(
     selected_dir: Path,
     *,
@@ -2067,13 +2258,16 @@ def _write_native_payload_shard(
     delivery_path: str,
 ) -> None:
     selected_dir.mkdir(parents=True, exist_ok=True)
-    write_json(
-        selected_dir / f"selected-exemplars-{record_index:05d}.json",
-        {
-            "schema_version": "selected_exemplar_payload_shard_v1",
-            "delivery_path": delivery_path,
-            "selected_exemplars": [payload],
-        },
+    shard = {
+        "schema_version": "selected_exemplar_payload_shard_v1",
+        "delivery_path": delivery_path,
+        "delivery_authority_hash": payload.get("delivery_authority_hash"),
+        "record_index": record_index,
+        "selected_exemplars": [payload],
+    }
+    shard["payload_hash"] = _native_payload_hash(shard)
+    _write_json_atomic(
+        selected_dir / f"selected-exemplars-{record_index:05d}.json", shard
     )
 
 
@@ -2128,7 +2322,137 @@ def _synchronize_native_payload_shards(
             "semantic_tail_tag",
         ):
             item[key] = record.get(key)
-        write_json(path, payload)
+        payload["payload_hash"] = _native_payload_hash(payload)
+        _write_json_atomic(path, payload)
+
+
+def _native_payload_stage_dir(config: ExemplarDeliveryConfig) -> Path:
+    authority = (config.delivery_authority_hash or "unbound").replace(":", "-")
+    return config.artifact_dir / ".staging-native-c6" / authority
+
+
+def _prepare_native_payload_staging(
+    config: ExemplarDeliveryConfig,
+    *,
+    selected_records: list[dict[str, Any]],
+) -> dict[int, dict[str, Any]]:
+    stage = _native_payload_stage_dir(config)
+    stage.mkdir(parents=True, exist_ok=True)
+    public = config.artifact_dir / "selected_exemplars"
+    for path in public.glob("selected-exemplars-*.json"):
+        path.unlink()
+    (public / "payload_index.json").unlink(missing_ok=True)
+    completed: dict[int, dict[str, Any]] = {}
+    for path in sorted(stage.glob("selected-exemplars-*.json")):
+        try:
+            record_index = int(path.stem.rsplit("-", 1)[1])
+            payload = read_json_object(path)
+            item = _validate_native_staged_payload(
+                payload,
+                path=path,
+                record_index=record_index,
+                selected_records=selected_records,
+                expected_authority=config.delivery_authority_hash,
+            )
+        except (OSError, TypeError, ValueError, KeyError):
+            path.unlink(missing_ok=True)
+            continue
+        completed[record_index] = _payload_scalar_summary(
+            item,
+            record_index=record_index,
+        )
+    return completed
+
+
+def _promote_native_payload_shards(config: ExemplarDeliveryConfig) -> None:
+    stage = _native_payload_stage_dir(config)
+    public = config.artifact_dir / "selected_exemplars"
+    staged = sorted(stage.glob("selected-exemplars-*.json"))
+    expected = len(config.authoritative_records or ())
+    if len(staged) != expected:
+        raise ValueError(
+            "native selected payload transaction incomplete: "
+            f"expected={expected} staged={len(staged)}"
+        )
+    staged_indices: list[int] = []
+    for path in staged:
+        payload = read_json_object(path)
+        if payload.get("delivery_authority_hash") != config.delivery_authority_hash:
+            raise ValueError(f"native payload authority hash mismatch: {path.name}")
+        record_index = int(payload.get("record_index", -1))
+        staged_indices.append(record_index)
+        _validate_native_staged_payload(
+            payload,
+            path=path,
+            record_index=record_index,
+            selected_records=list(config.authoritative_records or ()),
+            expected_authority=config.delivery_authority_hash,
+        )
+    if sorted(staged_indices) != list(range(expected)):
+        raise ValueError(
+            "native selected payload transaction has invalid record indices"
+        )
+    for path in staged:
+        os.replace(path, public / path.name)
+    try:
+        stage.rmdir()
+        stage.parent.rmdir()
+    except OSError:
+        pass
+
+
+def _validate_native_staged_payload(
+    payload: dict[str, Any],
+    *,
+    path: Path,
+    record_index: int,
+    selected_records: list[dict[str, Any]],
+    expected_authority: str | None,
+) -> dict[str, Any]:
+    if payload.get("schema_version") != "selected_exemplar_payload_shard_v1":
+        raise ValueError(f"native payload schema mismatch: {path.name}")
+    if payload.get("delivery_authority_hash") != expected_authority:
+        raise ValueError(f"native payload authority hash mismatch: {path.name}")
+    if payload.get("record_index") != record_index:
+        raise ValueError(f"native payload record index mismatch: {path.name}")
+    if not 0 <= record_index < len(selected_records):
+        raise ValueError(f"native payload record index out of range: {path.name}")
+    records = payload.get("selected_exemplars")
+    if not isinstance(records, list) or len(records) != 1:
+        raise ValueError(f"native payload record count mismatch: {path.name}")
+    item = records[0]
+    if not isinstance(item, dict):
+        raise ValueError(f"native payload record is invalid: {path.name}")
+    expected = selected_records[record_index]
+    if str(item.get("selected_example_id")) != str(
+        expected.get("selected_example_id")
+    ) or int(item.get("selected_position", -1)) != int(
+        expected.get("selected_position", -1)
+    ):
+        raise ValueError(f"native payload coordinate mismatch: {path.name}")
+    if payload.get("payload_hash") != _native_payload_hash(payload):
+        raise ValueError(f"native payload hash mismatch: {path.name}")
+    for field in _REQUIRED_SELECTED_PAYLOAD_FIELDS:
+        if field not in item:
+            raise ValueError(f"native payload missing {field}: {path.name}")
+    return item
+
+
+def _native_payload_hash(payload: dict[str, Any]) -> str:
+    body = {key: value for key, value in payload.items() if key != "payload_hash"}
+    return hashlib.sha256(
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp")
+    temporary.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    os.replace(temporary, path)
 
 
 def _host_rss_bytes() -> int:
@@ -2198,11 +2522,17 @@ def _selected_payload_from_emission(
     payload: Any,
     row: int,
     config: ExemplarDeliveryConfig,
+    position_index: int | None = None,
 ) -> dict[str, Any]:
     position = int(record["source_position"])
-    top_selection_mask = _payload_slice(payload, "top_selection_mask", row, position)
-    effective_top_k = int(_payload_scalar(payload, "effective_top_k", row, position))
-    top_token_ids = _payload_slice(payload, "top_token_ids", row, position)
+    payload_position = position if position_index is None else position_index
+    top_selection_mask = _payload_slice(
+        payload, "top_selection_mask", row, payload_position
+    )
+    effective_top_k = int(
+        _payload_scalar(payload, "effective_top_k", row, payload_position)
+    )
+    top_token_ids = _payload_slice(payload, "top_token_ids", row, payload_position)
     return {
         "selected_example_id": record["selected_example_id"],
         "selected_position": position,
@@ -2218,19 +2548,26 @@ def _selected_payload_from_emission(
         "payload_ref": record["payload_ref"],
         "selected_policy": record["selected_policy"],
         "source_delivery_path": record["source_delivery_path"],
+        "delivery_authority_hash": config.delivery_authority_hash,
         "selected_board": record.get("selected_board", PRIMARY_SELECTED_BOARD),
         "mode_key": record.get("mode_key"),
         "rank_by_board": record.get("rank_by_board", {}),
         "scores_by_board": record.get("scores_by_board", {}),
         "top_token_ids": top_token_ids,
-        "top_log_probs": _payload_slice(payload, "top_log_probs", row, position),
-        "top_probs": _payload_slice(payload, "top_probs", row, position),
+        "top_log_probs": _payload_slice(
+            payload, "top_log_probs", row, payload_position
+        ),
+        "top_probs": _payload_slice(payload, "top_probs", row, payload_position),
         "top_selection_mask": top_selection_mask,
         "effective_top_k": effective_top_k,
-        "top_mass": _payload_scalar(payload, "top_mass", row, position),
-        "tail_mass": _payload_scalar(payload, "tail_mass", row, position),
-        "bucket_masses": _payload_slice(payload, "bucket_masses", row, position),
-        "teacher_entropy": _payload_scalar(payload, "teacher_entropy", row, position),
+        "top_mass": _payload_scalar(payload, "top_mass", row, payload_position),
+        "tail_mass": _payload_scalar(payload, "tail_mass", row, payload_position),
+        "bucket_masses": _payload_slice(
+            payload, "bucket_masses", row, payload_position
+        ),
+        "teacher_entropy": _payload_scalar(
+            payload, "teacher_entropy", row, payload_position
+        ),
         "sequence_length": config.sequence_length,
         "vocab_size": config.vocab_size,
         "num_buckets": config.num_buckets,

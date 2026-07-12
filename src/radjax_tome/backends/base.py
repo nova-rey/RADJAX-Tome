@@ -80,12 +80,25 @@ class TeacherBackendConfig:
 class TeacherBatchInput:
     example_ids: tuple[str, ...]
     texts: tuple[str, ...]
+    selected_positions_by_example: tuple[tuple[int, ...], ...] | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "example_ids", tuple(self.example_ids))
         object.__setattr__(self, "texts", tuple(self.texts))
         if len(self.example_ids) != len(self.texts):
             raise ValueError("example_ids and texts must have the same length")
+        if self.selected_positions_by_example is not None:
+            positions = tuple(
+                tuple(int(position) for position in row)
+                for row in self.selected_positions_by_example
+            )
+            if len(positions) != len(self.example_ids):
+                raise ValueError(
+                    "selected_positions_by_example must match example_ids length"
+                )
+            if any(position < 0 for row in positions for position in row):
+                raise ValueError("selected positions must be nonnegative")
+            object.__setattr__(self, "selected_positions_by_example", positions)
 
 
 @dataclass(frozen=True)

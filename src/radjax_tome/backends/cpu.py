@@ -214,7 +214,8 @@ class CPUReferenceTeacherEmissionBackend:
             vocab_size=self.config.vocab_size,
         )
         logits = _deterministic_logits(input_ids, vocab_size=self.config.vocab_size)
-        payload = self._payload_for_policy(logits)
+        payload_logits = _selected_position_logits(logits, batch)
+        payload = self._payload_for_policy(payload_logits)
         metadata = self.metadata(
             actual_batch_size=len(batch.texts),
             payload=payload,
@@ -1161,6 +1162,27 @@ def _corridor_selected_pass_metadata(
         "requires_second_pass_for_final_exemplars": False,
         "rerun_teacher_for_selected_examples": True,
     }
+
+
+def _selected_position_logits(
+    logits: np.ndarray,
+    batch: TeacherBatchInput,
+) -> np.ndarray:
+    """Flatten only requested token rows for selected-position delivery."""
+
+    if batch.selected_positions_by_example is None:
+        return logits
+    rows: list[np.ndarray] = []
+    for row, positions in enumerate(batch.selected_positions_by_example):
+        for position in positions:
+            if position >= logits.shape[1]:
+                raise ValueError(
+                    f"selected position outside sequence length: {position}"
+                )
+            rows.append(logits[row, position])
+    if not rows:
+        raise ValueError("selected-position batch contains no positions")
+    return np.stack(rows, axis=0)[None, ...]
 
 
 def _softmax(logits: np.ndarray) -> np.ndarray:

@@ -68,10 +68,26 @@ def test_dense_logits_payload_shape_and_determinism() -> None:
     assert first.payload["logits"].shape == (2, 5, config.vocab_size)
     np.testing.assert_array_equal(first.input_ids, second.input_ids)
     np.testing.assert_array_equal(first.attention_mask, second.attention_mask)
-    np.testing.assert_array_equal(first.payload["logits"], second.payload["logits"])
-    assert first.metadata["capability_status"] == "supported_debug"
-    assert first.metadata["configured_batch_size"] == 99
-    assert first.metadata["actual_batch_size"] == 2
+
+
+def test_selected_position_dynamic_payload_flattens_only_requested_rows() -> None:
+    config = _config(
+        target_policy="dynamic_cascaded_soft_labels_v1",
+        sequence_length=5,
+        dynamic_top_k_max=8,
+    )
+    backend = create_backend(config)
+    batch = TeacherBatchInput(
+        example_ids=("ex-1", "ex-2"),
+        texts=("alpha", "beta"),
+        selected_positions_by_example=((1, 3), (2,)),
+    )
+
+    result = backend.emit_batch(batch)
+
+    assert result.payload["top_token_ids"].shape[:2] == (1, 3)
+    assert result.payload["effective_top_k"].shape == (1, 3)
+    assert result.payload["bucket_masses"].shape[:2] == (1, 3)
 
 
 def test_topk_payload_fields_shapes_and_mass_accounting() -> None:

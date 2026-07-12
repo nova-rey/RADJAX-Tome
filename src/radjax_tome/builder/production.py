@@ -36,6 +36,7 @@ from radjax_tome.builder.exemplar_delivery import (
     EXEMPLAR_DELIVERY_REPORT_FILENAME,
     ExemplarDeliveryConfig,
     SelectedExemplarDeliveryError,
+    SelectedRerunCudaOOMError,
     materialize_selected_exemplar_delivery,
 )
 from radjax_tome.builder.exemplar_selection import build_exemplar_selection_manifest
@@ -441,10 +442,28 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
                         if c6_context is None
                         else tuple(c6_context["delivery_records"])
                     ),
+                    delivery_authority_hash=(
+                        None
+                        if c6_context is None
+                        else str(
+                            (c6_context.get("authorities") or {}).get(
+                                "score_pass_authority_hash"
+                            )
+                            or ""
+                        )
+                    ),
                 )
             )
         except SelectedExemplarDeliveryError as exc:
             selected_delivery_failure = exc.diagnostic
+            blockers.append(str(exc))
+        except SelectedRerunCudaOOMError as exc:
+            selected_delivery_failure = {
+                "failure_stage": "selected_rerun",
+                "failure_reason": str(exc),
+                "delivery_path": config.exemplar_delivery_path,
+                **exc.diagnostic,
+            }
             blockers.append(str(exc))
         except Exception as exc:
             selected_delivery_failure = {
@@ -453,50 +472,68 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
                 "delivery_path": config.exemplar_delivery_path,
             }
             blockers.append(str(exc))
-    progress.validation_started()
-    validation_started = perf_counter()
-    validation = validate_teacher_textbook(config.output_dir)
-    write_teacher_textbook_validation_report(
-        validation,
-        config.output_dir / "validation_report.json",
-    )
-    validation_wall_seconds = _elapsed(validation_started)
-    progress.memory_checkpoint("validation_complete")
-    progress.validation_completed(validation.status)
-    if c6_context is not None:
-        linkage_audit = audit_selected_linkage(config.output_dir, strict=True)
-        write_selected_linkage_audit(
-            linkage_audit,
-            config.output_dir / "selected_linkage_audit.json",
+    validation_status = "not_run"
+    validation_wall_seconds = 0.0
+    if selected_delivery_failure is None:
+        progress.validation_started()
+        validation_started = perf_counter()
+        validation = validate_teacher_textbook(config.output_dir)
+        write_teacher_textbook_validation_report(
+            validation,
+            config.output_dir / "validation_report.json",
         )
-        c6_validation, c6_coverage = _finalize_c6_selection(
-            config,
-            c6_context,
-            delivery_report=delivery_report,
-            audit_report=linkage_audit.to_dict(),
+        validation_wall_seconds = _elapsed(validation_started)
+        validation_status = validation.status
+        progress.memory_checkpoint("validation_complete")
+        progress.validation_completed(validation.status)
+        if c6_context is not None:
+            linkage_audit = audit_selected_linkage(config.output_dir, strict=True)
+            write_selected_linkage_audit(
+                linkage_audit,
+                config.output_dir / "selected_linkage_audit.json",
+            )
+            c6_validation, c6_coverage = _finalize_c6_selection(
+                config,
+                c6_context,
+                delivery_report=delivery_report,
+                audit_report=linkage_audit.to_dict(),
+            )
+            audit_payload = linkage_audit.to_dict()
+            audit_payload["c6_integration"] = {
+                "status": c6_validation["status"],
+                "selected_unique_count": c6_validation["selected_unique_count"],
+                "selected_obligation_count": c6_validation["selected_obligation_count"],
+                "coordinate_set_authority": "c5",
+            }
+            write_json(config.output_dir / "selected_linkage_audit.json", audit_payload)
+            (config.output_dir / "reports").mkdir(parents=True, exist_ok=True)
+            write_json(
+                config.output_dir
+                / "reports"
+                / "c6_integrated_selection_validation.json",
+                c6_validation,
+            )
+            if c6_validation["status"] == "fail":
+                blockers.extend(c6_validation["blockers"])
+            write_corridor_coverage_report(
+                c6_coverage,
+                config.output_dir / "reports" / "fingerprint_corridor_coverage.json",
+            )
+        if validation_status == "pass":
+            try:
+                write_cover_page(config.output_dir)
+            except (OSError, TypeError, ValueError, KeyError) as exc:
+                blockers.append(f"cover-page generation failed: {exc}")
+    else:
+        # The score-pass builder may have emitted an intermediate cover.  It
+        # is not a valid public surface until selected delivery completes.
+        (config.output_dir / "cover_page.json").unlink(missing_ok=True)
+        progress.failure(
+            "selected_delivery",
+            selected_delivery_failure,
         )
-        audit_payload = linkage_audit.to_dict()
-        audit_payload["c6_integration"] = {
-            "status": c6_validation["status"],
-            "selected_unique_count": c6_validation["selected_unique_count"],
-            "selected_obligation_count": c6_validation["selected_obligation_count"],
-            "coordinate_set_authority": "c5",
-        }
-        write_json(config.output_dir / "selected_linkage_audit.json", audit_payload)
-        (config.output_dir / "reports").mkdir(parents=True, exist_ok=True)
-        write_json(
-            config.output_dir / "reports" / "c6_integrated_selection_validation.json",
-            c6_validation,
-        )
-        if c6_validation["status"] == "fail":
-            blockers.extend(c6_validation["blockers"])
-        write_corridor_coverage_report(
-            c6_coverage,
-            config.output_dir / "reports" / "fingerprint_corridor_coverage.json",
-        )
-    write_cover_page(config.output_dir)
     parity_status = "not_run"
-    if config.parity_left is not None and validation.status == "pass":
+    if config.parity_left is not None and validation_status == "pass":
         parity_report = compare_tome_artifacts(
             config.parity_left,
             config.output_dir,
@@ -511,7 +548,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         elif parity_report.status == "warn":
             warnings.extend(parity_report.warnings)
 
-    if validation.status != "pass":
+    if selected_delivery_failure is None and validation_status != "pass":
         blockers.extend(validation.blockers)
     if delivery_report is not None:
         if delivery_report.get("status") == "fail":
@@ -535,7 +572,7 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         already_complete=already_complete,
         parity_report_path=parity_report_path,
         parity_status=parity_status,
-        validation_status=validation.status,
+        validation_status=validation_status,
         build_status=getattr(build_report, "status", None),
         delivery_report=delivery_report,
         selected_delivery_failure=selected_delivery_failure,
@@ -734,6 +771,15 @@ class _ProductionProgressReporter:
             force=True,
         )
 
+    def failure(self, phase: str, diagnostic: Mapping[str, Any]) -> None:
+        if not self.enabled:
+            return
+        self.payload["status"] = "failed"
+        self.payload["phase"] = phase
+        self.payload["failure"] = dict(diagnostic)
+        self._write()
+        self._emit(f"phase={phase} status=failed", force=True)
+
     def report_writing_started(self) -> None:
         if not self.enabled:
             return
@@ -816,6 +862,12 @@ class _ProductionProgressReporter:
             "status": "complete" if total and processed >= total else "running",
             "selected_examples_processed": processed,
             "selected_examples_total": total,
+            "selected_coordinates_committed": int(
+                event.get("selected_coordinates_committed") or 0
+            ),
+            "selected_coordinates_total": int(
+                event.get("selected_coordinates_total") or 0
+            ),
             "reruns_per_second": rps,
             "elapsed_seconds": round(elapsed, 3),
             "eta_seconds": _eta(total - processed, rps),
@@ -860,6 +912,8 @@ class _ProductionProgressReporter:
             "phase=selected_rerun "
             f"selected_examples={selected.get('selected_examples_processed', 0)}/"
             f"{selected.get('selected_examples_total', 0)} "
+            f"selected_coordinates={selected.get('selected_coordinates_committed', 0)}/"
+            f"{selected.get('selected_coordinates_total', 0)} "
             f"reruns_per_second={float(selected.get('reruns_per_second') or 0.0):.1f} "
             f"elapsed={float(selected.get('elapsed_seconds') or 0.0):.1f} "
             f"eta={_format_eta(selected.get('eta_seconds'))}",
@@ -1666,6 +1720,46 @@ def _production_report(
             if delivery_report is not None
             else None
         ),
+        "selected_source_example_count": (
+            delivery_report.get("selected_source_example_count")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_coordinate_count": (
+            delivery_report.get("selected_coordinate_count")
+            if delivery_report is not None
+            else None
+        ),
+        "requested_source_batch_size": (
+            delivery_report.get("requested_source_batch_size")
+            if delivery_report is not None
+            else None
+        ),
+        "effective_source_batch_sizes": (
+            delivery_report.get("effective_source_batch_sizes")
+            if delivery_report is not None
+            else None
+        ),
+        "source_batch_count": (
+            delivery_report.get("source_batch_count")
+            if delivery_report is not None
+            else None
+        ),
+        "coordinate_compression_batch_count": (
+            delivery_report.get("coordinate_compression_batch_count")
+            if delivery_report is not None
+            else None
+        ),
+        "selected_row_gather_seconds": (
+            delivery_report.get("selected_row_gather_seconds")
+            if delivery_report is not None
+            else None
+        ),
+        "payload_write_seconds": (
+            delivery_report.get("payload_write_seconds")
+            if delivery_report is not None
+            else None
+        ),
         "selected_board_summary": (
             delivery_report.get("selected_board_summary")
             if delivery_report is not None
@@ -2006,6 +2100,7 @@ def _exemplar_delivery_config(
     *,
     progress_callback: Any = None,
     authoritative_records: tuple[dict[str, Any], ...] | None = None,
+    delivery_authority_hash: str | None = None,
 ) -> ExemplarDeliveryConfig:
     return ExemplarDeliveryConfig(
         artifact_dir=config.output_dir,
@@ -2050,6 +2145,7 @@ def _exemplar_delivery_config(
             else "legacy_delivery_v1"
         ),
         rerun_metrics={},
+        delivery_authority_hash=delivery_authority_hash,
     )
 
 

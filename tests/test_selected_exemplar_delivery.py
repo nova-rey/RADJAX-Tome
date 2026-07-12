@@ -686,11 +686,12 @@ def test_production_report_names_selected_delivery_failure(
     report = build_production_gpu_tome(config)
 
     assert report["status"] == "fail"
-    assert report["validation_status"] == "pass"
+    assert report["validation_status"] == "not_run"
     assert report["selected_delivery_status"] == "fail"
     assert report["failure_stage"] == "selected_exemplar_delivery"
     assert report["selected_delivery_failure"] == diagnostic
     assert not (config.output_dir / "delivery_report.json").exists()
+    assert not (config.output_dir / "cover_page.json").exists()
 
 
 def test_path_a_path_b_delivery_parity_matches_selection_and_scores(
