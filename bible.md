@@ -1285,3 +1285,11 @@ manifests record the rewritten index hash. Corrupt shards fail closed without
 index, delivery, or payload-body changes. Migration records its source schema,
 backfill count, zero payload-body modifications, and zero teacher work. No T4
 rehearsal was executed by this corrective patch.
+
+## 2026-07-12 — M1 Mainline Canonization Inventory
+
+Recorded the native two-pass fingerprint-corridor Path B direction, the golden
+1K behavioral lock, an exhaustive tracked-surface disposition ledger, and the
+research-status map. This documentation-only milestone preserves research and
+records existing package-initializer imports of research modules as M3/M6
+dependency-boundary remediation; it makes no runtime import changes.
