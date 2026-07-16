@@ -1324,3 +1324,13 @@ teacher manifest or emission configuration, while the run manifest contributes
 only corroborating hashes. C4 corridor/global claims, collisions, selected
 coordinates, and backfill lineage are projected from their JSONL authorities.
 No real golden fixture was created; status remains capture_pending.
+
+## 2026-07-16 — M2A Golden Capture Truth Gate
+
+Golden capture now treats prefixed `source_corpus_*` provenance and the logical
+teacher `model_name` as canonical identity, resolves native delivery and rerun
+batch aliases from final reports, and rejects null corpus, teacher-hash,
+execution-mode, delivery, selection-policy, or dynamic-top-k authority. C4
+semantic projection now excludes storage manifests and physical file hashes in
+favor of the captured claim, obligation, selected-coordinate, and backfill
+rows. No real golden fixture was created; status remains capture_pending.

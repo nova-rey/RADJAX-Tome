@@ -49,6 +49,9 @@ def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, A
     )
     if reconciliation.get("status") != "pass":
         raise ValueError("golden capture requires passing C6 selection reconciliation")
+    input_identity = _input_identity(artifact)
+    semantic_policy = _semantic_policy(artifact, reports, authority)
+    _require_truth_gate_fields(input_identity, semantic_policy)
     contract = build_contract(
         fixture_metadata={
             "profile": "full_debug_provenance",
@@ -58,8 +61,8 @@ def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, A
             ),
             "canonical_pipeline": "native_two_pass_fingerprint_corridor_path_b",
         },
-        input_identity=_input_identity(artifact),
-        semantic_policy=_semantic_policy(artifact, reports, authority),
+        input_identity=input_identity,
+        semantic_policy=semantic_policy,
         stage_summary=[
             {"stage": name.removesuffix(".json"), "status": report.get("status")}
             for name, report in reports.items()
@@ -245,7 +248,7 @@ def _input_identity(root: Path) -> dict[str, Any]:
         "teacher_identity": {
             key: teacher.get(key)
             for key in (
-                "model_family",
+                "model_name",
                 "model_revision",
                 "config_hash",
                 "tokenizer_hash",
@@ -258,11 +261,31 @@ def _input_identity(root: Path) -> dict[str, Any]:
         "sequence_length": metadata.get("sequence_length"),
         "num_examples": metadata.get("num_examples"),
         "teacher_model_hashes": run.get("teacher_model_hashes"),
-        "corpus_hash": corpus.get("corpus_hash", run.get("corpus_hash")),
-        "corpus_manifest_hash": corpus.get("manifest_hash"),
-        "normalization_policy": corpus.get("normalization_policy"),
-        "chunking_policy": corpus.get("chunking_policy"),
-        "deduplication_policy": corpus.get("deduplication_policy"),
+        "corpus_hash": _first_present(
+            corpus,
+            run,
+            aliases=("source_corpus_hash", "corpus_hash"),
+        ),
+        "corpus_manifest_hash": _first_present(
+            corpus,
+            run,
+            aliases=("source_corpus_manifest_hash", "manifest_hash"),
+        ),
+        "normalization_policy": _first_present(
+            corpus,
+            run,
+            aliases=("source_corpus_normalization_policy", "normalization_policy"),
+        ),
+        "chunking_policy": _first_present(
+            corpus,
+            run,
+            aliases=("source_corpus_chunking_policy", "chunking_policy"),
+        ),
+        "deduplication_policy": _first_present(
+            corpus,
+            run,
+            aliases=("source_corpus_deduplication_policy", "deduplication_policy"),
+        ),
     }
 
 
@@ -271,22 +294,23 @@ def _semantic_policy(
 ) -> dict[str, Any]:
     emission = _read_object(root / "emission_config.json")
     run = _read_object(root / "run_manifest.json")
+    delivery = reports["delivery_report.json"]
+    production = reports["production_build_report.json"]
     keys = (
         "teacher_backend",
         "runtime_mode",
         "target_policy",
         "native_execution_mode",
         "selection_integration_policy",
-        "exemplar_delivery_path",
         "dynamic_top_k_min",
         "dynamic_top_k_max",
         "dynamic_mass_threshold",
         "num_buckets",
-        "selected_rerun_batch_size",
         "retain_unselected_exemplar_payloads",
     )
-    return {
-        key: emission.get(key, reports["delivery_report.json"].get(key)) for key in keys
+    policy = {
+        key: _first_present(delivery, production, emission, aliases=(key,))
+        for key in keys
     } | {
         "score_pass_config_hash": authority.get("score_pass_config_hash"),
         "selection_integration_config_hash": authority.get(
@@ -294,20 +318,30 @@ def _semantic_policy(
         ),
         "run_manifest_hash": run.get("resume_config_hash"),
     }
+    policy["delivery_path"] = _first_present(
+        delivery,
+        production,
+        emission,
+        aliases=("delivery_path", "exemplar_delivery_path"),
+    )
+    policy["selected_rerun_batch_size"] = _first_present(
+        delivery,
+        production,
+        emission,
+        aliases=("selected_rerun_requested_batch_size", "selected_rerun_batch_size"),
+    )
+    return policy
 
 
 def _authority_summary(root: Path, authority: dict[str, Any]) -> dict[str, Any]:
-    paths = authority.get("paths") or {}
     required = {
         "c2": root / "c6" / "corridor-leaderboards" / "manifest.json",
         "c3": root / "c6" / "coverage-plan" / "coverage_plan.json",
         "c3_validation": root / "c6" / "coverage-plan" / "validation_report.json",
-        "c4": root / "c6" / "claims" / "claim_manifest.json",
         "c5": root / "c6" / "multi-role-selection" / "manifest.json",
         "coverage": root / "reports" / "fingerprint_corridor_coverage.json",
         "budget": root / "c6" / "selection_budget_diagnostics.json",
     }
-    claim_manifest = _read_object(root / "c6" / "claims" / "claim_manifest.json")
     claim_rows = {
         name: _read_jsonl(root / "c6" / "claims" / name)
         for name in (
@@ -320,11 +354,8 @@ def _authority_summary(root: Path, authority: dict[str, Any]) -> dict[str, Any]:
     }
     return _semantic_board_summary(
         {
-            "authority": authority,
-            "paths": paths,
+            "authority": _semantic_authority(authority),
             **{name: _read_object(path) for name, path in required.items()},
-            "c4_claim_policy": claim_manifest.get("claim_policy"),
-            "c4_source_provenance": claim_manifest.get("source_provenance"),
             "c4_semantic_records": claim_rows,
         }
     )
@@ -345,10 +376,96 @@ def _semantic_board_summary(value: Any) -> Any:
                 "shard_path",
             }
             and not key.endswith("_path")
+            and key not in {"files", "file_hashes"}
+            and not key.endswith("_sha256")
         }
     if isinstance(value, list):
         return [_semantic_board_summary(item) for item in value]
     return value
+
+
+def _semantic_authority(authority: dict[str, Any]) -> dict[str, Any]:
+    """Keep C6 semantic bindings without inheriting C4 storage layout hashes."""
+    return {
+        key: authority.get(key)
+        for key in (
+            "schema_version",
+            "score_pass_authority_hash",
+            "score_pass_config_hash",
+            "selection_integration_config_hash",
+            "delivery_path",
+            "native_execution_mode",
+            "corpus_hash",
+            "production_grade",
+        )
+        if authority.get(key) is not None
+    }
+
+
+def _first_present(*sources: dict[str, Any], aliases: tuple[str, ...]) -> Any:
+    names = aliases
+    for source in sources:
+        if not isinstance(source, dict):
+            continue
+        for name in names:
+            if source.get(name) is not None:
+                return source[name]
+    return None
+
+
+def _require_truth_gate_fields(
+    input_identity: dict[str, Any], semantic_policy: dict[str, Any]
+) -> None:
+    required_input = (
+        "teacher_model_hashes",
+        "corpus_hash",
+        "corpus_manifest_hash",
+        "normalization_policy",
+        "chunking_policy",
+        "deduplication_policy",
+    )
+    required_policy = (
+        "teacher_backend",
+        "runtime_mode",
+        "target_policy",
+        "native_execution_mode",
+        "delivery_path",
+        "selection_integration_policy",
+        "dynamic_top_k_min",
+        "dynamic_top_k_max",
+        "dynamic_mass_threshold",
+    )
+    missing = [
+        f"input_identity.{key}"
+        for key in required_input
+        if input_identity.get(key) is None
+    ] + [
+        f"semantic_policy.{key}"
+        for key in required_policy
+        if semantic_policy.get(key) is None
+    ]
+    teacher_identity = input_identity.get("teacher_identity")
+    if (
+        not isinstance(teacher_identity, dict)
+        or teacher_identity.get("model_name") is None
+    ):
+        missing.append("input_identity.teacher_identity.model_name")
+    teacher_hashes = input_identity.get("teacher_model_hashes")
+    if isinstance(teacher_hashes, dict):
+        missing.extend(
+            f"input_identity.teacher_model_hashes.{key}"
+            for key in (
+                "config_hash",
+                "tokenizer_hash",
+                "weights_hash",
+                "model_directory_hash",
+            )
+            if teacher_hashes.get(key) is None
+        )
+    if missing:
+        raise ValueError(
+            "golden capture truth gate has required null fields: " + ", ".join(missing)
+        )
 
 
 def _write_fixture(
