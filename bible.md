@@ -1334,3 +1334,9 @@ execution-mode, delivery, selection-policy, or dynamic-top-k authority. C4
 semantic projection now excludes storage manifests and physical file hashes in
 favor of the captured claim, obligation, selected-coordinate, and backfill
 rows. No real golden fixture was created; status remains capture_pending.
+
+## 2026-07-19 — Golden Fixture Staging Directory Compatibility
+
+Golden fixture writing now accepts the pre-created staging directory returned
+by `tempfile.mkdtemp`, matching capture's atomic-write flow. This is a writer
+compatibility repair only; golden schemas and semantic projection are unchanged.

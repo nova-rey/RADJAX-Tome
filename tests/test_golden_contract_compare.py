@@ -1,13 +1,21 @@
 from __future__ import annotations
 
 import json
+import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
 
 from radjax_tome.golden.compare import compare_contracts
 from radjax_tome.golden.contract import build_contract
-from radjax_tome.golden.projection import _payload_index, capture_golden_contract
+from radjax_tome.golden.projection import (
+    _payload_index,
+    capture_golden_contract,
+)
+from radjax_tome.golden.projection import (
+    _write_fixture as write_captured_fixture,
+)
 from radjax_tome.tome.golden_fixture import build_production_contract_fixture
 
 
@@ -65,6 +73,25 @@ def test_payload_index_uses_native_selected_exemplars_field(tmp_path: Path) -> N
     assert _payload_index(tmp_path) == {
         ("one", 3): {"selected_example_id": "one", "selected_position": 3}
     }
+
+
+def test_capture_fixture_writer_accepts_mkdtemp_staging_directory() -> None:
+    staging = Path(tempfile.mkdtemp(prefix="radjax-golden-test-"))
+    try:
+        fixture = _write_fixture(staging / "contract")
+        contract = json.loads((fixture / "contract.json").read_text(encoding="utf-8"))
+        write_captured_fixture(
+            staging,
+            contract,
+            _read_jsonl(fixture / "selected_obligations.jsonl"),
+            _read_jsonl(fixture / "source_passports.jsonl"),
+            _read_jsonl(fixture / "payload_semantics.jsonl"),
+            {},
+        )
+
+        assert (staging / "contract.json").is_file()
+    finally:
+        shutil.rmtree(staging)
 
 
 def test_compare_rejects_c5_role_and_passport_drift(tmp_path: Path) -> None:
@@ -162,3 +189,7 @@ def _write_fixture(root: Path, *, entropy: float = 1.0, position: int = 3) -> Pa
             "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8"
         )
     return root
+
+
+def _read_jsonl(path: Path) -> list[dict[str, object]]:
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]

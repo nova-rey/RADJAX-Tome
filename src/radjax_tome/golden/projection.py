@@ -476,7 +476,7 @@ def _write_fixture(
     payloads: list[dict[str, Any]],
     board_summary: dict[str, Any],
 ) -> None:
-    root.mkdir(parents=True)
+    root.mkdir(parents=True, exist_ok=True)
     (root / "contract.json").write_text(
         json.dumps(contract, indent=2, sort_keys=True) + "\n"
     )
