@@ -4,6 +4,9 @@ M2A status: **capture_pending**. No coordinate, passport, allocation, or
 payload-semantic record is committed until it is exported read-only from the
 terminal T4 artifact using the corrected sparse-payload capture exporter. Any
 earlier dense payload capture is not committable and must be recaptured.
+Capture projects selected payload shards one at a time and retains only compact
+semantic records, so comparison against an artifact does not retain the full
+source payload projection in memory.
 
 ```bash
 cd /teamspace/studios/this_studio/radjax/RADJAX-Tome

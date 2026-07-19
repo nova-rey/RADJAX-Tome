@@ -194,6 +194,73 @@ def test_compare_streams_jsonl_without_eager_projection_loader(
     assert compare_contracts(expected, observed)["status"] == "pass"
 
 
+def test_capture_projects_payload_shards_without_eager_payload_collector(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    artifact = tmp_path / "artifact"
+    payload_dir = artifact / "selected_exemplars"
+    payload_dir.mkdir(parents=True)
+    selected = [_selected_record(index) for index in range(1, 257)]
+    payload_index = {
+        (record["example_id"], record["position"]): {} for record in selected
+    }
+    _write_payload_shard(payload_dir / "selected-exemplars-00000.json", selected[128:])
+    _write_payload_shard(payload_dir / "selected-exemplars-00001.json", selected[:128])
+
+    original_read_object = golden_projection._read_object
+
+    def read_object(path: Path) -> dict[str, object]:
+        if not path.is_relative_to(artifact):
+            return original_read_object(path)
+        if path.name.startswith("selected-exemplars-"):
+            return original_read_object(path)
+        if path.name == "c6_integrated_selection_validation.json":
+            return {"status": "pass"}
+        if path.name in {
+            "authority_manifest.json",
+            "production_build_report.json",
+            "validation_report.json",
+            "delivery_report.json",
+            "selected_linkage_audit.json",
+        }:
+            return {"status": "pass"}
+        raise AssertionError(f"unexpected golden capture read: {path}")
+
+    monkeypatch.setattr(
+        golden_projection, "_validate_terminal_artifact", lambda _: None
+    )
+    monkeypatch.setattr(golden_projection, "_c5_records", lambda _: selected)
+    monkeypatch.setattr(golden_projection, "_payload_index", lambda _: payload_index)
+    monkeypatch.setattr(golden_projection, "_authority_summary", lambda *_: {})
+    monkeypatch.setattr(
+        golden_projection,
+        "_input_identity",
+        lambda _: _valid_input_identity(),
+    )
+    monkeypatch.setattr(
+        golden_projection,
+        "_semantic_policy",
+        lambda *_: _valid_semantic_policy(),
+    )
+    monkeypatch.setattr(golden_projection, "_read_object", read_object)
+    monkeypatch.setattr(
+        golden_projection,
+        "_payload_records",
+        lambda _: pytest.fail("capture must not use eager payload collection"),
+        raising=False,
+    )
+
+    capture = tmp_path / "capture"
+    report = capture_golden_contract(artifact, capture)
+
+    assert report["status"] == "pass"
+    payloads = _read_jsonl(capture / "payload_semantics.jsonl")
+    assert [row["selection_index"] for row in payloads] == list(range(1, 257))
+    assert all(row["top_token_ids"] == [row["selection_index"]] for row in payloads)
+    assert all("top_selection_mask" not in row for row in payloads)
+
+
 def test_compare_rejects_c5_role_and_passport_drift(tmp_path: Path) -> None:
     expected = _write_fixture(tmp_path / "expected")
     observed = _write_fixture(tmp_path / "observed")
@@ -296,3 +363,65 @@ def _write_fixture(root: Path, *, entropy: float = 1.0, position: int = 3) -> Pa
 
 def _read_jsonl(path: Path) -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+
+
+def _selected_record(index: int) -> dict[str, object]:
+    return {
+        "example_id": f"example-{index:03d}",
+        "position": 0,
+        "selection_index": index,
+        "source_passport": {"source_row": index - 1},
+        "payload_identity": {"payload_key": f"payload-{index:03d}"},
+    }
+
+
+def _write_payload_shard(path: Path, records: list[dict[str, object]]) -> None:
+    payloads = [
+        {
+            "selected_example_id": record["example_id"],
+            "selected_position": record["position"],
+            "effective_top_k": 1,
+            "top_token_ids": [record["selection_index"], 999999],
+            "top_probs": [0.9, 0.0],
+            "top_log_probs": [-0.1, -100.0],
+            "top_selection_mask": [True, False],
+            "teacher_entropy": 1.0,
+            "top_mass": 0.9,
+            "tail_mass": 0.1,
+            "dynamic_mass_threshold": 0.95,
+            "vocab_size": 262144,
+        }
+        for record in records
+    ]
+    path.write_text(json.dumps({"selected_exemplars": payloads}), encoding="utf-8")
+
+
+def _valid_input_identity() -> dict[str, object]:
+    return {
+        "teacher_identity": {"model_name": "teacher"},
+        "teacher_model_hashes": {
+            "config_hash": "sha256:config",
+            "tokenizer_hash": "sha256:tokenizer",
+            "weights_hash": "sha256:weights",
+            "model_directory_hash": "sha256:directory",
+        },
+        "corpus_hash": "sha256:corpus",
+        "corpus_manifest_hash": "sha256:manifest",
+        "normalization_policy": "normalize_v1",
+        "chunking_policy": "chunk_v1",
+        "deduplication_policy": "dedupe_v1",
+    }
+
+
+def _valid_semantic_policy() -> dict[str, object]:
+    return {
+        "teacher_backend": "gpu_torch",
+        "runtime_mode": "cpu_gpu",
+        "target_policy": "corridor_exemplar_v1",
+        "native_execution_mode": "native_c6_path_b_v1",
+        "delivery_path": "two_pass_rerun_selected",
+        "selection_integration_policy": "c6_multi_role_v1",
+        "dynamic_top_k_min": 1,
+        "dynamic_top_k_max": 128,
+        "dynamic_mass_threshold": 0.95,
+    }

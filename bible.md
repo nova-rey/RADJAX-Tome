@@ -1348,3 +1348,11 @@ order, with padded backend arrays and selection masks excluded. Fixture
 validation rejects dense fields, malformed sparse arrays, nonfinite values,
 duplicate active tokens, and oversized records; comparison streams JSONL rows.
 M2A remains capture_pending until the corrected sparse fixture is recaptured.
+
+## 2026-07-19 — M2A Streaming Selected Payload Capture
+
+Golden capture now projects selected payload shards one at a time, validates
+every source coordinate against C5 and the payload index, releases each dense
+shard, and retains only compact semantics ordered by C5 selection index.
+Comparison through `golden compare --artifact` inherits this bounded capture
+path. No real fixture was created; M2A remains capture_pending.

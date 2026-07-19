@@ -28,26 +28,19 @@ def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, A
     _validate_terminal_artifact(artifact)
     selected = _c5_records(artifact)
     payload_index = _payload_index(artifact)
-    payloads = _payload_records(artifact)
-    if len(selected) != 256 or len(payloads) != 256 or len(payload_index) != 256:
+    if len(selected) != 256 or len(payload_index) != 256:
         raise ValueError("golden capture requires exactly 256 selected coordinates")
-    _require_coordinate_join(selected, payload_index, payloads)
+    selected_by_coordinate = _selected_by_coordinate(selected)
+    _require_selection_index_join(selected_by_coordinate, payload_index)
     obligations = [
         _obligation(row, index) for index, row in enumerate(selected, start=1)
     ]
     passports = [_passport(row, index) for index, row in enumerate(selected, start=1)]
-    payload_by_coordinate = {_coordinate(row): row for row in payloads}
-    payload_rows = [
-        _payload_semantics(
-            {
-                **payload_by_coordinate[_coordinate(record)],
-                "selection_index": record["selection_index"],
-                "payload_identity": record["payload_identity"],
-            },
-            index,
-        )
-        for index, record in enumerate(selected, start=1)
-    ]
+    payload_rows = _project_payload_shards(
+        artifact,
+        selected_by_coordinate=selected_by_coordinate,
+        payload_index=payload_index,
+    )
     authority = _read_object(artifact / "c6" / "authority_manifest.json")
     board_summary = _authority_summary(artifact, authority)
     reports = {name: _read_object(artifact / name) for name in _REQUIRED_REPORTS}
@@ -183,27 +176,76 @@ def _payload_index(root: Path) -> dict[tuple[str, int], dict[str, Any]]:
     return result
 
 
-def _payload_records(root: Path) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
+def _selected_by_coordinate(
+    selected: list[dict[str, Any]],
+) -> dict[tuple[str, int], dict[str, Any]]:
+    result = {_coordinate(row): row for row in selected}
+    if len(result) != len(selected):
+        raise ValueError(
+            "golden capture C5 selected records have duplicate coordinates"
+        )
+    return result
+
+
+def _require_selection_index_join(
+    selected_by_coordinate: dict[tuple[str, int], dict[str, Any]],
+    payload_index: dict[tuple[str, int], dict[str, Any]],
+) -> None:
+    if set(selected_by_coordinate) != set(payload_index):
+        raise ValueError(
+            "golden capture C5 selected records and payload index do not join"
+        )
+
+
+def _project_payload_shards(
+    root: Path,
+    *,
+    selected_by_coordinate: dict[tuple[str, int], dict[str, Any]],
+    payload_index: dict[tuple[str, int], dict[str, Any]],
+) -> list[dict[str, Any]]:
+    projected: list[dict[str, Any]] = []
+    seen: set[tuple[str, int]] = set()
     for path in sorted((root / "selected_exemplars").glob("selected-exemplars-*.json")):
         document = _read_object(path)
-        values = document.get("selected_exemplars", document.get("payloads"))
-        if isinstance(values, list):
-            rows.extend(dict(row) for row in values if isinstance(row, dict))
-    return rows
-
-
-def _require_coordinate_join(
-    selected: list[dict[str, Any]],
-    payload_index: dict[tuple[str, int], dict[str, Any]],
-    payloads: list[dict[str, Any]],
-) -> None:
-    c5 = {_coordinate(row) for row in selected}
-    payload = {_coordinate(row) for row in payloads}
-    if len(c5) != len(selected) or c5 != set(payload_index) or c5 != payload:
-        raise ValueError(
-            "golden capture C5, payload index, and payload coordinates do not join"
-        )
+        rows = document.get("selected_exemplars", document.get("payloads"))
+        if not isinstance(rows, list):
+            raise ValueError(
+                f"golden capture selected payload shard is invalid: {path.name}"
+            )
+        for row_index, payload in enumerate(rows):
+            if not isinstance(payload, dict):
+                raise ValueError(
+                    f"golden capture selected payload record is invalid: {path.name}"
+                )
+            coordinate = _coordinate(payload)
+            selected_record = selected_by_coordinate.get(coordinate)
+            if selected_record is None or coordinate not in payload_index:
+                raise ValueError(
+                    "golden capture selected payload coordinate does not join C5 and "
+                    "payload index"
+                )
+            if coordinate in seen:
+                raise ValueError(
+                    "golden capture selected payloads have duplicate coordinates"
+                )
+            projected.append(
+                _payload_semantics(
+                    {
+                        **payload,
+                        "selection_index": selected_record["selection_index"],
+                        "payload_identity": selected_record["payload_identity"],
+                    },
+                    int(selected_record["selection_index"]),
+                )
+            )
+            seen.add(coordinate)
+            rows[row_index] = None
+        del rows
+        del document
+    missing = set(selected_by_coordinate) - seen
+    if missing:
+        raise ValueError("golden capture selected payloads are missing C5 coordinates")
+    return sorted(projected, key=lambda row: int(row["selection_index"]))
 
 
 def _obligation(row: dict[str, Any], index: int) -> dict[str, Any]:
