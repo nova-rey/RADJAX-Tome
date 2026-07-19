@@ -5,7 +5,9 @@ payload-semantic record is committed until it is exported read-only from the
 terminal T4 artifact using the corrected sparse-payload capture exporter. Any
 earlier dense payload capture is not committable and must be recaptured.
 Capture projects selected payload shards one at a time and retains only compact
-semantic records, so comparison against an artifact does not retain the full
+scalar metadata plus versioned semantic digests of active token IDs,
+probabilities, log-probabilities, and ordered active entries. It never commits
+payload arrays, so comparison against an artifact does not retain the full
 source payload projection in memory.
 
 ```bash
@@ -23,7 +25,7 @@ radjax-tome golden compare --fixture "$CAPTURE" --artifact "$OUT"
 
 Before committing, verify 256 unique obligations, 256 payload-semantic rows,
 and no corpus text, prompt text, absolute rental paths, credentials, model
-weights, raw target shards, padded backend payload bodies, or dense vocabulary
-arrays. The capture command requires passing canonical production, validation,
-delivery, and strict linkage reports and never modifies or reruns the source
-artifact.
+weights, raw target shards, padded backend payload bodies, dense vocabulary
+arrays, or active payload arrays. The capture command requires passing
+canonical production, validation, delivery, and strict linkage reports and
+never modifies or reruns the source artifact.

@@ -1356,3 +1356,11 @@ every source coordinate against C5 and the payload index, releases each dense
 shard, and retains only compact semantics ordered by C5 selection index.
 Comparison through `golden compare --artifact` inherits this bounded capture
 path. No real fixture was created; M2A remains capture_pending.
+
+## 2026-07-19 — M2A Digest-Only Payload Semantics
+
+Golden payload records now retain scalar target summaries and versioned,
+ordered active-value digests instead of active token/probability arrays. Raw
+payload storage is validated before hashing but discarded immediately, keeping
+full-vocabulary selections compact and fixture-size bounded. M2A remains
+capture_pending until a corrected fixture is captured from the terminal Tome.

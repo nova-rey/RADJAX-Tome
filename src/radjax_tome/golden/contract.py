@@ -11,9 +11,18 @@ import numpy as np
 GOLDEN_CONTRACT_SCHEMA_VERSION = "radjax_tome.golden_contract.v1"
 GOLDEN_CONTRACT_NAME = "t4_gemma3_270m_fingerprint_corridor_path_b_1k"
 COLLECTION_NAMES = ("selected_obligations", "source_passports", "payload_semantics")
-SPARSE_PAYLOAD_FIELDS = ("top_token_ids", "top_probs", "top_log_probs")
+ACTIVE_PAYLOAD_DIGEST_VERSION = "golden_active_payload_v1"
+ACTIVE_PAYLOAD_DIGEST_FIELDS = (
+    "active_top_token_ids_digest",
+    "active_top_probs_digest",
+    "active_top_log_probs_digest",
+    "active_payload_digest",
+)
 FORBIDDEN_DENSE_PAYLOAD_FIELDS = frozenset(
     {
+        "top_token_ids",
+        "top_probs",
+        "top_log_probs",
         "top_selection_mask",
         "logits",
         "dense_logits",
@@ -171,32 +180,12 @@ def validate_sparse_payload_semantics_record(row: Mapping[str, Any]) -> None:
         or effective_top_k < 1
     ):
         raise ValueError("payload_semantics effective_top_k must be a positive integer")
-    values = {key: row.get(key) for key in SPARSE_PAYLOAD_FIELDS}
-    if any(not isinstance(value, (list, tuple)) for value in values.values()):
-        raise ValueError("payload_semantics sparse payload arrays are required")
-    lengths = {key: len(value) for key, value in values.items()}
-    if set(lengths.values()) != {effective_top_k}:
-        raise ValueError(
-            "payload_semantics sparse payload lengths must equal effective_top_k"
-        )
-    token_ids = values["top_token_ids"]
-    if any(
-        not isinstance(token_id, int) or isinstance(token_id, bool) or token_id < 0
-        for token_id in token_ids
-    ):
-        raise ValueError("payload_semantics top_token_ids must be nonnegative integers")
-    if len(set(token_ids)) != len(token_ids):
-        raise ValueError("payload_semantics contains duplicate active top_token_ids")
-    for key in ("top_probs", "top_log_probs"):
-        for value in values[key]:
-            if (
-                not isinstance(value, (int, float))
-                or isinstance(value, bool)
-                or not math.isfinite(float(value))
-            ):
-                raise ValueError(f"payload_semantics {key} contains nonfinite values")
-    if any(value < 0.0 or value > 1.0 for value in values["top_probs"]):
-        raise ValueError("payload_semantics top_probs contains invalid probabilities")
+    if row.get("payload_digest_version") != ACTIVE_PAYLOAD_DIGEST_VERSION:
+        raise ValueError("payload_semantics payload digest version is unsupported")
+    for key in ACTIVE_PAYLOAD_DIGEST_FIELDS:
+        value = row.get(key)
+        if not isinstance(value, str) or not value.startswith("sha256:"):
+            raise ValueError(f"payload_semantics {key} is required")
     for key in ("teacher_entropy", "top_mass", "tail_mass", "dynamic_mass_threshold"):
         value = row.get(key)
         if value is not None and (
@@ -217,6 +206,114 @@ def validate_sparse_payload_semantics_record(row: Mapping[str, Any]) -> None:
             raise ValueError(
                 "payload_semantics bucket_masses must be finite probabilities"
             )
+
+
+def digest_active_payload_storage(row: Mapping[str, Any]) -> dict[str, str]:
+    effective_top_k = row.get("effective_top_k")
+    arrays = {
+        key: row.get(key)
+        for key in ("top_token_ids", "top_probs", "top_log_probs", "top_selection_mask")
+    }
+    if (
+        not isinstance(effective_top_k, int)
+        or isinstance(effective_top_k, bool)
+        or effective_top_k < 1
+        or any(not isinstance(value, list) for value in arrays.values())
+    ):
+        raise ValueError("golden capture payload arrays or effective_top_k are invalid")
+    lengths = {len(value) for value in arrays.values()}
+    if len(lengths) != 1:
+        raise ValueError("golden capture payload arrays have inconsistent lengths")
+    mask = arrays["top_selection_mask"]
+    if any(not isinstance(value, bool) for value in mask):
+        raise ValueError("golden capture top_selection_mask must contain booleans")
+    active_count = sum(mask)
+    if active_count != effective_top_k:
+        raise ValueError(
+            "golden capture top_selection_mask active count does not equal "
+            "effective_top_k"
+        )
+    token_hasher = _active_payload_hasher("token-ids", active_count)
+    probability_hasher = _active_payload_hasher("probabilities", active_count)
+    log_probability_hasher = _active_payload_hasher("log-probabilities", active_count)
+    combined_hasher = _active_payload_hasher("entries", active_count)
+    seen_token_ids: set[int] = set()
+    active_rank = 0
+    for token_id, probability, log_probability, active in zip(
+        arrays["top_token_ids"],
+        arrays["top_probs"],
+        arrays["top_log_probs"],
+        mask,
+        strict=True,
+    ):
+        if not active:
+            continue
+        _validate_active_payload_entry(token_id, probability, log_probability)
+        if token_id in seen_token_ids:
+            raise ValueError(
+                "golden capture payload contains duplicate active token IDs"
+            )
+        seen_token_ids.add(token_id)
+        _update_active_payload_hasher(token_hasher, active_rank, token_id)
+        _update_active_payload_hasher(probability_hasher, active_rank, probability)
+        _update_active_payload_hasher(
+            log_probability_hasher, active_rank, log_probability
+        )
+        _update_active_payload_hasher(
+            combined_hasher,
+            active_rank,
+            {
+                "token_id": token_id,
+                "probability": probability,
+                "log_probability": log_probability,
+            },
+        )
+        active_rank += 1
+    return {
+        "payload_digest_version": ACTIVE_PAYLOAD_DIGEST_VERSION,
+        "active_top_token_ids_digest": "sha256:" + token_hasher.hexdigest(),
+        "active_top_probs_digest": "sha256:" + probability_hasher.hexdigest(),
+        "active_top_log_probs_digest": "sha256:" + log_probability_hasher.hexdigest(),
+        "active_payload_digest": "sha256:" + combined_hasher.hexdigest(),
+    }
+
+
+def _active_payload_hasher(domain: str, active_count: int) -> Any:
+    hasher = hashlib.sha256()
+    hasher.update(f"radjax-tome:golden-active-{domain}:v1\n".encode())
+    hasher.update(canonical_json_bytes({"active_count": active_count}))
+    hasher.update(b"\n")
+    return hasher
+
+
+def _update_active_payload_hasher(hasher: Any, rank: int, value: Any) -> None:
+    hasher.update(canonical_json_bytes({"rank": rank, "value": value}))
+    hasher.update(b"\n")
+
+
+def _validate_active_payload_entry(
+    token_id: Any,
+    probability: Any,
+    log_probability: Any,
+) -> None:
+    if not isinstance(token_id, int) or isinstance(token_id, bool) or token_id < 0:
+        raise ValueError(
+            "golden capture active top_token_ids must be nonnegative integers"
+        )
+    for name, value in (
+        ("top_probs", probability),
+        ("top_log_probs", log_probability),
+    ):
+        if (
+            not isinstance(value, (int, float))
+            or isinstance(value, bool)
+            or not math.isfinite(float(value))
+        ):
+            raise ValueError(f"golden capture active {name} contains nonfinite values")
+    if probability < 0.0 or probability > 1.0:
+        raise ValueError(
+            "golden capture active top_probs contains invalid probabilities"
+        )
 
 
 def _coordinate(row: Mapping[str, Any]) -> tuple[str, int]:

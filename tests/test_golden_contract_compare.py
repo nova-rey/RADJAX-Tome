@@ -11,6 +11,7 @@ import radjax_tome.golden.projection as golden_projection
 from radjax_tome.golden.compare import compare_contracts
 from radjax_tome.golden.contract import build_contract
 from radjax_tome.golden.projection import (
+    MAX_GOLDEN_FIXTURE_BYTES,
     MAX_GOLDEN_RECORD_BYTES,
     _payload_index,
     _payload_semantics,
@@ -33,7 +34,7 @@ def test_compare_allows_one_entropy_quantization_step_but_not_token_drift(
 
     payload = observed / "payload_semantics.jsonl"
     row = json.loads(payload.read_text(encoding="utf-8"))
-    row["top_token_ids"] = [999]
+    row["active_top_token_ids_digest"] = "sha256:changed"
     payload.write_text(json.dumps(row) + "\n", encoding="utf-8")
     assert compare_contracts(expected, observed)["status"] == "fail"
 
@@ -119,13 +120,14 @@ def test_payload_projection_emits_only_active_padded_entries() -> None:
         1,
     )
 
-    assert projected["top_token_ids"] == [101, 102]
-    assert projected["top_probs"] == [0.4, 0.3]
-    assert projected["top_log_probs"] == [-0.9, -1.2]
+    assert projected["effective_top_k"] == 2
+    assert projected["active_top_token_ids_digest"].startswith("sha256:")
+    assert projected["active_top_probs_digest"].startswith("sha256:")
+    assert projected["active_top_log_probs_digest"].startswith("sha256:")
+    assert projected["active_payload_digest"].startswith("sha256:")
     assert "top_selection_mask" not in projected
-    assert all(
-        len(projected[key]) == projected["effective_top_k"]
-        for key in ("top_token_ids", "top_probs", "top_log_probs")
+    assert not any(
+        key in projected for key in ("top_token_ids", "top_probs", "top_log_probs")
     )
 
 
@@ -177,6 +179,61 @@ def test_validate_fixture_rejects_oversized_record(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="record exceeds maximum size"):
         validate_fixture(fixture)
+
+
+def test_full_vocabulary_payload_projection_is_compact_and_order_sensitive() -> None:
+    vocab_size = 4096
+    source = {
+        "selected_example_id": "one",
+        "selected_position": 3,
+        "effective_top_k": vocab_size,
+        "top_token_ids": list(range(vocab_size)),
+        "top_probs": [1.0 / vocab_size] * vocab_size,
+        "top_log_probs": [-8.317766166719343] * vocab_size,
+        "top_selection_mask": [True] * vocab_size,
+        "vocab_size": vocab_size,
+    }
+    projected = _payload_semantics(source, 1)
+    token_mutation = _payload_semantics(
+        {**source, "top_token_ids": [999999, *source["top_token_ids"][1:]]},
+        1,
+    )
+    probability_mutation = _payload_semantics(
+        {**source, "top_probs": [0.0, *source["top_probs"][1:]]},
+        1,
+    )
+    log_probability_mutation = _payload_semantics(
+        {**source, "top_log_probs": [-7.0, *source["top_log_probs"][1:]]},
+        1,
+    )
+    reordered = _payload_semantics(
+        {
+            **source,
+            "top_token_ids": list(reversed(source["top_token_ids"])),
+            "top_probs": list(reversed(source["top_probs"])),
+            "top_log_probs": list(reversed(source["top_log_probs"])),
+        },
+        1,
+    )
+
+    assert len(json.dumps(projected)) < 4096
+    assert not any(
+        key in projected
+        for key in ("top_token_ids", "top_probs", "top_log_probs", "top_selection_mask")
+    )
+    assert (
+        projected["active_top_token_ids_digest"]
+        != token_mutation["active_top_token_ids_digest"]
+    )
+    assert (
+        projected["active_top_probs_digest"]
+        != probability_mutation["active_top_probs_digest"]
+    )
+    assert (
+        projected["active_top_log_probs_digest"]
+        != log_probability_mutation["active_top_log_probs_digest"]
+    )
+    assert projected["active_payload_digest"] != reordered["active_payload_digest"]
 
 
 def test_compare_streams_jsonl_without_eager_projection_loader(
@@ -257,8 +314,11 @@ def test_capture_projects_payload_shards_without_eager_payload_collector(
     assert report["status"] == "pass"
     payloads = _read_jsonl(capture / "payload_semantics.jsonl")
     assert [row["selection_index"] for row in payloads] == list(range(1, 257))
-    assert all(row["top_token_ids"] == [row["selection_index"]] for row in payloads)
+    assert all("active_payload_digest" in row for row in payloads)
     assert all("top_selection_mask" not in row for row in payloads)
+    assert sum(path.stat().st_size for path in capture.glob("*.jsonl")) < (
+        MAX_GOLDEN_FIXTURE_BYTES
+    )
 
 
 def test_compare_rejects_c5_role_and_passport_drift(tmp_path: Path) -> None:
@@ -332,10 +392,8 @@ def _write_fixture(root: Path, *, entropy: float = 1.0, position: int = 3) -> Pa
             "selected_example_id": "one",
             "selected_position": position,
             "teacher_entropy": entropy,
-            "top_token_ids": [7],
-            "top_probs": [0.5],
-            "top_log_probs": [-0.6931471805599453],
             "effective_top_k": 1,
+            **_payload_digest_fields(token_id=7),
         }
     ]
     contract = build_contract(
@@ -425,3 +483,15 @@ def _valid_semantic_policy() -> dict[str, object]:
         "dynamic_top_k_max": 128,
         "dynamic_mass_threshold": 0.95,
     }
+
+
+def _payload_digest_fields(*, token_id: int) -> dict[str, str]:
+    return golden_projection.digest_active_payload_storage(
+        {
+            "effective_top_k": 1,
+            "top_token_ids": [token_id],
+            "top_probs": [0.5],
+            "top_log_probs": [-0.6931471805599453],
+            "top_selection_mask": [True],
+        }
+    )

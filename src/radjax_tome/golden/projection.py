@@ -8,6 +8,7 @@ from typing import Any
 
 from radjax_tome.golden.contract import (
     build_contract,
+    digest_active_payload_storage,
     semantic_digest,
     validate_contract,
     validate_sparse_payload_semantics_record,
@@ -294,40 +295,9 @@ def _payload_semantics(row: dict[str, Any], index: int) -> dict[str, Any]:
         "semantic_authority_hash",
         "payload_identity",
     )
-    projected.update(_sparse_payload_arrays(row))
+    projected.update(digest_active_payload_storage(row))
     validate_sparse_payload_semantics_record(projected)
     return projected
-
-
-def _sparse_payload_arrays(row: dict[str, Any]) -> dict[str, list[Any]]:
-    effective_top_k = row.get("effective_top_k")
-    arrays = {
-        key: row.get(key)
-        for key in ("top_token_ids", "top_probs", "top_log_probs", "top_selection_mask")
-    }
-    if (
-        not isinstance(effective_top_k, int)
-        or isinstance(effective_top_k, bool)
-        or effective_top_k < 1
-        or any(not isinstance(value, list) for value in arrays.values())
-    ):
-        raise ValueError("golden capture payload arrays or effective_top_k are invalid")
-    lengths = {len(value) for value in arrays.values()}
-    if len(lengths) != 1:
-        raise ValueError("golden capture payload arrays have inconsistent lengths")
-    mask = arrays["top_selection_mask"]
-    if any(not isinstance(value, bool) for value in mask):
-        raise ValueError("golden capture top_selection_mask must contain booleans")
-    active_ranks = [rank for rank, active in enumerate(mask) if active]
-    if len(active_ranks) != effective_top_k:
-        raise ValueError(
-            "golden capture top_selection_mask active count does not equal "
-            "effective_top_k"
-        )
-    return {
-        key: [arrays[key][rank] for rank in active_ranks]
-        for key in ("top_token_ids", "top_probs", "top_log_probs")
-    }
 
 
 def _project(row: dict[str, Any], index: int, *keys: str) -> dict[str, Any]:

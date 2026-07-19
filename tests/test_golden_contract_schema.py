@@ -6,6 +6,7 @@ from radjax_tome.golden.contract import (
     GOLDEN_CONTRACT_SCHEMA_VERSION,
     build_contract,
     canonical_json_bytes,
+    digest_active_payload_storage,
     validate_contract,
 )
 
@@ -72,9 +73,15 @@ def _rows() -> dict[str, list[dict[str, object]]]:
         row.update(
             {
                 "effective_top_k": 1,
-                "top_token_ids": [7],
-                "top_probs": [0.5],
-                "top_log_probs": [-0.6931471805599453],
+                **digest_active_payload_storage(
+                    {
+                        "effective_top_k": 1,
+                        "top_token_ids": [7],
+                        "top_probs": [0.5],
+                        "top_log_probs": [-0.6931471805599453],
+                        "top_selection_mask": [True],
+                    }
+                ),
             }
         )
     return rows
