@@ -432,6 +432,14 @@
       "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
       "status": "canonical"
     },
+    "docs/M4D_INTEGRATION_EVIDENCE.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M4",
+      "rationale": "Local integration proof and reviewed T4 Golden 1K handoff criteria.",
+      "replacement_or_target_boundary": "M4D evidence and external review gate.",
+      "status": "supporting"
+    },
     "docs/MULTI_GPU_PATH_B.md": {
       "archive_or_removal_condition": "M3 archive pointer and M2 parity gate.",
       "kind": "top-level-doc",

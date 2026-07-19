@@ -1550,3 +1550,10 @@ commands and acceptance criteria. T4 rental proof is not executed on this
 host: it has no CUDA/T4, Torch, Transformers, or terminal canonical artifact.
 This is an external merge gate, not a local pass claim; `main` remains
 untouched and the fixture was not regenerated.
+
+## 2026-07-19 — M4D Evidence Inventory Repair
+
+The committed M4D evidence document is now recorded in the authoritative Hydra
+disposition inventory, restoring the tracked-doc ledger gate required by CI.
+This is metadata-only; it changes no runtime, artifact, fixture, or T4 proof
+claim. The focused disposition gate passes locally before publication.
