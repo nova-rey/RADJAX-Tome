@@ -21,14 +21,6 @@ CANONICAL_IMPORTS = (
     "radjax_tome.tome.packaging",
 )
 
-# The first M3B initializer slice isolates the root, backends, and audit
-# facades. Builder, reports, and fingerprint isolation intentionally land in
-# the second slice, so their final negative assertions belong in a later gate.
-FIRST_SLICE_CANONICAL_IMPORTS = (
-    "radjax_tome.backends.gpu_torch",
-    "radjax_tome.audit.selected_linkage",
-)
-
 # These are deliberately distinct from the canonical leaves above.  They are
 # public today, but M3B must make their package-facade access lazy.
 RESEARCH_OR_COMPATIBILITY_EDGES = {
@@ -64,14 +56,18 @@ COMPATIBILITY_IMPORTS = (
     ("radjax_tome.fingerprint.inspection", "inspect_fingerprint_artifact"),
 )
 
-FIRST_SLICE_COMPATIBILITY_IMPORTS = (
-    ("radjax_tome.backends.hf_export", "HFTeacherExportConfig"),
-    ("radjax_tome.backends.hf_specimen", "HFTeacherSpecimenConfig"),
-    ("radjax_tome.backends.qwen_policy", "QwenPolicyMap"),
-    ("radjax_tome.audit.refactor_surface", "RefactorAudit"),
-)
+CLASSIFIED_LEAF_DEPENDENCIES = {
+    "radjax_tome.fingerprint.generation": {
+        "radjax_tome.fingerprint.artifacts",
+        "radjax_tome.fingerprint.exemplars",
+    },
+    "radjax_tome.fingerprint.inspection": {
+        "radjax_tome.fingerprint.artifacts",
+        "radjax_tome.fingerprint.exemplars",
+    },
+}
 
-FIRST_SLICE_PACKAGE_EXPORTS = (
+PACKAGE_COMPATIBILITY_EXPORTS = (
     ("radjax_tome", "FakeTeacherBackend", "radjax_tome.backends.fake"),
     (
         "radjax_tome",
@@ -107,6 +103,46 @@ FIRST_SLICE_PACKAGE_EXPORTS = (
         "radjax_tome.audit",
         "RefactorAudit",
         "radjax_tome.audit.refactor_surface",
+    ),
+    (
+        "radjax_tome.builder",
+        "MultiGPUPathBConfig",
+        "radjax_tome.builder.multi_gpu_path_b",
+    ),
+    (
+        "radjax_tome.reports",
+        "FingerprintArcReport",
+        "radjax_tome.reports.arc",
+    ),
+    (
+        "radjax_tome.reports",
+        "FingerprintBaselineComparisonReport",
+        "radjax_tome.reports.baseline",
+    ),
+    (
+        "radjax_tome.reports",
+        "FingerprintQualityPerByteReport",
+        "radjax_tome.reports.fingerprint_quality",
+    ),
+    (
+        "radjax_tome.fingerprint",
+        "validate_fingerprint_artifact",
+        "radjax_tome.fingerprint.artifacts",
+    ),
+    (
+        "radjax_tome.fingerprint",
+        "summarize_exemplar_reservoir",
+        "radjax_tome.fingerprint.exemplars",
+    ),
+    (
+        "radjax_tome.fingerprint",
+        "generate_exemplar_reservoir",
+        "radjax_tome.fingerprint.generation",
+    ),
+    (
+        "radjax_tome.fingerprint",
+        "inspect_fingerprint_artifact",
+        "radjax_tome.fingerprint.inspection",
     ),
 )
 
@@ -246,7 +282,18 @@ def _assert_isolated(snapshot: Mapping[str, object]) -> None:
     assert not RESEARCH_OR_COMPATIBILITY_EDGES & _project_modules(snapshot)
 
 
-def test_m3b_first_slice_root_snapshot_isolates_all_classified_leaves() -> None:
+def _assert_only_declared_classified_dependencies(
+    snapshot: Mapping[str, object],
+    leaf_module: str,
+) -> None:
+    allowed = CLASSIFIED_LEAF_DEPENDENCIES.get(leaf_module, set())
+    unexpected = RESEARCH_OR_COMPATIBILITY_EDGES - {leaf_module} - allowed
+
+    assert not unexpected & _project_modules(snapshot)
+    assert snapshot["optional_ml_modules"] == []
+
+
+def test_m3b_root_snapshot_isolates_all_classified_leaves() -> None:
     snapshot = _snapshot("root")
 
     assert "radjax_tome" in _project_modules(snapshot)
@@ -254,22 +301,14 @@ def test_m3b_first_slice_root_snapshot_isolates_all_classified_leaves() -> None:
 
 
 @pytest.mark.parametrize("module", CANONICAL_IMPORTS)
-def test_m3a_canonical_import_snapshots_are_subprocess_isolated(module: str) -> None:
-    snapshot = _snapshot("canonical", module=module)
-
-    assert module in _project_modules(snapshot)
-    assert snapshot["optional_ml_modules"] == []
-
-
-@pytest.mark.parametrize("module", FIRST_SLICE_CANONICAL_IMPORTS)
-def test_m3b_first_slice_canonical_imports_are_isolated(module: str) -> None:
+def test_m3b_canonical_imports_are_subprocess_isolated(module: str) -> None:
     snapshot = _snapshot("canonical", module=module)
 
     assert module in _project_modules(snapshot)
     _assert_isolated(snapshot)
 
 
-def test_m3b_first_slice_parser_and_help_keep_inventory_and_isolation() -> None:
+def test_m3b_parser_and_help_keep_inventory_and_isolation() -> None:
     parser_snapshot = _snapshot("parser")
     help_snapshot = _snapshot("help")
 
@@ -282,9 +321,7 @@ def test_m3b_first_slice_parser_and_help_keep_inventory_and_isolation() -> None:
     _assert_isolated(help_snapshot)
 
 
-def test_m3b_first_slice_native_gpu_availability_dispatch_has_no_research_leakage() -> (
-    None
-):
+def test_m3b_native_gpu_availability_dispatch_has_no_research_leakage() -> None:
     snapshot = _snapshot("gpu_availability_dispatch")
 
     assert "radjax_tome.backends.gpu_torch" in _project_modules(snapshot)
@@ -292,19 +329,7 @@ def test_m3b_first_slice_native_gpu_availability_dispatch_has_no_research_leakag
 
 
 @pytest.mark.parametrize(("module", "symbol"), COMPATIBILITY_IMPORTS)
-def test_m3a_explicit_research_and_compatibility_modules_remain_importable(
-    module: str,
-    symbol: str,
-) -> None:
-    snapshot = _snapshot("compatibility", module=module, symbol=symbol)
-
-    assert module in _project_modules(snapshot)
-    assert snapshot["requested_symbol_present"] is True
-    assert snapshot["optional_ml_modules"] == []
-
-
-@pytest.mark.parametrize(("module", "symbol"), FIRST_SLICE_COMPATIBILITY_IMPORTS)
-def test_m3b_first_slice_direct_compatibility_leaves_are_explicit_and_isolated(
+def test_m3b_direct_compatibility_leaves_are_explicit_and_isolated(
     module: str,
     symbol: str,
 ) -> None:
@@ -312,14 +337,13 @@ def test_m3b_first_slice_direct_compatibility_leaves_are_explicit_and_isolated(
 
     assert snapshot["requested_symbol_present"] is True
     assert module in _project_modules(snapshot)
-    assert not (RESEARCH_OR_COMPATIBILITY_EDGES - {module}) & _project_modules(snapshot)
-    assert snapshot["optional_ml_modules"] == []
+    _assert_only_declared_classified_dependencies(snapshot, module)
 
 
 @pytest.mark.parametrize(
-    ("module", "symbol", "leaf_module"), FIRST_SLICE_PACKAGE_EXPORTS
+    ("module", "symbol", "leaf_module"), PACKAGE_COMPATIBILITY_EXPORTS
 )
-def test_m3b_first_slice_package_compatibility_exports_are_lazy(
+def test_m3b_package_compatibility_exports_are_lazy_and_isolated(
     module: str,
     symbol: str,
     leaf_module: str,
@@ -330,4 +354,4 @@ def test_m3b_first_slice_package_compatibility_exports_are_lazy(
     assert snapshot["requested_symbol_present"] is True
     assert leaf_module not in before_symbol
     assert leaf_module in _project_modules(snapshot)
-    assert snapshot["optional_ml_modules"] == []
+    _assert_only_declared_classified_dependencies(snapshot, leaf_module)

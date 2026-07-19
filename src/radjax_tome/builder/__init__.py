@@ -1,5 +1,14 @@
 """Migrated legacy TeacherTextbook builder."""
 
+from __future__ import annotations
+
+from typing import Any
+
+from radjax_tome._lazy_exports import (
+    LazyExportMap,
+    lazy_export_names,
+    resolve_lazy_export,
+)
 from radjax_tome.builder.backend_textbook import (
     BackendTeacherTextbookBuildConfig,
     build_backend_teacher_textbook,
@@ -37,18 +46,6 @@ from radjax_tome.builder.exemplar_selection import (
     validate_exemplar_selection_manifest,
     write_exemplar_selection_manifest,
 )
-from radjax_tome.builder.multi_gpu_path_b import (
-    MULTI_GPU_PATH_B_REPORT_FILENAME,
-    MULTI_GPU_PATH_B_REPORT_SCHEMA,
-    MULTI_GPU_WORKER_MANIFEST_FILENAME,
-    MULTI_GPU_WORKER_MANIFEST_SCHEMA,
-    MultiGPUPathBConfig,
-    build_path_b_assignments,
-    merge_path_b_candidate_records,
-    normalize_multi_gpu_devices,
-    render_multi_gpu_path_b_summary,
-    run_multi_gpu_path_b_candidate_harness,
-)
 from radjax_tome.builder.production import (
     PRODUCTION_BUILD_REPORT_FILENAME,
     PRODUCTION_BUILD_REPORT_SCHEMA,
@@ -69,6 +66,49 @@ from radjax_tome.builder.teacher_textbook import (
     validate_teacher_textbook,
     write_teacher_textbook_validation_report,
 )
+
+_LAZY_EXPORTS: LazyExportMap = {
+    "MULTI_GPU_PATH_B_REPORT_FILENAME": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "MULTI_GPU_PATH_B_REPORT_FILENAME",
+    ),
+    "MULTI_GPU_PATH_B_REPORT_SCHEMA": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "MULTI_GPU_PATH_B_REPORT_SCHEMA",
+    ),
+    "MULTI_GPU_WORKER_MANIFEST_FILENAME": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "MULTI_GPU_WORKER_MANIFEST_FILENAME",
+    ),
+    "MULTI_GPU_WORKER_MANIFEST_SCHEMA": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "MULTI_GPU_WORKER_MANIFEST_SCHEMA",
+    ),
+    "MultiGPUPathBConfig": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "MultiGPUPathBConfig",
+    ),
+    "build_path_b_assignments": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "build_path_b_assignments",
+    ),
+    "merge_path_b_candidate_records": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "merge_path_b_candidate_records",
+    ),
+    "normalize_multi_gpu_devices": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "normalize_multi_gpu_devices",
+    ),
+    "render_multi_gpu_path_b_summary": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "render_multi_gpu_path_b_summary",
+    ),
+    "run_multi_gpu_path_b_candidate_harness": (
+        "radjax_tome.builder.multi_gpu_path_b",
+        "run_multi_gpu_path_b_candidate_harness",
+    ),
+}
 
 __all__ = [
     "TEACHER_TEXTBOOK_VERSION",
@@ -127,3 +167,11 @@ __all__ = [
     "write_production_build_report",
     "write_teacher_textbook_validation_report",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    return resolve_lazy_export(globals(), _LAZY_EXPORTS, name)
+
+
+def __dir__() -> list[str]:
+    return lazy_export_names(globals(), _LAZY_EXPORTS)

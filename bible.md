@@ -1419,3 +1419,15 @@ slice two. The focused import/refactor gate passed `46` tests. Golden validation
 retained count `256` and semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M3B Final Import Isolation and Hydra Repair
+
+M3B finalizes builder, reports, and fingerprint isolation and repairs the
+Hydra inventory for the lazy-export helper and M3A boundary documents. Public
+facade names and direct compatibility-leaf paths remain preserved, while fresh
+root, canonical, parser, and help imports leak neither optional ML stacks nor
+classified research modules. The full gate passed `731 passed, 22 skipped`; the
+focused final import gate passed `37` tests. Golden validation retained count
+`256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.

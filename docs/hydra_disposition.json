@@ -624,6 +624,22 @@
       "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
       "status": "canonical"
     },
+    "docs/m3_m4_canonical_disposition.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M3",
+      "rationale": "Canonical M3/M4 Path B disposition and preserved-semantics record.",
+      "replacement_or_target_boundary": "M3/M4 canonical boundary and staged production refactor.",
+      "status": "canonical"
+    },
+    "docs/m3_m4_import_architecture.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M3",
+      "rationale": "M3 import-boundary characterization and lazy compatibility facade contract.",
+      "replacement_or_target_boundary": "M3 import-isolation gate and compatibility facade boundary.",
+      "status": "supporting"
+    },
     "scripts/ab_compare_teacher_textbook.py": {
       "archive_or_removal_condition": "M2 parity and M3 preservation gates.",
       "kind": "script",
@@ -758,6 +774,14 @@
       "owning_milestone": "M6",
       "rationale": "Shared infrastructure behind the canonical pipeline.",
       "replacement_or_target_boundary": "Narrow supporting API.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/_lazy_exports.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M3",
+      "rationale": "Internal supporting module for M3 lazy compatibility facades.",
+      "replacement_or_target_boundary": "Internal supporting API for lazy compatibility facades.",
       "status": "supporting"
     },
     "src/radjax_tome/audit/__init__.py": {
