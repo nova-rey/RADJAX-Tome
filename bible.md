@@ -1380,3 +1380,15 @@ IDs while preserving logical IDs and hashes. A final recursive portability gate
 rejects POSIX, Windows, UNC, file URI, and home-relative storage locations in
 every contract object and JSONL record. M2A/M2B remain capture_pending; no
 fixture was committed.
+
+## 2026-07-19 — M2B Canonical Golden T4 1K Fixture Closure
+
+M2A golden capture machinery and M2B canonical fixture closure are complete.
+Commit `371a60541aa6c73dddcde510203064c8882c935e` captured the portable native
+two-pass fingerprint-corridor Path B Golden 1K contract at
+`tests/fixtures/golden_t4_1k`. Its semantic root is
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`
+with 256 selected coordinates. The working production head remains native
+two-pass fingerprint-corridor Path B; research-frozen paths remain frozen.
+The committed fixture has passed contract and portability validation and is the
+mandatory semantic regression baseline for future canonical-pipeline changes.

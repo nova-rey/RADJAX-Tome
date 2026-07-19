@@ -1,35 +1,36 @@
 # Golden 1K Capture
 
-M2A/M2B status: **capture_pending**. No coordinate, passport, allocation, or
-payload-semantic record is committed until it is exported read-only from the
-terminal T4 artifact using the corrected sparse-payload capture exporter. Any
-earlier dense payload capture is not committable and must be recaptured.
-Capture projects selected payload shards one at a time and retains only compact
-scalar metadata plus versioned semantic digests of active token IDs,
-probabilities, log-probabilities, and ordered active entries. It never commits
-payload arrays, so comparison against an artifact does not retain the full
-source payload projection in memory. Active values use the v2 canonical binary
-encoding: big-endian signed int64 token IDs, big-endian IEEE-754 float64 values,
-an explicit active count, and normalized signed zero (`-0.0` hashes as `+0.0`).
+M2A and M2B are **complete**. The canonical portable Golden 1K contract is
+checked in at `tests/fixtures/golden_t4_1k` with semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`
+and 256 selected coordinates. The fixture passed its recursive portability
+gate: no local POSIX, Windows, UNC, file URI, or home-relative storage locator
+is committed.
+
+The source artifact was a completed native two-pass fingerprint-corridor Path
+B Tesla T4 run with Gemma 3 270M, 1,000 corpus examples, sequence length 128,
+vocabulary size 262144, a selected rerun batch size of 8, dynamic top-k range
+32 through 262144, and dynamic mass threshold 0.99. The source Tome is not
+committed. The fixture is a portable semantic contract containing only
+reviewable selection, passport, board, and digest-level payload records.
+
+Validate the fixture without model loading, corpus access, GPU access, or the
+source Tome:
 
 ```bash
-cd /teamspace/studios/this_studio/radjax/RADJAX-Tome
-OUT=/teamspace/studios/this_studio/radjax_t4_path_b_1k/c6_3_2_native_clean
-CAPTURE=/teamspace/studios/this_studio/radjax_t4_path_b_1k/golden_contract_capture
-
-radjax-tome validate --path "$OUT"
-radjax-tome audit-selected-linkage --artifact "$OUT" --strict \
-  --profile full_debug_provenance --output "$OUT/selected_linkage_audit.json"
-radjax-tome golden capture --artifact "$OUT" --output "$CAPTURE"
-radjax-tome golden validate --fixture "$CAPTURE"
-radjax-tome golden compare --fixture "$CAPTURE" --artifact "$OUT"
+radjax-tome golden validate --fixture tests/fixtures/golden_t4_1k
 ```
 
-Before committing, verify 256 unique obligations, 256 payload-semantic rows,
-and no corpus text, prompt text, absolute rental paths, credentials, model
-weights, raw target shards, padded backend payload bodies, dense vocabulary
-arrays, or active payload arrays. The capture command requires passing
-canonical production, validation, delivery, and strict linkage reports and
-never modifies or reruns the source artifact. Artifact locators are portable:
-local storage paths are excluded from semantic board summaries and rejected
-from every committed fixture surface.
+Future canonical-pipeline changes must compare their produced artifact against
+this fixture:
+
+```bash
+radjax-tome golden compare \
+  --fixture tests/fixtures/golden_t4_1k \
+  --artifact /path/to/canonical-artifact
+```
+
+Any semantic difference requires an explicit explanation and an intentional
+fixture update. Payload bodies remain excluded: the contract stores versioned
+binary semantic digests of ordered active token IDs, probabilities, and
+log-probabilities rather than dense or raw payload arrays.
