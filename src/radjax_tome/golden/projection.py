@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -22,6 +23,8 @@ _REQUIRED_REPORTS = (
 )
 MAX_GOLDEN_FIXTURE_BYTES = 64 * 1024 * 1024
 MAX_GOLDEN_RECORD_BYTES = 1024 * 1024
+_WINDOWS_DRIVE_PATH = re.compile(r"^[A-Za-z]:[\\/]")
+_HOME_RELATIVE_PATH = re.compile(r"^~[^\\/]*[\\/]")
 
 
 def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, Any]:
@@ -93,7 +96,14 @@ def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, A
 def validate_fixture(fixture_dir: Path) -> dict[str, Any]:
     root = fixture_dir.resolve()
     contract = _read_object(root / "contract.json")
+    board_summary = _read_object(root / "board_summary.json")
+    _assert_portable_fixture_value(contract, context="contract")
+    _assert_portable_fixture_value(board_summary, context="board_summary")
     validate_contract(contract)
+    if semantic_digest("board-summary", board_summary) != contract.get(
+        "board_summary_digest"
+    ):
+        raise ValueError("golden fixture board_summary does not match contract")
     roots = contract["collection_roots"]
     coordinates: dict[str, set[tuple[str, int]]] = {}
     indices: dict[str, dict[tuple[str, int], int]] = {}
@@ -105,6 +115,7 @@ def validate_fixture(fixture_dir: Path) -> dict[str, Any]:
         selection_indices: dict[tuple[str, int], int] = {}
         previous_index = -1
         for row in _iter_fixture_jsonl(root / f"{name}.jsonl", fixture_bytes):
+            _assert_portable_fixture_value(row, context=f"{name} record")
             coordinate = _coordinate(row)
             selection_index = row.get("selection_index")
             if coordinate in seen:
@@ -451,22 +462,25 @@ def _authority_summary(root: Path, authority: dict[str, Any]) -> dict[str, Any]:
 
 def _semantic_board_summary(value: Any) -> Any:
     if isinstance(value, dict):
-        return {
-            key: _semantic_board_summary(item)
-            for key, item in value.items()
-            if key
-            not in {
+        projected: dict[str, Any] = {}
+        for key, item in value.items():
+            if key in {
                 "created_at",
                 "elapsed_seconds",
                 "host_memory_bytes",
                 "device_memory_bytes",
                 "path",
                 "shard_path",
-            }
-            and not key.endswith("_path")
-            and key not in {"files", "file_hashes"}
-            and not key.endswith("_sha256")
-        }
+            } or (
+                key.endswith("_path")
+                or key in {"files", "file_hashes"}
+                or key.endswith("_sha256")
+            ):
+                continue
+            if _is_path_valued_artifact_locator(key, item):
+                continue
+            projected[key] = _semantic_board_summary(item)
+        return projected
     if isinstance(value, list):
         return [_semantic_board_summary(item) for item in value]
     return value
@@ -564,6 +578,14 @@ def _write_fixture(
     payloads: list[dict[str, Any]],
     board_summary: dict[str, Any],
 ) -> None:
+    _assert_portable_fixture_value(contract, context="contract")
+    _assert_portable_fixture_value(board_summary, context="board_summary")
+    for name, rows in (
+        ("selected_obligations", obligations),
+        ("source_passports", passports),
+        ("payload_semantics", payloads),
+    ):
+        _assert_portable_fixture_value(rows, context=name)
     root.mkdir(parents=True, exist_ok=True)
     (root / "contract.json").write_text(
         json.dumps(contract, indent=2, sort_keys=True) + "\n"
@@ -617,3 +639,37 @@ def _iter_fixture_jsonl(
             if not isinstance(value, dict):
                 raise ValueError("golden fixture JSONL record must be an object")
             yield value
+
+
+def _is_path_valued_artifact_locator(key: str, value: Any) -> bool:
+    return key.lower().endswith("artifact_id") and _is_local_storage_locator(value)
+
+
+def _assert_portable_fixture_value(value: Any, *, context: str) -> None:
+    if isinstance(value, str):
+        if _is_local_storage_locator(value):
+            raise ValueError(f"golden fixture portability violation at {context}")
+        return
+    if isinstance(value, dict):
+        for key, item in value.items():
+            _assert_portable_fixture_value(item, context=f"{context}.{key}")
+        return
+    if isinstance(value, (list, tuple)):
+        for index, item in enumerate(value):
+            _assert_portable_fixture_value(item, context=f"{context}[{index}]")
+
+
+def _is_local_storage_locator(value: Any) -> bool:
+    if not isinstance(value, str):
+        return False
+    candidate = value.strip()
+    lowered = candidate.lower()
+    return (
+        candidate.startswith("/")
+        or candidate.startswith("\\\\")
+        or candidate.startswith("//")
+        or lowered.startswith("file://")
+        or _WINDOWS_DRIVE_PATH.match(candidate) is not None
+        or _HOME_RELATIVE_PATH.match(candidate) is not None
+        or candidate.startswith(("$HOME/", "${HOME}/", "%USERPROFILE%\\"))
+    )

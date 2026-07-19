@@ -5,12 +5,20 @@ from pathlib import Path
 
 import pytest
 
+from radjax_tome.golden.contract import (
+    build_contract,
+    digest_active_payload_storage,
+    semantic_digest,
+)
 from radjax_tome.golden.projection import (
     _input_identity,
+    _is_local_storage_locator,
     _require_truth_gate_fields,
     _semantic_authority,
     _semantic_board_summary,
     _semantic_policy,
+    _write_fixture,
+    validate_fixture,
 )
 
 
@@ -169,6 +177,76 @@ def test_c4_storage_hash_changes_do_not_change_semantic_projection() -> None:
     assert first == second
 
 
+def test_board_summary_removes_nested_storage_artifact_ids_but_keeps_logical_ids() -> (
+    None
+):
+    left = _semantic_board_summary(_nested_artifact_provenance("/teamspace/left"))
+    right = _semantic_board_summary(_nested_artifact_provenance("/teamspace/right"))
+
+    assert semantic_digest("board-summary", left) == semantic_digest(
+        "board-summary", right
+    )
+    assert (
+        _contract_for_board_summary(left)["semantic_root"]
+        == _contract_for_board_summary(right)["semantic_root"]
+    )
+    assert left["feature_provenance"] == {"logical_artifact_id": "c2-logical-v1"}
+    assert left["source_leaderboard_provenance"] == {
+        "logical_artifact_id": "leaderboard-logical-v1"
+    }
+    assert left["source_provenance"]["c4"]["claims"] == {
+        "logical_artifact_id": "c4-claims-v1"
+    }
+    assert left["feature_derivation"] == {"logical_artifact_id": "c2-derive-v1"}
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        "/teamspace/radjax/artifact",
+        r"C:\rental\artifact",
+        r"\\server\share\artifact",
+        "file:///teamspace/radjax/artifact",
+        "~/radjax/artifact",
+    ),
+)
+def test_portability_gate_recognizes_local_storage_locators(value: str) -> None:
+    assert _is_local_storage_locator(value)
+
+
+def test_capture_writer_and_fixture_validation_reject_local_storage_paths(
+    tmp_path: Path,
+) -> None:
+    obligations, passports, payloads = _fixture_rows()
+    contract = build_contract(
+        fixture_metadata={},
+        input_identity={},
+        semantic_policy={},
+        stage_summary=[],
+        selected_obligations=obligations,
+        source_passports=passports,
+        payload_semantics=payloads,
+        board_summary={},
+    )
+    passports[0]["unrecognized_storage_locator"] = "/teamspace/radjax/source"
+
+    with pytest.raises(ValueError, match="portability violation"):
+        _write_fixture(
+            tmp_path / "rejected", contract, obligations, passports, payloads, {}
+        )
+
+    passports[0].pop("unrecognized_storage_locator")
+    fixture = tmp_path / "fixture"
+    _write_fixture(fixture, contract, obligations, passports, payloads, {})
+    passport_path = fixture / "source_passports.jsonl"
+    row = json.loads(passport_path.read_text(encoding="utf-8"))
+    row["unknown_locator"] = "file:///teamspace/radjax/source"
+    passport_path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="portability violation"):
+        validate_fixture(fixture)
+
+
 def _write_projection_sidecars(
     root: Path,
     *,
@@ -199,4 +277,73 @@ def _write_projection_sidecars(
     )
     (root / "emission_config.json").write_text(
         json.dumps(emission or {}), encoding="utf-8"
+    )
+
+
+def _nested_artifact_provenance(storage_root: str) -> dict[str, object]:
+    return {
+        "feature_provenance": {
+            "source_artifact_id": f"{storage_root}/c2/features.jsonl",
+            "logical_artifact_id": "c2-logical-v1",
+        },
+        "source_leaderboard_provenance": {
+            "leaderboard_artifact_id": f"{storage_root}/c2/leaderboards.jsonl",
+            "logical_artifact_id": "leaderboard-logical-v1",
+        },
+        "source_provenance": {
+            "c4": {
+                "claims": {
+                    "source_artifact_id": f"{storage_root}/c4/claims.jsonl",
+                    "logical_artifact_id": "c4-claims-v1",
+                }
+            }
+        },
+        "feature_derivation": {
+            "c2_source_artifact_id": f"{storage_root}/c2/derived.jsonl",
+            "logical_artifact_id": "c2-derive-v1",
+        },
+    }
+
+
+def _fixture_rows() -> tuple[
+    list[dict[str, object]],
+    list[dict[str, object]],
+    list[dict[str, object]],
+]:
+    coordinate = {
+        "selection_index": 1,
+        "selected_example_id": "one",
+        "selected_position": 3,
+    }
+    obligations = [dict(coordinate)]
+    passports = [dict(coordinate)]
+    payloads = [
+        {
+            **coordinate,
+            "effective_top_k": 1,
+            **digest_active_payload_storage(
+                {
+                    "effective_top_k": 1,
+                    "top_token_ids": [7],
+                    "top_probs": [0.5],
+                    "top_log_probs": [-0.6931471805599453],
+                    "top_selection_mask": [True],
+                }
+            ),
+        }
+    ]
+    return obligations, passports, payloads
+
+
+def _contract_for_board_summary(board_summary: dict[str, object]) -> dict[str, object]:
+    obligations, passports, payloads = _fixture_rows()
+    return build_contract(
+        fixture_metadata={},
+        input_identity={},
+        semantic_policy={},
+        stage_summary=[],
+        selected_obligations=obligations,
+        source_passports=passports,
+        payload_semantics=payloads,
+        board_summary=board_summary,
     )

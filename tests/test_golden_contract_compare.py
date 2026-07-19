@@ -444,6 +444,7 @@ def _write_fixture(root: Path, *, entropy: float = 1.0, position: int = 3) -> Pa
     )
     root.mkdir()
     (root / "contract.json").write_text(json.dumps(contract), encoding="utf-8")
+    (root / "board_summary.json").write_text("{}\n", encoding="utf-8")
     for name, rows in (
         ("selected_obligations", obligations),
         ("source_passports", passports),

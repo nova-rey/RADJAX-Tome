@@ -1,6 +1,6 @@
 # Golden 1K Capture
 
-M2A status: **capture_pending**. No coordinate, passport, allocation, or
+M2A/M2B status: **capture_pending**. No coordinate, passport, allocation, or
 payload-semantic record is committed until it is exported read-only from the
 terminal T4 artifact using the corrected sparse-payload capture exporter. Any
 earlier dense payload capture is not committable and must be recaptured.
@@ -30,4 +30,6 @@ and no corpus text, prompt text, absolute rental paths, credentials, model
 weights, raw target shards, padded backend payload bodies, dense vocabulary
 arrays, or active payload arrays. The capture command requires passing
 canonical production, validation, delivery, and strict linkage reports and
-never modifies or reruns the source artifact.
+never modifies or reruns the source artifact. Artifact locators are portable:
+local storage paths are excluded from semantic board summaries and rejected
+from every committed fixture surface.

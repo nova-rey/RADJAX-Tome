@@ -1372,3 +1372,11 @@ big-endian signed int64 token IDs, big-endian IEEE-754 float64 probabilities
 and log-probabilities, explicit active counts, and normalized signed zero. The
 combined digest binds the component digests without per-entry JSON serialization.
 M2A remains capture_pending.
+
+## 2026-07-19 — M2A/M2B Golden Fixture Portability Gate
+
+Golden board-summary projection now excludes storage-valued artifact locator
+IDs while preserving logical IDs and hashes. A final recursive portability gate
+rejects POSIX, Windows, UNC, file URI, and home-relative storage locations in
+every contract object and JSONL record. M2A/M2B remain capture_pending; no
+fixture was committed.
