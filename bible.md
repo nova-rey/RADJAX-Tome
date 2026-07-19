@@ -1522,3 +1522,18 @@ suite passed `769 passed, 22 skipped`. Golden validation retained count `256`
 and semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4C Evidence-Derived Resume and Failure Normalization
+
+M4C adds a read-only canonical Path-B resume classifier with no new persistent
+stage schema. It derives the earliest repairable stage from the existing run
+plan, score manifest, distinct early/late corridor evidence, authority,
+selection, delivery, validation, reconciliation, and production-report files.
+Fresh, partial, delivery-pending, finalization-only, terminal, stale, corrupt,
+and full-config hash-mismatch cases are covered. A provisional early corridor
+cannot be treated as selected-linked final evidence; after the late overwrite,
+corridor corruption is attributed to late finalization. Existing compatibility
+migration remains production-owned. The M4C matrix and native/import focused
+gate passed `75` tests. Golden validation retained count `256` and semantic
+root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.

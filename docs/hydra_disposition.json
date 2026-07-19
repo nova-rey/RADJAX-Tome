@@ -1090,6 +1090,14 @@
       "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
       "status": "supporting"
     },
+    "src/radjax_tome/builder/native_path_b/resume.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Read-only native Path B evidence-derived resume and failure resolver.",
+      "replacement_or_target_boundary": "M4 native Path B stage-contract boundary.",
+      "status": "supporting"
+    },
     "src/radjax_tome/builder/native_path_b/score_pass.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",

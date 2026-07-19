@@ -32,6 +32,24 @@ C6 integrated-selection validation report leaves the existing probe eligible
 for CPU-only finalization. This is characterization of the current seam, not a
 new persistent stage schema or a broader resume promise.
 
+## M4B/M4C Native Boundaries
+
+For the exact canonical request, the production facade now executes preflight
+and score pass through typed slice-one callbacks before continuing into the
+preserved corridor/selection/delivery implementation. Global-only requests do
+not enter that adapter. The callback seam preserves the existing report,
+progress, and runtime-error behavior; it adds no artifact or progress schema.
+
+`native_path_b.resume` is a separate, read-only M4C classifier. It derives the
+earliest action from the existing run plan, streaming manifest, early or late
+corridor readers, C6 authority/selection evidence, delivery report, validation,
+reconciliation, and terminal report. A provisional early corridor can only
+advance to authority/selection or selected delivery; it is never final evidence.
+After late finalization overwrites the public corridor surface, corruption of
+that surface belongs to late-corridor repair. Optional full production-config
+context verifies the persisted selection-integration hash, while the existing
+compatibility migration remains the production owner's responsibility.
+
 ## Preserved and Research Disposition
 
 Canonical runtime code remains the production facade, streaming score pass,
