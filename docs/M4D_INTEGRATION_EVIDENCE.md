@@ -2,15 +2,17 @@
 
 ## Local proof — pass
 
-This evidence applies to runtime checkpoint `da807cc` on branch
-`m3-m4-canonical-path-b-refactor`; this document and its Bible entry add no
-runtime or fixture changes. The working tree was clean apart from the
-pre-existing untracked `.DS_Store`.
+This evidence applies to the post-`da807cc` canonical-execution correction on
+branch `m3-m4-canonical-path-b-refactor`. The earlier local proof did not
+exercise production through typed slices two through five; it must not be read
+as proof of that integration. The current gate executes the real ordered
+canonical callbacks and preserves the immutable fixture. The working tree is
+clean apart from the pre-existing untracked `.DS_Store`.
 
 | Gate | Command | Result |
 |---|---|---|
-| Complete non-GPU suite | `python3 -m pytest -q` | `779 passed, 22 skipped in 106.03s` |
-| Native, import, delivery, validation, linkage, reconciliation, and Golden focus | See the exact command below | `220 passed in 38.04s` |
+| Complete non-GPU suite | `python3 -m pytest -q` | `784 passed, 22 skipped in 95.98s` |
+| Native, import, delivery, validation, linkage, reconciliation, live canonical execution, resume assembly, and Golden focus | See the exact command below | `225 passed in 35.83s` |
 | Immutable Golden fixture | `PYTHONPATH=src python3 -m radjax_tome.cli.main golden validate --fixture tests/fixtures/golden_t4_1k` | `pass`; count `256`; semantic root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba` |
 | Static and whitespace checks | `ruff check src tests`; `ruff format --check src tests`; `git diff --check` | pass |
 
@@ -24,6 +26,8 @@ python3 -m pytest -q \
   tests/test_native_path_b_orchestrator.py \
   tests/test_native_path_b_resume.py \
   tests/test_m4b_production_stage_integration.py \
+  tests/test_m4_live_canonical_execution.py \
+  tests/test_m4c_resume_assembly.py \
   tests/test_m3a_runtime_characterization.py \
   tests/test_production_build.py \
   tests/test_selected_exemplar_delivery.py \

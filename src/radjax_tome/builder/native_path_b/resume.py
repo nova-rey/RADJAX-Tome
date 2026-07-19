@@ -37,6 +37,7 @@ GLOBAL_AUTHORITY_STAGE = "global_authority_export"
 INTEGRATED_SELECTION_STAGE = "integrated_selection"
 SELECTED_DELIVERY_STAGE = "selected_delivery_rerun"
 LATE_CORRIDOR_STAGE = "selected_artifact_corridor_finalization"
+ARTIFACT_ASSEMBLY_STAGE = "artifact_assembly"
 VALIDATION_STAGE = "validation_linkage"
 RECONCILIATION_STAGE = "reconciliation_cover"
 FINAL_REPORTING_STAGE = "final_reporting"
@@ -198,6 +199,22 @@ def _after_final_corridor(
     output_dir: Path,
     final_evidence: StageEvidence,
 ) -> NativePathBResumeResolution:
+    assembly = _artifact_assembly_evidence(output_dir, final_evidence)
+    if isinstance(assembly, StageFailure):
+        return _next(
+            ARTIFACT_ASSEMBLY_STAGE,
+            assembly.reason,
+            assembly.blockers,
+            remediation=assembly.remediation,
+            evidence=final_evidence,
+        )
+    return _after_artifact_assembly(output_dir, assembly)
+
+
+def _after_artifact_assembly(
+    output_dir: Path,
+    assembly_evidence: StageEvidence,
+) -> NativePathBResumeResolution:
     validation_path = output_dir / "validation_report.json"
     validation = _read_object(validation_path)
     if isinstance(validation, StageFailure):
@@ -206,7 +223,7 @@ def _after_final_corridor(
             "validation_evidence_unavailable",
             validation.blockers,
             remediation="run strict artifact validation and selected-linkage audit",
-            evidence=final_evidence,
+            evidence=assembly_evidence,
         )
     if validation.get("status") != "pass":
         return _next(
@@ -217,7 +234,7 @@ def _after_final_corridor(
                 EvidenceDiagnostic("validation_status", str(validation.get("status"))),
             ),
             remediation="repair validation blockers before finalization",
-            evidence=final_evidence,
+            evidence=assembly_evidence,
         )
 
     reconciliation_path = (
@@ -230,7 +247,7 @@ def _after_final_corridor(
             "reconciliation_evidence_unavailable",
             reconciliation.blockers,
             remediation="write C6 reconciliation and coverage evidence",
-            evidence=final_evidence,
+            evidence=assembly_evidence,
         )
     if reconciliation.get("status") != "pass":
         return _next(
@@ -243,7 +260,7 @@ def _after_final_corridor(
                 ),
             ),
             remediation="repair C6 reconciliation blockers before reporting",
-            evidence=final_evidence,
+            evidence=assembly_evidence,
         )
 
     report_path = output_dir / "production_build_report.json"
@@ -254,7 +271,7 @@ def _after_final_corridor(
             "final_reporting_evidence_unavailable",
             report.blockers,
             remediation="render the terminal production report",
-            evidence=final_evidence,
+            evidence=assembly_evidence,
         )
     if report.get("status") != "pass":
         return _next(
@@ -265,7 +282,7 @@ def _after_final_corridor(
                 EvidenceDiagnostic("report_status", str(report.get("status"))),
             ),
             remediation="complete final reporting after resolving its blockers",
-            evidence=final_evidence,
+            evidence=assembly_evidence,
         )
     terminal_paths = (validation_path, reconciliation_path, report_path)
     terminal_evidence = StageEvidence(
@@ -274,10 +291,10 @@ def _after_final_corridor(
         hashes=_file_evidence(FINAL_REPORTING_STAGE, terminal_paths).hashes,
         counts=(),
         prior_stage_proof=PriorStageProof(
-            stage=LATE_CORRIDOR_STAGE,
-            paths=final_evidence.paths,
-            hashes=final_evidence.hashes,
-            counts=final_evidence.counts,
+            stage=ARTIFACT_ASSEMBLY_STAGE,
+            paths=assembly_evidence.paths,
+            hashes=assembly_evidence.hashes,
+            counts=assembly_evidence.counts,
         ),
     )
     return NativePathBResumeResolution(
@@ -285,6 +302,50 @@ def _after_final_corridor(
         complete=True,
         failure=None,
         evidence=terminal_evidence,
+    )
+
+
+def _artifact_assembly_evidence(
+    output_dir: Path,
+    final_evidence: StageEvidence,
+) -> StageEvidence | StageFailure:
+    """Require promoted selected payload/index evidence after late corridors."""
+
+    selected_dir = output_dir / "selected_exemplars"
+    payload_shards = tuple(sorted(selected_dir.glob("selected-exemplars-*.json")))
+    paths = (
+        output_dir / "leaderboards" / "selected_exemplars.json",
+        selected_dir / "payload_index.json",
+        *payload_shards,
+    )
+    unavailable = [
+        path for path in paths if isinstance(_read_object(path), StageFailure)
+    ]
+    if not payload_shards:
+        unavailable.append(selected_dir / "selected-exemplars-*.json")
+    if unavailable:
+        return _failure(
+            ARTIFACT_ASSEMBLY_STAGE,
+            "artifact_assembly_evidence_unavailable",
+            tuple(
+                f"missing or invalid assembled selected artifact: {path}"
+                for path in unavailable
+            ),
+            remediation=(
+                "promote selected payloads and write their index after final corridors"
+            ),
+        )
+    return StageEvidence(
+        stage=ARTIFACT_ASSEMBLY_STAGE,
+        paths=paths,
+        hashes=_file_evidence(ARTIFACT_ASSEMBLY_STAGE, paths).hashes,
+        counts=(),
+        prior_stage_proof=PriorStageProof(
+            stage=LATE_CORRIDOR_STAGE,
+            paths=final_evidence.paths,
+            hashes=final_evidence.hashes,
+            counts=final_evidence.counts,
+        ),
     )
 
 

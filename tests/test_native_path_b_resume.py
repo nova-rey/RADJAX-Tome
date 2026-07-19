@@ -109,6 +109,22 @@ def _write_delivery_and_final_corridor(output_dir: Path) -> None:
         },
     )
     _write_corridors(output_dir, selected_count=2, selected_linked=True)
+    selected_records = [
+        {"selected_example_id": "example-0", "selected_position": 0},
+        {"selected_example_id": "example-1", "selected_position": 1},
+    ]
+    _write_json(
+        output_dir / "leaderboards" / "selected_exemplars.json",
+        {"selected_exemplars": selected_records},
+    )
+    _write_json(
+        output_dir / "selected_exemplars" / "payload_index.json",
+        {"selected_exemplars": selected_records},
+    )
+    _write_json(
+        output_dir / "selected_exemplars" / "selected-exemplars-00000.json",
+        {"selected_exemplars": selected_records},
+    )
 
 
 def _write_finalization(output_dir: Path) -> None:
@@ -237,7 +253,7 @@ def test_resume_resolver_identifies_finalization_only_after_late_corridor(
         reason="validation_evidence_unavailable",
     )
     assert resolution.evidence is not None
-    assert resolution.evidence.stage == "selected_artifact_corridor_finalization"
+    assert resolution.evidence.stage == "artifact_assembly"
 
 
 def test_resume_resolver_recognizes_an_already_complete_run(tmp_path: Path) -> None:

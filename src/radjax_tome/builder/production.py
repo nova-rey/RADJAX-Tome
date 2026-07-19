@@ -38,7 +38,10 @@ from radjax_tome.builder.exemplar_delivery import (
     ExemplarDeliveryConfig,
     SelectedExemplarDeliveryError,
     SelectedRerunCudaOOMError,
+    assemble_selected_delivery_artifacts,
+    finalize_selected_delivery_corridor,
     materialize_selected_exemplar_delivery,
+    run_selected_delivery_rerun,
     selected_delivery_staging_diagnostic,
 )
 from radjax_tome.builder.exemplar_selection import build_exemplar_selection_manifest
@@ -236,6 +239,7 @@ class _ProductionRunState:
     build_report: Any | None = None
     main_pass_wall_seconds: float = 0.0
     terminal_report: dict[str, Any] | None = None
+    native_resume_resolution: Any | None = None
 
 
 def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
@@ -303,6 +307,13 @@ def _build_production_gpu_tome_compatibility(
         return state.terminal_report or _stage_adapter_failure_report(
             state,
             None if score_result is None else score_result.failure,
+        )
+
+    if canonical_config is not None:
+        return _run_native_path_b_post_score_stages(
+            state,
+            canonical_config=canonical_config,
+            slice_one=slice_one,
         )
 
     created_at = state.created_at
@@ -653,6 +664,23 @@ def _run_existing_preflight(
             report["compatibility_migration"] = compatibility_migration.to_dict()
             _record_terminal_report(state, report)
             return _terminal_stage_failure(state, "preflight")
+        from radjax_tome.builder.native_path_b.api import (
+            resolve_canonical_path_b_config,
+        )
+        from radjax_tome.builder.native_path_b.resume import (
+            resolve_native_path_b_resume,
+        )
+
+        canonical_config = resolve_canonical_path_b_config(config)
+        state.native_resume_resolution = resolve_native_path_b_resume(
+            config.output_dir,
+            config=canonical_config,
+            run_manifest_path=config.run_manifest_path,
+        )
+        if state.native_resume_resolution.complete:
+            existing_report = read_json_object(report_path)
+            _record_terminal_report(state, existing_report)
+            return _terminal_stage_failure(state, "preflight")
     finalization_probe = probe_c6_finalization_only_resume(config)
     output_has_artifact = _has_existing_artifact(config)
     if output_has_artifact and not (config.resume or config.overwrite):
@@ -719,7 +747,12 @@ def _run_existing_preflight(
         )
         _record_terminal_report(state, report)
         return _terminal_stage_failure(state, "preflight")
-    if finalization_probe.eligible:
+    if finalization_probe.eligible and (
+        not c6_resume_requested
+        or state.native_resume_resolution is None
+        or state.native_resume_resolution.stage
+        in {"validation_linkage", "reconciliation_cover", "final_reporting"}
+    ):
         state.terminal_report = _resume_c6_finalization(
             config,
             created_at=created_at,
@@ -957,6 +990,651 @@ def _stage_adapter_failure_report(
         parity_status="not_run",
     )
     return _finalize_production_report(report, state.report_path, state.progress)
+
+
+def _selection_underfilled_stage_report(
+    state: _ProductionRunState,
+    failure: Any,
+) -> dict[str, Any]:
+    """Preserve the legacy named terminal report before selected rerun starts."""
+
+    blockers = list(getattr(failure, "blockers", ()) or ())
+    report = _production_report(
+        state.config,
+        created_at=state.created_at,
+        completed_at=_now(),
+        status="fail",
+        blockers=blockers,
+        warnings=state.warnings,
+        doctor_report=state.doctor_report or {},
+        run_plan_path=state.run_plan_path,
+        run_plan=state.plan or {},
+        effective_batch_size=state.effective_batch_size,
+        already_complete=state.already_complete,
+        parity_report_path=state.parity_report_path,
+        parity_status="not_run",
+        build_status="selection_underfilled_before_selected_rerun",
+    )
+    return _finalize_production_report(report, state.report_path, state.progress)
+
+
+def _run_native_path_b_post_score_stages(
+    state: _ProductionRunState,
+    *,
+    canonical_config: Any,
+    slice_one: Any,
+) -> dict[str, Any]:
+    """Run the real post-score native Path-B stages in their fixed order.
+
+    The callbacks retain ownership of the existing artifact writes.  The
+    orchestrator only carries typed, in-memory evidence between them; it does
+    not introduce a checkpoint schema or a second production algorithm.
+    """
+
+    from radjax_tome.builder.native_path_b.orchestrator import (
+        SliceFiveOperations,
+        SliceFourOperations,
+        SliceThreeOperations,
+        SliceTwoOperations,
+        run_slice_five,
+        run_slice_four,
+        run_slice_three,
+        run_slice_two,
+    )
+
+    slice_two = run_slice_two(
+        canonical_config,
+        slice_one,
+        operations=SliceTwoOperations(
+            early_corridor=lambda _, __: _native_early_corridor_operation(state),
+            fingerprint_authority=lambda _, __: _native_fingerprint_authority_operation(
+                state
+            ),
+            global_authority=lambda _, __, fingerprint: (
+                _native_global_authority_operation(state, fingerprint)
+            ),
+        ),
+    )
+    if slice_two.status != "pass":
+        return _stage_adapter_failure_report(
+            state,
+            slice_two.global_authority.failure
+            if slice_two.global_authority is not None
+            else (
+                slice_two.fingerprint_authority.failure
+                if slice_two.fingerprint_authority is not None
+                else slice_two.early_corridor.failure
+            ),
+        )
+    slice_three = run_slice_three(
+        canonical_config,
+        slice_two,
+        operations=SliceThreeOperations(
+            integrated_selection=lambda _, authorities: (
+                _native_integrated_selection_operation(state, authorities)
+            ),
+        ),
+    )
+    if slice_three.status != "pass":
+        failure = (
+            None
+            if slice_three.integrated_selection is None
+            else slice_three.integrated_selection.failure
+        )
+        if failure is not None and any(
+            blocker.startswith("C6 selected budget underfilled before selected rerun")
+            for blocker in failure.blockers
+        ):
+            return _selection_underfilled_stage_report(state, failure)
+        return _stage_adapter_failure_report(
+            state,
+            failure,
+        )
+    slice_four = run_slice_four(
+        canonical_config,
+        slice_three,
+        operations=SliceFourOperations(
+            selected_rerun=lambda _, inputs: _native_selected_rerun_operation(
+                state, inputs
+            ),
+            late_corridor=lambda _, inputs: _native_late_corridor_operation(inputs),
+            assembly=lambda _, inputs: _native_artifact_assembly_operation(inputs),
+        ),
+    )
+    if slice_four.status != "pass":
+        return _stage_adapter_failure_report(
+            state,
+            slice_four.assembly.failure
+            if slice_four.assembly is not None
+            else (
+                slice_four.late_corridor.failure
+                if slice_four.late_corridor is not None
+                else (
+                    slice_four.selected_rerun.failure
+                    if slice_four.selected_rerun is not None
+                    else None
+                )
+            ),
+        )
+    slice_five = run_slice_five(
+        canonical_config,
+        slice_four,
+        operations=SliceFiveOperations(
+            validation_linkage=lambda _, inputs: _native_validation_linkage_operation(
+                state, inputs
+            ),
+            reconciliation_cover=lambda _, inputs: (
+                _native_reconciliation_cover_operation(state, inputs)
+            ),
+            final_reporting=lambda _, inputs: _native_final_reporting_operation(
+                state, inputs
+            ),
+        ),
+    )
+    if slice_five.final_result is not None and state.terminal_report is not None:
+        return state.terminal_report
+    return _stage_adapter_failure_report(
+        state,
+        slice_five.validation.failure if slice_five.validation is not None else None,
+    )
+
+
+def _native_early_corridor_operation(state: _ProductionRunState) -> Any:
+    """Materialize the provisional corridor immediately after score pass."""
+
+    from radjax_tome.builder.native_path_b.evidence import (
+        read_score_surface_corridor_evidence,
+    )
+
+    config = state.config
+    state.progress.stage("fingerprint_corridor_export")
+    store = TeacherTargetStore.open(config.output_dir)
+    examples = load_text_examples(
+        config.dataset_path,
+        max_examples=store.metadata.num_examples,
+    )
+    build_corridor_artifacts(
+        output_dir=config.output_dir,
+        examples=examples,
+        selected_records=[],
+        selected_payloads=[],
+        delivery_path=config.exemplar_delivery_path or "one_pass_pruned_candidate",
+        non_selected_exemplar_payload_retained=(
+            config.retain_unselected_exemplar_payloads
+        ),
+    )
+    return read_score_surface_corridor_evidence(config.output_dir)
+
+
+def _native_fingerprint_authority_operation(state: _ProductionRunState) -> Any:
+    """Write selector/features bound to the passing provisional corridor."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+
+    config = state.config
+    state.progress.stage("selection_authority_export")
+    fingerprint = _export_c6_fingerprint_selection_authority(config)
+    paths = (
+        Path(str(fingerprint["selector_path"])),
+        Path(str(fingerprint["feature_path"])),
+        config.output_dir / "c6" / "corridor-features" / "manifest.json",
+    )
+    evidence = _native_file_evidence(
+        "fingerprint_corridor_selection_authority_export",
+        paths,
+    )
+    return StageResult(
+        status="pass",
+        value=fingerprint,
+        evidence=evidence,
+    )
+
+
+def _native_global_authority_operation(
+    state: _ProductionRunState,
+    fingerprint: Mapping[str, Path | str],
+) -> Any:
+    """Write global supply/passports only after matching fingerprint authority."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+
+    authorities = _export_c6_global_authority(state.config, fingerprint)
+    paths = (
+        Path(str(authorities["global_board_supply_path"])),
+        Path(str(authorities["source_passports_path"])),
+        Path(str(authorities["authority_manifest_path"])),
+    )
+    evidence = _native_file_evidence("global_authority_export", paths)
+    state.progress.memory_checkpoint("authority_export_complete")
+    return StageResult(status="pass", value=authorities, evidence=evidence)
+
+
+def _native_integrated_selection_operation(
+    state: _ProductionRunState, inputs: Any
+) -> Any:
+    """Run C2--C5 from the two explicit authority handoffs."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+    from radjax_tome.builder.native_path_b.selection import IntegratedSelectionHandoff
+
+    state.progress.stage("corridor_global_selection")
+    context = _prepare_c6_selection(state.config, inputs.global_value)
+    root = state.config.output_dir / "c6"
+    c2 = _native_file_evidence(
+        "c2_corridor_candidate_leaderboards",
+        (root / "corridor-leaderboards" / "manifest.json",),
+        prior=inputs.fingerprint_evidence,
+    )
+    c3 = _native_file_evidence(
+        "c3_corridor_coverage_plan",
+        (root / "coverage-plan" / "coverage_plan.json",),
+        prior=c2,
+    )
+    c4 = _native_file_evidence(
+        "c4_corridor_global_claims",
+        (root / "claims" / "claim_manifest.json",),
+        prior=c3,
+    )
+    c5 = _native_file_evidence(
+        "c5_multi_role_selection",
+        (root / "multi-role-selection" / "manifest.json",),
+        prior=c4,
+    )
+    evidence = _native_file_evidence(
+        "integrated_selection",
+        (
+            root / "selection_budget_diagnostics.json",
+            root / "multi-role-selection" / "manifest.json",
+        ),
+        prior=c5,
+    )
+    state.progress.memory_checkpoint("c2_c5_selection_complete")
+    return StageResult(
+        status="pass",
+        value=IntegratedSelectionHandoff(
+            value=context,
+            stage_evidence=evidence,
+            c2_evidence=c2,
+            c3_evidence=c3,
+            c4_evidence=c4,
+            c5_evidence=c5,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_selected_rerun_operation(state: _ProductionRunState, inputs: Any) -> Any:
+    """Run the selected-only teacher pass without promoting public payloads."""
+
+    from radjax_tome.builder.native_path_b.contracts import EvidenceCount, StageResult
+    from radjax_tome.builder.native_path_b.delivery import SelectedRerunHandoff
+
+    context = inputs.selection
+    config = _exemplar_delivery_config(
+        state.config,
+        state.effective_batch_size,
+        progress_callback=state.progress.handle_delivery_event,
+        authoritative_records=tuple(context["delivery_records"]),
+        delivery_authority_hash=str(
+            (context.get("authorities") or {}).get("score_pass_authority_hash") or ""
+        ),
+    )
+    prepared = run_selected_delivery_rerun(config)
+    staging_root = (
+        config.artifact_dir
+        / ".staging-native-c6"
+        / (str(config.delivery_authority_hash or "unbound").replace(":", "-"))
+    )
+    staging_paths = tuple(
+        sorted(path for path in staging_root.rglob("*") if path.is_file())
+    )
+    if not staging_paths:
+        raise ValueError("selected rerun produced no native staged payload evidence")
+    evidence = _native_file_evidence(
+        "selected_delivery_rerun",
+        staging_paths,
+        counts=(
+            EvidenceCount("selected_record_count", len(prepared.selected_records)),
+            EvidenceCount("selected_payload_count", len(prepared.selected_payloads)),
+            EvidenceCount(
+                "selected_rerun_example_count", prepared.rerun_selected_example_count
+            ),
+        ),
+        prior=inputs.c5_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=SelectedRerunHandoff(
+            value={"prepared": prepared, "context": context},
+            stage_evidence=evidence,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_late_corridor_operation(inputs: Any) -> Any:
+    """Overwrite the provisional public corridors only after selected rerun."""
+
+    from radjax_tome.builder.native_path_b.contracts import (
+        SelectedArtifactCorridorEvidence,
+        StageResult,
+    )
+
+    rerun = inputs.selected_rerun
+    prepared = rerun["prepared"]
+    finalized = finalize_selected_delivery_corridor(prepared)
+    # Slice Four deliberately keeps one selected-rerun handoff across late
+    # finalization and assembly.  Update only that ephemeral callback value so
+    # assembly consumes the finalized context rather than recreating a stage.
+    rerun["prepared"] = finalized
+    corridor = finalized.corridor_result
+    if corridor is None:
+        raise ValueError("late corridor finalization returned no corridor evidence")
+    output = finalized.config.artifact_dir
+    evidence = _native_file_evidence(
+        "selected_artifact_corridor_finalization",
+        (
+            corridor.summary_path,
+            corridor.fingerprints_path,
+            corridor.modes_path,
+            corridor.assignments_path,
+        ),
+        prior=inputs.selected_rerun_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=SelectedArtifactCorridorEvidence(
+            stage_evidence=evidence,
+            summary_path=corridor.summary_path,
+            fingerprints_path=corridor.fingerprints_path,
+            modes_path=corridor.modes_path,
+            assignments_path=corridor.assignments_path,
+            positions_available=corridor.positions_available,
+            positions_used=corridor.positions_used,
+            fingerprint_count=corridor.fingerprint_count,
+            mode_count=corridor.mode_count,
+            assignment_count=corridor.assignment_count,
+            selected_exemplar_count=len(finalized.selected_payloads),
+            selected_exemplars_linked=corridor.selected_exemplars_linked,
+            # Assembly owns the durable delivery report; retain its established
+            # destination as the subsequent proof path without writing early.
+            delivery_report_path=output / "delivery_report.json",
+            authority_manifest_path=output / "c6" / "authority_manifest.json",
+            delivery_authority_hash=str(finalized.config.delivery_authority_hash or ""),
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_artifact_assembly_operation(inputs: Any) -> Any:
+    """Promote payloads and write the established delivery artifact surface."""
+
+    from radjax_tome.builder.native_path_b.assembly import ArtifactAssemblyHandoff
+    from radjax_tome.builder.native_path_b.contracts import EvidenceCount, StageResult
+
+    rerun = inputs.selected_rerun
+    finalized = rerun["prepared"]
+    report = assemble_selected_delivery_artifacts(finalized)
+    output = finalized.config.artifact_dir
+    evidence = _native_file_evidence(
+        "artifact_assembly",
+        (
+            output / "delivery_report.json",
+            output / "leaderboards" / "selected_exemplars.json",
+            output / "selected_exemplars" / "payload_index.json",
+        ),
+        counts=(
+            EvidenceCount(
+                "selected_exemplar_count", int(report["num_selected_exemplars"])
+            ),
+        ),
+        prior=inputs.final_corridor_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=ArtifactAssemblyHandoff(
+            value={
+                "delivery_report": report,
+                "context": rerun["context"],
+                "prepared": finalized,
+            },
+            stage_evidence=evidence,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_validation_linkage_operation(
+    state: _ProductionRunState, inputs: Any
+) -> Any:
+    """Run the existing strict validation and selected-linkage audit."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+    from radjax_tome.builder.native_path_b.verification import ValidationLinkageHandoff
+
+    output = state.config.output_dir
+    state.progress.validation_started()
+    validation_started = perf_counter()
+    validation = validate_teacher_textbook(output)
+    write_teacher_textbook_validation_report(
+        validation, output / "validation_report.json"
+    )
+    validation_wall_seconds = _elapsed(validation_started)
+    state.progress.memory_checkpoint("validation_complete")
+    state.progress.validation_completed(validation.status)
+    linkage_audit = audit_selected_linkage(output, strict=True)
+    write_selected_linkage_audit(linkage_audit, output / "selected_linkage_audit.json")
+    evidence = _native_file_evidence(
+        "validation_linkage",
+        (output / "validation_report.json", output / "selected_linkage_audit.json"),
+        prior=inputs.assembly_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=ValidationLinkageHandoff(
+            value={
+                **inputs.assembly,
+                "validation": validation,
+                "linkage_audit": linkage_audit,
+                "validation_wall_seconds": validation_wall_seconds,
+            },
+            stage_evidence=evidence,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_reconciliation_cover_operation(
+    state: _ProductionRunState, inputs: Any
+) -> Any:
+    """Reconcile C2--C5 delivery proof, coverage, and cover page."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+    from radjax_tome.builder.native_path_b.verification import (
+        ReconciliationCoverHandoff,
+    )
+
+    output = state.config.output_dir
+    value = inputs.validation
+    c6_validation, c6_coverage = _finalize_c6_selection(
+        state.config,
+        value["context"],
+        delivery_report=value["delivery_report"],
+        audit_report=value["linkage_audit"].to_dict(),
+    )
+    audit_payload = value["linkage_audit"].to_dict()
+    audit_payload["c6_integration"] = {
+        "status": c6_validation["status"],
+        "selected_unique_count": c6_validation["selected_unique_count"],
+        "selected_obligation_count": c6_validation["selected_obligation_count"],
+        "coordinate_set_authority": "c5",
+    }
+    write_json(output / "selected_linkage_audit.json", audit_payload)
+    (output / "reports").mkdir(parents=True, exist_ok=True)
+    write_json(
+        output / "reports" / "c6_integrated_selection_validation.json",
+        c6_validation,
+    )
+    write_corridor_coverage_report(
+        c6_coverage,
+        output / "reports" / "fingerprint_corridor_coverage.json",
+    )
+    if c6_validation["status"] == "fail":
+        state.blockers.extend(str(item) for item in c6_validation["blockers"])
+    if value["validation"].status == "pass":
+        write_cover_page(output)
+    evidence = _native_file_evidence(
+        "reconciliation_cover",
+        (
+            output / "reports" / "c6_integrated_selection_validation.json",
+            output / "reports" / "fingerprint_corridor_coverage.json",
+            output / "cover_page.json",
+        ),
+        prior=inputs.validation_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=ReconciliationCoverHandoff(
+            value={**value, "c6_validation": c6_validation},
+            stage_evidence=evidence,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_final_reporting_operation(state: _ProductionRunState, inputs: Any) -> Any:
+    """Render the existing report/progress result from completed native proof."""
+
+    from radjax_tome.builder.native_path_b.contracts import (
+        NativePathBRunResult,
+        StageFailure,
+    )
+
+    value = inputs.reconciliation
+    config = state.config
+    validation = value["validation"]
+    delivery_report = value["delivery_report"]
+    parity_status = "not_run"
+    if config.parity_left is not None and validation.status == "pass":
+        parity_report = compare_tome_artifacts(
+            config.parity_left,
+            config.output_dir,
+            TomeParityConfig(max_examples=config.max_examples),
+            left_label="baseline",
+            right_label="production",
+        )
+        write_tome_parity_report(parity_report, state.parity_report_path)
+        parity_status = parity_report.status
+        if parity_report.status == "fail":
+            state.blockers.extend(parity_report.blockers)
+        elif parity_report.status == "warn":
+            state.warnings.extend(parity_report.warnings)
+    if validation.status != "pass":
+        state.blockers.extend(validation.blockers)
+    if delivery_report.get("status") == "fail":
+        state.blockers.extend(str(item) for item in delivery_report.get("blockers", ()))
+    elif delivery_report.get("status") == "warn":
+        state.warnings.extend(str(item) for item in delivery_report.get("warnings", ()))
+    else:
+        state.warnings = _filter_fulfilled_delivery_warnings(state.warnings)
+    status = "fail" if state.blockers else "warn" if state.warnings else "pass"
+    report = _production_report(
+        config,
+        created_at=state.created_at,
+        completed_at=_now(),
+        status=status,
+        blockers=state.blockers,
+        warnings=state.warnings,
+        doctor_report=state.doctor_report or {},
+        run_plan_path=state.run_plan_path,
+        run_plan=state.plan or {},
+        effective_batch_size=state.effective_batch_size,
+        already_complete=state.already_complete,
+        parity_report_path=state.parity_report_path,
+        parity_status=parity_status,
+        validation_status=validation.status,
+        build_status=getattr(state.build_report, "status", None),
+        delivery_report=delivery_report,
+        selected_delivery_failure=None,
+        timing=_production_timing_fields(
+            config,
+            started_at=state.created_at,
+            completed_at=_now(),
+            production_wall_seconds=_elapsed(state.production_started),
+            preflight_wall_seconds=state.preflight_wall_seconds,
+            main_pass_wall_seconds=state.main_pass_wall_seconds,
+            validation_wall_seconds=float(value["validation_wall_seconds"]),
+            delivery_report=delivery_report,
+        ),
+    )
+    state.terminal_report = _finalize_production_report(
+        report,
+        state.report_path,
+        state.progress,
+    )
+    evidence = _native_file_evidence(
+        "final_reporting",
+        (state.report_path, config.output_dir / "production_progress.json"),
+        prior=inputs.reconciliation_evidence,
+    )
+    if status == "fail":
+        return NativePathBRunResult(
+            status="fail",
+            production_report_path=state.report_path,
+            validation_report_path=config.output_dir / "validation_report.json",
+            evidence=None,
+            failure=StageFailure(
+                stage="final_reporting",
+                reason="existing_production_terminal_blockers",
+                blockers=tuple(state.blockers),
+                resumable=bool(config.resume),
+                remediation="inspect the preserved production report",
+            ),
+        )
+    return NativePathBRunResult(
+        status="pass",
+        production_report_path=state.report_path,
+        validation_report_path=config.output_dir / "validation_report.json",
+        evidence=evidence,
+    )
+
+
+def _native_file_evidence(
+    stage: str,
+    paths: tuple[Path, ...],
+    *,
+    counts: tuple[Any, ...] = (),
+    prior: Any | None = None,
+) -> Any:
+    """Hash existing files as immutable typed evidence for one native stage."""
+
+    from radjax_tome.builder.native_path_b.contracts import (
+        FileHash,
+        PriorStageProof,
+        StageEvidence,
+    )
+
+    missing = tuple(path for path in paths if not path.is_file())
+    if missing:
+        raise ValueError(
+            "native Path-B stage evidence is missing: "
+            + ", ".join(str(path) for path in missing)
+        )
+    prior_proof = None
+    if prior is not None:
+        prior_proof = PriorStageProof(
+            stage=prior.stage,
+            paths=prior.paths,
+            hashes=prior.hashes,
+            counts=prior.counts,
+        )
+    return StageEvidence(
+        stage=stage,
+        paths=paths,
+        hashes=tuple(FileHash(path=path, sha256=_file_sha256(path)) for path in paths),
+        counts=counts,
+        prior_stage_proof=prior_proof,
+    )
 
 
 def write_production_build_report(report: dict[str, Any], path: Path) -> None:
@@ -2014,7 +2692,22 @@ def _native_payload_hash_for_probe(payload: Mapping[str, Any]) -> str:
 def _export_c6_selection_authorities(
     config: ProductionBuildConfig,
 ) -> dict[str, Path | str | bool]:
-    """Derive every C6 authority from the completed Stage 1 score surface."""
+    """Compose the preserved fingerprint and global C6 authority exports."""
+
+    fingerprint = _export_c6_fingerprint_selection_authority(config)
+    return _export_c6_global_authority(config, fingerprint)
+
+
+def _export_c6_fingerprint_selection_authority(
+    config: ProductionBuildConfig,
+) -> dict[str, Path | str]:
+    """Export selector/features from the provisional score-surface corridor.
+
+    This is the first authority boundary in the canonical native Path-B route.
+    It intentionally leaves global-board supply, source passports, and the
+    combined authority manifest to the following global-authority operation.
+    The compatibility composer above preserves the historical public helper.
+    """
 
     if config.total_selected_exemplar_budget is None:
         raise ValueError("C6 total_selected_exemplar_budget is required")
@@ -2063,6 +2756,32 @@ def _export_c6_selection_authorities(
             "selection_integration_config_hash": _selection_integration_hash(config),
         }
     )
+    feature_path = export_corridor_candidate_features(
+        artifact_dir=config.output_dir,
+        output_dir=c6_root / "corridor-features",
+    )
+    feature_manifest_path = c6_root / "corridor-features" / "manifest.json"
+    feature_manifest = read_json_object(feature_manifest_path)
+    feature_manifest["score_pass_authority_hash"] = score_pass_authority_hash
+    write_json(feature_manifest_path, feature_manifest)
+    return {
+        "selector_path": selector_path,
+        "feature_path": feature_path,
+        "score_pass_authority_hash": score_pass_authority_hash,
+    }
+
+
+def _export_c6_global_authority(
+    config: ProductionBuildConfig,
+    fingerprint: Mapping[str, Path | str],
+) -> dict[str, Path | str | bool]:
+    """Export global supply/passports after matching fingerprint authority."""
+
+    c6_root = config.output_dir / "c6"
+    selector_path = Path(str(fingerprint["selector_path"]))
+    feature_path = Path(str(fingerprint["feature_path"]))
+    score_pass_authority_hash = str(fingerprint["score_pass_authority_hash"])
+    selector_manifest = read_json_object(selector_path)
     global_supply = export_production_global_board_supply(
         selector_manifest,
         source_artifact_id=str(config.output_dir),
@@ -2078,14 +2797,6 @@ def _export_c6_selection_authorities(
         output_path=c6_root / "source-passports.json",
         score_pass_authority_hash=score_pass_authority_hash,
     )
-    feature_path = export_corridor_candidate_features(
-        artifact_dir=config.output_dir,
-        output_dir=c6_root / "corridor-features",
-    )
-    feature_manifest_path = c6_root / "corridor-features" / "manifest.json"
-    feature_manifest = read_json_object(feature_manifest_path)
-    feature_manifest["score_pass_authority_hash"] = score_pass_authority_hash
-    write_json(feature_manifest_path, feature_manifest)
     authority_manifest_path = c6_root / "authority_manifest.json"
     run_manifest = read_json_object(config.output_dir / "run_manifest.json")
     authority_manifest = {

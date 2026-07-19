@@ -78,7 +78,7 @@ def test_m3a_distinguishes_ordered_early_and_late_corridor_exports(
     timeline: list[dict[str, Any]] = []
     early_builder = production.build_corridor_artifacts
     late_builder = exemplar_delivery.build_corridor_artifacts
-    delivery = production.materialize_selected_exemplar_delivery
+    delivery = production.run_selected_delivery_rerun
 
     def observe_early(**kwargs: Any) -> Any:
         assert kwargs["selected_records"] == []
@@ -114,7 +114,7 @@ def test_m3a_distinguishes_ordered_early_and_late_corridor_exports(
         )
         return result
 
-    def observe_delivery(delivery_config: Any) -> dict[str, Any]:
+    def observe_delivery(delivery_config: Any) -> Any:
         timeline.append({"phase": "selected_delivery_started"})
 
         def observe_progress(event: dict[str, Any]) -> None:
@@ -131,9 +131,7 @@ def test_m3a_distinguishes_ordered_early_and_late_corridor_exports(
 
     monkeypatch.setattr(production, "build_corridor_artifacts", observe_early)
     monkeypatch.setattr(exemplar_delivery, "build_corridor_artifacts", observe_late)
-    monkeypatch.setattr(
-        production, "materialize_selected_exemplar_delivery", observe_delivery
-    )
+    monkeypatch.setattr(production, "run_selected_delivery_rerun", observe_delivery)
 
     report = build_production_gpu_tome(config)
 

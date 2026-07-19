@@ -1557,3 +1557,32 @@ The committed M4D evidence document is now recorded in the authoritative Hydra
 disposition inventory, restoring the tracked-doc ledger gate required by CI.
 This is metadata-only; it changes no runtime, artifact, fixture, or T4 proof
 claim. The focused disposition gate passes locally before publication.
+
+## 2026-07-19 — M4B/M4C Canonical Execution Correction
+
+The previous local M4D note did not establish live execution of typed slices
+two through five, because production stopped after the slice-one adapter. The
+canonical Path-B facade now executes the real ordered callbacks for provisional
+early corridor export, split fingerprint/global authority export, C2-C5
+selection, selected rerun, late selected-linked corridor finalization, payload
+assembly, validation/linkage, reconciliation/cover, and final reporting.
+`materialize_selected_exemplar_delivery` remains the identical public
+three-phase composition while the canonical callbacks use the same phases
+directly. Global-only stays on the compatibility path. Resume now derives and
+uses an explicit artifact-assembly boundary from existing files before
+validation; no persistent stage schema was added. Focused delivery, canonical
+boundary, characterization, production, contracts, orchestration, C6, and
+resume gates passed `119` tests after the correction; Ruff, format, and diff
+checks passed. This corrects the local-proof scope and does not claim T4 proof.
+
+## 2026-07-19 — M4D Refreshed Local Integration Proof
+
+After the canonical-execution correction, the complete non-GPU suite passed
+`784 passed, 22 skipped in 95.98s`; the native/import/delivery/validation/
+linkage/reconciliation/live-resume/Golden focus passed `225` tests in `35.83s`.
+Ruff check, format, and diff checks passed. Immutable Golden validation remains
+`pass` with count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+`docs/M4D_INTEGRATION_EVIDENCE.md` now corrects the earlier slice-one-only
+scope; reviewed T4 Golden 1K comparison remains unexecuted and is still the
+external merge gate.
