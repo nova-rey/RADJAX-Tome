@@ -1431,3 +1431,14 @@ focused final import gate passed `37` tests. Golden validation retained count
 `256` and semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M3C Typed Native Path B Boundary
+
+M3C adds a typed exact native Path B configuration adapter and delegation seam
+while preserving the existing production executor, artifacts, progress, and
+CLI/parser behavior. Global-only and partial/alias routes remain non-native.
+The full gate passed `747 passed, 22 skipped`; M3C integration passed `7`
+tests; direct native API passed `9` tests and import isolation passed `37`
+tests. Golden validation retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.

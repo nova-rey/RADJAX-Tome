@@ -215,6 +215,27 @@ class CompatibilityMigrationResult:
 
 
 def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
+    """Build through the exact native Path-B boundary when it applies.
+
+    M3C deliberately delegates the resolved native request straight back to the
+    preserved executor.  M4 replaces that injected executor with typed stages;
+    until then this facade is the sole routing boundary and artifact semantics
+    remain identical for canonical and compatibility configurations.
+    """
+    from radjax_tome.builder.native_path_b import api as native_path_b_api
+
+    canonical_config = native_path_b_api.resolve_canonical_path_b_config(config)
+    if canonical_config is None:
+        return _build_production_gpu_tome_compatibility(config)
+    return native_path_b_api.run_canonical_path_b(
+        canonical_config,
+        compatibility_executor=_build_production_gpu_tome_compatibility,
+    )
+
+
+def _build_production_gpu_tome_compatibility(
+    config: ProductionBuildConfig,
+) -> dict[str, Any]:
     created_at = _now()
     production_started = perf_counter()
     preflight_started = perf_counter()

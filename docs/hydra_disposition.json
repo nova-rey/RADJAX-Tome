@@ -1002,6 +1002,22 @@
       "replacement_or_target_boundary": "Research namespace or documented archive pointer.",
       "status": "research-frozen"
     },
+    "src/radjax_tome/builder/native_path_b/__init__.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M3",
+      "rationale": "Internal package boundary for the canonical native Path B adapter.",
+      "replacement_or_target_boundary": "M3 native Path B supporting API.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/api.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M3",
+      "rationale": "Typed canonical Path B configuration resolver and delegation adapter.",
+      "replacement_or_target_boundary": "M3 native Path B supporting API.",
+      "status": "supporting"
+    },
     "src/radjax_tome/builder/production.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
