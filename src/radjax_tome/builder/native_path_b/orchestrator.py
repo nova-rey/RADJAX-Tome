@@ -103,16 +103,22 @@ def run_preflight_then_score_pass(
     config: CanonicalPathBConfig,
     *,
     operations: SliceOneOperations[PreflightValueT, ScorePassValueT],
+    propagate_exceptions: bool = False,
 ) -> SliceOneExecution[PreflightValueT, ScorePassValueT]:
-    """Execute only ordered slice one; later stages are intentionally absent."""
+    """Execute only slice one, optionally preserving callback exceptions."""
 
-    preflight = run_preflight_stage(config, operation=operations.preflight)
+    preflight = run_preflight_stage(
+        config,
+        operation=operations.preflight,
+        propagate_exceptions=propagate_exceptions,
+    )
     if preflight.status != "pass":
         return SliceOneExecution(preflight=preflight, score_pass=None)
     score_pass = run_score_pass_stage(
         config,
         preflight,
         operation=operations.score_pass,
+        propagate_exceptions=propagate_exceptions,
     )
     return SliceOneExecution(preflight=preflight, score_pass=score_pass)
 

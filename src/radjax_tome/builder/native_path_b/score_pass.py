@@ -22,6 +22,7 @@ def run_score_pass_stage(
     preflight: StageResult[PreflightValueT],
     *,
     operation: ScorePassOperation[PreflightValueT, ScorePassValueT],
+    propagate_exceptions: bool = False,
 ) -> StageResult[ScorePassValueT]:
     """Run the injected existing streaming score pass after typed preflight."""
 
@@ -34,6 +35,8 @@ def run_score_pass_stage(
     try:
         result = operation(config, preflight.value)
     except Exception as exc:
+        if propagate_exceptions:
+            raise
         return _failed_score_pass(
             "score_pass_operation_failed",
             (str(exc),),

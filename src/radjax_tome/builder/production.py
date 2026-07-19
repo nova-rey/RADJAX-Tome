@@ -214,260 +214,113 @@ class CompatibilityMigrationResult:
         }
 
 
+@dataclass
+class _ProductionRunState:
+    """Mutable private continuation shared by extracted production stages."""
+
+    config: ProductionBuildConfig
+    created_at: str
+    production_started: float
+    preflight_started: float
+    report_path: Path
+    run_plan_path: Path
+    parity_report_path: Path
+    progress: Any
+    blockers: list[str]
+    warnings: list[str]
+    already_complete: bool
+    doctor_report: dict[str, Any] | None = None
+    plan: dict[str, Any] | None = None
+    effective_batch_size: int | None = None
+    preflight_wall_seconds: float = 0.0
+    build_report: Any | None = None
+    main_pass_wall_seconds: float = 0.0
+    terminal_report: dict[str, Any] | None = None
+
+
 def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
     """Build through the exact native Path-B boundary when it applies.
 
-    M3C deliberately delegates the resolved native request straight back to the
-    preserved executor.  M4 replaces that injected executor with typed stages;
-    until then this facade is the sole routing boundary and artifact semantics
-    remain identical for canonical and compatibility configurations.
+    M3C establishes the exact routing boundary. M4B now sends the selected
+    canonical route through typed preflight and score-pass stages before the
+    preserved continuation; artifact semantics remain identical for canonical
+    and compatibility configurations.
     """
     from radjax_tome.builder.native_path_b import api as native_path_b_api
 
     canonical_config = native_path_b_api.resolve_canonical_path_b_config(config)
     if canonical_config is None:
         return _build_production_gpu_tome_compatibility(config)
+
+    def execute_native_path_b(source_config: Any) -> dict[str, Any]:
+        return _build_production_gpu_tome_compatibility(
+            source_config,
+            canonical_config=canonical_config,
+        )
+
     return native_path_b_api.run_canonical_path_b(
         canonical_config,
-        compatibility_executor=_build_production_gpu_tome_compatibility,
+        compatibility_executor=execute_native_path_b,
     )
 
 
 def _build_production_gpu_tome_compatibility(
     config: ProductionBuildConfig,
+    *,
+    canonical_config: Any | None = None,
 ) -> dict[str, Any]:
-    created_at = _now()
-    production_started = perf_counter()
-    preflight_started = perf_counter()
-    report_path = _production_report_path(config)
-    run_plan_path = _run_plan_path(config)
-    parity_report_path = _parity_report_path(config)
-    progress = _ProductionProgressReporter(
-        enabled=config.progress,
-        output_dir=config.output_dir,
-        path=_production_progress_path(config),
-    )
-    progress.start()
-    blockers: list[str] = []
-    warnings: list[str] = []
+    state = _new_production_run_state(config)
+    if canonical_config is None:
+        preflight_result = _run_existing_preflight(state)
+        score_result = (
+            _run_existing_score_pass(state)
+            if preflight_result.status == "pass"
+            else None
+        )
+    else:
+        from radjax_tome.builder.native_path_b.orchestrator import (
+            SliceOneOperations,
+            run_preflight_then_score_pass,
+        )
+
+        slice_one = run_preflight_then_score_pass(
+            canonical_config,
+            operations=SliceOneOperations(
+                preflight=lambda _: _run_existing_preflight(state),
+                score_pass=lambda _, ready: _run_existing_score_pass(ready),
+            ),
+            propagate_exceptions=True,
+        )
+        preflight_result = slice_one.preflight
+        score_result = slice_one.score_pass
+
+    if preflight_result.status != "pass":
+        return state.terminal_report or _stage_adapter_failure_report(
+            state,
+            preflight_result.failure,
+        )
+    if score_result is None or score_result.status != "pass":
+        return state.terminal_report or _stage_adapter_failure_report(
+            state,
+            None if score_result is None else score_result.failure,
+        )
+
+    created_at = state.created_at
+    production_started = state.production_started
+    report_path = state.report_path
+    run_plan_path = state.run_plan_path
+    parity_report_path = state.parity_report_path
+    progress = state.progress
+    blockers = state.blockers
+    warnings = state.warnings
+    already_complete = state.already_complete
+    doctor_report = state.doctor_report or {}
+    plan = state.plan or {}
+    effective_batch_size = state.effective_batch_size
+    preflight_wall_seconds = state.preflight_wall_seconds
+    build_report = state.build_report
+    main_pass_wall_seconds = state.main_pass_wall_seconds
     c6_context: dict[str, Any] | None = None
-    already_complete = _already_complete(config)
-
-    _validate_required_inputs(config, blockers)
-    progress.memory_checkpoint("preflight_complete")
-    if blockers:
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report={},
-            run_plan_path=run_plan_path,
-            run_plan={},
-            effective_batch_size=None,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        return _finalize_production_report(report, report_path, progress)
-
-    c6_resume_requested = (
-        config.resume
-        and config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
-        and config.target_policy == "corridor_exemplar_v1"
-        and config.exemplar_selection_enabled
-        and config.exemplar_delivery_path == "two_pass_rerun_selected"
-    )
-    compatibility_migration = CompatibilityMigrationResult(False)
-    if c6_resume_requested:
-        progress.stage("compatibility_migration")
-        compatibility_migration = migrate_c6_3_5_1_metadata(config)
-        if compatibility_migration.applicable and not compatibility_migration.applied:
-            blockers.append(
-                "C6.3.5.1 metadata compatibility migration failed: "
-                + "; ".join(compatibility_migration.reasons)
-            )
-            report = _production_report(
-                config,
-                created_at=created_at,
-                completed_at=_now(),
-                status="fail",
-                blockers=blockers,
-                warnings=warnings,
-                doctor_report={},
-                run_plan_path=run_plan_path,
-                run_plan={"status": "not_run"},
-                effective_batch_size=None,
-                already_complete=already_complete,
-                parity_report_path=parity_report_path,
-                parity_status="not_run",
-            )
-            report["compatibility_migration"] = compatibility_migration.to_dict()
-            return _finalize_production_report(report, report_path, progress)
-    finalization_probe = probe_c6_finalization_only_resume(config)
-    output_has_artifact = _has_existing_artifact(config)
-    if output_has_artifact and not (config.resume or config.overwrite):
-        blockers.append("output exists; use --resume or --overwrite")
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report={},
-            run_plan_path=run_plan_path,
-            run_plan={},
-            effective_batch_size=None,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        return _finalize_production_report(report, report_path, progress)
-    if (
-        already_complete
-        and not _c6_finalization_pending(config)
-        and not c6_resume_requested
-    ):
-        validation = validate_teacher_textbook(config.output_dir)
-        if validation.status == "pass":
-            report = _production_report(
-                config,
-                created_at=created_at,
-                completed_at=_now(),
-                status="pass",
-                blockers=[],
-                warnings=[],
-                doctor_report={},
-                run_plan_path=run_plan_path,
-                run_plan={"status": "not_run"},
-                effective_batch_size=None,
-                already_complete=True,
-                parity_report_path=parity_report_path,
-                parity_status="not_run",
-                validation_status="pass",
-                build_status="already_complete",
-            )
-            return _finalize_production_report(report, report_path, progress)
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=list(validation.blockers),
-            warnings=list(validation.warnings),
-            doctor_report={},
-            run_plan_path=run_plan_path,
-            run_plan={"status": "not_run"},
-            effective_batch_size=None,
-            already_complete=True,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-            validation_status=validation.status,
-            build_status="already_complete_invalid",
-        )
-        return _finalize_production_report(report, report_path, progress)
-    if finalization_probe.eligible:
-        return _resume_c6_finalization(
-            config,
-            created_at=created_at,
-            production_started=production_started,
-            report_path=report_path,
-            parity_report_path=parity_report_path,
-            progress=progress,
-        )
-    if output_has_artifact and config.overwrite:
-        shutil.rmtree(config.output_dir)
-
-    backend_config = _backend_config(config)
-    doctor_report = build_runtime_doctor_report(backend_config)
-    plan = build_gpu_run_plan(
-        GPURunPlanConfig(
-            backend_config=backend_config,
-            dataset_path=config.dataset_path,
-            corpus_manifest_path=config.corpus_manifest_path,
-            teacher_model_provenance_path=config.teacher_model_provenance_path,
-            max_examples=config.max_examples,
-            strict_provenance=config.strict_provenance,
-            max_artifact_bytes=config.max_artifact_bytes,
-            fail_on_warnings=config.fail_on_plan_warnings,
-            selection_integration_policy=config.selection_integration_policy,
-            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
-            fingerprint_corridor_budget_fraction=(
-                config.fingerprint_corridor_budget_fraction
-            ),
-            fingerprint_corridor_budget_max=config.fingerprint_corridor_budget_max,
-            fingerprint_corridor_mode_cap=config.fingerprint_corridor_mode_cap,
-            fingerprint_corridor_candidate_pool_cap=(
-                config.fingerprint_corridor_candidate_pool_cap
-            ),
-            require_full_selected_budget=config.require_full_selected_budget,
-        )
-    )
-    write_gpu_run_plan(plan, run_plan_path)
-    warnings.extend(str(item) for item in plan.get("warnings", ()))
-    run_plan_status = str(plan.get("status"))
-    if run_plan_status == "fail":
-        blockers.extend(str(item) for item in plan.get("blockers", ()))
-    if run_plan_status == "warn" and config.no_build_if_plan_warn:
-        blockers.append("run plan status is warn and no_build_if_plan_warn is enabled")
-    effective_batch_size = _effective_batch_size(plan)
-    if effective_batch_size is None:
-        blockers.append("run plan did not select an effective batch size")
-    if blockers:
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report=doctor_report,
-            run_plan_path=run_plan_path,
-            run_plan=plan,
-            effective_batch_size=effective_batch_size,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        return _finalize_production_report(report, report_path, progress)
-
-    preflight_wall_seconds = _elapsed(preflight_started)
-    main_pass_started = perf_counter()
-    progress.start_score_pass(
-        examples_total=_planned_example_count(plan),
-        shard_count_total=_planned_shard_count(config, plan),
-    )
-    try:
-        build_report = build_streaming_backend_teacher_textbook(
-            _streaming_config(
-                config,
-                effective_batch_size,
-                progress_callback=progress.handle_streaming_event,
-            )
-        )
-    except Exception as exc:
-        blockers.append(str(exc))
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report=doctor_report,
-            run_plan_path=run_plan_path,
-            run_plan=plan,
-            effective_batch_size=effective_batch_size,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        return _finalize_production_report(report, report_path, progress)
-    main_pass_wall_seconds = _elapsed(main_pass_started)
-    progress.memory_checkpoint("score_pass_complete")
 
     if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
         try:
@@ -705,6 +558,405 @@ def _build_production_gpu_tome_compatibility(
         ),
     )
     return _finalize_production_report(report, report_path, progress)
+
+
+def _new_production_run_state(config: ProductionBuildConfig) -> _ProductionRunState:
+    created_at = _now()
+    production_started = perf_counter()
+    preflight_started = perf_counter()
+    progress = _ProductionProgressReporter(
+        enabled=config.progress,
+        output_dir=config.output_dir,
+        path=_production_progress_path(config),
+    )
+    progress.start()
+    return _ProductionRunState(
+        config=config,
+        created_at=created_at,
+        production_started=production_started,
+        preflight_started=preflight_started,
+        report_path=_production_report_path(config),
+        run_plan_path=_run_plan_path(config),
+        parity_report_path=_parity_report_path(config),
+        progress=progress,
+        blockers=[],
+        warnings=[],
+        already_complete=_already_complete(config),
+    )
+
+
+def _run_existing_preflight(
+    state: _ProductionRunState,
+) -> Any:
+    config = state.config
+    created_at = state.created_at
+    production_started = state.production_started
+    report_path = state.report_path
+    run_plan_path = state.run_plan_path
+    parity_report_path = state.parity_report_path
+    progress = state.progress
+    blockers = state.blockers
+    warnings = state.warnings
+    already_complete = state.already_complete
+    _validate_required_inputs(config, blockers)
+    progress.memory_checkpoint("preflight_complete")
+    if blockers:
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report={},
+            run_plan_path=run_plan_path,
+            run_plan={},
+            effective_batch_size=None,
+            already_complete=already_complete,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "preflight")
+
+    c6_resume_requested = (
+        config.resume
+        and config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
+        and config.target_policy == "corridor_exemplar_v1"
+        and config.exemplar_selection_enabled
+        and config.exemplar_delivery_path == "two_pass_rerun_selected"
+    )
+    compatibility_migration = CompatibilityMigrationResult(False)
+    if c6_resume_requested:
+        progress.stage("compatibility_migration")
+        compatibility_migration = migrate_c6_3_5_1_metadata(config)
+        if compatibility_migration.applicable and not compatibility_migration.applied:
+            blockers.append(
+                "C6.3.5.1 metadata compatibility migration failed: "
+                + "; ".join(compatibility_migration.reasons)
+            )
+            report = _production_report(
+                config,
+                created_at=created_at,
+                completed_at=_now(),
+                status="fail",
+                blockers=blockers,
+                warnings=warnings,
+                doctor_report={},
+                run_plan_path=run_plan_path,
+                run_plan={"status": "not_run"},
+                effective_batch_size=None,
+                already_complete=already_complete,
+                parity_report_path=parity_report_path,
+                parity_status="not_run",
+            )
+            report["compatibility_migration"] = compatibility_migration.to_dict()
+            _record_terminal_report(state, report)
+            return _terminal_stage_failure(state, "preflight")
+    finalization_probe = probe_c6_finalization_only_resume(config)
+    output_has_artifact = _has_existing_artifact(config)
+    if output_has_artifact and not (config.resume or config.overwrite):
+        blockers.append("output exists; use --resume or --overwrite")
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report={},
+            run_plan_path=run_plan_path,
+            run_plan={},
+            effective_batch_size=None,
+            already_complete=already_complete,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "preflight")
+    if (
+        already_complete
+        and not _c6_finalization_pending(config)
+        and not c6_resume_requested
+    ):
+        validation = validate_teacher_textbook(config.output_dir)
+        if validation.status == "pass":
+            report = _production_report(
+                config,
+                created_at=created_at,
+                completed_at=_now(),
+                status="pass",
+                blockers=[],
+                warnings=[],
+                doctor_report={},
+                run_plan_path=run_plan_path,
+                run_plan={"status": "not_run"},
+                effective_batch_size=None,
+                already_complete=True,
+                parity_report_path=parity_report_path,
+                parity_status="not_run",
+                validation_status="pass",
+                build_status="already_complete",
+            )
+            _record_terminal_report(state, report)
+            return _terminal_stage_failure(state, "preflight")
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=list(validation.blockers),
+            warnings=list(validation.warnings),
+            doctor_report={},
+            run_plan_path=run_plan_path,
+            run_plan={"status": "not_run"},
+            effective_batch_size=None,
+            already_complete=True,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+            validation_status=validation.status,
+            build_status="already_complete_invalid",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "preflight")
+    if finalization_probe.eligible:
+        state.terminal_report = _resume_c6_finalization(
+            config,
+            created_at=created_at,
+            production_started=production_started,
+            report_path=report_path,
+            parity_report_path=parity_report_path,
+            progress=progress,
+        )
+        return _terminal_stage_failure(state, "preflight")
+    if output_has_artifact and config.overwrite:
+        shutil.rmtree(config.output_dir)
+
+    backend_config = _backend_config(config)
+    doctor_report = build_runtime_doctor_report(backend_config)
+    plan = build_gpu_run_plan(
+        GPURunPlanConfig(
+            backend_config=backend_config,
+            dataset_path=config.dataset_path,
+            corpus_manifest_path=config.corpus_manifest_path,
+            teacher_model_provenance_path=config.teacher_model_provenance_path,
+            max_examples=config.max_examples,
+            strict_provenance=config.strict_provenance,
+            max_artifact_bytes=config.max_artifact_bytes,
+            fail_on_warnings=config.fail_on_plan_warnings,
+            selection_integration_policy=config.selection_integration_policy,
+            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
+            fingerprint_corridor_budget_fraction=(
+                config.fingerprint_corridor_budget_fraction
+            ),
+            fingerprint_corridor_budget_max=config.fingerprint_corridor_budget_max,
+            fingerprint_corridor_mode_cap=config.fingerprint_corridor_mode_cap,
+            fingerprint_corridor_candidate_pool_cap=(
+                config.fingerprint_corridor_candidate_pool_cap
+            ),
+            require_full_selected_budget=config.require_full_selected_budget,
+        )
+    )
+    write_gpu_run_plan(plan, run_plan_path)
+    warnings.extend(str(item) for item in plan.get("warnings", ()))
+    run_plan_status = str(plan.get("status"))
+    if run_plan_status == "fail":
+        blockers.extend(str(item) for item in plan.get("blockers", ()))
+    if run_plan_status == "warn" and config.no_build_if_plan_warn:
+        blockers.append("run plan status is warn and no_build_if_plan_warn is enabled")
+    effective_batch_size = _effective_batch_size(plan)
+    if effective_batch_size is None:
+        blockers.append("run plan did not select an effective batch size")
+    if blockers:
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report=doctor_report,
+            run_plan_path=run_plan_path,
+            run_plan=plan,
+            effective_batch_size=effective_batch_size,
+            already_complete=already_complete,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "preflight")
+
+    state.doctor_report = doctor_report
+    state.plan = plan
+    state.effective_batch_size = effective_batch_size
+    state.preflight_wall_seconds = _elapsed(state.preflight_started)
+    return _existing_stage_success(
+        state,
+        "preflight",
+        paths=(run_plan_path,),
+    )
+
+
+def _run_existing_score_pass(
+    state: _ProductionRunState,
+) -> Any:
+    config = state.config
+    created_at = state.created_at
+    run_plan_path = state.run_plan_path
+    parity_report_path = state.parity_report_path
+    progress = state.progress
+    blockers = state.blockers
+    warnings = state.warnings
+    already_complete = state.already_complete
+    doctor_report = state.doctor_report or {}
+    plan = state.plan or {}
+    effective_batch_size = state.effective_batch_size
+    main_pass_started = perf_counter()
+    progress.start_score_pass(
+        examples_total=_planned_example_count(plan),
+        shard_count_total=_planned_shard_count(config, plan),
+    )
+    try:
+        build_report = build_streaming_backend_teacher_textbook(
+            _streaming_config(
+                config,
+                effective_batch_size,
+                progress_callback=progress.handle_streaming_event,
+            )
+        )
+    except Exception as exc:
+        blockers.append(str(exc))
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report=doctor_report,
+            run_plan_path=run_plan_path,
+            run_plan=plan,
+            effective_batch_size=effective_batch_size,
+            already_complete=already_complete,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "score_pass")
+    main_pass_wall_seconds = _elapsed(main_pass_started)
+    progress.memory_checkpoint("score_pass_complete")
+    state.build_report = build_report
+    state.main_pass_wall_seconds = main_pass_wall_seconds
+    return _existing_stage_success(
+        state,
+        "score_pass",
+        paths=(
+            config.output_dir / "run_manifest.json",
+            config.output_dir / "metadata.json",
+        ),
+        prior_stage="preflight",
+        prior_paths=(run_plan_path,),
+    )
+
+
+def _existing_stage_success(
+    state: _ProductionRunState,
+    stage: str,
+    *,
+    paths: tuple[Path, ...],
+    prior_stage: str | None = None,
+    prior_paths: tuple[Path, ...] = (),
+) -> Any:
+    from radjax_tome.builder.native_path_b.contracts import (
+        FileHash,
+        PriorStageProof,
+        StageEvidence,
+        StageResult,
+    )
+
+    existing_paths = tuple(path for path in paths if path.is_file())
+    hashes = tuple(
+        FileHash(path=path, sha256=_file_sha256(path)) for path in existing_paths
+    )
+    prior_proof = None
+    if prior_stage is not None:
+        existing_prior_paths = tuple(path for path in prior_paths if path.is_file())
+        prior_proof = PriorStageProof(
+            stage=prior_stage,
+            paths=existing_prior_paths,
+            hashes=tuple(
+                FileHash(path=path, sha256=_file_sha256(path))
+                for path in existing_prior_paths
+            ),
+        )
+    return StageResult(
+        status="pass",
+        value=state,
+        evidence=StageEvidence(
+            stage=stage,
+            paths=existing_paths,
+            hashes=hashes,
+            counts=(),
+            prior_stage_proof=prior_proof,
+        ),
+    )
+
+
+def _record_terminal_report(
+    state: _ProductionRunState,
+    report: dict[str, Any],
+) -> None:
+    state.terminal_report = _finalize_production_report(
+        report,
+        state.report_path,
+        state.progress,
+    )
+
+
+def _terminal_stage_failure(state: _ProductionRunState, stage: str) -> Any:
+    from radjax_tome.builder.native_path_b.contracts import StageFailure, StageResult
+
+    report = state.terminal_report or {}
+    blockers = tuple(str(item) for item in report.get("blockers", ()))
+    return StageResult(
+        status="fail",
+        value=None,
+        evidence=None,
+        failure=StageFailure(
+            stage=stage,
+            reason="existing_production_stage_terminal_report",
+            blockers=(
+                blockers or ("existing production stage returned terminal report",)
+            ),
+            resumable=bool(state.config.resume),
+            remediation="inspect the preserved production report",
+        ),
+    )
+
+
+def _stage_adapter_failure_report(
+    state: _ProductionRunState,
+    failure: Any,
+) -> dict[str, Any]:
+    blockers = list(getattr(failure, "blockers", ()) or ())
+    if not blockers:
+        blockers.append("native Path-B stage adapter failed without blockers")
+    report = _production_report(
+        state.config,
+        created_at=state.created_at,
+        completed_at=_now(),
+        status="fail",
+        blockers=blockers,
+        warnings=state.warnings,
+        doctor_report=state.doctor_report or {},
+        run_plan_path=state.run_plan_path,
+        run_plan=state.plan or {},
+        effective_batch_size=state.effective_batch_size,
+        already_complete=state.already_complete,
+        parity_report_path=state.parity_report_path,
+        parity_status="not_run",
+    )
+    return _finalize_production_report(report, state.report_path, state.progress)
 
 
 def write_production_build_report(report: dict[str, Any], path: Path) -> None:

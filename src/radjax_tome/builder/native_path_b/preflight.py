@@ -21,17 +21,21 @@ def run_preflight_stage(
     config: CanonicalPathBConfig,
     *,
     operation: PreflightOperation[PreflightValueT],
+    propagate_exceptions: bool = False,
 ) -> StageResult[PreflightValueT]:
     """Run the injected existing preflight operation as the first native stage.
 
     The callback owns all existing planner, doctor, validation, resume, and
-    report behavior.  This adapter only normalizes callback failures and
-    requires explicit typed evidence; it has no filesystem side effects.
+    report behavior.  By default this adapter normalizes callback failures;
+    production integration may opt into exception propagation to preserve
+    existing terminal behavior.  It has no filesystem side effects.
     """
 
     try:
         result = operation(config)
     except Exception as exc:
+        if propagate_exceptions:
+            raise
         return _failed_preflight(
             "preflight_operation_failed",
             (str(exc),),

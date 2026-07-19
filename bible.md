@@ -1508,3 +1508,17 @@ validation retained count `256` and semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed. This does not claim production
 facade integration.
+
+## 2026-07-19 — M4B Canonical Production Slice-One Integration
+
+The exact canonical Path-B production route now runs the existing preflight
+and score-pass operations through the typed slice-one adapter before entering
+the unchanged early provisional corridor and later selected-linked corridor
+continuation. Global-only production bypasses the adapter. Callback exception
+propagation is opt-in only for that production seam, preserving the established
+runtime doctor behavior while standalone adapters remain failure-normalizing.
+The focused integration and compatibility gate passed `132` tests; the complete
+suite passed `769 passed, 22 skipped`. Golden validation retained count `256`
+and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
