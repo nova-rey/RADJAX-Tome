@@ -6,6 +6,12 @@ from dataclasses import dataclass
 from typing import Generic
 
 from radjax_tome.builder.native_path_b.api import CanonicalPathBConfig
+from radjax_tome.builder.native_path_b.assembly import (
+    ArtifactAssemblyHandoff,
+    ArtifactAssemblyOperation,
+    AssemblyValueT,
+    run_artifact_assembly_stage,
+)
 from radjax_tome.builder.native_path_b.authorities import (
     FingerprintAuthorityOperation,
     FingerprintAuthorityValueT,
@@ -14,10 +20,21 @@ from radjax_tome.builder.native_path_b.authorities import (
     run_fingerprint_selection_authority_stage,
     run_global_authority_stage,
 )
-from radjax_tome.builder.native_path_b.contracts import StageResult
+from radjax_tome.builder.native_path_b.contracts import (
+    SelectedArtifactCorridorEvidence,
+    StageResult,
+)
 from radjax_tome.builder.native_path_b.corridors import (
     EarlyCorridorOperation,
     run_score_surface_corridor_stage,
+)
+from radjax_tome.builder.native_path_b.delivery import (
+    LateCorridorOperation,
+    SelectedRerunHandoff,
+    SelectedRerunOperation,
+    SelectedRerunValueT,
+    run_selected_artifact_corridor_finalization_stage,
+    run_selected_delivery_rerun_stage,
 )
 from radjax_tome.builder.native_path_b.preflight import (
     PreflightOperation,
@@ -269,4 +286,127 @@ def run_slice_three(
     return SliceThreeExecution(
         slice_two=slice_two,
         integrated_selection=integrated_selection,
+    )
+
+
+@dataclass(frozen=True)
+class SliceFourOperations(
+    Generic[SelectionValueT, SelectedRerunValueT, AssemblyValueT]
+):
+    """Injected selected delivery, late corridor, and assembly operations."""
+
+    selected_rerun: SelectedRerunOperation[SelectionValueT, SelectedRerunValueT]
+    late_corridor: LateCorridorOperation[SelectionValueT, SelectedRerunValueT]
+    assembly: ArtifactAssemblyOperation[
+        SelectionValueT,
+        SelectedRerunValueT,
+        AssemblyValueT,
+    ]
+
+
+@dataclass(frozen=True)
+class SliceFourExecution(
+    Generic[
+        PreflightValueT,
+        ScorePassValueT,
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+        SelectedRerunValueT,
+        AssemblyValueT,
+    ]
+):
+    """In-memory selected-delivery handoff; validation remains out of scope."""
+
+    slice_three: SliceThreeExecution[
+        PreflightValueT,
+        ScorePassValueT,
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+    ]
+    selected_rerun: StageResult[SelectedRerunHandoff[SelectedRerunValueT]] | None
+    late_corridor: StageResult[SelectedArtifactCorridorEvidence] | None
+    assembly: StageResult[ArtifactAssemblyHandoff[AssemblyValueT]] | None
+
+    @property
+    def status(self) -> str:
+        if self.slice_three.status != "pass":
+            return "fail"
+        results = (self.selected_rerun, self.late_corridor, self.assembly)
+        if all(result is not None and result.status == "pass" for result in results):
+            return "pass"
+        return "fail"
+
+
+def run_slice_four(
+    config: CanonicalPathBConfig,
+    slice_three: SliceThreeExecution[
+        PreflightValueT,
+        ScorePassValueT,
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+    ],
+    *,
+    operations: SliceFourOperations[
+        SelectionValueT,
+        SelectedRerunValueT,
+        AssemblyValueT,
+    ],
+) -> SliceFourExecution[
+    PreflightValueT,
+    ScorePassValueT,
+    SelectionFingerprintAuthorityValueT,
+    SelectionGlobalAuthorityValueT,
+    SelectionValueT,
+    SelectedRerunValueT,
+    AssemblyValueT,
+]:
+    """Run selected rerun, late final corridor, then assembly in that order."""
+
+    if slice_three.status != "pass":
+        return SliceFourExecution(
+            slice_three=slice_three,
+            selected_rerun=None,
+            late_corridor=None,
+            assembly=None,
+        )
+    selected_rerun = run_selected_delivery_rerun_stage(
+        config,
+        slice_three.integrated_selection,
+        operation=operations.selected_rerun,
+    )
+    if selected_rerun.status != "pass":
+        return SliceFourExecution(
+            slice_three=slice_three,
+            selected_rerun=selected_rerun,
+            late_corridor=None,
+            assembly=None,
+        )
+    late_corridor = run_selected_artifact_corridor_finalization_stage(
+        config,
+        slice_three.integrated_selection,
+        selected_rerun,
+        operation=operations.late_corridor,
+    )
+    if late_corridor.status != "pass":
+        return SliceFourExecution(
+            slice_three=slice_three,
+            selected_rerun=selected_rerun,
+            late_corridor=late_corridor,
+            assembly=None,
+        )
+    assembly = run_artifact_assembly_stage(
+        config,
+        integrated_selection=slice_three.integrated_selection,
+        selected_rerun=selected_rerun,
+        final_corridor=late_corridor,
+        operation=operations.assembly,
+    )
+    return SliceFourExecution(
+        slice_three=slice_three,
+        selected_rerun=selected_rerun,
+        late_corridor=late_corridor,
+        assembly=assembly,
     )

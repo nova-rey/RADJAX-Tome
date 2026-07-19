@@ -11,17 +11,31 @@ from radjax_tome.builder.native_path_b.api import (
     CanonicalPathBConfig,
     resolve_canonical_path_b_config,
 )
+from radjax_tome.builder.native_path_b.assembly import (
+    ArtifactAssemblyHandoff,
+    ArtifactAssemblyInputs,
+)
 from radjax_tome.builder.native_path_b.contracts import (
     ScoreSurfaceCorridorEvidence,
+    SelectedArtifactCorridorEvidence,
     StageEvidence,
     StageFailure,
     StageResult,
 )
+from radjax_tome.builder.native_path_b.delivery import (
+    LateCorridorInputs,
+    SelectedDeliveryInputs,
+    SelectedRerunHandoff,
+    run_selected_artifact_corridor_finalization_stage,
+    run_selected_delivery_rerun_stage,
+)
 from radjax_tome.builder.native_path_b.orchestrator import (
+    SliceFourOperations,
     SliceOneOperations,
     SliceThreeOperations,
     SliceTwoOperations,
     run_preflight_then_score_pass,
+    run_slice_four,
     run_slice_three,
     run_slice_two,
 )
@@ -134,6 +148,66 @@ def _integrated_selection_result() -> StageResult[IntegratedSelectionHandoff[str
     )
 
 
+def _selected_rerun_result() -> StageResult[SelectedRerunHandoff[str]]:
+    stage_evidence = StageEvidence(
+        stage="selected_delivery_rerun",
+        paths=(),
+        hashes=(),
+        counts=(),
+    )
+    return StageResult(
+        status="pass",
+        value=SelectedRerunHandoff(value="rerun", stage_evidence=stage_evidence),
+        evidence=stage_evidence,
+    )
+
+
+def _selected_artifact_corridor_result() -> StageResult[
+    SelectedArtifactCorridorEvidence
+]:
+    stage_evidence = StageEvidence(
+        stage="selected_artifact_corridor_finalization",
+        paths=(),
+        hashes=(),
+        counts=(),
+    )
+    return StageResult(
+        status="pass",
+        value=SelectedArtifactCorridorEvidence(
+            stage_evidence=stage_evidence,
+            summary_path=Path("corridors/corridor_summary.json"),
+            fingerprints_path=Path("corridors/corridor_fingerprints.json"),
+            modes_path=Path("corridors/corridor_modes.json"),
+            assignments_path=Path("corridors/mode_assignments.json"),
+            positions_available=2,
+            positions_used=2,
+            fingerprint_count=2,
+            mode_count=2,
+            assignment_count=2,
+            selected_exemplar_count=1,
+            selected_exemplars_linked=True,
+            delivery_report_path=Path("delivery_report.json"),
+            authority_manifest_path=Path("c6/authority_manifest.json"),
+            delivery_authority_hash="sha256:authority",
+        ),
+        evidence=stage_evidence,
+    )
+
+
+def _assembly_result() -> StageResult[ArtifactAssemblyHandoff[str]]:
+    stage_evidence = StageEvidence(
+        stage="artifact_assembly",
+        paths=(),
+        hashes=(),
+        counts=(),
+    )
+    return StageResult(
+        status="pass",
+        value=ArtifactAssemblyHandoff(value="assembled", stage_evidence=stage_evidence),
+        evidence=stage_evidence,
+    )
+
+
 def _passing_slice_two():
     canonical = _canonical_config()
     slice_one = run_preflight_then_score_pass(
@@ -154,6 +228,19 @@ def _passing_slice_two():
             global_authority=lambda config, early_evidence, fingerprint_value: _passed(
                 "global_authority_export", "global"
             ),
+        ),
+    )
+
+
+def _passing_slice_three():
+    canonical, slice_two = _passing_slice_two()
+    return canonical, run_slice_three(
+        canonical,
+        slice_two,
+        operations=SliceThreeOperations(
+            integrated_selection=lambda config, authorities: (
+                _integrated_selection_result()
+            )
         ),
     )
 
@@ -551,3 +638,144 @@ def test_slice_three_selection_failure_stops_before_rerun_and_normalizes_callbac
     assert normalized.status == "fail"
     assert normalized.failure.reason == "integrated_selection_operation_failed"
     assert normalized.failure.resumable is True
+
+
+def test_slice_four_orders_c5_rerun_selected_corridor_and_assembly_without_writes(
+    tmp_path: Path,
+) -> None:
+    events: list[str] = []
+    untouched_output = tmp_path / "artifact"
+    canonical, slice_two = _passing_slice_two()
+
+    def integrated_selection(
+        config: CanonicalPathBConfig,
+        authorities: SelectionAuthorityInputs[str, str],
+    ) -> StageResult[IntegratedSelectionHandoff[str]]:
+        events.append("c5")
+        return _integrated_selection_result()
+
+    slice_three = run_slice_three(
+        canonical,
+        slice_two,
+        operations=SliceThreeOperations(integrated_selection=integrated_selection),
+    )
+
+    def selected_rerun(
+        config: CanonicalPathBConfig,
+        inputs: SelectedDeliveryInputs[str],
+    ) -> StageResult[SelectedRerunHandoff[str]]:
+        assert inputs.selection == "selected"
+        assert inputs.c5_evidence.stage == "c5_multi_role_selection"
+        events.append("selected_rerun")
+        return _selected_rerun_result()
+
+    def late_corridor(
+        config: CanonicalPathBConfig,
+        inputs: LateCorridorInputs[str, str],
+    ) -> StageResult[SelectedArtifactCorridorEvidence]:
+        assert inputs.selected_rerun == "rerun"
+        assert inputs.selected_rerun_evidence.stage == "selected_delivery_rerun"
+        events.append("late_corridor")
+        return _selected_artifact_corridor_result()
+
+    def assembly(
+        config: CanonicalPathBConfig,
+        inputs: ArtifactAssemblyInputs[str, str],
+    ) -> StageResult[ArtifactAssemblyHandoff[str]]:
+        assert inputs.final_corridor.selected_exemplar_count == 1
+        assert inputs.final_corridor.selected_exemplars_linked is True
+        events.append("assembly")
+        return _assembly_result()
+
+    execution = run_slice_four(
+        canonical,
+        slice_three,
+        operations=SliceFourOperations(
+            selected_rerun=selected_rerun,
+            late_corridor=late_corridor,
+            assembly=assembly,
+        ),
+    )
+
+    assert events == ["c5", "selected_rerun", "late_corridor", "assembly"]
+    assert execution.status == "pass"
+    assert execution.late_corridor is not None
+    assert execution.late_corridor.value.selected_exemplars_linked is True
+    assert execution.assembly is not None
+    assert not untouched_output.exists()
+    assert not (untouched_output / "validation").exists()
+    assert not (untouched_output / "reconciliation").exists()
+    assert not (untouched_output / "reports").exists()
+
+
+def test_slice_four_late_corridor_failure_stops_assembly() -> None:
+    events: list[str] = []
+    canonical, slice_three = _passing_slice_three()
+
+    def selected_rerun(
+        config: CanonicalPathBConfig,
+        inputs: SelectedDeliveryInputs[str],
+    ) -> StageResult[SelectedRerunHandoff[str]]:
+        events.append("selected_rerun")
+        return _selected_rerun_result()
+
+    def late_corridor(
+        config: CanonicalPathBConfig,
+        inputs: LateCorridorInputs[str, str],
+    ) -> StageResult[SelectedArtifactCorridorEvidence]:
+        events.append("late_corridor")
+        return _failed(
+            "selected_artifact_corridor_finalization",
+            "known_late_corridor_blocker",
+        )
+
+    def assembly(
+        config: CanonicalPathBConfig,
+        inputs: ArtifactAssemblyInputs[str, str],
+    ) -> StageResult[ArtifactAssemblyHandoff[str]]:
+        events.append("assembly")
+        return _assembly_result()
+
+    execution = run_slice_four(
+        canonical,
+        slice_three,
+        operations=SliceFourOperations(
+            selected_rerun=selected_rerun,
+            late_corridor=late_corridor,
+            assembly=assembly,
+        ),
+    )
+
+    assert events == ["selected_rerun", "late_corridor"]
+    assert execution.status == "fail"
+    assert execution.late_corridor is not None
+    assert execution.late_corridor.failure.reason == "known_late_corridor_blocker"
+    assert execution.assembly is None
+
+
+def test_late_corridor_rejects_provisional_evidence() -> None:
+    canonical, slice_three = _passing_slice_three()
+    rerun = run_selected_delivery_rerun_stage(
+        canonical,
+        slice_three.integrated_selection,
+        operation=lambda config, inputs: _selected_rerun_result(),
+    )
+
+    def provisional_late_corridor(
+        config: CanonicalPathBConfig,
+        inputs: LateCorridorInputs[str, str],
+    ) -> StageResult[SelectedArtifactCorridorEvidence]:
+        return _provisional_early_evidence()
+
+    late_corridor = run_selected_artifact_corridor_finalization_stage(
+        canonical,
+        slice_three.integrated_selection,
+        rerun,
+        operation=provisional_late_corridor,
+    )
+
+    assert late_corridor.status == "fail"
+    assert (
+        late_corridor.failure.reason
+        == "selected_artifact_corridor_evidence_stage_mismatch"
+    )

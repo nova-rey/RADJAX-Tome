@@ -1486,3 +1486,14 @@ semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed. This does not claim production
 facade integration.
+
+## 2026-07-19 — M4B Slice Four Selected Delivery and Assembly
+
+M4B slice four strictly orders C5 selection, selected rerun, final
+selected-linked corridor, and assembly. Provisional corridor evidence is
+rejected; any later-stage failure stops downstream promotion or assembly; the
+adapters write no validation, reconciliation, or report state. The focused gate
+passed `179` tests. Golden validation retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed. This does not claim production
+facade integration.

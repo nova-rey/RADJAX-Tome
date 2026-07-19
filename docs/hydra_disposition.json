@@ -1018,6 +1018,14 @@
       "replacement_or_target_boundary": "M3 native Path B supporting API.",
       "status": "supporting"
     },
+    "src/radjax_tome/builder/native_path_b/assembly.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B selected-artifact assembly stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
     "src/radjax_tome/builder/native_path_b/authorities.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
@@ -1039,6 +1047,14 @@
       "kind": "source-module",
       "owning_milestone": "M4",
       "rationale": "Typed native Path B provisional score-surface corridor stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/delivery.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B selected rerun and late corridor stage adapters.",
       "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
       "status": "supporting"
     },
