@@ -21,6 +21,7 @@ from radjax_tome.builder.native_path_b.authorities import (
     run_global_authority_stage,
 )
 from radjax_tome.builder.native_path_b.contracts import (
+    NativePathBRunResult,
     SelectedArtifactCorridorEvidence,
     StageResult,
 )
@@ -35,6 +36,10 @@ from radjax_tome.builder.native_path_b.delivery import (
     SelectedRerunValueT,
     run_selected_artifact_corridor_finalization_stage,
     run_selected_delivery_rerun_stage,
+)
+from radjax_tome.builder.native_path_b.finalization import (
+    FinalReportingOperation,
+    run_final_reporting_stage,
 )
 from radjax_tome.builder.native_path_b.preflight import (
     PreflightOperation,
@@ -57,6 +62,16 @@ from radjax_tome.builder.native_path_b.selection import (
     IntegratedSelectionOperation,
     SelectionValueT,
     run_integrated_selection_stage,
+)
+from radjax_tome.builder.native_path_b.verification import (
+    ReconciliationCoverHandoff,
+    ReconciliationCoverOperation,
+    ReconciliationValueT,
+    ValidationLinkageHandoff,
+    ValidationLinkageOperation,
+    ValidationValueT,
+    run_reconciliation_cover_stage,
+    run_validation_linkage_stage,
 )
 
 
@@ -409,4 +424,142 @@ def run_slice_four(
         selected_rerun=selected_rerun,
         late_corridor=late_corridor,
         assembly=assembly,
+    )
+
+
+@dataclass(frozen=True)
+class SliceFiveOperations(
+    Generic[AssemblyValueT, ValidationValueT, ReconciliationValueT]
+):
+    """Injected validation, reconciliation, and terminal reporting operations."""
+
+    validation_linkage: ValidationLinkageOperation[AssemblyValueT, ValidationValueT]
+    reconciliation_cover: ReconciliationCoverOperation[
+        AssemblyValueT,
+        ValidationValueT,
+        ReconciliationValueT,
+    ]
+    final_reporting: FinalReportingOperation[
+        AssemblyValueT,
+        ValidationValueT,
+        ReconciliationValueT,
+    ]
+
+
+@dataclass(frozen=True)
+class SliceFiveExecution(
+    Generic[
+        PreflightValueT,
+        ScorePassValueT,
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+        SelectedRerunValueT,
+        AssemblyValueT,
+        ValidationValueT,
+        ReconciliationValueT,
+    ]
+):
+    """In-memory terminal proof; callbacks retain report and failure ownership."""
+
+    slice_four: SliceFourExecution[
+        PreflightValueT,
+        ScorePassValueT,
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+        SelectedRerunValueT,
+        AssemblyValueT,
+    ]
+    validation: StageResult[ValidationLinkageHandoff[ValidationValueT]] | None
+    reconciliation: StageResult[ReconciliationCoverHandoff[ReconciliationValueT]] | None
+    final_result: NativePathBRunResult | None
+
+    @property
+    def status(self) -> str:
+        if self.slice_four.status != "pass":
+            return "fail"
+        if self.validation is None or self.validation.status != "pass":
+            return "fail"
+        if self.reconciliation is None or self.reconciliation.status != "pass":
+            return "fail"
+        if self.final_result is None or self.final_result.status != "pass":
+            return "fail"
+        return "pass"
+
+
+def run_slice_five(
+    config: CanonicalPathBConfig,
+    slice_four: SliceFourExecution[
+        PreflightValueT,
+        ScorePassValueT,
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+        SelectedRerunValueT,
+        AssemblyValueT,
+    ],
+    *,
+    operations: SliceFiveOperations[
+        AssemblyValueT,
+        ValidationValueT,
+        ReconciliationValueT,
+    ],
+) -> SliceFiveExecution[
+    PreflightValueT,
+    ScorePassValueT,
+    SelectionFingerprintAuthorityValueT,
+    SelectionGlobalAuthorityValueT,
+    SelectionValueT,
+    SelectedRerunValueT,
+    AssemblyValueT,
+    ValidationValueT,
+    ReconciliationValueT,
+]:
+    """Run validation, reconciliation/cover, then terminal reporting in order."""
+
+    if slice_four.status != "pass":
+        return SliceFiveExecution(
+            slice_four=slice_four,
+            validation=None,
+            reconciliation=None,
+            final_result=None,
+        )
+    validation = run_validation_linkage_stage(
+        config,
+        slice_four.assembly,
+        operation=operations.validation_linkage,
+    )
+    if validation.status != "pass":
+        return SliceFiveExecution(
+            slice_four=slice_four,
+            validation=validation,
+            reconciliation=None,
+            final_result=None,
+        )
+    reconciliation = run_reconciliation_cover_stage(
+        config,
+        assembly=slice_four.assembly,
+        validation=validation,
+        operation=operations.reconciliation_cover,
+    )
+    if reconciliation.status != "pass":
+        return SliceFiveExecution(
+            slice_four=slice_four,
+            validation=validation,
+            reconciliation=reconciliation,
+            final_result=None,
+        )
+    final_result = run_final_reporting_stage(
+        config,
+        assembly=slice_four.assembly,
+        validation=validation,
+        reconciliation=reconciliation,
+        operation=operations.final_reporting,
+    )
+    return SliceFiveExecution(
+        slice_four=slice_four,
+        validation=validation,
+        reconciliation=reconciliation,
+        final_result=final_result,
     )

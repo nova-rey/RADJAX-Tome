@@ -1066,6 +1066,14 @@
       "replacement_or_target_boundary": "M4 native Path B stage-contract boundary.",
       "status": "supporting"
     },
+    "src/radjax_tome/builder/native_path_b/finalization.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B terminal final reporting stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
     "src/radjax_tome/builder/native_path_b/orchestrator.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
@@ -1095,6 +1103,14 @@
       "kind": "source-module",
       "owning_milestone": "M4",
       "rationale": "Typed native Path B C2-C5 integrated selection stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/verification.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B validation and reconciliation stage adapters.",
       "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
       "status": "supporting"
     },

@@ -16,6 +16,7 @@ from radjax_tome.builder.native_path_b.assembly import (
     ArtifactAssemblyInputs,
 )
 from radjax_tome.builder.native_path_b.contracts import (
+    NativePathBRunResult,
     ScoreSurfaceCorridorEvidence,
     SelectedArtifactCorridorEvidence,
     StageEvidence,
@@ -29,12 +30,15 @@ from radjax_tome.builder.native_path_b.delivery import (
     run_selected_artifact_corridor_finalization_stage,
     run_selected_delivery_rerun_stage,
 )
+from radjax_tome.builder.native_path_b.finalization import FinalReportingInputs
 from radjax_tome.builder.native_path_b.orchestrator import (
+    SliceFiveOperations,
     SliceFourOperations,
     SliceOneOperations,
     SliceThreeOperations,
     SliceTwoOperations,
     run_preflight_then_score_pass,
+    run_slice_five,
     run_slice_four,
     run_slice_three,
     run_slice_two,
@@ -45,6 +49,12 @@ from radjax_tome.builder.native_path_b.selection import (
     IntegratedSelectionHandoff,
     SelectionAuthorityInputs,
     run_integrated_selection_stage,
+)
+from radjax_tome.builder.native_path_b.verification import (
+    ReconciliationCoverHandoff,
+    ReconciliationCoverInputs,
+    ValidationLinkageHandoff,
+    ValidationLinkageInputs,
 )
 
 
@@ -208,6 +218,54 @@ def _assembly_result() -> StageResult[ArtifactAssemblyHandoff[str]]:
     )
 
 
+def _validation_result() -> StageResult[ValidationLinkageHandoff[str]]:
+    stage_evidence = StageEvidence(
+        stage="validation_linkage",
+        paths=(),
+        hashes=(),
+        counts=(),
+    )
+    return StageResult(
+        status="pass",
+        value=ValidationLinkageHandoff(
+            value="validated",
+            stage_evidence=stage_evidence,
+        ),
+        evidence=stage_evidence,
+    )
+
+
+def _reconciliation_result() -> StageResult[ReconciliationCoverHandoff[str]]:
+    stage_evidence = StageEvidence(
+        stage="reconciliation_cover",
+        paths=(),
+        hashes=(),
+        counts=(),
+    )
+    return StageResult(
+        status="pass",
+        value=ReconciliationCoverHandoff(
+            value="reconciled",
+            stage_evidence=stage_evidence,
+        ),
+        evidence=stage_evidence,
+    )
+
+
+def _terminal_result() -> NativePathBRunResult:
+    return NativePathBRunResult(
+        status="pass",
+        production_report_path=Path("production_build_report.json"),
+        validation_report_path=Path("validation_report.json"),
+        evidence=StageEvidence(
+            stage="final_reporting",
+            paths=(),
+            hashes=(),
+            counts=(),
+        ),
+    )
+
+
 def _passing_slice_two():
     canonical = _canonical_config()
     slice_one = run_preflight_then_score_pass(
@@ -241,6 +299,19 @@ def _passing_slice_three():
             integrated_selection=lambda config, authorities: (
                 _integrated_selection_result()
             )
+        ),
+    )
+
+
+def _passing_slice_four():
+    canonical, slice_three = _passing_slice_three()
+    return canonical, run_slice_four(
+        canonical,
+        slice_three,
+        operations=SliceFourOperations(
+            selected_rerun=lambda config, inputs: _selected_rerun_result(),
+            late_corridor=lambda config, inputs: _selected_artifact_corridor_result(),
+            assembly=lambda config, inputs: _assembly_result(),
         ),
     )
 
@@ -779,3 +850,188 @@ def test_late_corridor_rejects_provisional_evidence() -> None:
         late_corridor.failure.reason
         == "selected_artifact_corridor_evidence_stage_mismatch"
     )
+
+
+def test_slice_five_orders_assembly_to_typed_terminal_result_without_state_writes(
+    tmp_path: Path,
+) -> None:
+    events: list[str] = []
+    untouched_output = tmp_path / "artifact"
+    canonical, slice_three = _passing_slice_three()
+
+    def assembly(
+        config: CanonicalPathBConfig,
+        inputs: ArtifactAssemblyInputs[str, str],
+    ) -> StageResult[ArtifactAssemblyHandoff[str]]:
+        events.append("assembly")
+        return _assembly_result()
+
+    slice_four = run_slice_four(
+        canonical,
+        slice_three,
+        operations=SliceFourOperations(
+            selected_rerun=lambda config, inputs: _selected_rerun_result(),
+            late_corridor=lambda config, inputs: _selected_artifact_corridor_result(),
+            assembly=assembly,
+        ),
+    )
+    terminal = _terminal_result()
+
+    def validation(
+        config: CanonicalPathBConfig,
+        inputs: ValidationLinkageInputs[str],
+    ) -> StageResult[ValidationLinkageHandoff[str]]:
+        assert inputs.assembly == "assembled"
+        assert inputs.assembly_evidence.stage == "artifact_assembly"
+        events.append("validation")
+        return _validation_result()
+
+    def reconciliation(
+        config: CanonicalPathBConfig,
+        inputs: ReconciliationCoverInputs[str, str],
+    ) -> StageResult[ReconciliationCoverHandoff[str]]:
+        assert inputs.validation == "validated"
+        assert inputs.validation_evidence.stage == "validation_linkage"
+        events.append("reconciliation")
+        return _reconciliation_result()
+
+    def final_reporting(
+        config: CanonicalPathBConfig,
+        inputs: FinalReportingInputs[str, str, str],
+    ) -> NativePathBRunResult:
+        assert inputs.reconciliation == "reconciled"
+        assert inputs.reconciliation_evidence.stage == "reconciliation_cover"
+        events.append("reporting")
+        return terminal
+
+    execution = run_slice_five(
+        canonical,
+        slice_four,
+        operations=SliceFiveOperations(
+            validation_linkage=validation,
+            reconciliation_cover=reconciliation,
+            final_reporting=final_reporting,
+        ),
+    )
+
+    assert events == ["assembly", "validation", "reconciliation", "reporting"]
+    assert execution.status == "pass"
+    assert execution.final_result is terminal
+    assert execution.final_result.evidence.stage == "final_reporting"
+    assert not untouched_output.exists()
+    assert not (untouched_output / "native_path_b_state.json").exists()
+    assert not (untouched_output / "progress").exists()
+    assert not (untouched_output / "reports").exists()
+
+
+def test_slice_five_validation_evidence_failure_stops_downstream() -> None:
+    events: list[str] = []
+    canonical, slice_four = _passing_slice_four()
+
+    def validation(
+        config: CanonicalPathBConfig,
+        inputs: ValidationLinkageInputs[str],
+    ) -> StageResult[ValidationLinkageHandoff[str]]:
+        events.append("validation")
+        return _passed("artifact_assembly", "wrong-stage")
+
+    def reconciliation(
+        config: CanonicalPathBConfig,
+        inputs: ReconciliationCoverInputs[str, str],
+    ) -> StageResult[ReconciliationCoverHandoff[str]]:
+        events.append("reconciliation")
+        return _reconciliation_result()
+
+    def final_reporting(
+        config: CanonicalPathBConfig,
+        inputs: FinalReportingInputs[str, str, str],
+    ) -> NativePathBRunResult:
+        events.append("reporting")
+        return _terminal_result()
+
+    execution = run_slice_five(
+        canonical,
+        slice_four,
+        operations=SliceFiveOperations(
+            validation_linkage=validation,
+            reconciliation_cover=reconciliation,
+            final_reporting=final_reporting,
+        ),
+    )
+
+    assert events == ["validation"]
+    assert execution.status == "fail"
+    assert execution.validation is not None
+    assert (
+        execution.validation.failure.reason
+        == "validation_linkage_evidence_stage_mismatch"
+    )
+    assert execution.reconciliation is None
+    assert execution.final_result is None
+
+
+def test_slice_five_reconciliation_failure_preserves_terminal_behavior() -> None:
+    events: list[str] = []
+    canonical, slice_four = _passing_slice_four()
+
+    def validation(
+        config: CanonicalPathBConfig,
+        inputs: ValidationLinkageInputs[str],
+    ) -> StageResult[ValidationLinkageHandoff[str]]:
+        events.append("validation")
+        return _validation_result()
+
+    def reconciliation(
+        config: CanonicalPathBConfig,
+        inputs: ReconciliationCoverInputs[str, str],
+    ) -> StageResult[ReconciliationCoverHandoff[str]]:
+        events.append("reconciliation")
+        return _failed("reconciliation_cover", "known_reconciliation_blocker")
+
+    def final_reporting(
+        config: CanonicalPathBConfig,
+        inputs: FinalReportingInputs[str, str, str],
+    ) -> NativePathBRunResult:
+        events.append("reporting")
+        return _terminal_result()
+
+    execution = run_slice_five(
+        canonical,
+        slice_four,
+        operations=SliceFiveOperations(
+            validation_linkage=validation,
+            reconciliation_cover=reconciliation,
+            final_reporting=final_reporting,
+        ),
+    )
+
+    assert events == ["validation", "reconciliation"]
+    assert execution.status == "fail"
+    assert execution.reconciliation is not None
+    assert execution.reconciliation.failure.reason == "known_reconciliation_blocker"
+    assert execution.final_result is None
+
+    terminal_failure = NativePathBRunResult(
+        status="fail",
+        production_report_path=None,
+        validation_report_path=None,
+        evidence=None,
+        failure=StageFailure(
+            stage="final_reporting",
+            reason="known_terminal_failure",
+            blockers=("known_terminal_failure",),
+        ),
+    )
+    terminal_execution = run_slice_five(
+        canonical,
+        slice_four,
+        operations=SliceFiveOperations(
+            validation_linkage=lambda config, inputs: _validation_result(),
+            reconciliation_cover=lambda config, inputs: _reconciliation_result(),
+            final_reporting=lambda config, inputs: terminal_failure,
+        ),
+    )
+
+    assert terminal_execution.status == "fail"
+    assert terminal_execution.final_result is terminal_failure
+    assert terminal_execution.final_result.failure.reason == "known_terminal_failure"

@@ -1497,3 +1497,14 @@ passed `179` tests. Golden validation retained count `256` and semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed. This does not claim production
 facade integration.
+
+## 2026-07-19 — M4B Slice Five Typed Terminal Finalization
+
+M4B slice five strictly orders typed assembly, validation/linkage,
+reconciliation/cover, and final reporting handoffs; every failure stops later
+callbacks. Terminal `NativePathBRunResult` failures are preserved, and the
+adapters add no persistent state. The focused gate passed `182` tests. Golden
+validation retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed. This does not claim production
+facade integration.
