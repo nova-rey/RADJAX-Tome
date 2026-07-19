@@ -1018,12 +1018,28 @@
       "replacement_or_target_boundary": "M3 native Path B supporting API.",
       "status": "supporting"
     },
+    "src/radjax_tome/builder/native_path_b/authorities.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B fingerprint and global authority stage adapters.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
     "src/radjax_tome/builder/native_path_b/contracts.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
       "owning_milestone": "M4",
       "rationale": "Immutable native Path B stage contract and outcome types.",
       "replacement_or_target_boundary": "M4 native Path B stage-contract boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/corridors.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B provisional score-surface corridor stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
       "status": "supporting"
     },
     "src/radjax_tome/builder/native_path_b/evidence.py": {

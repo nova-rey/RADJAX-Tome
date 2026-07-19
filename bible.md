@@ -1464,3 +1464,14 @@ post-format broad focused coverage passed `131` tests and the orchestrator
 suite passed `4` tests. Golden validation retained count `256` and semantic
 root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4B Slice Two Provisional Corridor and Authority Adapters
+
+M4B slice two proves callback order from score pass through a zero/unlinked
+provisional corridor to fingerprint and global authority export. A failed early
+corridor stops both authority callbacks, and the adapter writes no selection,
+rerun, late-corridor, or evidence schemas. The focused gate passed `173` tests.
+Golden validation retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed. This does not claim production
+facade integration.
