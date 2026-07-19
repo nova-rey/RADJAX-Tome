@@ -1410,3 +1410,12 @@ focused M3A/import/runtime set at `23 passed`. Golden validation retained count
 `256` and semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M3B Slice One Import Isolation
+
+M3B slice one makes the root, backend, and audit facades resolve compatibility
+exports lazily; builder, reports, and fingerprint isolation is deferred to
+slice two. The focused import/refactor gate passed `46` tests. Golden validation
+retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
