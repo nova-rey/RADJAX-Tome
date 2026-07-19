@@ -11,6 +11,17 @@ import numpy as np
 GOLDEN_CONTRACT_SCHEMA_VERSION = "radjax_tome.golden_contract.v1"
 GOLDEN_CONTRACT_NAME = "t4_gemma3_270m_fingerprint_corridor_path_b_1k"
 COLLECTION_NAMES = ("selected_obligations", "source_passports", "payload_semantics")
+SPARSE_PAYLOAD_FIELDS = ("top_token_ids", "top_probs", "top_log_probs")
+FORBIDDEN_DENSE_PAYLOAD_FIELDS = frozenset(
+    {
+        "top_selection_mask",
+        "logits",
+        "dense_logits",
+        "dense_probabilities",
+        "full_vocab_log_probs",
+        "full_vocab_probs",
+    }
+)
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -142,6 +153,70 @@ def _validate_collection(name: str, rows: Sequence[Mapping[str, Any]]) -> None:
         if not isinstance(index, int) or index < 0 or index <= previous_index:
             raise ValueError(f"{name} selection_index is not strictly ordered")
         previous_index = index
+        if name == "payload_semantics":
+            validate_sparse_payload_semantics_record(row)
+
+
+def validate_sparse_payload_semantics_record(row: Mapping[str, Any]) -> None:
+    forbidden = sorted(FORBIDDEN_DENSE_PAYLOAD_FIELDS & set(row))
+    if forbidden:
+        raise ValueError(
+            "payload_semantics contains forbidden dense payload fields: "
+            + ", ".join(forbidden)
+        )
+    effective_top_k = row.get("effective_top_k")
+    if (
+        not isinstance(effective_top_k, int)
+        or isinstance(effective_top_k, bool)
+        or effective_top_k < 1
+    ):
+        raise ValueError("payload_semantics effective_top_k must be a positive integer")
+    values = {key: row.get(key) for key in SPARSE_PAYLOAD_FIELDS}
+    if any(not isinstance(value, (list, tuple)) for value in values.values()):
+        raise ValueError("payload_semantics sparse payload arrays are required")
+    lengths = {key: len(value) for key, value in values.items()}
+    if set(lengths.values()) != {effective_top_k}:
+        raise ValueError(
+            "payload_semantics sparse payload lengths must equal effective_top_k"
+        )
+    token_ids = values["top_token_ids"]
+    if any(
+        not isinstance(token_id, int) or isinstance(token_id, bool) or token_id < 0
+        for token_id in token_ids
+    ):
+        raise ValueError("payload_semantics top_token_ids must be nonnegative integers")
+    if len(set(token_ids)) != len(token_ids):
+        raise ValueError("payload_semantics contains duplicate active top_token_ids")
+    for key in ("top_probs", "top_log_probs"):
+        for value in values[key]:
+            if (
+                not isinstance(value, (int, float))
+                or isinstance(value, bool)
+                or not math.isfinite(float(value))
+            ):
+                raise ValueError(f"payload_semantics {key} contains nonfinite values")
+    if any(value < 0.0 or value > 1.0 for value in values["top_probs"]):
+        raise ValueError("payload_semantics top_probs contains invalid probabilities")
+    for key in ("teacher_entropy", "top_mass", "tail_mass", "dynamic_mass_threshold"):
+        value = row.get(key)
+        if value is not None and (
+            not isinstance(value, (int, float))
+            or isinstance(value, bool)
+            or not math.isfinite(float(value))
+        ):
+            raise ValueError(f"payload_semantics {key} must be finite")
+    bucket_masses = row.get("bucket_masses")
+    if bucket_masses is not None:
+        if not isinstance(bucket_masses, (list, tuple)) or any(
+            not isinstance(value, (int, float))
+            or isinstance(value, bool)
+            or not math.isfinite(float(value))
+            or value < 0.0
+            for value in bucket_masses
+        ):
+            raise ValueError(
+                "payload_semantics bucket_masses must be finite probabilities"
+            )
 
 
 def _coordinate(row: Mapping[str, Any]) -> tuple[str, int]:

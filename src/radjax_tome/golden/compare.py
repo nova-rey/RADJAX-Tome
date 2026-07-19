@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import tempfile
+from itertools import zip_longest
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +18,7 @@ def compare_fixture_artifact(fixture_dir: Path, artifact_dir: Path) -> dict[str,
 
 
 def compare_contracts(expected_dir: Path, observed_dir: Path) -> dict[str, Any]:
-    from radjax_tome.golden.projection import _read_jsonl, _read_object
+    from radjax_tome.golden.projection import _read_object
 
     expected = _read_object(expected_dir / "contract.json")
     observed = _read_object(observed_dir / "contract.json")
@@ -34,9 +36,13 @@ def compare_contracts(expected_dir: Path, observed_dir: Path) -> dict[str, Any]:
                 }
             )
     for name in ("selected_obligations", "source_passports", "payload_semantics"):
-        left = _read_jsonl(expected_dir / f"{name}.jsonl")
-        right = _read_jsonl(observed_dir / f"{name}.jsonl")
-        differences.extend(_compare_rows(name, left, right))
+        differences.extend(
+            _compare_jsonl_rows(
+                name,
+                expected_dir / f"{name}.jsonl",
+                observed_dir / f"{name}.jsonl",
+            )
+        )
     return {
         "status": "pass" if not differences else "fail",
         "expected_semantic_root": expected.get("semantic_root"),
@@ -46,20 +52,26 @@ def compare_contracts(expected_dir: Path, observed_dir: Path) -> dict[str, Any]:
     }
 
 
-def _compare_rows(
-    name: str, expected: list[dict[str, Any]], observed: list[dict[str, Any]]
+def _compare_jsonl_rows(
+    name: str,
+    expected_path: Path,
+    observed_path: Path,
 ) -> list[dict[str, Any]]:
     differences: list[dict[str, Any]] = []
-    if len(expected) != len(observed):
-        return [
-            {
-                "collection": name,
-                "field": "count",
-                "expected": len(expected),
-                "observed": len(observed),
-            }
-        ]
-    for left, right in zip(expected, observed, strict=True):
+    for row_number, (left, right) in enumerate(
+        zip_longest(_iter_jsonl(expected_path), _iter_jsonl(observed_path)), start=1
+    ):
+        if left is None or right is None:
+            differences.append(
+                {
+                    "collection": name,
+                    "field": "count",
+                    "row_number": row_number,
+                    "expected": "record" if left is not None else None,
+                    "observed": "record" if right is not None else None,
+                }
+            )
+            continue
         coordinate = (left.get("selected_example_id"), left.get("selected_position"))
         if coordinate != (
             right.get("selected_example_id"),
@@ -104,3 +116,15 @@ def _compare_rows(
                     }
                 )
     return differences
+
+
+def _iter_jsonl(path: Path) -> Any:
+    with path.open(encoding="utf-8") as handle:
+        for line in handle:
+            if line.strip():
+                value = json.loads(line)
+                if not isinstance(value, dict):
+                    raise ValueError(
+                        f"golden comparison expected object record: {path}"
+                    )
+                yield value

@@ -1340,3 +1340,11 @@ rows. No real golden fixture was created; status remains capture_pending.
 Golden fixture writing now accepts the pre-created staging directory returned
 by `tempfile.mkdtemp`, matching capture's atomic-write flow. This is a writer
 compatibility repair only; golden schemas and semantic projection are unchanged.
+
+## 2026-07-19 — M2A Sparse Golden Payload Projection
+
+Golden payload semantics now retain only active dynamic-top-k entries in rank
+order, with padded backend arrays and selection masks excluded. Fixture
+validation rejects dense fields, malformed sparse arrays, nonfinite values,
+duplicate active tokens, and oversized records; comparison streams JSONL rows.
+M2A remains capture_pending until the corrected sparse fixture is recaptured.

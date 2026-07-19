@@ -7,11 +7,15 @@ from pathlib import Path
 
 import pytest
 
+import radjax_tome.golden.projection as golden_projection
 from radjax_tome.golden.compare import compare_contracts
 from radjax_tome.golden.contract import build_contract
 from radjax_tome.golden.projection import (
+    MAX_GOLDEN_RECORD_BYTES,
     _payload_index,
+    _payload_semantics,
     capture_golden_contract,
+    validate_fixture,
 )
 from radjax_tome.golden.projection import (
     _write_fixture as write_captured_fixture,
@@ -94,6 +98,102 @@ def test_capture_fixture_writer_accepts_mkdtemp_staging_directory() -> None:
         shutil.rmtree(staging)
 
 
+def test_payload_projection_emits_only_active_padded_entries() -> None:
+    projected = _payload_semantics(
+        {
+            "selected_example_id": "one",
+            "selected_position": 3,
+            "effective_top_k": 2,
+            "top_token_ids": [101, 102, 103, 104],
+            "top_probs": [0.4, 0.3, 0.0, 0.0],
+            "top_log_probs": [-0.9, -1.2, -100.0, -100.0],
+            "top_selection_mask": [True, True, False, False],
+            "teacher_entropy": 1.2,
+            "top_mass": 0.7,
+            "tail_mass": 0.3,
+            "long_tail_class": "normal",
+            "dynamic_mass_threshold": 0.95,
+            "vocab_size": 262144,
+            "payload_identity": {"payload_hash": "sha256:payload"},
+        },
+        1,
+    )
+
+    assert projected["top_token_ids"] == [101, 102]
+    assert projected["top_probs"] == [0.4, 0.3]
+    assert projected["top_log_probs"] == [-0.9, -1.2]
+    assert "top_selection_mask" not in projected
+    assert all(
+        len(projected[key]) == projected["effective_top_k"]
+        for key in ("top_token_ids", "top_probs", "top_log_probs")
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "error"),
+    [
+        ("top_selection_mask", [True, False, False, False], "active count"),
+        ("top_token_ids", [101, 101, 103, 104], "duplicate active"),
+        ("top_probs", [float("nan"), 0.3, 0.0, 0.0], "nonfinite"),
+    ],
+)
+def test_payload_projection_rejects_inconsistent_or_invalid_active_entries(
+    field: str,
+    value: list[object],
+    error: str,
+) -> None:
+    source: dict[str, object] = {
+        "selected_example_id": "one",
+        "selected_position": 3,
+        "effective_top_k": 2,
+        "top_token_ids": [101, 102, 103, 104],
+        "top_probs": [0.4, 0.3, 0.0, 0.0],
+        "top_log_probs": [-0.9, -1.2, -100.0, -100.0],
+        "top_selection_mask": [True, True, False, False],
+    }
+    source[field] = value
+
+    with pytest.raises(ValueError, match=error):
+        _payload_semantics(source, 1)
+
+
+def test_validate_fixture_rejects_dense_payload_field(tmp_path: Path) -> None:
+    fixture = _write_fixture(tmp_path / "fixture")
+    payload_path = fixture / "payload_semantics.jsonl"
+    row = json.loads(payload_path.read_text(encoding="utf-8"))
+    row["top_selection_mask"] = [True]
+    payload_path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="forbidden dense payload fields"):
+        validate_fixture(fixture)
+
+
+def test_validate_fixture_rejects_oversized_record(tmp_path: Path) -> None:
+    fixture = _write_fixture(tmp_path / "fixture")
+    payload_path = fixture / "payload_semantics.jsonl"
+    row = json.loads(payload_path.read_text(encoding="utf-8"))
+    row["payload_identity"] = {"padding": "x" * MAX_GOLDEN_RECORD_BYTES}
+    payload_path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="record exceeds maximum size"):
+        validate_fixture(fixture)
+
+
+def test_compare_streams_jsonl_without_eager_projection_loader(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    expected = _write_fixture(tmp_path / "expected")
+    observed = _write_fixture(tmp_path / "observed")
+
+    def fail_eager_load(_: Path) -> list[dict[str, object]]:
+        raise AssertionError("comparison must stream fixture JSONL")
+
+    monkeypatch.setattr(golden_projection, "_read_jsonl", fail_eager_load)
+
+    assert compare_contracts(expected, observed)["status"] == "pass"
+
+
 def test_compare_rejects_c5_role_and_passport_drift(tmp_path: Path) -> None:
     expected = _write_fixture(tmp_path / "expected")
     observed = _write_fixture(tmp_path / "observed")
@@ -166,6 +266,9 @@ def _write_fixture(root: Path, *, entropy: float = 1.0, position: int = 3) -> Pa
             "selected_position": position,
             "teacher_entropy": entropy,
             "top_token_ids": [7],
+            "top_probs": [0.5],
+            "top_log_probs": [-0.6931471805599453],
+            "effective_top_k": 1,
         }
     ]
     contract = build_contract(

@@ -6,7 +6,12 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from radjax_tome.golden.contract import build_contract, validate_contract
+from radjax_tome.golden.contract import (
+    build_contract,
+    semantic_digest,
+    validate_contract,
+    validate_sparse_payload_semantics_record,
+)
 
 _REQUIRED_REPORTS = (
     "production_build_report.json",
@@ -14,6 +19,8 @@ _REQUIRED_REPORTS = (
     "delivery_report.json",
     "selected_linkage_audit.json",
 )
+MAX_GOLDEN_FIXTURE_BYTES = 64 * 1024 * 1024
+MAX_GOLDEN_RECORD_BYTES = 1024 * 1024
 
 
 def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, Any]:
@@ -92,16 +99,55 @@ def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, A
 def validate_fixture(fixture_dir: Path) -> dict[str, Any]:
     root = fixture_dir.resolve()
     contract = _read_object(root / "contract.json")
-    collections = {
-        "selected_obligations": _read_jsonl(root / "selected_obligations.jsonl"),
-        "source_passports": _read_jsonl(root / "source_passports.jsonl"),
-        "payload_semantics": _read_jsonl(root / "payload_semantics.jsonl"),
-    }
-    validate_contract(contract, collections=collections)
+    validate_contract(contract)
+    roots = contract["collection_roots"]
+    coordinates: dict[str, set[tuple[str, int]]] = {}
+    indices: dict[str, dict[tuple[str, int], int]] = {}
+    count = 0
+    fixture_bytes = [0]
+    for name in ("selected_obligations", "source_passports", "payload_semantics"):
+        row_digests: list[str] = []
+        seen: set[tuple[str, int]] = set()
+        selection_indices: dict[tuple[str, int], int] = {}
+        previous_index = -1
+        for row in _iter_fixture_jsonl(root / f"{name}.jsonl", fixture_bytes):
+            coordinate = _coordinate(row)
+            selection_index = row.get("selection_index")
+            if coordinate in seen:
+                raise ValueError(f"{name} contains duplicate selected coordinates")
+            if (
+                not isinstance(selection_index, int)
+                or isinstance(selection_index, bool)
+                or selection_index < 0
+                or selection_index <= previous_index
+            ):
+                raise ValueError(f"{name} selection_index is not strictly ordered")
+            if name == "payload_semantics":
+                validate_sparse_payload_semantics_record(row)
+            seen.add(coordinate)
+            selection_indices[coordinate] = selection_index
+            previous_index = selection_index
+            row_digests.append(semantic_digest(f"{name}-row", row))
+        observed_root = semantic_digest(f"{name}-root", row_digests)
+        if observed_root != roots[name]:
+            raise ValueError(f"golden contract {name} root does not match rows")
+        coordinates[name] = seen
+        indices[name] = selection_indices
+        if name == "selected_obligations":
+            count = len(seen)
+    selected_coordinates = coordinates["selected_obligations"]
+    for name in ("source_passports", "payload_semantics"):
+        if coordinates[name] != selected_coordinates:
+            raise ValueError(f"selected obligations and {name} do not join")
+        if any(
+            selection_index != indices["selected_obligations"][coordinate]
+            for coordinate, selection_index in indices[name].items()
+        ):
+            raise ValueError(f"{name} selection_index does not match obligations")
     return {
         "status": "pass",
         "semantic_root": contract["semantic_root"],
-        "count": len(collections["selected_obligations"]),
+        "count": count,
     }
 
 
@@ -191,14 +237,10 @@ def _passport(row: dict[str, Any], index: int) -> dict[str, Any]:
 
 
 def _payload_semantics(row: dict[str, Any], index: int) -> dict[str, Any]:
-    return _project(
+    projected = _project(
         row,
         index,
         "effective_top_k",
-        "top_token_ids",
-        "top_probs",
-        "top_log_probs",
-        "top_selection_mask",
         "bucket_masses",
         "teacher_entropy",
         "top_mass",
@@ -210,6 +252,40 @@ def _payload_semantics(row: dict[str, Any], index: int) -> dict[str, Any]:
         "semantic_authority_hash",
         "payload_identity",
     )
+    projected.update(_sparse_payload_arrays(row))
+    validate_sparse_payload_semantics_record(projected)
+    return projected
+
+
+def _sparse_payload_arrays(row: dict[str, Any]) -> dict[str, list[Any]]:
+    effective_top_k = row.get("effective_top_k")
+    arrays = {
+        key: row.get(key)
+        for key in ("top_token_ids", "top_probs", "top_log_probs", "top_selection_mask")
+    }
+    if (
+        not isinstance(effective_top_k, int)
+        or isinstance(effective_top_k, bool)
+        or effective_top_k < 1
+        or any(not isinstance(value, list) for value in arrays.values())
+    ):
+        raise ValueError("golden capture payload arrays or effective_top_k are invalid")
+    lengths = {len(value) for value in arrays.values()}
+    if len(lengths) != 1:
+        raise ValueError("golden capture payload arrays have inconsistent lengths")
+    mask = arrays["top_selection_mask"]
+    if any(not isinstance(value, bool) for value in mask):
+        raise ValueError("golden capture top_selection_mask must contain booleans")
+    active_ranks = [rank for rank, active in enumerate(mask) if active]
+    if len(active_ranks) != effective_top_k:
+        raise ValueError(
+            "golden capture top_selection_mask active count does not equal "
+            "effective_top_k"
+        )
+    return {
+        key: [arrays[key][rank] for rank in active_ranks]
+        for key in ("top_token_ids", "top_probs", "top_log_probs")
+    }
 
 
 def _project(row: dict[str, Any], index: int, *keys: str) -> dict[str, Any]:
@@ -509,3 +585,23 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
         for line in path.read_text(encoding="utf-8").splitlines()
         if line
     ]
+
+
+def _iter_fixture_jsonl(
+    path: Path,
+    fixture_bytes: list[int],
+) -> Any:
+    with path.open(encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            record_bytes = len(line.encode("utf-8"))
+            if record_bytes > MAX_GOLDEN_RECORD_BYTES:
+                raise ValueError("golden fixture record exceeds maximum size")
+            fixture_bytes[0] += record_bytes
+            if fixture_bytes[0] > MAX_GOLDEN_FIXTURE_BYTES:
+                raise ValueError("golden fixture exceeds maximum size")
+            value = json.loads(line)
+            if not isinstance(value, dict):
+                raise ValueError("golden fixture JSONL record must be an object")
+            yield value

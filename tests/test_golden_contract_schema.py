@@ -64,7 +64,17 @@ def _rows() -> dict[str, list[dict[str, object]]]:
         {"selection_index": 1, "selected_example_id": "one", "selected_position": 3},
         {"selection_index": 2, "selected_example_id": "two", "selected_position": 4},
     ]
-    return {
+    rows = {
         name: [dict(row) for row in base]
         for name in ("selected_obligations", "source_passports", "payload_semantics")
     }
+    for row in rows["payload_semantics"]:
+        row.update(
+            {
+                "effective_top_k": 1,
+                "top_token_ids": [7],
+                "top_probs": [0.5],
+                "top_log_probs": [-0.6931471805599453],
+            }
+        )
+    return rows

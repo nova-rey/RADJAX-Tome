@@ -2,7 +2,8 @@
 
 M2A status: **capture_pending**. No coordinate, passport, allocation, or
 payload-semantic record is committed until it is exported read-only from the
-terminal T4 artifact.
+terminal T4 artifact using the corrected sparse-payload capture exporter. Any
+earlier dense payload capture is not committable and must be recaptured.
 
 ```bash
 cd /teamspace/studios/this_studio/radjax/RADJAX-Tome
@@ -19,6 +20,7 @@ radjax-tome golden compare --fixture "$CAPTURE" --artifact "$OUT"
 
 Before committing, verify 256 unique obligations, 256 payload-semantic rows,
 and no corpus text, prompt text, absolute rental paths, credentials, model
-weights, raw target shards, or selected payload bodies. The capture command
-requires passing canonical production, validation, delivery, and strict linkage
-reports and never modifies or reruns the source artifact.
+weights, raw target shards, padded backend payload bodies, or dense vocabulary
+arrays. The capture command requires passing canonical production, validation,
+delivery, and strict linkage reports and never modifies or reruns the source
+artifact.
