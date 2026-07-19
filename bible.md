@@ -1475,3 +1475,14 @@ Golden validation retained count `256` and semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed. This does not claim production
 facade integration.
+
+## 2026-07-19 — M4B Slice Three Typed C2-C5 Selection Handoff
+
+M4B slice three adds a typed C2-C5 selection handoff that consumes both
+fingerprint and global authority proofs and exposes explicit C2, C3, C4, and
+C5 stage evidence. Selection failure stops before rerun or finalization. The
+focused gate passed `176` tests. Golden validation retained count `256` and
+semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed. This does not claim production
+facade integration.

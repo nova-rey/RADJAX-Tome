@@ -19,12 +19,19 @@ from radjax_tome.builder.native_path_b.contracts import (
 )
 from radjax_tome.builder.native_path_b.orchestrator import (
     SliceOneOperations,
+    SliceThreeOperations,
     SliceTwoOperations,
     run_preflight_then_score_pass,
+    run_slice_three,
     run_slice_two,
 )
 from radjax_tome.builder.native_path_b.preflight import run_preflight_stage
 from radjax_tome.builder.native_path_b.score_pass import run_score_pass_stage
+from radjax_tome.builder.native_path_b.selection import (
+    IntegratedSelectionHandoff,
+    SelectionAuthorityInputs,
+    run_integrated_selection_stage,
+)
 
 
 @dataclass(frozen=True)
@@ -83,6 +90,71 @@ def _provisional_early_evidence() -> StageResult[ScoreSurfaceCorridorEvidence]:
             selected_exemplars_linked=False,
         ),
         evidence=stage_evidence,
+    )
+
+
+def _integrated_selection_result() -> StageResult[IntegratedSelectionHandoff[str]]:
+    stage_evidence = StageEvidence(
+        stage="integrated_selection",
+        paths=(),
+        hashes=(),
+        counts=(),
+    )
+    return StageResult(
+        status="pass",
+        value=IntegratedSelectionHandoff(
+            value="selected",
+            stage_evidence=stage_evidence,
+            c2_evidence=StageEvidence(
+                stage="c2_corridor_candidate_leaderboards",
+                paths=(),
+                hashes=(),
+                counts=(),
+            ),
+            c3_evidence=StageEvidence(
+                stage="c3_corridor_coverage_plan",
+                paths=(),
+                hashes=(),
+                counts=(),
+            ),
+            c4_evidence=StageEvidence(
+                stage="c4_corridor_global_claims",
+                paths=(),
+                hashes=(),
+                counts=(),
+            ),
+            c5_evidence=StageEvidence(
+                stage="c5_multi_role_selection",
+                paths=(),
+                hashes=(),
+                counts=(),
+            ),
+        ),
+        evidence=stage_evidence,
+    )
+
+
+def _passing_slice_two():
+    canonical = _canonical_config()
+    slice_one = run_preflight_then_score_pass(
+        canonical,
+        operations=SliceOneOperations(
+            preflight=lambda config: _passed("preflight", "ready"),
+            score_pass=lambda config, preflight_value: _passed("score_pass", "scored"),
+        ),
+    )
+    return canonical, run_slice_two(
+        canonical,
+        slice_one,
+        operations=SliceTwoOperations(
+            early_corridor=lambda config, score_value: _provisional_early_evidence(),
+            fingerprint_authority=lambda config, early_evidence: _passed(
+                "fingerprint_corridor_selection_authority_export", "fingerprint"
+            ),
+            global_authority=lambda config, early_evidence, fingerprint_value: _passed(
+                "global_authority_export", "global"
+            ),
+        ),
     )
 
 
@@ -319,3 +391,163 @@ def test_slice_two_failed_early_corridor_skips_both_authorities() -> None:
     assert execution.early_corridor.failure.reason == "known_early_corridor_blocker"
     assert execution.fingerprint_authority is None
     assert execution.global_authority is None
+
+
+def test_slice_three_orders_authority_backed_c2_through_c5_without_rerun_writes(
+    tmp_path: Path,
+) -> None:
+    events: list[str] = []
+    untouched_output = tmp_path / "artifact"
+    canonical = _canonical_config()
+
+    def preflight(config: CanonicalPathBConfig) -> StageResult[str]:
+        events.append("preflight")
+        return _passed("preflight", "ready")
+
+    def score(
+        config: CanonicalPathBConfig,
+        preflight_value: str,
+    ) -> StageResult[str]:
+        events.append("score_pass")
+        return _passed("score_pass", "scored")
+
+    def early_corridor(
+        config: CanonicalPathBConfig,
+        score_value: str,
+    ) -> StageResult[ScoreSurfaceCorridorEvidence]:
+        events.append("early_corridor")
+        return _provisional_early_evidence()
+
+    def fingerprint_authority(
+        config: CanonicalPathBConfig,
+        early_evidence: ScoreSurfaceCorridorEvidence,
+    ) -> StageResult[str]:
+        events.append("fingerprint_authority")
+        return _passed("fingerprint_corridor_selection_authority_export", "fingerprint")
+
+    def global_authority(
+        config: CanonicalPathBConfig,
+        early_evidence: ScoreSurfaceCorridorEvidence,
+        fingerprint_value: str,
+    ) -> StageResult[str]:
+        events.append("global_authority")
+        return _passed("global_authority_export", "global")
+
+    def integrated_selection(
+        config: CanonicalPathBConfig,
+        authorities: SelectionAuthorityInputs[str, str],
+    ) -> StageResult[IntegratedSelectionHandoff[str]]:
+        assert authorities.fingerprint_value == "fingerprint"
+        assert (
+            authorities.fingerprint_evidence.stage
+            == "fingerprint_corridor_selection_authority_export"
+        )
+        assert authorities.global_value == "global"
+        assert authorities.global_evidence.stage == "global_authority_export"
+        events.extend(("c2", "c3", "c4", "c5"))
+        return _integrated_selection_result()
+
+    slice_one = run_preflight_then_score_pass(
+        canonical,
+        operations=SliceOneOperations(preflight=preflight, score_pass=score),
+    )
+    slice_two = run_slice_two(
+        canonical,
+        slice_one,
+        operations=SliceTwoOperations(
+            early_corridor=early_corridor,
+            fingerprint_authority=fingerprint_authority,
+            global_authority=global_authority,
+        ),
+    )
+    execution = run_slice_three(
+        canonical,
+        slice_two,
+        operations=SliceThreeOperations(integrated_selection=integrated_selection),
+    )
+
+    assert events == [
+        "preflight",
+        "score_pass",
+        "early_corridor",
+        "fingerprint_authority",
+        "global_authority",
+        "c2",
+        "c3",
+        "c4",
+        "c5",
+    ]
+    assert execution.status == "pass"
+    assert execution.integrated_selection is not None
+    assert execution.integrated_selection.value.c2_evidence.stage.startswith("c2_")
+    assert execution.integrated_selection.value.c3_evidence.stage.startswith("c3_")
+    assert execution.integrated_selection.value.c4_evidence.stage.startswith("c4_")
+    assert execution.integrated_selection.value.c5_evidence.stage.startswith("c5_")
+    assert not untouched_output.exists()
+    assert not (untouched_output / "reruns").exists()
+    assert not (untouched_output / "late_corridor").exists()
+
+
+def test_slice_three_requires_authority_evidence_before_selection() -> None:
+    events: list[str] = []
+
+    def selection(
+        config: CanonicalPathBConfig,
+        authorities: SelectionAuthorityInputs[str, str],
+    ) -> StageResult[IntegratedSelectionHandoff[str]]:
+        events.append("selection")
+        return _integrated_selection_result()
+
+    result = run_integrated_selection_stage(
+        _canonical_config(),
+        fingerprint_authority=None,
+        global_authority=_passed("global_authority_export", "global"),
+        operation=selection,
+    )
+
+    assert result.status == "fail"
+    assert result.failure.reason == "fingerprint_authority_required"
+    assert events == []
+
+
+def test_slice_three_selection_failure_stops_before_rerun_and_normalizes_callback_error(
+    tmp_path: Path,
+) -> None:
+    canonical, slice_two = _passing_slice_two()
+    untouched_output = tmp_path / "artifact"
+
+    def failed_selection(
+        config: CanonicalPathBConfig,
+        authorities: SelectionAuthorityInputs[str, str],
+    ) -> StageResult[IntegratedSelectionHandoff[str]]:
+        return _failed("integrated_selection", "known_selection_blocker")
+
+    execution = run_slice_three(
+        canonical,
+        slice_two,
+        operations=SliceThreeOperations(integrated_selection=failed_selection),
+    )
+
+    assert execution.status == "fail"
+    assert execution.integrated_selection is not None
+    assert execution.integrated_selection.failure.reason == "known_selection_blocker"
+    assert not untouched_output.exists()
+    assert not (untouched_output / "reruns").exists()
+    assert not (untouched_output / "late_corridor").exists()
+
+    def exploding_selection(
+        config: CanonicalPathBConfig,
+        authorities: SelectionAuthorityInputs[str, str],
+    ) -> StageResult[IntegratedSelectionHandoff[str]]:
+        raise RuntimeError("selection boom")
+
+    normalized = run_integrated_selection_stage(
+        canonical,
+        fingerprint_authority=slice_two.fingerprint_authority,
+        global_authority=slice_two.global_authority,
+        operation=exploding_selection,
+    )
+
+    assert normalized.status == "fail"
+    assert normalized.failure.reason == "integrated_selection_operation_failed"
+    assert normalized.failure.resumable is True

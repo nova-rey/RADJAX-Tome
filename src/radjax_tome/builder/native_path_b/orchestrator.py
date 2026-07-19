@@ -29,6 +29,18 @@ from radjax_tome.builder.native_path_b.score_pass import (
     ScorePassValueT,
     run_score_pass_stage,
 )
+from radjax_tome.builder.native_path_b.selection import (
+    FingerprintAuthorityValueT as SelectionFingerprintAuthorityValueT,
+)
+from radjax_tome.builder.native_path_b.selection import (
+    GlobalAuthorityValueT as SelectionGlobalAuthorityValueT,
+)
+from radjax_tome.builder.native_path_b.selection import (
+    IntegratedSelectionHandoff,
+    IntegratedSelectionOperation,
+    SelectionValueT,
+    run_integrated_selection_stage,
+)
 
 
 @dataclass(frozen=True)
@@ -169,4 +181,92 @@ def run_slice_two(
         early_corridor=early_corridor,
         fingerprint_authority=fingerprint_authority,
         global_authority=global_authority,
+    )
+
+
+@dataclass(frozen=True)
+class SliceThreeOperations(
+    Generic[
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+    ]
+):
+    """Injected existing C2-C5 operation for the third native slice."""
+
+    integrated_selection: IntegratedSelectionOperation[
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+    ]
+
+
+@dataclass(frozen=True)
+class SliceThreeExecution(
+    Generic[
+        PreflightValueT,
+        ScorePassValueT,
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+    ]
+):
+    """In-memory C2-C5 handoff; rerun and late corridor remain out of scope."""
+
+    slice_two: SliceTwoExecution[
+        PreflightValueT,
+        ScorePassValueT,
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+    ]
+    integrated_selection: (
+        StageResult[IntegratedSelectionHandoff[SelectionValueT]] | None
+    )
+
+    @property
+    def status(self) -> str:
+        if self.slice_two.status != "pass":
+            return "fail"
+        if (
+            self.integrated_selection is None
+            or self.integrated_selection.status != "pass"
+        ):
+            return "fail"
+        return "pass"
+
+
+def run_slice_three(
+    config: CanonicalPathBConfig,
+    slice_two: SliceTwoExecution[
+        PreflightValueT,
+        ScorePassValueT,
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+    ],
+    *,
+    operations: SliceThreeOperations[
+        SelectionFingerprintAuthorityValueT,
+        SelectionGlobalAuthorityValueT,
+        SelectionValueT,
+    ],
+) -> SliceThreeExecution[
+    PreflightValueT,
+    ScorePassValueT,
+    SelectionFingerprintAuthorityValueT,
+    SelectionGlobalAuthorityValueT,
+    SelectionValueT,
+]:
+    """Run C2-C5 after both authorities; no delivery stages are invoked."""
+
+    if slice_two.status != "pass":
+        return SliceThreeExecution(slice_two=slice_two, integrated_selection=None)
+    integrated_selection = run_integrated_selection_stage(
+        config,
+        fingerprint_authority=slice_two.fingerprint_authority,
+        global_authority=slice_two.global_authority,
+        operation=operations.integrated_selection,
+    )
+    return SliceThreeExecution(
+        slice_two=slice_two,
+        integrated_selection=integrated_selection,
     )
