@@ -8,7 +8,9 @@ Capture projects selected payload shards one at a time and retains only compact
 scalar metadata plus versioned semantic digests of active token IDs,
 probabilities, log-probabilities, and ordered active entries. It never commits
 payload arrays, so comparison against an artifact does not retain the full
-source payload projection in memory.
+source payload projection in memory. Active values use the v2 canonical binary
+encoding: big-endian signed int64 token IDs, big-endian IEEE-754 float64 values,
+an explicit active count, and normalized signed zero (`-0.0` hashes as `+0.0`).
 
 ```bash
 cd /teamspace/studios/this_studio/radjax/RADJAX-Tome

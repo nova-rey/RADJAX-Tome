@@ -44,6 +44,14 @@ def test_contract_rejects_selection_index_mismatch() -> None:
         _contract(rows)
 
 
+def test_contract_rejects_malformed_payload_digest() -> None:
+    rows = _rows()
+    rows["payload_semantics"][0]["active_payload_digest"] = "sha256:UPPERCASE"
+
+    with pytest.raises(ValueError, match="active_payload_digest is required"):
+        _contract(rows)
+
+
 def _contract(
     rows: dict[str, list[dict[str, object]]], **kwargs: object
 ) -> dict[str, object]:

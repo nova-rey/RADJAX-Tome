@@ -1364,3 +1364,11 @@ ordered active-value digests instead of active token/probability arrays. Raw
 payload storage is validated before hashing but discarded immediately, keeping
 full-vocabulary selections compact and fixture-size bounded. M2A remains
 capture_pending until a corrected fixture is captured from the terminal Tome.
+
+## 2026-07-19 — M2A Binary Active-Payload Digests
+
+Active payload digests now use versioned, chunked canonical binary encoding:
+big-endian signed int64 token IDs, big-endian IEEE-754 float64 probabilities
+and log-probabilities, explicit active counts, and normalized signed zero. The
+combined digest binds the component digests without per-entry JSON serialization.
+M2A remains capture_pending.

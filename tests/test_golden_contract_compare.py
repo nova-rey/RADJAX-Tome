@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import radjax_tome.golden.contract as golden_contract
 import radjax_tome.golden.projection as golden_projection
 from radjax_tome.golden.compare import compare_contracts
 from radjax_tome.golden.contract import build_contract
@@ -234,6 +235,41 @@ def test_full_vocabulary_payload_projection_is_compact_and_order_sensitive() -> 
         != log_probability_mutation["active_top_log_probs_digest"]
     )
     assert projected["active_payload_digest"] != reordered["active_payload_digest"]
+
+
+def test_binary_payload_digest_uses_chunked_encoding_for_full_vocabulary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    vocab_size = 262144
+    canonical_calls = 0
+    original_canonical_json_bytes = golden_contract.canonical_json_bytes
+
+    def count_canonical_json_bytes(value: object) -> bytes:
+        nonlocal canonical_calls
+        canonical_calls += 1
+        return original_canonical_json_bytes(value)
+
+    monkeypatch.setattr(
+        golden_contract,
+        "canonical_json_bytes",
+        count_canonical_json_bytes,
+    )
+    digests = golden_contract.digest_active_payload_storage(
+        {
+            "effective_top_k": vocab_size,
+            "top_token_ids": list(range(vocab_size)),
+            "top_probs": [1.0 / vocab_size] * vocab_size,
+            "top_log_probs": [-12.476649250079015] * vocab_size,
+            "top_selection_mask": [True] * vocab_size,
+        }
+    )
+
+    assert canonical_calls == 0
+    assert all(
+        len(digest) == 71 and digest.startswith("sha256:")
+        for key, digest in digests.items()
+        if key != "payload_digest_version"
+    )
 
 
 def test_compare_streams_jsonl_without_eager_projection_loader(

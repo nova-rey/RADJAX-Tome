@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
+import struct
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -11,7 +13,8 @@ import numpy as np
 GOLDEN_CONTRACT_SCHEMA_VERSION = "radjax_tome.golden_contract.v1"
 GOLDEN_CONTRACT_NAME = "t4_gemma3_270m_fingerprint_corridor_path_b_1k"
 COLLECTION_NAMES = ("selected_obligations", "source_passports", "payload_semantics")
-ACTIVE_PAYLOAD_DIGEST_VERSION = "golden_active_payload_v1"
+ACTIVE_PAYLOAD_DIGEST_VERSION = "golden_active_payload_v2"
+ACTIVE_PAYLOAD_DIGEST_CHUNK_ENTRIES = 4096
 ACTIVE_PAYLOAD_DIGEST_FIELDS = (
     "active_top_token_ids_digest",
     "active_top_probs_digest",
@@ -31,6 +34,7 @@ FORBIDDEN_DENSE_PAYLOAD_FIELDS = frozenset(
         "full_vocab_probs",
     }
 )
+_SHA256_DIGEST_PATTERN = re.compile(r"sha256:[0-9a-f]{64}\Z")
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -184,7 +188,10 @@ def validate_sparse_payload_semantics_record(row: Mapping[str, Any]) -> None:
         raise ValueError("payload_semantics payload digest version is unsupported")
     for key in ACTIVE_PAYLOAD_DIGEST_FIELDS:
         value = row.get(key)
-        if not isinstance(value, str) or not value.startswith("sha256:"):
+        if (
+            not isinstance(value, str)
+            or _SHA256_DIGEST_PATTERN.fullmatch(value) is None
+        ):
             raise ValueError(f"payload_semantics {key} is required")
     for key in ("teacher_entropy", "top_mass", "tail_mass", "dynamic_mass_threshold"):
         value = row.get(key)
@@ -236,9 +243,10 @@ def digest_active_payload_storage(row: Mapping[str, Any]) -> dict[str, str]:
     token_hasher = _active_payload_hasher("token-ids", active_count)
     probability_hasher = _active_payload_hasher("probabilities", active_count)
     log_probability_hasher = _active_payload_hasher("log-probabilities", active_count)
-    combined_hasher = _active_payload_hasher("entries", active_count)
     seen_token_ids: set[int] = set()
-    active_rank = 0
+    token_buffer: list[int] = []
+    probability_buffer: list[float] = []
+    log_probability_buffer: list[float] = []
     for token_id, probability, log_probability, active in zip(
         arrays["top_token_ids"],
         arrays["top_probs"],
@@ -254,21 +262,33 @@ def digest_active_payload_storage(row: Mapping[str, Any]) -> dict[str, str]:
                 "golden capture payload contains duplicate active token IDs"
             )
         seen_token_ids.add(token_id)
-        _update_active_payload_hasher(token_hasher, active_rank, token_id)
-        _update_active_payload_hasher(probability_hasher, active_rank, probability)
-        _update_active_payload_hasher(
-            log_probability_hasher, active_rank, log_probability
+        token_buffer.append(token_id)
+        probability_buffer.append(_canonical_float64(probability))
+        log_probability_buffer.append(_canonical_float64(log_probability))
+        if len(token_buffer) == ACTIVE_PAYLOAD_DIGEST_CHUNK_ENTRIES:
+            _flush_active_payload_buffers(
+                token_hasher,
+                probability_hasher,
+                log_probability_hasher,
+                token_buffer,
+                probability_buffer,
+                log_probability_buffer,
+            )
+            token_buffer.clear()
+            probability_buffer.clear()
+            log_probability_buffer.clear()
+    if token_buffer:
+        _flush_active_payload_buffers(
+            token_hasher,
+            probability_hasher,
+            log_probability_hasher,
+            token_buffer,
+            probability_buffer,
+            log_probability_buffer,
         )
-        _update_active_payload_hasher(
-            combined_hasher,
-            active_rank,
-            {
-                "token_id": token_id,
-                "probability": probability,
-                "log_probability": log_probability,
-            },
-        )
-        active_rank += 1
+    combined_hasher = _active_payload_hasher("combined", active_count)
+    for hasher in (token_hasher, probability_hasher, log_probability_hasher):
+        combined_hasher.update(hasher.digest())
     return {
         "payload_digest_version": ACTIVE_PAYLOAD_DIGEST_VERSION,
         "active_top_token_ids_digest": "sha256:" + token_hasher.hexdigest(),
@@ -280,15 +300,29 @@ def digest_active_payload_storage(row: Mapping[str, Any]) -> dict[str, str]:
 
 def _active_payload_hasher(domain: str, active_count: int) -> Any:
     hasher = hashlib.sha256()
-    hasher.update(f"radjax-tome:golden-active-{domain}:v1\n".encode())
-    hasher.update(canonical_json_bytes({"active_count": active_count}))
-    hasher.update(b"\n")
+    hasher.update(f"radjax-tome:golden-active-{domain}:binary-v2\n".encode())
+    hasher.update(struct.pack(">Q", active_count))
     return hasher
 
 
-def _update_active_payload_hasher(hasher: Any, rank: int, value: Any) -> None:
-    hasher.update(canonical_json_bytes({"rank": rank, "value": value}))
-    hasher.update(b"\n")
+def _flush_active_payload_buffers(
+    token_hasher: Any,
+    probability_hasher: Any,
+    log_probability_hasher: Any,
+    token_ids: list[int],
+    probabilities: list[float],
+    log_probabilities: list[float],
+) -> None:
+    count = len(token_ids)
+    token_hasher.update(struct.pack(f">{count}q", *token_ids))
+    probability_hasher.update(struct.pack(f">{count}d", *probabilities))
+    log_probability_hasher.update(struct.pack(f">{count}d", *log_probabilities))
+
+
+def _canonical_float64(value: Any) -> float:
+    """Normalize both signed-zero encodings to positive zero before hashing."""
+    numeric = float(value)
+    return 0.0 if numeric == 0.0 else numeric
 
 
 def _validate_active_payload_entry(
@@ -296,7 +330,12 @@ def _validate_active_payload_entry(
     probability: Any,
     log_probability: Any,
 ) -> None:
-    if not isinstance(token_id, int) or isinstance(token_id, bool) or token_id < 0:
+    if (
+        not isinstance(token_id, int)
+        or isinstance(token_id, bool)
+        or token_id < 0
+        or token_id > (2**63 - 1)
+    ):
         raise ValueError(
             "golden capture active top_token_ids must be nonnegative integers"
         )
