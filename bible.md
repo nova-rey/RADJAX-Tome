@@ -1442,3 +1442,14 @@ tests; direct native API passed `9` tests and import isolation passed `37`
 tests. Golden validation retained count `256` and semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4A Typed Stage Contracts and Evidence Readers
+
+M4A adds typed contracts and read-only evidence readers without changing
+schemas or paths. Early provisional corridor evidence is rejected as final;
+evidence derives hashes from existing JSON and performs no writes. The full
+gate passed `751 passed, 22 skipped` before mechanical format; the post-format
+focused native contract/API/runtime/M3C set passed `21` tests. Golden validation
+retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.

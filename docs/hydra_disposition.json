@@ -1018,6 +1018,22 @@
       "replacement_or_target_boundary": "M3 native Path B supporting API.",
       "status": "supporting"
     },
+    "src/radjax_tome/builder/native_path_b/contracts.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Immutable native Path B stage contract and outcome types.",
+      "replacement_or_target_boundary": "M4 native Path B stage-contract boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/evidence.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Read-only native Path B early and late corridor evidence readers.",
+      "replacement_or_target_boundary": "M4 native Path B stage-contract boundary.",
+      "status": "supporting"
+    },
     "src/radjax_tome/builder/production.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
