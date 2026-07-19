@@ -1392,3 +1392,21 @@ with 256 selected coordinates. The working production head remains native
 two-pass fingerprint-corridor Path B; research-frozen paths remain frozen.
 The committed fixture has passed contract and portability validation and is the
 mandatory semantic regression baseline for future canonical-pipeline changes.
+
+## 2026-07-19 — M3A Corridor Phase Characterization
+
+M3A adds a focused CPU characterization of native Path B's two corridor writes:
+the early score-surface export has zero selected records and no selected-link
+claim, while the post-rerun export overwrites the public corridor summary with
+selected linkage and emits detailed corridor progress. The characterization
+also proves its observable order and a current finalization-only resume probe
+after removing only the C6 validation report. No runtime algorithm, schema,
+artifact path, or golden fixture changed.
+
+## 2026-07-19 — M3A Root Gate Evidence
+
+The M3A root gate verified the full suite at `714 passed, 22 skipped` and the
+focused M3A/import/runtime set at `23 passed`. Golden validation retained count
+`256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
