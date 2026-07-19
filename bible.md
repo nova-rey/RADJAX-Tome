@@ -1537,3 +1537,16 @@ migration remains production-owned. The M4C matrix and native/import focused
 gate passed `75` tests. Golden validation retained count `256` and semantic
 root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4D Local Integration Proof
+
+M4D local proof passed without changing runtime code or the immutable fixture:
+the full non-GPU suite passed `779 passed, 22 skipped`, the native/import/
+delivery/validation/linkage/reconciliation/Golden focus passed `220` tests,
+and static checks passed. Golden validation retained count `256` and semantic
+root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+`docs/M4D_INTEGRATION_EVIDENCE.md` records the exact reviewed T4 Golden 1K
+commands and acceptance criteria. T4 rental proof is not executed on this
+host: it has no CUDA/T4, Torch, Transformers, or terminal canonical artifact.
+This is an external merge gate, not a local pass claim; `main` remains
+untouched and the fixture was not regenerated.
