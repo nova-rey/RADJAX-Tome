@@ -1034,6 +1034,30 @@
       "replacement_or_target_boundary": "M4 native Path B stage-contract boundary.",
       "status": "supporting"
     },
+    "src/radjax_tome/builder/native_path_b/orchestrator.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Ordered native Path B preflight and score-pass stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/preflight.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed adapter for existing native Path B preflight behavior.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/score_pass.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed adapter for the existing native Path B score pass.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
     "src/radjax_tome/builder/production.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",

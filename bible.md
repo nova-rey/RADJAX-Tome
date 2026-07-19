@@ -1453,3 +1453,14 @@ focused native contract/API/runtime/M3C set passed `21` tests. Golden validation
 retained count `256` and semantic root
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
 Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4B Slice One Preflight and Score Adapters
+
+M4B slice one introduces typed callback-driven preflight-to-score adapters.
+Score execution is blocked after preflight failure; the adapters write no
+artifacts, progress, or reports and preserve schemas and paths. Later corridor
+stages remain for later slices. The initial focused gate passed `171` tests;
+post-format broad focused coverage passed `131` tests and the orchestrator
+suite passed `4` tests. Golden validation retained count `256` and semantic
+root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
