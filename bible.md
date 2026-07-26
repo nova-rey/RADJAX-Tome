@@ -1586,3 +1586,23 @@ Ruff check, format, and diff checks passed. Immutable Golden validation remains
 `docs/M4D_INTEGRATION_EVIDENCE.md` now corrects the earlier slice-one-only
 scope; reviewed T4 Golden 1K comparison remains unexecuted and is still the
 external merge gate.
+
+## 2026-07-26 — M4D Versioned Authority-Hash and Golden Contract Migration
+
+The accepted M4D diagnosis is implemented without modifying the immutable T4
+Golden v1 fixture or running GPU inference. Historical
+`radjax.c6.score_pass_authority.v1` remains the exact raw-byte recipe, while
+new artifacts emit explicit v2 semantic authority, retain their v1 lineage
+hash, and record raw digests for metadata, packed-assignment manifest, corridor
+modes, and production selector inputs. Golden contracts now have distinct v1
+and v2 schema/digest domains; cross-version comparisons are explicitly
+incompatible, and a v2 capture can project a historical v1 artifact read-only
+after verifying its recorded v1 authority. The complete contract is in
+`docs/AUTHORITY_HASH_V2_MIGRATION.md`. Focused authority/M3/M4/Golden/Hydra
+coverage passed `133 passed, 1 skipped in 18.97s`; the complete local suite
+passed `794 passed, 23 skipped in 92.78s`. The conditional July 19/July 24
+source-artifact comparison skipped because neither artifact is mounted locally;
+it runs only when both explicit artifact paths are supplied. Ruff check/format,
+`git diff --check`, CLI Golden help, and frozen v1 fixture validation passed;
+the fixture root remains
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.

@@ -791,6 +791,19 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     golden_capture.add_argument("--artifact", type=Path, required=True)
     golden_capture.add_argument("--output", type=Path, required=True)
+    golden_capture.add_argument(
+        "--contract-version",
+        choices=(
+            "auto",
+            "radjax_tome.golden_contract.v1",
+            "radjax_tome.golden_contract.v2",
+        ),
+        default="auto",
+        help=(
+            "Golden contract version to capture; auto follows the artifact "
+            "authority contract."
+        ),
+    )
     golden_capture.set_defaults(func=_cmd_golden_capture)
     golden_validate = golden_subparsers.add_parser(
         "validate",
@@ -1853,7 +1866,11 @@ def _cmd_model_discover(args: argparse.Namespace) -> int:
 def _cmd_golden_capture(args: argparse.Namespace) -> int:
     from radjax_tome.golden import capture_golden_contract
 
-    report = capture_golden_contract(args.artifact, args.output)
+    report = capture_golden_contract(
+        args.artifact,
+        args.output,
+        contract_version=args.contract_version,
+    )
     print(json.dumps(report, sort_keys=True))
     return 0
 

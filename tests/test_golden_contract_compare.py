@@ -10,7 +10,11 @@ import pytest
 import radjax_tome.golden.contract as golden_contract
 import radjax_tome.golden.projection as golden_projection
 from radjax_tome.golden.compare import compare_contracts
-from radjax_tome.golden.contract import build_contract
+from radjax_tome.golden.contract import (
+    GOLDEN_CONTRACT_SCHEMA_V1,
+    GOLDEN_CONTRACT_SCHEMA_V2,
+    build_contract,
+)
 from radjax_tome.golden.projection import (
     MAX_GOLDEN_FIXTURE_BYTES,
     MAX_GOLDEN_RECORD_BYTES,
@@ -47,6 +51,28 @@ def test_compare_reports_coordinate_and_selection_order_drift(tmp_path: Path) ->
     report = compare_contracts(expected, observed)
     assert report["status"] == "fail"
     assert report["differences"][0]["field"] == "coordinate"
+
+
+def test_compare_refuses_to_silently_compare_contract_versions(tmp_path: Path) -> None:
+    expected = _write_fixture(tmp_path / "v1", schema_version=GOLDEN_CONTRACT_SCHEMA_V1)
+    observed = _write_fixture(tmp_path / "v2", schema_version=GOLDEN_CONTRACT_SCHEMA_V2)
+
+    report = compare_contracts(expected, observed)
+
+    assert report == {
+        "status": "incompatible",
+        "expected_schema_version": GOLDEN_CONTRACT_SCHEMA_V1,
+        "observed_schema_version": GOLDEN_CONTRACT_SCHEMA_V2,
+        "differences": [
+            {
+                "collection": "contract",
+                "field": "schema_version",
+                "expected": GOLDEN_CONTRACT_SCHEMA_V1,
+                "observed": GOLDEN_CONTRACT_SCHEMA_V2,
+            }
+        ],
+        "storage_only_differences": [],
+    }
 
 
 def test_capture_refuses_nonterminal_artifact_without_modifying_it(
@@ -398,7 +424,13 @@ def test_compare_rejects_semantic_field_drift(
     assert compare_contracts(expected, observed)["status"] == "fail"
 
 
-def _write_fixture(root: Path, *, entropy: float = 1.0, position: int = 3) -> Path:
+def _write_fixture(
+    root: Path,
+    *,
+    entropy: float = 1.0,
+    position: int = 3,
+    schema_version: str = GOLDEN_CONTRACT_SCHEMA_V1,
+) -> Path:
     obligations = [
         {
             "selection_index": 1,
@@ -441,6 +473,7 @@ def _write_fixture(root: Path, *, entropy: float = 1.0, position: int = 3) -> Pa
         source_passports=passports,
         payload_semantics=payloads,
         board_summary={},
+        schema_version=schema_version,
     )
     root.mkdir()
     (root / "contract.json").write_text(json.dumps(contract), encoding="utf-8")

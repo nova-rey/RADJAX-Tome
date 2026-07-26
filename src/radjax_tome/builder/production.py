@@ -15,6 +15,11 @@ from typing import Any
 
 from radjax_tome.audit import audit_selected_linkage, write_selected_linkage_audit
 from radjax_tome.backends import TeacherBackendConfig
+from radjax_tome.builder.authority_hashes import (
+    AUTHORITY_HASH_V2,
+    AUTHORITY_MANIFEST_SCHEMA_V2,
+    authority_hashes_for_artifact,
+)
 from radjax_tome.builder.backend_textbook import (
     BackendTeacherTextbookBuildConfig,
     build_streaming_backend_teacher_textbook,
@@ -2691,7 +2696,7 @@ def _native_payload_hash_for_probe(payload: Mapping[str, Any]) -> str:
 
 def _export_c6_selection_authorities(
     config: ProductionBuildConfig,
-) -> dict[str, Path | str | bool]:
+) -> dict[str, Any]:
     """Compose the preserved fingerprint and global C6 authority exports."""
 
     fingerprint = _export_c6_fingerprint_selection_authority(config)
@@ -2700,7 +2705,7 @@ def _export_c6_selection_authorities(
 
 def _export_c6_fingerprint_selection_authority(
     config: ProductionBuildConfig,
-) -> dict[str, Path | str]:
+) -> dict[str, Any]:
     """Export selector/features from the provisional score-surface corridor.
 
     This is the first authority boundary in the canonical native Path-B route.
@@ -2743,19 +2748,11 @@ def _export_c6_fingerprint_selection_authority(
     )
     selector_path = c6_root / "production_global_selector.json"
     write_json(selector_path, selector_manifest)
-    score_pass_authority_hash = _hash_payload(
-        {
-            "metadata_sha256": _file_sha256(config.output_dir / "metadata.json"),
-            "assignment_manifest_sha256": _file_sha256(
-                config.output_dir / "corridors" / "mode_assignments.json"
-            ),
-            "modes_sha256": _file_sha256(
-                config.output_dir / "corridors" / "corridor_modes.json"
-            ),
-            "selector_sha256": _file_sha256(selector_path),
-            "selection_integration_config_hash": _selection_integration_hash(config),
-        }
+    authority_hashes = authority_hashes_for_artifact(
+        config.output_dir,
+        selection_integration_config_hash=_selection_integration_hash(config),
     )
+    score_pass_authority_hash = authority_hashes.score_pass_authority_hash_v2
     feature_path = export_corridor_candidate_features(
         artifact_dir=config.output_dir,
         output_dir=c6_root / "corridor-features",
@@ -2763,24 +2760,30 @@ def _export_c6_fingerprint_selection_authority(
     feature_manifest_path = c6_root / "corridor-features" / "manifest.json"
     feature_manifest = read_json_object(feature_manifest_path)
     feature_manifest["score_pass_authority_hash"] = score_pass_authority_hash
+    feature_manifest["score_pass_authority_contract_version"] = AUTHORITY_HASH_V2
     write_json(feature_manifest_path, feature_manifest)
     return {
         "selector_path": selector_path,
         "feature_path": feature_path,
         "score_pass_authority_hash": score_pass_authority_hash,
+        "score_pass_authority_hash_v1": (authority_hashes.score_pass_authority_hash_v1),
+        "score_pass_authority_contract_version": AUTHORITY_HASH_V2,
+        "raw_artifact_digests": authority_hashes.raw_artifact_digests,
     }
 
 
 def _export_c6_global_authority(
     config: ProductionBuildConfig,
-    fingerprint: Mapping[str, Path | str],
-) -> dict[str, Path | str | bool]:
+    fingerprint: Mapping[str, Any],
+) -> dict[str, Any]:
     """Export global supply/passports after matching fingerprint authority."""
 
     c6_root = config.output_dir / "c6"
     selector_path = Path(str(fingerprint["selector_path"]))
     feature_path = Path(str(fingerprint["feature_path"]))
     score_pass_authority_hash = str(fingerprint["score_pass_authority_hash"])
+    score_pass_authority_hash_v1 = str(fingerprint["score_pass_authority_hash_v1"])
+    raw_artifact_digests = dict(fingerprint["raw_artifact_digests"])
     selector_manifest = read_json_object(selector_path)
     global_supply = export_production_global_board_supply(
         selector_manifest,
@@ -2800,11 +2803,12 @@ def _export_c6_global_authority(
     authority_manifest_path = c6_root / "authority_manifest.json"
     run_manifest = read_json_object(config.output_dir / "run_manifest.json")
     authority_manifest = {
-        "schema_version": "radjax.c6_selection_authority.v1",
+        "schema_version": AUTHORITY_MANIFEST_SCHEMA_V2,
+        "score_pass_authority_contract_version": AUTHORITY_HASH_V2,
         "score_pass_authority_hash": score_pass_authority_hash,
-        "target_store_metadata_sha256": _file_sha256(
-            config.output_dir / "metadata.json"
-        ),
+        "score_pass_authority_hash_v1": score_pass_authority_hash_v1,
+        "raw_artifact_digests": raw_artifact_digests,
+        "target_store_metadata_sha256": raw_artifact_digests["metadata.json"],
         "corpus_hash": run_manifest.get("corpus_hash"),
         "score_pass_config_hash": run_manifest.get("emission_config_hash"),
         "score_pass_resume_hash": run_manifest.get("resume_config_hash"),
@@ -2821,7 +2825,9 @@ def _export_c6_global_authority(
             "corridor_features": feature_path.relative_to(config.output_dir).as_posix(),
         },
         "hashes": {
-            "selector_sha256": _file_sha256(selector_path),
+            "selector_sha256": raw_artifact_digests[
+                "c6/production_global_selector.json"
+            ],
             "global_board_supply_sha256": _file_sha256(global_path),
             "source_passports_manifest_sha256": _file_sha256(passports_path),
             "corridor_features_sha256": _file_sha256(feature_path),
@@ -2924,7 +2930,7 @@ def _validate_external_c6_overrides(
 
 def _prepare_c6_selection(
     config: ProductionBuildConfig,
-    authorities: Mapping[str, Path | str | bool],
+    authorities: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Run C2-C5 from the internally exported production authorities."""
 

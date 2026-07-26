@@ -368,6 +368,14 @@
       "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
       "status": "supporting"
     },
+    "docs/AUTHORITY_HASH_V2_MIGRATION.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M4",
+      "rationale": "Versioned authority-hash and Golden semantic-contract migration.",
+      "replacement_or_target_boundary": "M4D authority integrity and Golden reproducibility evidence.",
+      "status": "supporting"
+    },
     "docs/FINGERPRINT_API.md": {
       "archive_or_removal_condition": "M3 archive pointer and M2 parity gate.",
       "kind": "top-level-doc",

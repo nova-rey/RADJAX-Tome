@@ -10,7 +10,13 @@ from typing import Any
 
 import numpy as np
 
-GOLDEN_CONTRACT_SCHEMA_VERSION = "radjax_tome.golden_contract.v1"
+GOLDEN_CONTRACT_SCHEMA_V1 = "radjax_tome.golden_contract.v1"
+GOLDEN_CONTRACT_SCHEMA_V2 = "radjax_tome.golden_contract.v2"
+# Preserve the public historical default for callers that do not request v2.
+GOLDEN_CONTRACT_SCHEMA_VERSION = GOLDEN_CONTRACT_SCHEMA_V1
+GOLDEN_CONTRACT_SCHEMA_VERSIONS = frozenset(
+    {GOLDEN_CONTRACT_SCHEMA_V1, GOLDEN_CONTRACT_SCHEMA_V2}
+)
 GOLDEN_CONTRACT_NAME = "t4_gemma3_270m_fingerprint_corridor_path_b_1k"
 COLLECTION_NAMES = ("selected_obligations", "source_passports", "payload_semantics")
 ACTIVE_PAYLOAD_DIGEST_VERSION = "golden_active_payload_v2"
@@ -47,14 +53,29 @@ def canonical_json_bytes(value: Any) -> bytes:
     ).encode("utf-8")
 
 
-def semantic_digest(domain: str, value: Any) -> str:
-    prefix = f"radjax-tome:{domain}:v1\n".encode()
+def semantic_digest(
+    domain: str,
+    value: Any,
+    *,
+    schema_version: str = GOLDEN_CONTRACT_SCHEMA_VERSION,
+) -> str:
+    _validate_schema_version(schema_version)
+    version = schema_version.rsplit(".", maxsplit=1)[-1]
+    prefix = f"radjax-tome:{domain}:{version}\n".encode()
     return "sha256:" + hashlib.sha256(prefix + canonical_json_bytes(value)).hexdigest()
 
 
-def ordered_collection_root(domain: str, rows: Sequence[Mapping[str, Any]]) -> str:
-    digests = [semantic_digest(f"{domain}-row", row) for row in rows]
-    return semantic_digest(f"{domain}-root", digests)
+def ordered_collection_root(
+    domain: str,
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    schema_version: str = GOLDEN_CONTRACT_SCHEMA_VERSION,
+) -> str:
+    digests = [
+        semantic_digest(f"{domain}-row", row, schema_version=schema_version)
+        for row in rows
+    ]
+    return semantic_digest(f"{domain}-root", digests, schema_version=schema_version)
 
 
 def build_contract(
@@ -68,24 +89,29 @@ def build_contract(
     payload_semantics: Sequence[Mapping[str, Any]],
     board_summary: Mapping[str, Any],
     capture_metadata: Mapping[str, Any] | None = None,
+    schema_version: str = GOLDEN_CONTRACT_SCHEMA_VERSION,
 ) -> dict[str, Any]:
+    _validate_schema_version(schema_version)
     collections = {
         "selected_obligations": list(selected_obligations),
         "source_passports": list(source_passports),
         "payload_semantics": list(payload_semantics),
     }
     roots = {
-        name: ordered_collection_root(name, rows) for name, rows in collections.items()
+        name: ordered_collection_root(name, rows, schema_version=schema_version)
+        for name, rows in collections.items()
     }
     contract = {
-        "schema_version": GOLDEN_CONTRACT_SCHEMA_VERSION,
+        "schema_version": schema_version,
         "fixture_name": GOLDEN_CONTRACT_NAME,
         "fixture_metadata": dict(fixture_metadata),
         "input_identity": dict(input_identity),
         "semantic_policy": dict(semantic_policy),
         "stage_summary": list(stage_summary),
         "collection_roots": roots,
-        "board_summary_digest": semantic_digest("board-summary", board_summary),
+        "board_summary_digest": semantic_digest(
+            "board-summary", board_summary, schema_version=schema_version
+        ),
         "capture_metadata": dict(capture_metadata or {}),
     }
     contract["semantic_root"] = semantic_digest(
@@ -95,6 +121,7 @@ def build_contract(
             for key, value in contract.items()
             if key not in {"capture_metadata", "semantic_root"}
         },
+        schema_version=schema_version,
     )
     validate_contract(contract, collections=collections)
     return contract
@@ -105,8 +132,8 @@ def validate_contract(
     *,
     collections: Mapping[str, Sequence[Mapping[str, Any]]] | None = None,
 ) -> None:
-    if contract.get("schema_version") != GOLDEN_CONTRACT_SCHEMA_VERSION:
-        raise ValueError("unsupported golden contract schema version")
+    schema_version = contract.get("schema_version")
+    _validate_schema_version(schema_version)
     if contract.get("fixture_name") != GOLDEN_CONTRACT_NAME:
         raise ValueError("unexpected golden contract fixture name")
     roots = contract.get("collection_roots")
@@ -121,6 +148,7 @@ def validate_contract(
             for key, value in contract.items()
             if key not in {"capture_metadata", "semantic_root"}
         },
+        schema_version=schema_version,
     )
     if contract["semantic_root"] != expected_root:
         raise ValueError("golden contract semantic_root does not match content")
@@ -131,7 +159,7 @@ def validate_contract(
         if rows is None:
             raise ValueError(f"golden contract collection missing: {name}")
         _validate_collection(name, rows)
-        observed = ordered_collection_root(name, rows)
+        observed = ordered_collection_root(name, rows, schema_version=schema_version)
         if observed != roots[name]:
             raise ValueError(f"golden contract {name} root does not match rows")
     coordinates = [_coordinate(row) for row in collections["selected_obligations"]]
@@ -168,6 +196,12 @@ def _validate_collection(name: str, rows: Sequence[Mapping[str, Any]]) -> None:
         previous_index = index
         if name == "payload_semantics":
             validate_sparse_payload_semantics_record(row)
+
+
+def _validate_schema_version(value: Any) -> str:
+    if value not in GOLDEN_CONTRACT_SCHEMA_VERSIONS:
+        raise ValueError("unsupported golden contract schema version")
+    return str(value)
 
 
 def validate_sparse_payload_semantics_record(row: Mapping[str, Any]) -> None:

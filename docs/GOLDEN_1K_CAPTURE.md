@@ -34,3 +34,30 @@ Any semantic difference requires an explicit explanation and an intentional
 fixture update. Payload bodies remain excluded: the contract stores versioned
 binary semantic digests of ordered active token IDs, probabilities, and
 log-probabilities rather than dense or raw payload arrays.
+
+## Historical v1 and reproducible v2
+
+This checked-in fixture is permanently a
+`radjax_tome.golden_contract.v1` historical contract. Its root and recorded
+authority hash must not be changed or reinterpreted. Its v1 authority binds
+raw artifact bytes and therefore includes runtime timestamps from the source
+artifact; a fresh artifact must not be expected to reproduce the v1 root.
+
+New reproducibility work uses the explicit v2 authority and Golden contracts
+described in [Authority-Hash v2 Migration](AUTHORITY_HASH_V2_MIGRATION.md).
+Capture a v2 projection read-only from a terminal source artifact, then use
+that new v2 fixture only with v2 comparisons:
+
+```bash
+radjax-tome golden capture \
+  --contract-version radjax_tome.golden_contract.v2 \
+  --artifact /path/to/terminal-artifact \
+  --output /path/to/golden-v2-fixture
+
+radjax-tome golden compare \
+  --fixture /path/to/golden-v2-fixture \
+  --artifact /path/to/another-terminal-artifact
+```
+
+V1 and v2 contracts are intentionally incompatible. `golden compare` reports
+their differing schema versions rather than treating them as comparable roots.

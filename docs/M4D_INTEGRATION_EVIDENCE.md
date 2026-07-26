@@ -38,7 +38,50 @@ python3 -m pytest -q \
   tests/test_golden_projection_truth_gate.py
 ```
 
-## Reviewed T4 Golden 1K proof — not executed
+## Reviewed T4 Golden 1K proof — v1 historical mismatch diagnosed
+
+The reviewed T4 run subsequently completed with production exit `0`, passing
+validation, `256` selected coordinates, `47` corridor modes, and `34,220`
+fingerprints. Its selected coordinates, scores, modes, token IDs, payload
+slots, and source locations matched the frozen fixture. The v1 Golden compare
+failed only because `score_pass_authority_hash` differed: the historical
+fixture recorded `sha256:39588f7bbc69285c9a86c2fb13a7ff34f8ad093e8093abfc56776866b355657a`
+while the fresh run recorded
+`sha256:77a83e9cdda941970813d9293e975f0bc26ef27fb6579e1cf6c7aeb2864bfeb1`.
+
+Authority-hash v1 directly hashes raw `metadata.json` and
+`c6/production_global_selector.json`; both include runtime `created_at`.
+The M4 refactor preserved that recipe exactly. The versioned migration in
+[Authority-Hash v2 Migration](AUTHORITY_HASH_V2_MIGRATION.md) retains this
+fixture as v1 historical evidence and establishes v2 for reproducible
+cross-artifact comparison. No GPU rerun or v1 fixture regeneration is claimed
+or authorized by this migration.
+
+## Authority-hash v2 migration — local verification
+
+The accepted migration preserves v1 as an explicit raw-byte authority contract
+and makes the active authority of newly produced artifacts
+`radjax.c6.score_pass_authority.v2`. V2 binds canonical semantic projections
+while retaining separate raw digests for `metadata.json`,
+`corridors/mode_assignments.json`, `corridors/corridor_modes.json`, and
+`c6/production_global_selector.json`. The complete projection and historical
+capture behavior are specified in
+[Authority-Hash v2 Migration](AUTHORITY_HASH_V2_MIGRATION.md).
+
+| Gate | Result |
+|---|---|
+| Authority v2, M3/M4 characterization, production, Hydra, and Golden tests | `133 passed, 1 skipped in 18.97s` |
+| Complete non-GPU suite | `794 passed, 23 skipped in 92.78s` |
+| Immutable v1 fixture validation | `pass`; count `256`; root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba` |
+| Static and whitespace checks | Ruff check/format and `git diff --check` pass |
+
+The skipped test is the required July 19/July 24 read-only v2 comparison. It
+is conditional on both terminal source artifacts being locally mounted; neither
+artifact is available on this host. It fails rather than skips if only one
+artifact path is configured. No source artifact, frozen fixture, or GPU output
+was modified to obtain this local proof.
+
+## Reviewed T4 Golden 1K proof — original command and source-artifact handling
 
 This checkout contains only the immutable semantic fixture, not a terminal
 canonical artifact suitable for `golden compare`. The local host has no

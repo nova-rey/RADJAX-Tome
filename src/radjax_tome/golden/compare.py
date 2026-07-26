@@ -12,8 +12,15 @@ from radjax_tome.quantization import ENTROPY_PARITY_QUANTIZATION_STEP
 
 def compare_fixture_artifact(fixture_dir: Path, artifact_dir: Path) -> dict[str, Any]:
     validate_fixture(fixture_dir)
+    from radjax_tome.golden.projection import _read_object
+
+    fixture_contract = _read_object(fixture_dir / "contract.json")
     with tempfile.TemporaryDirectory(prefix="radjax-golden-observed-") as temporary:
-        capture_golden_contract(artifact_dir, Path(temporary))
+        capture_golden_contract(
+            artifact_dir,
+            Path(temporary),
+            contract_version=str(fixture_contract["schema_version"]),
+        )
         return compare_contracts(fixture_dir, Path(temporary))
 
 
@@ -23,7 +30,20 @@ def compare_contracts(expected_dir: Path, observed_dir: Path) -> dict[str, Any]:
     expected = _read_object(expected_dir / "contract.json")
     observed = _read_object(observed_dir / "contract.json")
     if expected.get("schema_version") != observed.get("schema_version"):
-        return {"status": "incompatible", "differences": ["schema_version"]}
+        return {
+            "status": "incompatible",
+            "expected_schema_version": expected.get("schema_version"),
+            "observed_schema_version": observed.get("schema_version"),
+            "differences": [
+                {
+                    "collection": "contract",
+                    "field": "schema_version",
+                    "expected": expected.get("schema_version"),
+                    "observed": observed.get("schema_version"),
+                }
+            ],
+            "storage_only_differences": [],
+        }
     differences: list[dict[str, Any]] = []
     for field in ("input_identity", "semantic_policy", "board_summary_digest"):
         if expected.get(field) != observed.get(field):
