@@ -71,15 +71,20 @@ capture behavior are specified in
 | Gate | Result |
 |---|---|
 | Authority v2, M3/M4 characterization, production, Hydra, and Golden tests | `133 passed, 1 skipped in 18.97s` |
-| Complete non-GPU suite | `794 passed, 23 skipped in 92.78s` |
+| Complete non-GPU suite | `794 passed, 23 skipped in 84.38s` |
 | Immutable v1 fixture validation | `pass`; count `256`; root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba` |
 | Static and whitespace checks | Ruff check/format and `git diff --check` pass |
+| Reviewed historical-artifact v2 comparison | `tests/test_authority_hash_contract_v2.py::test_july_t4_artifacts_compare_under_v2_when_both_are_available` passed in `168.86s` |
 
-The skipped test is the required July 19/July 24 read-only v2 comparison. It
-is conditional on both terminal source artifacts being locally mounted; neither
-artifact is available on this host. It fails rather than skips if only one
-artifact path is configured. No source artifact, frozen fixture, or GPU output
-was modified to obtain this local proof.
+The conditional July comparison initially skipped on this local host because
+the source artifacts were not mounted. The final reviewed proof subsequently
+ran it read-only against
+`/teamspace/studios/this_studio/radjax_t4_path_b_1k/c6_3_2_native_clean` and
+`/teamspace/studios/this_studio/radjax_t4_path_b_1k/m4d_refactor_proof/tome`.
+It passed in `168.86s`: the artifacts are semantically equal under v2 while
+their raw-integrity digests remain distinct. The test fails rather than skips
+if only one path is configured. No GPU inference, source artifact, or frozen
+fixture was modified for the comparison.
 
 ## Reviewed T4 Golden 1K proof — original command and source-artifact handling
 

@@ -1138,6 +1138,14 @@
       "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
       "status": "supporting"
     },
+    "src/radjax_tome/builder/authority_hashes.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Versioned raw-integrity and semantic authority-hash contracts for canonical C6 selection.",
+      "replacement_or_target_boundary": "M4D authority integrity and Golden reproducibility boundary.",
+      "status": "supporting"
+    },
     "src/radjax_tome/builder/production.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",

@@ -1606,3 +1606,22 @@ it runs only when both explicit artifact paths are supplied. Ruff check/format,
 `git diff --check`, CLI Golden help, and frozen v1 fixture validation passed;
 the fixture root remains
 `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+
+## 2026-07-26 — M4D Closure and Mainline Approval
+
+The reviewed historical-artifact v2 comparison has closed the final M4D gap.
+`tests/test_authority_hash_contract_v2.py::test_july_t4_artifacts_compare_under_v2_when_both_are_available`
+passed in `168.86s` against
+`/teamspace/studios/this_studio/radjax_t4_path_b_1k/c6_3_2_native_clean` and
+`/teamspace/studios/this_studio/radjax_t4_path_b_1k/m4d_refactor_proof/tome`.
+It proves semantic equality under authority-hash v2 while preserving distinct
+raw integrity digests. This closure records the reviewed read-only comparison;
+it neither reruns GPU inference nor changes either source artifact or the
+immutable v1 fixture. The final bounded roadmap and scope review found all
+M3A–M4D checkpoint criteria satisfied, no corridor-order collapse, no frozen
+fixture mutation, no unauthorized scope expansion, and no merge-policy
+blocker. The final local suite passed `794 passed, 23 skipped in 84.38s`.
+The closure also repairs the Hydra inventory record for the committed
+`builder/authority_hashes.py`; its focused ledger gate passes. M4 is complete
+and the reviewed `m3-m4-canonical-path-b-refactor` branch is approved for
+normal merge to `main`.
