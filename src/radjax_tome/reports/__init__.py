@@ -1,28 +1,13 @@
 """Producer-side report schemas for RADJAX-Tome."""
 
-from radjax_tome.reports.arc import (
-    REQUIRED_ARC2_FLAGS,
-    FingerprintArcReport,
-    build_fingerprint_arc_report,
-    read_fingerprint_arc_report,
-    render_fingerprint_arc_summary,
-    write_fingerprint_arc_report,
-)
-from radjax_tome.reports.baseline import (
-    BaselineArmReport,
-    FingerprintBaselineComparisonReport,
-    read_fingerprint_baseline_report,
-    render_fingerprint_baseline_summary,
-    write_fingerprint_baseline_report,
-)
-from radjax_tome.reports.fingerprint_quality import (
-    FingerprintArtifactByteBudget,
-    FingerprintQualityPerByteReport,
-    QualityPerByteDelta,
-    build_quality_per_byte_delta,
-    read_fingerprint_quality_report,
-    render_fingerprint_quality_summary,
-    write_fingerprint_quality_report,
+from __future__ import annotations
+
+from typing import Any
+
+from radjax_tome._lazy_exports import (
+    LazyExportMap,
+    lazy_export_names,
+    resolve_lazy_export,
 )
 from radjax_tome.reports.metadata_sanity import (
     ARTIFACT_METADATA_SANITY_REPORT_SCHEMA,
@@ -56,6 +41,72 @@ from radjax_tome.reports.runtime_doctor import (
     write_runtime_doctor_report,
 )
 from radjax_tome.reports.writers import write_json_report, write_markdown_report
+
+_LAZY_EXPORTS: LazyExportMap = {
+    "REQUIRED_ARC2_FLAGS": ("radjax_tome.reports.arc", "REQUIRED_ARC2_FLAGS"),
+    "FingerprintArcReport": ("radjax_tome.reports.arc", "FingerprintArcReport"),
+    "build_fingerprint_arc_report": (
+        "radjax_tome.reports.arc",
+        "build_fingerprint_arc_report",
+    ),
+    "read_fingerprint_arc_report": (
+        "radjax_tome.reports.arc",
+        "read_fingerprint_arc_report",
+    ),
+    "render_fingerprint_arc_summary": (
+        "radjax_tome.reports.arc",
+        "render_fingerprint_arc_summary",
+    ),
+    "write_fingerprint_arc_report": (
+        "radjax_tome.reports.arc",
+        "write_fingerprint_arc_report",
+    ),
+    "BaselineArmReport": ("radjax_tome.reports.baseline", "BaselineArmReport"),
+    "FingerprintBaselineComparisonReport": (
+        "radjax_tome.reports.baseline",
+        "FingerprintBaselineComparisonReport",
+    ),
+    "read_fingerprint_baseline_report": (
+        "radjax_tome.reports.baseline",
+        "read_fingerprint_baseline_report",
+    ),
+    "render_fingerprint_baseline_summary": (
+        "radjax_tome.reports.baseline",
+        "render_fingerprint_baseline_summary",
+    ),
+    "write_fingerprint_baseline_report": (
+        "radjax_tome.reports.baseline",
+        "write_fingerprint_baseline_report",
+    ),
+    "FingerprintArtifactByteBudget": (
+        "radjax_tome.reports.fingerprint_quality",
+        "FingerprintArtifactByteBudget",
+    ),
+    "FingerprintQualityPerByteReport": (
+        "radjax_tome.reports.fingerprint_quality",
+        "FingerprintQualityPerByteReport",
+    ),
+    "QualityPerByteDelta": (
+        "radjax_tome.reports.fingerprint_quality",
+        "QualityPerByteDelta",
+    ),
+    "build_quality_per_byte_delta": (
+        "radjax_tome.reports.fingerprint_quality",
+        "build_quality_per_byte_delta",
+    ),
+    "read_fingerprint_quality_report": (
+        "radjax_tome.reports.fingerprint_quality",
+        "read_fingerprint_quality_report",
+    ),
+    "render_fingerprint_quality_summary": (
+        "radjax_tome.reports.fingerprint_quality",
+        "render_fingerprint_quality_summary",
+    ),
+    "write_fingerprint_quality_report": (
+        "radjax_tome.reports.fingerprint_quality",
+        "write_fingerprint_quality_report",
+    ),
+}
 
 __all__ = [
     "ARTIFACT_METADATA_SANITY_REPORT_SCHEMA",
@@ -103,3 +154,11 @@ __all__ = [
     "write_runtime_doctor_report",
     "write_tome_parity_report",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    return resolve_lazy_export(globals(), _LAZY_EXPORTS, name)
+
+
+def __dir__() -> list[str]:
+    return lazy_export_names(globals(), _LAZY_EXPORTS)

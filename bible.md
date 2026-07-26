@@ -1392,3 +1392,236 @@ with 256 selected coordinates. The working production head remains native
 two-pass fingerprint-corridor Path B; research-frozen paths remain frozen.
 The committed fixture has passed contract and portability validation and is the
 mandatory semantic regression baseline for future canonical-pipeline changes.
+
+## 2026-07-19 — M3A Corridor Phase Characterization
+
+M3A adds a focused CPU characterization of native Path B's two corridor writes:
+the early score-surface export has zero selected records and no selected-link
+claim, while the post-rerun export overwrites the public corridor summary with
+selected linkage and emits detailed corridor progress. The characterization
+also proves its observable order and a current finalization-only resume probe
+after removing only the C6 validation report. No runtime algorithm, schema,
+artifact path, or golden fixture changed.
+
+## 2026-07-19 — M3A Root Gate Evidence
+
+The M3A root gate verified the full suite at `714 passed, 22 skipped` and the
+focused M3A/import/runtime set at `23 passed`. Golden validation retained count
+`256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M3B Slice One Import Isolation
+
+M3B slice one makes the root, backend, and audit facades resolve compatibility
+exports lazily; builder, reports, and fingerprint isolation is deferred to
+slice two. The focused import/refactor gate passed `46` tests. Golden validation
+retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M3B Final Import Isolation and Hydra Repair
+
+M3B finalizes builder, reports, and fingerprint isolation and repairs the
+Hydra inventory for the lazy-export helper and M3A boundary documents. Public
+facade names and direct compatibility-leaf paths remain preserved, while fresh
+root, canonical, parser, and help imports leak neither optional ML stacks nor
+classified research modules. The full gate passed `731 passed, 22 skipped`; the
+focused final import gate passed `37` tests. Golden validation retained count
+`256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M3C Typed Native Path B Boundary
+
+M3C adds a typed exact native Path B configuration adapter and delegation seam
+while preserving the existing production executor, artifacts, progress, and
+CLI/parser behavior. Global-only and partial/alias routes remain non-native.
+The full gate passed `747 passed, 22 skipped`; M3C integration passed `7`
+tests; direct native API passed `9` tests and import isolation passed `37`
+tests. Golden validation retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4A Typed Stage Contracts and Evidence Readers
+
+M4A adds typed contracts and read-only evidence readers without changing
+schemas or paths. Early provisional corridor evidence is rejected as final;
+evidence derives hashes from existing JSON and performs no writes. The full
+gate passed `751 passed, 22 skipped` before mechanical format; the post-format
+focused native contract/API/runtime/M3C set passed `21` tests. Golden validation
+retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4B Slice One Preflight and Score Adapters
+
+M4B slice one introduces typed callback-driven preflight-to-score adapters.
+Score execution is blocked after preflight failure; the adapters write no
+artifacts, progress, or reports and preserve schemas and paths. Later corridor
+stages remain for later slices. The initial focused gate passed `171` tests;
+post-format broad focused coverage passed `131` tests and the orchestrator
+suite passed `4` tests. Golden validation retained count `256` and semantic
+root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4B Slice Two Provisional Corridor and Authority Adapters
+
+M4B slice two proves callback order from score pass through a zero/unlinked
+provisional corridor to fingerprint and global authority export. A failed early
+corridor stops both authority callbacks, and the adapter writes no selection,
+rerun, late-corridor, or evidence schemas. The focused gate passed `173` tests.
+Golden validation retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed. This does not claim production
+facade integration.
+
+## 2026-07-19 — M4B Slice Three Typed C2-C5 Selection Handoff
+
+M4B slice three adds a typed C2-C5 selection handoff that consumes both
+fingerprint and global authority proofs and exposes explicit C2, C3, C4, and
+C5 stage evidence. Selection failure stops before rerun or finalization. The
+focused gate passed `176` tests. Golden validation retained count `256` and
+semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed. This does not claim production
+facade integration.
+
+## 2026-07-19 — M4B Slice Four Selected Delivery and Assembly
+
+M4B slice four strictly orders C5 selection, selected rerun, final
+selected-linked corridor, and assembly. Provisional corridor evidence is
+rejected; any later-stage failure stops downstream promotion or assembly; the
+adapters write no validation, reconciliation, or report state. The focused gate
+passed `179` tests. Golden validation retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed. This does not claim production
+facade integration.
+
+## 2026-07-19 — M4B Slice Five Typed Terminal Finalization
+
+M4B slice five strictly orders typed assembly, validation/linkage,
+reconciliation/cover, and final reporting handoffs; every failure stops later
+callbacks. Terminal `NativePathBRunResult` failures are preserved, and the
+adapters add no persistent state. The focused gate passed `182` tests. Golden
+validation retained count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed. This does not claim production
+facade integration.
+
+## 2026-07-19 — M4B Canonical Production Slice-One Integration
+
+The exact canonical Path-B production route now runs the existing preflight
+and score-pass operations through the typed slice-one adapter before entering
+the unchanged early provisional corridor and later selected-linked corridor
+continuation. Global-only production bypasses the adapter. Callback exception
+propagation is opt-in only for that production seam, preserving the established
+runtime doctor behavior while standalone adapters remain failure-normalizing.
+The focused integration and compatibility gate passed `132` tests; the complete
+suite passed `769 passed, 22 skipped`. Golden validation retained count `256`
+and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4C Evidence-Derived Resume and Failure Normalization
+
+M4C adds a read-only canonical Path-B resume classifier with no new persistent
+stage schema. It derives the earliest repairable stage from the existing run
+plan, score manifest, distinct early/late corridor evidence, authority,
+selection, delivery, validation, reconciliation, and production-report files.
+Fresh, partial, delivery-pending, finalization-only, terminal, stale, corrupt,
+and full-config hash-mismatch cases are covered. A provisional early corridor
+cannot be treated as selected-linked final evidence; after the late overwrite,
+corridor corruption is attributed to late finalization. Existing compatibility
+migration remains production-owned. The M4C matrix and native/import focused
+gate passed `75` tests. Golden validation retained count `256` and semantic
+root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Ruff check/format and `git diff --check` passed.
+
+## 2026-07-19 — M4D Local Integration Proof
+
+M4D local proof passed without changing runtime code or the immutable fixture:
+the full non-GPU suite passed `779 passed, 22 skipped`, the native/import/
+delivery/validation/linkage/reconciliation/Golden focus passed `220` tests,
+and static checks passed. Golden validation retained count `256` and semantic
+root `sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+`docs/M4D_INTEGRATION_EVIDENCE.md` records the exact reviewed T4 Golden 1K
+commands and acceptance criteria. T4 rental proof is not executed on this
+host: it has no CUDA/T4, Torch, Transformers, or terminal canonical artifact.
+This is an external merge gate, not a local pass claim; `main` remains
+untouched and the fixture was not regenerated.
+
+## 2026-07-19 — M4D Evidence Inventory Repair
+
+The committed M4D evidence document is now recorded in the authoritative Hydra
+disposition inventory, restoring the tracked-doc ledger gate required by CI.
+This is metadata-only; it changes no runtime, artifact, fixture, or T4 proof
+claim. The focused disposition gate passes locally before publication.
+
+## 2026-07-19 — M4B/M4C Canonical Execution Correction
+
+The previous local M4D note did not establish live execution of typed slices
+two through five, because production stopped after the slice-one adapter. The
+canonical Path-B facade now executes the real ordered callbacks for provisional
+early corridor export, split fingerprint/global authority export, C2-C5
+selection, selected rerun, late selected-linked corridor finalization, payload
+assembly, validation/linkage, reconciliation/cover, and final reporting.
+`materialize_selected_exemplar_delivery` remains the identical public
+three-phase composition while the canonical callbacks use the same phases
+directly. Global-only stays on the compatibility path. Resume now derives and
+uses an explicit artifact-assembly boundary from existing files before
+validation; no persistent stage schema was added. Focused delivery, canonical
+boundary, characterization, production, contracts, orchestration, C6, and
+resume gates passed `119` tests after the correction; Ruff, format, and diff
+checks passed. This corrects the local-proof scope and does not claim T4 proof.
+
+## 2026-07-19 — M4D Refreshed Local Integration Proof
+
+After the canonical-execution correction, the complete non-GPU suite passed
+`784 passed, 22 skipped in 95.98s`; the native/import/delivery/validation/
+linkage/reconciliation/live-resume/Golden focus passed `225` tests in `35.83s`.
+Ruff check, format, and diff checks passed. Immutable Golden validation remains
+`pass` with count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+`docs/M4D_INTEGRATION_EVIDENCE.md` now corrects the earlier slice-one-only
+scope; reviewed T4 Golden 1K comparison remains unexecuted and is still the
+external merge gate.
+
+## 2026-07-26 — M4D Versioned Authority-Hash and Golden Contract Migration
+
+The accepted M4D diagnosis is implemented without modifying the immutable T4
+Golden v1 fixture or running GPU inference. Historical
+`radjax.c6.score_pass_authority.v1` remains the exact raw-byte recipe, while
+new artifacts emit explicit v2 semantic authority, retain their v1 lineage
+hash, and record raw digests for metadata, packed-assignment manifest, corridor
+modes, and production selector inputs. Golden contracts now have distinct v1
+and v2 schema/digest domains; cross-version comparisons are explicitly
+incompatible, and a v2 capture can project a historical v1 artifact read-only
+after verifying its recorded v1 authority. The complete contract is in
+`docs/AUTHORITY_HASH_V2_MIGRATION.md`. Focused authority/M3/M4/Golden/Hydra
+coverage passed `133 passed, 1 skipped in 18.97s`; the complete local suite
+passed `794 passed, 23 skipped in 92.78s`. The conditional July 19/July 24
+source-artifact comparison skipped because neither artifact is mounted locally;
+it runs only when both explicit artifact paths are supplied. Ruff check/format,
+`git diff --check`, CLI Golden help, and frozen v1 fixture validation passed;
+the fixture root remains
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+
+## 2026-07-26 — M4D Closure and Mainline Approval
+
+The reviewed historical-artifact v2 comparison has closed the final M4D gap.
+`tests/test_authority_hash_contract_v2.py::test_july_t4_artifacts_compare_under_v2_when_both_are_available`
+passed in `168.86s` against
+`/teamspace/studios/this_studio/radjax_t4_path_b_1k/c6_3_2_native_clean` and
+`/teamspace/studios/this_studio/radjax_t4_path_b_1k/m4d_refactor_proof/tome`.
+It proves semantic equality under authority-hash v2 while preserving distinct
+raw integrity digests. This closure records the reviewed read-only comparison;
+it neither reruns GPU inference nor changes either source artifact or the
+immutable v1 fixture. The final bounded roadmap and scope review found all
+M3A–M4D checkpoint criteria satisfied, no corridor-order collapse, no frozen
+fixture mutation, no unauthorized scope expansion, and no merge-policy
+blocker. The final local suite passed `794 passed, 23 skipped in 84.38s`.
+The closure also repairs the Hydra inventory record for the committed
+`builder/authority_hashes.py`; its focused ledger gate passes. M4 is complete
+and the reviewed `m3-m4-canonical-path-b-refactor` branch is approved for
+normal merge to `main`.

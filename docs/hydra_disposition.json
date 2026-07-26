@@ -368,6 +368,14 @@
       "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
       "status": "supporting"
     },
+    "docs/AUTHORITY_HASH_V2_MIGRATION.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M4",
+      "rationale": "Versioned authority-hash and Golden semantic-contract migration.",
+      "replacement_or_target_boundary": "M4D authority integrity and Golden reproducibility evidence.",
+      "status": "supporting"
+    },
     "docs/FINGERPRINT_API.md": {
       "archive_or_removal_condition": "M3 archive pointer and M2 parity gate.",
       "kind": "top-level-doc",
@@ -431,6 +439,14 @@
       "rationale": "Canonical product direction, user documentation, or M1 authority.",
       "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
       "status": "canonical"
+    },
+    "docs/M4D_INTEGRATION_EVIDENCE.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M4",
+      "rationale": "Local integration proof and reviewed T4 Golden 1K handoff criteria.",
+      "replacement_or_target_boundary": "M4D evidence and external review gate.",
+      "status": "supporting"
     },
     "docs/MULTI_GPU_PATH_B.md": {
       "archive_or_removal_condition": "M3 archive pointer and M2 parity gate.",
@@ -624,6 +640,22 @@
       "replacement_or_target_boundary": "M12 user docs or M3 research status map.",
       "status": "canonical"
     },
+    "docs/m3_m4_canonical_disposition.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M3",
+      "rationale": "Canonical M3/M4 Path B disposition and preserved-semantics record.",
+      "replacement_or_target_boundary": "M3/M4 canonical boundary and staged production refactor.",
+      "status": "canonical"
+    },
+    "docs/m3_m4_import_architecture.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M3",
+      "rationale": "M3 import-boundary characterization and lazy compatibility facade contract.",
+      "replacement_or_target_boundary": "M3 import-isolation gate and compatibility facade boundary.",
+      "status": "supporting"
+    },
     "scripts/ab_compare_teacher_textbook.py": {
       "archive_or_removal_condition": "M2 parity and M3 preservation gates.",
       "kind": "script",
@@ -758,6 +790,14 @@
       "owning_milestone": "M6",
       "rationale": "Shared infrastructure behind the canonical pipeline.",
       "replacement_or_target_boundary": "Narrow supporting API.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/_lazy_exports.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M3",
+      "rationale": "Internal supporting module for M3 lazy compatibility facades.",
+      "replacement_or_target_boundary": "Internal supporting API for lazy compatibility facades.",
       "status": "supporting"
     },
     "src/radjax_tome/audit/__init__.py": {
@@ -977,6 +1017,134 @@
       "rationale": "Historical experiment; preserve outside the supported mainline.",
       "replacement_or_target_boundary": "Research namespace or documented archive pointer.",
       "status": "research-frozen"
+    },
+    "src/radjax_tome/builder/native_path_b/__init__.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M3",
+      "rationale": "Internal package boundary for the canonical native Path B adapter.",
+      "replacement_or_target_boundary": "M3 native Path B supporting API.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/api.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M3",
+      "rationale": "Typed canonical Path B configuration resolver and delegation adapter.",
+      "replacement_or_target_boundary": "M3 native Path B supporting API.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/assembly.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B selected-artifact assembly stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/authorities.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B fingerprint and global authority stage adapters.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/contracts.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Immutable native Path B stage contract and outcome types.",
+      "replacement_or_target_boundary": "M4 native Path B stage-contract boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/corridors.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B provisional score-surface corridor stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/delivery.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B selected rerun and late corridor stage adapters.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/evidence.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Read-only native Path B early and late corridor evidence readers.",
+      "replacement_or_target_boundary": "M4 native Path B stage-contract boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/finalization.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B terminal final reporting stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/orchestrator.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Ordered native Path B preflight and score-pass stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/preflight.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed adapter for existing native Path B preflight behavior.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/resume.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Read-only native Path B evidence-derived resume and failure resolver.",
+      "replacement_or_target_boundary": "M4 native Path B stage-contract boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/score_pass.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed adapter for the existing native Path B score pass.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/selection.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B C2-C5 integrated selection stage adapter.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/native_path_b/verification.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Typed native Path B validation and reconciliation stage adapters.",
+      "replacement_or_target_boundary": "M4 native Path B orchestration boundary.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/authority_hashes.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M4",
+      "rationale": "Versioned raw-integrity and semantic authority-hash contracts for canonical C6 selection.",
+      "replacement_or_target_boundary": "M4D authority integrity and Golden reproducibility boundary.",
+      "status": "supporting"
     },
     "src/radjax_tome/builder/production.py": {
       "archive_or_removal_condition": null,

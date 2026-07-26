@@ -14,6 +14,9 @@ FIXTURE = Path(__file__).parent / "fixtures" / "golden_t4_1k"
 EXPECTED_SEMANTIC_ROOT = (
     "sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba"
 )
+EXPECTED_V1_AUTHORITY_HASH = (
+    "sha256:39588f7bbc69285c9a86c2fb13a7ff34f8ad093e8093abfc56776866b355657a"
+)
 EXPECTED_PIPELINE = "native_two_pass_fingerprint_corridor_path_b"
 FIXTURE_SURFACES = (
     "contract.json",
@@ -35,6 +38,11 @@ def test_canonical_t4_1k_fixture_is_valid_and_self_contained() -> None:
     }
     assert contract["semantic_root"] == EXPECTED_SEMANTIC_ROOT
     assert contract["fixture_metadata"]["canonical_pipeline"] == EXPECTED_PIPELINE
+
+    passports = list(_read_jsonl(FIXTURE / "source_passports.jsonl"))
+    assert {row.get("score_pass_authority_hash") for row in passports} == {
+        EXPECTED_V1_AUTHORITY_HASH
+    }
 
     payload_rows = list(_read_jsonl(FIXTURE / "payload_semantics.jsonl"))
     assert len(payload_rows) == 256

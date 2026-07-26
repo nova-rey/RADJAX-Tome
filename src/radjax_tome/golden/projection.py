@@ -7,7 +7,15 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from radjax_tome.builder.authority_hashes import (
+    AUTHORITY_HASH_V1,
+    AUTHORITY_HASH_V2,
+    authority_hash_contract_version,
+    authority_hashes_for_artifact,
+)
 from radjax_tome.golden.contract import (
+    GOLDEN_CONTRACT_SCHEMA_V1,
+    GOLDEN_CONTRACT_SCHEMA_V2,
     build_contract,
     digest_active_payload_storage,
     semantic_digest,
@@ -25,12 +33,26 @@ MAX_GOLDEN_FIXTURE_BYTES = 64 * 1024 * 1024
 MAX_GOLDEN_RECORD_BYTES = 1024 * 1024
 _WINDOWS_DRIVE_PATH = re.compile(r"^[A-Za-z]:[\\/]")
 _HOME_RELATIVE_PATH = re.compile(r"^~[^\\/]*[\\/]")
+GOLDEN_CAPTURE_AUTO = "auto"
 
 
-def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, Any]:
+def capture_golden_contract(
+    artifact_dir: Path,
+    output_dir: Path,
+    *,
+    contract_version: str = GOLDEN_CONTRACT_SCHEMA_V1,
+) -> dict[str, Any]:
     artifact = artifact_dir.resolve()
     _validate_terminal_artifact(artifact)
-    selected = _c5_records(artifact)
+    authority = _read_object(artifact / "c6" / "authority_manifest.json")
+    schema_version = _capture_schema_version(authority, contract_version)
+    authority_view, authority_replacement = _authority_for_capture(
+        artifact, authority, schema_version
+    )
+    selected = [
+        _replace_authority_references(row, authority_replacement)
+        for row in _c5_records(artifact)
+    ]
     payload_index = _payload_index(artifact)
     if len(selected) != 256 or len(payload_index) != 256:
         raise ValueError("golden capture requires exactly 256 selected coordinates")
@@ -44,9 +66,17 @@ def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, A
         artifact,
         selected_by_coordinate=selected_by_coordinate,
         payload_index=payload_index,
+        authority_replacement=authority_replacement,
     )
-    authority = _read_object(artifact / "c6" / "authority_manifest.json")
-    board_summary = _authority_summary(artifact, authority)
+    if schema_version == GOLDEN_CONTRACT_SCHEMA_V1:
+        board_summary = _authority_summary(artifact, authority_view)
+    else:
+        board_summary = _authority_summary(
+            artifact,
+            authority_view,
+            schema_version=schema_version,
+            authority_replacement=authority_replacement,
+        )
     reports = {name: _read_object(artifact / name) for name in _REQUIRED_REPORTS}
     reconciliation = _read_object(
         artifact / "reports" / "c6_integrated_selection_validation.json"
@@ -54,12 +84,20 @@ def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, A
     if reconciliation.get("status") != "pass":
         raise ValueError("golden capture requires passing C6 selection reconciliation")
     input_identity = _input_identity(artifact)
-    semantic_policy = _semantic_policy(artifact, reports, authority)
+    semantic_policy = (
+        _semantic_policy(artifact, reports, authority_view)
+        if schema_version == GOLDEN_CONTRACT_SCHEMA_V1
+        else _semantic_policy(
+            artifact, reports, authority_view, schema_version=schema_version
+        )
+    )
     _require_truth_gate_fields(input_identity, semantic_policy)
     contract = build_contract(
         fixture_metadata={
             "profile": "full_debug_provenance",
-            "capture_tool_version": "m2a",
+            "capture_tool_version": (
+                "m2a" if schema_version == GOLDEN_CONTRACT_SCHEMA_V1 else "m4d-v2"
+            ),
             "repository_revision": reports["production_build_report.json"].get(
                 "repository_revision"
             ),
@@ -77,6 +115,7 @@ def capture_golden_contract(artifact_dir: Path, output_dir: Path) -> dict[str, A
         payload_semantics=payload_rows,
         board_summary=board_summary,
         capture_metadata={"capture_status": "captured", "source_path": "redacted"},
+        schema_version=schema_version,
     )
     temporary = Path(tempfile.mkdtemp(prefix="radjax-golden-", dir=output_dir.parent))
     try:
@@ -100,9 +139,10 @@ def validate_fixture(fixture_dir: Path) -> dict[str, Any]:
     _assert_portable_fixture_value(contract, context="contract")
     _assert_portable_fixture_value(board_summary, context="board_summary")
     validate_contract(contract)
-    if semantic_digest("board-summary", board_summary) != contract.get(
-        "board_summary_digest"
-    ):
+    schema_version = str(contract["schema_version"])
+    if semantic_digest(
+        "board-summary", board_summary, schema_version=schema_version
+    ) != contract.get("board_summary_digest"):
         raise ValueError("golden fixture board_summary does not match contract")
     roots = contract["collection_roots"]
     coordinates: dict[str, set[tuple[str, int]]] = {}
@@ -132,8 +172,12 @@ def validate_fixture(fixture_dir: Path) -> dict[str, Any]:
             seen.add(coordinate)
             selection_indices[coordinate] = selection_index
             previous_index = selection_index
-            row_digests.append(semantic_digest(f"{name}-row", row))
-        observed_root = semantic_digest(f"{name}-root", row_digests)
+            row_digests.append(
+                semantic_digest(f"{name}-row", row, schema_version=schema_version)
+            )
+        observed_root = semantic_digest(
+            f"{name}-root", row_digests, schema_version=schema_version
+        )
         if observed_root != roots[name]:
             raise ValueError(f"golden contract {name} root does not match rows")
         coordinates[name] = seen
@@ -167,6 +211,58 @@ def _validate_terminal_artifact(root: Path) -> None:
     )
     if reconciliation.get("status") != "pass":
         raise ValueError("golden capture requires passing C6 selection reconciliation")
+
+
+def _capture_schema_version(authority: dict[str, Any], requested: str) -> str:
+    if requested == GOLDEN_CAPTURE_AUTO:
+        return (
+            GOLDEN_CONTRACT_SCHEMA_V2
+            if authority_hash_contract_version(authority) == AUTHORITY_HASH_V2
+            else GOLDEN_CONTRACT_SCHEMA_V1
+        )
+    if requested not in {GOLDEN_CONTRACT_SCHEMA_V1, GOLDEN_CONTRACT_SCHEMA_V2}:
+        raise ValueError(f"unsupported golden capture contract version: {requested!r}")
+    return requested
+
+
+def _authority_for_capture(
+    artifact: Path,
+    authority: dict[str, Any],
+    schema_version: str,
+) -> tuple[dict[str, Any], tuple[str, str] | None]:
+    if schema_version == GOLDEN_CONTRACT_SCHEMA_V1:
+        return authority, None
+    selection_hash = authority.get("selection_integration_config_hash")
+    if not isinstance(selection_hash, str) or not selection_hash:
+        raise ValueError("golden v2 capture requires selection integration authority")
+    hashes = authority_hashes_for_artifact(
+        artifact,
+        selection_integration_config_hash=selection_hash,
+    )
+    recorded_contract = authority_hash_contract_version(authority)
+    recorded_v1 = authority.get("score_pass_authority_hash_v1")
+    if recorded_v1 is None and recorded_contract == AUTHORITY_HASH_V1:
+        recorded_v1 = authority.get("score_pass_authority_hash")
+    if recorded_v1 is not None and recorded_v1 != hashes.score_pass_authority_hash_v1:
+        raise ValueError("golden v2 capture v1 authority verification failed")
+    recorded_active = authority.get("score_pass_authority_hash")
+    if (
+        recorded_contract == AUTHORITY_HASH_V2
+        and recorded_active != hashes.score_pass_authority_hash_v2
+    ):
+        raise ValueError("golden v2 capture recorded v2 authority verification failed")
+    if not isinstance(recorded_active, str) or not recorded_active:
+        raise ValueError("golden v2 capture requires recorded score-pass authority")
+    projected = dict(authority)
+    projected.update(
+        {
+            "score_pass_authority_contract_version": AUTHORITY_HASH_V2,
+            "score_pass_authority_hash": hashes.score_pass_authority_hash_v2,
+            "score_pass_authority_hash_v1": hashes.score_pass_authority_hash_v1,
+            "raw_artifact_digests": hashes.raw_artifact_digests,
+        }
+    )
+    return projected, (recorded_active, hashes.score_pass_authority_hash_v2)
 
 
 def _c5_records(root: Path) -> list[dict[str, Any]]:
@@ -214,6 +310,7 @@ def _project_payload_shards(
     *,
     selected_by_coordinate: dict[tuple[str, int], dict[str, Any]],
     payload_index: dict[tuple[str, int], dict[str, Any]],
+    authority_replacement: tuple[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     projected: list[dict[str, Any]] = []
     seen: set[tuple[str, int]] = set()
@@ -242,11 +339,14 @@ def _project_payload_shards(
                 )
             projected.append(
                 _payload_semantics(
-                    {
-                        **payload,
-                        "selection_index": selected_record["selection_index"],
-                        "payload_identity": selected_record["payload_identity"],
-                    },
+                    _replace_authority_references(
+                        {
+                            **payload,
+                            "selection_index": selected_record["selection_index"],
+                            "payload_identity": selected_record["payload_identity"],
+                        },
+                        authority_replacement,
+                    ),
                     int(selected_record["selection_index"]),
                 )
             )
@@ -389,7 +489,11 @@ def _input_identity(root: Path) -> dict[str, Any]:
 
 
 def _semantic_policy(
-    root: Path, reports: dict[str, dict[str, Any]], authority: dict[str, Any]
+    root: Path,
+    reports: dict[str, dict[str, Any]],
+    authority: dict[str, Any],
+    *,
+    schema_version: str = GOLDEN_CONTRACT_SCHEMA_V1,
 ) -> dict[str, Any]:
     emission = _read_object(root / "emission_config.json")
     run = _read_object(root / "run_manifest.json")
@@ -429,10 +533,20 @@ def _semantic_policy(
         emission,
         aliases=("selected_rerun_requested_batch_size", "selected_rerun_batch_size"),
     )
+    if schema_version == GOLDEN_CONTRACT_SCHEMA_V2:
+        policy["score_pass_authority_contract_version"] = authority.get(
+            "score_pass_authority_contract_version"
+        )
     return policy
 
 
-def _authority_summary(root: Path, authority: dict[str, Any]) -> dict[str, Any]:
+def _authority_summary(
+    root: Path,
+    authority: dict[str, Any],
+    *,
+    schema_version: str = GOLDEN_CONTRACT_SCHEMA_V1,
+    authority_replacement: tuple[str, str] | None = None,
+) -> dict[str, Any]:
     required = {
         "c2": root / "c6" / "corridor-leaderboards" / "manifest.json",
         "c3": root / "c6" / "coverage-plan" / "coverage_plan.json",
@@ -452,11 +566,16 @@ def _authority_summary(root: Path, authority: dict[str, Any]) -> dict[str, Any]:
         )
     }
     return _semantic_board_summary(
-        {
-            "authority": _semantic_authority(authority),
-            **{name: _read_object(path) for name, path in required.items()},
-            "c4_semantic_records": claim_rows,
-        }
+        _replace_authority_references(
+            {
+                "authority": _semantic_authority(
+                    authority, schema_version=schema_version
+                ),
+                **{name: _read_object(path) for name, path in required.items()},
+                "c4_semantic_records": claim_rows,
+            },
+            authority_replacement,
+        )
     )
 
 
@@ -486,8 +605,27 @@ def _semantic_board_summary(value: Any) -> Any:
     return value
 
 
-def _semantic_authority(authority: dict[str, Any]) -> dict[str, Any]:
+def _semantic_authority(
+    authority: dict[str, Any],
+    *,
+    schema_version: str = GOLDEN_CONTRACT_SCHEMA_V1,
+) -> dict[str, Any]:
     """Keep C6 semantic bindings without inheriting C4 storage layout hashes."""
+    if schema_version == GOLDEN_CONTRACT_SCHEMA_V2:
+        return {
+            key: authority.get(key)
+            for key in (
+                "score_pass_authority_contract_version",
+                "score_pass_authority_hash",
+                "score_pass_config_hash",
+                "selection_integration_config_hash",
+                "delivery_path",
+                "native_execution_mode",
+                "corpus_hash",
+                "production_grade",
+            )
+            if authority.get(key) is not None
+        }
     return {
         key: authority.get(key)
         for key in (
@@ -502,6 +640,35 @@ def _semantic_authority(authority: dict[str, Any]) -> dict[str, Any]:
         )
         if authority.get(key) is not None
     }
+
+
+def _replace_authority_references(
+    value: Any,
+    replacement: tuple[str, str] | None,
+) -> Any:
+    """Rewrite only projected authority bindings for an explicit v2 capture."""
+
+    if replacement is None:
+        return value
+    previous, current = replacement
+    if isinstance(value, dict):
+        return {
+            key: (
+                current
+                if key
+                in {
+                    "score_pass_authority_hash",
+                    "source_artifact_hash",
+                    "semantic_authority_hash",
+                }
+                and item == previous
+                else _replace_authority_references(item, replacement)
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_replace_authority_references(item, replacement) for item in value]
+    return value
 
 
 def _first_present(*sources: dict[str, Any], aliases: tuple[str, ...]) -> Any:

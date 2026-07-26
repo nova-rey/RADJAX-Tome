@@ -1,5 +1,14 @@
 """Teacher backend interfaces and fake/synthetic implementations."""
 
+from __future__ import annotations
+
+from typing import Any
+
+from radjax_tome._lazy_exports import (
+    LazyExportMap,
+    lazy_export_names,
+    resolve_lazy_export,
+)
 from radjax_tome.backends.base import (
     MIN_CORRIDOR_STAT_TOP_K,
     BackendCapability,
@@ -18,12 +27,6 @@ from radjax_tome.backends.base import (
     resolve_gpu_batch_size_policy,
     validate_gpu_batch_size_policy_config,
 )
-from radjax_tome.backends.cpu import CPUReferenceTeacherEmissionBackend
-from radjax_tome.backends.emission import emit_teacher_target_store
-from radjax_tome.backends.fake import (
-    FakeNumpyTeacherEmissionBackend,
-    FakeTeacherBackend,
-)
 from radjax_tome.backends.gpu_torch import (
     GPUTorchTeacherEmissionBackend,
     TorchAcceleratorDetection,
@@ -31,47 +34,122 @@ from radjax_tome.backends.gpu_torch import (
     detect_torch_accelerator,
     diagnose_gpu_torch_backend,
 )
-from radjax_tome.backends.hf_export import (
-    HFTeacherExportConfig,
-    HFTeacherExportMetadata,
-    build_hf_export_metadata,
-    read_hf_export_metadata,
-    validate_hf_export_config,
-    write_hf_export_metadata,
-)
-from radjax_tome.backends.hf_specimen import (
-    DEFAULT_HF_SPECIMEN_MODEL_ID,
-    HFTeacherSpecimenConfig,
-    HFTeacherSpecimenSmokeResult,
-    HFTeacherSpecimenSwapReport,
-    build_hf_teacher_specimen_dry_run,
-    build_hf_teacher_specimen_swap_report,
-    read_hf_teacher_specimen_report,
-    run_hf_teacher_specimen_smoke,
-    validate_hf_teacher_specimen_config,
-    write_hf_teacher_specimen_report,
-)
-from radjax_tome.backends.hf_torch import HFTorchTeacherEmissionBackend
-from radjax_tome.backends.orchestration import (
-    BackendBatchEnvelope,
-    BackendRunConfig,
-    BackendRunResult,
-    run_backend_batches,
-)
-from radjax_tome.backends.qwen_policy import (
-    QwenPolicyEntry,
-    QwenPolicyMap,
-    QwenResolution,
-    load_qwen_policy,
-    resolve_qwen_policy,
-    resolve_qwen_policy_map,
-)
-from radjax_tome.backends.registry import (
-    create_backend,
-    list_backend_capabilities,
-    register_backend,
-)
-from radjax_tome.backends.synthetic import SyntheticTeacherBackend
+
+_LAZY_EXPORTS: LazyExportMap = {
+    "CPUReferenceTeacherEmissionBackend": (
+        "radjax_tome.backends.cpu",
+        "CPUReferenceTeacherEmissionBackend",
+    ),
+    "emit_teacher_target_store": (
+        "radjax_tome.backends.emission",
+        "emit_teacher_target_store",
+    ),
+    "FakeNumpyTeacherEmissionBackend": (
+        "radjax_tome.backends.fake",
+        "FakeNumpyTeacherEmissionBackend",
+    ),
+    "FakeTeacherBackend": ("radjax_tome.backends.fake", "FakeTeacherBackend"),
+    "HFTorchTeacherEmissionBackend": (
+        "radjax_tome.backends.hf_torch",
+        "HFTorchTeacherEmissionBackend",
+    ),
+    "BackendBatchEnvelope": (
+        "radjax_tome.backends.orchestration",
+        "BackendBatchEnvelope",
+    ),
+    "BackendRunConfig": ("radjax_tome.backends.orchestration", "BackendRunConfig"),
+    "BackendRunResult": ("radjax_tome.backends.orchestration", "BackendRunResult"),
+    "run_backend_batches": (
+        "radjax_tome.backends.orchestration",
+        "run_backend_batches",
+    ),
+    "create_backend": ("radjax_tome.backends.registry", "create_backend"),
+    "list_backend_capabilities": (
+        "radjax_tome.backends.registry",
+        "list_backend_capabilities",
+    ),
+    "register_backend": ("radjax_tome.backends.registry", "register_backend"),
+    "SyntheticTeacherBackend": (
+        "radjax_tome.backends.synthetic",
+        "SyntheticTeacherBackend",
+    ),
+    "HFTeacherExportConfig": (
+        "radjax_tome.backends.hf_export",
+        "HFTeacherExportConfig",
+    ),
+    "HFTeacherExportMetadata": (
+        "radjax_tome.backends.hf_export",
+        "HFTeacherExportMetadata",
+    ),
+    "build_hf_export_metadata": (
+        "radjax_tome.backends.hf_export",
+        "build_hf_export_metadata",
+    ),
+    "read_hf_export_metadata": (
+        "radjax_tome.backends.hf_export",
+        "read_hf_export_metadata",
+    ),
+    "validate_hf_export_config": (
+        "radjax_tome.backends.hf_export",
+        "validate_hf_export_config",
+    ),
+    "write_hf_export_metadata": (
+        "radjax_tome.backends.hf_export",
+        "write_hf_export_metadata",
+    ),
+    "DEFAULT_HF_SPECIMEN_MODEL_ID": (
+        "radjax_tome.backends.hf_specimen",
+        "DEFAULT_HF_SPECIMEN_MODEL_ID",
+    ),
+    "HFTeacherSpecimenConfig": (
+        "radjax_tome.backends.hf_specimen",
+        "HFTeacherSpecimenConfig",
+    ),
+    "HFTeacherSpecimenSmokeResult": (
+        "radjax_tome.backends.hf_specimen",
+        "HFTeacherSpecimenSmokeResult",
+    ),
+    "HFTeacherSpecimenSwapReport": (
+        "radjax_tome.backends.hf_specimen",
+        "HFTeacherSpecimenSwapReport",
+    ),
+    "build_hf_teacher_specimen_dry_run": (
+        "radjax_tome.backends.hf_specimen",
+        "build_hf_teacher_specimen_dry_run",
+    ),
+    "build_hf_teacher_specimen_swap_report": (
+        "radjax_tome.backends.hf_specimen",
+        "build_hf_teacher_specimen_swap_report",
+    ),
+    "read_hf_teacher_specimen_report": (
+        "radjax_tome.backends.hf_specimen",
+        "read_hf_teacher_specimen_report",
+    ),
+    "run_hf_teacher_specimen_smoke": (
+        "radjax_tome.backends.hf_specimen",
+        "run_hf_teacher_specimen_smoke",
+    ),
+    "validate_hf_teacher_specimen_config": (
+        "radjax_tome.backends.hf_specimen",
+        "validate_hf_teacher_specimen_config",
+    ),
+    "write_hf_teacher_specimen_report": (
+        "radjax_tome.backends.hf_specimen",
+        "write_hf_teacher_specimen_report",
+    ),
+    "QwenPolicyEntry": ("radjax_tome.backends.qwen_policy", "QwenPolicyEntry"),
+    "QwenPolicyMap": ("radjax_tome.backends.qwen_policy", "QwenPolicyMap"),
+    "QwenResolution": ("radjax_tome.backends.qwen_policy", "QwenResolution"),
+    "load_qwen_policy": ("radjax_tome.backends.qwen_policy", "load_qwen_policy"),
+    "resolve_qwen_policy": (
+        "radjax_tome.backends.qwen_policy",
+        "resolve_qwen_policy",
+    ),
+    "resolve_qwen_policy_map": (
+        "radjax_tome.backends.qwen_policy",
+        "resolve_qwen_policy_map",
+    ),
+}
 
 __all__ = [
     "BackendCapability",
@@ -131,3 +209,11 @@ __all__ = [
     "write_hf_export_metadata",
     "write_hf_teacher_specimen_report",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    return resolve_lazy_export(globals(), _LAZY_EXPORTS, name)
+
+
+def __dir__() -> list[str]:
+    return lazy_export_names(globals(), _LAZY_EXPORTS)

@@ -15,6 +15,11 @@ from typing import Any
 
 from radjax_tome.audit import audit_selected_linkage, write_selected_linkage_audit
 from radjax_tome.backends import TeacherBackendConfig
+from radjax_tome.builder.authority_hashes import (
+    AUTHORITY_HASH_V2,
+    AUTHORITY_MANIFEST_SCHEMA_V2,
+    authority_hashes_for_artifact,
+)
 from radjax_tome.builder.backend_textbook import (
     BackendTeacherTextbookBuildConfig,
     build_streaming_backend_teacher_textbook,
@@ -38,7 +43,10 @@ from radjax_tome.builder.exemplar_delivery import (
     ExemplarDeliveryConfig,
     SelectedExemplarDeliveryError,
     SelectedRerunCudaOOMError,
+    assemble_selected_delivery_artifacts,
+    finalize_selected_delivery_corridor,
     materialize_selected_exemplar_delivery,
+    run_selected_delivery_rerun,
     selected_delivery_staging_diagnostic,
 )
 from radjax_tome.builder.exemplar_selection import build_exemplar_selection_manifest
@@ -214,239 +222,121 @@ class CompatibilityMigrationResult:
         }
 
 
+@dataclass
+class _ProductionRunState:
+    """Mutable private continuation shared by extracted production stages."""
+
+    config: ProductionBuildConfig
+    created_at: str
+    production_started: float
+    preflight_started: float
+    report_path: Path
+    run_plan_path: Path
+    parity_report_path: Path
+    progress: Any
+    blockers: list[str]
+    warnings: list[str]
+    already_complete: bool
+    doctor_report: dict[str, Any] | None = None
+    plan: dict[str, Any] | None = None
+    effective_batch_size: int | None = None
+    preflight_wall_seconds: float = 0.0
+    build_report: Any | None = None
+    main_pass_wall_seconds: float = 0.0
+    terminal_report: dict[str, Any] | None = None
+    native_resume_resolution: Any | None = None
+
+
 def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
-    created_at = _now()
-    production_started = perf_counter()
-    preflight_started = perf_counter()
-    report_path = _production_report_path(config)
-    run_plan_path = _run_plan_path(config)
-    parity_report_path = _parity_report_path(config)
-    progress = _ProductionProgressReporter(
-        enabled=config.progress,
-        output_dir=config.output_dir,
-        path=_production_progress_path(config),
+    """Build through the exact native Path-B boundary when it applies.
+
+    M3C establishes the exact routing boundary. M4B now sends the selected
+    canonical route through typed preflight and score-pass stages before the
+    preserved continuation; artifact semantics remain identical for canonical
+    and compatibility configurations.
+    """
+    from radjax_tome.builder.native_path_b import api as native_path_b_api
+
+    canonical_config = native_path_b_api.resolve_canonical_path_b_config(config)
+    if canonical_config is None:
+        return _build_production_gpu_tome_compatibility(config)
+
+    def execute_native_path_b(source_config: Any) -> dict[str, Any]:
+        return _build_production_gpu_tome_compatibility(
+            source_config,
+            canonical_config=canonical_config,
+        )
+
+    return native_path_b_api.run_canonical_path_b(
+        canonical_config,
+        compatibility_executor=execute_native_path_b,
     )
-    progress.start()
-    blockers: list[str] = []
-    warnings: list[str] = []
+
+
+def _build_production_gpu_tome_compatibility(
+    config: ProductionBuildConfig,
+    *,
+    canonical_config: Any | None = None,
+) -> dict[str, Any]:
+    state = _new_production_run_state(config)
+    if canonical_config is None:
+        preflight_result = _run_existing_preflight(state)
+        score_result = (
+            _run_existing_score_pass(state)
+            if preflight_result.status == "pass"
+            else None
+        )
+    else:
+        from radjax_tome.builder.native_path_b.orchestrator import (
+            SliceOneOperations,
+            run_preflight_then_score_pass,
+        )
+
+        slice_one = run_preflight_then_score_pass(
+            canonical_config,
+            operations=SliceOneOperations(
+                preflight=lambda _: _run_existing_preflight(state),
+                score_pass=lambda _, ready: _run_existing_score_pass(ready),
+            ),
+            propagate_exceptions=True,
+        )
+        preflight_result = slice_one.preflight
+        score_result = slice_one.score_pass
+
+    if preflight_result.status != "pass":
+        return state.terminal_report or _stage_adapter_failure_report(
+            state,
+            preflight_result.failure,
+        )
+    if score_result is None or score_result.status != "pass":
+        return state.terminal_report or _stage_adapter_failure_report(
+            state,
+            None if score_result is None else score_result.failure,
+        )
+
+    if canonical_config is not None:
+        return _run_native_path_b_post_score_stages(
+            state,
+            canonical_config=canonical_config,
+            slice_one=slice_one,
+        )
+
+    created_at = state.created_at
+    production_started = state.production_started
+    report_path = state.report_path
+    run_plan_path = state.run_plan_path
+    parity_report_path = state.parity_report_path
+    progress = state.progress
+    blockers = state.blockers
+    warnings = state.warnings
+    already_complete = state.already_complete
+    doctor_report = state.doctor_report or {}
+    plan = state.plan or {}
+    effective_batch_size = state.effective_batch_size
+    preflight_wall_seconds = state.preflight_wall_seconds
+    build_report = state.build_report
+    main_pass_wall_seconds = state.main_pass_wall_seconds
     c6_context: dict[str, Any] | None = None
-    already_complete = _already_complete(config)
-
-    _validate_required_inputs(config, blockers)
-    progress.memory_checkpoint("preflight_complete")
-    if blockers:
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report={},
-            run_plan_path=run_plan_path,
-            run_plan={},
-            effective_batch_size=None,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        return _finalize_production_report(report, report_path, progress)
-
-    c6_resume_requested = (
-        config.resume
-        and config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
-        and config.target_policy == "corridor_exemplar_v1"
-        and config.exemplar_selection_enabled
-        and config.exemplar_delivery_path == "two_pass_rerun_selected"
-    )
-    compatibility_migration = CompatibilityMigrationResult(False)
-    if c6_resume_requested:
-        progress.stage("compatibility_migration")
-        compatibility_migration = migrate_c6_3_5_1_metadata(config)
-        if compatibility_migration.applicable and not compatibility_migration.applied:
-            blockers.append(
-                "C6.3.5.1 metadata compatibility migration failed: "
-                + "; ".join(compatibility_migration.reasons)
-            )
-            report = _production_report(
-                config,
-                created_at=created_at,
-                completed_at=_now(),
-                status="fail",
-                blockers=blockers,
-                warnings=warnings,
-                doctor_report={},
-                run_plan_path=run_plan_path,
-                run_plan={"status": "not_run"},
-                effective_batch_size=None,
-                already_complete=already_complete,
-                parity_report_path=parity_report_path,
-                parity_status="not_run",
-            )
-            report["compatibility_migration"] = compatibility_migration.to_dict()
-            return _finalize_production_report(report, report_path, progress)
-    finalization_probe = probe_c6_finalization_only_resume(config)
-    output_has_artifact = _has_existing_artifact(config)
-    if output_has_artifact and not (config.resume or config.overwrite):
-        blockers.append("output exists; use --resume or --overwrite")
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report={},
-            run_plan_path=run_plan_path,
-            run_plan={},
-            effective_batch_size=None,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        return _finalize_production_report(report, report_path, progress)
-    if (
-        already_complete
-        and not _c6_finalization_pending(config)
-        and not c6_resume_requested
-    ):
-        validation = validate_teacher_textbook(config.output_dir)
-        if validation.status == "pass":
-            report = _production_report(
-                config,
-                created_at=created_at,
-                completed_at=_now(),
-                status="pass",
-                blockers=[],
-                warnings=[],
-                doctor_report={},
-                run_plan_path=run_plan_path,
-                run_plan={"status": "not_run"},
-                effective_batch_size=None,
-                already_complete=True,
-                parity_report_path=parity_report_path,
-                parity_status="not_run",
-                validation_status="pass",
-                build_status="already_complete",
-            )
-            return _finalize_production_report(report, report_path, progress)
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=list(validation.blockers),
-            warnings=list(validation.warnings),
-            doctor_report={},
-            run_plan_path=run_plan_path,
-            run_plan={"status": "not_run"},
-            effective_batch_size=None,
-            already_complete=True,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-            validation_status=validation.status,
-            build_status="already_complete_invalid",
-        )
-        return _finalize_production_report(report, report_path, progress)
-    if finalization_probe.eligible:
-        return _resume_c6_finalization(
-            config,
-            created_at=created_at,
-            production_started=production_started,
-            report_path=report_path,
-            parity_report_path=parity_report_path,
-            progress=progress,
-        )
-    if output_has_artifact and config.overwrite:
-        shutil.rmtree(config.output_dir)
-
-    backend_config = _backend_config(config)
-    doctor_report = build_runtime_doctor_report(backend_config)
-    plan = build_gpu_run_plan(
-        GPURunPlanConfig(
-            backend_config=backend_config,
-            dataset_path=config.dataset_path,
-            corpus_manifest_path=config.corpus_manifest_path,
-            teacher_model_provenance_path=config.teacher_model_provenance_path,
-            max_examples=config.max_examples,
-            strict_provenance=config.strict_provenance,
-            max_artifact_bytes=config.max_artifact_bytes,
-            fail_on_warnings=config.fail_on_plan_warnings,
-            selection_integration_policy=config.selection_integration_policy,
-            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
-            fingerprint_corridor_budget_fraction=(
-                config.fingerprint_corridor_budget_fraction
-            ),
-            fingerprint_corridor_budget_max=config.fingerprint_corridor_budget_max,
-            fingerprint_corridor_mode_cap=config.fingerprint_corridor_mode_cap,
-            fingerprint_corridor_candidate_pool_cap=(
-                config.fingerprint_corridor_candidate_pool_cap
-            ),
-            require_full_selected_budget=config.require_full_selected_budget,
-        )
-    )
-    write_gpu_run_plan(plan, run_plan_path)
-    warnings.extend(str(item) for item in plan.get("warnings", ()))
-    run_plan_status = str(plan.get("status"))
-    if run_plan_status == "fail":
-        blockers.extend(str(item) for item in plan.get("blockers", ()))
-    if run_plan_status == "warn" and config.no_build_if_plan_warn:
-        blockers.append("run plan status is warn and no_build_if_plan_warn is enabled")
-    effective_batch_size = _effective_batch_size(plan)
-    if effective_batch_size is None:
-        blockers.append("run plan did not select an effective batch size")
-    if blockers:
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report=doctor_report,
-            run_plan_path=run_plan_path,
-            run_plan=plan,
-            effective_batch_size=effective_batch_size,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        return _finalize_production_report(report, report_path, progress)
-
-    preflight_wall_seconds = _elapsed(preflight_started)
-    main_pass_started = perf_counter()
-    progress.start_score_pass(
-        examples_total=_planned_example_count(plan),
-        shard_count_total=_planned_shard_count(config, plan),
-    )
-    try:
-        build_report = build_streaming_backend_teacher_textbook(
-            _streaming_config(
-                config,
-                effective_batch_size,
-                progress_callback=progress.handle_streaming_event,
-            )
-        )
-    except Exception as exc:
-        blockers.append(str(exc))
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report=doctor_report,
-            run_plan_path=run_plan_path,
-            run_plan=plan,
-            effective_batch_size=effective_batch_size,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        return _finalize_production_report(report, report_path, progress)
-    main_pass_wall_seconds = _elapsed(main_pass_started)
-    progress.memory_checkpoint("score_pass_complete")
 
     if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
         try:
@@ -684,6 +574,1072 @@ def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
         ),
     )
     return _finalize_production_report(report, report_path, progress)
+
+
+def _new_production_run_state(config: ProductionBuildConfig) -> _ProductionRunState:
+    created_at = _now()
+    production_started = perf_counter()
+    preflight_started = perf_counter()
+    progress = _ProductionProgressReporter(
+        enabled=config.progress,
+        output_dir=config.output_dir,
+        path=_production_progress_path(config),
+    )
+    progress.start()
+    return _ProductionRunState(
+        config=config,
+        created_at=created_at,
+        production_started=production_started,
+        preflight_started=preflight_started,
+        report_path=_production_report_path(config),
+        run_plan_path=_run_plan_path(config),
+        parity_report_path=_parity_report_path(config),
+        progress=progress,
+        blockers=[],
+        warnings=[],
+        already_complete=_already_complete(config),
+    )
+
+
+def _run_existing_preflight(
+    state: _ProductionRunState,
+) -> Any:
+    config = state.config
+    created_at = state.created_at
+    production_started = state.production_started
+    report_path = state.report_path
+    run_plan_path = state.run_plan_path
+    parity_report_path = state.parity_report_path
+    progress = state.progress
+    blockers = state.blockers
+    warnings = state.warnings
+    already_complete = state.already_complete
+    _validate_required_inputs(config, blockers)
+    progress.memory_checkpoint("preflight_complete")
+    if blockers:
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report={},
+            run_plan_path=run_plan_path,
+            run_plan={},
+            effective_batch_size=None,
+            already_complete=already_complete,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "preflight")
+
+    c6_resume_requested = (
+        config.resume
+        and config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
+        and config.target_policy == "corridor_exemplar_v1"
+        and config.exemplar_selection_enabled
+        and config.exemplar_delivery_path == "two_pass_rerun_selected"
+    )
+    compatibility_migration = CompatibilityMigrationResult(False)
+    if c6_resume_requested:
+        progress.stage("compatibility_migration")
+        compatibility_migration = migrate_c6_3_5_1_metadata(config)
+        if compatibility_migration.applicable and not compatibility_migration.applied:
+            blockers.append(
+                "C6.3.5.1 metadata compatibility migration failed: "
+                + "; ".join(compatibility_migration.reasons)
+            )
+            report = _production_report(
+                config,
+                created_at=created_at,
+                completed_at=_now(),
+                status="fail",
+                blockers=blockers,
+                warnings=warnings,
+                doctor_report={},
+                run_plan_path=run_plan_path,
+                run_plan={"status": "not_run"},
+                effective_batch_size=None,
+                already_complete=already_complete,
+                parity_report_path=parity_report_path,
+                parity_status="not_run",
+            )
+            report["compatibility_migration"] = compatibility_migration.to_dict()
+            _record_terminal_report(state, report)
+            return _terminal_stage_failure(state, "preflight")
+        from radjax_tome.builder.native_path_b.api import (
+            resolve_canonical_path_b_config,
+        )
+        from radjax_tome.builder.native_path_b.resume import (
+            resolve_native_path_b_resume,
+        )
+
+        canonical_config = resolve_canonical_path_b_config(config)
+        state.native_resume_resolution = resolve_native_path_b_resume(
+            config.output_dir,
+            config=canonical_config,
+            run_manifest_path=config.run_manifest_path,
+        )
+        if state.native_resume_resolution.complete:
+            existing_report = read_json_object(report_path)
+            _record_terminal_report(state, existing_report)
+            return _terminal_stage_failure(state, "preflight")
+    finalization_probe = probe_c6_finalization_only_resume(config)
+    output_has_artifact = _has_existing_artifact(config)
+    if output_has_artifact and not (config.resume or config.overwrite):
+        blockers.append("output exists; use --resume or --overwrite")
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report={},
+            run_plan_path=run_plan_path,
+            run_plan={},
+            effective_batch_size=None,
+            already_complete=already_complete,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "preflight")
+    if (
+        already_complete
+        and not _c6_finalization_pending(config)
+        and not c6_resume_requested
+    ):
+        validation = validate_teacher_textbook(config.output_dir)
+        if validation.status == "pass":
+            report = _production_report(
+                config,
+                created_at=created_at,
+                completed_at=_now(),
+                status="pass",
+                blockers=[],
+                warnings=[],
+                doctor_report={},
+                run_plan_path=run_plan_path,
+                run_plan={"status": "not_run"},
+                effective_batch_size=None,
+                already_complete=True,
+                parity_report_path=parity_report_path,
+                parity_status="not_run",
+                validation_status="pass",
+                build_status="already_complete",
+            )
+            _record_terminal_report(state, report)
+            return _terminal_stage_failure(state, "preflight")
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=list(validation.blockers),
+            warnings=list(validation.warnings),
+            doctor_report={},
+            run_plan_path=run_plan_path,
+            run_plan={"status": "not_run"},
+            effective_batch_size=None,
+            already_complete=True,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+            validation_status=validation.status,
+            build_status="already_complete_invalid",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "preflight")
+    if finalization_probe.eligible and (
+        not c6_resume_requested
+        or state.native_resume_resolution is None
+        or state.native_resume_resolution.stage
+        in {"validation_linkage", "reconciliation_cover", "final_reporting"}
+    ):
+        state.terminal_report = _resume_c6_finalization(
+            config,
+            created_at=created_at,
+            production_started=production_started,
+            report_path=report_path,
+            parity_report_path=parity_report_path,
+            progress=progress,
+        )
+        return _terminal_stage_failure(state, "preflight")
+    if output_has_artifact and config.overwrite:
+        shutil.rmtree(config.output_dir)
+
+    backend_config = _backend_config(config)
+    doctor_report = build_runtime_doctor_report(backend_config)
+    plan = build_gpu_run_plan(
+        GPURunPlanConfig(
+            backend_config=backend_config,
+            dataset_path=config.dataset_path,
+            corpus_manifest_path=config.corpus_manifest_path,
+            teacher_model_provenance_path=config.teacher_model_provenance_path,
+            max_examples=config.max_examples,
+            strict_provenance=config.strict_provenance,
+            max_artifact_bytes=config.max_artifact_bytes,
+            fail_on_warnings=config.fail_on_plan_warnings,
+            selection_integration_policy=config.selection_integration_policy,
+            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
+            fingerprint_corridor_budget_fraction=(
+                config.fingerprint_corridor_budget_fraction
+            ),
+            fingerprint_corridor_budget_max=config.fingerprint_corridor_budget_max,
+            fingerprint_corridor_mode_cap=config.fingerprint_corridor_mode_cap,
+            fingerprint_corridor_candidate_pool_cap=(
+                config.fingerprint_corridor_candidate_pool_cap
+            ),
+            require_full_selected_budget=config.require_full_selected_budget,
+        )
+    )
+    write_gpu_run_plan(plan, run_plan_path)
+    warnings.extend(str(item) for item in plan.get("warnings", ()))
+    run_plan_status = str(plan.get("status"))
+    if run_plan_status == "fail":
+        blockers.extend(str(item) for item in plan.get("blockers", ()))
+    if run_plan_status == "warn" and config.no_build_if_plan_warn:
+        blockers.append("run plan status is warn and no_build_if_plan_warn is enabled")
+    effective_batch_size = _effective_batch_size(plan)
+    if effective_batch_size is None:
+        blockers.append("run plan did not select an effective batch size")
+    if blockers:
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report=doctor_report,
+            run_plan_path=run_plan_path,
+            run_plan=plan,
+            effective_batch_size=effective_batch_size,
+            already_complete=already_complete,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "preflight")
+
+    state.doctor_report = doctor_report
+    state.plan = plan
+    state.effective_batch_size = effective_batch_size
+    state.preflight_wall_seconds = _elapsed(state.preflight_started)
+    return _existing_stage_success(
+        state,
+        "preflight",
+        paths=(run_plan_path,),
+    )
+
+
+def _run_existing_score_pass(
+    state: _ProductionRunState,
+) -> Any:
+    config = state.config
+    created_at = state.created_at
+    run_plan_path = state.run_plan_path
+    parity_report_path = state.parity_report_path
+    progress = state.progress
+    blockers = state.blockers
+    warnings = state.warnings
+    already_complete = state.already_complete
+    doctor_report = state.doctor_report or {}
+    plan = state.plan or {}
+    effective_batch_size = state.effective_batch_size
+    main_pass_started = perf_counter()
+    progress.start_score_pass(
+        examples_total=_planned_example_count(plan),
+        shard_count_total=_planned_shard_count(config, plan),
+    )
+    try:
+        build_report = build_streaming_backend_teacher_textbook(
+            _streaming_config(
+                config,
+                effective_batch_size,
+                progress_callback=progress.handle_streaming_event,
+            )
+        )
+    except Exception as exc:
+        blockers.append(str(exc))
+        report = _production_report(
+            config,
+            created_at=created_at,
+            completed_at=_now(),
+            status="fail",
+            blockers=blockers,
+            warnings=warnings,
+            doctor_report=doctor_report,
+            run_plan_path=run_plan_path,
+            run_plan=plan,
+            effective_batch_size=effective_batch_size,
+            already_complete=already_complete,
+            parity_report_path=parity_report_path,
+            parity_status="not_run",
+        )
+        _record_terminal_report(state, report)
+        return _terminal_stage_failure(state, "score_pass")
+    main_pass_wall_seconds = _elapsed(main_pass_started)
+    progress.memory_checkpoint("score_pass_complete")
+    state.build_report = build_report
+    state.main_pass_wall_seconds = main_pass_wall_seconds
+    return _existing_stage_success(
+        state,
+        "score_pass",
+        paths=(
+            config.output_dir / "run_manifest.json",
+            config.output_dir / "metadata.json",
+        ),
+        prior_stage="preflight",
+        prior_paths=(run_plan_path,),
+    )
+
+
+def _existing_stage_success(
+    state: _ProductionRunState,
+    stage: str,
+    *,
+    paths: tuple[Path, ...],
+    prior_stage: str | None = None,
+    prior_paths: tuple[Path, ...] = (),
+) -> Any:
+    from radjax_tome.builder.native_path_b.contracts import (
+        FileHash,
+        PriorStageProof,
+        StageEvidence,
+        StageResult,
+    )
+
+    existing_paths = tuple(path for path in paths if path.is_file())
+    hashes = tuple(
+        FileHash(path=path, sha256=_file_sha256(path)) for path in existing_paths
+    )
+    prior_proof = None
+    if prior_stage is not None:
+        existing_prior_paths = tuple(path for path in prior_paths if path.is_file())
+        prior_proof = PriorStageProof(
+            stage=prior_stage,
+            paths=existing_prior_paths,
+            hashes=tuple(
+                FileHash(path=path, sha256=_file_sha256(path))
+                for path in existing_prior_paths
+            ),
+        )
+    return StageResult(
+        status="pass",
+        value=state,
+        evidence=StageEvidence(
+            stage=stage,
+            paths=existing_paths,
+            hashes=hashes,
+            counts=(),
+            prior_stage_proof=prior_proof,
+        ),
+    )
+
+
+def _record_terminal_report(
+    state: _ProductionRunState,
+    report: dict[str, Any],
+) -> None:
+    state.terminal_report = _finalize_production_report(
+        report,
+        state.report_path,
+        state.progress,
+    )
+
+
+def _terminal_stage_failure(state: _ProductionRunState, stage: str) -> Any:
+    from radjax_tome.builder.native_path_b.contracts import StageFailure, StageResult
+
+    report = state.terminal_report or {}
+    blockers = tuple(str(item) for item in report.get("blockers", ()))
+    return StageResult(
+        status="fail",
+        value=None,
+        evidence=None,
+        failure=StageFailure(
+            stage=stage,
+            reason="existing_production_stage_terminal_report",
+            blockers=(
+                blockers or ("existing production stage returned terminal report",)
+            ),
+            resumable=bool(state.config.resume),
+            remediation="inspect the preserved production report",
+        ),
+    )
+
+
+def _stage_adapter_failure_report(
+    state: _ProductionRunState,
+    failure: Any,
+) -> dict[str, Any]:
+    blockers = list(getattr(failure, "blockers", ()) or ())
+    if not blockers:
+        blockers.append("native Path-B stage adapter failed without blockers")
+    report = _production_report(
+        state.config,
+        created_at=state.created_at,
+        completed_at=_now(),
+        status="fail",
+        blockers=blockers,
+        warnings=state.warnings,
+        doctor_report=state.doctor_report or {},
+        run_plan_path=state.run_plan_path,
+        run_plan=state.plan or {},
+        effective_batch_size=state.effective_batch_size,
+        already_complete=state.already_complete,
+        parity_report_path=state.parity_report_path,
+        parity_status="not_run",
+    )
+    return _finalize_production_report(report, state.report_path, state.progress)
+
+
+def _selection_underfilled_stage_report(
+    state: _ProductionRunState,
+    failure: Any,
+) -> dict[str, Any]:
+    """Preserve the legacy named terminal report before selected rerun starts."""
+
+    blockers = list(getattr(failure, "blockers", ()) or ())
+    report = _production_report(
+        state.config,
+        created_at=state.created_at,
+        completed_at=_now(),
+        status="fail",
+        blockers=blockers,
+        warnings=state.warnings,
+        doctor_report=state.doctor_report or {},
+        run_plan_path=state.run_plan_path,
+        run_plan=state.plan or {},
+        effective_batch_size=state.effective_batch_size,
+        already_complete=state.already_complete,
+        parity_report_path=state.parity_report_path,
+        parity_status="not_run",
+        build_status="selection_underfilled_before_selected_rerun",
+    )
+    return _finalize_production_report(report, state.report_path, state.progress)
+
+
+def _run_native_path_b_post_score_stages(
+    state: _ProductionRunState,
+    *,
+    canonical_config: Any,
+    slice_one: Any,
+) -> dict[str, Any]:
+    """Run the real post-score native Path-B stages in their fixed order.
+
+    The callbacks retain ownership of the existing artifact writes.  The
+    orchestrator only carries typed, in-memory evidence between them; it does
+    not introduce a checkpoint schema or a second production algorithm.
+    """
+
+    from radjax_tome.builder.native_path_b.orchestrator import (
+        SliceFiveOperations,
+        SliceFourOperations,
+        SliceThreeOperations,
+        SliceTwoOperations,
+        run_slice_five,
+        run_slice_four,
+        run_slice_three,
+        run_slice_two,
+    )
+
+    slice_two = run_slice_two(
+        canonical_config,
+        slice_one,
+        operations=SliceTwoOperations(
+            early_corridor=lambda _, __: _native_early_corridor_operation(state),
+            fingerprint_authority=lambda _, __: _native_fingerprint_authority_operation(
+                state
+            ),
+            global_authority=lambda _, __, fingerprint: (
+                _native_global_authority_operation(state, fingerprint)
+            ),
+        ),
+    )
+    if slice_two.status != "pass":
+        return _stage_adapter_failure_report(
+            state,
+            slice_two.global_authority.failure
+            if slice_two.global_authority is not None
+            else (
+                slice_two.fingerprint_authority.failure
+                if slice_two.fingerprint_authority is not None
+                else slice_two.early_corridor.failure
+            ),
+        )
+    slice_three = run_slice_three(
+        canonical_config,
+        slice_two,
+        operations=SliceThreeOperations(
+            integrated_selection=lambda _, authorities: (
+                _native_integrated_selection_operation(state, authorities)
+            ),
+        ),
+    )
+    if slice_three.status != "pass":
+        failure = (
+            None
+            if slice_three.integrated_selection is None
+            else slice_three.integrated_selection.failure
+        )
+        if failure is not None and any(
+            blocker.startswith("C6 selected budget underfilled before selected rerun")
+            for blocker in failure.blockers
+        ):
+            return _selection_underfilled_stage_report(state, failure)
+        return _stage_adapter_failure_report(
+            state,
+            failure,
+        )
+    slice_four = run_slice_four(
+        canonical_config,
+        slice_three,
+        operations=SliceFourOperations(
+            selected_rerun=lambda _, inputs: _native_selected_rerun_operation(
+                state, inputs
+            ),
+            late_corridor=lambda _, inputs: _native_late_corridor_operation(inputs),
+            assembly=lambda _, inputs: _native_artifact_assembly_operation(inputs),
+        ),
+    )
+    if slice_four.status != "pass":
+        return _stage_adapter_failure_report(
+            state,
+            slice_four.assembly.failure
+            if slice_four.assembly is not None
+            else (
+                slice_four.late_corridor.failure
+                if slice_four.late_corridor is not None
+                else (
+                    slice_four.selected_rerun.failure
+                    if slice_four.selected_rerun is not None
+                    else None
+                )
+            ),
+        )
+    slice_five = run_slice_five(
+        canonical_config,
+        slice_four,
+        operations=SliceFiveOperations(
+            validation_linkage=lambda _, inputs: _native_validation_linkage_operation(
+                state, inputs
+            ),
+            reconciliation_cover=lambda _, inputs: (
+                _native_reconciliation_cover_operation(state, inputs)
+            ),
+            final_reporting=lambda _, inputs: _native_final_reporting_operation(
+                state, inputs
+            ),
+        ),
+    )
+    if slice_five.final_result is not None and state.terminal_report is not None:
+        return state.terminal_report
+    return _stage_adapter_failure_report(
+        state,
+        slice_five.validation.failure if slice_five.validation is not None else None,
+    )
+
+
+def _native_early_corridor_operation(state: _ProductionRunState) -> Any:
+    """Materialize the provisional corridor immediately after score pass."""
+
+    from radjax_tome.builder.native_path_b.evidence import (
+        read_score_surface_corridor_evidence,
+    )
+
+    config = state.config
+    state.progress.stage("fingerprint_corridor_export")
+    store = TeacherTargetStore.open(config.output_dir)
+    examples = load_text_examples(
+        config.dataset_path,
+        max_examples=store.metadata.num_examples,
+    )
+    build_corridor_artifacts(
+        output_dir=config.output_dir,
+        examples=examples,
+        selected_records=[],
+        selected_payloads=[],
+        delivery_path=config.exemplar_delivery_path or "one_pass_pruned_candidate",
+        non_selected_exemplar_payload_retained=(
+            config.retain_unselected_exemplar_payloads
+        ),
+    )
+    return read_score_surface_corridor_evidence(config.output_dir)
+
+
+def _native_fingerprint_authority_operation(state: _ProductionRunState) -> Any:
+    """Write selector/features bound to the passing provisional corridor."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+
+    config = state.config
+    state.progress.stage("selection_authority_export")
+    fingerprint = _export_c6_fingerprint_selection_authority(config)
+    paths = (
+        Path(str(fingerprint["selector_path"])),
+        Path(str(fingerprint["feature_path"])),
+        config.output_dir / "c6" / "corridor-features" / "manifest.json",
+    )
+    evidence = _native_file_evidence(
+        "fingerprint_corridor_selection_authority_export",
+        paths,
+    )
+    return StageResult(
+        status="pass",
+        value=fingerprint,
+        evidence=evidence,
+    )
+
+
+def _native_global_authority_operation(
+    state: _ProductionRunState,
+    fingerprint: Mapping[str, Path | str],
+) -> Any:
+    """Write global supply/passports only after matching fingerprint authority."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+
+    authorities = _export_c6_global_authority(state.config, fingerprint)
+    paths = (
+        Path(str(authorities["global_board_supply_path"])),
+        Path(str(authorities["source_passports_path"])),
+        Path(str(authorities["authority_manifest_path"])),
+    )
+    evidence = _native_file_evidence("global_authority_export", paths)
+    state.progress.memory_checkpoint("authority_export_complete")
+    return StageResult(status="pass", value=authorities, evidence=evidence)
+
+
+def _native_integrated_selection_operation(
+    state: _ProductionRunState, inputs: Any
+) -> Any:
+    """Run C2--C5 from the two explicit authority handoffs."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+    from radjax_tome.builder.native_path_b.selection import IntegratedSelectionHandoff
+
+    state.progress.stage("corridor_global_selection")
+    context = _prepare_c6_selection(state.config, inputs.global_value)
+    root = state.config.output_dir / "c6"
+    c2 = _native_file_evidence(
+        "c2_corridor_candidate_leaderboards",
+        (root / "corridor-leaderboards" / "manifest.json",),
+        prior=inputs.fingerprint_evidence,
+    )
+    c3 = _native_file_evidence(
+        "c3_corridor_coverage_plan",
+        (root / "coverage-plan" / "coverage_plan.json",),
+        prior=c2,
+    )
+    c4 = _native_file_evidence(
+        "c4_corridor_global_claims",
+        (root / "claims" / "claim_manifest.json",),
+        prior=c3,
+    )
+    c5 = _native_file_evidence(
+        "c5_multi_role_selection",
+        (root / "multi-role-selection" / "manifest.json",),
+        prior=c4,
+    )
+    evidence = _native_file_evidence(
+        "integrated_selection",
+        (
+            root / "selection_budget_diagnostics.json",
+            root / "multi-role-selection" / "manifest.json",
+        ),
+        prior=c5,
+    )
+    state.progress.memory_checkpoint("c2_c5_selection_complete")
+    return StageResult(
+        status="pass",
+        value=IntegratedSelectionHandoff(
+            value=context,
+            stage_evidence=evidence,
+            c2_evidence=c2,
+            c3_evidence=c3,
+            c4_evidence=c4,
+            c5_evidence=c5,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_selected_rerun_operation(state: _ProductionRunState, inputs: Any) -> Any:
+    """Run the selected-only teacher pass without promoting public payloads."""
+
+    from radjax_tome.builder.native_path_b.contracts import EvidenceCount, StageResult
+    from radjax_tome.builder.native_path_b.delivery import SelectedRerunHandoff
+
+    context = inputs.selection
+    config = _exemplar_delivery_config(
+        state.config,
+        state.effective_batch_size,
+        progress_callback=state.progress.handle_delivery_event,
+        authoritative_records=tuple(context["delivery_records"]),
+        delivery_authority_hash=str(
+            (context.get("authorities") or {}).get("score_pass_authority_hash") or ""
+        ),
+    )
+    prepared = run_selected_delivery_rerun(config)
+    staging_root = (
+        config.artifact_dir
+        / ".staging-native-c6"
+        / (str(config.delivery_authority_hash or "unbound").replace(":", "-"))
+    )
+    staging_paths = tuple(
+        sorted(path for path in staging_root.rglob("*") if path.is_file())
+    )
+    if not staging_paths:
+        raise ValueError("selected rerun produced no native staged payload evidence")
+    evidence = _native_file_evidence(
+        "selected_delivery_rerun",
+        staging_paths,
+        counts=(
+            EvidenceCount("selected_record_count", len(prepared.selected_records)),
+            EvidenceCount("selected_payload_count", len(prepared.selected_payloads)),
+            EvidenceCount(
+                "selected_rerun_example_count", prepared.rerun_selected_example_count
+            ),
+        ),
+        prior=inputs.c5_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=SelectedRerunHandoff(
+            value={"prepared": prepared, "context": context},
+            stage_evidence=evidence,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_late_corridor_operation(inputs: Any) -> Any:
+    """Overwrite the provisional public corridors only after selected rerun."""
+
+    from radjax_tome.builder.native_path_b.contracts import (
+        SelectedArtifactCorridorEvidence,
+        StageResult,
+    )
+
+    rerun = inputs.selected_rerun
+    prepared = rerun["prepared"]
+    finalized = finalize_selected_delivery_corridor(prepared)
+    # Slice Four deliberately keeps one selected-rerun handoff across late
+    # finalization and assembly.  Update only that ephemeral callback value so
+    # assembly consumes the finalized context rather than recreating a stage.
+    rerun["prepared"] = finalized
+    corridor = finalized.corridor_result
+    if corridor is None:
+        raise ValueError("late corridor finalization returned no corridor evidence")
+    output = finalized.config.artifact_dir
+    evidence = _native_file_evidence(
+        "selected_artifact_corridor_finalization",
+        (
+            corridor.summary_path,
+            corridor.fingerprints_path,
+            corridor.modes_path,
+            corridor.assignments_path,
+        ),
+        prior=inputs.selected_rerun_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=SelectedArtifactCorridorEvidence(
+            stage_evidence=evidence,
+            summary_path=corridor.summary_path,
+            fingerprints_path=corridor.fingerprints_path,
+            modes_path=corridor.modes_path,
+            assignments_path=corridor.assignments_path,
+            positions_available=corridor.positions_available,
+            positions_used=corridor.positions_used,
+            fingerprint_count=corridor.fingerprint_count,
+            mode_count=corridor.mode_count,
+            assignment_count=corridor.assignment_count,
+            selected_exemplar_count=len(finalized.selected_payloads),
+            selected_exemplars_linked=corridor.selected_exemplars_linked,
+            # Assembly owns the durable delivery report; retain its established
+            # destination as the subsequent proof path without writing early.
+            delivery_report_path=output / "delivery_report.json",
+            authority_manifest_path=output / "c6" / "authority_manifest.json",
+            delivery_authority_hash=str(finalized.config.delivery_authority_hash or ""),
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_artifact_assembly_operation(inputs: Any) -> Any:
+    """Promote payloads and write the established delivery artifact surface."""
+
+    from radjax_tome.builder.native_path_b.assembly import ArtifactAssemblyHandoff
+    from radjax_tome.builder.native_path_b.contracts import EvidenceCount, StageResult
+
+    rerun = inputs.selected_rerun
+    finalized = rerun["prepared"]
+    report = assemble_selected_delivery_artifacts(finalized)
+    output = finalized.config.artifact_dir
+    evidence = _native_file_evidence(
+        "artifact_assembly",
+        (
+            output / "delivery_report.json",
+            output / "leaderboards" / "selected_exemplars.json",
+            output / "selected_exemplars" / "payload_index.json",
+        ),
+        counts=(
+            EvidenceCount(
+                "selected_exemplar_count", int(report["num_selected_exemplars"])
+            ),
+        ),
+        prior=inputs.final_corridor_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=ArtifactAssemblyHandoff(
+            value={
+                "delivery_report": report,
+                "context": rerun["context"],
+                "prepared": finalized,
+            },
+            stage_evidence=evidence,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_validation_linkage_operation(
+    state: _ProductionRunState, inputs: Any
+) -> Any:
+    """Run the existing strict validation and selected-linkage audit."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+    from radjax_tome.builder.native_path_b.verification import ValidationLinkageHandoff
+
+    output = state.config.output_dir
+    state.progress.validation_started()
+    validation_started = perf_counter()
+    validation = validate_teacher_textbook(output)
+    write_teacher_textbook_validation_report(
+        validation, output / "validation_report.json"
+    )
+    validation_wall_seconds = _elapsed(validation_started)
+    state.progress.memory_checkpoint("validation_complete")
+    state.progress.validation_completed(validation.status)
+    linkage_audit = audit_selected_linkage(output, strict=True)
+    write_selected_linkage_audit(linkage_audit, output / "selected_linkage_audit.json")
+    evidence = _native_file_evidence(
+        "validation_linkage",
+        (output / "validation_report.json", output / "selected_linkage_audit.json"),
+        prior=inputs.assembly_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=ValidationLinkageHandoff(
+            value={
+                **inputs.assembly,
+                "validation": validation,
+                "linkage_audit": linkage_audit,
+                "validation_wall_seconds": validation_wall_seconds,
+            },
+            stage_evidence=evidence,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_reconciliation_cover_operation(
+    state: _ProductionRunState, inputs: Any
+) -> Any:
+    """Reconcile C2--C5 delivery proof, coverage, and cover page."""
+
+    from radjax_tome.builder.native_path_b.contracts import StageResult
+    from radjax_tome.builder.native_path_b.verification import (
+        ReconciliationCoverHandoff,
+    )
+
+    output = state.config.output_dir
+    value = inputs.validation
+    c6_validation, c6_coverage = _finalize_c6_selection(
+        state.config,
+        value["context"],
+        delivery_report=value["delivery_report"],
+        audit_report=value["linkage_audit"].to_dict(),
+    )
+    audit_payload = value["linkage_audit"].to_dict()
+    audit_payload["c6_integration"] = {
+        "status": c6_validation["status"],
+        "selected_unique_count": c6_validation["selected_unique_count"],
+        "selected_obligation_count": c6_validation["selected_obligation_count"],
+        "coordinate_set_authority": "c5",
+    }
+    write_json(output / "selected_linkage_audit.json", audit_payload)
+    (output / "reports").mkdir(parents=True, exist_ok=True)
+    write_json(
+        output / "reports" / "c6_integrated_selection_validation.json",
+        c6_validation,
+    )
+    write_corridor_coverage_report(
+        c6_coverage,
+        output / "reports" / "fingerprint_corridor_coverage.json",
+    )
+    if c6_validation["status"] == "fail":
+        state.blockers.extend(str(item) for item in c6_validation["blockers"])
+    if value["validation"].status == "pass":
+        write_cover_page(output)
+    evidence = _native_file_evidence(
+        "reconciliation_cover",
+        (
+            output / "reports" / "c6_integrated_selection_validation.json",
+            output / "reports" / "fingerprint_corridor_coverage.json",
+            output / "cover_page.json",
+        ),
+        prior=inputs.validation_evidence,
+    )
+    return StageResult(
+        status="pass",
+        value=ReconciliationCoverHandoff(
+            value={**value, "c6_validation": c6_validation},
+            stage_evidence=evidence,
+        ),
+        evidence=evidence,
+    )
+
+
+def _native_final_reporting_operation(state: _ProductionRunState, inputs: Any) -> Any:
+    """Render the existing report/progress result from completed native proof."""
+
+    from radjax_tome.builder.native_path_b.contracts import (
+        NativePathBRunResult,
+        StageFailure,
+    )
+
+    value = inputs.reconciliation
+    config = state.config
+    validation = value["validation"]
+    delivery_report = value["delivery_report"]
+    parity_status = "not_run"
+    if config.parity_left is not None and validation.status == "pass":
+        parity_report = compare_tome_artifacts(
+            config.parity_left,
+            config.output_dir,
+            TomeParityConfig(max_examples=config.max_examples),
+            left_label="baseline",
+            right_label="production",
+        )
+        write_tome_parity_report(parity_report, state.parity_report_path)
+        parity_status = parity_report.status
+        if parity_report.status == "fail":
+            state.blockers.extend(parity_report.blockers)
+        elif parity_report.status == "warn":
+            state.warnings.extend(parity_report.warnings)
+    if validation.status != "pass":
+        state.blockers.extend(validation.blockers)
+    if delivery_report.get("status") == "fail":
+        state.blockers.extend(str(item) for item in delivery_report.get("blockers", ()))
+    elif delivery_report.get("status") == "warn":
+        state.warnings.extend(str(item) for item in delivery_report.get("warnings", ()))
+    else:
+        state.warnings = _filter_fulfilled_delivery_warnings(state.warnings)
+    status = "fail" if state.blockers else "warn" if state.warnings else "pass"
+    report = _production_report(
+        config,
+        created_at=state.created_at,
+        completed_at=_now(),
+        status=status,
+        blockers=state.blockers,
+        warnings=state.warnings,
+        doctor_report=state.doctor_report or {},
+        run_plan_path=state.run_plan_path,
+        run_plan=state.plan or {},
+        effective_batch_size=state.effective_batch_size,
+        already_complete=state.already_complete,
+        parity_report_path=state.parity_report_path,
+        parity_status=parity_status,
+        validation_status=validation.status,
+        build_status=getattr(state.build_report, "status", None),
+        delivery_report=delivery_report,
+        selected_delivery_failure=None,
+        timing=_production_timing_fields(
+            config,
+            started_at=state.created_at,
+            completed_at=_now(),
+            production_wall_seconds=_elapsed(state.production_started),
+            preflight_wall_seconds=state.preflight_wall_seconds,
+            main_pass_wall_seconds=state.main_pass_wall_seconds,
+            validation_wall_seconds=float(value["validation_wall_seconds"]),
+            delivery_report=delivery_report,
+        ),
+    )
+    state.terminal_report = _finalize_production_report(
+        report,
+        state.report_path,
+        state.progress,
+    )
+    evidence = _native_file_evidence(
+        "final_reporting",
+        (state.report_path, config.output_dir / "production_progress.json"),
+        prior=inputs.reconciliation_evidence,
+    )
+    if status == "fail":
+        return NativePathBRunResult(
+            status="fail",
+            production_report_path=state.report_path,
+            validation_report_path=config.output_dir / "validation_report.json",
+            evidence=None,
+            failure=StageFailure(
+                stage="final_reporting",
+                reason="existing_production_terminal_blockers",
+                blockers=tuple(state.blockers),
+                resumable=bool(config.resume),
+                remediation="inspect the preserved production report",
+            ),
+        )
+    return NativePathBRunResult(
+        status="pass",
+        production_report_path=state.report_path,
+        validation_report_path=config.output_dir / "validation_report.json",
+        evidence=evidence,
+    )
+
+
+def _native_file_evidence(
+    stage: str,
+    paths: tuple[Path, ...],
+    *,
+    counts: tuple[Any, ...] = (),
+    prior: Any | None = None,
+) -> Any:
+    """Hash existing files as immutable typed evidence for one native stage."""
+
+    from radjax_tome.builder.native_path_b.contracts import (
+        FileHash,
+        PriorStageProof,
+        StageEvidence,
+    )
+
+    missing = tuple(path for path in paths if not path.is_file())
+    if missing:
+        raise ValueError(
+            "native Path-B stage evidence is missing: "
+            + ", ".join(str(path) for path in missing)
+        )
+    prior_proof = None
+    if prior is not None:
+        prior_proof = PriorStageProof(
+            stage=prior.stage,
+            paths=prior.paths,
+            hashes=prior.hashes,
+            counts=prior.counts,
+        )
+    return StageEvidence(
+        stage=stage,
+        paths=paths,
+        hashes=tuple(FileHash(path=path, sha256=_file_sha256(path)) for path in paths),
+        counts=counts,
+        prior_stage_proof=prior_proof,
+    )
 
 
 def write_production_build_report(report: dict[str, Any], path: Path) -> None:
@@ -1740,8 +2696,23 @@ def _native_payload_hash_for_probe(payload: Mapping[str, Any]) -> str:
 
 def _export_c6_selection_authorities(
     config: ProductionBuildConfig,
-) -> dict[str, Path | str | bool]:
-    """Derive every C6 authority from the completed Stage 1 score surface."""
+) -> dict[str, Any]:
+    """Compose the preserved fingerprint and global C6 authority exports."""
+
+    fingerprint = _export_c6_fingerprint_selection_authority(config)
+    return _export_c6_global_authority(config, fingerprint)
+
+
+def _export_c6_fingerprint_selection_authority(
+    config: ProductionBuildConfig,
+) -> dict[str, Any]:
+    """Export selector/features from the provisional score-surface corridor.
+
+    This is the first authority boundary in the canonical native Path-B route.
+    It intentionally leaves global-board supply, source passports, and the
+    combined authority manifest to the following global-authority operation.
+    The compatibility composer above preserves the historical public helper.
+    """
 
     if config.total_selected_exemplar_budget is None:
         raise ValueError("C6 total_selected_exemplar_budget is required")
@@ -1777,19 +2748,43 @@ def _export_c6_selection_authorities(
     )
     selector_path = c6_root / "production_global_selector.json"
     write_json(selector_path, selector_manifest)
-    score_pass_authority_hash = _hash_payload(
-        {
-            "metadata_sha256": _file_sha256(config.output_dir / "metadata.json"),
-            "assignment_manifest_sha256": _file_sha256(
-                config.output_dir / "corridors" / "mode_assignments.json"
-            ),
-            "modes_sha256": _file_sha256(
-                config.output_dir / "corridors" / "corridor_modes.json"
-            ),
-            "selector_sha256": _file_sha256(selector_path),
-            "selection_integration_config_hash": _selection_integration_hash(config),
-        }
+    authority_hashes = authority_hashes_for_artifact(
+        config.output_dir,
+        selection_integration_config_hash=_selection_integration_hash(config),
     )
+    score_pass_authority_hash = authority_hashes.score_pass_authority_hash_v2
+    feature_path = export_corridor_candidate_features(
+        artifact_dir=config.output_dir,
+        output_dir=c6_root / "corridor-features",
+    )
+    feature_manifest_path = c6_root / "corridor-features" / "manifest.json"
+    feature_manifest = read_json_object(feature_manifest_path)
+    feature_manifest["score_pass_authority_hash"] = score_pass_authority_hash
+    feature_manifest["score_pass_authority_contract_version"] = AUTHORITY_HASH_V2
+    write_json(feature_manifest_path, feature_manifest)
+    return {
+        "selector_path": selector_path,
+        "feature_path": feature_path,
+        "score_pass_authority_hash": score_pass_authority_hash,
+        "score_pass_authority_hash_v1": (authority_hashes.score_pass_authority_hash_v1),
+        "score_pass_authority_contract_version": AUTHORITY_HASH_V2,
+        "raw_artifact_digests": authority_hashes.raw_artifact_digests,
+    }
+
+
+def _export_c6_global_authority(
+    config: ProductionBuildConfig,
+    fingerprint: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Export global supply/passports after matching fingerprint authority."""
+
+    c6_root = config.output_dir / "c6"
+    selector_path = Path(str(fingerprint["selector_path"]))
+    feature_path = Path(str(fingerprint["feature_path"]))
+    score_pass_authority_hash = str(fingerprint["score_pass_authority_hash"])
+    score_pass_authority_hash_v1 = str(fingerprint["score_pass_authority_hash_v1"])
+    raw_artifact_digests = dict(fingerprint["raw_artifact_digests"])
+    selector_manifest = read_json_object(selector_path)
     global_supply = export_production_global_board_supply(
         selector_manifest,
         source_artifact_id=str(config.output_dir),
@@ -1805,22 +2800,15 @@ def _export_c6_selection_authorities(
         output_path=c6_root / "source-passports.json",
         score_pass_authority_hash=score_pass_authority_hash,
     )
-    feature_path = export_corridor_candidate_features(
-        artifact_dir=config.output_dir,
-        output_dir=c6_root / "corridor-features",
-    )
-    feature_manifest_path = c6_root / "corridor-features" / "manifest.json"
-    feature_manifest = read_json_object(feature_manifest_path)
-    feature_manifest["score_pass_authority_hash"] = score_pass_authority_hash
-    write_json(feature_manifest_path, feature_manifest)
     authority_manifest_path = c6_root / "authority_manifest.json"
     run_manifest = read_json_object(config.output_dir / "run_manifest.json")
     authority_manifest = {
-        "schema_version": "radjax.c6_selection_authority.v1",
+        "schema_version": AUTHORITY_MANIFEST_SCHEMA_V2,
+        "score_pass_authority_contract_version": AUTHORITY_HASH_V2,
         "score_pass_authority_hash": score_pass_authority_hash,
-        "target_store_metadata_sha256": _file_sha256(
-            config.output_dir / "metadata.json"
-        ),
+        "score_pass_authority_hash_v1": score_pass_authority_hash_v1,
+        "raw_artifact_digests": raw_artifact_digests,
+        "target_store_metadata_sha256": raw_artifact_digests["metadata.json"],
         "corpus_hash": run_manifest.get("corpus_hash"),
         "score_pass_config_hash": run_manifest.get("emission_config_hash"),
         "score_pass_resume_hash": run_manifest.get("resume_config_hash"),
@@ -1837,7 +2825,9 @@ def _export_c6_selection_authorities(
             "corridor_features": feature_path.relative_to(config.output_dir).as_posix(),
         },
         "hashes": {
-            "selector_sha256": _file_sha256(selector_path),
+            "selector_sha256": raw_artifact_digests[
+                "c6/production_global_selector.json"
+            ],
             "global_board_supply_sha256": _file_sha256(global_path),
             "source_passports_manifest_sha256": _file_sha256(passports_path),
             "corridor_features_sha256": _file_sha256(feature_path),
@@ -1940,7 +2930,7 @@ def _validate_external_c6_overrides(
 
 def _prepare_c6_selection(
     config: ProductionBuildConfig,
-    authorities: Mapping[str, Path | str | bool],
+    authorities: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Run C2-C5 from the internally exported production authorities."""
 

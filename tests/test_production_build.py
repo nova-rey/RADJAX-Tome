@@ -13,6 +13,11 @@ from radjax_tome.backends import (
     TeacherBackendConfig,
 )
 from radjax_tome.builder import ProductionBuildConfig, build_production_gpu_tome
+from radjax_tome.builder.authority_hashes import (
+    AUTHORITY_HASH_V2,
+    AUTHORITY_MANIFEST_SCHEMA_V2,
+    RAW_ARTIFACT_DIGEST_PATHS,
+)
 from radjax_tome.corpora import CorpusBuildConfig, build_corpus_artifact
 from radjax_tome.io.json import write_json
 from radjax_tome.provenance import inspect_teacher_model, write_teacher_model_provenance
@@ -224,6 +229,10 @@ def test_c6_cpu_path_generates_features_audit_and_curriculum(
     authority = _json(config.output_dir / "c6" / "authority_manifest.json")
     assert authority["production_grade"] is True
     assert authority["score_pass_authority_hash"]
+    assert authority["schema_version"] == AUTHORITY_MANIFEST_SCHEMA_V2
+    assert authority["score_pass_authority_contract_version"] == AUTHORITY_HASH_V2
+    assert authority["score_pass_authority_hash_v1"].startswith("sha256:")
+    assert set(authority["raw_artifact_digests"]) == set(RAW_ARTIFACT_DIGEST_PATHS)
     assert (config.output_dir / "c6" / "global-board-supply.json").is_file()
     assert (config.output_dir / "c6" / "source-passports.json").is_file()
     global_supply = _json(config.output_dir / "c6" / "global-board-supply.json")
@@ -236,6 +245,7 @@ def test_c6_cpu_path_generates_features_audit_and_curriculum(
     )
     assert passports["score_pass_authority_hash"] == authority_hash
     assert features["score_pass_authority_hash"] == authority_hash
+    assert features["score_pass_authority_contract_version"] == AUTHORITY_HASH_V2
     assert report["full_teacher_pass_count"] == 1
     assert report["external_authority_override_used"] is False
     if delivery_path == "two_pass_rerun_selected":

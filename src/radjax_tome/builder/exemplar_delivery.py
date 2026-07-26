@@ -21,6 +21,7 @@ from radjax_tome.backends import (
     create_backend,
 )
 from radjax_tome.builder.corridor_artifacts import (
+    CorridorArtifactBuildResult,
     build_corridor_artifacts,
     validate_corridor_artifacts,
 )
@@ -187,9 +188,48 @@ class ExemplarDeliveryConfig:
     delivery_authority_hash: str | None = None
 
 
+@dataclass(frozen=True)
+class PreparedSelectedDelivery:
+    """In-memory handoff between the native selected-delivery phases."""
+
+    config: ExemplarDeliveryConfig
+    created_at: str
+    delivery_started: float
+    store: TeacherTargetStore
+    examples: tuple[TinyTextExample, ...]
+    manifest: dict[str, Any]
+    selected_records: list[dict[str, Any]]
+    selected_payloads: list[dict[str, Any]]
+    rerun_selected_example_count: int
+    rerun_selected_example_ids: list[str]
+    selection_wall_seconds: float
+    payload_wall_seconds: float
+    selected_example_count: int
+    tail_summary: dict[str, Any]
+    selected_board_summary: dict[str, Any]
+    selected_records_by_board: dict[str, list[dict[str, Any]]]
+    corridors_dir: Path
+    leaderboards_dir: Path
+    selected_dir: Path
+    curriculum_dir: Path
+    corridor_result: CorridorArtifactBuildResult | None = None
+
+
 def materialize_selected_exemplar_delivery(
     config: ExemplarDeliveryConfig,
 ) -> dict[str, Any]:
+    """Materialize selected delivery through its canonical three-phase order."""
+
+    prepared = run_selected_delivery_rerun(config)
+    finalized = finalize_selected_delivery_corridor(prepared)
+    return assemble_selected_delivery_artifacts(finalized)
+
+
+def run_selected_delivery_rerun(
+    config: ExemplarDeliveryConfig,
+) -> PreparedSelectedDelivery:
+    """Select and materialize rerun payloads before final corridor export."""
+
     _validate_delivery_config(config)
     created_at = _now()
     delivery_started = perf_counter()
@@ -320,17 +360,69 @@ def materialize_selected_exemplar_delivery(
     )
     selected_records_by_board = _records_by_selected_board(selected_records)
     payload_wall_seconds = _elapsed(payload_started)
-    corridor_result = build_corridor_artifacts(
-        output_dir=output,
+    return PreparedSelectedDelivery(
+        config=config,
+        created_at=created_at,
+        delivery_started=delivery_started,
+        store=store,
         examples=examples,
+        manifest=manifest,
         selected_records=selected_records,
         selected_payloads=selected_payloads,
+        rerun_selected_example_count=rerun_selected_example_count,
+        rerun_selected_example_ids=rerun_selected_example_ids,
+        selection_wall_seconds=selection_wall_seconds,
+        payload_wall_seconds=payload_wall_seconds,
+        selected_example_count=selected_example_count,
+        tail_summary=tail_summary,
+        selected_board_summary=selected_board_summary,
+        selected_records_by_board=selected_records_by_board,
+        corridors_dir=corridors_dir,
+        leaderboards_dir=leaderboards_dir,
+        selected_dir=selected_dir,
+        curriculum_dir=curriculum_dir,
+    )
+
+
+def finalize_selected_delivery_corridor(
+    prepared: PreparedSelectedDelivery,
+) -> PreparedSelectedDelivery:
+    """Write the final selected-linked public corridor surface."""
+
+    config = prepared.config
+    corridor_result = build_corridor_artifacts(
+        output_dir=config.artifact_dir,
+        examples=prepared.examples,
+        selected_records=prepared.selected_records,
+        selected_payloads=prepared.selected_payloads,
         delivery_path=config.delivery_path,
         non_selected_exemplar_payload_retained=(
             config.retain_unselected_exemplar_payloads
         ),
         progress_callback=config.progress_callback,
     )
+    return replace(prepared, corridor_result=corridor_result)
+
+
+def assemble_selected_delivery_artifacts(
+    prepared: PreparedSelectedDelivery,
+) -> dict[str, Any]:
+    """Promote native payloads and write the legacy delivery artifact surface."""
+
+    if prepared.corridor_result is None:
+        raise ValueError(
+            "selected delivery artifact assembly requires finalized corridor artifacts"
+        )
+    config = prepared.config
+    output = config.artifact_dir
+    store = prepared.store
+    selected_records = prepared.selected_records
+    selected_payloads = prepared.selected_payloads
+    corridors_dir = prepared.corridors_dir
+    leaderboards_dir = prepared.leaderboards_dir
+    selected_dir = prepared.selected_dir
+    curriculum_dir = prepared.curriculum_dir
+    corridor_result = prepared.corridor_result
     if _native_streamed_payloads(config):
         native_payload_hashes = _synchronize_native_payload_shards(
             _native_payload_stage_dir(config),
@@ -355,22 +447,22 @@ def materialize_selected_exemplar_delivery(
         enabled=config.delivery_path == ONE_PASS_PRUNED_CANDIDATE,
     )
     leaderboard_report = _leaderboard_report(
-        manifest,
+        prepared.manifest,
         selected_records=selected_records,
         config=config,
-        created_at=created_at,
-        long_tail_summary=tail_summary,
-        selected_board_summary=selected_board_summary,
+        created_at=prepared.created_at,
+        long_tail_summary=prepared.tail_summary,
+        selected_board_summary=prepared.selected_board_summary,
     )
     selected_exemplars = {
         "schema_version": "selected_exemplars_v1",
-        "created_at": created_at,
+        "created_at": prepared.created_at,
         "delivery_path": config.delivery_path,
         "score_policy": config.score_policy,
         "selected_exemplars": selected_records,
-        "long_tail_summary": tail_summary,
-        "selected_board_summary": selected_board_summary,
-        "selected_exemplar_boards": selected_records_by_board,
+        "long_tail_summary": prepared.tail_summary,
+        "selected_board_summary": prepared.selected_board_summary,
+        "selected_exemplar_boards": prepared.selected_records_by_board,
     }
     write_json(leaderboards_dir / LEADERBOARD_REPORT_FILENAME, leaderboard_report)
     write_json(leaderboards_dir / SELECTED_EXEMPLARS_FILENAME, selected_exemplars)
@@ -402,8 +494,8 @@ def materialize_selected_exemplar_delivery(
                 "schema_version": "selected_exemplar_side_board_v1",
                 "delivery_path": config.delivery_path,
                 "selected_board": board_id,
-                "selected_exemplars": selected_records_by_board[board_id],
-                "selected_board_summary": selected_board_summary,
+                "selected_exemplars": prepared.selected_records_by_board[board_id],
+                "selected_board_summary": prepared.selected_board_summary,
             },
         )
     if not _native_streamed_payloads(config):
@@ -412,8 +504,8 @@ def materialize_selected_exemplar_delivery(
             {
                 "schema_version": "selected_exemplar_payload_shard_v1",
                 "delivery_path": config.delivery_path,
-                "long_tail_summary": tail_summary,
-                "selected_board_summary": selected_board_summary,
+                "long_tail_summary": prepared.tail_summary,
+                "selected_board_summary": prepared.selected_board_summary,
                 "selected_exemplars": selected_payloads,
             },
         )
@@ -426,8 +518,8 @@ def materialize_selected_exemplar_delivery(
         "status": "pass",
         "blockers": [],
         "warnings": [],
-        "long_tail_observations": _long_tail_observations(tail_summary),
-        "created_at": created_at,
+        "long_tail_observations": _long_tail_observations(prepared.tail_summary),
+        "created_at": prepared.created_at,
         "completed_at": _now(),
         "selection_enabled": config.selection_enabled,
         "delivery_path": config.delivery_path,
@@ -441,22 +533,22 @@ def materialize_selected_exemplar_delivery(
         "num_positions_scored": store.metadata.num_examples
         * store.metadata.sequence_length,
         "num_selected_exemplars": len(selected_payloads),
-        "selected_board_summary": selected_board_summary,
+        "selected_board_summary": prepared.selected_board_summary,
         "primary_selected_exemplar_budget": _primary_budget(config),
         "long_tail_side_board_cap": config.long_tail_side_board_cap,
         "perverse_tail_side_board_cap": config.perverse_tail_side_board_cap,
         "include_long_tail_in_primary": config.include_long_tail_in_primary,
         "include_perverse_tail_in_primary": config.include_perverse_tail_in_primary,
         "include_perverse_tail_in_student": config.include_perverse_tail_in_student,
-        "long_tail_summary": tail_summary,
-        "selected_example_count": selected_example_count,
+        "long_tail_summary": prepared.tail_summary,
+        "selected_example_count": prepared.selected_example_count,
         "selected_rerun_example_ids": (
-            rerun_selected_example_ids
+            prepared.rerun_selected_example_ids
             if config.delivery_path == TWO_PASS_RERUN_SELECTED
             else []
         ),
         "selected_rerun_example_count": (
-            rerun_selected_example_count
+            prepared.rerun_selected_example_count
             if config.delivery_path == TWO_PASS_RERUN_SELECTED
             else 0
         ),
@@ -465,7 +557,7 @@ def materialize_selected_exemplar_delivery(
             config.retain_unselected_exemplar_payloads
         ),
         "teacher_rerun_count": (
-            rerun_selected_example_count
+            prepared.rerun_selected_example_count
             if config.delivery_path == TWO_PASS_RERUN_SELECTED
             else 0
         ),
@@ -480,7 +572,7 @@ def materialize_selected_exemplar_delivery(
             "selected_rerun_batch_count", 0
         ),
         "selected_rerun_examples": rerun_metrics.get(
-            "selected_rerun_examples", rerun_selected_example_count
+            "selected_rerun_examples", prepared.rerun_selected_example_count
         ),
         "selected_rerun_examples_per_second": rerun_metrics.get(
             "selected_rerun_examples_per_second"
@@ -566,16 +658,16 @@ def materialize_selected_exemplar_delivery(
         report["status"] = "fail"
         report["blockers"] = ["non-selected exemplar payload retention is enabled"]
     if config.track_timing:
-        delivery_wall_seconds = _elapsed(delivery_started)
+        delivery_wall_seconds = _elapsed(prepared.delivery_started)
         report.update(
             _delivery_timing_fields(
                 config,
                 num_examples=store.metadata.num_examples,
                 num_selected_payloads=len(selected_payloads),
-                selected_example_count=selected_example_count,
+                selected_example_count=prepared.selected_example_count,
                 delivery_wall_seconds=delivery_wall_seconds,
-                selection_wall_seconds=selection_wall_seconds,
-                payload_wall_seconds=payload_wall_seconds,
+                selection_wall_seconds=prepared.selection_wall_seconds,
+                payload_wall_seconds=prepared.payload_wall_seconds,
                 pruning_wall_seconds=pruning_wall_seconds,
             )
         )

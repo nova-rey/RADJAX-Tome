@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 
 from radjax_tome.golden.contract import (
+    GOLDEN_CONTRACT_SCHEMA_V1,
+    GOLDEN_CONTRACT_SCHEMA_V2,
     GOLDEN_CONTRACT_SCHEMA_VERSION,
     build_contract,
     canonical_json_bytes,
@@ -50,6 +52,18 @@ def test_contract_rejects_malformed_payload_digest() -> None:
 
     with pytest.raises(ValueError, match="active_payload_digest is required"):
         _contract(rows)
+
+
+def test_v2_contract_uses_a_distinct_semantic_root_domain() -> None:
+    rows = _rows()
+    v1 = _contract(rows, schema_version=GOLDEN_CONTRACT_SCHEMA_V1)
+    v2 = _contract(rows, schema_version=GOLDEN_CONTRACT_SCHEMA_V2)
+
+    validate_contract(v2, collections=rows)
+
+    assert v1["schema_version"] == GOLDEN_CONTRACT_SCHEMA_V1
+    assert v2["schema_version"] == GOLDEN_CONTRACT_SCHEMA_V2
+    assert v1["semantic_root"] != v2["semantic_root"]
 
 
 def _contract(
