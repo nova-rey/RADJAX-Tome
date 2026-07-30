@@ -1739,6 +1739,14 @@
       "replacement_or_target_boundary": "M5 canonical Tome contract.",
       "status": "canonical"
     },
+    "src/radjax_tome/tome/canonical_artifact.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M5",
+      "rationale": "M5D source-derived semantic identity and v3 raw-inventory validation seam.",
+      "replacement_or_target_boundary": "M5 canonical Tome writer and validator boundary.",
+      "status": "canonical"
+    },
     "src/radjax_tome/tome/bundle.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",

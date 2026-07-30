@@ -139,6 +139,17 @@ referenced producer/validator schemas; they do not add cover sections or
 identity fields. Any future core extension requires a new versioned contract,
 not an ignored extra field.
 
+## M5D source-derived identity seam
+
+`tome.canonical_artifact` derives a semantic identity from the source artifact
+before any student/full-debug profile materialization. It hashes canonical JSON
+projections of retained training sidecars after excluding runtime timestamps,
+while recording independent raw-byte digests for metadata, mode assignments,
+corridor modes, and the production global selector when present. The physical
+inventory excludes `cover_page.json` to avoid a circular cover/manifest hash.
+The profile writer will receive this source identity unchanged, so extra
+provenance receipts and transport wrapping cannot change the Tome identity.
+
 ## Compatibility and migration behavior
 
 Historical cover-page v2 and `radjax_tome_package_cover_v1` continue to be

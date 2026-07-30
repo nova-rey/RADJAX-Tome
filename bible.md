@@ -1747,3 +1747,12 @@ passed `838 passed, 23 skipped in 93.16s`. Ruff, formatting, and diff checks
 passed. No GPU work, fixture regeneration, authority projection change, or
 Path-B stage-order change occurred; the unrelated `.DS_Store` remains
 untracked and untouched.
+
+## 2026-07-30 — M5D Source-Derived Identity Seam
+
+M5D begins with a pure source-artifact derivation seam for the canonical v3
+cover. It separates timestamp-insensitive training semantic identity from
+profile-specific raw inventory and preserves raw integrity digests for the
+authority-relevant source files. The focused v3 contract tests pass; writer,
+validator, profile, and transport routing remain the next M5D integration
+slice. No existing public writer or historical reader changed in this commit.
