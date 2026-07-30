@@ -1625,3 +1625,21 @@ The closure also repairs the Hydra inventory record for the committed
 `builder/authority_hashes.py`; its focused ledger gate passes. M4 is complete
 and the reviewed `m3-m4-canonical-path-b-refactor` branch is approved for
 normal merge to `main`.
+
+## 2026-07-30 — M5A Contract Ownership and Characterization
+
+M5A records the pre-change ownership of the mainline configuration and Tome
+contract surface in `docs/M5_CONTRACT_OWNERSHIP.md`. The current
+`ProductionBuildConfig` contains 67 fields, replacing the earlier approximate
+61-field assessment; the M5A characterization test pins the complete ordered
+field surface. It also pins the existing 25-field selection-integration
+authority projection to
+`sha256:c7bdbfe538c007db6b65c7fc87850b29355dfeef5300c5bd4fc6efb178e987ab`
+for a fixed request, asserts every authority-bearing request field changes the
+hash, and asserts a non-authority long-tail policy does not. Cover-page v2 and
+`radjax_tome_package_cover_v1` remain distinct historical contracts. No
+production writer, reader, artifact schema, Golden fixture, authority recipe,
+or GPU behavior changed. Focused M5 config/cover/package/bundle/Golden
+coverage passed `87 passed, 1 skipped`; the complete local suite passed
+`798 passed, 23 skipped in 90.45s`. The unrelated pre-existing `.DS_Store`
+remains untracked and untouched.

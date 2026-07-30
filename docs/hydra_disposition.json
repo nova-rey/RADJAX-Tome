@@ -448,6 +448,14 @@
       "replacement_or_target_boundary": "M4D evidence and external review gate.",
       "status": "supporting"
     },
+    "docs/M5_CONTRACT_OWNERSHIP.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M5",
+      "rationale": "Authoritative M5 configuration, cover, package, and transport ownership inventory.",
+      "replacement_or_target_boundary": "M5 canonical contract and compatibility migration boundary.",
+      "status": "supporting"
+    },
     "docs/MULTI_GPU_PATH_B.md": {
       "archive_or_removal_condition": "M3 archive pointer and M2 parity gate.",
       "kind": "top-level-doc",
