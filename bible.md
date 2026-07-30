@@ -1699,3 +1699,32 @@ Golden/Hydra/ledger coverage passed `162 passed, 1 skipped in 22.59s`; the
 complete local suite passed `821 passed, 23 skipped in 92.09s`. Ruff check,
 formatting, and `git diff --check` passed. The unrelated pre-existing
 `.DS_Store` remains untracked and untouched. M5C has not begun.
+
+## 2026-07-30 — M5C Canonical Configuration Normalization and Presets
+
+M5C makes the M5B `TomeBuildIntent` / `ResolvedTomeBuildConfig` boundary the
+authoritative public production configuration path. `production-build` now
+uses the single normalizer, which applies a named preset before only explicitly
+provided advanced overrides, validates before execution, derives a separate
+execution plan, and then derives the unchanged 25-field selection authority.
+`--print-resolved-config` exposes that complete result before preflight, model
+loading, or artifact writing. Supported presets are `smoke`, `t4-1k`,
+`t4-10k`, and `production-100k`; the T4 size presets preserve the reviewed T4
+semantic settings and differ only in `max_examples` (1K, 10K, or 100K).
+
+Legacy `ProductionBuildConfig` remains a fully copied, explicit adapter and
+continues to preserve its immutable object identity at the native Path-B
+boundary after canonical validation. Canonical requests use the same explicit
+flat execution adapter only at that preserved boundary. The native route gate,
+early provisional and late selected-linked corridor order, authority recipes,
+historical readers, covers, manifests, transports, and frozen Golden fixtures
+are unchanged. New canonical CLI requests default to not retaining unselected
+exemplar payloads; retention remains an explicit advanced compatibility
+override. `docs/M5_CONFIGURATION_NORMALIZATION.md` records the contract,
+preset values, compatibility seam, and non-claims.
+
+Focused M3/M4/M5/production/Golden coverage passed `155 passed, 1 skipped in
+17.69s`; the full available local suite passed `829 passed, 23 skipped in
+92.40s`. Ruff check, formatting, and `git diff --check` passed. No GPU
+inference ran and no fixture was regenerated. The unrelated pre-existing
+`.DS_Store` remains untracked and untouched.

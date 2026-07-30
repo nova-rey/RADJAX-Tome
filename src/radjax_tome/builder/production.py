@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from radjax_tome.audit import audit_selected_linkage, write_selected_linkage_audit
 from radjax_tome.backends import TeacherBackendConfig
@@ -101,6 +101,9 @@ from radjax_tome.reports import (
 )
 from radjax_tome.targets.store import TeacherTargetStore
 from radjax_tome.tome import write_cover_page
+
+if TYPE_CHECKING:
+    from radjax_tome.builder.config import ResolvedTomeBuildConfig, TomeBuildIntent
 
 PRODUCTION_BUILD_REPORT_SCHEMA = "production_build_report_v1"
 PRODUCTION_BUILD_REPORT_FILENAME = "production_build_report.json"
@@ -247,19 +250,33 @@ class _ProductionRunState:
     native_resume_resolution: Any | None = None
 
 
-def build_production_gpu_tome(config: ProductionBuildConfig) -> dict[str, Any]:
-    """Build through the exact native Path-B boundary when it applies.
+def build_production_gpu_tome(
+    config: ProductionBuildConfig | TomeBuildIntent | ResolvedTomeBuildConfig,
+) -> dict[str, Any]:
+    """Build through the canonical normalization and native Path-B boundaries.
 
-    M3C establishes the exact routing boundary. M4B now sends the selected
-    canonical route through typed preflight and score-pass stages before the
-    preserved continuation; artifact semantics remain identical for canonical
-    and compatibility configurations.
+    The public facade accepts a historical flat request only through the M5C
+    adapter.  All public callers otherwise supply resolved canonical intent;
+    execution is reconstructed as the unchanged flat compatibility shape for
+    the preserved Path-B stages.
     """
+    from radjax_tome.builder.config import (
+        normalize_production_build_request,
+        production_build_config_from_resolved,
+    )
     from radjax_tome.builder.native_path_b import api as native_path_b_api
 
-    canonical_config = native_path_b_api.resolve_canonical_path_b_config(config)
+    normalized = normalize_production_build_request(config)
+    execution_config = (
+        config
+        if isinstance(config, ProductionBuildConfig)
+        else production_build_config_from_resolved(normalized.resolved)
+    )
+    canonical_config = native_path_b_api.resolve_canonical_path_b_config(
+        execution_config
+    )
     if canonical_config is None:
-        return _build_production_gpu_tome_compatibility(config)
+        return _build_production_gpu_tome_compatibility(execution_config)
 
     def execute_native_path_b(source_config: Any) -> dict[str, Any]:
         return _build_production_gpu_tome_compatibility(

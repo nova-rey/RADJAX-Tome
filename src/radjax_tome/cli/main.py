@@ -604,6 +604,25 @@ def _build_parser() -> argparse.ArgumentParser:
         default="entropy_top_n_v1",
     )
     production.add_argument("--track-delivery-timing", action="store_true")
+    production.add_argument(
+        "--preset",
+        choices=("smoke", "t4-1k", "t4-10k", "production-100k"),
+        help=(
+            "Resolve a named canonical production configuration before any "
+            "advanced options are applied."
+        ),
+    )
+    production.add_argument(
+        "--print-resolved-config",
+        action="store_true",
+        help="Print the fully resolved canonical configuration and exit.",
+    )
+    # The canonical normalizer owns defaults.  Suppressing parser defaults is
+    # what lets it distinguish an explicit advanced override from an omitted
+    # option, preserving the documented preset -> override ordering.
+    for action in production._actions:
+        if action.dest != "help" and not action.required:
+            action.default = argparse.SUPPRESS
     production.set_defaults(func=_cmd_production_build)
 
     exemplar_delivery_parity = subparsers.add_parser(
@@ -1551,88 +1570,64 @@ def _cmd_plan(args: argparse.Namespace) -> int:
 
 def _cmd_production_build(args: argparse.Namespace) -> int:
     from radjax_tome.builder import (
-        ProductionBuildConfig,
         build_production_gpu_tome,
+        normalize_cli_production_build_request,
         render_production_build_summary,
+        resolved_tome_build_config_payload,
     )
 
-    report = build_production_gpu_tome(
-        ProductionBuildConfig(
-            teacher_model=str(args.teacher_model),
-            tokenizer_id=args.tokenizer_id,
-            dataset_path=args.dataset,
-            corpus_manifest_path=args.corpus_manifest,
-            teacher_model_provenance_path=args.teacher_model_provenance,
-            output_dir=args.output,
-            teacher_backend=args.teacher_backend,
-            runtime_mode=args.runtime_mode,
-            target_policy=_normalize_target_policy(args.target_policy),
-            sequence_length=args.sequence_length,
-            vocab_size=args.vocab_size,
-            top_k=args.top_k,
-            num_buckets=args.num_buckets,
-            dynamic_top_k_min=args.dynamic_top_k_min,
-            dynamic_top_k_max=args.dynamic_top_k_max,
-            dynamic_mass_threshold=args.dynamic_mass_threshold,
-            long_tail_warning_k=args.long_tail_warning_k,
-            very_long_tail_warning_k=args.very_long_tail_warning_k,
-            perverse_tail_warning_k=args.perverse_tail_warning_k,
-            reject_perverse_exemplars=args.reject_perverse_exemplars,
-            primary_selected_exemplar_budget=args.primary_selected_exemplar_budget,
-            long_tail_side_board_cap=args.long_tail_side_board_cap,
-            perverse_tail_side_board_cap=args.perverse_tail_side_board_cap,
-            include_long_tail_in_primary=args.include_long_tail_in_primary,
-            include_perverse_tail_in_primary=args.include_perverse_tail_in_primary,
-            include_perverse_tail_in_student=args.include_perverse_tail_in_student,
-            gpu_batch_size_mode=args.gpu_batch_size_mode,
-            gpu_batch_size_preset=args.gpu_batch_size_preset,
-            gpu_batch_size_custom=args.gpu_batch_size_custom,
-            gpu_batch_size_auto_min=args.gpu_batch_size_auto_min,
-            gpu_batch_size_auto_max=args.gpu_batch_size_auto_max,
-            shard_size_examples=args.shard_size_examples,
-            max_examples=args.max_examples,
-            resume=args.resume,
-            overwrite=args.overwrite,
-            strict_provenance=args.strict_provenance,
-            fail_on_plan_warnings=args.fail_on_plan_warnings,
-            no_build_if_plan_warn=args.no_build_if_plan_warn,
-            max_artifact_bytes=args.max_artifact_bytes,
-            run_plan_path=args.run_plan,
-            production_report_path=args.production_report,
-            parity_left=args.parity_left,
-            parity_report_path=args.parity_report,
-            run_manifest_path=args.run_manifest,
-            progress_log_path=args.progress_log,
-            progress=args.progress,
-            exemplar_delivery_path=args.exemplar_delivery_path,
-            exemplar_selection_enabled=args.exemplar_selection_enabled,
-            exemplar_leaderboard_capacity=args.exemplar_leaderboard_capacity,
-            selected_exemplar_budget=args.selected_exemplar_budget,
-            selected_exemplar_fraction=args.selected_exemplar_fraction,
-            retain_unselected_exemplar_payloads=(
-                args.retain_unselected_exemplar_payloads
-            ),
-            exemplar_score_policy=args.exemplar_score_policy,
-            selected_rerun_batch_size=args.selected_rerun_batch_size,
-            track_delivery_timing=args.track_delivery_timing,
-            selection_integration_policy=args.selection_integration_policy,
-            total_selected_exemplar_budget=args.total_selected_exemplar_budget,
-            fingerprint_corridor_budget_fraction=(
-                args.fingerprint_corridor_budget_fraction
-            ),
-            fingerprint_corridor_budget_max=args.fingerprint_corridor_budget_max,
-            fingerprint_corridor_mode_cap=args.fingerprint_corridor_mode_cap,
-            fingerprint_corridor_candidate_pool_cap=(
-                args.fingerprint_corridor_candidate_pool_cap
-            ),
-            require_full_selected_budget=args.require_full_selected_budget,
-            corridor_feature_jsonl_path=args.corridor_feature_jsonl,
-            global_board_supply_path=args.global_board_supply,
-            c4_claims_path=args.c4_claims,
-            c5_selection_path=args.c5_selection,
-            source_passports_path=args.source_passports,
+    provided = vars(args)
+    aliases = {
+        "run_plan": "run_plan_path",
+        "production_report": "production_report_path",
+        "parity_report": "parity_report_path",
+        "run_manifest": "run_manifest_path",
+        "progress_log": "progress_log_path",
+        "corridor_feature_jsonl": "corridor_feature_jsonl_path",
+        "global_board_supply": "global_board_supply_path",
+        "c4_claims": "c4_claims_path",
+        "c5_selection": "c5_selection_path",
+        "source_passports": "source_passports_path",
+    }
+    excluded = {
+        "command",
+        "func",
+        "teacher_model",
+        "tokenizer_id",
+        "dataset",
+        "corpus_manifest",
+        "teacher_model_provenance",
+        "output",
+        "preset",
+        "print_resolved_config",
+    }
+    overrides = {
+        aliases.get(name, name): (
+            _normalize_target_policy(value) if name == "target_policy" else value
         )
+        for name, value in provided.items()
+        if name not in excluded
+    }
+    normalized = normalize_cli_production_build_request(
+        teacher_model=str(args.teacher_model),
+        tokenizer_id=provided.get("tokenizer_id"),
+        dataset_path=args.dataset,
+        corpus_manifest_path=args.corpus_manifest,
+        teacher_model_provenance_path=args.teacher_model_provenance,
+        output_dir=args.output,
+        preset_name=provided.get("preset"),
+        advanced_overrides=overrides,
     )
+    if provided.get("print_resolved_config"):
+        print(
+            json.dumps(
+                resolved_tome_build_config_payload(normalized),
+                sort_keys=True,
+            )
+        )
+        return 0
+
+    report = build_production_gpu_tome(normalized.resolved)
     for line in render_production_build_summary(report):
         print(line)
     return 0 if report["status"] in {"pass", "warn"} else 1

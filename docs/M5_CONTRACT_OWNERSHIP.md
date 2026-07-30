@@ -78,3 +78,18 @@ The content manifest must exclude its cover page so the cover can reference
 the manifest digest without a circular hash. Directory, `.rtome`, and `tgz`
 validators will converge on the same semantic validation path in M5D; M5A
 only records this target and changes no writer.
+
+## M5C normalization implementation
+
+M5C activates the typed configuration boundary defined in M5B. The canonical
+default intent, named presets, explicit advanced overrides, validation,
+resolved configuration, derived execution plan, and protected selection
+authority now have one owner: `builder.config`. The current CLI uses this
+normalizer and `build_production_gpu_tome` adapts a resolved request into the
+flat execution configuration only at the preserved production/Path-B boundary.
+
+The default/override order is exactly preset, explicit overrides, validation,
+execution-plan derivation, then 25-field authority projection. See
+`docs/M5_CONFIGURATION_NORMALIZATION.md` for the preset values and the
+compatibility adapter boundary. M5C does not modify cover, manifest, package,
+transport, historical-reader, authority-hash, or Golden writer behavior.
