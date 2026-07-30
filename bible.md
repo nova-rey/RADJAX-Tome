@@ -1756,3 +1756,16 @@ profile-specific raw inventory and preserves raw integrity digests for the
 authority-relevant source files. The focused v3 contract tests pass; writer,
 validator, profile, and transport routing remain the next M5D integration
 slice. No existing public writer or historical reader changed in this commit.
+
+## 2026-07-30 — M5D Canonical Package Cover Migration
+
+Package writers for both `student` and `full_debug_provenance` now emit the
+closed nested v3 cover and validate its canonical raw inventory against the
+materialized directory. Source identity is computed once before profile
+materialization, so the two packages share a Tome identity while retaining
+distinct manifest digests. The former package-v1 cover is captured only under
+v3 provenance for compatibility diagnostics; existing manifest-level and
+student/full-debug contract validation is reused through explicit internal
+references, not as a coequal public cover. Focused profile, bundle, canonical
+contract, and identity coverage passed `41 passed`; no GPU work or fixture
+mutation occurred.

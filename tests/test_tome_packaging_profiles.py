@@ -102,13 +102,15 @@ def test_full_package_uses_manifest_references_not_inline_shards(
     )
 
     cover = _json(package / "cover_page.json")
+    receipt = cover["provenance"]["historical_package_cover_v1"]
     content = _json(package / "manifests" / "content_manifest.json")
     shard_manifest = _json(package / "manifests" / "shard_manifest.json")
 
-    assert cover["package_profile"] == FULL_DEBUG_PROVENANCE
-    assert cover["shard_manifest"]["path"] == "manifests/shard_manifest.json"
-    assert "contents" not in cover
-    assert len(cover["shard_manifest"]) == 3
+    assert cover["schema_version"] == "radjax_tome_cover_v3"
+    assert cover["package"]["profile"] == FULL_DEBUG_PROVENANCE
+    assert receipt["shard_manifest"]["path"] == "manifests/shard_manifest.json"
+    assert "contents" not in receipt
+    assert len(receipt["shard_manifest"]) == 3
     assert content["entry_count"] == len(content["entries"])
     assert len(shard_manifest["shards"]) == 3
     assert validate_tome_package(package, profile=FULL_DEBUG_PROVENANCE).ok
@@ -130,6 +132,7 @@ def test_student_package_is_self_contained_training_contract(
     corridor = reader.corridor_batch(0)
     exemplar = reader.exemplar_batch(0)
     cover = _json(package / "cover_page.json")
+    receipt = cover["provenance"]["historical_package_cover_v1"]
     emission = _json(package / "emission_config.json")
     payload_manifest = _json(package / "manifests" / "selected_payload_manifest.json")
     selected_payload = _json(
@@ -159,12 +162,12 @@ def test_student_package_is_self_contained_training_contract(
     assert audit.producer_shard_authority == "not_available_in_student_profile"
     assert audit_cli.returncode == 0, audit_cli.stdout + audit_cli.stderr
     assert "not_available_in_student_profile" in audit_cli.stdout
-    assert cover["claims_made"]["student_batches_constructible"] is True
-    assert cover["claims_not_made"]["does_not_include_full_producer_shards"] is True
+    assert receipt["claims_made"]["student_batches_constructible"] is True
+    assert receipt["claims_not_made"]["does_not_include_full_producer_shards"] is True
     assert "non_portable_source_path" in emission["dataset_source"]
     assert payload_manifest["long_tail_summary"]["count"] == 2
     assert (
-        cover["diagnostics"]["long_tail_summary"]
+        receipt["diagnostics"]["long_tail_summary"]
         == payload_manifest["long_tail_summary"]
     )
     assert {
@@ -176,6 +179,33 @@ def test_student_package_is_self_contained_training_contract(
         "effective_top_k_fraction_of_vocab",
     } <= set(selected_payload)
     assert validate_tome_package(package, profile=STUDENT).ok
+
+
+def test_m5d_profiles_share_source_identity_but_bind_distinct_inventories(
+    artifact: Path,
+    tmp_path: Path,
+) -> None:
+    student = tmp_path / "student"
+    debug = tmp_path / "debug"
+    package_tome_artifact(artifact, student, profile=STUDENT, overwrite=True)
+    package_tome_artifact(
+        artifact,
+        debug,
+        profile=FULL_DEBUG_PROVENANCE,
+        overwrite=True,
+    )
+
+    student_cover = _json(student / "cover_page.json")
+    debug_cover = _json(debug / "cover_page.json")
+    assert student_cover["schema_version"] == "radjax_tome_cover_v3"
+    assert (
+        student_cover["identity"]["semantic_digest"]
+        == debug_cover["identity"]["semantic_digest"]
+    )
+    assert (
+        student_cover["manifests"]["content"]["manifest_digest"]
+        != debug_cover["manifests"]["content"]["manifest_digest"]
+    )
 
 
 @pytest.mark.parametrize("include_perverse", (False, True))
@@ -202,13 +232,20 @@ def test_student_package_filters_perverse_tail_board_by_producer_opt_in(
     boards = selected["selected_exemplar_boards"]
     retained_count = len(selected["selected_exemplars"])
     assert selected["long_tail_summary"] == payload_manifest["long_tail_summary"]
-    assert selected["long_tail_summary"] == cover["diagnostics"]["long_tail_summary"]
+    assert (
+        selected["long_tail_summary"]
+        == cover["provenance"]["historical_package_cover_v1"]["diagnostics"][
+            "long_tail_summary"
+        ]
+    )
     assert (
         selected["selected_board_summary"] == payload_manifest["selected_board_summary"]
     )
     assert (
         selected["selected_board_summary"]
-        == cover["diagnostics"]["selected_board_summary"]
+        == cover["provenance"]["historical_package_cover_v1"]["diagnostics"][
+            "selected_board_summary"
+        ]
     )
     assert selected["selected_board_summary"]["total_selected_count"] == retained_count
     assert audit["selected_count"] == retained_count
@@ -251,7 +288,9 @@ def test_full_debug_package_retains_perverse_tail_board(tmp_path: Path) -> None:
     assert (package / "leaderboards" / "perverse_tail_diagnostic.json").is_file()
     assert selected["selected_exemplar_boards"]["perverse_tail_diagnostic"]
     assert (
-        cover["diagnostics"]["selected_board_summary"]["perverse_tail_diagnostic_count"]
+        cover["provenance"]["historical_package_cover_v1"]["diagnostics"][
+            "selected_board_summary"
+        ]["perverse_tail_diagnostic_count"]
         > 0
     )
     assert validate_tome_package(package, profile=FULL_DEBUG_PROVENANCE).ok
@@ -290,7 +329,7 @@ def test_packaged_cover_page_summary_uses_package_local_truth(
     package_tome_artifact(artifact, package, profile=profile, overwrite=True)
 
     cover = _json(package / "cover_page.json")
-    top = cover["top_level_summary"]
+    top = cover["provenance"]["historical_package_cover_v1"]["top_level_summary"]
     corridor = _json(package / "corridors" / "corridor_summary.json")
     assignments = _json(package / "manifests" / "corridor_assignment_manifest.json")
     selected = _json(package / "manifests" / "selected_payload_manifest.json")

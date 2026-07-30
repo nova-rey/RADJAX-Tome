@@ -17,6 +17,12 @@ from radjax_tome.audit import audit_selected_linkage
 from radjax_tome.builder.long_tail import long_tail_summary
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.provenance.hashes import sha256_file
+from radjax_tome.tome.canonical_artifact import (
+    build_canonical_artifact_cover,
+    derive_tome_semantic_identity,
+    validate_canonical_artifact_directory,
+)
+from radjax_tome.tome.contracts import CANONICAL_TOME_COVER_SCHEMA
 
 FULL_DEBUG_PROVENANCE = "full_debug_provenance"
 STUDENT = "student"
@@ -129,6 +135,7 @@ def package_tome_artifact(
         raise ValueError(f"artifact directory does not exist: {source}")
     if output.exists() and not overwrite:
         raise ValueError(f"package output already exists: {output}")
+    semantic_identity = derive_tome_semantic_identity(source)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(
@@ -139,7 +146,11 @@ def package_tome_artifact(
         _materialize_package(source, temporary_root, profile=profile)
         _write_package_audit(temporary_root, profile=profile)
         _write_package_manifests(temporary_root, profile=profile)
-        _write_package_cover_page(temporary_root, profile=profile)
+        _write_canonical_package_cover_page(
+            temporary_root,
+            profile=profile,
+            semantic_identity=semantic_identity,
+        )
         report = validate_tome_package(temporary_root, profile=profile)
         if not report.ok:
             raise ValueError(
@@ -169,7 +180,14 @@ def validate_tome_package(
     blockers: list[str] = []
     warnings: list[str] = []
     cover = _read_object(root / "cover_page.json", blockers, "cover_page.json")
-    actual_profile = cover.get("package_profile") if cover else None
+    canonical_cover = bool(
+        cover and cover.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA
+    )
+    if canonical_cover:
+        package = cover.get("package")
+        actual_profile = package.get("profile") if isinstance(package, dict) else None
+    else:
+        actual_profile = cover.get("package_profile") if cover else None
     if actual_profile not in PACKAGE_PROFILES:
         blockers.append("cover_page.json package_profile is invalid")
         actual_profile = None
@@ -180,16 +198,30 @@ def validate_tome_package(
             blockers.append(str(exc))
         if actual_profile is not None and actual_profile != profile:
             blockers.append("package profile does not match requested profile")
-    if not cover or cover.get("schema_version") != PACKAGE_COVER_SCHEMA:
+    if canonical_cover:
+        try:
+            validate_canonical_artifact_directory(root, cover)
+        except ValueError as exc:
+            blockers.append(str(exc))
+        validation_cover = _legacy_manifest_references(root)
+    else:
+        validation_cover = cover
+    if not cover or (
+        not canonical_cover and cover.get("schema_version") != PACKAGE_COVER_SCHEMA
+    ):
         blockers.append("cover_page.json schema_version mismatch")
 
-    content_ok = _validate_content_manifest(root, cover, actual_profile, blockers)
-    assignment_ok = _validate_corridor_assignment_manifest(root, cover, blockers)
-    selected_ok = _validate_selected_payload_manifest(root, cover, blockers)
+    content_ok = _validate_content_manifest(
+        root, validation_cover, actual_profile, blockers
+    )
+    assignment_ok = _validate_corridor_assignment_manifest(
+        root, validation_cover, blockers
+    )
+    selected_ok = _validate_selected_payload_manifest(root, validation_cover, blockers)
     shard_ok: bool | None = None
     audit_ok: bool | None = None
     if actual_profile == FULL_DEBUG_PROVENANCE:
-        shard_ok = _validate_shard_manifest(root, cover, blockers)
+        shard_ok = _validate_shard_manifest(root, validation_cover, blockers)
         if not (root / "shards").is_dir():
             blockers.append("full_debug_provenance package missing shards/")
         else:
@@ -683,6 +715,54 @@ def _write_package_cover_page(root: Path, *, profile: str) -> None:
         "claims_not_made": claims_not_made,
     }
     write_json(root / "cover_page.json", cover)
+
+
+def _write_canonical_package_cover_page(
+    root: Path,
+    *,
+    profile: str,
+    semantic_identity: Any,
+) -> None:
+    """Materialize the one M5D public cover after all package manifests exist."""
+
+    # Preserve the historical package report as provenance only.  It remains
+    # useful to old diagnostics/readers but cannot become a second public
+    # cover contract or alter v3 semantic identity.
+    _write_package_cover_page(root, profile=profile)
+    legacy_receipt = read_json_object(root / "cover_page.json")
+    cover = build_canonical_artifact_cover(
+        root,
+        profile=profile,
+        transport="directory",
+        semantic_identity=semantic_identity,
+    )
+    cover["provenance"]["historical_package_cover_v1"] = legacy_receipt
+    write_json(root / "cover_page.json", cover)
+    validate_canonical_artifact_directory(root, cover)
+
+
+def _legacy_manifest_references(root: Path) -> dict[str, Any]:
+    """Keep v1 manifest validators reusable beneath the v3 public cover."""
+
+    cover = {
+        "content_manifest": _manifest_reference(
+            root, _MANIFEST_FILES["content_manifest"]
+        ),
+        "corridor_assignment_manifest": _manifest_reference(
+            root, _MANIFEST_FILES["corridor_assignment_manifest"]
+        ),
+    }
+    selected_path = root / _MANIFEST_FILES["selected_payload_manifest"]
+    if selected_path.is_file():
+        cover["selected_payload_manifest"] = _manifest_reference(
+            root, _MANIFEST_FILES["selected_payload_manifest"]
+        )
+    shard_path = root / _MANIFEST_FILES["shard_manifest"]
+    if shard_path.is_file():
+        cover["shard_manifest"] = _manifest_reference(
+            root, _MANIFEST_FILES["shard_manifest"]
+        )
+    return cover
 
 
 def _package_top_level_summary(

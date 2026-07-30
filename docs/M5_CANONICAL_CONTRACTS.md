@@ -149,6 +149,12 @@ corridor modes, and the production global selector when present. The physical
 inventory excludes `cover_page.json` to avoid a circular cover/manifest hash.
 The profile writer will receive this source identity unchanged, so extra
 provenance receipts and transport wrapping cannot change the Tome identity.
+M5D package writers now emit `radjax_tome_cover_v3`; the former package-v1
+cover is retained only as `provenance.historical_package_cover_v1` for explicit
+compatibility diagnostics. The live package validator validates the v3 cover
+and its raw inventory first, then reuses the existing manifest-level checks
+through explicit internal references rather than treating the legacy receipt
+as public authority.
 
 ## Compatibility and migration behavior
 
