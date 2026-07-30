@@ -19,7 +19,9 @@ from radjax_tome.tome.contracts import (
     build_canonical_tome_cover,
     build_tome_semantic_identity,
     compare_canonical_tome_identities,
+    validate_canonical_content_manifest,
     validate_canonical_tome_cover,
+    validate_canonical_tome_semantic_identity,
 )
 from radjax_tome.tome.cover_page import (
     COVER_PAGE_FILENAME,
@@ -67,6 +69,8 @@ __all__ = [
     "unpack_tome_bundle",
     "validate_tome_cover_page",
     "validate_tome_bundle",
+    "validate_canonical_content_manifest",
+    "validate_canonical_tome_semantic_identity",
     "validate_canonical_tome_cover",
     "validate_tome_package",
     "write_cover_page",

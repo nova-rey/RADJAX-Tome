@@ -1681,3 +1681,21 @@ fixture code changed. The already-completed M5B focused suite
 (`147 passed, 1 skipped`) and full suite (`807 passed, 23 skipped`) remain the
 applicable code evidence; the ledger/Hydra/M5 contract documentation tests and
 Ruff checks pass after this correction. M5C has not begun.
+
+## 2026-07-30 — M5B Closed-Shape Contract Hardening
+
+The approved M5B correction adds standalone validators for semantic identity
+and canonical content manifests. They recompute their digests, require exact
+contract keys, require exact lowercase SHA-256 syntax, and reject stale,
+unsorted, duplicate, traversing, malformed, or type-invalid nested records.
+The v3 cover validator now rejects unexpected top-level/package/manifest
+sections and validates identity plus manifest contracts before checking their
+cross-references. Identity comparison validates both inputs before equality,
+so stale matching digest strings cannot compare successfully. The contract
+documentation now records the closed core shapes and no-extension policy.
+No production writer, CLI route, native Path B stage, historical reader,
+authority recipe, or Golden fixture changed. Focused M5/M3/M4/cover/package/
+Golden/Hydra/ledger coverage passed `162 passed, 1 skipped in 22.59s`; the
+complete local suite passed `821 passed, 23 skipped in 92.09s`. Ruff check,
+formatting, and `git diff --check` passed. The unrelated pre-existing
+`.DS_Store` remains untracked and untouched. M5C has not begun.

@@ -10,8 +10,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 from typing import Any
 
 CANONICAL_TOME_COVER_SCHEMA = "radjax_tome_cover_v3"
@@ -19,6 +22,58 @@ CANONICAL_CONTENT_MANIFEST_SCHEMA = "tome_content_manifest_v2"
 TOME_SEMANTIC_IDENTITY_SCHEMA = "radjax_tome_semantic_identity_v1"
 
 _PACKAGE_PROFILES = frozenset({"unpacked", "student", "full_debug_provenance"})
+_CONTENT_CLASSIFICATIONS = frozenset(
+    {
+        "training_critical",
+        "integrity_or_provenance",
+        "diagnostic",
+        "human_readable",
+        "operational",
+    }
+)
+_SHA256_RE = re.compile(r"sha256:[0-9a-f]{64}\Z")
+_IDENTITY_KEYS = frozenset(
+    {
+        "schema_version",
+        "training_payload",
+        "training_contract",
+        "authority",
+        "semantic_digest",
+    }
+)
+_TRAINING_PAYLOAD_ENTRY_KEYS = frozenset({"logical_id", "semantic_digest"})
+_CONTENT_MANIFEST_KEYS = frozenset(
+    {
+        "schema_version",
+        "profile",
+        "semantic_identity_digest",
+        "inventory",
+        "manifest_digest",
+    }
+)
+_INVENTORY_ENTRY_KEYS = frozenset(
+    {
+        "path",
+        "sha256",
+        "size_bytes",
+        "classification",
+        "training_authoritative",
+    }
+)
+_COVER_KEYS = frozenset(
+    {
+        "schema_version",
+        "identity",
+        "training",
+        "package",
+        "manifests",
+        "authority",
+        "provenance",
+        "validation",
+    }
+)
+_PACKAGE_KEYS = frozenset({"profile", "transport"})
+_MANIFEST_WRAPPER_KEYS = frozenset({"content"})
 _RUNTIME_ONLY_KEYS = frozenset(
     {
         "created_at",
@@ -29,15 +84,6 @@ _RUNTIME_ONLY_KEYS = frozenset(
         "manifest_digest",
         "raw_artifact_digest",
     }
-)
-_COVER_SECTIONS = (
-    "identity",
-    "training",
-    "package",
-    "manifests",
-    "authority",
-    "provenance",
-    "validation",
 )
 
 
@@ -138,8 +184,8 @@ def build_tome_semantic_identity(
     """
 
     entries = _sorted_training_payload(training_payload)
-    contract = _json_object(training_contract, "training_contract")
-    authority_payload = _json_object(authority, "authority")
+    contract = _require_json_object(training_contract, "training_contract")
+    authority_payload = _require_json_object(authority, "authority")
     _reject_runtime_only_keys(contract, "training_contract")
     _reject_runtime_only_keys(authority_payload, "authority")
     identity_payload = {
@@ -156,6 +202,63 @@ def build_tome_semantic_identity(
     )
 
 
+def validate_canonical_tome_semantic_identity(identity: Mapping[str, Any]) -> None:
+    """Validate the complete v1 identity structure and recompute its digest.
+
+    The identity contract is closed at this version.  In particular, callers
+    must not compare a merely plausible digest string without first proving it
+    still binds the exact, ordered semantic payload carried beside it.
+    """
+
+    payload = _require_exact_object(identity, "identity", _IDENTITY_KEYS)
+    if payload["schema_version"] != TOME_SEMANTIC_IDENTITY_SCHEMA:
+        raise ValueError("semantic identity contract is unsupported")
+    entries = payload["training_payload"]
+    if not isinstance(entries, list) or not entries:
+        raise ValueError("semantic identity training_payload must be a non-empty list")
+    previous_logical_id: str | None = None
+    validated_entries: list[dict[str, Any]] = []
+    for index, entry in enumerate(entries):
+        entry_payload = _require_exact_object(
+            entry,
+            f"identity.training_payload[{index}]",
+            _TRAINING_PAYLOAD_ENTRY_KEYS,
+        )
+        logical_id = entry_payload["logical_id"]
+        if not isinstance(logical_id, str) or not logical_id:
+            raise ValueError(
+                f"identity.training_payload[{index}].logical_id must be non-empty"
+            )
+        if previous_logical_id is not None and logical_id <= previous_logical_id:
+            raise ValueError(
+                "semantic identity training_payload logical_id values must be "
+                "strictly sorted and unique"
+            )
+        previous_logical_id = logical_id
+        _require_sha256(
+            entry_payload["semantic_digest"],
+            f"identity.training_payload[{index}].semantic_digest",
+        )
+        validated_entries.append(entry_payload)
+    training_contract = _require_json_object(
+        payload["training_contract"], "identity.training_contract"
+    )
+    authority = _require_json_object(payload["authority"], "identity.authority")
+    _reject_runtime_only_keys(training_contract, "identity.training_contract")
+    _reject_runtime_only_keys(authority, "identity.authority")
+    _require_sha256(payload["semantic_digest"], "identity.semantic_digest")
+    expected = canonical_json_digest(
+        {
+            "schema_version": payload["schema_version"],
+            "training_payload": validated_entries,
+            "training_contract": training_contract,
+            "authority": authority,
+        }
+    )
+    if payload["semantic_digest"] != expected:
+        raise ValueError("semantic identity semantic_digest mismatch")
+
+
 def build_canonical_content_manifest(
     *,
     profile: str,
@@ -164,23 +267,99 @@ def build_canonical_content_manifest(
 ) -> CanonicalContentManifest:
     """Build a profile inventory, excluding the cover to avoid circular hashing."""
 
+    validate_canonical_tome_semantic_identity(semantic_identity.to_dict())
     if profile not in _PACKAGE_PROFILES:
         raise ValueError(f"unsupported canonical package profile: {profile}")
     entries = _sorted_inventory(inventory)
-    if any(entry.path == "cover_page.json" for entry in entries):
-        raise ValueError("canonical content manifest must exclude cover_page.json")
     payload = {
         "schema_version": CANONICAL_CONTENT_MANIFEST_SCHEMA,
         "profile": profile,
         "semantic_identity_digest": semantic_identity.semantic_digest,
         "inventory": [entry.to_dict() for entry in entries],
     }
-    return CanonicalContentManifest(
+    manifest = CanonicalContentManifest(
         profile=profile,
         semantic_identity_digest=semantic_identity.semantic_digest,
         inventory=entries,
         manifest_digest=canonical_json_digest(payload),
     )
+    validate_canonical_content_manifest(manifest.to_dict())
+    return manifest
+
+
+def validate_canonical_content_manifest(manifest: Mapping[str, Any]) -> None:
+    """Validate the complete closed v2 profile-inventory contract."""
+
+    payload = _require_exact_object(
+        manifest, "content manifest", _CONTENT_MANIFEST_KEYS
+    )
+    if payload["schema_version"] != CANONICAL_CONTENT_MANIFEST_SCHEMA:
+        raise ValueError("canonical content manifest schema_version mismatch")
+    if payload["profile"] not in _PACKAGE_PROFILES:
+        raise ValueError("canonical content manifest profile is invalid")
+    _require_sha256(
+        payload["semantic_identity_digest"],
+        "canonical content manifest semantic_identity_digest",
+    )
+    inventory = payload["inventory"]
+    if not isinstance(inventory, list):
+        raise ValueError("canonical content manifest inventory must be a list")
+    previous_path: str | None = None
+    validated_inventory: list[dict[str, Any]] = []
+    for index, entry in enumerate(inventory):
+        entry_payload = _require_exact_object(
+            entry,
+            f"canonical content manifest inventory[{index}]",
+            _INVENTORY_ENTRY_KEYS,
+        )
+        path = entry_payload["path"]
+        _require_normalized_relative_path(
+            path, f"canonical content manifest inventory[{index}].path"
+        )
+        if path == "cover_page.json":
+            raise ValueError("canonical content manifest must exclude cover_page.json")
+        if previous_path is not None and path <= previous_path:
+            raise ValueError(
+                "canonical content manifest inventory paths must be strictly "
+                "sorted and unique"
+            )
+        previous_path = path
+        _require_sha256(
+            entry_payload["sha256"],
+            f"canonical content manifest inventory[{index}].sha256",
+        )
+        size_bytes = entry_payload["size_bytes"]
+        if (
+            isinstance(size_bytes, bool)
+            or not isinstance(size_bytes, int)
+            or size_bytes < 0
+        ):
+            raise ValueError(
+                f"canonical content manifest inventory[{index}].size_bytes "
+                "must be a non-negative integer"
+            )
+        if entry_payload["classification"] not in _CONTENT_CLASSIFICATIONS:
+            raise ValueError(
+                f"canonical content manifest inventory[{index}].classification "
+                "is invalid"
+            )
+        if not isinstance(entry_payload["training_authoritative"], bool):
+            raise ValueError(
+                "canonical content manifest inventory["
+                f"{index}].training_authoritative must be boolean"
+            )
+        validated_inventory.append(entry_payload)
+    _require_sha256(payload["manifest_digest"], "canonical content manifest digest")
+    expected = canonical_json_digest(
+        {
+            "schema_version": payload["schema_version"],
+            "profile": payload["profile"],
+            "semantic_identity_digest": payload["semantic_identity_digest"],
+            "inventory": validated_inventory,
+        }
+    )
+    if payload["manifest_digest"] != expected:
+        raise ValueError("canonical content manifest digest mismatch")
 
 
 def build_canonical_tome_cover(
@@ -193,12 +372,14 @@ def build_canonical_tome_cover(
 ) -> dict[str, Any]:
     """Build the nested public v3 cover without materializing any artifact."""
 
+    validate_canonical_tome_semantic_identity(semantic_identity.to_dict())
+    validate_canonical_content_manifest(content_manifest.to_dict())
     if transport not in {"directory", "rtome", "tgz"}:
         raise ValueError(f"unsupported canonical transport: {transport}")
     if content_manifest.semantic_identity_digest != semantic_identity.semantic_digest:
         raise ValueError("content manifest does not reference the supplied identity")
-    provenance_payload = _json_object(provenance, "provenance")
-    validation_payload = _json_object(validation, "validation")
+    provenance_payload = _require_json_object(provenance, "provenance")
+    validation_payload = _require_json_object(validation, "validation")
     cover = {
         "schema_version": CANONICAL_TOME_COVER_SCHEMA,
         "identity": semantic_identity.to_dict(),
@@ -219,64 +400,39 @@ def build_canonical_tome_cover(
 def validate_canonical_tome_cover(cover: Mapping[str, Any]) -> None:
     """Fail closed on a malformed v3 cover or mismatched nested contracts."""
 
-    if cover.get("schema_version") != CANONICAL_TOME_COVER_SCHEMA:
+    payload = _require_exact_object(cover, "canonical cover", _COVER_KEYS)
+    if payload["schema_version"] != CANONICAL_TOME_COVER_SCHEMA:
         raise ValueError("canonical cover schema_version mismatch")
-    missing = [section for section in _COVER_SECTIONS if section not in cover]
-    if missing:
-        raise ValueError(
-            "canonical cover missing nested sections: " + ", ".join(missing)
-        )
-    identity = _json_object(cover["identity"], "identity")
-    manifest_wrapper = _json_object(cover["manifests"], "manifests")
-    package = _json_object(cover["package"], "package")
-    manifest = _json_object(manifest_wrapper.get("content"), "manifests.content")
-    if identity.get("schema_version") != TOME_SEMANTIC_IDENTITY_SCHEMA:
-        raise ValueError("canonical cover identity schema_version mismatch")
-    _reject_runtime_only_keys(identity, "identity")
-    identity_payload = {
-        key: identity.get(key)
-        for key in (
-            "schema_version",
-            "training_payload",
-            "training_contract",
-            "authority",
-        )
-    }
-    if identity.get("semantic_digest") != canonical_json_digest(identity_payload):
-        raise ValueError("canonical cover identity semantic_digest mismatch")
-    if cover["training"] != identity.get("training_contract"):
+    identity = _require_exact_object(payload["identity"], "identity", _IDENTITY_KEYS)
+    validate_canonical_tome_semantic_identity(identity)
+    training = _require_json_object(payload["training"], "canonical cover training")
+    authority = _require_json_object(payload["authority"], "canonical cover authority")
+    if training != identity["training_contract"]:
         raise ValueError("canonical cover training does not match identity")
-    if cover["authority"] != identity.get("authority"):
+    if authority != identity["authority"]:
         raise ValueError("canonical cover authority does not match identity")
-    if package.get("profile") not in _PACKAGE_PROFILES:
+    package = _require_exact_object(
+        payload["package"], "canonical cover package", _PACKAGE_KEYS
+    )
+    if package["profile"] not in _PACKAGE_PROFILES:
         raise ValueError("canonical cover package profile is invalid")
-    if package.get("transport") not in {"directory", "rtome", "tgz"}:
+    if package["transport"] not in {"directory", "rtome", "tgz"}:
         raise ValueError("canonical cover package transport is invalid")
-    if manifest.get("schema_version") != CANONICAL_CONTENT_MANIFEST_SCHEMA:
-        raise ValueError("canonical content manifest schema_version mismatch")
-    manifest_payload = {
-        key: manifest.get(key)
-        for key in (
-            "schema_version",
-            "profile",
-            "semantic_identity_digest",
-            "inventory",
-        )
-    }
-    if manifest.get("manifest_digest") != canonical_json_digest(manifest_payload):
-        raise ValueError("canonical content manifest digest mismatch")
-    if manifest.get("semantic_identity_digest") != identity.get("semantic_digest"):
+    manifest_wrapper = _require_exact_object(
+        payload["manifests"], "canonical cover manifests", _MANIFEST_WRAPPER_KEYS
+    )
+    manifest = _require_exact_object(
+        manifest_wrapper["content"],
+        "canonical cover manifests.content",
+        _CONTENT_MANIFEST_KEYS,
+    )
+    validate_canonical_content_manifest(manifest)
+    if manifest["semantic_identity_digest"] != identity["semantic_digest"]:
         raise ValueError("canonical content manifest identity reference mismatch")
-    if manifest.get("profile") != package.get("profile"):
+    if manifest["profile"] != package["profile"]:
         raise ValueError("canonical content manifest profile mismatch")
-    inventory = manifest.get("inventory")
-    if not isinstance(inventory, list):
-        raise ValueError("canonical content manifest inventory must be a list")
-    if any(
-        not isinstance(item, dict) or item.get("path") == "cover_page.json"
-        for item in inventory
-    ):
-        raise ValueError("canonical content manifest must exclude cover_page.json")
+    _require_json_object(payload["provenance"], "canonical cover provenance")
+    _require_json_object(payload["validation"], "canonical cover validation")
 
 
 def compare_canonical_tome_identities(
@@ -285,11 +441,9 @@ def compare_canonical_tome_identities(
 ) -> bool:
     """Compare identities only when their explicit contract versions match."""
 
-    if left.get("schema_version") != TOME_SEMANTIC_IDENTITY_SCHEMA:
-        raise ValueError("left semantic identity contract is unsupported")
-    if right.get("schema_version") != TOME_SEMANTIC_IDENTITY_SCHEMA:
-        raise ValueError("right semantic identity contract is unsupported")
-    return left.get("semantic_digest") == right.get("semantic_digest")
+    validate_canonical_tome_semantic_identity(left)
+    validate_canonical_tome_semantic_identity(right)
+    return left["semantic_digest"] == right["semantic_digest"]
 
 
 def _sorted_training_payload(
@@ -297,6 +451,15 @@ def _sorted_training_payload(
 ) -> tuple[TrainingPayloadEntry, ...]:
     if not entries:
         raise ValueError("semantic identity requires training payload entries")
+    if any(not isinstance(entry, TrainingPayloadEntry) for entry in entries):
+        raise ValueError("training payload entries must be TrainingPayloadEntry values")
+    if any(
+        not isinstance(entry.logical_id, str) or not entry.logical_id
+        for entry in entries
+    ):
+        raise ValueError(
+            "training payload logical_id values must be unique and non-empty"
+        )
     normalized = tuple(sorted(entries, key=lambda entry: entry.logical_id))
     identifiers = [entry.logical_id for entry in normalized]
     if any(not identifier for identifier in identifiers) or len(
@@ -305,42 +468,107 @@ def _sorted_training_payload(
         raise ValueError(
             "training payload logical_id values must be unique and non-empty"
         )
-    if any(not entry.semantic_digest.startswith("sha256:") for entry in normalized):
-        raise ValueError(
-            "training payload semantic_digest values must be sha256 digests"
-        )
+    for entry in normalized:
+        _require_sha256(entry.semantic_digest, "training payload semantic_digest")
     return normalized
 
 
 def _sorted_inventory(
     entries: Sequence[PackageInventoryEntry],
 ) -> tuple[PackageInventoryEntry, ...]:
+    if any(not isinstance(entry, PackageInventoryEntry) for entry in entries):
+        raise ValueError(
+            "package inventory entries must be PackageInventoryEntry values"
+        )
+    if any(not isinstance(entry.path, str) for entry in entries):
+        raise ValueError("package inventory paths must be strings")
     normalized = tuple(sorted(entries, key=lambda entry: entry.path))
     paths = [entry.path for entry in normalized]
-    if any(
-        not path or path.startswith("/") or ".." in path.split("/") for path in paths
-    ):
-        raise ValueError("package inventory paths must be relative and normalized")
+    for path in paths:
+        _require_normalized_relative_path(path, "package inventory path")
     if len(set(paths)) != len(paths):
         raise ValueError("package inventory paths must be unique")
-    if any(entry.size_bytes < 0 for entry in normalized):
-        raise ValueError("package inventory sizes must be non-negative")
-    if any(not entry.sha256.startswith("sha256:") for entry in normalized):
-        raise ValueError("package inventory sha256 values must be sha256 digests")
+    for entry in normalized:
+        _require_sha256(entry.sha256, "package inventory sha256")
+        if (
+            isinstance(entry.size_bytes, bool)
+            or not isinstance(entry.size_bytes, int)
+            or entry.size_bytes < 0
+        ):
+            raise ValueError("package inventory sizes must be non-negative integers")
+        if entry.classification not in _CONTENT_CLASSIFICATIONS:
+            raise ValueError("package inventory classification is invalid")
+        if not isinstance(entry.training_authoritative, bool):
+            raise ValueError("package inventory training_authoritative must be boolean")
     return normalized
 
 
-def _json_object(value: Any, name: str) -> dict[str, Any]:
+def _require_exact_object(
+    value: Any,
+    location: str,
+    expected_keys: frozenset[str],
+) -> dict[str, Any]:
+    payload = _require_json_object(value, location)
+    keys = frozenset(payload)
+    missing = sorted(expected_keys - keys)
+    unexpected = sorted(keys - expected_keys)
+    if missing or unexpected:
+        details: list[str] = []
+        if missing:
+            details.append("missing " + ", ".join(missing))
+        if unexpected:
+            details.append("unexpected " + ", ".join(unexpected))
+        raise ValueError(f"{location} must contain exact keys: " + "; ".join(details))
+    return payload
+
+
+def _require_json_object(value: Any, name: str) -> dict[str, Any]:
     if not isinstance(value, Mapping):
         raise ValueError(f"{name} must be a JSON object")
-    try:
-        encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"{name} must be JSON serializable") from exc
-    decoded = json.loads(encoded)
-    if not isinstance(decoded, dict):
-        raise ValueError(f"{name} must be a JSON object")
-    return decoded
+    _validate_json_value(value, name)
+    return dict(value)
+
+
+def _validate_json_value(value: Any, location: str) -> None:
+    if value is None or isinstance(value, (str, bool)):
+        return
+    if isinstance(value, int):
+        return
+    if isinstance(value, float):
+        if math.isfinite(value):
+            return
+        raise ValueError(f"{location} contains a non-finite number")
+    if isinstance(value, list):
+        for index, nested in enumerate(value):
+            _validate_json_value(nested, f"{location}[{index}]")
+        return
+    if isinstance(value, Mapping):
+        for key, nested in value.items():
+            if not isinstance(key, str):
+                raise ValueError(f"{location} contains a non-string object key")
+            _validate_json_value(nested, f"{location}.{key}")
+        return
+    raise ValueError(f"{location} must contain only JSON values")
+
+
+def _require_sha256(value: Any, location: str) -> None:
+    if not isinstance(value, str) or _SHA256_RE.fullmatch(value) is None:
+        raise ValueError(f"{location} must be sha256: followed by 64 lowercase hex")
+
+
+def _require_normalized_relative_path(value: Any, location: str) -> None:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{location} must be a non-empty normalized relative path")
+    if "\\" in value:
+        raise ValueError(f"{location} must use normalized POSIX separators")
+    path = PurePosixPath(value)
+    if (
+        path.is_absolute()
+        or value == "."
+        or value != path.as_posix()
+        or any(part in {".", ".."} for part in path.parts)
+    ):
+        raise ValueError(f"{location} must be a normalized relative path")
 
 
 def _reject_runtime_only_keys(value: Any, location: str) -> None:
@@ -367,5 +595,7 @@ __all__ = [
     "build_tome_semantic_identity",
     "canonical_json_digest",
     "compare_canonical_tome_identities",
+    "validate_canonical_content_manifest",
+    "validate_canonical_tome_semantic_identity",
     "validate_canonical_tome_cover",
 ]

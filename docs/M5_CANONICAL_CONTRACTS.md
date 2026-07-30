@@ -102,6 +102,43 @@ The content manifest must exclude `cover_page.json`, allowing the v3 cover to
 reference its digest with no circular hashing.  The package section may name a
 transport, but transport and tar/gzip wrapping remain nonsemantic.
 
+### Closed-shape validation
+
+M5B exposes three standalone validators:
+
+- `validate_canonical_tome_semantic_identity` validates the complete
+  `radjax_tome_semantic_identity_v1` structure and recomputes its digest.
+- `validate_canonical_content_manifest` validates the complete
+  `tome_content_manifest_v2` profile inventory and recomputes its digest.
+- `validate_canonical_tome_cover` validates the closed v3 cover shape and its
+  nested identity/manifest references.
+
+There is no extension mechanism in these v1/v2/v3 core contracts. The identity
+has exactly `schema_version`, `training_payload`, `training_contract`,
+`authority`, and `semantic_digest`; each payload entry has exactly
+`logical_id` and `semantic_digest`. Payload IDs must be nonempty, unique, and
+strictly lexical-order sorted. Every semantic digest is exactly
+`sha256:` plus 64 lowercase hexadecimal characters.
+
+The content manifest has exactly `schema_version`, `profile`,
+`semantic_identity_digest`, `inventory`, and `manifest_digest`; each inventory
+entry has exactly `path`, `sha256`, `size_bytes`, `classification`, and
+`training_authoritative`. Inventory paths are nonempty, normalized relative
+POSIX paths, sorted and unique, and cannot be `cover_page.json`. Raw digests
+use the same exact SHA-256 form; sizes are nonnegative integers (not
+booleans); classifications are one of `training_critical`,
+`integrity_or_provenance`, `diagnostic`, `human_readable`, or `operational`;
+and `training_authoritative` is a boolean.
+
+The v3 cover has exactly `schema_version`, `identity`, `training`, `package`,
+`manifests`, `authority`, `provenance`, and `validation`. `package` has exactly
+`profile` and `transport`; `manifests` has exactly `content`. `training` and
+`authority` must exactly equal their identity counterparts. `provenance` and
+`validation` are JSON objects whose leaf vocabularies remain governed by their
+referenced producer/validator schemas; they do not add cover sections or
+identity fields. Any future core extension requires a new versioned contract,
+not an ignored extra field.
+
 ## Compatibility and migration behavior
 
 Historical cover-page v2 and `radjax_tome_package_cover_v1` continue to be
