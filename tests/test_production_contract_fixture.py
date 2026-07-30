@@ -21,15 +21,17 @@ def test_production_contract_fixture_is_deterministic_and_valid(
     assert validate_teacher_textbook(left).status == "pass"
     assert validate_tome_cover_page(left).status == "pass"
     cover = json.loads((left / "cover_page.json").read_text(encoding="utf-8"))
-    assert cover["cover_page_version"] == 2
-    assert [item["surface_id"] for item in cover["behavioral_surfaces"]] == [
+    assert cover["schema_version"] == "radjax_tome_cover_v3"
+    legacy_cover = cover["provenance"]["historical_cover_page_v2"]
+    assert [item["surface_id"] for item in legacy_cover["behavioral_surfaces"]] == [
         "corridor",
         "exemplar",
     ]
     assert [
-        item["surface_id"] for item in cover["recommended_training_plan"]["passes"]
+        item["surface_id"]
+        for item in legacy_cover["recommended_training_plan"]["passes"]
     ] == ["corridor", "exemplar"]
-    roles = {item["role"] for item in cover["contents"]}
+    roles = {item["role"] for item in legacy_cover["contents"]}
     assert "corridor_assignment_mode_id" in roles
     assert "selected_exemplar_payload_shard" in roles
 

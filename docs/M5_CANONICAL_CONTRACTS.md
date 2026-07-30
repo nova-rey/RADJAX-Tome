@@ -143,18 +143,33 @@ not an ignored extra field.
 
 `tome.canonical_artifact` derives a semantic identity from the source artifact
 before any student/full-debug profile materialization. It hashes canonical JSON
-projections of retained training sidecars after excluding runtime timestamps,
-while recording independent raw-byte digests for metadata, mode assignments,
-corridor modes, and the production global selector when present. The physical
-inventory excludes `cover_page.json` to avoid a circular cover/manifest hash.
-The profile writer will receive this source identity unchanged, so extra
-provenance receipts and transport wrapping cannot change the Tome identity.
+projections of the core training sidecars, selected payload/curriculum JSON,
+and the training authority binding after excluding runtime timestamps. It also
+binds the authoritative shard NPZ payloads, corridor assignment NPY arrays,
+and assignment example metadata. NPZ semantic digests use sorted uncompressed
+member bytes so zip-container metadata is not identity. The physical inventory
+excludes `cover_page.json` to avoid a circular cover/manifest hash, while
+recording independent raw-byte digests for metadata, mode assignments,
+corridor modes, and the production global selector when present. The profile
+writer receives this source identity unchanged, so extra provenance receipts
+and transport wrapping cannot change the Tome identity.
 M5D package writers now emit `radjax_tome_cover_v3`; the former package-v1
 cover is retained only as `provenance.historical_package_cover_v1` for explicit
 compatibility diagnostics. The live package validator validates the v3 cover
 and its raw inventory first, then reuses the existing manifest-level checks
 through explicit internal references rather than treating the legacy receipt
 as public authority.
+
+The unpacked artifact writer now follows the same path and retains its former
+cover-page v2 document only as `provenance.historical_cover_page_v2`. The
+canonical bundle writer consumes the same v3 inventory for uncompressed
+`.rtome` and deterministic gzip transport. New `tgz` profile packages use that
+bundle writer at archive root rather than a second package-specific tar path.
+The archive wrapper is transport-only: it may alter v3 package transport
+metadata and raw archive bytes, but it cannot alter the embedded semantic
+identity. Archive validation and directory validation both begin with the same
+closed v3 cover/manifest validation; archive validation also proves the exact
+member inventory and recorded raw digests.
 
 ## Compatibility and migration behavior
 

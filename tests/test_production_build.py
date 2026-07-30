@@ -1092,7 +1092,12 @@ def test_production_build_custom_manifest_and_progress_paths_are_truthful(
     assert metadata["target_params"]["progress_log_path"] == "custom/progress_log.jsonl"
     assert teacher_manifest["run_manifest_path"] == "custom/run_manifest.json"
     assert emission_config["progress_log_path"] == "custom/progress_log.jsonl"
-    assert cover_page["streaming"]["run_manifest_path"] == "custom/run_manifest.json"
+    assert (
+        cover_page["provenance"]["historical_cover_page_v2"]["streaming"][
+            "run_manifest_path"
+        ]
+        == "custom/run_manifest.json"
+    )
     assert report["run_manifest_path"].endswith("custom/run_manifest.json")
     assert report["progress_log_path"].endswith("custom/progress_log.jsonl")
 

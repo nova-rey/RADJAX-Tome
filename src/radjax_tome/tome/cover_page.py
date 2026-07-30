@@ -6,6 +6,11 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from radjax_tome.io.json import read_json_object, write_json
+from radjax_tome.tome.canonical_artifact import (
+    build_canonical_artifact_cover,
+    validate_canonical_artifact_directory,
+)
+from radjax_tome.tome.contracts import CANONICAL_TOME_COVER_SCHEMA
 
 COVER_PAGE_FILENAME = "cover_page.json"
 COVER_PAGE_VERSION = 2
@@ -301,7 +306,14 @@ def build_cover_page(tome_root: str | Path) -> dict[str, Any]:
 def write_cover_page(tome_root: str | Path) -> Path:
     root = Path(tome_root)
     path = root / COVER_PAGE_FILENAME
-    write_json(path, build_cover_page(root))
+    legacy_cover = build_cover_page(root)
+    cover = build_canonical_artifact_cover(
+        root,
+        profile="unpacked",
+        transport="directory",
+    )
+    cover["provenance"]["historical_cover_page_v2"] = legacy_cover
+    write_json(path, cover)
     report = validate_tome_cover_page(root)
     if not report.ok:
         raise ValueError(
@@ -324,6 +336,21 @@ def validate_tome_cover_page(tome_root: str | Path) -> CoverPageValidationReport
     except ValueError as exc:
         blockers.append(str(exc))
         return _report(blockers=blockers)
+
+    if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+        try:
+            validate_canonical_artifact_directory(root, cover_page)
+        except ValueError as exc:
+            blockers.append(str(exc))
+        return _report(
+            blockers=blockers,
+            artifact_kind_ok=True,
+            version_ok=True,
+            layout_ok=True,
+            contents_ok=not blockers,
+            hashes_ok=not blockers,
+            required_fields_ok=True,
+        )
 
     missing_fields = [
         field for field in REQUIRED_TOP_LEVEL_FIELDS if field not in cover_page

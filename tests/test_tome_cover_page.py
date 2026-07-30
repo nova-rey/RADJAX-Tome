@@ -8,27 +8,24 @@ import numpy as np
 
 from radjax_tome.builder import validate_teacher_textbook
 from radjax_tome.io.json import write_json
-from radjax_tome.tome import validate_tome_cover_page, write_cover_page
+from radjax_tome.tome import (
+    build_cover_page,
+    validate_tome_cover_page,
+    write_cover_page,
+)
 from tests.helpers.fixtures import build_fake_teacher_textbook_artifact
 from tests.helpers.subprocess import run_cli, run_repo_python
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_TOP_LEVEL_FIELDS = {
-    "artifact_kind",
-    "cover_page_version",
-    "tome_version",
-    "layout",
-    "created_by",
-    "created_at",
-    "source_artifact_type",
-    "teacher",
-    "tokenizer",
-    "targets",
-    "contents",
-    "behavioral_surfaces",
-    "recommended_training_plan",
+    "schema_version",
+    "identity",
+    "training",
+    "package",
+    "manifests",
+    "authority",
+    "provenance",
     "validation",
-    "claims_not_made",
 }
 REQUIRED_CONTENTS = {
     "metadata.json",
@@ -50,18 +47,17 @@ def test_fake_build_writes_deterministic_cover_page(tmp_path: Path) -> None:
     assert raw.endswith("\n")
     assert raw == json.dumps(cover_page, indent=2, sort_keys=True) + "\n"
     assert REQUIRED_TOP_LEVEL_FIELDS <= set(cover_page)
-    assert cover_page["artifact_kind"] == "radjax_tome"
-    assert cover_page["cover_page_version"] == 2
-    assert cover_page["tome_version"] == 1
-    assert cover_page["layout"] == "unpacked_directory"
-    assert cover_page["source_artifact_type"] == "teacher_textbook"
-    assert cover_page["teacher"]["model_id"] == "fake-deterministic-teacher"
-    assert cover_page["teacher"]["backend_type"] == "fake"
-    assert cover_page["tokenizer"]["vocab_contract_path"] == "vocab_contract.json"
-    assert cover_page["targets"]["target_type"] == "dense_logits"
-    assert cover_page["targets"]["num_examples"] == 2
-    assert cover_page["behavioral_surfaces"] == []
-    assert cover_page["recommended_training_plan"]["passes"] == []
+    assert cover_page["schema_version"] == "radjax_tome_cover_v3"
+    assert cover_page["package"] == {"profile": "unpacked", "transport": "directory"}
+    assert cover_page["training"]["target_type"] == "dense_logits"
+    assert (
+        cover_page["identity"]["semantic_digest"]
+        == cover_page["manifests"]["content"]["semantic_identity_digest"]
+    )
+    assert (
+        cover_page["provenance"]["historical_cover_page_v2"]["source_artifact_type"]
+        == "teacher_textbook"
+    )
 
 
 def test_cover_page_contents_include_sidecars_and_matching_hashes(
@@ -69,15 +65,18 @@ def test_cover_page_contents_include_sidecars_and_matching_hashes(
 ) -> None:
     artifact = build_fake_teacher_textbook_artifact(tmp_path)
     cover_page = json.loads((artifact / "cover_page.json").read_text(encoding="utf-8"))
-    contents = {entry["path"]: entry for entry in cover_page["contents"]}
+    contents = {
+        entry["path"]: entry
+        for entry in cover_page["manifests"]["content"]["inventory"]
+    }
 
     assert REQUIRED_CONTENTS <= set(contents)
     assert "cover_page.json" not in contents
     for relative_path, entry in contents.items():
         path = artifact / relative_path
         assert entry["size_bytes"] == path.stat().st_size
-        assert entry["sha256"] == _sha256(path)
-        assert isinstance(entry["required"], bool)
+        assert entry["sha256"] == "sha256:" + _sha256(path)
+        assert isinstance(entry["training_authoritative"], bool)
         assert entry["classification"] in {
             "training_critical",
             "integrity_or_provenance",
@@ -110,7 +109,7 @@ def test_cover_page_validation_passes_and_fails_on_tampering(
 
     tampered = validate_tome_cover_page(artifact)
     assert tampered.status == "fail"
-    assert any("sha256 mismatch" in blocker for blocker in tampered.blockers)
+    assert "canonical content inventory does not match directory" in tampered.blockers
 
 
 def test_legacy_teacher_textbook_without_cover_page_still_validates(
@@ -156,9 +155,8 @@ def test_public_cli_validate_and_inspect_are_cover_page_aware(
     assert inspect.returncode == 0, inspect.stderr
     assert "artifact_type=teacher_textbook" in inspect.stdout
     assert "tome_artifact_kind=radjax_tome" in inspect.stdout
-    assert "cover_page_version=2" in inspect.stdout
-    assert "tome_version=1" in inspect.stdout
-    assert "layout=unpacked_directory" in inspect.stdout
+    assert "cover_page_version=3" in inspect.stdout
+    assert "layout=canonical_directory" in inspect.stdout
     assert "target_type=dense_logits" in inspect.stdout
     assert "num_examples=2" in inspect.stdout
     assert "shard_count=1" in inspect.stdout
@@ -185,7 +183,8 @@ def test_production_cover_page_indexes_surfaces_and_packed_files(
 
     write_cover_page(artifact)
     cover = json.loads((artifact / "cover_page.json").read_text(encoding="utf-8"))
-    roles = {entry["role"] for entry in cover["contents"]}
+    legacy_cover = cover["provenance"]["historical_cover_page_v2"]
+    roles = {entry["role"] for entry in legacy_cover["contents"]}
 
     assert {
         "corridor_mode_table",
@@ -198,16 +197,17 @@ def test_production_cover_page_indexes_surfaces_and_packed_files(
         "selected_exemplar_index",
         "selected_exemplar_payload_shard",
     } <= roles
-    assert [item["surface_id"] for item in cover["behavioral_surfaces"]] == [
+    assert [item["surface_id"] for item in legacy_cover["behavioral_surfaces"]] == [
         "corridor",
         "exemplar",
     ]
     assert [
-        item["surface_id"] for item in cover["recommended_training_plan"]["passes"]
+        item["surface_id"]
+        for item in legacy_cover["recommended_training_plan"]["passes"]
     ] == ["corridor", "exemplar"]
     assert all(
         item["checkpoint_after"]
-        for item in cover["recommended_training_plan"]["passes"]
+        for item in legacy_cover["recommended_training_plan"]["passes"]
     )
     assert validate_tome_cover_page(artifact).status == "pass"
 
@@ -217,9 +217,8 @@ def test_cover_page_rejects_missing_surface_role_and_unknown_pass_surface(
 ) -> None:
     artifact = build_fake_teacher_textbook_artifact(tmp_path)
     _add_behavioral_surface_files(artifact)
-    write_cover_page(artifact)
     cover_path = artifact / "cover_page.json"
-    cover = json.loads(cover_path.read_text(encoding="utf-8"))
+    cover = build_cover_page(artifact)
     cover["contents"] = [
         item
         for item in cover["contents"]
@@ -241,7 +240,7 @@ def test_cover_page_rejects_missing_surface_role_and_unknown_pass_surface(
 def test_cover_page_rejects_unsafe_and_duplicate_paths(tmp_path: Path) -> None:
     artifact = build_fake_teacher_textbook_artifact(tmp_path)
     cover_path = artifact / "cover_page.json"
-    cover = json.loads(cover_path.read_text(encoding="utf-8"))
+    cover = build_cover_page(artifact)
     cover["contents"][0]["path"] = "../metadata.json"
     cover["contents"].append(dict(cover["contents"][1]))
     write_json(cover_path, cover)

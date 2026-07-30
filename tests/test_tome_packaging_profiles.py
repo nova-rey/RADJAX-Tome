@@ -20,6 +20,7 @@ from radjax_tome.tome import (
     STUDENT,
     open_student_tome,
     package_tome_artifact,
+    validate_tome_bundle,
     validate_tome_package,
 )
 from tests.helpers.subprocess import run_cli
@@ -407,7 +408,7 @@ def test_student_tgz_round_trip_and_cli(artifact: Path, tmp_path: Path) -> None:
     extracted = tmp_path / "extracted"
     with tarfile.open(archive, "r:gz") as handle:
         handle.extractall(extracted, filter="data")
-    package_root = extracted / "student"
+    package_root = extracted
     package_cli_output = tmp_path / "student-cli"
     package_cli = run_cli(
         ROOT,
@@ -431,5 +432,7 @@ def test_student_tgz_round_trip_and_cli(artifact: Path, tmp_path: Path) -> None:
 
     assert result.output_path == archive
     assert (package_root / "cover_page.json").is_file()
+    assert validate_tome_bundle(archive).ok
+    assert _json(package_root / "cover_page.json")["package"]["transport"] == "tgz"
     assert package_cli.returncode == 0, package_cli.stdout + package_cli.stderr
     assert cli.returncode == 0, cli.stdout + cli.stderr

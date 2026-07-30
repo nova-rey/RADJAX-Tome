@@ -1769,3 +1769,37 @@ student/full-debug contract validation is reused through explicit internal
 references, not as a coequal public cover. Focused profile, bundle, canonical
 contract, and identity coverage passed `41 passed`; no GPU work or fixture
 mutation occurred.
+
+## 2026-07-30 — M5D Canonical Directory and Unified Transport
+
+The unpacked Tome writer now emits the same closed `radjax_tome_cover_v3`
+consumer contract as package writers and validates its complete raw inventory
+against the directory. Its former v2 cover is retained only as explicit
+provenance; the native v2 validator remains available for historical inputs.
+The bundle abstraction now owns both deterministic uncompressed `.rtome` and
+deterministic gzip transport. New profile `.tgz` output uses that common bundle
+writer at archive root instead of a separate tar implementation, while its
+v3 profile/inventory agreement is validated before archival. Directory and
+archive validation both use the v3 cover/manifest validation path; archives
+also prove exact member inventory, raw SHA-256, byte sizes, and deterministic
+tar metadata. A focused cover/bundle/package/CLI/production fixture suite
+passed `43 passed in 17.20s`. No GPU execution, authority recipe change,
+Golden fixture mutation, or Path-B stage change occurred. The unrelated
+pre-existing `.DS_Store` remains untracked and untouched.
+
+## 2026-07-30 — M5D Validation Completion
+
+The source identity projection now binds the complete known training payload:
+canonical JSON sidecars with runtime timestamps excluded, selected payload and
+curriculum JSON, assignment metadata and arrays, and shard NPZ members by
+sorted uncompressed content. A mutation to an authoritative assignment payload
+changes the semantic identity; a timestamp-only mutation still changes raw
+integrity but not identity. The streaming completed-resume path now refreshes
+the v3 cover only after writing its final progress event, preserving exact
+inventory agreement. Focused M5D cover/bundle/package/streaming coverage passed
+`39 passed in 13.07s`; the broader writer/provenance/streaming regression group
+passed `75 passed in 10.69s`; the cache-cleared full local suite passed
+`842 passed, 23 skipped` (865 collected). Ruff, formatting, and diff checks
+passed. No GPU execution, Golden fixture mutation, authority-projection change,
+or Path-B stage change occurred. The unrelated pre-existing `.DS_Store`
+remains untracked and untouched.

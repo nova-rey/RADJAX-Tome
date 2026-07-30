@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 import shutil
-import tarfile
 import tempfile
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -17,6 +16,7 @@ from radjax_tome.audit import audit_selected_linkage
 from radjax_tome.builder.long_tail import long_tail_summary
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.provenance.hashes import sha256_file
+from radjax_tome.tome.bundle import pack_tome_bundle
 from radjax_tome.tome.canonical_artifact import (
     build_canonical_artifact_cover,
     derive_tome_semantic_identity,
@@ -150,6 +150,7 @@ def package_tome_artifact(
             temporary_root,
             profile=profile,
             semantic_identity=semantic_identity,
+            transport="tgz" if archive == "tgz" else "directory",
         )
         report = validate_tome_package(temporary_root, profile=profile)
         if not report.ok:
@@ -166,7 +167,7 @@ def package_tome_artifact(
             )
 
         temporary_archive = Path(tmp) / output.name
-        _write_tgz(temporary_root, temporary_archive)
+        pack_tome_bundle(temporary_root, temporary_archive, compression="gz")
         _replace_output_path(temporary_archive, output, overwrite=overwrite)
     return TomePackageResult(output_path=output, profile=profile, archive=archive)
 
@@ -722,6 +723,7 @@ def _write_canonical_package_cover_page(
     *,
     profile: str,
     semantic_identity: Any,
+    transport: str,
 ) -> None:
     """Materialize the one M5D public cover after all package manifests exist."""
 
@@ -733,7 +735,7 @@ def _write_canonical_package_cover_page(
     cover = build_canonical_artifact_cover(
         root,
         profile=profile,
-        transport="directory",
+        transport=transport,
         semantic_identity=semantic_identity,
     )
     cover["provenance"]["historical_package_cover_v1"] = legacy_receipt
@@ -1516,25 +1518,6 @@ def _replace_output_path(source: Path, output: Path, *, overwrite: bool) -> None
         else:
             output.unlink()
     os.replace(source, output)
-
-
-def _write_tgz(root: Path, output: Path) -> None:
-    with tarfile.open(output, "w:gz") as archive:
-        for path in sorted(
-            root.rglob("*"),
-            key=lambda item: item.relative_to(root).as_posix(),
-        ):
-            if not path.is_file():
-                continue
-            arcname = (Path(root.name) / path.relative_to(root)).as_posix()
-            info = archive.gettarinfo(str(path), arcname=arcname)
-            info.mtime = 0
-            info.uid = 0
-            info.gid = 0
-            info.uname = ""
-            info.gname = ""
-            with path.open("rb") as handle:
-                archive.addfile(info, handle)
 
 
 def _require_profile(profile: str) -> None:

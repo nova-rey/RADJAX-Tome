@@ -65,3 +65,20 @@ def test_m5d_identity_ignores_runtime_created_at_but_raw_integrity_does_not(
     )
     validate_canonical_artifact_directory(first, first_cover)
     validate_canonical_artifact_directory(second, second_cover)
+
+
+def test_m5d_identity_binds_authoritative_assignment_payload(tmp_path: Path) -> None:
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    _artifact(first, created_at="2026-07-19T00:00:00Z")
+    _artifact(second, created_at="2026-07-19T00:00:00Z")
+    relative = "corridors/mode_assignments/mode_id.npy"
+    (first / relative).parent.mkdir(parents=True, exist_ok=True)
+    (second / relative).parent.mkdir(parents=True, exist_ok=True)
+    (first / relative).write_bytes(b"authoritative-mode-id=0")
+    (second / relative).write_bytes(b"authoritative-mode-id=1")
+
+    first_identity = derive_tome_semantic_identity(first)
+    second_identity = derive_tome_semantic_identity(second)
+
+    assert first_identity.semantic_digest != second_identity.semantic_digest

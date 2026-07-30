@@ -366,7 +366,12 @@ def test_tome_build_with_corpus_manifest_records_provenance(tmp_path: Path) -> N
         emission_config["corpus_provenance"]["source_corpus_manifest_hash"]
         == (manifest["manifest_hash"])
     )
-    assert cover_page["corpus"]["source_corpus_hash"] == manifest["corpus_hash"]
+    assert (
+        cover_page["provenance"]["historical_cover_page_v2"]["corpus"][
+            "source_corpus_hash"
+        ]
+        == manifest["corpus_hash"]
+    )
 
 
 def test_docs_and_bible_mention_spec_4_1() -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,15 @@ _SEMANTIC_JSON_FILES = (
     "corridors/mode_assignments.json",
     "leaderboards/selected_exemplars.json",
 )
+_SEMANTIC_JSON_GLOBS = (
+    "selected_exemplars/*.json",
+    "curriculum/*.json",
+)
+_SEMANTIC_BINARY_GLOBS = (
+    "shards/shard-*.npz",
+    "corridors/mode_assignments/*.npy",
+)
+_SEMANTIC_LINE_FILES = ("corridors/mode_assignments/examples_metadata.jsonl",)
 _RUNTIME_KEYS = frozenset({"created_at", "completed_at", "updated_at"})
 
 
@@ -41,11 +51,7 @@ def derive_tome_semantic_identity(root: Path) -> TomeSemanticIdentity:
     """
 
     metadata = _read_required(root, "metadata.json")
-    payload = tuple(
-        TrainingPayloadEntry(relative, _semantic_file_digest(root / relative))
-        for relative in _SEMANTIC_JSON_FILES
-        if (root / relative).is_file()
-    )
+    payload = _semantic_training_payload(root)
     if not payload:
         raise ValueError("canonical Tome identity requires semantic payload files")
     production = _read_optional(root, "production_build_report.json") or {}
@@ -124,20 +130,65 @@ def _inventory(root: Path) -> tuple[PackageInventoryEntry, ...]:
                 sha256=_raw_digest(path),
                 size_bytes=path.stat().st_size,
                 classification=_classification(relative),
-                training_authoritative=relative in _SEMANTIC_JSON_FILES,
+                training_authoritative=_is_training_authoritative(relative),
             )
         )
     return tuple(sorted(entries, key=lambda entry: entry.path))
 
 
 def _classification(relative: str) -> str:
-    if relative in _SEMANTIC_JSON_FILES or relative.startswith("shards/"):
+    if _is_training_authoritative(relative):
         return "training_critical"
     if relative.startswith(("reports/", "leaderboards/")):
         return "diagnostic"
     if relative.startswith("manifests/"):
         return "integrity_or_provenance"
     return "operational"
+
+
+def _semantic_training_payload(root: Path) -> tuple[TrainingPayloadEntry, ...]:
+    entries: dict[str, TrainingPayloadEntry] = {}
+    for relative in _SEMANTIC_JSON_FILES:
+        path = root / relative
+        if path.is_file():
+            entries[relative] = TrainingPayloadEntry(
+                relative,
+                _semantic_file_digest(path),
+            )
+    for pattern in _SEMANTIC_JSON_GLOBS:
+        for path in sorted(root.glob(pattern)):
+            if path.is_file():
+                relative = path.relative_to(root).as_posix()
+                entries[relative] = TrainingPayloadEntry(
+                    relative,
+                    _semantic_file_digest(path),
+                )
+    for relative in _SEMANTIC_LINE_FILES:
+        path = root / relative
+        if path.is_file():
+            entries[relative] = TrainingPayloadEntry(relative, _raw_digest(path))
+    for pattern in _SEMANTIC_BINARY_GLOBS:
+        for path in sorted(root.glob(pattern)):
+            if path.is_file():
+                relative = path.relative_to(root).as_posix()
+                entries[relative] = TrainingPayloadEntry(
+                    relative,
+                    _semantic_binary_digest(path),
+                )
+    return tuple(entries[key] for key in sorted(entries))
+
+
+def _is_training_authoritative(relative: str) -> bool:
+    if relative in _SEMANTIC_JSON_FILES or relative in _SEMANTIC_LINE_FILES:
+        return True
+    return (
+        relative.startswith("selected_exemplars/")
+        or relative.startswith("curriculum/")
+        or relative.startswith("shards/shard-")
+        and relative.endswith(".npz")
+        or relative.startswith("corridors/mode_assignments/")
+        and relative.endswith(".npy")
+    )
 
 
 def _raw_integrity_digests(root: Path) -> dict[str, str | None]:
@@ -154,6 +205,27 @@ def _raw_integrity_digests(root: Path) -> dict[str, str | None]:
 
 def _semantic_file_digest(path: Path) -> str:
     return canonical_json_digest(_strip_runtime(_read_json(path)))
+
+
+def _semantic_binary_digest(path: Path) -> str:
+    """Hash binary training payload independently of NPZ container metadata."""
+
+    if path.suffix != ".npz":
+        return _raw_digest(path)
+    with zipfile.ZipFile(path) as archive:
+        names = sorted(
+            member.filename for member in archive.infolist() if not member.is_dir()
+        )
+        if len(names) != len(set(names)):
+            raise ValueError(f"semantic NPZ payload has duplicate members: {path}")
+        members = [
+            {
+                "name": name,
+                "sha256": "sha256:" + hashlib.sha256(archive.read(name)).hexdigest(),
+            }
+            for name in names
+        ]
+    return canonical_json_digest({"npz_members": members})
 
 
 def _strip_runtime(value: Any) -> Any:

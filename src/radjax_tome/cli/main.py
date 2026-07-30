@@ -295,6 +295,12 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     pack.add_argument("--input", type=Path, required=True)
     pack.add_argument("--output", type=Path, required=True)
+    pack.add_argument(
+        "--compression",
+        choices=("none", "gz"),
+        default="none",
+        help="Container compression only; it never changes Tome semantic identity.",
+    )
     pack.add_argument("--overwrite", action="store_true")
     pack.set_defaults(func=_cmd_pack)
 
@@ -1407,7 +1413,11 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 def _cmd_inspect(args: argparse.Namespace) -> int:
     from radjax_tome.io.json import read_json_object
     from radjax_tome.targets import inspect_target_store
-    from radjax_tome.tome import COVER_PAGE_FILENAME, inspect_tome_bundle
+    from radjax_tome.tome import (
+        CANONICAL_TOME_COVER_SCHEMA,
+        COVER_PAGE_FILENAME,
+        inspect_tome_bundle,
+    )
 
     if args.path.is_file():
         summary = inspect_tome_bundle(args.path)
@@ -1434,10 +1444,18 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
     print(f"path={args.path}")
     print("artifact_type=teacher_textbook")
     if cover_page:
-        print(f"tome_artifact_kind={cover_page['artifact_kind']}")
-        print(f"cover_page_version={cover_page['cover_page_version']}")
-        print(f"tome_version={cover_page['tome_version']}")
-        print(f"layout={cover_page['layout']}")
+        if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+            training = cover_page["training"]
+            transport = cover_page["package"]["transport"]
+            print("tome_artifact_kind=radjax_tome")
+            print("cover_page_version=3")
+            print(f"tome_version={training.get('tome_version')}")
+            print(f"layout=canonical_{transport}")
+        else:
+            print(f"tome_artifact_kind={cover_page['artifact_kind']}")
+            print(f"cover_page_version={cover_page['cover_page_version']}")
+            print(f"tome_version={cover_page['tome_version']}")
+            print(f"layout={cover_page['layout']}")
     print(f"target_type={summary['target_type']}")
     print(f"model_id={summary['model_id']}")
     print(f"vocab_size={summary['vocab_size']}")
@@ -1459,6 +1477,7 @@ def _cmd_pack(args: argparse.Namespace) -> int:
         args.input,
         args.output,
         overwrite=args.overwrite,
+        compression=args.compression,
     )
     print(f"status=pass bundle={output}")
     return 0

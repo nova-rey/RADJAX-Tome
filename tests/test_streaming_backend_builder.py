@@ -124,7 +124,12 @@ def test_streaming_build_writes_manifest_progress_sidecars_and_cover_page(
     assert params["num_examples_completed"] == "5"
     assert teacher_manifest["streaming_build"] is True
     assert emission_config["resume_supported"] is True
-    assert cover_page["streaming"]["streaming_build"] is True
+    assert (
+        cover_page["provenance"]["historical_cover_page_v2"]["streaming"][
+            "streaming_build"
+        ]
+        is True
+    )
 
 
 def test_streaming_resume_skips_completed_shards_and_finishes_after_failure(

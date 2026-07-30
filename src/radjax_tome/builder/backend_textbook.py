@@ -295,6 +295,7 @@ def build_streaming_backend_teacher_textbook(
                     "run_resumed",
                     message="streaming build already complete",
                 )
+                write_cover_page(output_dir)
                 return report
             raise ValueError("cannot resume complete run because validation failed")
         if manifest.get("resume_config_hash") != resume_hash:
@@ -521,7 +522,6 @@ def build_streaming_backend_teacher_textbook(
             "built streaming backend TeacherTextbook failed validation: "
             + "; ".join(report.blockers)
         )
-    write_cover_page(output_dir)
     completed_at = datetime.now(UTC).replace(microsecond=0).isoformat()
     manifest = _streaming_manifest(
         config,
@@ -541,6 +541,7 @@ def build_streaming_backend_teacher_textbook(
     )
     _write_streaming_manifest(run_manifest_path, manifest)
     _notify_progress(config, progress_log_path, "run_completed")
+    write_cover_page(output_dir)
     return validate_teacher_textbook(output_dir)
 
 

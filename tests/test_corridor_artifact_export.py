@@ -357,7 +357,10 @@ def test_reports_and_cover_page_include_corridor_counts(tmp_path: Path) -> None:
     delivery = _json(output / "delivery_report.json")
     validation = _json(output / "validation_report.json")
     cover_page = _json(output / "cover_page.json")
-    contents = {entry["path"]: entry["role"] for entry in cover_page["contents"]}
+    contents = {
+        entry["path"]: entry["role"]
+        for entry in cover_page["provenance"]["historical_cover_page_v2"]["contents"]
+    }
 
     for report in (production, delivery):
         assert report["corridor_artifact_built"] is True

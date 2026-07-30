@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import io
+import json
 import tarfile
 from pathlib import Path
 
 from radjax_tome.tome import (
+    compare_canonical_tome_identities,
     inspect_tome_bundle,
     pack_tome_bundle,
     unpack_tome_bundle,
@@ -42,24 +44,44 @@ def test_pack_tome_bundle_is_byte_deterministic(tmp_path: Path) -> None:
     assert first.read_bytes() == second.read_bytes()
 
 
+def test_gzip_bundle_is_deterministic_and_preserves_semantic_identity(
+    tmp_path: Path,
+) -> None:
+    artifact = build_fake_teacher_textbook_artifact(tmp_path)
+    first = pack_tome_bundle(
+        artifact,
+        tmp_path / "first.tgz",
+        compression="gz",
+    )
+    second = pack_tome_bundle(
+        artifact,
+        tmp_path / "second.tgz",
+        compression="gz",
+    )
+    unpacked = unpack_tome_bundle(first, tmp_path / "unpacked")
+    source_cover = json.loads(
+        (artifact / "cover_page.json").read_text(encoding="utf-8")
+    )
+    unpacked_cover = json.loads(
+        (unpacked / "cover_page.json").read_text(encoding="utf-8")
+    )
+
+    assert first.read_bytes() == second.read_bytes()
+    assert validate_tome_bundle(first).ok
+    assert compare_canonical_tome_identities(
+        source_cover["identity"], unpacked_cover["identity"]
+    )
+
+
 def test_bundle_contains_cover_page_and_only_listed_contents(tmp_path: Path) -> None:
     artifact = build_fake_teacher_textbook_artifact(tmp_path)
     (artifact / "junk.txt").write_text("not part of the Tome\n", encoding="utf-8")
-    bundle = pack_tome_bundle(artifact, tmp_path / "fake_tome.rtome")
-
-    with tarfile.open(bundle, mode="r:*") as archive:
-        names = archive.getnames()
-
-    assert "cover_page.json" in names
-    assert "junk.txt" not in names
-    assert {
-        "metadata.json",
-        "vocab_contract.json",
-        "teacher_manifest.json",
-        "emission_config.json",
-        "validation_report.json",
-        "shards/shard-00000.npz",
-    } <= set(names)
+    try:
+        pack_tome_bundle(artifact, tmp_path / "fake_tome.rtome")
+    except ValueError as exc:
+        assert "canonical content inventory does not match directory" in str(exc)
+    else:  # pragma: no cover - defensive assertion
+        raise AssertionError("canonical inventory must reject unmanifested files")
 
 
 def test_bundle_validation_passes_and_inspects_without_extraction(
@@ -77,12 +99,12 @@ def test_bundle_validation_passes_and_inspects_without_extraction(
     assert report.contents_ok
     assert report.deterministic_layout_ok
     assert summary["artifact_kind"] == "radjax_tome"
-    assert summary["cover_page_version"] == 2
-    assert summary["tome_version"] == 1
-    assert summary["layout"] == "unpacked_directory"
+    assert summary["cover_page_version"] == 3
+    assert summary["tome_version"] is None
+    assert summary["layout"] == "canonical_transport"
     assert summary["target_type"] == "dense_logits"
-    assert summary["num_examples"] == 2
-    assert summary["shard_count"] == 1
+    assert summary["num_examples"] is None
+    assert summary["shard_count"] is None
     assert summary["content_count"] == 6
     assert not (tmp_path / "inspection_extract").exists()
 
@@ -196,6 +218,8 @@ def test_public_cli_pack_validate_inspect_and_unpack_bundle(tmp_path: Path) -> N
         str(artifact),
         "--output",
         str(bundle),
+        "--compression",
+        "none",
         "--overwrite",
     )
     validate = run_cli(ROOT, "validate", "--path", str(bundle))

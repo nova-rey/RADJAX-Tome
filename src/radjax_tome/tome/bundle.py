@@ -1,14 +1,21 @@
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import shutil
 import tarfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
 from radjax_tome.io.json import read_json_object
+from radjax_tome.tome.contracts import (
+    CANONICAL_TOME_COVER_SCHEMA,
+    validate_canonical_tome_cover,
+)
 from radjax_tome.tome.cover_page import (
     ARTIFACT_KIND,
     COVER_PAGE_FILENAME,
@@ -18,7 +25,7 @@ from radjax_tome.tome.cover_page import (
     validate_tome_cover_page,
 )
 
-SUPPORTED_COMPRESSION = {"none"}
+SUPPORTED_COMPRESSION = {"none", "gz"}
 
 
 @dataclass(frozen=True)
@@ -60,7 +67,7 @@ def pack_tome_bundle(
     cover_page = read_json_object(root / COVER_PAGE_FILENAME)
     entry_paths = _bundle_entry_paths(cover_page)
     output.parent.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(output, mode=_tar_write_mode(compression)) as archive:
+    with _open_bundle_for_write(output, compression) as archive:
         for relative_path in entry_paths:
             source = _safe_source_path(root, relative_path)
             if source is None or not source.is_file():
@@ -73,6 +80,21 @@ def inspect_tome_bundle(bundle_path: str | Path) -> dict[str, object]:
     path = Path(bundle_path)
     with tarfile.open(path, mode="r:*") as archive:
         cover_page = _read_cover_page_from_archive(archive)
+    if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+        training = cover_page["training"]
+        inventory = cover_page["manifests"]["content"]["inventory"]
+        return {
+            "artifact_kind": "radjax_tome",
+            "bundle_path": str(path),
+            "compression": _compression_label(path),
+            "content_count": len(inventory),
+            "cover_page_version": 3,
+            "layout": "canonical_transport",
+            "num_examples": None,
+            "shard_count": None,
+            "target_type": training.get("target_type"),
+            "tome_version": training.get("tome_version"),
+        }
     targets = cover_page.get("targets", {})
     return {
         "artifact_kind": cover_page.get("artifact_kind"),
@@ -205,6 +227,10 @@ def _add_file(archive: tarfile.TarFile, source: Path, relative_path: str) -> Non
 
 def _bundle_entry_paths(cover_page: dict[str, Any]) -> tuple[str, ...]:
     paths = {COVER_PAGE_FILENAME}
+    if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+        inventory = cover_page["manifests"]["content"]["inventory"]
+        paths.update(str(entry["path"]) for entry in inventory)
+        return tuple(sorted(paths))
     contents = cover_page.get("contents", [])
     if not isinstance(contents, list):
         raise ValueError("cover_page.json contents must be a list")
@@ -261,6 +287,12 @@ def _validate_member_names(
 
 def _validate_embedded_cover_page(cover_page: dict[str, Any]) -> list[str]:
     blockers: list[str] = []
+    if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+        try:
+            validate_canonical_tome_cover(cover_page)
+        except ValueError as exc:
+            blockers.append(str(exc))
+        return blockers
     for field in REQUIRED_TOP_LEVEL_FIELDS:
         if field not in cover_page:
             blockers.append(f"cover_page.json missing required field: {field}")
@@ -284,6 +316,10 @@ def _validate_archive_contents(
 ) -> tuple[list[str], list[str]]:
     blockers: list[str] = []
     warnings: list[str] = []
+    if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+        return _validate_v3_archive_contents(
+            archive, members, cover_page, duplicate_names
+        )
     member_by_name = {member.name: member for member in members}
     contents = cover_page.get("contents", [])
     if not isinstance(contents, list):
@@ -340,6 +376,35 @@ def _validate_archive_contents(
     return blockers, warnings
 
 
+def _validate_v3_archive_contents(
+    archive: tarfile.TarFile,
+    members: list[tarfile.TarInfo],
+    cover_page: dict[str, Any],
+    duplicate_names: set[str],
+) -> tuple[list[str], list[str]]:
+    blockers: list[str] = []
+    names = {member.name: member for member in members}
+    expected = {COVER_PAGE_FILENAME}
+    for entry in cover_page["manifests"]["content"]["inventory"]:
+        relative = str(entry["path"])
+        expected.add(relative)
+        member = names.get(relative)
+        if relative in duplicate_names or member is None or not member.isfile():
+            blockers.append(f"canonical inventory missing bundle member: {relative}")
+            continue
+        data = _read_member_bytes(archive, member)
+        if entry["size_bytes"] != len(data):
+            blockers.append(f"canonical inventory size mismatch: {relative}")
+        digest = "sha256:" + hashlib.sha256(data).hexdigest()
+        if entry["sha256"] != digest:
+            blockers.append(f"canonical inventory sha256 mismatch: {relative}")
+    extras = sorted(name for name in names if name not in expected)
+    blockers.extend(
+        f"extra bundle member not in canonical inventory: {name}" for name in extras
+    )
+    return blockers, []
+
+
 def _read_member_bytes(archive: tarfile.TarFile, member: tarfile.TarInfo) -> bytes:
     extracted = archive.extractfile(member)
     if extracted is None:
@@ -373,9 +438,20 @@ def _safe_relative_path(relative_path: str) -> PurePosixPath | None:
     return posix
 
 
-def _tar_write_mode(compression: str) -> str:
+@contextmanager
+def _open_bundle_for_write(
+    output: Path,
+    compression: str,
+) -> Iterator[tarfile.TarFile]:
     _require_supported_compression(compression)
-    return "w"
+    if compression == "none":
+        with tarfile.open(output, mode="w") as archive:
+            yield archive
+        return
+    with output.open("wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as stream:
+            with tarfile.open(fileobj=stream, mode="w") as archive:
+                yield archive
 
 
 def _compression_label(path: Path) -> str:
@@ -392,7 +468,8 @@ def _compression_label(path: Path) -> str:
 def _require_supported_compression(compression: str) -> None:
     if compression not in SUPPORTED_COMPRESSION:
         raise ValueError(
-            f"unsupported bundle compression: {compression!r}; supported: none"
+            "unsupported bundle compression: "
+            f"{compression!r}; supported: {', '.join(sorted(SUPPORTED_COMPRESSION))}"
         )
 
 

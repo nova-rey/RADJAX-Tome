@@ -158,9 +158,9 @@ def test_backend_builder_writes_dynamic_cascaded_artifact(tmp_path: Path) -> Non
     assert params["effective_gpu_batch_size"] == "8"
     assert params["measured_output_bytes_available"] == "true"
     assert params["optimized_path_used"] == "false"
-    assert cover_page["targets"]["target_params"]["effective_backend_id"] == (
-        "cpu_reference"
-    )
+    assert cover_page["provenance"]["historical_cover_page_v2"]["targets"][
+        "target_params"
+    ]["effective_backend_id"] == ("cpu_reference")
 
     shard = store.read_shard(0)
     assert shard["input_ids"].shape == (2, 5)

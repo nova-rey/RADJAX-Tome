@@ -210,10 +210,17 @@ def test_tome_build_records_teacher_model_provenance(tmp_path: Path) -> None:
     )
     assert emission_config["teacher_model_provenance"]["network_used"] is False
     assert (
-        cover_page["teacher_model_provenance"]["model_directory_hash"]
+        cover_page["provenance"]["historical_cover_page_v2"][
+            "teacher_model_provenance"
+        ]["model_directory_hash"]
         == (provenance["model_directory_hash"])
     )
-    assert "weight_files" not in cover_page["teacher_model_provenance"]
+    assert (
+        "weight_files"
+        not in cover_page["provenance"]["historical_cover_page_v2"][
+            "teacher_model_provenance"
+        ]
+    )
 
 
 def test_tampered_teacher_model_file_fails_validation(tmp_path: Path) -> None:
