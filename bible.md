@@ -1643,3 +1643,27 @@ or GPU behavior changed. Focused M5 config/cover/package/bundle/Golden
 coverage passed `87 passed, 1 skipped`; the complete local suite passed
 `798 passed, 23 skipped in 90.45s`. The unrelated pre-existing `.DS_Store`
 remains untracked and untouched.
+
+## 2026-07-30 — M5B Canonical Configuration and Tome Contracts
+
+M5B adds a dependency-light canonical configuration boundary with explicit
+`TomeBuildIntent`, `ResolvedTomeBuildConfig`, and `TomeExecutionPlan` forms,
+plus a legacy adapter that copies the inventoried 67-field
+`ProductionBuildConfig` without rerouting production. The unchanged 25-field
+selection-integration projection is available from resolved configuration and
+is characterized as byte-for-byte equivalent to the existing production hash.
+`radjax_tome_cover_v3` is defined as a nested pure contract with identity,
+training, package, manifests, authority, provenance, and validation sections.
+Its semantic identity contains only the training-authoritative payload,
+training contract, and authority binding: profile-specific inventory and
+directory/`.rtome`/`tgz` transport cannot change it. Package manifests retain
+raw-byte digests and may therefore differ between student and full-debug
+packages; the cover is excluded from the manifest to prevent circular hashing.
+Historical v2/v1 readers, production writers, CLI behavior, native Path-B
+routing, authority-hash v1/v2, and the frozen Golden fixture are unchanged.
+Focused M5/M3/M4/cover/package/Golden/Hydra coverage passed
+`147 passed, 1 skipped in 21.68s`; the complete local suite passed
+`807 passed, 23 skipped in 93.82s`. Ruff check, formatting, and
+`git diff --check` passed. The unrelated pre-existing `.DS_Store` remains
+untracked and untouched. M5B is ready for its mandatory review gate; M5C has
+not begun.

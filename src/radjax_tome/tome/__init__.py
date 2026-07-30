@@ -7,6 +7,20 @@ from radjax_tome.tome.bundle import (
     unpack_tome_bundle,
     validate_tome_bundle,
 )
+from radjax_tome.tome.contracts import (
+    CANONICAL_CONTENT_MANIFEST_SCHEMA,
+    CANONICAL_TOME_COVER_SCHEMA,
+    TOME_SEMANTIC_IDENTITY_SCHEMA,
+    CanonicalContentManifest,
+    PackageInventoryEntry,
+    TomeSemanticIdentity,
+    TrainingPayloadEntry,
+    build_canonical_content_manifest,
+    build_canonical_tome_cover,
+    build_tome_semantic_identity,
+    compare_canonical_tome_identities,
+    validate_canonical_tome_cover,
+)
 from radjax_tome.tome.cover_page import (
     COVER_PAGE_FILENAME,
     CoverPageValidationReport,
@@ -26,15 +40,26 @@ from radjax_tome.tome.packaging import (
 )
 
 __all__ = [
+    "CANONICAL_CONTENT_MANIFEST_SCHEMA",
+    "CANONICAL_TOME_COVER_SCHEMA",
     "COVER_PAGE_FILENAME",
+    "CanonicalContentManifest",
     "FULL_DEBUG_PROVENANCE",
+    "PackageInventoryEntry",
     "CoverPageValidationReport",
     "TomeBundleValidationReport",
     "TomePackageResult",
     "TomePackageValidationReport",
     "STUDENT",
     "StudentTomeReader",
+    "TOME_SEMANTIC_IDENTITY_SCHEMA",
+    "TomeSemanticIdentity",
+    "TrainingPayloadEntry",
+    "build_canonical_content_manifest",
+    "build_canonical_tome_cover",
     "build_cover_page",
+    "build_tome_semantic_identity",
+    "compare_canonical_tome_identities",
     "inspect_tome_bundle",
     "pack_tome_bundle",
     "package_tome_artifact",
@@ -42,6 +67,7 @@ __all__ = [
     "unpack_tome_bundle",
     "validate_tome_cover_page",
     "validate_tome_bundle",
+    "validate_canonical_tome_cover",
     "validate_tome_package",
     "write_cover_page",
 ]

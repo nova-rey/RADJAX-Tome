@@ -456,6 +456,14 @@
       "replacement_or_target_boundary": "M5 canonical contract and compatibility migration boundary.",
       "status": "supporting"
     },
+    "docs/M5_CANONICAL_CONTRACTS.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M5",
+      "rationale": "M5B nested configuration, semantic identity, and profile-manifest contract.",
+      "replacement_or_target_boundary": "M5 canonical contract and compatibility migration boundary.",
+      "status": "canonical"
+    },
     "docs/MULTI_GPU_PATH_B.md": {
       "archive_or_removal_condition": "M3 archive pointer and M2 parity gate.",
       "kind": "top-level-doc",
@@ -981,10 +989,10 @@
     "src/radjax_tome/builder/config.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
-      "owning_milestone": "M6",
-      "rationale": "Shared infrastructure behind the canonical pipeline.",
-      "replacement_or_target_boundary": "Narrow supporting API.",
-      "status": "supporting"
+      "owning_milestone": "M5",
+      "rationale": "Canonical intent, resolved configuration, execution-plan, and legacy-adapter boundary.",
+      "replacement_or_target_boundary": "M5 canonical configuration contract.",
+      "status": "canonical"
     },
     "src/radjax_tome/builder/corridor_artifacts.py": {
       "archive_or_removal_condition": null,
@@ -1710,10 +1718,18 @@
     "src/radjax_tome/tome/__init__.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
-      "owning_milestone": "M6",
-      "rationale": "Shared infrastructure behind the canonical pipeline.",
-      "replacement_or_target_boundary": "Narrow supporting API.",
+      "owning_milestone": "M5",
+      "rationale": "Narrow facade for historical Tome helpers and M5 canonical contracts.",
+      "replacement_or_target_boundary": "M5 canonical Tome contract facade.",
       "status": "supporting"
+    },
+    "src/radjax_tome/tome/contracts.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M5",
+      "rationale": "Pure profile-neutral semantic identity and nested v3 cover contract.",
+      "replacement_or_target_boundary": "M5 canonical Tome contract.",
+      "status": "canonical"
     },
     "src/radjax_tome/tome/bundle.py": {
       "archive_or_removal_condition": null,
