@@ -113,6 +113,21 @@ unknown facts.  Equality helpers require the same identity schema version;
 cross-version comparisons fail closed rather than treating unequal contracts
 as interchangeable.
 
+The required compatibility mapping is deliberately source-specific:
+
+| Historical source | Known fields | Canonical concept | Mapping limit |
+|---|---|---|---|
+| cover-page v2 | `teacher`, `tokenizer`, `targets`, `behavioral_surfaces`, `recommended_training_plan` | `identity` and `training` descriptors | Retain only fields present in v2; do not invent package inventory or selection authority. |
+| cover-page v2 | `contents` entries and their digests/classifications | Candidate `manifests.content.inventory` entries | Preserve v2's stated file facts; a later adapter must label the source contract and cannot claim a v2 inventory is package-profile complete. |
+| cover-page v2 | `created_at`, `created_by`, corpus/model provenance, claims | `provenance` / validation claims | Runtime creation time is provenance only and is excluded from semantic identity. |
+| cover-page v2 | `validation`, `claims_not_made` | `validation` | Preserve stated claims and non-claims without upgrading their proof. |
+| package-cover v1 | `package_profile`, package schema, archive/layout facts | `package` and source-contract provenance | Profile/transport are package metadata only; never copy them into semantic identity. |
+| package-cover v1 | content, shard, assignment, and selected-payload manifest references/digests | `manifests.content` and profile-specific inventory | Preserve raw integrity data and profile constraints; do not infer missing teacher/training-plan fields. |
+| package-cover v1 | package audit and validation facts | `validation` and provenance | Preserve the historical validator's scope; do not imply v3 validation. |
+
+An M5E adapter must emit the source schema and every unavailable v3 section as
+unknown or absent, rather than filling it from a sibling file or a default.
+
 ## Rollback and acceptance
 
 Because M5B does not route production or emit v3 artifacts, rollback is the

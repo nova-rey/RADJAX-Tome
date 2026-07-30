@@ -1667,3 +1667,17 @@ Focused M5/M3/M4/cover/package/Golden/Hydra coverage passed
 `git diff --check` passed. The unrelated pre-existing `.DS_Store` remains
 untracked and untouched. M5B is ready for its mandatory review gate; M5C has
 not begun.
+
+## 2026-07-30 — M5B Compatibility-Mapping Review Correction
+
+The M5B contract document now tabulates the explicit, non-inferential mapping
+from cover-page v2 and `radjax_tome_package_cover_v1` to the nested v3
+concepts. The table separates known teacher/training descriptors, profile
+inventory and raw-integrity facts, provenance/runtime metadata, and validation
+claims; it records what each historical format cannot establish and requires a
+future M5E adapter to leave unknown information absent. This is
+documentation-only: no production, writer, reader, routing, authority, or
+fixture code changed. The already-completed M5B focused suite
+(`147 passed, 1 skipped`) and full suite (`807 passed, 23 skipped`) remain the
+applicable code evidence; the ledger/Hydra/M5 contract documentation tests and
+Ruff checks pass after this correction. M5C has not begun.
