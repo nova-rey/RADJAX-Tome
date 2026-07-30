@@ -57,6 +57,7 @@ from radjax_tome.builder.config import (
     resolved_tome_build_config_payload,
     selection_authority_hash_v1,
     selection_authority_payload_v1,
+    validate_resolved_tome_build_config,
     validate_tome_build_intent,
 )
 from radjax_tome.builder.exemplar_delivery import (
@@ -225,6 +226,7 @@ __all__ = [
     "teacher_backend_config_from_build_config",
     "validate_teacher_textbook",
     "validate_tome_build_intent",
+    "validate_resolved_tome_build_config",
     "validate_exemplar_selection_manifest",
     "validate_integrated_selection_contract",
     "write_corridor_coverage_report",

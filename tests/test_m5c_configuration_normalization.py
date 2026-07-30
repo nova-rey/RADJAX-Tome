@@ -15,6 +15,8 @@ from radjax_tome.builder.config import (
     normalize_production_build_request,
     production_build_config_from_resolved,
     selection_authority_hash_v1,
+    validate_resolved_tome_build_config,
+    validate_tome_build_intent,
 )
 from radjax_tome.builder.production import (
     ProductionBuildConfig,
@@ -82,7 +84,9 @@ def test_m5c_legacy_flat_config_round_trips_through_the_execution_adapter() -> N
 
 
 def test_m5c_cli_and_programmatic_requests_resolve_identically() -> None:
-    programmatic = normalize_production_build_request(_legacy_config())
+    programmatic = normalize_production_build_request(
+        replace(_legacy_config(), exemplar_selection_enabled=True)
+    )
     cli = _cli_request(
         advanced_overrides={
             "sequence_length": 128,
@@ -101,6 +105,7 @@ def test_m5c_cli_and_programmatic_requests_resolve_identically() -> None:
             "fingerprint_corridor_candidate_pool_cap": 4,
             "require_full_selected_budget": True,
             "exemplar_delivery_path": "two_pass_rerun_selected",
+            "exemplar_selection_enabled": True,
             "retain_unselected_exemplar_payloads": True,
             "progress": False,
         }
@@ -174,6 +179,109 @@ def test_m5c_contradiction_fails_before_execution_resolution() -> None:
     invalid = replace(intent, behavior=replace(intent.behavior, top_k=33))
 
     with pytest.raises(ValueError, match="behavior.top_k"):
+        normalize_production_build_request(invalid)
+
+
+@pytest.mark.parametrize(
+    ("section", "field", "value", "message"),
+    (
+        (
+            "behavior",
+            "sequence_length",
+            True,
+            "behavior.sequence_length must be an integer",
+        ),
+        ("behavior", "dynamic_mass_threshold", True, "dynamic_mass_threshold"),
+        ("execution", "resume", 1, "execution.resume must be boolean"),
+        ("teacher", "model", "", "teacher.model must be a non-empty string"),
+        ("teacher", "backend", "unknown", "teacher.backend is unsupported"),
+        (
+            "selection",
+            "fingerprint_corridor_budget_fraction",
+            "1.1",
+            "canonical decimal text",
+        ),
+        (
+            "selection",
+            "fingerprint_corridor_budget_fraction",
+            0.5,
+            "canonical decimal text",
+        ),
+    ),
+)
+def test_m5c_validation_rejects_malformed_canonical_field_types_and_domains(
+    section: str, field: str, value: Any, message: str
+) -> None:
+    intent = canonical_production_build_intent(
+        teacher_model="teacher",
+        dataset_path=Path("/data/corpus.jsonl"),
+        corpus_manifest_path=Path("/data/manifest.json"),
+        teacher_model_provenance_path=Path("/data/provenance.json"),
+        output_dir=Path("/out"),
+    )
+    invalid = replace(
+        intent, **{section: replace(getattr(intent, section), **{field: value})}
+    )
+    assert any(message in error for error in validate_tome_build_intent(invalid))
+
+
+def test_m5c_validation_rejects_runtime_and_selection_contradictions() -> None:
+    intent = canonical_production_build_intent(
+        teacher_model="teacher",
+        dataset_path=Path("/data/corpus.jsonl"),
+        corpus_manifest_path=Path("/data/manifest.json"),
+        teacher_model_provenance_path=Path("/data/provenance.json"),
+        output_dir=Path("/out"),
+    )
+    invalid = replace(
+        intent,
+        teacher=replace(intent.teacher, backend="cpu_reference", runtime_mode="cpu"),
+        execution=replace(intent.execution, resume=True, overwrite=True),
+        selection=replace(
+            intent.selection,
+            exemplar_delivery_path="two_pass_rerun_selected",
+            selected_exemplar_budget=2,
+            selected_exemplar_fraction=0.5,
+            selected_rerun_batch_size=2,
+            selection_integration_policy="corridor_first_global_backfill_v1",
+            total_selected_exemplar_budget=2,
+        ),
+    )
+    errors = validate_tome_build_intent(invalid)
+    assert "execution.resume and execution.overwrite are mutually exclusive" in errors
+    assert (
+        "selection.selected_exemplar_budget and fraction are mutually exclusive"
+        in errors
+    )
+    assert "selection controls require exemplar_selection_enabled=true" in errors
+
+    runtime_invalid = replace(
+        intent,
+        teacher=replace(
+            intent.teacher,
+            backend="cpu_reference",
+            runtime_mode="cpu_gpu",
+        ),
+    )
+    assert (
+        "teacher.backend cpu_reference requires runtime_mode cpu"
+        in validate_tome_build_intent(runtime_invalid)
+    )
+
+
+def test_m5c_resolved_envelope_validation_fails_closed() -> None:
+    resolved = _cli_request(preset_name="smoke").resolved
+    invalid = replace(
+        resolved,
+        schema_version="wrong",
+        resolution=replace(
+            resolved.resolution, explicit_override_fields=("top_k", "top_k")
+        ),
+    )
+    errors = validate_resolved_tome_build_config(invalid)
+    assert "resolved config schema_version mismatch" in errors
+    assert "resolution.explicit_override_fields must be sorted and unique" in errors
+    with pytest.raises(ValueError, match="invalid resolved Tome build config"):
         normalize_production_build_request(invalid)
 
 

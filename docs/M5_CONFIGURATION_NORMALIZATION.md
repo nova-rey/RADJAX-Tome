@@ -73,6 +73,28 @@ M5C does not extract, reorder, or otherwise alter the native Path-B stage
 sequence. In particular, early provisional corridor materialization and late
 selected-linked corridor finalization remain separately ordered operations.
 
+## Validation hardening
+
+Canonical requests fail during normalization when nested section types, paths,
+required strings, enum-like controls, numeric values, booleans, or optional
+numeric values are malformed. Integer fields reject booleans. Fractional
+controls reject booleans and non-finite values. The corridor allocation
+fraction must be canonical decimal text within the authoritative `[0, 1]`
+range; historical protected spellings such as `"0.50"` remain valid and are
+never rewritten before the 25-field authority projection.
+
+`gpu_torch` requires `cpu_gpu`; `cpu_reference` requires `cpu`; and resume
+cannot be combined with overwrite. Strict canonical selection requests require
+the documented delivery/integration dependencies, including the exact enabled
+two-pass tuple for corridor-first Path B. The resolved envelope itself is also
+validated: its schema version, source, preset, and sorted unique explicit
+override fields must be valid before plan derivation.
+
+Flat `ProductionBuildConfig` inputs retain only their explicit historical
+compatibility behavior through `legacy_production_adapter`; this is not a
+second canonical resolver and does not relax validation for CLI or typed
+canonical requests.
+
 ## Compatibility and non-claims
 
 Legacy `ProductionBuildConfig` remains accepted as an explicit input adapter.

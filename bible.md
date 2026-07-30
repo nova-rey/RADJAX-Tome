@@ -1728,3 +1728,22 @@ Focused M3/M4/M5/production/Golden coverage passed `155 passed, 1 skipped in
 92.40s`. Ruff check, formatting, and `git diff --check` passed. No GPU
 inference ran and no fixture was regenerated. The unrelated pre-existing
 `.DS_Store` remains untracked and untouched.
+
+## 2026-07-30 — M5C Normalization Validation Hardening
+
+The canonical normalization boundary now validates concrete nested-section and
+field types before any preflight/runtime work. Integer and numeric controls
+reject booleans; required strings, paths, enums, finite numeric ranges, and
+canonical corridor-fraction decimal text are fail-closed. The latter retains
+historically authority-bearing spellings such as `"0.50"` without rewriting
+the fixed 25-field projection. Validation now enforces backend/runtime pairs,
+resume-versus-overwrite exclusion, strict canonical selection/Path-B
+dependencies, and the resolved-config envelope schema plus metadata. The
+explicit legacy flat adapter retains only its intentional compatibility path.
+
+Focused validation, legacy-adapter, M3/M4 routing, Golden, and production
+coverage passed `72 passed, 1 skipped in 9.43s`; the complete local suite
+passed `838 passed, 23 skipped in 93.16s`. Ruff, formatting, and diff checks
+passed. No GPU work, fixture regeneration, authority projection change, or
+Path-B stage-order change occurred; the unrelated `.DS_Store` remains
+untracked and untouched.

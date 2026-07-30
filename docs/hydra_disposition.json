@@ -464,6 +464,14 @@
       "replacement_or_target_boundary": "M5 canonical contract and compatibility migration boundary.",
       "status": "canonical"
     },
+    "docs/M5_CONFIGURATION_NORMALIZATION.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M5",
+      "rationale": "M5C canonical production normalization, preset, and adapter contract.",
+      "replacement_or_target_boundary": "M5 canonical configuration contract.",
+      "status": "canonical"
+    },
     "docs/MULTI_GPU_PATH_B.md": {
       "archive_or_removal_condition": "M3 archive pointer and M2 parity gate.",
       "kind": "top-level-doc",

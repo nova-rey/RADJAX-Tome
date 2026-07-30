@@ -107,7 +107,7 @@ def test_m5b_resolved_projection_keeps_the_legacy_selection_authority_hash() -> 
 
 def test_m5b_execution_plan_preserves_current_path_defaults_without_io() -> None:
     intent = adapt_legacy_production_build_config(_legacy_config())
-    resolved = resolve_tome_build_intent(intent)
+    resolved = resolve_tome_build_intent(intent, source="legacy_production_adapter")
 
     plan = derive_execution_plan(resolved)
 
