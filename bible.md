@@ -1823,3 +1823,26 @@ passed `75 passed in 10.69s`; the cache-cleared full local suite passed
 passed. No GPU execution, Golden fixture mutation, authority-projection change,
 or Path-B stage change occurred. The unrelated pre-existing `.DS_Store`
 remains untracked and untouched.
+
+## 2026-07-30 — M5F Canonical Tome Contract Closure
+
+M5 is complete as a product-contract milestone. The paved road is typed build
+intent to resolved configuration to derived execution plan, then the preserved
+production/Path-B facade, source-derived profile-neutral Tome identity, closed
+v3 cover and manifest, and deterministic directory/`.rtome`/gzip transport.
+Student and full-debug packages retain distinct raw inventories while agreeing
+on source identity. Historical v2 and v1 inputs validate natively and adapt
+only known facts into an incomplete descriptor; new writers emit v3 only.
+The closure matrix, compatibility limits, contract versions, exact verification
+commands, intentional deferrals, and non-claims are recorded in
+`docs/M5_CLOSURE_REPORT.md`.
+
+The final M5F static gates passed: `ruff check src tests`,
+`ruff format --check src tests` (`205 files already formatted`), JSON syntax,
+and `git diff --check`. The final cache-cleared full local suite passed
+`851 passed, 23 skipped` (874 collected). This leaves the immutable Golden v1
+fixture, fixed 25-field selection authority, authority-hash v1/v2 contracts,
+canonical Path-B early/late corridor order, and M4D proof unchanged. No GPU
+inference, fixture regeneration, main merge, M6 work, performance work, or
+corpus/model/runtime expansion occurred. The unrelated pre-existing
+`.DS_Store` remains untracked and untouched.
