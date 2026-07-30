@@ -1747,6 +1747,14 @@
       "replacement_or_target_boundary": "M5 canonical Tome writer and validator boundary.",
       "status": "canonical"
     },
+    "src/radjax_tome/tome/compatibility.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M5",
+      "rationale": "Explicit non-inferential adapter for historical cover-page v2 and package-cover v1.",
+      "replacement_or_target_boundary": "Isolated M5 compatibility reader; new writers remain canonical v3.",
+      "status": "supporting"
+    },
     "src/radjax_tome/tome/bundle.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",

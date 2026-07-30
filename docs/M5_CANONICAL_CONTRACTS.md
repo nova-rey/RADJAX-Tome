@@ -197,6 +197,24 @@ The required compatibility mapping is deliberately source-specific:
 An M5E adapter must emit the source schema and every unavailable v3 section as
 unknown or absent, rather than filling it from a sibling file or a default.
 
+M5E implements that boundary in `tome.compatibility`. Its
+`adapt_historical_tome_cover` and `read_historical_tome_descriptor` APIs accept
+only cover-page v2 or `radjax_tome_package_cover_v1`; they return a
+`HistoricalTomeDescriptor`, not a v3 cover. The descriptor uses the v3 section
+vocabulary only for facts proven by the source: v2 can provide target settings
+and a non-profile-complete inventory claim, while package v1 can provide its
+declared profile, explicit `unpacked_directory` to `directory` mapping, and
+manifest references. Unknown identity, authority, training, profile, or
+transport facts remain absent as applicable. The path-based reader first
+validates a directory under its native v2 or v1 validator; for a legacy `tgz`
+outer directory, it safely materializes the one cover-root into a temporary
+directory and applies that same native validator before mapping. It never
+rewrites the source, validates historical data as v3, or infers sibling facts.
+A standalone JSON cover has no artifact context and must use the pure adapter
+directly; it cannot claim native validity. Unsupported layouts/profiles,
+malformed inventories, and unknown schemas fail closed with a migration
+diagnostic. New artifact and package writers always emit v3.
+
 ## Rollback and acceptance
 
 Because M5B does not route production or emit v3 artifacts, rollback is the

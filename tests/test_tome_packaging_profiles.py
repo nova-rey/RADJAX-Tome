@@ -18,8 +18,10 @@ from radjax_tome.provenance import (
 from radjax_tome.tome import (
     FULL_DEBUG_PROVENANCE,
     STUDENT,
+    adapt_historical_tome_cover,
     open_student_tome,
     package_tome_artifact,
+    read_historical_tome_descriptor,
     validate_tome_bundle,
     validate_tome_package,
 )
@@ -207,6 +209,30 @@ def test_m5d_profiles_share_source_identity_but_bind_distinct_inventories(
         student_cover["manifests"]["content"]["manifest_digest"]
         != debug_cover["manifests"]["content"]["manifest_digest"]
     )
+
+
+def test_m5e_historical_package_v1_remains_native_and_adapts_explicitly(
+    artifact: Path,
+    tmp_path: Path,
+) -> None:
+    package = tmp_path / "student"
+    package_tome_artifact(artifact, package, profile=STUDENT, overwrite=True)
+    cover_path = package / "cover_page.json"
+    canonical_cover = _json(cover_path)
+    historical_cover = canonical_cover["provenance"]["historical_package_cover_v1"]
+    cover_path.write_text(
+        json.dumps(historical_cover, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    descriptor = adapt_historical_tome_cover(historical_cover)
+    path_descriptor = read_historical_tome_descriptor(package)
+
+    assert validate_tome_package(package, profile=STUDENT).ok
+    assert descriptor.package == {"profile": STUDENT, "transport": "directory"}
+    assert path_descriptor.package == descriptor.package
+    assert descriptor.identity is None
+    assert descriptor.authority is None
 
 
 @pytest.mark.parametrize("include_perverse", (False, True))

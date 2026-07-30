@@ -1644,6 +1644,26 @@ coverage passed `87 passed, 1 skipped`; the complete local suite passed
 `798 passed, 23 skipped in 90.45s`. The unrelated pre-existing `.DS_Store`
 remains untracked and untouched.
 
+## 2026-07-30 — M5E Historical Adapter Closure
+
+`tome.compatibility` is the isolated, dependency-light compatibility reader for
+cover-page v2 and `radjax_tome_package_cover_v1`. The pure adapter maps only
+known historical facts into a deliberately incomplete descriptor: v2 target
+settings and an explicitly non-profile-complete inventory claim, or v1 package
+profile/layout and manifest references. It leaves identity, authority, and any
+unproven section absent. The path reader validates directory inputs under their
+native historical validator before mapping; it safely materializes an outer
+legacy `tgz` into a temporary directory and performs the same native
+validation. Standalone JSON covers cannot claim artifact validity, and unknown
+schemas, layouts, profiles, malformed inventories, and unsafe archives fail
+closed. New writers remain v3 only; no historical artifact, authority recipe,
+Path-B stage, or Golden fixture was rewritten. Focused M3/M5/cover/package/
+Hydra coverage passed `123 passed in 20.87s`; the native-reader package/adapter
+regression passed `24 passed in 7.46s`; the cache-cleared full local suite
+passed `851 passed, 23 skipped` (874 collected). Ruff, formatting, JSON, and
+diff checks passed. The unrelated pre-existing `.DS_Store` remains untracked
+and untouched.
+
 ## 2026-07-30 — M5B Canonical Configuration and Tome Contracts
 
 M5B adds a dependency-light canonical configuration boundary with explicit

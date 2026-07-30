@@ -20,6 +20,7 @@ from typing import Any
 CANONICAL_TOME_COVER_SCHEMA = "radjax_tome_cover_v3"
 CANONICAL_CONTENT_MANIFEST_SCHEMA = "tome_content_manifest_v2"
 TOME_SEMANTIC_IDENTITY_SCHEMA = "radjax_tome_semantic_identity_v1"
+HISTORICAL_PACKAGE_COVER_SCHEMA = "radjax_tome_package_cover_v1"
 
 _PACKAGE_PROFILES = frozenset({"unpacked", "student", "full_debug_provenance"})
 _CONTENT_CLASSIFICATIONS = frozenset(
@@ -585,6 +586,7 @@ def _reject_runtime_only_keys(value: Any, location: str) -> None:
 __all__ = [
     "CANONICAL_CONTENT_MANIFEST_SCHEMA",
     "CANONICAL_TOME_COVER_SCHEMA",
+    "HISTORICAL_PACKAGE_COVER_SCHEMA",
     "TOME_SEMANTIC_IDENTITY_SCHEMA",
     "CanonicalContentManifest",
     "PackageInventoryEntry",

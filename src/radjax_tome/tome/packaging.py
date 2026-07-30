@@ -22,12 +22,15 @@ from radjax_tome.tome.canonical_artifact import (
     derive_tome_semantic_identity,
     validate_canonical_artifact_directory,
 )
-from radjax_tome.tome.contracts import CANONICAL_TOME_COVER_SCHEMA
+from radjax_tome.tome.contracts import (
+    CANONICAL_TOME_COVER_SCHEMA,
+    HISTORICAL_PACKAGE_COVER_SCHEMA,
+)
 
 FULL_DEBUG_PROVENANCE = "full_debug_provenance"
 STUDENT = "student"
 PACKAGE_PROFILES = frozenset({FULL_DEBUG_PROVENANCE, STUDENT})
-PACKAGE_COVER_SCHEMA = "radjax_tome_package_cover_v1"
+PACKAGE_COVER_SCHEMA = HISTORICAL_PACKAGE_COVER_SCHEMA
 CONTENT_MANIFEST_SCHEMA = "tome_content_manifest_v1"
 SHARD_MANIFEST_SCHEMA = "tome_shard_manifest_v1"
 CORRIDOR_ASSIGNMENT_MANIFEST_SCHEMA = "corridor_assignment_manifest_v1"

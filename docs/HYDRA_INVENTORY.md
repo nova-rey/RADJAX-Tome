@@ -62,7 +62,7 @@ Cross-cutting supporting layers are `targets.schema/store`, `provenance`, `io`, 
 | Frozen selection/passports | `fingerprint/multi_role_selection.py`, `builder/c6_integration.py` | obligations, routes, passports, authority manifest | Also emits a legacy flat projection |
 | Selected rerun/delivery | `builder/exemplar_delivery.py`, `backends/gpu_torch.py` | transactional selected payloads and index | Correct, large, slow, one payload file per coordinate |
 | Validation/audit | `builder/teacher_textbook.py`, `builder/exemplar_delivery.py`, `audit/selected_linkage.py`, `builder/c6_integration.py` | validation, delivery, linkage, reconciliation reports | Multiple validators; finalization memory peak is too high |
-| Cover/package | `tome/cover_page.py`, `tome/packaging.py`, `tome/bundle.py` | cover page, debug/student packages | Packaging imports selection internals and audit logic |
+| Cover/package | `tome/contracts.py`, `tome/canonical_artifact.py`, `tome/cover_page.py`, `tome/packaging.py`, `tome/bundle.py`, `tome/compatibility.py` | canonical v3 cover/identity, profiles, transports, historical adapters | Historical formats are isolated compatibility readers, not public writer contracts |
 | Orchestration | `builder/production.py`, `cli/main.py` | lifecycle/progress/production report | Too many responsibilities and configuration flags |
 
 ## 4. Source disposition
@@ -90,6 +90,8 @@ The following is the M1 disposition. “Keep” means keep the behavior/API cont
 | `builder/long_tail.py` | Canonical policy helper | Selected-payload diagnostics |
 | `builder/cascaded_soft_labels.py` | Canonical payload encoding | Cascading bucket semantics |
 | `tome/cover_page.py` | Canonical | Artifact truth surface |
+| `tome/contracts.py`, `tome/canonical_artifact.py` | Canonical | M5 typed cover/identity and source-derived inventory boundary |
+| `tome/compatibility.py` | Supporting compatibility | Explicit non-inferential historical v2/v1 reader |
 | `tome/packaging.py` | Canonical behavior, decouple internals | Debug/student package construction |
 | `tome/bundle.py` | Canonical | Transport bundle operations |
 | `builder/production.py` | Canonical façade, replace internals | Current working orchestrator |
