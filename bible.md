@@ -2023,3 +2023,21 @@ descriptor, validation, delivery, and production tests passed during this
 checkpoint. No M4/M5/v3 semantics, authority projection, Golden fixture,
 Contract, Student, or accelerator behavior changed; final full-suite and
 closure evidence remain pending.
+
+## 2026-07-31 — M6 Corrective Closure
+
+The independent-review deficiencies are closed by corrective commits
+`4091464` and `5203465`: production stages have real owners, selected delivery
+has a behavioral split behind its compatibility façade, reusable validation is
+Builder-independent, and package/validation routes cannot transitively import
+Builder. The AST graph policy reports complete forbidden paths, detects cycles,
+and proves a forwarding module cannot hide a prohibited edge. The corrected
+closure record documents retained façade responsibility, removal conditions,
+and M7 deferrals without claiming a line-count-only victory. Cache-cleared full
+tests, focused M3--M6/Golden/Contract-pin coverage, compile, Ruff, formatting,
+JSON, diff, lightweight CLI help, and immutable Golden validation completed;
+the Golden result remains selected count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+No Contract, Student, Golden fixture, published v3 asset, authority recipe,
+fixed 25-field projection, M4 state-machine behavior, or accelerator workload
+changed.

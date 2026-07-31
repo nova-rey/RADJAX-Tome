@@ -7,8 +7,10 @@ from typing import Any
 
 import pytest
 
-import radjax_tome.builder.exemplar_delivery as exemplar_delivery
+import radjax_tome.builder.delivery.assembly as delivery_assembly
 import radjax_tome.builder.production as production
+import radjax_tome.builder.production_stages.assembly as production_assembly
+import radjax_tome.builder.production_stages.delivery as production_delivery
 from radjax_tome.builder import ProductionBuildConfig, build_production_gpu_tome
 from radjax_tome.corpora import CorpusBuildConfig, build_corpus_artifact
 from radjax_tome.provenance import inspect_teacher_model, write_teacher_model_provenance
@@ -76,9 +78,9 @@ def test_m3a_distinguishes_ordered_early_and_late_corridor_exports(
 
     config = _config(tmp_path)
     timeline: list[dict[str, Any]] = []
-    early_builder = production.build_corridor_artifacts
-    late_builder = exemplar_delivery.build_corridor_artifacts
-    delivery = production.run_selected_delivery_rerun
+    early_builder = production_assembly.build_corridor_artifacts
+    late_builder = delivery_assembly.build_corridor_artifacts
+    delivery = production_delivery.run_selected_delivery_rerun
 
     def observe_early(**kwargs: Any) -> Any:
         assert kwargs["selected_records"] == []
@@ -129,9 +131,11 @@ def test_m3a_distinguishes_ordered_early_and_late_corridor_exports(
 
         return delivery(replace(delivery_config, progress_callback=observe_progress))
 
-    monkeypatch.setattr(production, "build_corridor_artifacts", observe_early)
-    monkeypatch.setattr(exemplar_delivery, "build_corridor_artifacts", observe_late)
-    monkeypatch.setattr(production, "run_selected_delivery_rerun", observe_delivery)
+    monkeypatch.setattr(production_assembly, "build_corridor_artifacts", observe_early)
+    monkeypatch.setattr(delivery_assembly, "build_corridor_artifacts", observe_late)
+    monkeypatch.setattr(
+        production_delivery, "run_selected_delivery_rerun", observe_delivery
+    )
 
     report = build_production_gpu_tome(config)
 

@@ -1831,6 +1831,214 @@
       "replacement_or_target_boundary": "Canonical M4 orchestration integration.",
       "status": "canonical"
     },
+    "src/radjax_tome/artifact_validation/__init__.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Builder-independent validation namespace.",
+      "replacement_or_target_boundary": "Canonical artifact validation boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/artifact_validation/corridors.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Reusable corridor artifact validation.",
+      "replacement_or_target_boundary": "Canonical artifact validation boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/artifact_validation/delivery.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Reusable selected-delivery linkage validation.",
+      "replacement_or_target_boundary": "Canonical artifact validation boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/artifact_validation/long_tail.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Reusable long-tail diagnostics.",
+      "replacement_or_target_boundary": "Canonical artifact validation boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/artifact_validation/selection.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Reusable C6 selection-contract validation.",
+      "replacement_or_target_boundary": "Canonical artifact validation boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/artifact_validation/teacher_textbook.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Reusable TeacherTextbook artifact validation.",
+      "replacement_or_target_boundary": "Canonical artifact validation boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/__init__.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Focused selected-delivery namespace.",
+      "replacement_or_target_boundary": "Canonical selected-delivery owners.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/_legacy.py": {
+      "archive_or_removal_condition": "Remove after public exemplar-delivery import migration.",
+      "kind": "source-module",
+      "owning_milestone": "M9",
+      "rationale": "Compatibility import aggregation only.",
+      "replacement_or_target_boundary": "Public exemplar_delivery facade.",
+      "status": "compatibility-only"
+    },
+    "src/radjax_tome/builder/delivery/_shared.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Inward shared selected-delivery primitives.",
+      "replacement_or_target_boundary": "Canonical selected-delivery owners.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/delivery/assembly.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Selected payload assembly owner.",
+      "replacement_or_target_boundary": "Canonical selected-delivery owners.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/parity.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Selected-delivery parity evidence owner.",
+      "replacement_or_target_boundary": "Canonical selected-delivery owners.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/payloads.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Path-A payload materialization owner.",
+      "replacement_or_target_boundary": "Canonical selected-delivery owners.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/reporting.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Selected-delivery report rendering owner.",
+      "replacement_or_target_boundary": "Canonical selected-delivery owners.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/rerun.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Selected-rerun execution owner.",
+      "replacement_or_target_boundary": "Canonical selected-delivery owners.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/staging.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Transactional selected-rerun staging owner.",
+      "replacement_or_target_boundary": "Canonical selected-delivery owners.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/validation.py": {
+      "archive_or_removal_condition": "Remove after public exemplar-delivery import migration.",
+      "kind": "source-module",
+      "owning_milestone": "M9",
+      "rationale": "Forwarding compatibility facade for artifact validation.",
+      "replacement_or_target_boundary": "artifact_validation.delivery.",
+      "status": "compatibility-only"
+    },
+    "src/radjax_tome/builder/production_stages/assembly.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Production assembly and separate corridor operations.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/production_stages/authorities.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Production authority export owner.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/production_stages/delivery.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Production selected-rerun stage owner.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/production_stages/evidence.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Typed production evidence helper.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/production_stages/preflight.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Production preflight stage owner.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/production_stages/reporting.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Production reporting stage owner.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/production_stages/score_pass.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Production score-pass stage owner.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/production_stages/selection.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Production C2-C5 selection stage owner.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/production_stages/shared.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Inward shared production-stage helpers.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/production_stages/verification.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Production validation, reconciliation, and cover owner.",
+      "replacement_or_target_boundary": "Canonical production stage owner.",
+      "status": "canonical"
+    },
     "src/radjax_tome/reports/compatibility_exports.py": {
       "archive_or_removal_condition": "Retain while research report exports remain package-compatible.",
       "kind": "source-module",

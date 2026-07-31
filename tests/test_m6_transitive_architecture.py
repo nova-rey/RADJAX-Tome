@@ -10,7 +10,6 @@ import ast
 from collections import deque
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = ROOT / "src" / "radjax_tome"
 PACKAGE = "radjax_tome"
@@ -110,9 +109,7 @@ def _cycles(graph: dict[str, set[str]], prefix: str) -> list[tuple[str, ...]]:
     return result
 
 
-def _assert_no_path(
-    graph: dict[str, set[str]], start: str, forbidden: str
-) -> None:
+def _assert_no_path(graph: dict[str, set[str]], start: str, forbidden: str) -> None:
     path = _find_path(graph, start, forbidden)
     assert path is None, "forbidden transitive import path: " + " -> ".join(path or ())
 
@@ -169,9 +166,7 @@ def test_forwarding_module_cannot_hide_a_forbidden_dependency(tmp_path: Path) ->
     }.items():
         path.write_text(text, encoding="utf-8")
     graph = _module_graph(root)
-    assert _find_path(
-        graph, "radjax_tome.tome.packaging", "radjax_tome.builder"
-    ) == (
+    assert _find_path(graph, "radjax_tome.tome.packaging", "radjax_tome.builder") == (
         "radjax_tome.tome.packaging",
         "radjax_tome.tome.forward",
         "radjax_tome.builder",

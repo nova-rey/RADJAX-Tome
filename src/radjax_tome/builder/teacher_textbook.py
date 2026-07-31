@@ -144,6 +144,7 @@ class TeacherTextbookBuildConfig:
     corpus_manifest_path: Path | None = None
     teacher_model_provenance_path: Path | None = None
 
+
 def build_teacher_textbook(
     config: TeacherTextbookBuildConfig,
 ) -> TeacherTextbookValidationReport:
