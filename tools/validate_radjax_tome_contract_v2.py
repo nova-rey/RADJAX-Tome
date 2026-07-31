@@ -8,6 +8,8 @@ import hashlib
 import json
 import math
 import re
+import sqlite3
+import tempfile
 from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 from pathlib import Path, PurePosixPath
@@ -405,12 +407,11 @@ def _validate_selected_payloads(
         raise ContractError("shape_invalid")
     index_iter = iter(_lines(_inside(root, index_path)))
     overall_digest = _SequenceDigest()
-    # The list only contains fixed two-digest references.  It deliberately never
-    # contains payload bytes; M7D will replace it with a digest sink for unbounded
-    # packages before writer integration.
     expected_selection = 0
     index_seen = 0
-    seen_logical_ids: set[str] = set()
+    seen_tmp = tempfile.TemporaryDirectory(prefix="radjax-tome-v2-ids-")
+    seen = sqlite3.connect(Path(seen_tmp.name) / "logical-ids.sqlite3")
+    seen.execute("CREATE TABLE ids (logical_id TEXT PRIMARY KEY)")
     for shard_position, shard in enumerate(shards):
         if not isinstance(shard, dict):
             raise ContractError("shape_invalid")
@@ -479,12 +480,14 @@ def _validate_selected_payloads(
                 or _nonnegative_int(index.get("row")) != row
                 or _sha(index.get("payload_sha256")) != _canonical(payload)
                 or _sha(index.get("shard_sha256")) != shard["sha256"]
-                or logical_id in seen_logical_ids
             ):
                 raise ContractError("payload_index_address_invalid")
             if _sha(index.get("payload_semantic_digest")) != semantic_digest:
                 raise ContractError("payload_semantic_projection_invalid")
-            seen_logical_ids.add(logical_id)
+            try:
+                seen.execute("INSERT INTO ids VALUES (?)", (logical_id,))
+            except sqlite3.IntegrityError as exc:
+                raise ContractError("payload_index_address_invalid") from exc
             record = {
                 "logical_id": logical_id,
                 "payload_semantic_digest": semantic_digest,
@@ -513,6 +516,8 @@ def _validate_selected_payloads(
         or sequence_digest != identity["payload_sequence_digest"]
     ):
         raise ContractError("payload_semantic_projection_invalid")
+    seen.close()
+    seen_tmp.cleanup()
 
 
 def validate_directory(root: Path) -> Result:

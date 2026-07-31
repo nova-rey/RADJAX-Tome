@@ -2125,3 +2125,13 @@ does not. The legacy M4 selected-rerun staging, v3 package writer, archive
 writer, public v3 readers, authority, Golden fixtures, Contract, and Student
 remain unmodified. Further M7D work still needs the source-adapter, transport,
 and native/portable parity boundaries before the Contract review gate.
+
+## 2026-07-31 — M7D Bounded-Memory Duplicate Detection
+
+The portable v2 validator now uses a temporary on-disk uniqueness table for
+logical IDs instead of retaining an in-memory set. Together with its streaming
+JSONL readers and sequence digest sinks, validation retains one encoded record
+plus fixed buffers and scalar state, while still rejecting duplicate IDs. The
+writer uses the same disk-backed uniqueness approach. No v3 validator, writer,
+archive behavior, Contract, Student, Golden fixture, or production runtime
+path changed.
