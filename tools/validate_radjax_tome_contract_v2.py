@@ -9,6 +9,7 @@ import json
 import math
 import re
 import sqlite3
+import tarfile
 import tempfile
 from collections.abc import Iterator
 from dataclasses import asdict, dataclass
@@ -648,6 +649,33 @@ def validate_directory(root: Path) -> Result:
         return Result(False, (exc.code,))
 
 
+def validate_archive(path: Path) -> Result:
+    """Safely spool a sequential archive to temporary disk, never memory."""
+    try:
+        with tempfile.TemporaryDirectory(prefix="radjax-tome-v2-archive-") as temp:
+            root = Path(temp)
+            names: set[str] = set()
+            with tarfile.open(path, mode="r|*") as archive:
+                for member in archive:
+                    name = _path(member.name)
+                    if name in names or not member.isfile():
+                        raise ContractError("transport_unsafe")
+                    names.add(name)
+                    target = _inside(root, name)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    source = archive.extractfile(member)
+                    if source is None:
+                        raise ContractError("transport_corrupt")
+                    with target.open("wb") as destination:
+                        while block := source.read(CHUNK):
+                            destination.write(block)
+            return validate_directory(root)
+    except ContractError as exc:
+        return Result(False, (exc.code,))
+    except (OSError, tarfile.TarError):
+        return Result(False, ("transport_corrupt",))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=Path)
@@ -655,7 +683,7 @@ def main() -> int:
     result = (
         validate_directory(args.path)
         if args.path.is_dir()
-        else Result(False, ("schema_version_unsupported",))
+        else validate_archive(args.path)
     )
     print(json.dumps(result.to_dict(), sort_keys=True))
     return 0 if result.ok else 1

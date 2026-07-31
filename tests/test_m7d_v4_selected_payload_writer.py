@@ -3,14 +3,21 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import subprocess
 import sys
+import tarfile
 from pathlib import Path
 
 import pytest
 
-from radjax_tome.tome import write_sharded_tome_v4
+from radjax_tome.tome import (
+    pack_sharded_tome_v4,
+    write_sharded_tome_v4,
+    write_sharded_tome_v4_from_legacy_artifact,
+)
+from tests.helpers.fixtures import build_fake_teacher_textbook_artifact
 
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = ROOT / "tools" / "validate_radjax_tome_contract_v2.py"
@@ -128,3 +135,48 @@ def test_v4_writer_rejects_duplicate_logical_ids_without_publishing(
             authority={"selection": "fixture"},
         )
     assert not (tmp_path / "tome").exists()
+
+
+def test_v4_legacy_adapter_does_not_mutate_its_v3_source(tmp_path: Path) -> None:
+    source = build_fake_teacher_textbook_artifact(tmp_path)
+    before = {
+        path.relative_to(source).as_posix(): hashlib.sha256(
+            path.read_bytes()
+        ).hexdigest()
+        for path in source.rglob("*")
+        if path.is_file()
+    }
+    result = write_sharded_tome_v4_from_legacy_artifact(
+        source, tmp_path / "v4", payload_records_per_shard=2
+    )
+    after = {
+        path.relative_to(source).as_posix(): hashlib.sha256(
+            path.read_bytes()
+        ).hexdigest()
+        for path in source.rglob("*")
+        if path.is_file()
+    }
+    assert before == after
+    assert _validate(result.root)["ok"] is True
+
+
+def test_v4_transport_is_byte_deterministic(tmp_path: Path) -> None:
+    root = write_sharded_tome_v4(
+        [_record(index) for index in range(3)],
+        tmp_path / "root",
+        training_contract={"target_type": "fixture"},
+        authority={"selection": "fixture"},
+    ).root
+    first = pack_sharded_tome_v4(root, tmp_path / "first.tgz")
+    second = pack_sharded_tome_v4(root, tmp_path / "second.tgz")
+    assert first.read_bytes() == second.read_bytes()
+    assert _validate(first)["ok"] is True
+
+
+def test_v4_archive_validator_rejects_unsafe_member(tmp_path: Path) -> None:
+    archive = tmp_path / "unsafe.rtome"
+    with tarfile.open(archive, "w") as output:
+        info = tarfile.TarInfo("../cover_page.json")
+        info.size = 2
+        output.addfile(info, io.BytesIO(b"{}"))
+    assert _validate(archive)["errors"] == ["path_unsafe"]

@@ -2135,3 +2135,14 @@ plus fixed buffers and scalar state, while still rejecting duplicate IDs. The
 writer uses the same disk-backed uniqueness approach. No v3 validator, writer,
 archive behavior, Contract, Student, Golden fixture, or production runtime
 path changed.
+
+## 2026-07-31 — M7D Legacy Adapter and V4 Transport
+
+The v4 writer now has an explicit read-only legacy-artifact adapter: it derives
+the established training/authority context, projects only the closed selected
+payload fields, and proves the v3 source bytes are unchanged. A separate v4
+tar/gzip transport writer fixes member ordering, timestamps, ownership, modes,
+and gzip mtime; it is byte-deterministic. The portable validator safely streams
+an archive into temporary disk before directory validation, rejecting traversal,
+duplicate, special, corrupt, and unsupported members without loading a package
+into memory. Legacy bundle APIs and v3 semantics remain untouched.

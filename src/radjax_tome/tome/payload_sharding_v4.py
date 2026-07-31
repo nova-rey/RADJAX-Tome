@@ -7,20 +7,67 @@ portable v4 layout transactionally, and leaves M4 delivery staging untouched.
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import os
 import shutil
 import sqlite3
+import tarfile
 import tempfile
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from radjax_tome.io.json import read_json_object
+from radjax_tome.tome.canonical_artifact import derive_tome_semantic_identity
+
 PREFIX = "sha256:"
 _SEQUENCE_PREFIX = b'{"records":['
 _SEQUENCE_SUFFIX = b'],"schema_version":"selected_exemplar_payload_sequence_v1"}'
+_SEMANTIC_FIELDS = frozenset(
+    {
+        "selected_example_id",
+        "selected_position",
+        "selected_score",
+        "score_selected_position_entropy",
+        "score_top_token_id",
+        "source_shard_id",
+        "source_row",
+        "source_position",
+        "source_score",
+        "source_top_token_id",
+        "source_score_policy",
+        "payload_ref",
+        "selected_policy",
+        "source_delivery_path",
+        "top_token_ids",
+        "top_log_probs",
+        "top_probs",
+        "top_selection_mask",
+        "effective_top_k",
+        "top_mass",
+        "tail_mass",
+        "bucket_masses",
+        "teacher_entropy",
+        "sequence_length",
+        "vocab_size",
+        "num_buckets",
+        "dynamic_top_k",
+        "dynamic_mass_threshold",
+        "dynamic_top_k_max",
+        "top_k_saturated",
+        "long_tail_class",
+        "long_tail_warnings",
+        "effective_top_k_fraction_of_vocab",
+        "semantic_tail_tag",
+        "selected_board",
+        "corridor_mode_id",
+        "corridor_fingerprint_id",
+        "corridor_assignment_status",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -31,6 +78,68 @@ class ShardedTomeV4Result:
     semantic_identity_digest: str
     selected_count: int
     shard_count: int
+
+
+def write_sharded_tome_v4_from_legacy_artifact(
+    source: Path,
+    output: Path,
+    *,
+    profile: str = "student",
+    payload_records_per_shard: int = 128,
+    overwrite: bool = False,
+) -> ShardedTomeV4Result:
+    """Adapt a complete native artifact without mutating its v3 contents."""
+    identity = derive_tome_semantic_identity(source)
+    return write_sharded_tome_v4(
+        _legacy_selected_records(source),
+        output,
+        training_contract=identity.training_contract,
+        authority=identity.authority,
+        profile=profile,
+        payload_records_per_shard=payload_records_per_shard,
+        overwrite=overwrite,
+    )
+
+
+def pack_sharded_tome_v4(
+    root: Path,
+    output: Path,
+    *,
+    compression: str = "gz",
+    overwrite: bool = False,
+) -> Path:
+    """Create the deterministic v4 transport without changing legacy bundles."""
+    if compression not in {"none", "gz"}:
+        raise ValueError("v4 compression must be one of: none, gz")
+    if output.exists() and not overwrite:
+        raise ValueError(f"output already exists: {output}")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("wb") as raw:
+        stream: Any = (
+            gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0)
+            if compression == "gz"
+            else raw
+        )
+        try:
+            with tarfile.open(
+                fileobj=stream, mode="w", format=tarfile.USTAR_FORMAT
+            ) as archive:
+                for source in sorted(
+                    path for path in root.rglob("*") if path.is_file()
+                ):
+                    relative = source.relative_to(root).as_posix()
+                    info = tarfile.TarInfo(relative)
+                    info.size = source.stat().st_size
+                    info.mtime = 0
+                    info.uid = info.gid = 0
+                    info.uname = info.gname = ""
+                    info.mode = 0o644
+                    with source.open("rb") as handle:
+                        archive.addfile(info, handle)
+        finally:
+            if compression == "gz":
+                stream.close()
+    return output
 
 
 def write_sharded_tome_v4(
@@ -223,6 +332,26 @@ def _write_directory(
     return ShardedTomeV4Result(
         root, identity["semantic_digest"], selected_count, len(shards)
     )
+
+
+def _legacy_selected_records(source: Path) -> Iterable[dict[str, Any]]:
+    """Yield legacy selected records in native shard order at the v4 boundary."""
+    allowed = _SEMANTIC_FIELDS | {"opaque_extensions"}
+    for path in sorted(
+        (source / "selected_exemplars").glob("selected-exemplars-*.json")
+    ):
+        document = read_json_object(path)
+        records = document.get("selected_exemplars")
+        if not isinstance(records, list):
+            raise ValueError(f"legacy selected payload shard is invalid: {path.name}")
+        for record in records:
+            if not isinstance(record, dict) or not _SEMANTIC_FIELDS <= set(record):
+                raise ValueError(f"legacy selected payload is incomplete: {path.name}")
+            if set(record) - allowed:
+                raise ValueError(
+                    f"legacy selected payload is not v4-projectable: {path.name}"
+                )
+            yield {key: record[key] for key in record if key in allowed}
 
 
 def _rewrite_index_shard_hashes(path: Path, hashes: dict[int, str]) -> None:
