@@ -2126,6 +2126,38 @@
       "rationale": "Downstream implementation-neutral portable Tome contract guide.",
       "replacement_or_target_boundary": "M6 downstream handoff contract.",
       "status": "canonical"
+    },
+    "src/radjax_tome/tome/payload_sharding_v4.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M7",
+      "rationale": "Additive v4 streaming payload writer, profile adapter, and deterministic transport owner.",
+      "replacement_or_target_boundary": "Published M7 producer-side sharding boundary.",
+      "status": "canonical"
+    },
+    "docs/M7_PAYLOAD_SHARDING_CHARACTERIZATION.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M7",
+      "rationale": "Characterizes the protected pre-sharding selected-payload surface.",
+      "replacement_or_target_boundary": "M7 contract field-projection evidence.",
+      "status": "supporting"
+    },
+    "docs/M7_PAYLOAD_SHARDING_CONTRACT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M7",
+      "rationale": "Portable v4 streaming payload and identity contract summary.",
+      "replacement_or_target_boundary": "RADJAX-Contract v0.3.0 streaming assets.",
+      "status": "canonical"
+    },
+    "docs/M7_CONTRACT_PUBLICATION_PIN.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M7",
+      "rationale": "Pins Contract v0.3.0 and the verified offline v2 mirror.",
+      "replacement_or_target_boundary": "M7 Contract publication and conformance boundary.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

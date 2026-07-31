@@ -2193,3 +2193,11 @@ offline verified mirror. Source, installed-wheel, and mirror asset parity are
 tested byte-for-byte. M7 introduces no production writer or CLI import of the
 new Contract-resource API; Contract remains a verification/conformance boundary.
 The M6 v1 mirror and v0.2.0 historical evidence remain unchanged.
+
+## 2026-07-31 — M7F Closure Inventory Correction
+
+The Hydra disposition ledger now explicitly owns the M7 v4 streaming writer,
+characterization, portable contract, and Contract-publication pin documents.
+This is an inventory-only closure correction required by the repository's
+tracked-surface audit; it does not change payload, identity, authority, archive,
+Contract, Student, Golden, or runtime behavior.
