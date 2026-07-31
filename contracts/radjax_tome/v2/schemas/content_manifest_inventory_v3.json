@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["path", "sha256", "size_bytes", "classification", "training_authoritative"],
   "properties": {
-    "path": {"type": "string", "minLength": 1, "not": {"enum": ["cover.json", "manifests/content-manifest-header.json", "manifests/content-manifest-inventory.jsonl"]}},
+    "path": {"type": "string", "minLength": 1, "not": {"enum": ["cover_page.json", "manifests/content-manifest-header.json", "manifests/content-manifest-inventory.jsonl"]}},
     "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "size_bytes": {"type": "integer", "minimum": 0},
     "classification": {"enum": ["training_critical", "integrity_or_provenance", "diagnostic", "human_readable", "operational"]},
