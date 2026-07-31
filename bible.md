@@ -1915,3 +1915,14 @@ RADJAX-Contract dependency from `main` to `v0.2.0`, not as a new
 development-only dependency. Existing production modules retain their
 established Contract API imports; M6 introduces no production import of the
 v3 publication resource API, whose assets serve verification and conformance.
+
+## 2026-07-31 — M6A Production Boundary Characterization
+
+The roadmap's original M6 now begins from the approved publication base.  A
+checked ownership ledger and AST-backed characterization pin the public
+production façade, M4 native Path-B state-machine seam, packaging façade, and
+the required inward dependency direction before implementation movement.  The
+ledger distinguishes the completed v3 publication milestone from this
+production-boundary work, preserves Contract `v0.2.0` and its offline mirror,
+and explicitly defers M7--M12 work.  No production behavior, authority recipe,
+Golden fixture, v3 contract, Contract repository, or Student repository changed.
