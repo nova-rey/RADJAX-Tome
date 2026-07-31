@@ -10,6 +10,8 @@ import ast
 from collections import deque
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = ROOT / "src" / "radjax_tome"
 PACKAGE = "radjax_tome"
@@ -114,6 +116,31 @@ def _assert_no_path(graph: dict[str, set[str]], start: str, forbidden: str) -> N
     assert path is None, "forbidden transitive import path: " + " -> ".join(path or ())
 
 
+def _descendant_modules(
+    graph: dict[str, set[str]], namespaces: tuple[str, ...]
+) -> tuple[str, ...]:
+    return tuple(
+        module
+        for module in sorted(graph)
+        if any(
+            module == namespace or module.startswith(f"{namespace}.")
+            for namespace in namespaces
+        )
+    )
+
+
+def _assert_no_outward_dependencies(
+    graph: dict[str, set[str]],
+    *,
+    namespaces: tuple[str, ...],
+    forbidden: tuple[str, ...],
+) -> None:
+    """Apply policy to every descendant, never only a package initializer."""
+    for start in _descendant_modules(graph, namespaces):
+        for blocked in forbidden:
+            _assert_no_path(graph, start, blocked)
+
+
 def test_tome_packaging_and_validation_cannot_reach_builder() -> None:
     graph = _module_graph()
     for start in (
@@ -126,20 +153,24 @@ def test_tome_packaging_and_validation_cannot_reach_builder() -> None:
 
 def test_production_and_domain_layers_cannot_reach_outward_entry_points() -> None:
     graph = _module_graph()
-    starts = (
-        "radjax_tome.builder.production",
-        "radjax_tome.builder.production_stages",
-        "radjax_tome.builder.delivery",
-        "radjax_tome.artifact_validation",
+    _assert_no_outward_dependencies(
+        graph,
+        namespaces=(
+            "radjax_tome.builder.production",
+            "radjax_tome.builder.production_stages",
+            "radjax_tome.builder.delivery",
+            "radjax_tome.artifact_validation",
+            "radjax_tome.tome.packaging",
+            "radjax_tome.tome.producer_validation",
+            "radjax_tome.tome.artifact_descriptor",
+            "radjax_tome.tome.bundle",
+        ),
+        forbidden=(
+            "radjax_tome.cli",
+            "radjax_tome.research",
+            "radjax_student",
+        ),
     )
-    forbidden = (
-        "radjax_tome.cli",
-        "radjax_tome.research",
-        "radjax_student",
-    )
-    for start in starts:
-        for blocked in forbidden:
-            _assert_no_path(graph, start, blocked)
 
 
 def test_production_layers_are_acyclic() -> None:
@@ -171,3 +202,35 @@ def test_forwarding_module_cannot_hide_a_forbidden_dependency(tmp_path: Path) ->
         "radjax_tome.tome.forward",
         "radjax_tome.builder",
     )
+
+
+def test_descendant_outward_dependency_is_not_hidden_by_clean_initializer(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "radjax_tome"
+    (root / "builder" / "delivery").mkdir(parents=True)
+    (root / "cli").mkdir()
+    for path, text in {
+        root / "__init__.py": "",
+        root / "builder" / "__init__.py": "",
+        root / "builder" / "delivery" / "__init__.py": "",
+        root / "builder" / "delivery" / "owner.py": (
+            "from radjax_tome.cli import main\n"
+        ),
+        root / "cli" / "__init__.py": "",
+        root / "cli" / "main.py": "",
+    }.items():
+        path.write_text(text, encoding="utf-8")
+
+    graph = _module_graph(root)
+    # The former package-initializer-only policy would have accepted this tree.
+    assert _find_path(graph, "radjax_tome.builder.delivery", "radjax_tome.cli") is None
+    with pytest.raises(
+        AssertionError,
+        match=("radjax_tome.builder.delivery.owner -> radjax_tome.cli"),
+    ):
+        _assert_no_outward_dependencies(
+            graph,
+            namespaces=("radjax_tome.builder.delivery",),
+            forbidden=("radjax_tome.cli",),
+        )

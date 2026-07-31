@@ -2041,3 +2041,14 @@ the Golden result remains selected count `256` and semantic root
 No Contract, Student, Golden fixture, published v3 asset, authority recipe,
 fixed 25-field projection, M4 state-machine behavior, or accelerator workload
 changed.
+
+## 2026-07-31 — M6 Final Integration Cleanup
+
+The final integration cleanup corrects the closure status and the measured
+`builder.exemplar_delivery` façade size to 42 lines. The static outward-policy
+now evaluates every descendant of the governed production, delivery, artifact
+validation, and Tome packaging/validation namespaces, rather than treating a
+clean package initializer as sufficient. Its new synthetic regression proves a
+forbidden dependency in a descendant module is reported with the complete path.
+No runtime behavior, public API, Contract pin/mirror, Golden fixture, v3 asset,
+Contract repository, or Student repository changed.

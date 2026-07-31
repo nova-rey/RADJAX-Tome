@@ -1,6 +1,6 @@
 # M6 Production Module Boundary Closure
 
-Status: **corrective closure pending final commit**
+Status: **complete; final cleanup pending integration into `main`**
 
 Base: `a7109c25b78780dd64eae6a923a33aac2a2a86b7`
 
@@ -16,7 +16,7 @@ Base: `a7109c25b78780dd64eae6a923a33aac2a2a86b7`
   state, failure normalization, or evidence representation. In particular,
   provisional early corridors and selected-linked late corridors remain
   separate ordered operations.
-- `builder.exemplar_delivery` is an import-compatible façade (49 lines).
+- `builder.exemplar_delivery` is an import-compatible façade (42 lines).
   Selected rerun/staging, payloads, assembly, linkage validation, parity, and
   report rendering have concrete delivery-owned modules. The façade keeps
   private compatibility names while behavioral tests cover selected-only rerun,
@@ -39,7 +39,7 @@ Base: `a7109c25b78780dd64eae6a923a33aac2a2a86b7`
 | Surface | Before corrective work | Corrected ownership | Compatibility retained |
 | --- | --- | --- | --- |
 | `builder/production.py` | ~4,300 lines mixing stage implementations with façade routing | 3,073-line façade plus `production_stages/{preflight,score_pass,authorities,selection,delivery,assembly,verification,reporting}.py` | public build/configuration and legacy helpers |
-| `builder/exemplar_delivery.py` | 3,441-line mixed delivery owner | 49-line façade plus focused `builder/delivery/*` owners | historic imports and private helper forwarding |
+| `builder/exemplar_delivery.py` | 3,441-line mixed delivery owner | 42-line façade plus focused `builder/delivery/*` owners | historic imports and private helper forwarding |
 | package validation | packaging reached a lazy adapter that could reach Builder | `artifact_validation/*` shared leaves, `tome.producer_validation`, and typed descriptors | Builder validation imports forward where required |
 
 The remaining large production façade intentionally retains public request
