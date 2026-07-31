@@ -9,9 +9,9 @@ from typing import Any
 
 import pytest
 
-import radjax_tome.builder.native_path_b.orchestrator as orchestrator
 import radjax_tome.builder.native_path_b.resume as native_resume
 import radjax_tome.builder.production as production
+import radjax_tome.builder.production_stages.path_b_integration as path_b_integration
 from radjax_tome.builder.production import ProductionBuildConfig
 from radjax_tome.corpora import CorpusBuildConfig, build_corpus_artifact
 from radjax_tome.provenance import inspect_teacher_model, write_teacher_model_provenance
@@ -85,7 +85,7 @@ def _observe_stages(
         "run_slice_four",
         "run_slice_five",
     ):
-        operation = getattr(orchestrator, name)
+        operation = getattr(path_b_integration, name)
 
         def observe(
             *args: Any,
@@ -96,7 +96,7 @@ def _observe_stages(
             calls.append(_name)
             return _operation(*args, **kwargs)
 
-        monkeypatch.setattr(orchestrator, name, observe)
+        monkeypatch.setattr(path_b_integration, name, observe)
 
 
 def _canonical_artifact_bytes(output_dir: Path) -> dict[str, bytes]:
@@ -159,7 +159,7 @@ def test_global_only_build_bypasses_all_native_post_score_slices(
         "run_slice_four",
         "run_slice_five",
     ):
-        monkeypatch.setattr(orchestrator, name, native_stage_must_not_run)
+        monkeypatch.setattr(path_b_integration, name, native_stage_must_not_run)
 
     report = production.build_production_gpu_tome(config)
 

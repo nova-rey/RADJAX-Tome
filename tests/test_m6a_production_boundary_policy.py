@@ -63,10 +63,8 @@ def test_m6a_public_facades_and_m4_callback_seam_are_explicit() -> None:
         "def build_production_gpu_tome",
         "def _run_native_path_b_post_score_stages",
         "run_preflight_then_score_pass",
-        "run_slice_two",
-        "run_slice_three",
-        "run_slice_four",
-        "run_slice_five",
+        "NativePathBCallbacks",
+        "run_post_score_path_b",
     ):
         assert symbol in production
 

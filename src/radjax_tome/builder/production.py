@@ -1046,118 +1046,49 @@ def _run_native_path_b_post_score_stages(
     canonical_config: Any,
     slice_one: Any,
 ) -> dict[str, Any]:
-    """Run the real post-score native Path-B stages in their fixed order.
+    """Bind retained callbacks to the sole M4 Path-B state machine."""
 
-    The callbacks retain ownership of the existing artifact writes.  The
-    orchestrator only carries typed, in-memory evidence between them; it does
-    not introduce a checkpoint schema or a second production algorithm.
-    """
-
-    from radjax_tome.builder.native_path_b.orchestrator import (
-        SliceFiveOperations,
-        SliceFourOperations,
-        SliceThreeOperations,
-        SliceTwoOperations,
-        run_slice_five,
-        run_slice_four,
-        run_slice_three,
-        run_slice_two,
+    from radjax_tome.builder.production_stages import (
+        NativePathBCallbacks,
+        run_post_score_path_b,
     )
 
-    slice_two = run_slice_two(
+    return run_post_score_path_b(
         canonical_config,
         slice_one,
-        operations=SliceTwoOperations(
-            early_corridor=lambda _, __: _native_early_corridor_operation(state),
-            fingerprint_authority=lambda _, __: _native_fingerprint_authority_operation(
+        callbacks=NativePathBCallbacks(
+            early_corridor=lambda: _native_early_corridor_operation(state),
+            fingerprint_authority=lambda: _native_fingerprint_authority_operation(
                 state
             ),
-            global_authority=lambda _, __, fingerprint: (
-                _native_global_authority_operation(state, fingerprint)
+            global_authority=lambda fingerprint: _native_global_authority_operation(
+                state, fingerprint
             ),
-        ),
-    )
-    if slice_two.status != "pass":
-        return _stage_adapter_failure_report(
-            state,
-            slice_two.global_authority.failure
-            if slice_two.global_authority is not None
-            else (
-                slice_two.fingerprint_authority.failure
-                if slice_two.fingerprint_authority is not None
-                else slice_two.early_corridor.failure
-            ),
-        )
-    slice_three = run_slice_three(
-        canonical_config,
-        slice_two,
-        operations=SliceThreeOperations(
-            integrated_selection=lambda _, authorities: (
-                _native_integrated_selection_operation(state, authorities)
-            ),
-        ),
-    )
-    if slice_three.status != "pass":
-        failure = (
-            None
-            if slice_three.integrated_selection is None
-            else slice_three.integrated_selection.failure
-        )
-        if failure is not None and any(
-            blocker.startswith("C6 selected budget underfilled before selected rerun")
-            for blocker in failure.blockers
-        ):
-            return _selection_underfilled_stage_report(state, failure)
-        return _stage_adapter_failure_report(
-            state,
-            failure,
-        )
-    slice_four = run_slice_four(
-        canonical_config,
-        slice_three,
-        operations=SliceFourOperations(
-            selected_rerun=lambda _, inputs: _native_selected_rerun_operation(
-                state, inputs
-            ),
-            late_corridor=lambda _, inputs: _native_late_corridor_operation(inputs),
-            assembly=lambda _, inputs: _native_artifact_assembly_operation(inputs),
-        ),
-    )
-    if slice_four.status != "pass":
-        return _stage_adapter_failure_report(
-            state,
-            slice_four.assembly.failure
-            if slice_four.assembly is not None
-            else (
-                slice_four.late_corridor.failure
-                if slice_four.late_corridor is not None
-                else (
-                    slice_four.selected_rerun.failure
-                    if slice_four.selected_rerun is not None
-                    else None
+            integrated_selection=(
+                lambda authorities: _native_integrated_selection_operation(
+                    state, authorities
                 )
             ),
-        )
-    slice_five = run_slice_five(
-        canonical_config,
-        slice_four,
-        operations=SliceFiveOperations(
-            validation_linkage=lambda _, inputs: _native_validation_linkage_operation(
+            selected_rerun=(
+                lambda inputs: _native_selected_rerun_operation(state, inputs)
+            ),
+            late_corridor=_native_late_corridor_operation,
+            assembly=_native_artifact_assembly_operation,
+            validation_linkage=lambda inputs: _native_validation_linkage_operation(
                 state, inputs
             ),
-            reconciliation_cover=lambda _, inputs: (
-                _native_reconciliation_cover_operation(state, inputs)
-            ),
-            final_reporting=lambda _, inputs: _native_final_reporting_operation(
+            reconciliation_cover=lambda inputs: _native_reconciliation_cover_operation(
                 state, inputs
             ),
+            final_reporting=(
+                lambda inputs: _native_final_reporting_operation(state, inputs)
+            ),
+            stage_failure=lambda failure: _stage_adapter_failure_report(state, failure),
+            selection_underfilled=lambda failure: _selection_underfilled_stage_report(
+                state, failure
+            ),
+            terminal_report=lambda: state.terminal_report,
         ),
-    )
-    if slice_five.final_result is not None and state.terminal_report is not None:
-        return state.terminal_report
-    return _stage_adapter_failure_report(
-        state,
-        slice_five.validation.failure if slice_five.validation is not None else None,
     )
 
 

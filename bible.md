@@ -1926,3 +1926,15 @@ ledger distinguishes the completed v3 publication milestone from this
 production-boundary work, preserves Contract `v0.2.0` and its offline mirror,
 and explicitly defers M7--M12 work.  No production behavior, authority recipe,
 Golden fixture, v3 contract, Contract repository, or Student repository changed.
+
+## 2026-07-31 — M6B Native Path-B Callback Composition Extraction
+
+Post-score callback composition now lives in the production-stage integration
+module rather than the public `builder.production` façade.  That module binds
+existing callbacks to the already canonical M4 Path-B slices two through five;
+it adds no second state machine, persistent workflow format, or changed stage
+semantics.  The live canonical traversal test follows the new private seam and
+continues to prove the exact ordered slices.  Focused native/orchestration,
+production, C6, authority, and M6A boundary coverage passed `72 passed, 1
+skipped`; Ruff, format, and diff checks passed.  No GPU work, Golden mutation,
+authority/configuration change, Contract change, or Student work occurred.
