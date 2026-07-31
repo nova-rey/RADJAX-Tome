@@ -1,5 +1,18 @@
 # RADJAX-Tome Project Ledger
 
+## 2026-07-31 — M7A Payload Sharding Characterization
+
+M7 begins from an explicit characterization of the current selected-payload
+surface. Canonical Path B emits one-record
+`selected_exemplar_payload_shard_v1` JSON files and uses transactional native
+staging/promotion, but package and public student-reader paths retain eager
+payload collections. The current v3 semantic identity hashes physical selected
+payload files, so regrouping unchanged records changes its digest. The approved
+M7 solution is a versioned v4 / semantic-identity-v2 contract; v3 remains
+historical compatibility evidence and is not reinterpreted. The complete
+pre-M7 payload-field census is locked in a characterization test for M7B
+classification.
+
 Earlier history in this root ledger was reconstructed from current repository
 state because no root `bible.md` existed when Spec 3.1 landed. Existing
 historical notes remain in `docs/BIBLE.md`; future spec commits should append
