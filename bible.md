@@ -2182,3 +2182,14 @@ identity to selected records. The source adapter supplies that projection from
 the native v3 identity, while direct synthetic writer callers may explicitly
 provide none. No v3 identity recipe, profile behavior, Golden fixture, Contract,
 Student, or authority semantics changed.
+
+## 2026-07-31 — M7E Streaming Contract Publication Pin
+
+RADJAX-Contract `0.3.0`, tag `v0.3.0`, commit
+`1b8c6f79bdfa32464a55aa93c8b3626aaa1a0047` is now the normative owner of the
+M7 v4 streaming contract. Tome pins its established Contract dependency to
+that release and retains `contracts/radjax_tome/v2` as a checksum-enforced,
+offline verified mirror. Source, installed-wheel, and mirror asset parity are
+tested byte-for-byte. M7 introduces no production writer or CLI import of the
+new Contract-resource API; Contract remains a verification/conformance boundary.
+The M6 v1 mirror and v0.2.0 historical evidence remain unchanged.
