@@ -182,7 +182,9 @@ def pack_sharded_tome_v4(
                         if relative == "cover_page.json"
                         else None
                     )
-                    info.size = len(cover) if cover is not None else source.stat().st_size
+                    info.size = (
+                        len(cover) if cover is not None else source.stat().st_size
+                    )
                     info.mtime = 0
                     info.uid = info.gid = 0
                     info.uname = info.gname = ""

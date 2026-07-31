@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import io
 import json
-from pathlib import Path
 import tarfile
+from pathlib import Path
 
 import pytest
 
@@ -17,7 +17,6 @@ from radjax_tome.tome.payload_sharding_v4 import (
     pack_sharded_tome_v4,
     write_sharded_tome_v4,
 )
-
 from tests.test_m7d_v4_selected_payload_writer import _record
 
 
@@ -53,9 +52,10 @@ def test_archive_transport_declaration_mismatch_is_rejected(tmp_path: Path) -> N
     archive = pack_sharded_tome_v4(root, tmp_path / "tome.tgz")
     mismatched = tmp_path / "mismatched.tgz"
 
-    with tarfile.open(archive, "r:gz") as source, tarfile.open(
-        mismatched, "w:gz", format=tarfile.USTAR_FORMAT
-    ) as destination:
+    with (
+        tarfile.open(archive, "r:gz") as source,
+        tarfile.open(mismatched, "w:gz", format=tarfile.USTAR_FORMAT) as destination,
+    ):
         for member in source:
             contents = source.extractfile(member)
             if member.name == "cover_page.json":

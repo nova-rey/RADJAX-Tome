@@ -5,10 +5,10 @@ import json
 import os
 import shutil
 import tempfile
+from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
-from collections.abc import Iterator
 from typing import Any
 
 import numpy as np
@@ -161,7 +161,7 @@ class StreamingStudentTomeReader:
     def close(self) -> None:
         self._reader.close()
 
-    def __enter__(self) -> "StreamingStudentTomeReader":
+    def __enter__(self) -> StreamingStudentTomeReader:
         return self
 
     def __exit__(self, *_: object) -> None:

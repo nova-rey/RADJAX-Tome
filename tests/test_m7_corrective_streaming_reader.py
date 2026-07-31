@@ -45,7 +45,9 @@ def test_streaming_student_reader_is_fully_verified_only_when_drained(
         assert reader.verification_state == "fully_verified"
 
 
-def test_extracted_indexed_reader_reads_only_the_addressed_record(tmp_path: Path) -> None:
+def test_extracted_indexed_reader_reads_only_the_addressed_record(
+    tmp_path: Path,
+) -> None:
     root, archive = _artifact(tmp_path)
     reader = open_indexed_student_tome(root)
     assert reader.read(shard_id=1, row=0)["selected_example_id"] == "example-2"

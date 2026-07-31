@@ -2275,6 +2275,13 @@ staging tests pass. This remains corrective implementation only; complete
 resume wiring, full adversarial/memory coverage, and independent closure review
 are still pending.
 
+## 2026-07-31 — M7 Corrective Formatting and Import Hygiene
+
+The corrective streaming/publication surfaces were formatted and their public
+imports normalized after integration. Focused native Path-B, staging, writer,
+and streaming tests remain green; this is mechanical hygiene only and changes
+no contract, artifact, authority, or Golden behavior.
+
 ## 2026-07-31 — M7 Corrective Configuration Boundary
 
 `payload_records_per_shard` is now an explicit execution-only control with a

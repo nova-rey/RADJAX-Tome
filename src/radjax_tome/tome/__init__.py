@@ -39,15 +39,15 @@ from radjax_tome.tome.cover_page import (
 )
 from radjax_tome.tome.packaging import (
     FULL_DEBUG_PROVENANCE,
-    IndexedStudentTomeReader,
     STUDENT,
-    StudentTomeReader,
+    IndexedStudentTomeReader,
     StreamingStudentTomeReader,
+    StudentTomeReader,
     TomePackageResult,
     TomePackageValidationReport,
-    open_student_tome,
     open_indexed_student_tome,
     open_streaming_student_tome,
+    open_student_tome,
     package_tome_artifact,
     validate_tome_package,
 )
