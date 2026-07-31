@@ -1,7 +1,11 @@
 # M7 Streaming Contract Publication Pin
 
-The normative M7 streaming contract is RADJAX-Contract release `0.3.1`, Git
-tag `v0.3.1`, source commit `f8ca8c0885d7c539a51d1594ba7a38c4d457b4d`. It publishes the byte-identical
+The published M7 streaming contract baseline is RADJAX-Contract release
+`0.3.1`, Git tag `v0.3.1`, source commit
+`f8ca8c0885d7c539a51d1594ba7a38c4d457b4d`. The corrective branch pins
+verification to the untagged additive `0.3.2` candidate commit
+`78ba36300f201d75b016b2fdcf5720e467310815`; no release or tag has been
+created. The published baseline remains immutable. It publishes the byte-identical
 `radjax_tome/v2` assets approved in Tome: v4 cover, manifest graph, payload and
 shard indexes, semantic identity, canonicalization recipes, compatibility
 descriptors, error vocabulary, vectors, and conformance catalog.

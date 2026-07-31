@@ -2282,6 +2282,16 @@ imports normalized after integration. Focused native Path-B, staging, writer,
 and streaming tests remain green; this is mechanical hygiene only and changes
 no contract, artifact, authority, or Golden behavior.
 
+## 2026-07-31 — M7 Corrective Status Record
+
+The historical M7 closure document has been corrected: its `f0b1e2e` closure
+claim was rejected by independent review, the preserved v0.3.1 publication is
+distinguished from the untagged v0.3.2 Contract candidate, and no official
+milestone closure is claimed. The Hydra ownership ledger now records the
+terminal native v4 publication stage. This documentation/ledger checkpoint
+does not change published v0.3.1 assets, Student, Golden fixtures, authority
+contracts, or production semantics.
+
 ## 2026-07-31 — M7 Corrective Configuration Boundary
 
 `payload_records_per_shard` is now an explicit execution-only control with a

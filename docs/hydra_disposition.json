@@ -2031,6 +2031,14 @@
       "replacement_or_target_boundary": "Canonical production stage owner.",
       "status": "supporting"
     },
+    "src/radjax_tome/builder/production_stages/v4_publication.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M7",
+      "rationale": "Terminal native Path-B publisher for the canonical sharded v4 consumer artifact.",
+      "replacement_or_target_boundary": "Canonical M7 publication stage after retained Path-B proof.",
+      "status": "canonical"
+    },
     "src/radjax_tome/builder/production_stages/verification.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
