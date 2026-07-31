@@ -1907,3 +1907,11 @@ is an offline checksum-enforced mirror. The closure report records exact
 version, tag, commit, checksum, downstream verification commands, proven
 transport/identity behavior, and intentional deferrals. No Student work,
 inference, accelerator work, Golden fixture regeneration, or merge occurred.
+
+## 2026-07-31 — M6 Publication-Pin Dependency Clarification
+
+The M6 publication pin is documented as a pin of Tome's pre-existing
+RADJAX-Contract dependency from `main` to `v0.2.0`, not as a new
+development-only dependency. Existing production modules retain their
+established Contract API imports; M6 introduces no production import of the
+v3 publication resource API, whose assets serve verification and conformance.
