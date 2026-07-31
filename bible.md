@@ -2292,6 +2292,18 @@ terminal native v4 publication stage. This documentation/ledger checkpoint
 does not change published v0.3.1 assets, Student, Golden fixtures, authority
 contracts, or production semantics.
 
+## 2026-07-31 — M7 Corrective Bounded-Memory Evidence
+
+The direct archive reader is now guarded by a local tracemalloc test with
+fixed maximum record size and 8-versus-64-record synthetic payloads. Warmed
+measurements were 1,119,345 bytes for 531,792 logical JSONL bytes and
+1,148,017 bytes for 4,254,552 logical JSONL bytes; the enforced envelope is
+under 1,250,000 bytes, non-scaling by record count, and under half the large
+payload. A tracked tar source proves first yield before 80 percent of archive
+input, rejects unbounded reads, and proves early close consumes no remainder
+or false full-verification state. These are synthetic local correctness tests;
+they make no performance or accelerator claim.
+
 ## 2026-07-31 — M7 Corrective Configuration Boundary
 
 `payload_records_per_shard` is now an explicit execution-only control with a
