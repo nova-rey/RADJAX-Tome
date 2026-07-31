@@ -1888,3 +1888,13 @@ intentional validator difference: native bundle validation enforces producer
 canonical transport metadata, while portable consumer validation reports a
 safe noncanonical container and rejects it only in strict mode. Unsafe or
 integrity-invalid transport remains fail-closed in both paths.
+
+## 2026-07-31 — M6E Contract 0.2.0 Publication Pin
+
+The approved portable asset tree and corpus are published byte-identically in
+RADJAX-Contract `0.2.0` at tag `v0.2.0` and commit
+`147ca371c78a98dbc82de1ea93deb4f3ae27f399`. Tome pins verification to that
+release and retains its tree only as a checksum-enforced offline mirror. Tests
+compare the mirror to Contract source when available; release verification also
+proved the installed wheel assets identical. Production writers and CLI remain
+independent of Contract runtime imports.
