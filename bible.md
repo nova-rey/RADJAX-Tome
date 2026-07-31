@@ -1898,3 +1898,12 @@ release and retains its tree only as a checksum-enforced offline mirror. Tests
 compare the mirror to Contract source when available; release verification also
 proved the installed wheel assets identical. Production writers and CLI remain
 independent of Contract runtime imports.
+
+## 2026-07-31 — M6F Contract Publication Closure
+
+M6 closes the Tome-local publication and conformance milestone. Contract 0.2.0
+is the released authority for the static v3 assets; Tome's identical asset tree
+is an offline checksum-enforced mirror. The closure report records exact
+version, tag, commit, checksum, downstream verification commands, proven
+transport/identity behavior, and intentional deferrals. No Student work,
+inference, accelerator work, Golden fixture regeneration, or merge occurred.

@@ -1786,6 +1786,54 @@
       "rationale": "Native Path B product spine.",
       "replacement_or_target_boundary": "M6 pipeline stage boundary.",
       "status": "canonical"
+    },
+    "docs/M5_CLOSURE_REPORT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M5",
+      "rationale": "Canonical Tome-contract closure evidence and preserved invariants.",
+      "replacement_or_target_boundary": "M5 closure report.",
+      "status": "supporting"
+    },
+    "docs/M6D_CONFORMANCE_EVIDENCE.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M6",
+      "rationale": "Native and portable conformance parity and intentional transport difference.",
+      "replacement_or_target_boundary": "M6 portable contract evidence.",
+      "status": "supporting"
+    },
+    "docs/M6_CONTRACT_PUBLICATION_PIN.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M6",
+      "rationale": "Pins the released Contract authority and Tome offline mirror behavior.",
+      "replacement_or_target_boundary": "M6 Contract publication pin.",
+      "status": "canonical"
+    },
+    "docs/M6_CLOSURE_REPORT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M6",
+      "rationale": "Published-contract closure evidence, pin, and downstream handoff.",
+      "replacement_or_target_boundary": "M6 completion report.",
+      "status": "canonical"
+    },
+    "docs/M6_PUBLICATION_INVENTORY.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M6",
+      "rationale": "Portable-contract ownership, public boundary, and drift inventory.",
+      "replacement_or_target_boundary": "M6 publication ownership ledger.",
+      "status": "supporting"
+    },
+    "docs/M6_TOME_CONTRACT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M6",
+      "rationale": "Downstream implementation-neutral portable Tome contract guide.",
+      "replacement_or_target_boundary": "M6 downstream handoff contract.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"
