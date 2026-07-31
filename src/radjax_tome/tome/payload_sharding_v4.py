@@ -174,13 +174,23 @@ def pack_sharded_tome_v4(
                 ):
                     relative = source.relative_to(root).as_posix()
                     info = tarfile.TarInfo(relative)
-                    info.size = source.stat().st_size
+                    cover = (
+                        _archive_cover_bytes(source, compression=compression)
+                        if relative == "cover_page.json"
+                        else None
+                    )
+                    info.size = len(cover) if cover is not None else source.stat().st_size
                     info.mtime = 0
                     info.uid = info.gid = 0
                     info.uname = info.gname = ""
                     info.mode = 0o644
-                    with source.open("rb") as handle:
-                        archive.addfile(info, handle)
+                    if cover is not None:
+                        import io
+
+                        archive.addfile(info, io.BytesIO(cover))
+                    else:
+                        with source.open("rb") as handle:
+                            archive.addfile(info, handle)
         finally:
             if compression == "gz":
                 stream.close()
@@ -272,6 +282,7 @@ def _write_directory(
     index_handle = index_path.open("wb")
     try:
         for record in records:
+            _validate_semantic_record_for_write(record)
             _assert_finite(record)
             encoded = _canonical_bytes(record)
             semantic_digest = _digest_bytes(encoded)
@@ -407,6 +418,39 @@ def _write_directory(
     return ShardedTomeV4Result(
         root, identity["semantic_digest"], selected_count, shard_count
     )
+
+
+def _validate_semantic_record_for_write(record: Any) -> None:
+    """Reject a malformed semantic payload while it is still staging-only.
+
+    Full package validation remains Contract-owned at final publication.  This
+    local boundary only prevents an obviously incomplete record from becoming
+    a successfully returned artifact before that authoritative validation can
+    run.
+    """
+    if not isinstance(record, dict) or not _SEMANTIC_FIELDS <= set(record):
+        raise ValueError("record is missing a required semantic field")
+    allowed = _SEMANTIC_FIELDS | {"opaque_extensions"}
+    if set(record) - allowed:
+        raise ValueError("record contains an undeclared semantic field")
+
+
+def _archive_cover_bytes(source: Path, *, compression: str) -> bytes:
+    """Return the transport-specific cover without changing the directory.
+
+    The cover is deliberately excluded from the inventory graph, so replacing
+    only this transport declaration does not alter package-member integrity or
+    logical identity.  ``none`` is the deterministic ``rtome`` transport.
+    """
+    cover = read_json_object(source)
+    package = cover.get("package")
+    if not isinstance(package, dict):
+        raise ValueError("v4 cover package section is invalid")
+    package = dict(package)
+    package["transport"] = "tgz" if compression == "gz" else "rtome"
+    cover = dict(cover)
+    cover["package"] = package
+    return _canonical_bytes(cover)
 
 
 def _legacy_selected_records(source: Path) -> Iterable[dict[str, Any]]:

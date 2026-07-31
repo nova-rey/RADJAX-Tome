@@ -2232,6 +2232,17 @@ not a closure claim; production integration, transactional resume, direct
 streaming, indexed access, adversarial coverage, and bounded-memory proof are
 still pending independent review.
 
+## 2026-07-31 — M7 Corrective Writer Publication Boundary
+
+The v4 writer now rejects a record missing any declared required semantic field
+while it is still in its private staging directory, before a successful return
+can expose an invalid package. Deterministic archive emission now synthesizes
+the cover's physical transport declaration (`tgz` or `rtome`) without changing
+the unpacked directory cover, inventory, raw member digests, or layout-
+independent semantic identity. The intentionally malformed archive regression
+remains pending the Contract-side transport mismatch enforcement; no closure
+or native Path-B integration claim is made here.
+
 ## 2026-07-31 — M7 Corrective Configuration Boundary
 
 `payload_records_per_shard` is now an explicit execution-only control with a
