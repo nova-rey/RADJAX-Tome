@@ -1975,3 +1975,18 @@ production, configuration, publication-pin, and disposition coverage passed
 `106 passed`; Ruff, formatting, JSON, and diff checks passed.  No public symbol
 was removed and no v3, M4/M5, authority, Golden, Contract, Student, or
 accelerator behavior changed.
+
+## 2026-07-31 — M6F Production Boundary Closure
+
+The roadmap's original production-boundary M6 is complete. Public production
+facades, typed M4 handoffs, package descriptor/validation boundaries, and
+compatibility export registries now state and enforce ownership without
+changing the M4 state machine or M5/v3 semantics. The cache-free closure suite
+passed `876 passed, 23 skipped in 89.32s`; immutable Golden validation passed
+with count `256` and semantic root
+`sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba`.
+Compile, Ruff, formatting, JSON, and diff checks passed. The v3 Contract
+`v0.2.0` pin/offline mirror, authority v1/v2, fixed 25-field projection,
+historical formats, public CLI, artifact contracts, and all intentional M7+
+deferrals remain unchanged. No Contract/Student work, accelerator inference,
+or fixture regeneration occurred; the unrelated `.DS_Store` remains untouched.

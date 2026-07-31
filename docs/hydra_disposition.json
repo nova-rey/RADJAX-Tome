@@ -1863,6 +1863,14 @@
       "replacement_or_target_boundary": "M6 production boundary closure evidence.",
       "status": "canonical"
     },
+    "docs/M6_PRODUCTION_BOUNDARY_CLOSURE.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M6",
+      "rationale": "Production-boundary closure claims, evidence, and deferrals.",
+      "replacement_or_target_boundary": "M6 production boundary closure report.",
+      "status": "canonical"
+    },
     "docs/M5_CLOSURE_REPORT.md": {
       "archive_or_removal_condition": null,
       "kind": "top-level-doc",
