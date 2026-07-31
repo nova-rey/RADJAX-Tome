@@ -46,7 +46,7 @@ def test_m7b_contract_declares_the_acyclic_streaming_manifest_graph() -> None:
     assert contract["manifest_graph"] == "cover_to_header_to_inventory_acyclic"
 
 
-def test_m7b_portable_validator_is_standard_library_only() -> None:
+def test_m7b_portable_validator_is_a_contract_owned_forwarder() -> None:
     tree = ast.parse(VALIDATOR.read_text())
     imports = {
         alias.name.split(".")[0]
@@ -60,4 +60,4 @@ def test_m7b_portable_validator_is_standard_library_only() -> None:
         if isinstance(node, ast.ImportFrom) and node.module is not None
     )
     assert "radjax_tome" not in imports
-    assert "radjax_contract" not in imports
+    assert "radjax_contract" in imports

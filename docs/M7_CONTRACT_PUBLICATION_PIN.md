@@ -1,14 +1,15 @@
 # M7 Streaming Contract Publication Pin
 
-The normative M7 streaming contract is RADJAX-Contract release `0.3.0`, Git
-tag `v0.3.0`, source commit `1b8c6f79bdfa32464a55aa93c8b3626aaa1a0047`. It publishes the byte-identical
+The normative M7 streaming contract is RADJAX-Contract release `0.3.1`, Git
+tag `v0.3.1`, source commit `f8ca8c0885d7c539a51d1594ba7a38c4d457b4d`. It publishes the byte-identical
 `radjax_tome/v2` assets approved in Tome: v4 cover, manifest graph, payload and
 shard indexes, semantic identity, canonicalization recipes, compatibility
 descriptors, error vocabulary, vectors, and conformance catalog.
 
-Tome pins its established Contract dependency to `v0.3.0`. M7 introduces no
+Tome pins its established Contract dependency to `v0.3.1`. M7 introduces no
 production writer or CLI import of the new publication-resource API; it is used
-only for contract verification and conformance. The checked-in
+only for contract verification and conformance. The shared portable validator
+is Contract-owned; Tome's tool is a forwarding compatibility command. The checked-in
 `contracts/radjax_tome/v2` tree is an offline-capable verified mirror, not an
 independently editable authority. Tests fail if it differs from Contract source
 or installed package resources.

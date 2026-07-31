@@ -19,8 +19,8 @@ def _entries(root: Path) -> dict[str, str]:
 
 def test_m7e_v2_mirror_is_checksum_pinned_to_contract_release() -> None:
     text = PIN_DOCUMENT.read_text(encoding="utf-8")
-    assert "v0.3.0" in text
-    assert "1b8c6f7" in text
+    assert "v0.3.1" in text
+    assert "f8ca8c0" in text
     expected = {}
     for line in (MIRROR / "SHA256SUMS").read_text(encoding="utf-8").splitlines():
         digest, relative = line.split("  ", maxsplit=1)

@@ -6,8 +6,8 @@ the fixed 25-field selection projection, or immutable Golden fixtures.
 
 ## Released shared contract
 
-- RADJAX-Contract: `0.3.0`, tag `v0.3.0`, commit
-  `1b8c6f79bdfa32464a55aa93c8b3626aaa1a0047`.
+- RADJAX-Contract: `0.3.1`, tag `v0.3.1`, commit
+  `f8ca8c0885d7c539a51d1594ba7a38c4d457b4d`.
 - Tome branch: `m7-payload-sharding-streaming`, closure commit `a859a0c`.
 - Tome's `contracts/radjax_tome/v2` is a checked-in offline mirror verified
   byte-for-byte against Contract source and installed wheel assets.

@@ -2185,14 +2185,21 @@ Student, or authority semantics changed.
 
 ## 2026-07-31 — M7E Streaming Contract Publication Pin
 
-RADJAX-Contract `0.3.0`, tag `v0.3.0`, commit
-`1b8c6f79bdfa32464a55aa93c8b3626aaa1a0047` is now the normative owner of the
+RADJAX-Contract `0.3.1`, tag `v0.3.1`, commit
+`f8ca8c0885d7c539a51d1594ba7a38c4d457b4d` is now the normative owner of the
 M7 v4 streaming contract. Tome pins its established Contract dependency to
 that release and retains `contracts/radjax_tome/v2` as a checksum-enforced,
 offline verified mirror. Source, installed-wheel, and mirror asset parity are
 tested byte-for-byte. M7 introduces no production writer or CLI import of the
 new Contract-resource API; Contract remains a verification/conformance boundary.
 The M6 v1 mirror and v0.2.0 historical evidence remain unchanged.
+
+## 2026-07-31 — M7F Portable Validator Ownership Correction
+
+The reusable M7 portable validator is now Contract-owned at `v0.3.1`; Tome's
+tool is a thin compatibility command. This removes the last producer-only
+implementation of consumer-visible validation while preserving no new runtime
+dependency for Tome production writers or CLI routes.
 
 ## 2026-07-31 — M7F Closure Inventory Correction
 
