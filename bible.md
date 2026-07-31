@@ -2243,6 +2243,21 @@ independent semantic identity. The intentionally malformed archive regression
 remains pending the Contract-side transport mismatch enforcement; no closure
 or native Path-B integration claim is made here.
 
+## 2026-07-31 — M7 Corrective Portable Streaming Boundary
+
+Tome now pins its verification and conformance boundary to the untagged,
+additive RADJAX-Contract `0.3.2` candidate commit
+`78ba36300f201d75b016b2fdcf5720e467310815`; no published tag was changed.
+The checked-in v2 mirror was updated byte-for-byte for the expanded portable
+error vocabulary. The Tome-facing Student adapter delegates direct archive
+iteration, verification state, and strict/permissive canonicality to the
+Contract-owned reader. It reports `fully_verified` only after exhaustion and
+`closed_early` after intentional partial consumption. An extracted-directory
+adapter delegates indexed `(shard_id, row)` reads to Contract and rejects
+archive random access. Focused writer, mismatch, streaming, and indexed-reader
+tests pass. Native Path-B publication, resume staging, the full adversarial
+matrix, and bounded-memory closure evidence remain pending.
+
 ## 2026-07-31 — M7 Corrective Configuration Boundary
 
 `payload_records_per_shard` is now an explicit execution-only control with a
