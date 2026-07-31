@@ -1846,3 +1846,15 @@ canonical Path-B early/late corridor order, and M4D proof unchanged. No GPU
 inference, fixture regeneration, main merge, M6 work, performance work, or
 corpus/model/runtime expansion occurred. The unrelated pre-existing
 `.DS_Store` remains untracked and untouched.
+
+## 2026-07-31 — M6A Publication Inventory and Ownership
+
+M6 begins with a checked ownership ledger for the M5 v3 cover, semantic
+identity, content manifest, profiles, transport, historical descriptors, and
+protected M4/M5 authority and Golden boundaries. It separates deterministic
+producer transport requirements from consumer safety and consumer canonicality
+reporting, and records that the independent portable validator will be created
+once in M6B and reused for M6D parity. The existing v2-first cover-page guide
+is recorded as documentation drift to correct in M6B. No writer, CLI, Path-B,
+authority, Golden fixture, or external repository changed; the unrelated
+`.DS_Store` remains untouched.
