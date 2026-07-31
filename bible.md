@@ -1990,3 +1990,19 @@ Compile, Ruff, formatting, JSON, and diff checks passed. The v3 Contract
 historical formats, public CLI, artifact contracts, and all intentional M7+
 deferrals remain unchanged. No Contract/Student work, accelerator inference,
 or fixture regeneration occurred; the unrelated `.DS_Store` remains untouched.
+
+## 2026-07-31 — M6 Corrective Stage and Delivery Ownership
+
+Independent review established that the earlier M6F claim was premature. This
+corrective checkpoint moves substantive preflight, score-pass, authority,
+selection, delivery, assembly, verification, and terminal-report operations
+into focused `builder.production_stages` modules; `builder.production` remains
+the public compatibility, configuration, and sole-Path-B routing façade.
+Selected-delivery behavior is physically partitioned into rerun, staging,
+payload, assembly, validation, parity, and reporting owners, while
+`builder.exemplar_delivery` is a narrow import-compatible façade. The M4
+native orchestrator remains the only state machine; no artifact semantics,
+authority recipe, Golden fixture, Contract, Student, or accelerator work
+changed. Focused native/production and selected-delivery characterization is
+recorded with this correction; broader dependency and closure evidence remains
+open until the validation-boundary and graph-policy checkpoints complete.

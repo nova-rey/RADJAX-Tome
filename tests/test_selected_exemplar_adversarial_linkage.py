@@ -13,6 +13,7 @@ import radjax_tome.builder.exemplar_delivery as exemplar_delivery
 from radjax_tome.audit import audit_selected_linkage
 from radjax_tome.backends import TeacherBackendConfig
 from radjax_tome.builder import ProductionBuildConfig, build_production_gpu_tome
+from radjax_tome.builder.delivery import staging as delivery_staging
 from radjax_tome.builder.exemplar_delivery import ExemplarDeliveryConfig
 from radjax_tome.builder.teacher_textbook import TinyTextExample
 from radjax_tome.corpora import CorpusBuildConfig, build_corpus_artifact
@@ -233,7 +234,7 @@ def test_path_b_rerun_mapping_preserves_duplicate_records_for_one_example(
             return None
 
     monkeypatch.setattr(
-        exemplar_delivery,
+        delivery_staging,
         "create_backend",
         lambda _config: DuplicateRecordBackend(),
     )

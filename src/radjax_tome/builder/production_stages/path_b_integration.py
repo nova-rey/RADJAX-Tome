@@ -132,6 +132,20 @@ def run_post_score_path_b(
     terminal_report = callbacks.terminal_report()
     if slice_five.final_result is not None and terminal_report is not None:
         return terminal_report
-    return callbacks.stage_failure(
-        slice_five.validation.failure if slice_five.validation is not None else None
+    # Preserve the terminal stage's concrete failure.  Reporting, reconciliation,
+    # and validation are all typed independently; collapsing a later failure onto
+    # validation hid the real remediation behind a generic adapter error.
+    failure = (
+        slice_five.final_result.failure
+        if slice_five.final_result is not None
+        else (
+            slice_five.reconciliation.failure
+            if slice_five.reconciliation is not None
+            else (
+                slice_five.validation.failure
+                if slice_five.validation is not None
+                else None
+            )
+        )
     )
+    return callbacks.stage_failure(failure)

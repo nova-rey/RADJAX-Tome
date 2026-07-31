@@ -17,6 +17,8 @@ from radjax_tome.builder import (
     compare_exemplar_delivery_artifacts,
     validate_teacher_textbook,
 )
+from radjax_tome.builder.delivery import parity as delivery_parity
+from radjax_tome.builder.delivery import staging as delivery_staging
 from radjax_tome.corpora import CorpusBuildConfig, build_corpus_artifact
 from radjax_tome.io.json import write_json
 from radjax_tome.provenance import inspect_teacher_model, write_teacher_model_provenance
@@ -170,7 +172,7 @@ def test_delivery_parity_selection_identity_is_opt_in(
             "corridor_assignment_storage_kind": "packed_numpy_v1",
         }
 
-    monkeypatch.setattr(exemplar_delivery, "_artifact_selection", artifact_selection)
+    monkeypatch.setattr(delivery_parity, "_artifact_selection", artifact_selection)
 
     structural = compare_exemplar_delivery_artifacts(Path("a"), Path("b"))
     controlled = compare_exemplar_delivery_artifacts(
@@ -193,7 +195,7 @@ def test_delivery_parity_reports_quantization_aware_entropy_metrics(
         score = 4.0 if path.name == "a" else 4.00390625
         return _parity_artifact_selection(score)
 
-    monkeypatch.setattr(exemplar_delivery, "_artifact_selection", artifact_selection)
+    monkeypatch.setattr(delivery_parity, "_artifact_selection", artifact_selection)
 
     report = compare_exemplar_delivery_artifacts(
         Path("a"), Path("b"), require_selection_match=True
@@ -259,7 +261,7 @@ def test_delivery_parity_rejects_entropy_beyond_quantization_tolerance(
     def artifact_selection(path: Path) -> dict[str, object]:
         return _parity_artifact_selection(4.0 if path.name == "a" else right_score)
 
-    monkeypatch.setattr(exemplar_delivery, "_artifact_selection", artifact_selection)
+    monkeypatch.setattr(delivery_parity, "_artifact_selection", artifact_selection)
 
     report = compare_exemplar_delivery_artifacts(
         Path("a"), Path("b"), require_selection_match=True
@@ -289,7 +291,7 @@ def test_delivery_parity_keeps_same_example_positions_distinct(
         item["top_token_ids"] = [7, 8]
         return item
 
-    monkeypatch.setattr(exemplar_delivery, "_artifact_selection", artifact_selection)
+    monkeypatch.setattr(delivery_parity, "_artifact_selection", artifact_selection)
 
     report = compare_exemplar_delivery_artifacts(
         Path("a"), Path("b"), require_selection_match=True
@@ -703,7 +705,7 @@ def test_path_a_materializes_payloads_from_capture_without_backend_rerun(
     def fail_create_backend(_backend_config):
         raise AssertionError("Path A must not rerun the backend")
 
-    monkeypatch.setattr(exemplar_delivery, "create_backend", fail_create_backend)
+    monkeypatch.setattr(delivery_staging, "create_backend", fail_create_backend)
     config = _config(
         tmp_path,
         output_name="path_a_no_rerun",
@@ -1100,7 +1102,7 @@ def test_path_b_selected_rerun_invokes_backend_only_for_selected_examples(
             return None
 
     monkeypatch.setattr(
-        exemplar_delivery,
+        delivery_staging,
         "create_backend",
         lambda backend_config: MarkerBackend(backend_config),
     )
@@ -1134,7 +1136,7 @@ def test_path_b_rerun_mismatch_reports_score_pass_coordinate_diagnostic(
             return None
 
     monkeypatch.setattr(
-        exemplar_delivery,
+        delivery_staging,
         "create_backend",
         lambda backend_config: DivergentBackend(backend_config),
     )
@@ -1190,7 +1192,7 @@ def test_selected_payload_values_come_from_backend_emission(
             return SimpleNamespace(payload=payload)
 
     monkeypatch.setattr(
-        exemplar_delivery,
+        delivery_staging,
         "create_backend",
         lambda backend_config: MarkerBackend(backend_config),
     )

@@ -5,7 +5,6 @@ import json
 import os
 import platform
 import resource
-import shutil
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -15,11 +14,6 @@ from typing import TYPE_CHECKING, Any
 
 from radjax_tome.audit import audit_selected_linkage, write_selected_linkage_audit
 from radjax_tome.backends import TeacherBackendConfig
-from radjax_tome.builder.authority_hashes import (
-    AUTHORITY_HASH_V2,
-    AUTHORITY_MANIFEST_SCHEMA_V2,
-    authority_hashes_for_artifact,
-)
 from radjax_tome.builder.backend_textbook import (
     BackendTeacherTextbookBuildConfig,
     build_streaming_backend_teacher_textbook,
@@ -27,13 +21,6 @@ from radjax_tome.builder.backend_textbook import (
 from radjax_tome.builder.c6_integration import (
     C6_SELECTION_INTEGRATION_POLICY,
     GLOBAL_ONLY_SELECTION_POLICY,
-    build_corridor_coverage_report,
-    c5_records_for_delivery,
-    export_corridor_candidate_features,
-    export_production_global_board_supply,
-    export_production_source_passports,
-    load_curriculum_route_records,
-    validate_integrated_selection_contract,
     write_corridor_coverage_report,
 )
 from radjax_tome.builder.corridor_artifacts import build_corridor_artifacts
@@ -43,13 +30,9 @@ from radjax_tome.builder.exemplar_delivery import (
     ExemplarDeliveryConfig,
     SelectedExemplarDeliveryError,
     SelectedRerunCudaOOMError,
-    assemble_selected_delivery_artifacts,
-    finalize_selected_delivery_corridor,
     materialize_selected_exemplar_delivery,
-    run_selected_delivery_rerun,
     selected_delivery_staging_diagnostic,
 )
-from radjax_tome.builder.exemplar_selection import build_exemplar_selection_manifest
 from radjax_tome.builder.long_tail import (
     DEFAULT_LONG_TAIL_WARNING_K,
     DEFAULT_PERVERSE_TAIL_WARNING_K,
@@ -62,36 +45,9 @@ from radjax_tome.builder.teacher_textbook import (
 )
 from radjax_tome.corpora import (
     corpus_provenance_from_manifest,
-    validate_corpus_artifact,
-)
-from radjax_tome.fingerprint.corridor_budget import (
-    CorridorBudgetPolicy,
-    allocate_corridor_coverage,
-    inspect_corridor_coverage_plan,
-    write_corridor_coverage_plan,
-)
-from radjax_tome.fingerprint.corridor_claims import (
-    CorridorGlobalClaimPolicy,
-    claim_corridor_then_backfill_global,
-    load_global_board_input,
-    write_corridor_global_claim_result,
-)
-from radjax_tome.fingerprint.corridor_leaderboards import (
-    CorridorLeaderboardPolicy,
-    build_corridor_candidate_leaderboards,
-    inspect_corridor_candidate_leaderboards,
-    load_candidate_records_jsonl,
-    write_corridor_candidate_leaderboards,
-)
-from radjax_tome.fingerprint.multi_role_selection import (
-    build_multi_role_selected_exemplars,
-    load_source_passports_for_coordinates,
-    write_multi_role_selection_artifact,
 )
 from radjax_tome.io.json import read_json_object, write_json
-from radjax_tome.provenance import validate_teacher_model_provenance
 from radjax_tome.reports import (
-    GPURunPlanConfig,
     TomeParityConfig,
     build_gpu_run_plan,
     build_runtime_doctor_report,
@@ -618,299 +574,52 @@ def _new_production_run_state(config: ProductionBuildConfig) -> _ProductionRunSt
     )
 
 
-def _run_existing_preflight(
-    state: _ProductionRunState,
-) -> Any:
-    config = state.config
-    created_at = state.created_at
-    production_started = state.production_started
-    report_path = state.report_path
-    run_plan_path = state.run_plan_path
-    parity_report_path = state.parity_report_path
-    progress = state.progress
-    blockers = state.blockers
-    warnings = state.warnings
-    already_complete = state.already_complete
-    _validate_required_inputs(config, blockers)
-    progress.memory_checkpoint("preflight_complete")
-    if blockers:
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report={},
-            run_plan_path=run_plan_path,
-            run_plan={},
-            effective_batch_size=None,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        _record_terminal_report(state, report)
-        return _terminal_stage_failure(state, "preflight")
-
-    c6_resume_requested = (
-        config.resume
-        and config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
-        and config.target_policy == "corridor_exemplar_v1"
-        and config.exemplar_selection_enabled
-        and config.exemplar_delivery_path == "two_pass_rerun_selected"
+def _run_existing_preflight(state: _ProductionRunState) -> Any:
+    """Compatibility façade into the owned preflight stage."""
+    from radjax_tome.builder.production_stages.preflight import (
+        PreflightOperations,
+        run_preflight,
     )
-    compatibility_migration = CompatibilityMigrationResult(False)
-    if c6_resume_requested:
-        progress.stage("compatibility_migration")
-        compatibility_migration = migrate_c6_3_5_1_metadata(config)
-        if compatibility_migration.applicable and not compatibility_migration.applied:
-            blockers.append(
-                "C6.3.5.1 metadata compatibility migration failed: "
-                + "; ".join(compatibility_migration.reasons)
-            )
-            report = _production_report(
-                config,
-                created_at=created_at,
-                completed_at=_now(),
-                status="fail",
-                blockers=blockers,
-                warnings=warnings,
-                doctor_report={},
-                run_plan_path=run_plan_path,
-                run_plan={"status": "not_run"},
-                effective_batch_size=None,
-                already_complete=already_complete,
-                parity_report_path=parity_report_path,
-                parity_status="not_run",
-            )
-            report["compatibility_migration"] = compatibility_migration.to_dict()
-            _record_terminal_report(state, report)
-            return _terminal_stage_failure(state, "preflight")
-        from radjax_tome.builder.native_path_b.api import (
-            resolve_canonical_path_b_config,
-        )
-        from radjax_tome.builder.native_path_b.resume import (
-            resolve_native_path_b_resume,
-        )
 
-        canonical_config = resolve_canonical_path_b_config(config)
-        state.native_resume_resolution = resolve_native_path_b_resume(
-            config.output_dir,
-            config=canonical_config,
-            run_manifest_path=config.run_manifest_path,
-        )
-        if state.native_resume_resolution.complete:
-            existing_report = read_json_object(report_path)
-            _record_terminal_report(state, existing_report)
-            return _terminal_stage_failure(state, "preflight")
-    finalization_probe = probe_c6_finalization_only_resume(config)
-    output_has_artifact = _has_existing_artifact(config)
-    if output_has_artifact and not (config.resume or config.overwrite):
-        blockers.append("output exists; use --resume or --overwrite")
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report={},
-            run_plan_path=run_plan_path,
-            run_plan={},
-            effective_batch_size=None,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        _record_terminal_report(state, report)
-        return _terminal_stage_failure(state, "preflight")
-    if (
-        already_complete
-        and not _c6_finalization_pending(config)
-        and not c6_resume_requested
-    ):
-        validation = validate_teacher_textbook(config.output_dir)
-        if validation.status == "pass":
-            report = _production_report(
-                config,
-                created_at=created_at,
-                completed_at=_now(),
-                status="pass",
-                blockers=[],
-                warnings=[],
-                doctor_report={},
-                run_plan_path=run_plan_path,
-                run_plan={"status": "not_run"},
-                effective_batch_size=None,
-                already_complete=True,
-                parity_report_path=parity_report_path,
-                parity_status="not_run",
-                validation_status="pass",
-                build_status="already_complete",
-            )
-            _record_terminal_report(state, report)
-            return _terminal_stage_failure(state, "preflight")
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=list(validation.blockers),
-            warnings=list(validation.warnings),
-            doctor_report={},
-            run_plan_path=run_plan_path,
-            run_plan={"status": "not_run"},
-            effective_batch_size=None,
-            already_complete=True,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-            validation_status=validation.status,
-            build_status="already_complete_invalid",
-        )
-        _record_terminal_report(state, report)
-        return _terminal_stage_failure(state, "preflight")
-    if finalization_probe.eligible and (
-        not c6_resume_requested
-        or state.native_resume_resolution is None
-        or state.native_resume_resolution.stage
-        in {"validation_linkage", "reconciliation_cover", "final_reporting"}
-    ):
-        state.terminal_report = _resume_c6_finalization(
-            config,
-            created_at=created_at,
-            production_started=production_started,
-            report_path=report_path,
-            parity_report_path=parity_report_path,
-            progress=progress,
-        )
-        return _terminal_stage_failure(state, "preflight")
-    if output_has_artifact and config.overwrite:
-        shutil.rmtree(config.output_dir)
-
-    backend_config = _backend_config(config)
-    doctor_report = build_runtime_doctor_report(backend_config)
-    plan = build_gpu_run_plan(
-        GPURunPlanConfig(
-            backend_config=backend_config,
-            dataset_path=config.dataset_path,
-            corpus_manifest_path=config.corpus_manifest_path,
-            teacher_model_provenance_path=config.teacher_model_provenance_path,
-            max_examples=config.max_examples,
-            strict_provenance=config.strict_provenance,
-            max_artifact_bytes=config.max_artifact_bytes,
-            fail_on_warnings=config.fail_on_plan_warnings,
-            selection_integration_policy=config.selection_integration_policy,
-            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
-            fingerprint_corridor_budget_fraction=(
-                config.fingerprint_corridor_budget_fraction
-            ),
-            fingerprint_corridor_budget_max=config.fingerprint_corridor_budget_max,
-            fingerprint_corridor_mode_cap=config.fingerprint_corridor_mode_cap,
-            fingerprint_corridor_candidate_pool_cap=(
-                config.fingerprint_corridor_candidate_pool_cap
-            ),
-            require_full_selected_budget=config.require_full_selected_budget,
-        )
-    )
-    write_gpu_run_plan(plan, run_plan_path)
-    warnings.extend(str(item) for item in plan.get("warnings", ()))
-    run_plan_status = str(plan.get("status"))
-    if run_plan_status == "fail":
-        blockers.extend(str(item) for item in plan.get("blockers", ()))
-    if run_plan_status == "warn" and config.no_build_if_plan_warn:
-        blockers.append("run plan status is warn and no_build_if_plan_warn is enabled")
-    effective_batch_size = _effective_batch_size(plan)
-    if effective_batch_size is None:
-        blockers.append("run plan did not select an effective batch size")
-    if blockers:
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report=doctor_report,
-            run_plan_path=run_plan_path,
-            run_plan=plan,
-            effective_batch_size=effective_batch_size,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        _record_terminal_report(state, report)
-        return _terminal_stage_failure(state, "preflight")
-
-    state.doctor_report = doctor_report
-    state.plan = plan
-    state.effective_batch_size = effective_batch_size
-    state.preflight_wall_seconds = _elapsed(state.preflight_started)
-    return _existing_stage_success(
+    return run_preflight(
         state,
-        "preflight",
-        paths=(run_plan_path,),
-    )
-
-
-def _run_existing_score_pass(
-    state: _ProductionRunState,
-) -> Any:
-    config = state.config
-    created_at = state.created_at
-    run_plan_path = state.run_plan_path
-    parity_report_path = state.parity_report_path
-    progress = state.progress
-    blockers = state.blockers
-    warnings = state.warnings
-    already_complete = state.already_complete
-    doctor_report = state.doctor_report or {}
-    plan = state.plan or {}
-    effective_batch_size = state.effective_batch_size
-    main_pass_started = perf_counter()
-    progress.start_score_pass(
-        examples_total=_planned_example_count(plan),
-        shard_count_total=_planned_shard_count(config, plan),
-    )
-    try:
-        build_report = build_streaming_backend_teacher_textbook(
-            _streaming_config(
-                config,
-                effective_batch_size,
-                progress_callback=progress.handle_streaming_event,
-            )
-        )
-    except Exception as exc:
-        blockers.append(str(exc))
-        report = _production_report(
-            config,
-            created_at=created_at,
-            completed_at=_now(),
-            status="fail",
-            blockers=blockers,
-            warnings=warnings,
-            doctor_report=doctor_report,
-            run_plan_path=run_plan_path,
-            run_plan=plan,
-            effective_batch_size=effective_batch_size,
-            already_complete=already_complete,
-            parity_report_path=parity_report_path,
-            parity_status="not_run",
-        )
-        _record_terminal_report(state, report)
-        return _terminal_stage_failure(state, "score_pass")
-    main_pass_wall_seconds = _elapsed(main_pass_started)
-    progress.memory_checkpoint("score_pass_complete")
-    state.build_report = build_report
-    state.main_pass_wall_seconds = main_pass_wall_seconds
-    return _existing_stage_success(
-        state,
-        "score_pass",
-        paths=(
-            config.output_dir / "run_manifest.json",
-            config.output_dir / "metadata.json",
+        operations=PreflightOperations(
+            report=_production_report,
+            record_terminal_report=_record_terminal_report,
+            terminal_stage_failure=_terminal_stage_failure,
+            stage_success=_existing_stage_success,
+            now=_now,
+            migrate_metadata=migrate_c6_3_5_1_metadata,
+            probe_finalization_resume=probe_c6_finalization_only_resume,
+            has_existing_artifact=_has_existing_artifact,
+            finalization_pending=_c6_finalization_pending,
+            resume_finalization=_resume_c6_finalization,
+            backend_config=_backend_config,
+            effective_batch_size=_effective_batch_size,
+            runtime_doctor=build_runtime_doctor_report,
+            build_plan=build_gpu_run_plan,
+            write_plan=write_gpu_run_plan,
         ),
-        prior_stage="preflight",
-        prior_paths=(run_plan_path,),
+    )
+
+
+def _run_existing_score_pass(state: _ProductionRunState) -> Any:
+    """Compatibility façade into the owned score-pass stage."""
+    from radjax_tome.builder.production_stages.score_pass import (
+        ScorePassOperations,
+        run_score_pass,
+    )
+
+    return run_score_pass(
+        state,
+        operations=ScorePassOperations(
+            report=_production_report,
+            record_terminal_report=_record_terminal_report,
+            terminal_stage_failure=_terminal_stage_failure,
+            stage_success=_existing_stage_success,
+            now=_now,
+            build_streaming=build_streaming_backend_teacher_textbook,
+        ),
     )
 
 
@@ -1093,462 +802,102 @@ def _run_native_path_b_post_score_stages(
 
 
 def _native_early_corridor_operation(state: _ProductionRunState) -> Any:
-    """Materialize the provisional corridor immediately after score pass."""
-
-    from radjax_tome.builder.native_path_b.evidence import (
-        read_score_surface_corridor_evidence,
+    from radjax_tome.builder.production_stages.assembly import (
+        native_early_corridor_operation,
     )
 
-    config = state.config
-    state.progress.stage("fingerprint_corridor_export")
-    store = TeacherTargetStore.open(config.output_dir)
-    examples = load_text_examples(
-        config.dataset_path,
-        max_examples=store.metadata.num_examples,
-    )
-    build_corridor_artifacts(
-        output_dir=config.output_dir,
-        examples=examples,
-        selected_records=[],
-        selected_payloads=[],
-        delivery_path=config.exemplar_delivery_path or "one_pass_pruned_candidate",
-        non_selected_exemplar_payload_retained=(
-            config.retain_unselected_exemplar_payloads
-        ),
-    )
-    return read_score_surface_corridor_evidence(config.output_dir)
+    return native_early_corridor_operation(state)
 
 
 def _native_fingerprint_authority_operation(state: _ProductionRunState) -> Any:
-    """Write selector/features bound to the passing provisional corridor."""
+    from radjax_tome.builder.production_stages.authorities import (
+        native_fingerprint_authority_operation,
+    )
 
-    from radjax_tome.builder.native_path_b.contracts import StageResult
-
-    config = state.config
-    state.progress.stage("selection_authority_export")
-    fingerprint = _export_c6_fingerprint_selection_authority(config)
-    paths = (
-        Path(str(fingerprint["selector_path"])),
-        Path(str(fingerprint["feature_path"])),
-        config.output_dir / "c6" / "corridor-features" / "manifest.json",
-    )
-    evidence = _native_file_evidence(
-        "fingerprint_corridor_selection_authority_export",
-        paths,
-    )
-    return StageResult(
-        status="pass",
-        value=fingerprint,
-        evidence=evidence,
-    )
+    return native_fingerprint_authority_operation(state)
 
 
 def _native_global_authority_operation(
-    state: _ProductionRunState,
-    fingerprint: Mapping[str, Path | str],
+    state: _ProductionRunState, fingerprint: Any
 ) -> Any:
-    """Write global supply/passports only after matching fingerprint authority."""
-
-    from radjax_tome.builder.native_path_b.contracts import StageResult
-
-    authorities = _export_c6_global_authority(state.config, fingerprint)
-    paths = (
-        Path(str(authorities["global_board_supply_path"])),
-        Path(str(authorities["source_passports_path"])),
-        Path(str(authorities["authority_manifest_path"])),
+    from radjax_tome.builder.production_stages.authorities import (
+        native_global_authority_operation,
     )
-    evidence = _native_file_evidence("global_authority_export", paths)
-    state.progress.memory_checkpoint("authority_export_complete")
-    return StageResult(status="pass", value=authorities, evidence=evidence)
+
+    return native_global_authority_operation(state, fingerprint)
 
 
 def _native_integrated_selection_operation(
     state: _ProductionRunState, inputs: Any
 ) -> Any:
-    """Run C2--C5 from the two explicit authority handoffs."""
+    from radjax_tome.builder.production_stages.selection import (
+        native_integrated_selection_operation,
+    )
 
-    from radjax_tome.builder.native_path_b.contracts import StageResult
-    from radjax_tome.builder.native_path_b.selection import IntegratedSelectionHandoff
-
-    state.progress.stage("corridor_global_selection")
-    context = _prepare_c6_selection(state.config, inputs.global_value)
-    root = state.config.output_dir / "c6"
-    c2 = _native_file_evidence(
-        "c2_corridor_candidate_leaderboards",
-        (root / "corridor-leaderboards" / "manifest.json",),
-        prior=inputs.fingerprint_evidence,
-    )
-    c3 = _native_file_evidence(
-        "c3_corridor_coverage_plan",
-        (root / "coverage-plan" / "coverage_plan.json",),
-        prior=c2,
-    )
-    c4 = _native_file_evidence(
-        "c4_corridor_global_claims",
-        (root / "claims" / "claim_manifest.json",),
-        prior=c3,
-    )
-    c5 = _native_file_evidence(
-        "c5_multi_role_selection",
-        (root / "multi-role-selection" / "manifest.json",),
-        prior=c4,
-    )
-    evidence = _native_file_evidence(
-        "integrated_selection",
-        (
-            root / "selection_budget_diagnostics.json",
-            root / "multi-role-selection" / "manifest.json",
-        ),
-        prior=c5,
-    )
-    state.progress.memory_checkpoint("c2_c5_selection_complete")
-    return StageResult(
-        status="pass",
-        value=IntegratedSelectionHandoff(
-            value=context,
-            stage_evidence=evidence,
-            c2_evidence=c2,
-            c3_evidence=c3,
-            c4_evidence=c4,
-            c5_evidence=c5,
-        ),
-        evidence=evidence,
-    )
+    return native_integrated_selection_operation(state, inputs)
 
 
 def _native_selected_rerun_operation(state: _ProductionRunState, inputs: Any) -> Any:
-    """Run the selected-only teacher pass without promoting public payloads."""
+    from radjax_tome.builder.production_stages.delivery import (
+        native_selected_rerun_operation,
+    )
 
-    from radjax_tome.builder.native_path_b.contracts import EvidenceCount, StageResult
-    from radjax_tome.builder.native_path_b.delivery import SelectedRerunHandoff
-
-    context = inputs.selection
-    config = _exemplar_delivery_config(
-        state.config,
-        state.effective_batch_size,
-        progress_callback=state.progress.handle_delivery_event,
-        authoritative_records=tuple(context["delivery_records"]),
-        delivery_authority_hash=str(
-            (context.get("authorities") or {}).get("score_pass_authority_hash") or ""
-        ),
-    )
-    prepared = run_selected_delivery_rerun(config)
-    staging_root = (
-        config.artifact_dir
-        / ".staging-native-c6"
-        / (str(config.delivery_authority_hash or "unbound").replace(":", "-"))
-    )
-    staging_paths = tuple(
-        sorted(path for path in staging_root.rglob("*") if path.is_file())
-    )
-    if not staging_paths:
-        raise ValueError("selected rerun produced no native staged payload evidence")
-    evidence = _native_file_evidence(
-        "selected_delivery_rerun",
-        staging_paths,
-        counts=(
-            EvidenceCount("selected_record_count", len(prepared.selected_records)),
-            EvidenceCount("selected_payload_count", len(prepared.selected_payloads)),
-            EvidenceCount(
-                "selected_rerun_example_count", prepared.rerun_selected_example_count
-            ),
-        ),
-        prior=inputs.c5_evidence,
-    )
-    return StageResult(
-        status="pass",
-        value=SelectedRerunHandoff(
-            value={"prepared": prepared, "context": context},
-            stage_evidence=evidence,
-        ),
-        evidence=evidence,
-    )
+    return native_selected_rerun_operation(state, inputs)
 
 
 def _native_late_corridor_operation(inputs: Any) -> Any:
-    """Overwrite the provisional public corridors only after selected rerun."""
-
-    from radjax_tome.builder.native_path_b.contracts import (
-        SelectedArtifactCorridorEvidence,
-        StageResult,
+    from radjax_tome.builder.production_stages.assembly import (
+        native_late_corridor_operation,
     )
 
-    rerun = inputs.selected_rerun
-    prepared = rerun["prepared"]
-    finalized = finalize_selected_delivery_corridor(prepared)
-    # Slice Four deliberately keeps one selected-rerun handoff across late
-    # finalization and assembly.  Update only that ephemeral callback value so
-    # assembly consumes the finalized context rather than recreating a stage.
-    rerun["prepared"] = finalized
-    corridor = finalized.corridor_result
-    if corridor is None:
-        raise ValueError("late corridor finalization returned no corridor evidence")
-    output = finalized.config.artifact_dir
-    evidence = _native_file_evidence(
-        "selected_artifact_corridor_finalization",
-        (
-            corridor.summary_path,
-            corridor.fingerprints_path,
-            corridor.modes_path,
-            corridor.assignments_path,
-        ),
-        prior=inputs.selected_rerun_evidence,
-    )
-    return StageResult(
-        status="pass",
-        value=SelectedArtifactCorridorEvidence(
-            stage_evidence=evidence,
-            summary_path=corridor.summary_path,
-            fingerprints_path=corridor.fingerprints_path,
-            modes_path=corridor.modes_path,
-            assignments_path=corridor.assignments_path,
-            positions_available=corridor.positions_available,
-            positions_used=corridor.positions_used,
-            fingerprint_count=corridor.fingerprint_count,
-            mode_count=corridor.mode_count,
-            assignment_count=corridor.assignment_count,
-            selected_exemplar_count=len(finalized.selected_payloads),
-            selected_exemplars_linked=corridor.selected_exemplars_linked,
-            # Assembly owns the durable delivery report; retain its established
-            # destination as the subsequent proof path without writing early.
-            delivery_report_path=output / "delivery_report.json",
-            authority_manifest_path=output / "c6" / "authority_manifest.json",
-            delivery_authority_hash=str(finalized.config.delivery_authority_hash or ""),
-        ),
-        evidence=evidence,
-    )
+    return native_late_corridor_operation(inputs)
 
 
 def _native_artifact_assembly_operation(inputs: Any) -> Any:
-    """Promote payloads and write the established delivery artifact surface."""
-
-    from radjax_tome.builder.native_path_b.assembly import ArtifactAssemblyHandoff
-    from radjax_tome.builder.native_path_b.contracts import EvidenceCount, StageResult
-
-    rerun = inputs.selected_rerun
-    finalized = rerun["prepared"]
-    report = assemble_selected_delivery_artifacts(finalized)
-    output = finalized.config.artifact_dir
-    evidence = _native_file_evidence(
-        "artifact_assembly",
-        (
-            output / "delivery_report.json",
-            output / "leaderboards" / "selected_exemplars.json",
-            output / "selected_exemplars" / "payload_index.json",
-        ),
-        counts=(
-            EvidenceCount(
-                "selected_exemplar_count", int(report["num_selected_exemplars"])
-            ),
-        ),
-        prior=inputs.final_corridor_evidence,
+    from radjax_tome.builder.production_stages.assembly import (
+        native_artifact_assembly_operation,
     )
-    return StageResult(
-        status="pass",
-        value=ArtifactAssemblyHandoff(
-            value={
-                "delivery_report": report,
-                "context": rerun["context"],
-                "prepared": finalized,
-            },
-            stage_evidence=evidence,
-        ),
-        evidence=evidence,
-    )
+
+    return native_artifact_assembly_operation(inputs)
 
 
 def _native_validation_linkage_operation(
     state: _ProductionRunState, inputs: Any
 ) -> Any:
-    """Run the existing strict validation and selected-linkage audit."""
+    from radjax_tome.builder.production_stages.verification import (
+        native_validation_linkage_operation,
+    )
 
-    from radjax_tome.builder.native_path_b.contracts import StageResult
-    from radjax_tome.builder.native_path_b.verification import ValidationLinkageHandoff
-
-    output = state.config.output_dir
-    state.progress.validation_started()
-    validation_started = perf_counter()
-    validation = validate_teacher_textbook(output)
-    write_teacher_textbook_validation_report(
-        validation, output / "validation_report.json"
-    )
-    validation_wall_seconds = _elapsed(validation_started)
-    state.progress.memory_checkpoint("validation_complete")
-    state.progress.validation_completed(validation.status)
-    linkage_audit = audit_selected_linkage(output, strict=True)
-    write_selected_linkage_audit(linkage_audit, output / "selected_linkage_audit.json")
-    evidence = _native_file_evidence(
-        "validation_linkage",
-        (output / "validation_report.json", output / "selected_linkage_audit.json"),
-        prior=inputs.assembly_evidence,
-    )
-    return StageResult(
-        status="pass",
-        value=ValidationLinkageHandoff(
-            value={
-                **inputs.assembly,
-                "validation": validation,
-                "linkage_audit": linkage_audit,
-                "validation_wall_seconds": validation_wall_seconds,
-            },
-            stage_evidence=evidence,
-        ),
-        evidence=evidence,
-    )
+    return native_validation_linkage_operation(state, inputs)
 
 
 def _native_reconciliation_cover_operation(
     state: _ProductionRunState, inputs: Any
 ) -> Any:
-    """Reconcile C2--C5 delivery proof, coverage, and cover page."""
-
-    from radjax_tome.builder.native_path_b.contracts import StageResult
-    from radjax_tome.builder.native_path_b.verification import (
-        ReconciliationCoverHandoff,
+    from radjax_tome.builder.production_stages.verification import (
+        native_reconciliation_cover_operation,
     )
 
-    output = state.config.output_dir
-    value = inputs.validation
-    c6_validation, c6_coverage = _finalize_c6_selection(
-        state.config,
-        value["context"],
-        delivery_report=value["delivery_report"],
-        audit_report=value["linkage_audit"].to_dict(),
-    )
-    audit_payload = value["linkage_audit"].to_dict()
-    audit_payload["c6_integration"] = {
-        "status": c6_validation["status"],
-        "selected_unique_count": c6_validation["selected_unique_count"],
-        "selected_obligation_count": c6_validation["selected_obligation_count"],
-        "coordinate_set_authority": "c5",
-    }
-    write_json(output / "selected_linkage_audit.json", audit_payload)
-    (output / "reports").mkdir(parents=True, exist_ok=True)
-    write_json(
-        output / "reports" / "c6_integrated_selection_validation.json",
-        c6_validation,
-    )
-    write_corridor_coverage_report(
-        c6_coverage,
-        output / "reports" / "fingerprint_corridor_coverage.json",
-    )
-    if c6_validation["status"] == "fail":
-        state.blockers.extend(str(item) for item in c6_validation["blockers"])
-    if value["validation"].status == "pass":
-        write_cover_page(output)
-    evidence = _native_file_evidence(
-        "reconciliation_cover",
-        (
-            output / "reports" / "c6_integrated_selection_validation.json",
-            output / "reports" / "fingerprint_corridor_coverage.json",
-            output / "cover_page.json",
-        ),
-        prior=inputs.validation_evidence,
-    )
-    return StageResult(
-        status="pass",
-        value=ReconciliationCoverHandoff(
-            value={**value, "c6_validation": c6_validation},
-            stage_evidence=evidence,
-        ),
-        evidence=evidence,
-    )
+    return native_reconciliation_cover_operation(state, inputs)
 
 
 def _native_final_reporting_operation(state: _ProductionRunState, inputs: Any) -> Any:
-    """Render the existing report/progress result from completed native proof."""
-
-    from radjax_tome.builder.native_path_b.contracts import (
-        NativePathBRunResult,
-        StageFailure,
+    """Compatibility façade into the owned terminal-reporting stage."""
+    from radjax_tome.builder.production_stages.reporting import (
+        FinalReportingOperations,
+        native_final_reporting_operation,
     )
 
-    value = inputs.reconciliation
-    config = state.config
-    validation = value["validation"]
-    delivery_report = value["delivery_report"]
-    parity_status = "not_run"
-    if config.parity_left is not None and validation.status == "pass":
-        parity_report = compare_tome_artifacts(
-            config.parity_left,
-            config.output_dir,
-            TomeParityConfig(max_examples=config.max_examples),
-            left_label="baseline",
-            right_label="production",
-        )
-        write_tome_parity_report(parity_report, state.parity_report_path)
-        parity_status = parity_report.status
-        if parity_report.status == "fail":
-            state.blockers.extend(parity_report.blockers)
-        elif parity_report.status == "warn":
-            state.warnings.extend(parity_report.warnings)
-    if validation.status != "pass":
-        state.blockers.extend(validation.blockers)
-    if delivery_report.get("status") == "fail":
-        state.blockers.extend(str(item) for item in delivery_report.get("blockers", ()))
-    elif delivery_report.get("status") == "warn":
-        state.warnings.extend(str(item) for item in delivery_report.get("warnings", ()))
-    else:
-        state.warnings = _filter_fulfilled_delivery_warnings(state.warnings)
-    status = "fail" if state.blockers else "warn" if state.warnings else "pass"
-    report = _production_report(
-        config,
-        created_at=state.created_at,
-        completed_at=_now(),
-        status=status,
-        blockers=state.blockers,
-        warnings=state.warnings,
-        doctor_report=state.doctor_report or {},
-        run_plan_path=state.run_plan_path,
-        run_plan=state.plan or {},
-        effective_batch_size=state.effective_batch_size,
-        already_complete=state.already_complete,
-        parity_report_path=state.parity_report_path,
-        parity_status=parity_status,
-        validation_status=validation.status,
-        build_status=getattr(state.build_report, "status", None),
-        delivery_report=delivery_report,
-        selected_delivery_failure=None,
-        timing=_production_timing_fields(
-            config,
-            started_at=state.created_at,
-            completed_at=_now(),
-            production_wall_seconds=_elapsed(state.production_started),
-            preflight_wall_seconds=state.preflight_wall_seconds,
-            main_pass_wall_seconds=state.main_pass_wall_seconds,
-            validation_wall_seconds=float(value["validation_wall_seconds"]),
-            delivery_report=delivery_report,
+    return native_final_reporting_operation(
+        state,
+        inputs,
+        operations=FinalReportingOperations(
+            report=_production_report,
+            finalize_report=_finalize_production_report,
+            timing_fields=_production_timing_fields,
+            now=_now,
+            filter_warnings=_filter_fulfilled_delivery_warnings,
         ),
-    )
-    state.terminal_report = _finalize_production_report(
-        report,
-        state.report_path,
-        state.progress,
-    )
-    evidence = _native_file_evidence(
-        "final_reporting",
-        (state.report_path, config.output_dir / "production_progress.json"),
-        prior=inputs.reconciliation_evidence,
-    )
-    if status == "fail":
-        return NativePathBRunResult(
-            status="fail",
-            production_report_path=state.report_path,
-            validation_report_path=config.output_dir / "validation_report.json",
-            evidence=None,
-            failure=StageFailure(
-                stage="final_reporting",
-                reason="existing_production_terminal_blockers",
-                blockers=tuple(state.blockers),
-                resumable=bool(config.resume),
-                remediation="inspect the preserved production report",
-            ),
-        )
-    return NativePathBRunResult(
-        status="pass",
-        production_report_path=state.report_path,
-        validation_report_path=config.output_dir / "validation_report.json",
-        evidence=evidence,
     )
 
 
@@ -1954,70 +1303,11 @@ class _ProductionProgressReporter:
 
 
 def _validate_required_inputs(
-    config: ProductionBuildConfig,
-    blockers: list[str],
+    config: ProductionBuildConfig, blockers: list[str]
 ) -> None:
-    if config.selection_integration_policy not in {
-        GLOBAL_ONLY_SELECTION_POLICY,
-        C6_SELECTION_INTEGRATION_POLICY,
-    }:
-        blockers.append(
-            "unsupported selection_integration_policy: "
-            f"{config.selection_integration_policy}"
-        )
-    if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
-        if config.total_selected_exemplar_budget is None:
-            blockers.append("C6 requires total_selected_exemplar_budget")
-        # Normal C6.2 production derives global ranked supply and passports
-        # from this run's score surface.  Supplied files are only fail-closed
-        # checkpoints and are compared after Stage 2 has an authority hash.
-        for label, path in (
-            ("source passports", config.source_passports_path),
-            ("global board supply", config.global_board_supply_path),
-        ):
-            if path is not None and not path.is_file():
-                blockers.append(f"{label} override path missing: {path}")
-        if config.corridor_feature_jsonl_path is not None:
-            blockers.append(
-                "C6 derives strict corridor features from the current packed "
-                "corridor artifact; --corridor-feature-jsonl is not accepted"
-            )
-        if config.c4_claims_path is not None or config.c5_selection_path is not None:
-            blockers.append(
-                "C6 production rebuilds C4/C5 from the current artifact; "
-                "external C4/C5 checkpoints are not accepted"
-            )
-    if (
-        config.exemplar_selection_enabled
-        and config.target_policy != "corridor_exemplar_v1"
-    ):
-        blockers.append(
-            "selected exemplar delivery requires target_policy='corridor_exemplar_v1'"
-        )
-    if (
-        config.selected_rerun_batch_size is not None
-        and config.selected_rerun_batch_size < 1
-    ):
-        blockers.append("selected_rerun_batch_size must be positive")
-    for label, path in (
-        ("dataset", config.dataset_path),
-        ("corpus manifest", config.corpus_manifest_path),
-        ("teacher model provenance", config.teacher_model_provenance_path),
-    ):
-        if not path.is_file():
-            blockers.append(f"{label} path missing: {path}")
-    if not blockers:
-        corpus_report = validate_corpus_artifact(config.corpus_manifest_path.parent)
-        blockers.extend(
-            f"corpus manifest invalid: {item}" for item in corpus_report.blockers
-        )
-        teacher_report = validate_teacher_model_provenance(
-            config.teacher_model_provenance_path
-        )
-        blockers.extend(
-            f"teacher model provenance invalid: {item}"
-            for item in teacher_report.blockers
-        )
+    from radjax_tome.builder.production_stages.preflight import validate_required_inputs
+
+    validate_required_inputs(config, blockers)
 
 
 def migrate_c6_3_5_1_metadata(
@@ -2642,371 +1932,64 @@ def _native_payload_hash_for_probe(payload: Mapping[str, Any]) -> str:
     ).hexdigest()
 
 
-def _export_c6_selection_authorities(
-    config: ProductionBuildConfig,
-) -> dict[str, Any]:
-    """Compose the preserved fingerprint and global C6 authority exports."""
+def _export_c6_selection_authorities(config: ProductionBuildConfig) -> dict[str, Any]:
+    from radjax_tome.builder.production_stages.authorities import (
+        export_c6_selection_authorities,
+    )
 
-    fingerprint = _export_c6_fingerprint_selection_authority(config)
-    return _export_c6_global_authority(config, fingerprint)
+    return export_c6_selection_authorities(config)
 
 
 def _export_c6_fingerprint_selection_authority(
     config: ProductionBuildConfig,
 ) -> dict[str, Any]:
-    """Export selector/features from the provisional score-surface corridor.
+    from radjax_tome.builder.production_stages.authorities import (
+        export_c6_fingerprint_selection_authority,
+    )
 
-    This is the first authority boundary in the canonical native Path-B route.
-    It intentionally leaves global-board supply, source passports, and the
-    combined authority manifest to the following global-authority operation.
-    The compatibility composer above preserves the historical public helper.
-    """
-
-    if config.total_selected_exemplar_budget is None:
-        raise ValueError("C6 total_selected_exemplar_budget is required")
-    c6_root = config.output_dir / "c6"
-    c6_root.mkdir(parents=True, exist_ok=True)
-    store = TeacherTargetStore.open(config.output_dir)
-    examples = load_text_examples(
-        config.dataset_path,
-        max_examples=store.metadata.num_examples,
-    )
-    selector_manifest = build_exemplar_selection_manifest(
-        store,
-        examples=examples,
-        batch_size=max(1, config.shard_size_examples),
-        capture_mode=_exemplar_capture_mode(config),
-        fulfillment_policy=(
-            "rerun_selected_capture"
-            if config.exemplar_delivery_path == "two_pass_rerun_selected"
-            else "select_from_existing_capture"
-        ),
-        # Capacity is distinct from the C3 allocation.  Retaining it at least
-        # as deep as the final budget leaves ranked supply for C4 backfill.
-        board_capacity=max(
-            config.total_selected_exemplar_budget,
-            config.exemplar_leaderboard_capacity,
-        ),
-        budget_examples=None,
-        budget_fraction=None,
-        created_at=_now(),
-        canonical_score_fields_only=True,
-        use_score_pass_fields=True,
-        production_global_selector=True,
-    )
-    selector_path = c6_root / "production_global_selector.json"
-    write_json(selector_path, selector_manifest)
-    authority_hashes = authority_hashes_for_artifact(
-        config.output_dir,
-        selection_integration_config_hash=_selection_integration_hash(config),
-    )
-    score_pass_authority_hash = authority_hashes.score_pass_authority_hash_v2
-    feature_path = export_corridor_candidate_features(
-        artifact_dir=config.output_dir,
-        output_dir=c6_root / "corridor-features",
-    )
-    feature_manifest_path = c6_root / "corridor-features" / "manifest.json"
-    feature_manifest = read_json_object(feature_manifest_path)
-    feature_manifest["score_pass_authority_hash"] = score_pass_authority_hash
-    feature_manifest["score_pass_authority_contract_version"] = AUTHORITY_HASH_V2
-    write_json(feature_manifest_path, feature_manifest)
-    return {
-        "selector_path": selector_path,
-        "feature_path": feature_path,
-        "score_pass_authority_hash": score_pass_authority_hash,
-        "score_pass_authority_hash_v1": (authority_hashes.score_pass_authority_hash_v1),
-        "score_pass_authority_contract_version": AUTHORITY_HASH_V2,
-        "raw_artifact_digests": authority_hashes.raw_artifact_digests,
-    }
+    return export_c6_fingerprint_selection_authority(config)
 
 
 def _export_c6_global_authority(
-    config: ProductionBuildConfig,
-    fingerprint: Mapping[str, Any],
+    config: ProductionBuildConfig, fingerprint: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Export global supply/passports after matching fingerprint authority."""
+    from radjax_tome.builder.production_stages.authorities import (
+        export_c6_global_authority,
+    )
 
-    c6_root = config.output_dir / "c6"
-    selector_path = Path(str(fingerprint["selector_path"]))
-    feature_path = Path(str(fingerprint["feature_path"]))
-    score_pass_authority_hash = str(fingerprint["score_pass_authority_hash"])
-    score_pass_authority_hash_v1 = str(fingerprint["score_pass_authority_hash_v1"])
-    raw_artifact_digests = dict(fingerprint["raw_artifact_digests"])
-    selector_manifest = read_json_object(selector_path)
-    global_supply = export_production_global_board_supply(
-        selector_manifest,
-        source_artifact_id=str(config.output_dir),
-        source_artifact_hash=score_pass_authority_hash,
+    return export_c6_global_authority(config, fingerprint)
+
+
+def _mark_native_c6_score_pass_artifact(
+    config: ProductionBuildConfig, *, selector_path: Path, authority_manifest_path: Path
+) -> None:
+    from radjax_tome.builder.production_stages.authorities import (
+        mark_native_c6_score_pass_artifact,
     )
-    global_supply["source_provenance"]["score_pass_authority_hash"] = (
-        score_pass_authority_hash
-    )
-    global_path = c6_root / "global-board-supply.json"
-    write_json(global_path, global_supply)
-    passports_path = export_production_source_passports(
-        artifact_dir=config.output_dir,
-        output_path=c6_root / "source-passports.json",
-        score_pass_authority_hash=score_pass_authority_hash,
-    )
-    authority_manifest_path = c6_root / "authority_manifest.json"
-    run_manifest = read_json_object(config.output_dir / "run_manifest.json")
-    authority_manifest = {
-        "schema_version": AUTHORITY_MANIFEST_SCHEMA_V2,
-        "score_pass_authority_contract_version": AUTHORITY_HASH_V2,
-        "score_pass_authority_hash": score_pass_authority_hash,
-        "score_pass_authority_hash_v1": score_pass_authority_hash_v1,
-        "raw_artifact_digests": raw_artifact_digests,
-        "target_store_metadata_sha256": raw_artifact_digests["metadata.json"],
-        "corpus_hash": run_manifest.get("corpus_hash"),
-        "score_pass_config_hash": run_manifest.get("emission_config_hash"),
-        "score_pass_resume_hash": run_manifest.get("resume_config_hash"),
-        "selection_integration_config_hash": _selection_integration_hash(config),
-        "delivery_path": config.exemplar_delivery_path,
-        "paths": {
-            "selector": selector_path.relative_to(config.output_dir).as_posix(),
-            "global_board_supply": global_path.relative_to(
-                config.output_dir
-            ).as_posix(),
-            "source_passports": passports_path.relative_to(
-                config.output_dir
-            ).as_posix(),
-            "corridor_features": feature_path.relative_to(config.output_dir).as_posix(),
-        },
-        "hashes": {
-            "selector_sha256": raw_artifact_digests[
-                "c6/production_global_selector.json"
-            ],
-            "global_board_supply_sha256": _file_sha256(global_path),
-            "source_passports_manifest_sha256": _file_sha256(passports_path),
-            "corridor_features_sha256": _file_sha256(feature_path),
-        },
-        "external_authority_override_used": False,
-        "production_grade": True,
-    }
-    write_json(authority_manifest_path, authority_manifest)
-    _mark_native_c6_score_pass_artifact(
+
+    mark_native_c6_score_pass_artifact(
         config,
         selector_path=selector_path,
         authority_manifest_path=authority_manifest_path,
     )
-    external_override_used = _validate_external_c6_overrides(
-        config,
-        score_pass_authority_hash=score_pass_authority_hash,
-    )
-    selected_global_path = config.global_board_supply_path or global_path
-    selected_passports_path = config.source_passports_path or passports_path
-    authority_manifest["authority_paths_used"] = {
-        "global_board_supply": str(selected_global_path),
-        "source_passports": str(selected_passports_path),
-    }
-    authority_manifest["external_authority_override_used"] = external_override_used
-    write_json(authority_manifest_path, authority_manifest)
-    return {
-        "feature_path": feature_path,
-        "global_board_supply_path": selected_global_path,
-        "source_passports_path": selected_passports_path,
-        "authority_manifest_path": authority_manifest_path,
-        "score_pass_authority_hash": score_pass_authority_hash,
-        "external_authority_override_used": external_override_used,
-    }
-
-
-def _mark_native_c6_score_pass_artifact(
-    config: ProductionBuildConfig,
-    *,
-    selector_path: Path,
-    authority_manifest_path: Path,
-) -> None:
-    """Correct the score-pass sidecar once native C6 authority exists."""
-
-    if not _native_c6_path_b_enabled(config):
-        return
-    path = config.output_dir / "emission_config.json"
-    payload = read_json_object(path)
-    claims = [
-        str(item)
-        for item in payload.get("claims_not_made", ())
-        if str(item) != "no_production_global_two_pass_selector"
-    ]
-    payload.update(
-        {
-            "exemplar_selection_enabled": True,
-            "exemplar_selection_manifest": selector_path.relative_to(
-                config.output_dir
-            ).as_posix(),
-            "selection_integration_policy": C6_SELECTION_INTEGRATION_POLICY,
-            "native_execution_mode": "native_c6_path_b_v1",
-            "selection_authority_manifest": authority_manifest_path.relative_to(
-                config.output_dir
-            ).as_posix(),
-            "claims_not_made": claims,
-        }
-    )
-    write_json(path, payload)
 
 
 def _validate_external_c6_overrides(
-    config: ProductionBuildConfig,
-    *,
-    score_pass_authority_hash: str,
+    config: ProductionBuildConfig, *, score_pass_authority_hash: str
 ) -> bool:
-    """Fail closed when an optional checkpoint is not tied to this score pass."""
+    from radjax_tome.builder.production_stages.authorities import (
+        validate_external_c6_overrides,
+    )
 
-    used = False
-    for label, path in (
-        ("global board supply", config.global_board_supply_path),
-        ("source passports", config.source_passports_path),
-    ):
-        if path is None:
-            continue
-        if not path.is_file():
-            raise ValueError(f"{label} override path missing: {path}")
-        payload = read_json_object(path)
-        provenance = payload.get("source_provenance", payload)
-        observed = (
-            provenance.get("score_pass_authority_hash")
-            if isinstance(provenance, Mapping)
-            else None
-        )
-        if observed != score_pass_authority_hash:
-            raise ValueError(
-                f"{label} override does not match the current score-pass authority hash"
-            )
-        used = True
-    return used
+    return validate_external_c6_overrides(config, score_pass_authority_hash)
 
 
 def _prepare_c6_selection(
-    config: ProductionBuildConfig,
-    authorities: Mapping[str, Any],
+    config: ProductionBuildConfig, authorities: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Run C2-C5 from the internally exported production authorities."""
+    from radjax_tome.builder.production_stages.selection import prepare_c6_selection
 
-    if config.total_selected_exemplar_budget is None:
-        raise ValueError("C6 total_selected_exemplar_budget is required")
-    c6_root = config.output_dir / "c6"
-    c6_root.mkdir(parents=True, exist_ok=True)
-    c2_summary: dict[str, Any] = {}
-    c3_summary: dict[str, Any] = {}
-    global_supply: dict[str, Any] | None = None
-
-    feature_path = Path(str(authorities["feature_path"]))
-    feature_records = load_candidate_records_jsonl(
-        feature_path,
-        source_artifact_id=str(feature_path),
-    )
-    leaderboards = build_corridor_candidate_leaderboards(
-        feature_records,
-        CorridorLeaderboardPolicy(
-            candidate_pool_cap=config.fingerprint_corridor_candidate_pool_cap,
-        ),
-    )
-    c2_path = write_corridor_candidate_leaderboards(
-        leaderboards,
-        c6_root / "corridor-leaderboards",
-        overwrite=True,
-    )
-    c2_summary = inspect_corridor_candidate_leaderboards(c2_path)
-    plan = allocate_corridor_coverage(
-        leaderboards,
-        CorridorBudgetPolicy(
-            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
-            corridor_budget_fraction=config.fingerprint_corridor_budget_fraction,
-            corridor_budget_max=config.fingerprint_corridor_budget_max,
-            corridor_mode_cap=config.fingerprint_corridor_mode_cap,
-        ),
-        source_leaderboard_provenance=c2_summary,
-    )
-    c3_path = write_corridor_coverage_plan(
-        plan,
-        c6_root / "coverage-plan",
-        overwrite=True,
-    )
-    c3_summary = inspect_corridor_coverage_plan(c3_path)
-    c3_summary["mode_allocations"] = [
-        {
-            "mode_id": mode.corridor_mode_id,
-            "allocated_slots": mode.allocated_slots,
-            "zero_allocation_reason": mode.zero_allocation_reason,
-        }
-        for mode in plan.modes
-    ]
-    global_input = load_global_board_input(
-        Path(str(authorities["global_board_supply_path"])),
-        production_grade=True,
-    )
-    global_provenance = global_input.source_provenance
-    if global_provenance.get("selector_policy") != (
-        "multi_leaderboard_exemplar_selector_v1"
-    ) or global_provenance.get("selector_schema_version") != (
-        "exemplar_selection_manifest_v1"
-    ):
-        raise ValueError(
-            "C6 global board supply must be exported by the production global selector"
-        )
-    global_supply = global_input.to_dict()
-    claims = claim_corridor_then_backfill_global(
-        leaderboards,
-        plan,
-        global_input,
-        CorridorGlobalClaimPolicy(
-            total_selected_exemplar_budget=config.total_selected_exemplar_budget,
-            # Preserve the complete claim/backfill artifact before enforcing a
-            # production budget failure at the Path B teacher boundary.
-            require_full_budget=False,
-        ),
-    )
-    write_corridor_global_claim_result(
-        claims,
-        c6_root / "claims",
-        overwrite=True,
-    )
-    budget_diagnostics = _c6_budget_diagnostics(
-        config,
-        claims=claims,
-        leaderboards=leaderboards,
-        plan=plan,
-        global_supply=global_supply,
-    )
-    write_json(c6_root / "selection_budget_diagnostics.json", budget_diagnostics)
-    if config.require_full_selected_budget and budget_diagnostics["budget_shortfall"]:
-        raise C6BudgetShortfallError(budget_diagnostics)
-    source_passports = load_source_passports_for_coordinates(
-        Path(str(authorities["source_passports_path"])),
-        {
-            (coordinate.example_id, coordinate.position)
-            for coordinate in claims.selected_coordinates
-        },
-    )
-    selected = build_multi_role_selected_exemplars(
-        claims,
-        source_passports=source_passports,
-    )
-    write_multi_role_selection_artifact(
-        selected,
-        c6_root / "multi-role-selection",
-        overwrite=True,
-    )
-    delivery_path = config.exemplar_delivery_path or "one_pass_pruned_candidate"
-    delivery_records = c5_records_for_delivery(
-        selected,
-        delivery_path=delivery_path,
-    )
-    return {
-        "claims": claims,
-        "selected": selected,
-        # C6 final validation needs passports for the C5 set, not the whole
-        # full-corpus authority stream.
-        "source_passports": [
-            dict(record.source_passport) for record in selected.records
-        ],
-        "delivery_records": delivery_records,
-        "c2_summary": c2_summary,
-        "c3_summary": c3_summary,
-        "global_supply": global_supply,
-        "budget_diagnostics": budget_diagnostics,
-        "authorities": dict(authorities),
-    }
+    return prepare_c6_selection(config, authorities)
 
 
 def _c6_budget_diagnostics(
@@ -3017,79 +2000,15 @@ def _c6_budget_diagnostics(
     plan: Any,
     global_supply: Mapping[str, Any],
 ) -> dict[str, Any]:
-    requested = int(config.total_selected_exemplar_budget or 0)
-    final_count = len(claims.selected_coordinates)
-    corridor_candidate_entries = [
-        (candidate.candidate_id, candidate.position)
-        for mode in leaderboards.modes
-        for candidate in mode.candidates
-    ]
-    corridor_candidates = set(corridor_candidate_entries)
-    global_candidate_entries = [
-        (str(candidate["example_id"]), int(candidate["position"]))
-        for board in global_supply.get("boards", [])
-        if isinstance(board, Mapping)
-        for candidate in board.get("candidates", [])
-        if isinstance(candidate, Mapping)
-    ]
-    global_candidates = set(global_candidate_entries)
-    corridor_claim_set = {
-        (claim.example_id, claim.position) for claim in claims.corridor_claims
-    }
-    global_claim_set = {
-        (claim.example_id, claim.position) for claim in claims.global_claims
-    }
-    intersection = corridor_claim_set & global_candidates
-    union = corridor_claim_set | global_candidates
-    corridor_budget_requested = sum(int(mode.allocated_slots) for mode in plan.modes)
-    global_claims = len(claims.global_claims)
-    corridor_claims = len(claims.corridor_claims)
-    collisions = list(claims.collision_obligations)
-    global_examined = sum(
-        int(item.get("candidate_count_seen") or 0)
-        for item in (claims.summary or {}).get("board_summaries", [])
-        if isinstance(item, Mapping)
+    from radjax_tome.builder.production_stages.selection import c6_budget_diagnostics
+
+    return c6_budget_diagnostics(
+        config,
+        claims=claims,
+        leaderboards=leaderboards,
+        plan=plan,
+        global_supply=global_supply,
     )
-    shortfall = max(0, requested - final_count)
-    if not shortfall:
-        reason = None
-    elif len(corridor_candidates | global_candidates) < requested:
-        reason = "insufficient_eligible_unique_candidates"
-    elif global_claims < requested - corridor_claims:
-        reason = "global_ranked_supply_exhaustion"
-    elif collisions:
-        reason = "deduplication_overlap_exhaustion"
-    else:
-        reason = "fingerprint_corridor_allocation_or_cap_exhaustion"
-    return {
-        "total_budget_requested": requested,
-        "fingerprint_corridor_budget_requested": corridor_budget_requested,
-        "fingerprint_corridor_candidates_eligible_unique": len(corridor_candidates),
-        "fingerprint_corridor_claims_before_dedup": len(corridor_claim_set),
-        "fingerprint_corridor_claims_accepted": corridor_claims,
-        "global_supply_exported": len(global_candidates),
-        "global_candidates_examined": global_examined,
-        "global_claims_accepted": global_claims,
-        "cross_role_duplicate_count": len(intersection),
-        "accepted_cross_role_overlap": len(corridor_claim_set & global_claim_set),
-        "within_role_duplicate_count": (
-            len(corridor_candidate_entries)
-            - len(corridor_candidates)
-            + len(global_candidate_entries)
-            - len(global_candidates)
-        ),
-        "final_unique_selected_count": final_count,
-        "budget_shortfall": shortfall,
-        "budget_shortfall_reason": reason,
-        "global_supply_remaining": max(0, len(global_candidates) - global_examined),
-        "fingerprint_corridor_global_intersection_size": len(intersection),
-        "fingerprint_corridor_global_jaccard": (
-            float(len(intersection)) / float(max(len(union), 1))
-        ),
-        "accepted_global_rank_depth": max(
-            (claim.global_rank for claim in claims.global_claims), default=0
-        ),
-    }
 
 
 def _finalize_c6_selection(
@@ -3099,92 +2018,17 @@ def _finalize_c6_selection(
     delivery_report: dict[str, Any] | None,
     audit_report: dict[str, Any] | None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    claims = context["claims"]
-    selected = context["selected"]
-    legacy: list[Mapping[str, Any]] = []
-    payloads: list[Mapping[str, Any]] = []
-    selected_path = config.output_dir / "leaderboards" / "selected_exemplars.json"
-    payload_path = config.output_dir / "selected_exemplars" / "payload_index.json"
-    if selected_path.is_file():
-        legacy_payload = read_json_object(selected_path)
-        legacy = list(legacy_payload.get("selected_exemplars") or [])
-    if payload_path.is_file():
-        payload_payload = read_json_object(payload_path)
-        payloads = list(payload_payload.get("selected_exemplars") or [])
-    else:
-        legacy_payload_path = (
-            config.output_dir / "selected_exemplars" / "selected-exemplars-00000.json"
-        )
-        if legacy_payload_path.is_file():
-            payload_payload = read_json_object(legacy_payload_path)
-            payloads = list(payload_payload.get("selected_exemplars") or [])
-    curriculum_records: list[Mapping[str, Any]] = []
-    try:
-        curriculum_records = load_curriculum_route_records(config.output_dir)
-    except (OSError, TypeError, ValueError) as exc:
-        curriculum_records = [{"curriculum_load_error": str(exc)}]
-    if delivery_report is None:
-        validation = {
-            "schema_version": "radjax.c6_integrated_selection_validation.v1",
-            "status": "fail",
-            "blockers": ["C6 selected delivery did not complete"],
-            "warnings": [],
-            "selected_unique_count": len(selected.records),
-            "selected_obligation_count": selected.summary.get("obligation_count", 0),
-            "coordinate_set_authority": "c5",
-        }
-    else:
-        validation = validate_integrated_selection_contract(
-            claims,
-            selected,
-            legacy_records=legacy,
-            payload_records=payloads,
-            source_passports=context["source_passports"],
-            curriculum_records=curriculum_records,
-            audit_report=audit_report,
-            production_grade=True,
-        )
-    coverage = build_corridor_coverage_report(
-        claims,
-        selected,
-        c2_summary=context.get("c2_summary"),
-        c3_summary=context.get("c3_summary"),
-        global_supply=context.get("global_supply"),
-        delivery_report=delivery_report,
+    from radjax_tome.builder.production_stages.verification import finalize_c6_selection
+
+    return finalize_c6_selection(
+        config, context, delivery_report=delivery_report, audit_report=audit_report
     )
-    coverage["integrated_validation_status"] = validation["status"]
-    coverage["integrated_validation_path"] = (
-        "reports/c6_integrated_selection_validation.json"
-    )
-    return validation, coverage
 
 
 def _backend_config(config: ProductionBuildConfig) -> TeacherBackendConfig:
-    tokenizer_id = config.tokenizer_id or config.teacher_model
-    return TeacherBackendConfig(
-        backend_id=config.teacher_backend,
-        runtime_mode=config.runtime_mode,  # type: ignore[arg-type]
-        target_policy=config.target_policy,  # type: ignore[arg-type]
-        model_id=config.teacher_model,
-        tokenizer_id=tokenizer_id,
-        sequence_length=config.sequence_length,
-        batch_size=1,
-        vocab_size=config.vocab_size,
-        top_k=config.top_k,
-        num_buckets=config.num_buckets,
-        dynamic_top_k_min=config.dynamic_top_k_min,
-        dynamic_top_k_max=config.dynamic_top_k_max,
-        dynamic_mass_threshold=config.dynamic_mass_threshold,
-        gpu_batch_size_mode=config.gpu_batch_size_mode,
-        gpu_batch_size_preset=config.gpu_batch_size_preset,
-        gpu_batch_size_custom=config.gpu_batch_size_custom,
-        gpu_batch_size_auto_min=config.gpu_batch_size_auto_min,
-        gpu_batch_size_auto_max=config.gpu_batch_size_auto_max,
-        local_files_only=True,
-        allow_downloads=False,
-        fallback_policy="error",
-        exemplar_capture_mode=_exemplar_capture_mode(config),
-    )
+    from radjax_tome.builder.production_stages.delivery import backend_config
+
+    return backend_config(config)
 
 
 def _streaming_config(
@@ -3193,45 +2037,10 @@ def _streaming_config(
     *,
     progress_callback: Any = None,
 ) -> BackendTeacherTextbookBuildConfig:
-    return BackendTeacherTextbookBuildConfig(
-        output_dir=config.output_dir,
-        dataset_path=config.dataset_path,
-        teacher_backend=config.teacher_backend,
-        runtime_mode=config.runtime_mode,
-        target_policy=config.target_policy,
-        teacher_model_id=config.teacher_model,
-        tokenizer_id=config.tokenizer_id or config.teacher_model,
-        sequence_length=config.sequence_length,
-        batch_size=effective_batch_size,
-        max_examples=config.max_examples,
-        vocab_size=config.vocab_size,
-        top_k=config.top_k,
-        num_buckets=config.num_buckets,
-        dynamic_top_k_min=config.dynamic_top_k_min,
-        dynamic_top_k_max=config.dynamic_top_k_max,
-        dynamic_mass_threshold=config.dynamic_mass_threshold,
-        gpu_batch_size_mode=config.gpu_batch_size_mode,
-        gpu_batch_size_preset=config.gpu_batch_size_preset,
-        gpu_batch_size_custom=config.gpu_batch_size_custom,
-        gpu_batch_size_auto_min=config.gpu_batch_size_auto_min,
-        gpu_batch_size_auto_max=config.gpu_batch_size_auto_max,
-        fallback_policy="error",
-        exemplar_capture_mode=_exemplar_capture_mode(config),
-        local_files_only=True,
-        allow_downloads=False,
-        overwrite=False,
-        corpus_manifest_path=config.corpus_manifest_path,
-        teacher_model_provenance_path=config.teacher_model_provenance_path,
-        streaming=True,
-        resume=config.resume,
-        shard_size_examples=config.shard_size_examples,
-        progress_log_path=config.progress_log_path,
-        run_manifest_path=config.run_manifest_path,
-        progress_callback=progress_callback,
-        selection_integration_policy=config.selection_integration_policy,
-        selection_integration_config_hash=_selection_integration_hash(config),
-        exemplar_selection_enabled=_native_c6_path_b_enabled(config),
-        native_c6_path_b_execution=_native_c6_path_b_enabled(config),
+    from radjax_tome.builder.production_stages.score_pass import streaming_config
+
+    return streaming_config(
+        config, effective_batch_size, progress_callback=progress_callback
     )
 
 
@@ -3821,55 +2630,19 @@ def _selected_delivery_failure_with_staging(
 
 def _exemplar_delivery_config(
     config: ProductionBuildConfig,
-    effective_batch_size: int,
+    effective_batch_size: int | None = None,
     *,
     progress_callback: Any = None,
     authoritative_records: tuple[dict[str, Any], ...] | None = None,
     delivery_authority_hash: str | None = None,
 ) -> ExemplarDeliveryConfig:
-    return ExemplarDeliveryConfig(
-        artifact_dir=config.output_dir,
-        dataset_path=config.dataset_path,
-        delivery_path=config.exemplar_delivery_path or "one_pass_pruned_candidate",
-        selection_enabled=config.exemplar_selection_enabled,
-        leaderboard_capacity=config.exemplar_leaderboard_capacity,
-        selected_exemplar_budget=config.selected_exemplar_budget,
-        selected_exemplar_fraction=config.selected_exemplar_fraction,
-        retain_unselected_exemplar_payloads=config.retain_unselected_exemplar_payloads,
-        score_policy=config.exemplar_score_policy,
-        sequence_length=config.sequence_length,
-        vocab_size=config.vocab_size,
-        top_k=config.top_k,
-        num_buckets=config.num_buckets,
-        max_examples=config.max_examples,
-        backend_config=_backend_config(config),
-        selected_rerun_batch_size=(
-            config.selected_rerun_batch_size or effective_batch_size
-        ),
-        track_timing=config.track_delivery_timing,
-        long_tail_warning_k=config.long_tail_warning_k,
-        very_long_tail_warning_k=config.very_long_tail_warning_k,
-        perverse_tail_warning_k=config.perverse_tail_warning_k,
-        reject_perverse_exemplars=config.reject_perverse_exemplars,
-        primary_selected_exemplar_budget=(
-            config.primary_selected_exemplar_budget
-            if config.primary_selected_exemplar_budget is not None
-            else config.selected_exemplar_budget
-        ),
-        long_tail_side_board_cap=config.long_tail_side_board_cap,
-        perverse_tail_side_board_cap=config.perverse_tail_side_board_cap,
-        include_long_tail_in_primary=config.include_long_tail_in_primary,
-        include_perverse_tail_in_primary=config.include_perverse_tail_in_primary,
-        include_perverse_tail_in_student=config.include_perverse_tail_in_student,
+    from radjax_tome.builder.production_stages.delivery import exemplar_delivery_config
+
+    return exemplar_delivery_config(
+        config,
+        int(effective_batch_size or config.selected_rerun_batch_size or 1),
         progress_callback=progress_callback,
-        authoritative_selection=authoritative_records is not None,
         authoritative_records=authoritative_records,
-        execution_mode=(
-            "native_c6_path_b_v1"
-            if authoritative_records is not None and _native_c6_path_b_enabled(config)
-            else "legacy_delivery_v1"
-        ),
-        rerun_metrics={},
         delivery_authority_hash=delivery_authority_hash,
     )
 
