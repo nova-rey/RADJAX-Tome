@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from radjax_tome._lazy_exports import (
-    LazyExportMap,
     lazy_export_names,
     resolve_lazy_export,
 )
@@ -25,6 +24,7 @@ from radjax_tome.builder.c6_integration import (
     validate_integrated_selection_contract,
     write_corridor_coverage_report,
 )
+from radjax_tome.builder.compatibility_exports import COMPATIBILITY_EXPORTS
 from radjax_tome.builder.config import (
     CANONICAL_BUILD_INTENT_SCHEMA,
     EXECUTION_PLAN_SCHEMA,
@@ -102,48 +102,7 @@ from radjax_tome.builder.teacher_textbook import (
     write_teacher_textbook_validation_report,
 )
 
-_LAZY_EXPORTS: LazyExportMap = {
-    "MULTI_GPU_PATH_B_REPORT_FILENAME": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "MULTI_GPU_PATH_B_REPORT_FILENAME",
-    ),
-    "MULTI_GPU_PATH_B_REPORT_SCHEMA": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "MULTI_GPU_PATH_B_REPORT_SCHEMA",
-    ),
-    "MULTI_GPU_WORKER_MANIFEST_FILENAME": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "MULTI_GPU_WORKER_MANIFEST_FILENAME",
-    ),
-    "MULTI_GPU_WORKER_MANIFEST_SCHEMA": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "MULTI_GPU_WORKER_MANIFEST_SCHEMA",
-    ),
-    "MultiGPUPathBConfig": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "MultiGPUPathBConfig",
-    ),
-    "build_path_b_assignments": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "build_path_b_assignments",
-    ),
-    "merge_path_b_candidate_records": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "merge_path_b_candidate_records",
-    ),
-    "normalize_multi_gpu_devices": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "normalize_multi_gpu_devices",
-    ),
-    "render_multi_gpu_path_b_summary": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "render_multi_gpu_path_b_summary",
-    ),
-    "run_multi_gpu_path_b_candidate_harness": (
-        "radjax_tome.builder.multi_gpu_path_b",
-        "run_multi_gpu_path_b_candidate_harness",
-    ),
-}
+_LAZY_EXPORTS = COMPATIBILITY_EXPORTS
 
 __all__ = [
     "CANONICAL_BUILD_INTENT_SCHEMA",

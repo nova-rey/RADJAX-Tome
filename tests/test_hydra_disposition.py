@@ -39,7 +39,8 @@ def test_hydra_disposition_schema_and_statuses_are_valid() -> None:
 
     assert payload["schema_version"] == "radjax_tome.hydra_disposition.v1"
     assert payload["baseline"] == "7a56a0808453f4b4ecc6cefe3ee63b724c701980"
-    assert payload["known_dependency_boundary_violations"]
+    assert payload["known_dependency_boundary_violations"] == []
+    assert payload["resolved_dependency_boundary_violations"]
 
     for identifier, record in payload["records"].items():
         assert REQUIRED_RECORD_KEYS <= record.keys(), identifier
@@ -54,17 +55,19 @@ def test_hydra_disposition_schema_and_statuses_are_valid() -> None:
         assert record["owning_milestone"], identifier
 
 
-def test_initializer_boundary_violations_are_explicitly_owned() -> None:
+def test_initializer_boundary_violations_are_isolated_in_compatibility_adapters() -> (
+    None
+):
     payload = _ledger()
     violations = {
         item["module"]: item["remediation_milestone"]
-        for item in payload["known_dependency_boundary_violations"]
+        for item in payload["resolved_dependency_boundary_violations"]
     }
 
     assert violations == {
-        "src/radjax_tome/backends/__init__.py": "M6",
-        "src/radjax_tome/builder/__init__.py": "M3/M6",
-        "src/radjax_tome/reports/__init__.py": "M6",
+        "src/radjax_tome/backends/__init__.py": "M6E",
+        "src/radjax_tome/builder/__init__.py": "M6E",
+        "src/radjax_tome/reports/__init__.py": "M6E",
     }
     for module in violations:
         assert payload["records"][module]["known_dependency_boundary_violation"]

@@ -4,7 +4,8 @@
     "docs/MAINLINE_CONSOLIDATION_ARC.md",
     "docs/HYDRA_INVENTORY.md"
   ],
-  "known_dependency_boundary_violations": [
+  "known_dependency_boundary_violations": [],
+  "resolved_dependency_boundary_violations": [
     {
       "imports": [
         "backends.hf_specimen",
@@ -12,14 +13,16 @@
         "backends.qwen_policy"
       ],
       "module": "src/radjax_tome/backends/__init__.py",
-      "remediation_milestone": "M6"
+      "remediation_milestone": "M6E",
+      "resolution": "compatibility export registry"
     },
     {
       "imports": [
         "builder.multi_gpu_path_b"
       ],
       "module": "src/radjax_tome/builder/__init__.py",
-      "remediation_milestone": "M3/M6"
+      "remediation_milestone": "M6E",
+      "resolution": "compatibility export registry"
     },
     {
       "imports": [
@@ -28,7 +31,8 @@
         "reports.fingerprint_quality"
       ],
       "module": "src/radjax_tome/reports/__init__.py",
-      "remediation_milestone": "M6"
+      "remediation_milestone": "M6E",
+      "resolution": "compatibility export registry"
     }
   ],
   "records": {
@@ -1785,6 +1789,78 @@
       "owning_milestone": "M6",
       "rationale": "Native Path B product spine.",
       "replacement_or_target_boundary": "M6 pipeline stage boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/backends/compatibility_exports.py": {
+      "archive_or_removal_condition": "Retain while package-level compatibility exports remain supported.",
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Isolated registry for research and compatibility backend exports.",
+      "replacement_or_target_boundary": "Compatibility adapter outside the backend initializer.",
+      "status": "compatibility-only"
+    },
+    "src/radjax_tome/builder/compatibility_exports.py": {
+      "archive_or_removal_condition": "Retain while the frozen multi-GPU API remains import-compatible.",
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Isolated registry for the frozen multi-GPU compatibility surface.",
+      "replacement_or_target_boundary": "Compatibility adapter outside the builder initializer.",
+      "status": "compatibility-only"
+    },
+    "src/radjax_tome/builder/exemplar_delivery_contracts.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Typed selected-delivery configuration, failure, and handoff boundary.",
+      "replacement_or_target_boundary": "Canonical delivery contracts.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/production_stages/__init__.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Narrow production-stage integration namespace.",
+      "replacement_or_target_boundary": "Canonical production-stage boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/production_stages/path_b_integration.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Binds retained callbacks to the sole native Path-B state machine.",
+      "replacement_or_target_boundary": "Canonical M4 orchestration integration.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/reports/compatibility_exports.py": {
+      "archive_or_removal_condition": "Retain while research report exports remain package-compatible.",
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Isolated registry for research report compatibility exports.",
+      "replacement_or_target_boundary": "Compatibility adapter outside the reports initializer.",
+      "status": "compatibility-only"
+    },
+    "src/radjax_tome/tome/artifact_descriptor.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Explicit validated source artifact handoff for package materialization.",
+      "replacement_or_target_boundary": "Canonical Tome packaging boundary.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tome/producer_validation.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M6",
+      "rationale": "Producer-only validation adapters separated from package materialization.",
+      "replacement_or_target_boundary": "Reusable Tome-side producer validation adapter.",
+      "status": "supporting"
+    },
+    "docs/M6_PRODUCTION_BOUNDARY_OWNERSHIP.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M6",
+      "rationale": "Canonical production ownership and dependency-boundary ledger.",
+      "replacement_or_target_boundary": "M6 production boundary closure evidence.",
       "status": "canonical"
     },
     "docs/M5_CLOSURE_REPORT.md": {

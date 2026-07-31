@@ -80,6 +80,13 @@ builder or audit import.  The adapter preserves native validator ownership and
 uses lazy imports solely to avoid an import cycle with the established writer
 façade; it is not a new semantic or portable-contract authority.
 
+M6E resolves the Hydra initializer findings by moving research/frozen lazy
+registries into package-local `compatibility_exports` modules.  The three
+public package façades retain their existing compatibility symbols and lazy
+behavior, but their initializers no longer own direct research-module edges.
+The CLI validation command now reaches `write_cover_page` through the Tome
+façade instead of importing the implementation leaf.
+
 ## Explicit deferrals
 
 M6 does not redesign v3 contracts, authority recipes, production policy, CLI,

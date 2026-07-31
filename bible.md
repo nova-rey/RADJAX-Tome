@@ -1963,3 +1963,15 @@ profiles, archive behavior, and historical support are unchanged.  Focused
 package/bundle/M5/M6 parity and publication-pin coverage passed `66 passed`;
 Ruff, formatting, and diff checks passed.  No Contract or Student work, GPU
 execution, Golden mutation, or semantic change occurred.
+
+## 2026-07-31 — M6E Initializer and CLI Façade Isolation
+
+The Hydra-recorded initializer violations are resolved: research and frozen
+lazy export registries now live in package-local compatibility modules, while
+`backends`, `builder`, and `reports` preserve their supported lazy public
+exports without direct research edges.  CLI validation now imports
+`write_cover_page` through the Tome façade.  Import-isolation, native resume,
+production, configuration, publication-pin, and disposition coverage passed
+`106 passed`; Ruff, formatting, JSON, and diff checks passed.  No public symbol
+was removed and no v3, M4/M5, authority, Golden, Contract, Student, or
+accelerator behavior changed.

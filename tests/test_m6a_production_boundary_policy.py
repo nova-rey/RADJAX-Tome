@@ -98,3 +98,34 @@ def test_m6a_production_callers_use_only_the_tome_facade() -> None:
             for imported in imports
             for forbidden in forbidden_tome_leaves
         ), relative
+
+
+def test_m6e_initializers_delegate_research_exports_to_compatibility_modules() -> None:
+    packages = {
+        "backends": (
+            "radjax_tome.backends.hf_export",
+            "radjax_tome.backends.hf_specimen",
+            "radjax_tome.backends.qwen_policy",
+        ),
+        "builder": ("radjax_tome.builder.multi_gpu_path_b",),
+        "reports": (
+            "radjax_tome.reports.arc",
+            "radjax_tome.reports.baseline",
+            "radjax_tome.reports.fingerprint_quality",
+        ),
+    }
+    for package, forbidden in packages.items():
+        initializer = (SOURCE / package / "__init__.py").read_text(encoding="utf-8")
+        compatibility = (SOURCE / package / "compatibility_exports.py").read_text(
+            encoding="utf-8"
+        )
+        assert "COMPATIBILITY_EXPORTS" in initializer
+        for module in forbidden:
+            assert module not in initializer
+            assert module in compatibility
+
+
+def test_m6e_cli_uses_the_tome_facade_not_a_cover_implementation_leaf() -> None:
+    imports = _imports(SOURCE / "cli" / "main.py")
+    assert "radjax_tome.tome.cover_page" not in imports
+    assert "radjax_tome.tome" in imports

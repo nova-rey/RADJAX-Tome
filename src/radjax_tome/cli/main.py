@@ -1354,8 +1354,8 @@ def _cmd_validate(args: argparse.Namespace) -> int:
         COVER_PAGE_FILENAME,
         validate_tome_bundle,
         validate_tome_cover_page,
+        write_cover_page,
     )
-    from radjax_tome.tome.cover_page import write_cover_page
 
     if args.path.is_file():
         report = validate_tome_bundle(args.path)
