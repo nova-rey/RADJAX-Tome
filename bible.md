@@ -2112,3 +2112,16 @@ the new v4 identity. The corpus stays compact and reproducible: payload bytes
 are generated in temporary test directories, while the reviewed schemas,
 vectors, catalog, and checksum inventory are checked in. Contract, Student,
 Golden fixtures, authority behavior, and accelerator work remain untouched.
+
+## 2026-07-31 — M7D Additive V4 Streaming Writer
+
+The new `tome.payload_sharding_v4` writer is a separate, transactional v4
+artifact boundary. It streams selected records to compact canonical JSONL with
+strict record-count shard boundaries, disk-backed duplicate logical-ID checking,
+per-record/index/shard/sequence integrity, a compact sequence-bound semantic
+identity, and the acyclic cover/header/inventory graph. Its deterministic
+regrouping proof shows physical layout hashes change while semantic identity
+does not. The legacy M4 selected-rerun staging, v3 package writer, archive
+writer, public v3 readers, authority, Golden fixtures, Contract, and Student
+remain unmodified. Further M7D work still needs the source-adapter, transport,
+and native/portable parity boundaries before the Contract review gate.

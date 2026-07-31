@@ -47,6 +47,10 @@ from radjax_tome.tome.packaging import (
     package_tome_artifact,
     validate_tome_package,
 )
+from radjax_tome.tome.payload_sharding_v4 import (
+    ShardedTomeV4Result,
+    write_sharded_tome_v4,
+)
 
 __all__ = [
     "CANONICAL_CONTENT_MANIFEST_SCHEMA",
@@ -63,6 +67,7 @@ __all__ = [
     "TomePackageResult",
     "TomePackageValidationReport",
     "STUDENT",
+    "ShardedTomeV4Result",
     "StudentTomeReader",
     "TOME_SEMANTIC_IDENTITY_SCHEMA",
     "TomeSemanticIdentity",
@@ -86,4 +91,5 @@ __all__ = [
     "validate_canonical_tome_cover",
     "validate_tome_package",
     "write_cover_page",
+    "write_sharded_tome_v4",
 ]

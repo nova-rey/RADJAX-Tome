@@ -1,0 +1,370 @@
+"""Additive writer for the proposed streaming Tome v4 payload layout.
+
+This module deliberately does not participate in the legacy v3 packaging path.
+It accepts already-selected semantic records at the artifact boundary, emits the
+portable v4 layout transactionally, and leaves M4 delivery staging untouched.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import shutil
+import sqlite3
+import tempfile
+from collections.abc import Iterable
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+PREFIX = "sha256:"
+_SEQUENCE_PREFIX = b'{"records":['
+_SEQUENCE_SUFFIX = b'],"schema_version":"selected_exemplar_payload_sequence_v1"}'
+
+
+@dataclass(frozen=True)
+class ShardedTomeV4Result:
+    """A completed v4 package root and its layout-independent identity."""
+
+    root: Path
+    semantic_identity_digest: str
+    selected_count: int
+    shard_count: int
+
+
+def write_sharded_tome_v4(
+    records: Iterable[dict[str, Any]],
+    output: Path,
+    *,
+    training_contract: dict[str, Any],
+    authority: dict[str, Any],
+    profile: str = "student",
+    payload_records_per_shard: int = 128,
+    overwrite: bool = False,
+) -> ShardedTomeV4Result:
+    """Write a compact, count-sharded v4 directory without buffering a shard.
+
+    Record order is the caller's selected order.  A shard boundary is *only*
+    ``payload_records_per_shard``; one encoded record plus fixed I/O state is
+    retained at a time.  The target is atomically replaced only after every
+    raw and semantic reference has been written.
+    """
+    if profile not in {"student", "full_debug_provenance", "unpacked"}:
+        raise ValueError("unsupported v4 package profile")
+    if (
+        not isinstance(payload_records_per_shard, int)
+        or isinstance(payload_records_per_shard, bool)
+        or payload_records_per_shard < 1
+    ):
+        raise ValueError("payload_records_per_shard must be a positive integer")
+    if output.exists() and not overwrite:
+        raise ValueError(f"output already exists: {output}")
+    if not isinstance(training_contract, dict) or not isinstance(authority, dict):
+        raise ValueError("training_contract and authority must be objects")
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".radjax-v4-", dir=output.parent) as tmp:
+        stage = Path(tmp) / output.name
+        stage.mkdir()
+        result = _write_directory(
+            records,
+            stage,
+            training_contract=training_contract,
+            authority=authority,
+            profile=profile,
+            capacity=payload_records_per_shard,
+        )
+        if output.exists():
+            shutil.rmtree(output)
+        os.replace(stage, output)
+    return ShardedTomeV4Result(
+        root=output,
+        semantic_identity_digest=result.semantic_identity_digest,
+        selected_count=result.selected_count,
+        shard_count=result.shard_count,
+    )
+
+
+def _write_directory(
+    records: Iterable[dict[str, Any]],
+    root: Path,
+    *,
+    training_contract: dict[str, Any],
+    authority: dict[str, Any],
+    profile: str,
+    capacity: int,
+) -> ShardedTomeV4Result:
+    selected_dir = root / "selected_exemplars"
+    shard_dir = selected_dir / "shards"
+    shard_dir.mkdir(parents=True)
+    index_path = selected_dir / "payload-index.jsonl"
+    sequence = _SequenceHasher()
+    shards: list[dict[str, Any]] = []
+    seen_path = root / ".selected-logical-ids.sqlite3"
+    seen = sqlite3.connect(seen_path)
+    seen.execute("CREATE TABLE ids (logical_id TEXT PRIMARY KEY)")
+    selected_count = 0
+    shard_handle = None
+    shard_hasher: _SequenceHasher | None = None
+    shard_start = 0
+    shard_rows = 0
+    shard_index = -1
+    index_handle = index_path.open("wb")
+    try:
+        for record in records:
+            _assert_finite(record)
+            encoded = _canonical_bytes(record)
+            semantic_digest = _digest_bytes(encoded)
+            logical_id = _digest_json(
+                {
+                    "selected_example_id": record.get("selected_example_id"),
+                    "selected_position": record.get("selected_position"),
+                }
+            )
+            try:
+                seen.execute("INSERT INTO ids VALUES (?)", (logical_id,))
+            except sqlite3.IntegrityError as exc:
+                raise ValueError("duplicate selected logical identifier") from exc
+            if shard_handle is None or shard_rows == capacity:
+                if shard_handle is not None:
+                    shard_handle.close()
+                    shards.append(
+                        _shard_entry(
+                            root,
+                            shard_index,
+                            shard_start,
+                            shard_rows,
+                            shard_hasher.finish() if shard_hasher is not None else "",
+                        )
+                    )
+                shard_index += 1
+                shard_start = selected_count
+                shard_rows = 0
+                shard_hasher = _SequenceHasher()
+                relative = f"selected_exemplars/shards/shard-{shard_index:05d}.jsonl"
+                shard_handle = (root / relative).open("wb")
+            assert shard_handle is not None and shard_hasher is not None
+            shard_handle.write(encoded + b"\n")
+            sequence_item = {
+                "logical_id": logical_id,
+                "payload_semantic_digest": semantic_digest,
+            }
+            sequence.add(sequence_item)
+            shard_hasher.add(sequence_item)
+            raw_digest = _digest_bytes(encoded)
+            index_handle.write(
+                _canonical_bytes(
+                    {
+                        "logical_id": logical_id,
+                        "selected_example_id": record.get("selected_example_id"),
+                        "selected_position": record.get("selected_position"),
+                        "selection_index": selected_count,
+                        "shard_id": shard_index,
+                        "row": shard_rows,
+                        "payload_sha256": raw_digest,
+                        "payload_semantic_digest": semantic_digest,
+                        # Bound after the shard closes; index is rewritten below.
+                        "shard_sha256": "",
+                    }
+                )
+                + b"\n"
+            )
+            selected_count += 1
+            shard_rows += 1
+        if shard_handle is not None:
+            shard_handle.close()
+            shards.append(
+                _shard_entry(
+                    root,
+                    shard_index,
+                    shard_start,
+                    shard_rows,
+                    shard_hasher.finish() if shard_hasher is not None else "",
+                )
+            )
+    finally:
+        index_handle.close()
+        if shard_handle is not None and not shard_handle.closed:
+            shard_handle.close()
+        seen.close()
+        seen_path.unlink(missing_ok=True)
+
+    # Bind raw shard hashes into JSONL without retaining payload records.
+    _rewrite_index_shard_hashes(
+        index_path, {item["shard_id"]: item["sha256"] for item in shards}
+    )
+    sequence_digest = sequence.finish()
+    identity = {
+        "schema_version": "radjax_tome_semantic_identity_v2",
+        "payload_sequence_digest": sequence_digest,
+        "selected_count": selected_count,
+        "training_contract": training_contract,
+        "authority": authority,
+    }
+    identity["semantic_digest"] = _digest_json(identity)
+    layout = {
+        "schema_version": "radjax_tome_payload_layout_v1",
+        "layout_version": "selected_payload_shards_v1",
+        "payload_index": {
+            "path": "selected_exemplars/payload-index.jsonl",
+            "sha256": _digest_file(index_path),
+            "size_bytes": index_path.stat().st_size,
+            "record_count": selected_count,
+            "schema_version": "radjax_tome_payload_index_v2",
+        },
+        "sequence_digest": sequence_digest,
+        "selected_count": selected_count,
+        "payload_records_per_shard": capacity,
+        "shards": shards,
+    }
+    _write_json(root / "selected_exemplars" / "payload-layout.json", layout)
+    _write_manifest_graph(root, profile=profile, identity=identity)
+    return ShardedTomeV4Result(
+        root, identity["semantic_digest"], selected_count, len(shards)
+    )
+
+
+def _rewrite_index_shard_hashes(path: Path, hashes: dict[int, str]) -> None:
+    temporary = path.with_suffix(".tmp")
+    with path.open(encoding="utf-8") as source, temporary.open("wb") as target:
+        for line in source:
+            row = json.loads(line)
+            row["shard_sha256"] = hashes[int(row["shard_id"])]
+            target.write(_canonical_bytes(row) + b"\n")
+    os.replace(temporary, path)
+
+
+def _shard_entry(
+    root: Path, shard_id: int, first: int, count: int, semantic_digest: str
+) -> dict[str, Any]:
+    relative = f"selected_exemplars/shards/shard-{shard_id:05d}.jsonl"
+    path = root / relative
+    return {
+        "shard_id": shard_id,
+        "path": relative,
+        "sha256": _digest_file(path),
+        "size_bytes": path.stat().st_size,
+        "first_selection_index": first,
+        "last_selection_index": first + count - 1,
+        "record_count": count,
+        "semantic_digest": semantic_digest,
+    }
+
+
+def _write_manifest_graph(
+    root: Path, *, profile: str, identity: dict[str, Any]
+) -> None:
+    ignored = {
+        "cover_page.json",
+        "manifests/content-manifest-header.json",
+        "manifests/content-manifest-inventory.jsonl",
+    }
+    members = sorted(
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_file() and path.relative_to(root).as_posix() not in ignored
+    )
+    inventory_path = root / "manifests" / "content-manifest-inventory.jsonl"
+    inventory_path.parent.mkdir(parents=True, exist_ok=True)
+    with inventory_path.open("wb") as handle:
+        for relative in members:
+            path = root / relative
+            handle.write(
+                _canonical_bytes(
+                    {
+                        "path": relative,
+                        "sha256": _digest_file(path),
+                        "size_bytes": path.stat().st_size,
+                        "classification": "training_critical",
+                        "training_authoritative": True,
+                    }
+                )
+                + b"\n"
+            )
+    header = {
+        "schema_version": "tome_content_manifest_header_v3",
+        "profile": profile,
+        "semantic_identity_digest": identity["semantic_digest"],
+        "inventory_path": "manifests/content-manifest-inventory.jsonl",
+        "inventory_sha256": _digest_file(inventory_path),
+        "inventory_size_bytes": inventory_path.stat().st_size,
+        "entry_count": len(members),
+    }
+    header_path = root / "manifests" / "content-manifest-header.json"
+    _write_json(header_path, header)
+    cover = {
+        "schema_version": "radjax_tome_cover_v4",
+        "identity": identity,
+        "training": identity["training_contract"],
+        "package": {"profile": profile, "transport": "directory"},
+        "manifests": {
+            "header": {
+                "path": "manifests/content-manifest-header.json",
+                "sha256": _digest_file(header_path),
+                "size_bytes": header_path.stat().st_size,
+                "schema_version": "tome_content_manifest_header_v3",
+            }
+        },
+        "authority": identity["authority"],
+        "provenance": {},
+        "validation": {},
+    }
+    _write_json(root / "cover_page.json", cover)
+
+
+class _SequenceHasher:
+    def __init__(self) -> None:
+        self._hash = hashlib.sha256()
+        self._hash.update(_SEQUENCE_PREFIX)
+        self._first = True
+
+    def add(self, value: dict[str, str]) -> None:
+        if not self._first:
+            self._hash.update(b",")
+        self._hash.update(_canonical_bytes(value))
+        self._first = False
+
+    def finish(self) -> str:
+        self._hash.update(_SEQUENCE_SUFFIX)
+        return PREFIX + self._hash.hexdigest()
+
+
+def _canonical_bytes(value: Any) -> bytes:
+    return json.dumps(
+        value, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode()
+
+
+def _digest_bytes(value: bytes) -> str:
+    return PREFIX + hashlib.sha256(value).hexdigest()
+
+
+def _digest_json(value: Any) -> str:
+    return _digest_bytes(_canonical_bytes(value))
+
+
+def _digest_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        while block := handle.read(1 << 16):
+            digest.update(block)
+    return PREFIX + digest.hexdigest()
+
+
+def _write_json(path: Path, value: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(_canonical_bytes(value))
+
+
+def _assert_finite(value: Any) -> None:
+    if isinstance(value, float) and (
+        value != value or value in {float("inf"), float("-inf")}
+    ):
+        raise ValueError("payload contains a non-finite number")
+    if isinstance(value, dict):
+        for item in value.values():
+            _assert_finite(item)
+    elif isinstance(value, list):
+        for item in value:
+            _assert_finite(item)
