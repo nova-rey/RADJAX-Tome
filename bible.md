@@ -1868,3 +1868,13 @@ inventory; and a stdlib-only independent conformance validator. Native writers
 and CLI routing remain untouched. The current cover-page documentation now
 identifies v3 as the front door and v2 as historical compatibility only. The
 portable validator is created once here and will be reused for M6D parity.
+
+## 2026-07-31 — M6C Conformance Corpus and Digest Vectors
+
+M6C adds a compact, checksum-pinned conformance catalog and independently
+reproducible canonical JSON/SHA-256 vector. The corpus exercises valid v3
+directories and deterministic archive transports, stale semantic identity,
+unsafe archive paths, historical nonpromotion, and the deliberate distinction
+between unsafe transport and safe-but-noncanonical metadata. Fixture artifacts
+are generated only in temporary test directories; no model inference or Golden
+fixture regeneration is involved.

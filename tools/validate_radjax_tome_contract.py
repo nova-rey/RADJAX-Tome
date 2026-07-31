@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import tarfile
 from dataclasses import asdict, dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -63,13 +64,18 @@ def _pairs_no_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 
 def read_json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(
-            path.read_text(encoding="utf-8"), object_pairs_hook=_pairs_no_duplicates
-        )
+        return parse_json(path.read_text(encoding="utf-8"), str(path))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ContractError("shape_invalid", f"invalid JSON {path}: {exc}") from exc
+
+
+def parse_json(text: str, label: str) -> dict[str, Any]:
+    try:
+        value = json.loads(text, object_pairs_hook=_pairs_no_duplicates)
+    except json.JSONDecodeError as exc:
+        raise ContractError("shape_invalid", f"invalid JSON {label}: {exc}") from exc
     if not isinstance(value, dict):
-        raise ContractError("shape_invalid", f"JSON root must be object: {path}")
+        raise ContractError("shape_invalid", f"JSON root must be object: {label}")
     return value
 
 
@@ -355,6 +361,71 @@ def validate_directory(root: Path) -> Result:
         return Result(False, (exc.code,))
 
 
+def validate_archive(path: Path, *, strict_canonicality: bool) -> Result:
+    try:
+        with tarfile.open(path, mode="r:*") as archive:
+            members = archive.getmembers()
+            names: list[str] = []
+            warnings: list[str] = []
+            payloads: dict[str, bytes] = {}
+            for member in members:
+                _safe_relative_path(member.name, "archive member")
+                if member.name in names:
+                    raise ContractError("transport_unsafe", "duplicate archive member")
+                names.append(member.name)
+                if not member.isfile():
+                    raise ContractError(
+                        "transport_unsafe", "archive member is not regular file"
+                    )
+                handle = archive.extractfile(member)
+                if handle is None:
+                    raise ContractError(
+                        "transport_corrupt", "archive member cannot be read"
+                    )
+                payloads[member.name] = handle.read()
+                if (
+                    member.mtime != 0
+                    or member.uid != 0
+                    or member.gid != 0
+                    or member.mode != 0o644
+                    or member.uname
+                    or member.gname
+                ):
+                    warnings.append("transport_noncanonical")
+            if "cover_page.json" not in payloads:
+                raise ContractError(
+                    "transport_corrupt", "archive has no cover_page.json"
+                )
+            cover = parse_json(
+                payloads["cover_page.json"].decode("utf-8"), "cover_page.json"
+            )
+            validate_cover(cover)
+            expected = cover["manifests"]["content"]["inventory"]
+            expected_names = {"cover_page.json", *(entry["path"] for entry in expected)}
+            if set(names) != expected_names:
+                raise ContractError(
+                    "profile_inventory_mismatch",
+                    "archive members do not match inventory",
+                )
+            for entry in expected:
+                raw = payloads[entry["path"]]
+                if (
+                    len(raw) != entry["size_bytes"]
+                    or SHA256_PREFIX + hashlib.sha256(raw).hexdigest()
+                    != entry["sha256"]
+                ):
+                    raise ContractError(
+                        "digest_mismatch", f"raw inventory mismatch: {entry['path']}"
+                    )
+        if strict_canonicality and warnings:
+            return Result(False, tuple(sorted(set(warnings))))
+        return Result(True, warnings=tuple(sorted(set(warnings))))
+    except (OSError, tarfile.TarError, UnicodeDecodeError):
+        return Result(False, ("transport_corrupt",))
+    except ContractError as exc:
+        return Result(False, (exc.code,))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("path", type=Path)
@@ -363,7 +434,7 @@ def main() -> int:
     result = (
         validate_directory(args.path)
         if args.path.is_dir()
-        else Result(False, ("transport_unsafe",))
+        else validate_archive(args.path, strict_canonicality=args.strict_canonicality)
     )
     print(json.dumps(result.to_dict(), sort_keys=True))
     return 0 if result.ok else 1

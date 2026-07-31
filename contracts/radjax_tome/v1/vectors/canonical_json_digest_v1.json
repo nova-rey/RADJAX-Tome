@@ -1,0 +1,13 @@
+{
+  "schema_version": "radjax_tome_digest_vector_v1",
+  "payload": {
+    "authority": {"b": 2},
+    "schema_version": "radjax_tome_semantic_identity_v1",
+    "training_contract": {"a": 1},
+    "training_payload": [
+      {"logical_id": "payload", "semantic_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+    ]
+  },
+  "canonical_json_utf8": "{\"authority\":{\"b\":2},\"schema_version\":\"radjax_tome_semantic_identity_v1\",\"training_contract\":{\"a\":1},\"training_payload\":[{\"logical_id\":\"payload\",\"semantic_digest\":\"sha256:1111111111111111111111111111111111111111111111111111111111111111\"}]}",
+  "sha256": "sha256:9eceb3ce2b51d4fd2623a9b8055324d933e6652324a9c48ab4ab53349c27fdaa"
+}

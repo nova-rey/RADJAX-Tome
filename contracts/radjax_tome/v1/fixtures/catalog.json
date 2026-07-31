@@ -1,0 +1,14 @@
+{
+  "schema_version": "radjax_tome_conformance_catalog_v1",
+  "cases": [
+    {"id": "canonical-json-digest", "kind": "vector", "expected": "pass"},
+    {"id": "canonical-directory", "kind": "valid", "expected": "pass"},
+    {"id": "canonical-rtome", "kind": "valid", "expected": "pass"},
+    {"id": "canonical-tgz", "kind": "valid", "expected": "pass"},
+    {"id": "safe-noncanonical-archive", "kind": "adversarial", "expected": "transport_noncanonical"},
+    {"id": "stale-identity", "kind": "invalid", "expected": "digest_mismatch"},
+    {"id": "unsafe-member", "kind": "invalid", "expected": "path_unsafe"},
+    {"id": "historical-v2", "kind": "historical", "expected": "incomplete_descriptor"}
+  ],
+  "regeneration": "fixtures are generated only in temporary test directories; source assets and expected vectors are reviewed and checksum-pinned"
+}
