@@ -1878,3 +1878,13 @@ unsafe archive paths, historical nonpromotion, and the deliberate distinction
 between unsafe transport and safe-but-noncanonical metadata. Fixture artifacts
 are generated only in temporary test directories; no model inference or Golden
 fixture regeneration is involved.
+
+## 2026-07-31 — M6D Native and Portable Conformance
+
+M6D reuses the single M6B portable validator against canonical directory,
+`.rtome`, gzip, student, and full-debug producer outputs. It proves profile
+identity agreement with permitted manifest differences and documents the only
+intentional validator difference: native bundle validation enforces producer
+canonical transport metadata, while portable consumer validation reports a
+safe noncanonical container and rejects it only in strict mode. Unsafe or
+integrity-invalid transport remains fail-closed in both paths.
