@@ -12,19 +12,23 @@ from typing import Any
 
 import numpy as np
 
-from radjax_tome.audit import audit_selected_linkage
-from radjax_tome.builder.long_tail import long_tail_summary
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.provenance.hashes import sha256_file
+from radjax_tome.tome.artifact_descriptor import ValidatedTomeArtifact
 from radjax_tome.tome.bundle import pack_tome_bundle
 from radjax_tome.tome.canonical_artifact import (
     build_canonical_artifact_cover,
-    derive_tome_semantic_identity,
     validate_canonical_artifact_directory,
 )
 from radjax_tome.tome.contracts import (
     CANONICAL_TOME_COVER_SCHEMA,
     HISTORICAL_PACKAGE_COVER_SCHEMA,
+)
+from radjax_tome.tome.producer_validation import (
+    audit_selected_package,
+    summarize_long_tail,
+    validate_c6_package_parity,
+    validate_full_debug_producer,
 )
 
 FULL_DEBUG_PROVENANCE = "full_debug_provenance"
@@ -133,12 +137,11 @@ def package_tome_artifact(
     _require_profile(profile)
     if archive not in {"none", "tgz"}:
         raise ValueError("archive must be one of: none, tgz")
-    source = artifact_dir.resolve()
-    if not source.is_dir():
-        raise ValueError(f"artifact directory does not exist: {source}")
+    source_artifact = ValidatedTomeArtifact.from_directory(artifact_dir)
+    source = source_artifact.root
     if output.exists() and not overwrite:
         raise ValueError(f"package output already exists: {output}")
-    semantic_identity = derive_tome_semantic_identity(source)
+    semantic_identity = source_artifact.semantic_identity
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(
@@ -229,13 +232,11 @@ def validate_tome_package(
         if not (root / "shards").is_dir():
             blockers.append("full_debug_provenance package missing shards/")
         else:
-            from radjax_tome.builder import validate_teacher_textbook
-
-            producer_report = validate_teacher_textbook(root)
-            if producer_report.status == "fail":
+            producer_status, producer_blockers = validate_full_debug_producer(root)
+            if producer_status == "fail":
                 blockers.append(
                     "full_debug_provenance producer validation failed: "
-                    + "; ".join(producer_report.blockers)
+                    + "; ".join(producer_blockers)
                 )
     elif actual_profile == STUDENT:
         shard_ok = None
@@ -245,17 +246,17 @@ def validate_tome_package(
 
     if _has_selected_payloads(root):
         if actual_profile is not None:
-            audit = audit_selected_linkage(
-                root,
-                strict=True,
-                profile=actual_profile,
-            )
+            audit = audit_selected_package(root, profile=actual_profile)
             audit_ok = audit.status == "pass"
             if not audit_ok:
                 blockers.append(
                     "selected linkage audit failed: " + _audit_summary(audit)
                 )
-            c6 = _validate_c6_package_parity(root, audit_report=audit.to_dict())
+            c6 = validate_c6_package_parity(
+                root,
+                audit_report=audit.to_dict(),
+                read_selected_payloads=_read_selected_payloads,
+            )
             if c6 is not None and c6["status"] == "fail":
                 blockers.append(
                     "C6 package parity failed: " + "; ".join(c6["blockers"])
@@ -446,7 +447,7 @@ def _filter_student_selected_boards(
                 for name, values in boards.items()
                 if name in allowed and isinstance(values, list)
             }
-        document["long_tail_summary"] = long_tail_summary(retained)
+        document["long_tail_summary"] = summarize_long_tail(retained)
         document["selected_board_summary"] = _selected_board_summary(retained)
         write_json(records_path, document)
 
@@ -465,7 +466,7 @@ def _filter_student_selected_boards(
             and str(record.get("selected_board") or "primary") in allowed
         ]
         document["selected_exemplars"] = retained
-        document["long_tail_summary"] = long_tail_summary(retained)
+        document["long_tail_summary"] = summarize_long_tail(retained)
         document["selected_board_summary"] = _selected_board_summary(retained)
         if document.get("payload_hash") is not None:
             document["payload_hash"] = _native_payload_hash(document)
@@ -502,7 +503,7 @@ def _filter_student_selected_boards(
                 if coordinate in payload_hashes:
                     record["payload_hash"] = payload_hashes[coordinate]
             document["selected_exemplars"] = retained
-            document["long_tail_summary"] = long_tail_summary(retained)
+            document["long_tail_summary"] = summarize_long_tail(retained)
             document["selected_board_summary"] = _selected_board_summary(retained)
             write_json(payload_index_path, document)
     routes_path = root / "curriculum" / "selected_routes.json"
@@ -628,9 +629,13 @@ def _source_input_rows(
 def _write_package_audit(root: Path, *, profile: str) -> None:
     if not _has_selected_payloads(root):
         return
-    audit = audit_selected_linkage(root, strict=True, profile=profile)
+    audit = audit_selected_package(root, profile=profile)
     payload = audit.to_dict()
-    c6 = _validate_c6_package_parity(root, audit_report=payload)
+    c6 = validate_c6_package_parity(
+        root,
+        audit_report=payload,
+        read_selected_payloads=_read_selected_payloads,
+    )
     if c6 is not None:
         payload["c6_integration"] = c6
     write_json(root / "selected_linkage_audit.json", payload)
@@ -974,7 +979,7 @@ def _selected_payload_manifest(root: Path) -> dict[str, Any]:
         "selected_count": selected_count,
         "shard_count": len(shards),
         "payload_shards": shards,
-        "long_tail_summary": long_tail_summary(selected_payloads),
+        "long_tail_summary": summarize_long_tail(selected_payloads),
         "selected_board_summary": _selected_board_summary(selected_payloads),
     }
 
@@ -1366,40 +1371,6 @@ def _content_role(relative: str) -> str:
     if relative.startswith("leaderboards/"):
         return "selected_exemplar_index"
     return Path(relative).stem
-
-
-def _validate_c6_package_parity(
-    root: Path,
-    *,
-    audit_report: dict[str, Any],
-) -> dict[str, Any] | None:
-    c5_root = root / "c6" / "multi-role-selection"
-    if not c5_root.is_dir():
-        return None
-    from radjax_tome.builder.c6_integration import (
-        load_curriculum_route_records,
-        validate_integrated_selection_contract,
-    )
-    from radjax_tome.fingerprint.multi_role_selection import (
-        load_multi_role_selection_artifact,
-    )
-
-    selected = load_multi_role_selection_artifact(c5_root, production_grade=False)
-    leaderboard = read_json_object(root / "leaderboards" / "selected_exemplars.json")
-    records = list(leaderboard.get("selected_exemplars") or [])
-    payloads = _read_selected_payloads(root)
-    routes = load_curriculum_route_records(root)
-    return validate_integrated_selection_contract(
-        None,
-        selected,
-        legacy_records=records,
-        payload_records=payloads,
-        source_passports=[dict(record.source_passport) for record in selected.records],
-        curriculum_records=routes,
-        package_records=records,
-        audit_report=audit_report,
-        production_grade=False,
-    )
 
 
 def _profile_claims(profile: str) -> tuple[dict[str, Any], dict[str, Any]]:

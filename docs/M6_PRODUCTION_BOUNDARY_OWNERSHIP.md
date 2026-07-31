@@ -73,6 +73,13 @@ those exact objects while retaining the established public functions and
 implementation body.  This is intentionally a type extraction, not a second
 delivery algorithm or altered transactional behavior.
 
+M6D gives `tome.packaging` an explicit `ValidatedTomeArtifact` source handoff
+and moves producer-specific audit, full-debug, C6, and long-tail validation
+adapters into `tome.producer_validation`.  Packaging therefore has no direct
+builder or audit import.  The adapter preserves native validator ownership and
+uses lazy imports solely to avoid an import cycle with the established writer
+façade; it is not a new semantic or portable-contract authority.
+
 ## Explicit deferrals
 
 M6 does not redesign v3 contracts, authority recipes, production policy, CLI,

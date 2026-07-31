@@ -1950,3 +1950,16 @@ change.  Focused delivery, adversarial linkage, native resume/orchestrator,
 production, and live-canonical tests passed `123 passed`; Ruff, formatting,
 and diff checks passed.  No delivery semantics, artifact schema/path, M4
 ordering, GPU run, Golden fixture, Contract, or Student work changed.
+
+## 2026-07-31 — M6D Packaging Descriptor and Validation Boundary
+
+Package materialization now receives an explicit `ValidatedTomeArtifact`
+source handoff and `tome.packaging` no longer directly imports builder or audit
+internals.  Existing producer-only full-debug, linkage, C6, and long-tail
+checks are delegated through a Tome-side validation adapter with lazy imports
+to preserve the established writer import cycle boundary.  Native validators
+remain authoritative; packaging output, public APIs, v3 covers/manifests,
+profiles, archive behavior, and historical support are unchanged.  Focused
+package/bundle/M5/M6 parity and publication-pin coverage passed `66 passed`;
+Ruff, formatting, and diff checks passed.  No Contract or Student work, GPU
+execution, Golden mutation, or semantic change occurred.
