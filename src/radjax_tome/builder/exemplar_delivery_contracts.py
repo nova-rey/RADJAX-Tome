@@ -72,6 +72,7 @@ class ExemplarDeliveryConfig:
     max_examples: int | None = None
     backend_config: TeacherBackendConfig | None = None
     selected_rerun_batch_size: int = 1
+    payload_records_per_shard: int = 128
     track_timing: bool = False
     long_tail_warning_k: int = DEFAULT_LONG_TAIL_WARNING_K
     very_long_tail_warning_k: int = DEFAULT_VERY_LONG_TAIL_WARNING_K

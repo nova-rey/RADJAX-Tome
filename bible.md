@@ -2231,3 +2231,14 @@ the verified `f0b1e2e` / `v0.3.1` baseline for those exact reasons. This is
 not a closure claim; production integration, transactional resume, direct
 streaming, indexed access, adversarial coverage, and bounded-memory proof are
 still pending independent review.
+
+## 2026-07-31 — M7 Corrective Configuration Boundary
+
+`payload_records_per_shard` is now an explicit execution-only control with a
+default of `128`. It flows through legacy intent adaptation, canonical intent,
+resolved configuration, execution planning, CLI overrides, the flat execution
+adapter, and the native delivery configuration. The focused characterization
+proves the value survives every boundary, rejects non-positive/non-integer
+values, and is absent from the fixed 25-field selection-authority payload and
+hash. This checkpoint changes no physical writer, resume behavior, identity,
+authority, or Golden artifact.

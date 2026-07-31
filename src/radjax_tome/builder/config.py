@@ -126,6 +126,7 @@ class ExecutionIntent:
     no_build_if_plan_warn: bool
     max_artifact_bytes: int | None
     progress: bool
+    payload_records_per_shard: int = 128
 
 
 @dataclass(frozen=True)
@@ -232,6 +233,7 @@ class TomeExecutionPlan:
     gpu_batch_size_auto_min: int
     gpu_batch_size_auto_max: int
     shard_size_examples: int
+    payload_records_per_shard: int
     schema_version: str = EXECUTION_PLAN_SCHEMA
 
 
@@ -324,6 +326,7 @@ def adapt_legacy_production_build_config(
             gpu_batch_size_auto_min=config.gpu_batch_size_auto_min,
             gpu_batch_size_auto_max=config.gpu_batch_size_auto_max,
             shard_size_examples=config.shard_size_examples,
+            payload_records_per_shard=config.payload_records_per_shard,
             resume=config.resume,
             overwrite=config.overwrite,
             strict_provenance=config.strict_provenance,
@@ -427,6 +430,7 @@ def canonical_production_build_intent(
             gpu_batch_size_auto_min=1,
             gpu_batch_size_auto_max=64,
             shard_size_examples=1024,
+            payload_records_per_shard=128,
             resume=False,
             overwrite=False,
             strict_provenance=True,
@@ -580,6 +584,7 @@ _PRODUCTION_OVERRIDE_SECTIONS = {
     "gpu_batch_size_auto_min": ("execution", "gpu_batch_size_auto_min"),
     "gpu_batch_size_auto_max": ("execution", "gpu_batch_size_auto_max"),
     "shard_size_examples": ("execution", "shard_size_examples"),
+    "payload_records_per_shard": ("execution", "payload_records_per_shard"),
     "resume": ("execution", "resume"),
     "overwrite": ("execution", "overwrite"),
     "strict_provenance": ("execution", "strict_provenance"),
@@ -774,6 +779,7 @@ def production_build_config_from_resolved(
         gpu_batch_size_auto_min=intent.execution.gpu_batch_size_auto_min,
         gpu_batch_size_auto_max=intent.execution.gpu_batch_size_auto_max,
         shard_size_examples=intent.execution.shard_size_examples,
+        payload_records_per_shard=intent.execution.payload_records_per_shard,
         max_examples=intent.corpus.max_examples,
         resume=intent.execution.resume,
         overwrite=intent.execution.overwrite,
@@ -983,6 +989,8 @@ def validate_tome_build_intent(
         errors.append("execution.gpu_batch_size_custom is only valid in custom mode")
     if intent.execution.shard_size_examples <= 0:
         errors.append("execution.shard_size_examples must be positive")
+    if intent.execution.payload_records_per_shard <= 0:
+        errors.append("execution.payload_records_per_shard must be a positive integer")
     if (
         intent.execution.max_artifact_bytes is not None
         and intent.execution.max_artifact_bytes <= 0
@@ -1154,6 +1162,10 @@ def _integer_fields(intent: TomeBuildIntent) -> tuple[tuple[str, Any], ...]:
         ("execution.gpu_batch_size_auto_min", intent.execution.gpu_batch_size_auto_min),
         ("execution.gpu_batch_size_auto_max", intent.execution.gpu_batch_size_auto_max),
         ("execution.shard_size_examples", intent.execution.shard_size_examples),
+        (
+            "execution.payload_records_per_shard",
+            intent.execution.payload_records_per_shard,
+        ),
         (
             "selection.exemplar_leaderboard_capacity",
             intent.selection.exemplar_leaderboard_capacity,
@@ -1356,6 +1368,7 @@ def derive_execution_plan(resolved: ResolvedTomeBuildConfig) -> TomeExecutionPla
         gpu_batch_size_auto_min=execution.gpu_batch_size_auto_min,
         gpu_batch_size_auto_max=execution.gpu_batch_size_auto_max,
         shard_size_examples=execution.shard_size_examples,
+        payload_records_per_shard=execution.payload_records_per_shard,
     )
 
 

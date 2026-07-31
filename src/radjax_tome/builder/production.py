@@ -112,6 +112,7 @@ class ProductionBuildConfig:
     gpu_batch_size_auto_min: int = 1
     gpu_batch_size_auto_max: int = 64
     shard_size_examples: int = 1024
+    payload_records_per_shard: int = 128
     max_examples: int | None = None
     resume: bool = False
     overwrite: bool = False

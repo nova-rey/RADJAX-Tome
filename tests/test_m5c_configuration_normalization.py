@@ -83,6 +83,49 @@ def test_m5c_legacy_flat_config_round_trips_through_the_execution_adapter() -> N
     ) == _selection_integration_hash(legacy)
 
 
+def test_m7_payload_shard_capacity_crosses_all_execution_boundaries_only() -> None:
+    """M7 physical layout control is resolved, planned, and non-authoritative."""
+
+    legacy = replace(_legacy_config(), payload_records_per_shard=7)
+
+    normalized = normalize_production_build_request(legacy)
+    execution = production_build_config_from_resolved(normalized.resolved)
+
+    assert normalized.resolved.intent.execution.payload_records_per_shard == 7
+    assert normalized.execution_plan.payload_records_per_shard == 7
+    assert execution.payload_records_per_shard == 7
+    assert "payload_records_per_shard" not in normalized.selection_authority_payload
+    assert normalized.selection_authority_hash == _selection_integration_hash(legacy)
+
+
+@pytest.mark.parametrize(
+    ("value", "message"),
+    (
+        (0, "execution.payload_records_per_shard must be a positive integer"),
+        (-1, "execution.payload_records_per_shard must be a positive integer"),
+        (True, "execution.payload_records_per_shard must be an integer"),
+        (1.5, "execution.payload_records_per_shard must be an integer"),
+        ("128", "execution.payload_records_per_shard must be an integer"),
+    ),
+)
+def test_m7_payload_shard_capacity_is_a_positive_integer(
+    value: object, message: str
+) -> None:
+    intent = canonical_production_build_intent(
+        teacher_model="teacher",
+        dataset_path=Path("/data/corpus.jsonl"),
+        corpus_manifest_path=Path("/data/manifest.json"),
+        teacher_model_provenance_path=Path("/data/provenance.json"),
+        output_dir=Path("/out"),
+    )
+    invalid = replace(
+        intent,
+        execution=replace(intent.execution, payload_records_per_shard=value),
+    )
+
+    assert message in validate_tome_build_intent(invalid)
+
+
 def test_m5c_cli_and_programmatic_requests_resolve_identically() -> None:
     programmatic = normalize_production_build_request(
         replace(_legacy_config(), exemplar_selection_enabled=True)

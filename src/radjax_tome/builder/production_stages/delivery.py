@@ -69,6 +69,7 @@ def exemplar_delivery_config(
         backend_config=backend_config(config),
         selected_rerun_batch_size=config.selected_rerun_batch_size
         or effective_batch_size,
+        payload_records_per_shard=config.payload_records_per_shard,
         track_timing=config.track_delivery_timing,
         long_tail_warning_k=config.long_tail_warning_k,
         very_long_tail_warning_k=config.very_long_tail_warning_k,
