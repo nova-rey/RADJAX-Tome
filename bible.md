@@ -1938,3 +1938,15 @@ continues to prove the exact ordered slices.  Focused native/orchestration,
 production, C6, authority, and M6A boundary coverage passed `72 passed, 1
 skipped`; Ruff, format, and diff checks passed.  No GPU work, Golden mutation,
 authority/configuration change, Contract change, or Student work occurred.
+
+## 2026-07-31 — M6C Delivery Typed-Handoff Extraction
+
+Delivery configuration, failure types, report vocabulary, and the immutable
+prepared-delivery handoff now have one dependency-light owner in
+`builder.exemplar_delivery_contracts`.  The established `exemplar_delivery`
+module forwards the exact same public types while retaining its existing
+rerun, staging, assembly, and validation behavior, avoiding a flag-day import
+change.  Focused delivery, adversarial linkage, native resume/orchestrator,
+production, and live-canonical tests passed `123 passed`; Ruff, formatting,
+and diff checks passed.  No delivery semantics, artifact schema/path, M4
+ordering, GPU run, Golden fixture, Contract, or Student work changed.

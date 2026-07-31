@@ -66,6 +66,13 @@ and native-boundary isolation.  Later M6 checkpoints strengthen them only
 after the corresponding dependency edge has actually been eliminated, so a
 test never asserts an architecture that the checked-in code has not reached.
 
+M6C owns the first delivery split: `builder.exemplar_delivery_contracts` is the
+single definition of delivery configuration, delivery failures, and the
+`PreparedSelectedDelivery` handoff.  `builder.exemplar_delivery` re-exports
+those exact objects while retaining the established public functions and
+implementation body.  This is intentionally a type extraction, not a second
+delivery algorithm or altered transactional behavior.
+
 ## Explicit deferrals
 
 M6 does not redesign v3 contracts, authority recipes, production policy, CLI,
