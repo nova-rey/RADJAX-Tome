@@ -73,7 +73,7 @@ def test_exact_canonical_build_uses_real_slice_one_before_compatible_continuatio
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    config = _config(tmp_path)
+    config = _config(tmp_path, payload_records_per_shard=2)
     calls: list[dict[str, object]] = []
     real_slice_one = orchestrator.run_preflight_then_score_pass
 
@@ -97,6 +97,28 @@ def test_exact_canonical_build_uses_real_slice_one_before_compatible_continuatio
     assert progress["score_pass"]["status"] == "complete"
     assert progress["selected_rerun"]["status"] == "complete"
     assert corridor["selected_exemplars_linked_to_corridor_modes"] is True
+    # The ordinary canonical Path-B command publishes the v4 package only
+    # after the existing late-corridor and reconciliation proof.  The legacy
+    # output remains the historical production/resume input, while this report
+    # identifies the one distributable v4 artifact for new consumers.
+    v4_root = Path(report["canonical_tome_directory"])
+    v4_archive = Path(report["canonical_tome_archive"])
+    assert v4_root == config.output_dir.with_name(f"{config.output_dir.name}.v4")
+    assert v4_archive == config.output_dir.with_name(f"{config.output_dir.name}.v4.tgz")
+    assert v4_root.is_dir()
+    assert v4_archive.is_file()
+    layout = _json(v4_root / "selected_exemplars" / "payload-layout.json")
+    assert layout["payload_records_per_shard"] == 2
+    assert layout["selected_count"] == 4
+    assert layout["shard_index"]["record_count"] == 2
+    assert report["canonical_tome_schema_version"] == "radjax_tome_cover_v4"
+    assert report["canonical_tome_selected_count"] == 4
+    assert report["canonical_tome_shard_count"] == 2
+
+    from radjax_contract.tome import validate_streaming_tome
+
+    assert validate_streaming_tome(v4_root).ok
+    assert validate_streaming_tome(v4_archive).ok
 
 
 def test_global_only_build_bypasses_real_slice_one_and_retains_legacy_artifacts(

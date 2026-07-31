@@ -2268,3 +2268,17 @@ proves the value survives every boundary, rejects non-positive/non-integer
 values, and is absent from the fixed 25-field selection-authority payload and
 hash. This checkpoint changes no physical writer, resume behavior, identity,
 authority, or Golden artifact.
+
+## 2026-07-31 — M7 Corrective Native Path-B v4 Publication
+
+The ordinary canonical Path-B terminal reporting callback now publishes the
+validated completed native artifact through the v4 adapter only after the
+existing late-corridor, linkage-validation, and reconciliation proof.  It
+reports one obvious consumer-facing sibling directory and deterministic `.tgz`
+archive, including their v4 identity and shard facts; the retained legacy tree
+is solely the historical/resume source for that transactional projection.
+The focused native integration test proves a configured two-record shard
+capacity reaches the final v4 layout and both physical forms pass the portable
+validator.  This preserves the sole M4 state machine and does not claim M7
+closure; staging-prefix resume and direct-streaming evidence remain separate
+corrective work.

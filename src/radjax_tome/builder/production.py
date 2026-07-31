@@ -889,11 +889,35 @@ def _native_final_reporting_operation(state: _ProductionRunState, inputs: Any) -
         native_final_reporting_operation,
     )
 
+    def report_with_native_v4(
+        config: ProductionBuildConfig, **kwargs: Any
+    ) -> dict[str, Any]:
+        """Publish the paved v4 package only after all retained Path-B proof."""
+
+        report = _production_report(config, **kwargs)
+        if report["status"] != "fail":
+            from radjax_tome.builder.production_stages.v4_publication import (
+                publish_native_path_b_v4,
+            )
+
+            publication = publish_native_path_b_v4(config)
+            report["canonical_tome_schema_version"] = "radjax_tome_cover_v4"
+            report["canonical_tome_directory"] = str(publication.directory.root)
+            report["canonical_tome_archive"] = str(publication.archive_path)
+            report["canonical_tome_semantic_identity"] = (
+                publication.directory.semantic_identity_digest
+            )
+            report["canonical_tome_selected_count"] = (
+                publication.directory.selected_count
+            )
+            report["canonical_tome_shard_count"] = publication.directory.shard_count
+        return report
+
     return native_final_reporting_operation(
         state,
         inputs,
         operations=FinalReportingOperations(
-            report=_production_report,
+            report=report_with_native_v4,
             finalize_report=_finalize_production_report,
             timing_fields=_production_timing_fields,
             now=_now,
