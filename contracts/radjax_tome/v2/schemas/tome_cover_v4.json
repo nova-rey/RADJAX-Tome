@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radjax_tome_cover_v4",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "identity", "training", "package", "manifests", "authority", "provenance", "validation"],
+  "properties": {
+    "schema_version": {"const": "radjax_tome_cover_v4"},
+    "identity": {"type": "object"},
+    "training": {"type": "object"},
+    "package": {"type": "object", "additionalProperties": false, "required": ["profile", "transport"], "properties": {"profile": {"enum": ["unpacked", "student", "full_debug_provenance"]}, "transport": {"enum": ["directory", "rtome", "tgz"]}}},
+    "manifests": {"type": "object", "additionalProperties": false, "required": ["header"], "properties": {"header": {"$ref": "#/$defs/header_ref"}}},
+    "authority": {"type": "object"},
+    "provenance": {"type": "object"},
+    "validation": {"type": "object"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "header_ref": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "size_bytes", "schema_version"], "properties": {"path": {"type": "string", "const": "manifests/content-manifest-header.json"}, "sha256": {"$ref": "#/$defs/sha256"}, "size_bytes": {"type": "integer", "minimum": 1}, "schema_version": {"const": "tome_content_manifest_header_v3"}}}
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tome_content_manifest_header_v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "profile", "semantic_identity_digest", "inventory_path", "inventory_sha256", "inventory_size_bytes", "entry_count"],
+  "properties": {
+    "schema_version": {"const": "tome_content_manifest_header_v3"},
+    "profile": {"enum": ["unpacked", "student", "full_debug_provenance"]},
+    "semantic_identity_digest": {"$ref": "#/$defs/sha256"},
+    "inventory_path": {"type": "string", "const": "manifests/content-manifest-inventory.jsonl"},
+    "inventory_sha256": {"$ref": "#/$defs/sha256"},
+    "inventory_size_bytes": {"type": "integer", "minimum": 1},
+    "entry_count": {"type": "integer", "minimum": 0}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

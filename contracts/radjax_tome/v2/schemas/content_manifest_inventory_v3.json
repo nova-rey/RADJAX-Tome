@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tome_content_manifest_inventory_v3",
+  "description": "One JSON object per UTF-8 JSONL line; the inventory never inventories itself, its header, or the cover.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["path", "sha256", "size_bytes", "classification", "training_authoritative"],
+  "properties": {
+    "path": {"type": "string", "minLength": 1, "not": {"enum": ["cover.json", "manifests/content-manifest-header.json", "manifests/content-manifest-inventory.jsonl"]}},
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "size_bytes": {"type": "integer", "minimum": 0},
+    "classification": {"enum": ["training_critical", "integrity_or_provenance", "diagnostic", "human_readable", "operational"]},
+    "training_authoritative": {"type": "boolean"}
+  }
+}

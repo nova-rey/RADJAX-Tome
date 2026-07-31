@@ -13,6 +13,16 @@ historical compatibility evidence and is not reinterpreted. The complete
 pre-M7 payload-field census is locked in a characterization test for M7B
 classification.
 
+## 2026-07-31 — M7B Tome-Local Streaming Contract Proposal
+
+The repository now carries a proposed, not-yet-published `radjax_tome/v2`
+contract tree for review. It defines the closed v4 cover, identity v2,
+streamed content-manifest graph, JSONL selected-payload index, bounded
+record-count sharding, exact 38-field selected-payload projection, errors,
+profiles, compatibility declarations, digest vector, and checksum inventory.
+The proposal preserves the v1 publication unchanged and is intentionally
+stopped before any RADJAX-Contract mutation.
+
 Earlier history in this root ledger was reconstructed from current repository
 state because no root `bible.md` existed when Spec 3.1 landed. Existing
 historical notes remain in `docs/BIBLE.md`; future spec commits should append
