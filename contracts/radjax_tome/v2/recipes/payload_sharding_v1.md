@@ -7,8 +7,11 @@ cover. This directed `cover -> header -> inventory` chain is acyclic.
 
 `selected_exemplars/payload-layout.json` binds layout/version, index reference,
 the selected-record sequence digest, selected count, shard capacity, and shard
-integrity records. `payload-index.jsonl` is one index record per line: it maps
-`logical_id` to `(shard,row)`, a raw `payload_sha256`, and a semantic digest.
+integrity records. `payload-index.jsonl` is one index record per line:
+`logical_id` is exactly
+`sha256(canonical-json({"selected_example_id":...,"selected_position":...}))`.
+It maps that coordinate-derived ID to `(shard,row)`, a raw `payload_sha256`,
+and a semantic digest.
 The layout index reference owns the only index record count; JSONL records do
 not repeat it.
 

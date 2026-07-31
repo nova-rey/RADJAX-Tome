@@ -23,6 +23,14 @@ profiles, compatibility declarations, digest vector, and checksum inventory.
 The proposal preserves the v1 publication unchanged and is intentionally
 stopped before any RADJAX-Contract mutation.
 
+## 2026-07-31 — M7B Contract Correction
+
+The v2 inventory exclusion now correctly names `cover_page.json`, and each
+JSONL payload-index record explicitly binds both its coordinate-derived logical
+ID and raw payload digest. This resolves the draft index ambiguity before the
+portable streaming validator and conformance corpus are accepted. Contract and
+Student remain untouched.
+
 Earlier history in this root ledger was reconstructed from current repository
 state because no root `bible.md` existed when Spec 3.1 landed. Existing
 historical notes remain in `docs/BIBLE.md`; future spec commits should append
