@@ -50,6 +50,7 @@ from radjax_tome.tome.packaging import (
 from radjax_tome.tome.payload_sharding_v4 import (
     ShardedTomeV4Result,
     pack_sharded_tome_v4,
+    package_legacy_artifact_as_sharded_tome_v4,
     write_sharded_tome_v4,
     write_sharded_tome_v4_from_legacy_artifact,
 )
@@ -83,6 +84,7 @@ __all__ = [
     "inspect_tome_bundle",
     "pack_tome_bundle",
     "package_tome_artifact",
+    "package_legacy_artifact_as_sharded_tome_v4",
     "pack_sharded_tome_v4",
     "read_historical_tome_descriptor",
     "open_student_tome",

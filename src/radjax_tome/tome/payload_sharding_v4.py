@@ -101,6 +101,49 @@ def write_sharded_tome_v4_from_legacy_artifact(
     )
 
 
+def package_legacy_artifact_as_sharded_tome_v4(
+    source: Path,
+    output: Path,
+    *,
+    profile: str = "student",
+    payload_records_per_shard: int = 128,
+    overwrite: bool = False,
+) -> ShardedTomeV4Result:
+    """Package one complete legacy artifact behind the additive v4 boundary.
+
+    Legacy selected wrappers and manifests are intentionally not copied: v4
+    emits their replacement payload grammar and its own acyclic manifest graph.
+    All copied source members remain raw-integrity inventory members only.
+    """
+    if output.exists() and not overwrite:
+        raise ValueError(f"output already exists: {output}")
+    identity = derive_tome_semantic_identity(source)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix=".radjax-v4-package-", dir=output.parent
+    ) as tmp:
+        stage = Path(tmp) / output.name
+        stage.mkdir()
+        _copy_legacy_profile_members(source, stage, profile=profile)
+        result = _write_directory(
+            _legacy_selected_records(source),
+            stage,
+            training_contract=identity.training_contract,
+            authority=identity.authority,
+            profile=profile,
+            capacity=payload_records_per_shard,
+        )
+        if output.exists():
+            shutil.rmtree(output)
+        os.replace(stage, output)
+    return ShardedTomeV4Result(
+        output,
+        result.semantic_identity_digest,
+        result.selected_count,
+        result.shard_count,
+    )
+
+
 def pack_sharded_tome_v4(
     root: Path,
     output: Path,
@@ -378,6 +421,26 @@ def _legacy_selected_records(source: Path) -> Iterable[dict[str, Any]]:
                     f"legacy selected payload is not v4-projectable: {path.name}"
                 )
             yield {key: record[key] for key in record if key in allowed}
+
+
+def _copy_legacy_profile_members(
+    source: Path, destination: Path, *, profile: str
+) -> None:
+    if profile not in {"student", "full_debug_provenance", "unpacked"}:
+        raise ValueError("unsupported v4 package profile")
+    for path in sorted(member for member in source.rglob("*") if member.is_file()):
+        relative = path.relative_to(source).as_posix()
+        if relative == "cover_page.json" or relative.startswith(
+            ("manifests/", "selected_exemplars/")
+        ):
+            continue
+        if relative.startswith(".staging-") or relative.startswith(".selected-"):
+            continue
+        if profile == "student" and relative.startswith("shards/"):
+            continue
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, target)
 
 
 def _rewrite_index_shard_hashes(path: Path, shard_index_path: Path) -> None:

@@ -2157,3 +2157,15 @@ one shard-index record, and fixed digest/database/I/O state; payload and shard
 collections are not materialized. The schema/checksum corpus, docs, and
 black-box fixtures moved together. No legacy v3 artifact, Contract, Student,
 Golden fixture, authority recipe, or production-stage behavior changed.
+
+## 2026-07-31 — M7D Complete Legacy-Artifact Packaging Boundary
+
+The additive v4 package adapter now builds one coherent package from a complete
+legacy artifact: it copies profile-permitted non-payload members into staging,
+omits legacy cover/manifests/selected wrappers, emits v4 selected shards and
+the acyclic v4 manifest graph, validates, and promotes atomically. Student
+packages omit raw producer shards; full-debug packages retain permitted source
+provenance, while the selected payload identity remains profile-independent.
+Tests prove source immutability, complete-package member behavior, legacy
+selected-payload projection, and portable validation. The v3 public package
+and archive routes remain compatibility paths, not inputs to v4 semantics.

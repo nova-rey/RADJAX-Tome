@@ -14,6 +14,7 @@ import pytest
 
 from radjax_tome.tome import (
     pack_sharded_tome_v4,
+    package_legacy_artifact_as_sharded_tome_v4,
     write_sharded_tome_v4,
     write_sharded_tome_v4_from_legacy_artifact,
 )
@@ -191,6 +192,50 @@ def test_v4_legacy_adapter_does_not_mutate_its_v3_source(tmp_path: Path) -> None
         if path.is_file()
     }
     assert before == after
+    assert _validate(result.root)["ok"] is True
+
+
+def test_v4_package_adapter_copies_a_complete_profile_without_legacy_payloads(
+    tmp_path: Path,
+) -> None:
+    source = build_fake_teacher_textbook_artifact(tmp_path)
+    result = package_legacy_artifact_as_sharded_tome_v4(source, tmp_path / "v4")
+    assert (result.root / "metadata.json").is_file()
+    assert (
+        not (result.root / "cover_page.json").read_bytes()
+        == (source / "cover_page.json").read_bytes()
+    )
+    assert not list(
+        (result.root / "selected_exemplars").glob("selected-exemplars-*.json")
+    )
+    assert not (result.root / "shards").exists()
+    assert _validate(result.root)["ok"] is True
+
+
+def test_v4_package_adapter_projects_legacy_selected_payloads(tmp_path: Path) -> None:
+    source = build_fake_teacher_textbook_artifact(tmp_path)
+    legacy = source / "selected_exemplars" / "selected-exemplars-00000.json"
+    legacy.parent.mkdir(exist_ok=True)
+    legacy.write_text(
+        json.dumps(
+            {
+                "schema_version": "selected_exemplar_payload_shard_v1",
+                "selected_exemplars": [_record(0), _record(1)],
+            }
+        )
+    )
+    result = package_legacy_artifact_as_sharded_tome_v4(
+        source, tmp_path / "v4", payload_records_per_shard=1
+    )
+    assert result.selected_count == 2
+    assert (
+        len(
+            (result.root / "selected_exemplars/payload-shards.jsonl")
+            .read_text()
+            .splitlines()
+        )
+        == 2
+    )
     assert _validate(result.root)["ok"] is True
 
 
