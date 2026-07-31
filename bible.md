@@ -2258,6 +2258,23 @@ archive random access. Focused writer, mismatch, streaming, and indexed-reader
 tests pass. Native Path-B publication, resume staging, the full adversarial
 matrix, and bounded-memory closure evidence remain pending.
 
+## 2026-07-31 — M7 Corrective Native Publication and Staging
+
+The ordinary canonical Path-B report now identifies a deterministic sibling
+v4 directory and `.tgz` only after the retained score, selected-rerun, late
+corridor, reconciliation, and validation callbacks complete. The legacy tree
+remains the historical/resume input, while the reported v4 path is the paved
+consumer artifact. A delivery-owned v4 staging primitive provides atomic
+sealed JSONL shards, receipt-backed contiguous-prefix reuse, interruption
+cleanup, and rejection of gaps, overlaps, reordering, and capacity mismatch.
+The legacy adapter projects declared v4 semantic fields while omitting
+legacy-only delivery receipts, and the deterministic tar writer emits the
+cover/header/inventory prelude before inventory-governed members for direct
+sequential Contract validation. Focused native publication, writer, and
+staging tests pass. This remains corrective implementation only; complete
+resume wiring, full adversarial/memory coverage, and independent closure review
+are still pending.
+
 ## 2026-07-31 — M7 Corrective Configuration Boundary
 
 `payload_records_per_shard` is now an explicit execution-only control with a

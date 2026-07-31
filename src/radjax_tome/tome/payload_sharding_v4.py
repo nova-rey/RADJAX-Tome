@@ -170,7 +170,10 @@ def pack_sharded_tome_v4(
                 fileobj=stream, mode="w", format=tarfile.USTAR_FORMAT
             ) as archive:
                 for source in sorted(
-                    path for path in root.rglob("*") if path.is_file()
+                    (path for path in root.rglob("*") if path.is_file()),
+                    key=lambda path: _archive_member_order(
+                        path.relative_to(root).as_posix()
+                    ),
                 ):
                     relative = source.relative_to(root).as_posix()
                     info = tarfile.TarInfo(relative)
@@ -453,6 +456,16 @@ def _archive_cover_bytes(source: Path, *, compression: str) -> bytes:
     return _canonical_bytes(cover)
 
 
+def _archive_member_order(relative: str) -> tuple[int, str]:
+    """Put the acyclic manifest prelude before inventory-governed members."""
+    prelude = {
+        "cover_page.json": 0,
+        "manifests/content-manifest-header.json": 1,
+        "manifests/content-manifest-inventory.jsonl": 2,
+    }
+    return prelude.get(relative, 3), relative
+
+
 def _legacy_selected_records(source: Path) -> Iterable[dict[str, Any]]:
     """Yield legacy selected records in native shard order at the v4 boundary."""
     allowed = _SEMANTIC_FIELDS | {"opaque_extensions"}
@@ -466,10 +479,10 @@ def _legacy_selected_records(source: Path) -> Iterable[dict[str, Any]]:
         for record in records:
             if not isinstance(record, dict) or not _SEMANTIC_FIELDS <= set(record):
                 raise ValueError(f"legacy selected payload is incomplete: {path.name}")
-            if set(record) - allowed:
-                raise ValueError(
-                    f"legacy selected payload is not v4-projectable: {path.name}"
-                )
+            # Native v3 delivery receipts may contain nonsemantic staging and
+            # linkage details such as ``payload_hash``.  The versioned v4
+            # adapter projects the closed public semantic surface explicitly;
+            # direct v4 writers remain strict about undeclared fields.
             yield {key: record[key] for key in record if key in allowed}
 
 
