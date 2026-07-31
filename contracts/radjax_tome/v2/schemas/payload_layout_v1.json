@@ -3,19 +3,19 @@
   "$id": "radjax_tome_payload_layout_v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "layout_version", "payload_index", "sequence_digest", "selected_count", "payload_records_per_shard", "shards"],
+  "required": ["schema_version", "layout_version", "payload_index", "shard_index", "sequence_digest", "selected_count", "payload_records_per_shard"],
   "properties": {
     "schema_version": {"const": "radjax_tome_payload_layout_v1"},
     "layout_version": {"const": "selected_payload_shards_v1"},
     "payload_index": {"$ref": "#/$defs/index_ref"},
+    "shard_index": {"$ref": "#/$defs/shard_index_ref"},
     "sequence_digest": {"$ref": "#/$defs/sha256"},
     "selected_count": {"type": "integer", "minimum": 0},
-    "payload_records_per_shard": {"type": "integer", "minimum": 1},
-    "shards": {"type": "array", "items": {"$ref": "#/$defs/shard"}}
+    "payload_records_per_shard": {"type": "integer", "minimum": 1}
   },
   "$defs": {
     "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "index_ref": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "size_bytes", "record_count", "schema_version"], "properties": {"path": {"type": "string", "const": "selected_exemplars/payload-index.jsonl"}, "sha256": {"$ref": "#/$defs/sha256"}, "size_bytes": {"type": "integer", "minimum": 0}, "record_count": {"type": "integer", "minimum": 0}, "schema_version": {"const": "radjax_tome_payload_index_v2"}}},
-    "shard": {"type": "object", "additionalProperties": false, "required": ["shard_id", "path", "sha256", "size_bytes", "first_selection_index", "last_selection_index", "record_count", "semantic_digest"], "properties": {"shard_id": {"type": "integer", "minimum": 0}, "path": {"type": "string", "pattern": "^selected_exemplars/shards/[a-z0-9][a-z0-9._-]*\\.jsonl$"}, "sha256": {"$ref": "#/$defs/sha256"}, "size_bytes": {"type": "integer", "minimum": 1}, "first_selection_index": {"type": "integer", "minimum": 0}, "last_selection_index": {"type": "integer", "minimum": 0}, "record_count": {"type": "integer", "minimum": 1}, "semantic_digest": {"$ref": "#/$defs/sha256"}}}
+    "shard_index_ref": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "size_bytes", "record_count", "schema_version"], "properties": {"path": {"type": "string", "const": "selected_exemplars/payload-shards.jsonl"}, "sha256": {"$ref": "#/$defs/sha256"}, "size_bytes": {"type": "integer", "minimum": 0}, "record_count": {"type": "integer", "minimum": 0}, "schema_version": {"const": "radjax_tome_payload_shard_index_v1"}}}
   }
 }

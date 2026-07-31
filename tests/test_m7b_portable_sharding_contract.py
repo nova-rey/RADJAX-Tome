@@ -40,6 +40,7 @@ def test_m7b_contract_declares_the_acyclic_streaming_manifest_graph() -> None:
         "content_manifest_inventory": "tome_content_manifest_inventory_v3",
         "payload_layout": "radjax_tome_payload_layout_v1",
         "payload_index": "radjax_tome_payload_index_v2",
+        "payload_shard_index": "radjax_tome_payload_shard_index_v1",
         "semantic_identity": "radjax_tome_semantic_identity_v2",
     }
     assert contract["manifest_graph"] == "cover_to_header_to_inventory_acyclic"

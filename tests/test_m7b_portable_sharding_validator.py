@@ -99,6 +99,7 @@ def _package(root: Path, mutate: Mutator | None = None) -> Path:
     )
     shard_path = "selected_exemplars/shards/fixture-00000.jsonl"
     index_path = "selected_exemplars/payload-index.jsonl"
+    shard_index_path = "selected_exemplars/payload-shards.jsonl"
     layout_path = "selected_exemplars/payload-layout.json"
     _write_jsonl(root, shard_path, [payload])
     shard_sha256 = _file_digest(root / shard_path)
@@ -123,6 +124,17 @@ def _package(root: Path, mutate: Mutator | None = None) -> Path:
         "shard_sha256": shard_sha256,
     }
     _write_jsonl(root, index_path, [index])
+    shard_entry = {
+        "shard_id": 0,
+        "path": shard_path,
+        "sha256": shard_sha256,
+        "size_bytes": (root / shard_path).stat().st_size,
+        "first_selection_index": 0,
+        "last_selection_index": 0,
+        "record_count": 1,
+        "semantic_digest": _digest(sequence),
+    }
+    _write_jsonl(root, shard_index_path, [shard_entry])
     layout = {
         "schema_version": "radjax_tome_payload_layout_v1",
         "layout_version": "selected_payload_shards_v1",
@@ -133,21 +145,16 @@ def _package(root: Path, mutate: Mutator | None = None) -> Path:
             "record_count": 1,
             "schema_version": "radjax_tome_payload_index_v2",
         },
+        "shard_index": {
+            "path": shard_index_path,
+            "sha256": _file_digest(root / shard_index_path),
+            "size_bytes": (root / shard_index_path).stat().st_size,
+            "record_count": 1,
+            "schema_version": "radjax_tome_payload_shard_index_v1",
+        },
         "sequence_digest": _digest(sequence),
         "selected_count": 1,
         "payload_records_per_shard": 1,
-        "shards": [
-            {
-                "shard_id": 0,
-                "path": shard_path,
-                "sha256": shard_sha256,
-                "size_bytes": (root / shard_path).stat().st_size,
-                "first_selection_index": 0,
-                "last_selection_index": 0,
-                "record_count": 1,
-                "semantic_digest": _digest(sequence),
-            }
-        ],
     }
     identity = {
         "schema_version": "radjax_tome_semantic_identity_v2",
@@ -161,14 +168,20 @@ def _package(root: Path, mutate: Mutator | None = None) -> Path:
         "payload": payload,
         "index": index,
         "layout": layout,
+        "shard_entry": shard_entry,
         "identity": identity,
     }
     if mutate is not None:
         mutate(package)
     _write_jsonl(root, shard_path, [package["payload"]])
     shard_sha256 = _file_digest(root / shard_path)
-    package["layout"]["shards"][0]["sha256"] = shard_sha256
-    package["layout"]["shards"][0]["size_bytes"] = (root / shard_path).stat().st_size
+    package["shard_entry"]["sha256"] = shard_sha256
+    package["shard_entry"]["size_bytes"] = (root / shard_path).stat().st_size
+    _write_jsonl(root, shard_index_path, [package["shard_entry"]])
+    package["layout"]["shard_index"]["sha256"] = _file_digest(root / shard_index_path)
+    package["layout"]["shard_index"]["size_bytes"] = (
+        (root / shard_index_path).stat().st_size
+    )
     package["index"]["shard_sha256"] = shard_sha256
     package["index"]["payload_sha256"] = _digest(package["payload"])
     _write_jsonl(root, index_path, [package["index"]])
@@ -180,7 +193,7 @@ def _package(root: Path, mutate: Mutator | None = None) -> Path:
 
     inventory_path = "manifests/content-manifest-inventory.jsonl"
     header_path = "manifests/content-manifest-header.json"
-    members = [layout_path, index_path, shard_path]
+    members = [layout_path, index_path, shard_index_path, shard_path]
     inventory = [
         {
             "path": relative,
@@ -264,7 +277,7 @@ def test_m7b_portable_validator_rejects_stale_shard_sequence_digest(
 ) -> None:
     package = _package(
         tmp_path,
-        lambda package: package["layout"]["shards"][0].update(
+        lambda package: package["shard_entry"].update(
             semantic_digest=PREFIX + "0" * 64
         ),
     )

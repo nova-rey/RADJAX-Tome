@@ -208,8 +208,10 @@ def _write_directory(
     shard_dir = selected_dir / "shards"
     shard_dir.mkdir(parents=True)
     index_path = selected_dir / "payload-index.jsonl"
+    shard_index_path = selected_dir / "payload-shards.jsonl"
     sequence = _SequenceHasher()
-    shards: list[dict[str, Any]] = []
+    shard_index_handle = shard_index_path.open("wb")
+    shard_count = 0
     seen_path = root / ".selected-logical-ids.sqlite3"
     seen = sqlite3.connect(seen_path)
     seen.execute("CREATE TABLE ids (logical_id TEXT PRIMARY KEY)")
@@ -238,15 +240,21 @@ def _write_directory(
             if shard_handle is None or shard_rows == capacity:
                 if shard_handle is not None:
                     shard_handle.close()
-                    shards.append(
-                        _shard_entry(
-                            root,
-                            shard_index,
-                            shard_start,
-                            shard_rows,
-                            shard_hasher.finish() if shard_hasher is not None else "",
+                    shard_index_handle.write(
+                        _canonical_bytes(
+                            _shard_entry(
+                                root,
+                                shard_index,
+                                shard_start,
+                                shard_rows,
+                                shard_hasher.finish()
+                                if shard_hasher is not None
+                                else "",
+                            )
                         )
+                        + b"\n"
                     )
+                    shard_count += 1
                 shard_index += 1
                 shard_start = selected_count
                 shard_rows = 0
@@ -283,26 +291,29 @@ def _write_directory(
             shard_rows += 1
         if shard_handle is not None:
             shard_handle.close()
-            shards.append(
-                _shard_entry(
-                    root,
-                    shard_index,
-                    shard_start,
-                    shard_rows,
-                    shard_hasher.finish() if shard_hasher is not None else "",
+            shard_index_handle.write(
+                _canonical_bytes(
+                    _shard_entry(
+                        root,
+                        shard_index,
+                        shard_start,
+                        shard_rows,
+                        shard_hasher.finish() if shard_hasher is not None else "",
+                    )
                 )
+                + b"\n"
             )
+            shard_count += 1
     finally:
         index_handle.close()
+        shard_index_handle.close()
         if shard_handle is not None and not shard_handle.closed:
             shard_handle.close()
         seen.close()
         seen_path.unlink(missing_ok=True)
 
     # Bind raw shard hashes into JSONL without retaining payload records.
-    _rewrite_index_shard_hashes(
-        index_path, {item["shard_id"]: item["sha256"] for item in shards}
-    )
+    _rewrite_index_shard_hashes(index_path, shard_index_path)
     sequence_digest = sequence.finish()
     identity = {
         "schema_version": "radjax_tome_semantic_identity_v2",
@@ -322,15 +333,30 @@ def _write_directory(
             "record_count": selected_count,
             "schema_version": "radjax_tome_payload_index_v2",
         },
+        "shard_index": {
+            "path": "selected_exemplars/payload-shards.jsonl",
+            "sha256": _digest_file(shard_index_path),
+            "size_bytes": shard_index_path.stat().st_size,
+            "record_count": shard_count,
+            "schema_version": "radjax_tome_payload_shard_index_v1",
+        },
         "sequence_digest": sequence_digest,
         "selected_count": selected_count,
         "payload_records_per_shard": capacity,
-        "shards": shards,
     }
     _write_json(root / "selected_exemplars" / "payload-layout.json", layout)
+    if profile == "full_debug_provenance":
+        _write_json(
+            root / "provenance" / "full-debug-receipt.json",
+            {
+                "schema_version": "radjax_tome_full_debug_receipt_v1",
+                "profile": profile,
+                "claim": "additional_nontraining_provenance",
+            },
+        )
     _write_manifest_graph(root, profile=profile, identity=identity)
     return ShardedTomeV4Result(
-        root, identity["semantic_digest"], selected_count, len(shards)
+        root, identity["semantic_digest"], selected_count, shard_count
     )
 
 
@@ -354,13 +380,32 @@ def _legacy_selected_records(source: Path) -> Iterable[dict[str, Any]]:
             yield {key: record[key] for key in record if key in allowed}
 
 
-def _rewrite_index_shard_hashes(path: Path, hashes: dict[int, str]) -> None:
+def _rewrite_index_shard_hashes(path: Path, shard_index_path: Path) -> None:
+    """Bind index rows from an on-disk shard index without a shard map in RAM."""
+    database = path.with_suffix(".shards.sqlite3")
+    connection = sqlite3.connect(database)
+    connection.execute(
+        "CREATE TABLE hashes (shard_id INTEGER PRIMARY KEY, digest TEXT)"
+    )
+    with shard_index_path.open(encoding="utf-8") as source:
+        for line in source:
+            entry = json.loads(line)
+            connection.execute(
+                "INSERT INTO hashes VALUES (?, ?)", (entry["shard_id"], entry["sha256"])
+            )
     temporary = path.with_suffix(".tmp")
     with path.open(encoding="utf-8") as source, temporary.open("wb") as target:
         for line in source:
             row = json.loads(line)
-            row["shard_sha256"] = hashes[int(row["shard_id"])]
+            digest = connection.execute(
+                "SELECT digest FROM hashes WHERE shard_id = ?", (row["shard_id"],)
+            ).fetchone()
+            if digest is None:
+                raise ValueError("payload index references an absent shard")
+            row["shard_sha256"] = digest[0]
             target.write(_canonical_bytes(row) + b"\n")
+    connection.close()
+    database.unlink(missing_ok=True)
     os.replace(temporary, path)
 
 
@@ -405,8 +450,14 @@ def _write_manifest_graph(
                         "path": relative,
                         "sha256": _digest_file(path),
                         "size_bytes": path.stat().st_size,
-                        "classification": "training_critical",
-                        "training_authoritative": True,
+                        "classification": (
+                            "diagnostic"
+                            if relative.startswith("provenance/")
+                            else "training_critical"
+                        ),
+                        "training_authoritative": not relative.startswith(
+                            "provenance/"
+                        ),
                     }
                 )
                 + b"\n"

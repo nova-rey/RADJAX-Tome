@@ -8,6 +8,7 @@
     "content_manifest_inventory": "tome_content_manifest_inventory_v3",
     "payload_layout": "radjax_tome_payload_layout_v1",
     "payload_index": "radjax_tome_payload_index_v2",
+    "payload_shard_index": "radjax_tome_payload_shard_index_v1",
     "semantic_identity": "radjax_tome_semantic_identity_v2"
   },
   "extension_policy": "closed_core_documented_opaque_extensions_only",

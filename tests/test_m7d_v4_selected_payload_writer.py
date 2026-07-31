@@ -81,11 +81,14 @@ def test_v4_writer_emits_a_portably_valid_count_sharded_package(tmp_path: Path) 
         authority={"selection": "fixture"},
         payload_records_per_shard=2,
     )
-    layout = json.loads(
-        (result.root / "selected_exemplars/payload-layout.json").read_text()
-    )
     assert result.selected_count == 5
-    assert [entry["record_count"] for entry in layout["shards"]] == [2, 2, 1]
+    shard_entries = [
+        json.loads(line)
+        for line in (result.root / "selected_exemplars/payload-shards.jsonl")
+        .read_text()
+        .splitlines()
+    ]
+    assert [entry["record_count"] for entry in shard_entries] == [2, 2, 1]
     assert _validate(result.root) == {
         "returncode": 0,
         "errors": [],
@@ -122,6 +125,37 @@ def test_v4_writer_regrouping_changes_layout_not_semantic_identity(
             (second.root / "selected_exemplars/payload-layout.json").read_bytes()
         ).hexdigest()
     )
+
+
+def test_v4_profile_debug_receipts_change_inventory_not_identity(
+    tmp_path: Path,
+) -> None:
+    common = {
+        "training_contract": {"target_type": "fixture"},
+        "authority": {"selection": "fixture"},
+    }
+    student = write_sharded_tome_v4(
+        [_record(index) for index in range(2)],
+        tmp_path / "student",
+        profile="student",
+        **common,
+    )
+    debug = write_sharded_tome_v4(
+        [_record(index) for index in range(2)],
+        tmp_path / "debug",
+        profile="full_debug_provenance",
+        **common,
+    )
+    student_header = json.loads(
+        (student.root / "manifests/content-manifest-header.json").read_text()
+    )
+    debug_header = json.loads(
+        (debug.root / "manifests/content-manifest-header.json").read_text()
+    )
+    assert student.semantic_identity_digest == debug.semantic_identity_digest
+    assert student_header["inventory_sha256"] != debug_header["inventory_sha256"]
+    assert _validate(student.root)["ok"] is True
+    assert _validate(debug.root)["ok"] is True
 
 
 def test_v4_writer_rejects_duplicate_logical_ids_without_publishing(

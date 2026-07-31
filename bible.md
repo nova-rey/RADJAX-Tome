@@ -2146,3 +2146,14 @@ and gzip mtime; it is byte-deterministic. The portable validator safely streams
 an archive into temporary disk before directory validation, rejecting traversal,
 duplicate, special, corrupt, and unsupported members without loading a package
 into memory. Legacy bundle APIs and v3 semantics remain untouched.
+
+## 2026-07-31 — M7D Streaming Shard Index
+
+The v4 layout no longer embeds a package-size-proportional shard array. It
+references a checksum-bound `payload-shards.jsonl` index, which the writer,
+portable validator, and archive path consume sequentially. This makes the
+declared bounded-memory model precise: one maximum encoded payload record,
+one shard-index record, and fixed digest/database/I/O state; payload and shard
+collections are not materialized. The schema/checksum corpus, docs, and
+black-box fixtures moved together. No legacy v3 artifact, Contract, Student,
+Golden fixture, authority recipe, or production-stage behavior changed.

@@ -13,8 +13,9 @@ then inventory in one direction without a manifest cycle.
 
 ## Selected payloads
 
-Payload layout specifies the index, sequence digest, selected count, per-shard
-record capacity, and shard integrity records. The index is JSONL: each row
+Payload layout specifies the payload and shard-index references, sequence
+digest, selected count, and per-shard record capacity. Both indexes are JSONL:
+the shard index carries shard integrity records, and each payload-index row
 maps a logical record to `(shard,row)` and binds raw and semantic hashes. The
 layout reference owns the sole record count. Validators must stream lines and
 shards; they must not materialize the complete selected payload set.

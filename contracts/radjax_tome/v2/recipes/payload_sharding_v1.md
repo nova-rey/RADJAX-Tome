@@ -5,9 +5,10 @@ The header references and hashes only `manifests/content-manifest-inventory.json
 The inventory lists every other package member, never itself, the header, or the
 cover. This directed `cover -> header -> inventory` chain is acyclic.
 
-`selected_exemplars/payload-layout.json` binds layout/version, index reference,
-the selected-record sequence digest, selected count, shard capacity, and shard
-integrity records. `payload-index.jsonl` is one index record per line:
+`selected_exemplars/payload-layout.json` binds layout/version, index references,
+the selected-record sequence digest, selected count, and shard capacity.
+`payload-shards.jsonl` is the separately streamed shard-integrity index.
+`payload-index.jsonl` is one record-address row per line:
 `logical_id` is exactly
 `sha256(canonical-json({"selected_example_id":...,"selected_position":...}))`.
 It maps that coordinate-derived ID to `(shard,row)`, a raw `payload_sha256`,

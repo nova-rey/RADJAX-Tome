@@ -367,10 +367,10 @@ def _validate_selected_payloads(
             "schema_version",
             "layout_version",
             "payload_index",
+            "shard_index",
             "sequence_digest",
             "selected_count",
             "payload_records_per_shard",
-            "shards",
         },
     )
     if (
@@ -403,9 +403,26 @@ def _validate_selected_payloads(
     ):
         raise ContractError("digest_mismatch")
     index_count = _nonnegative_int(index_ref["record_count"])
-    shards = layout["shards"]
-    if not isinstance(shards, list):
+    shard_ref = layout["shard_index"]
+    if not isinstance(shard_ref, dict):
         raise ContractError("shape_invalid")
+    _require(
+        shard_ref, {"path", "sha256", "size_bytes", "record_count", "schema_version"}
+    )
+    if shard_ref["schema_version"] != "radjax_tome_payload_shard_index_v1":
+        raise ContractError("schema_version_unsupported")
+    shard_index_path = _path(shard_ref["path"])
+    if (
+        shard_index_path != "selected_exemplars/payload-shards.jsonl"
+        or shard_index_path not in listed
+    ):
+        raise ContractError("payload_index_address_invalid")
+    if _digest_path(_inside(root, shard_index_path)) != (
+        _sha(shard_ref["sha256"]),
+        _nonnegative_int(shard_ref["size_bytes"]),
+    ):
+        raise ContractError("digest_mismatch")
+    shard_count = _nonnegative_int(shard_ref["record_count"])
     index_iter = iter(_lines(_inside(root, index_path)))
     overall_digest = _SequenceDigest()
     expected_selection = 0
@@ -413,9 +430,9 @@ def _validate_selected_payloads(
     seen_tmp = tempfile.TemporaryDirectory(prefix="radjax-tome-v2-ids-")
     seen = sqlite3.connect(Path(seen_tmp.name) / "logical-ids.sqlite3")
     seen.execute("CREATE TABLE ids (logical_id TEXT PRIMARY KEY)")
-    for shard_position, shard in enumerate(shards):
-        if not isinstance(shard, dict):
-            raise ContractError("shape_invalid")
+    shard_seen_count = 0
+    for shard_position, shard in enumerate(_lines(_inside(root, shard_index_path))):
+        shard_seen_count += 1
         _require(
             shard,
             {
@@ -436,8 +453,6 @@ def _validate_selected_payloads(
         if shard_id != shard_position or record_count < 1 or record_count > capacity:
             raise ContractError("payload_index_address_invalid")
         if first != expected_selection or last != first + record_count - 1:
-            raise ContractError("payload_index_address_invalid")
-        if shard_position < len(shards) - 1 and record_count != capacity:
             raise ContractError("payload_index_address_invalid")
         shard_path = _path(shard["path"])
         if shard_path not in listed:
@@ -507,7 +522,11 @@ def _validate_selected_payloads(
         pass
     else:
         raise ContractError("manifest_record_count_mismatch")
-    if index_seen != index_count or expected_selection != selected_count:
+    if (
+        index_seen != index_count
+        or expected_selection != selected_count
+        or shard_seen_count != shard_count
+    ):
         raise ContractError("manifest_record_count_mismatch")
     sequence_digest = overall_digest.finish()
     if sequence_digest != _sha(layout["sequence_digest"]):
