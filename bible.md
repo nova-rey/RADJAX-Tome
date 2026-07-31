@@ -1858,3 +1858,13 @@ once in M6B and reused for M6D parity. The existing v2-first cover-page guide
 is recorded as documentation drift to correct in M6B. No writer, CLI, Path-B,
 authority, Golden fixture, or external repository changed; the unrelated
 `.DS_Store` remains untouched.
+
+## 2026-07-31 — M6B Portable Contract Source and Validator
+
+M6B adds the Tome-local, implementation-neutral v1 contract source: closed
+v3 identity, manifest, and cover schemas; canonical digest and transport
+recipes; profile, error, and historical compatibility definitions; checksum
+inventory; and a stdlib-only independent conformance validator. Native writers
+and CLI routing remain untouched. The current cover-page documentation now
+identifies v3 as the front door and v2 as historical compatibility only. The
+portable validator is created once here and will be reused for M6D parity.

@@ -1,0 +1,16 @@
+{
+  "schema_version": "radjax_tome_portable_errors_v1",
+  "codes": [
+    "schema_version_unsupported",
+    "shape_invalid",
+    "digest_syntax_invalid",
+    "digest_mismatch",
+    "ordering_invalid",
+    "path_unsafe",
+    "profile_inventory_mismatch",
+    "transport_unsafe",
+    "transport_corrupt",
+    "transport_noncanonical",
+    "contract_version_incompatible"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radjax_tome_cover_v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "identity", "training", "package", "manifests", "authority", "provenance", "validation"],
+  "properties": {
+    "schema_version": {"const": "radjax_tome_cover_v3"},
+    "identity": {"type": "object"},
+    "training": {"type": "object"},
+    "package": {"type": "object", "additionalProperties": false, "required": ["profile", "transport"], "properties": {"profile": {"enum": ["unpacked", "student", "full_debug_provenance"]}, "transport": {"enum": ["directory", "rtome", "tgz"]}}},
+    "manifests": {"type": "object", "additionalProperties": false, "required": ["content"], "properties": {"content": {"type": "object"}}},
+    "authority": {"type": "object"},
+    "provenance": {"type": "object"},
+    "validation": {"type": "object"}
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schema_version": "radjax_tome_historical_compatibility_v1",
+  "formats": [
+    {"schema": "cover_page_v2", "descriptor_only": true, "v3_identity": "unavailable"},
+    {"schema": "radjax_tome_package_cover_v1", "descriptor_only": true, "v3_identity": "unavailable"}
+  ],
+  "mapping_policy": "native_validation_then_known_fields_only_no_inference"
+}

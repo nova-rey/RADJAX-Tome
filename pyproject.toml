@@ -26,6 +26,7 @@ gpu-teacher = [
 dev = [
   "pytest>=8.0",
   "ruff>=0.6",
+  "jsonschema>=4.23",
 ]
 
 [project.scripts]

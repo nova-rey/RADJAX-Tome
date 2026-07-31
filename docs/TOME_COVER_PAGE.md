@@ -1,8 +1,13 @@
 # Tome Cover Page
 
-`cover_page.json` is the front door for an unpacked RADJAX-Tome artifact. It
-binds existing TeacherTextbook sidecars, target shards, hashes, validation
-status, and claims into one inspectable JSON file.
+Current writers emit the closed `radjax_tome_cover_v3` contract. Its semantic
+identity is profile- and transport-independent, while its content manifest
+binds profile-specific raw inventory. See `docs/M6_TOME_CONTRACT.md` and
+`contracts/radjax_tome/v1` for the portable v3 contract.
+
+The v2 cover described below is historical compatibility documentation. It is
+retained only as provenance in newly written v3 artifacts and remains a native
+historical reader input; it is not the current front door.
 
 ## Unpacked Layout
 

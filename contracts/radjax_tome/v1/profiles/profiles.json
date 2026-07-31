@@ -1,0 +1,10 @@
+{
+  "schema_version": "radjax_tome_profiles_v1",
+  "profiles": [
+    {"id": "unpacked", "semantic_identity_scope": "profile_independent"},
+    {"id": "student", "semantic_identity_scope": "profile_independent"},
+    {"id": "full_debug_provenance", "semantic_identity_scope": "profile_independent"}
+  ],
+  "classifications": ["training_critical", "integrity_or_provenance", "diagnostic", "human_readable", "operational"],
+  "cover_page_inventory_rule": "excluded"
+}
