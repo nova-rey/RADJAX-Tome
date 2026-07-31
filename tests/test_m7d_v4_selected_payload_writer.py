@@ -209,6 +209,8 @@ def test_v4_package_adapter_copies_a_complete_profile_without_legacy_payloads(
         (result.root / "selected_exemplars").glob("selected-exemplars-*.json")
     )
     assert not (result.root / "shards").exists()
+    cover = json.loads((result.root / "cover_page.json").read_text())
+    assert cover["identity"]["nonselected_training_payload"]
     assert _validate(result.root)["ok"] is True
 
 

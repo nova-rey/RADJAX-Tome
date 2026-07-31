@@ -35,7 +35,8 @@ methods, or closed-core fields fail closed.
 
 The compact v2 semantic identity never repeats a payload collection. Its
 canonical digest is exactly the canonical JSON object containing
-`schema_version`, `payload_sequence_digest`, `selected_count`,
-`training_contract`, and `authority`; its stored `semantic_digest` is excluded
+`schema_version`, `payload_sequence_digest`, `selected_count`, the sorted
+`nonselected_training_payload` v3 projection, `training_contract`, and
+`authority`; its stored `semantic_digest` is excluded
 from the digest input. This makes identity validation constant-space with
 respect to the record collection while binding the streaming sequence digest.

@@ -331,6 +331,7 @@ def _validate_identity(identity: Any) -> dict[str, Any]:
             "schema_version",
             "payload_sequence_digest",
             "selected_count",
+            "nonselected_training_payload",
             "training_contract",
             "authority",
             "semantic_digest",
@@ -340,6 +341,19 @@ def _validate_identity(identity: Any) -> dict[str, Any]:
         raise ContractError("schema_version_unsupported")
     _sha(identity["payload_sequence_digest"])
     _nonnegative_int(identity["selected_count"])
+    payload = identity["nonselected_training_payload"]
+    if not isinstance(payload, list):
+        raise ContractError("payload_semantic_projection_invalid")
+    previous = ""
+    for entry in payload:
+        if not isinstance(entry, dict):
+            raise ContractError("payload_semantic_projection_invalid")
+        _require(entry, {"logical_id", "semantic_digest"})
+        logical_id = entry["logical_id"]
+        if not isinstance(logical_id, str) or not logical_id or logical_id <= previous:
+            raise ContractError("payload_semantic_projection_invalid")
+        previous = logical_id
+        _sha(entry["semantic_digest"])
     if not isinstance(identity["training_contract"], dict) or not isinstance(
         identity["authority"], dict
     ):

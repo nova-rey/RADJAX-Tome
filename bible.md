@@ -2169,3 +2169,16 @@ provenance, while the selected payload identity remains profile-independent.
 Tests prove source immutability, complete-package member behavior, legacy
 selected-payload projection, and portable validation. The v3 public package
 and archive routes remain compatibility paths, not inputs to v4 semantics.
+
+## 2026-07-31 — M7D Tome-Wide Semantic Identity Correction
+
+The v4 semantic identity now includes the sorted non-selected v3 training
+payload projection alongside training contract, authority, selected count, and
+the streamed selected-payload sequence digest. Only the grouping-sensitive
+legacy `selected_exemplars/*` entries are replaced by the sequence projection;
+the remainder of the Tome’s training-authoritative semantic boundary is still
+bound. This prevents sharding from accidentally narrowing canonical Tome
+identity to selected records. The source adapter supplies that projection from
+the native v3 identity, while direct synthetic writer callers may explicitly
+provide none. No v3 identity recipe, profile behavior, Golden fixture, Contract,
+Student, or authority semantics changed.

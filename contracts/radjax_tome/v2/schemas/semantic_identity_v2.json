@@ -7,6 +7,7 @@
     "schema_version",
     "payload_sequence_digest",
     "selected_count",
+    "nonselected_training_payload",
     "training_contract",
     "authority",
     "semantic_digest"
@@ -22,6 +23,10 @@
       "type": "integer",
       "minimum": 0
     },
+    "nonselected_training_payload": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/payload"}
+    },
     "training_contract": {
       "type": "object"
     },
@@ -36,6 +41,15 @@
     "sha256": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logical_id", "semantic_digest"],
+      "properties": {
+        "logical_id": {"type": "string", "minLength": 1},
+        "semantic_digest": {"$ref": "#/$defs/sha256"}
+      }
     },
     "semantic_record": {
       "type": "object",

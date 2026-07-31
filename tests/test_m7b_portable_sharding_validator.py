@@ -160,6 +160,7 @@ def _package(root: Path, mutate: Mutator | None = None) -> Path:
         "schema_version": "radjax_tome_semantic_identity_v2",
         "payload_sequence_digest": _digest(sequence),
         "selected_count": 1,
+        "nonselected_training_payload": [],
         "training_contract": {"target_type": "fixture"},
         "authority": {"selection": "fixture"},
     }

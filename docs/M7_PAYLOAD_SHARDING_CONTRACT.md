@@ -40,7 +40,8 @@ are invalid. See the v2 recipe and schemas for canonical digest inputs.
 The compact identity binds `payload_sequence_digest` and `selected_count`, not
 an eagerly materialized payload list. Its digest input is the exact object
 formed by `schema_version`, `payload_sequence_digest`, `selected_count`,
-`training_contract`, and `authority`; `semantic_digest` is the resulting
+the sorted `nonselected_training_payload` v3 projection, `training_contract`,
+and `authority`; `semantic_digest` is the resulting
 digest, not an input. Opaque values within a recognized profile are retained
 and hashed through their declared `{schema_id, value, semantic_digest}`
 envelope. Unknown profiles, execution capabilities, digest methods, and closed

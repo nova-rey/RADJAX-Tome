@@ -95,6 +95,7 @@ def write_sharded_tome_v4_from_legacy_artifact(
         output,
         training_contract=identity.training_contract,
         authority=identity.authority,
+        nonselected_training_payload=_nonselected_payload(identity.to_dict()),
         profile=profile,
         payload_records_per_shard=payload_records_per_shard,
         overwrite=overwrite,
@@ -130,6 +131,7 @@ def package_legacy_artifact_as_sharded_tome_v4(
             stage,
             training_contract=identity.training_contract,
             authority=identity.authority,
+            nonselected_training_payload=_nonselected_payload(identity.to_dict()),
             profile=profile,
             capacity=payload_records_per_shard,
         )
@@ -191,6 +193,7 @@ def write_sharded_tome_v4(
     *,
     training_contract: dict[str, Any],
     authority: dict[str, Any],
+    nonselected_training_payload: tuple[dict[str, str], ...] = (),
     profile: str = "student",
     payload_records_per_shard: int = 128,
     overwrite: bool = False,
@@ -224,6 +227,7 @@ def write_sharded_tome_v4(
             stage,
             training_contract=training_contract,
             authority=authority,
+            nonselected_training_payload=nonselected_training_payload,
             profile=profile,
             capacity=payload_records_per_shard,
         )
@@ -244,6 +248,7 @@ def _write_directory(
     *,
     training_contract: dict[str, Any],
     authority: dict[str, Any],
+    nonselected_training_payload: tuple[dict[str, str], ...],
     profile: str,
     capacity: int,
 ) -> ShardedTomeV4Result:
@@ -362,6 +367,7 @@ def _write_directory(
         "schema_version": "radjax_tome_semantic_identity_v2",
         "payload_sequence_digest": sequence_digest,
         "selected_count": selected_count,
+        "nonselected_training_payload": list(nonselected_training_payload),
         "training_contract": training_contract,
         "authority": authority,
     }
@@ -421,6 +427,27 @@ def _legacy_selected_records(source: Path) -> Iterable[dict[str, Any]]:
                     f"legacy selected payload is not v4-projectable: {path.name}"
                 )
             yield {key: record[key] for key in record if key in allowed}
+
+
+def _nonselected_payload(identity: dict[str, Any]) -> tuple[dict[str, str], ...]:
+    """Carry v3 semantic material except the physical selected-wrapper files."""
+    entries = identity.get("training_payload")
+    if not isinstance(entries, list):
+        raise ValueError("legacy semantic identity is missing training payload")
+    selected = tuple(
+        {
+            "logical_id": str(entry["logical_id"]),
+            "semantic_digest": str(entry["semantic_digest"]),
+        }
+        for entry in entries
+        if isinstance(entry, dict)
+        and not str(entry.get("logical_id", "")).startswith("selected_exemplars/")
+    )
+    if [entry["logical_id"] for entry in selected] != sorted(
+        entry["logical_id"] for entry in selected
+    ):
+        raise ValueError("legacy semantic identity payload order is invalid")
+    return selected
 
 
 def _copy_legacy_profile_members(
