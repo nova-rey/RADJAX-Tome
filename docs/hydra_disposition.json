@@ -2158,6 +2158,14 @@
       "rationale": "Pins Contract v0.3.0 and the verified offline v2 mirror.",
       "replacement_or_target_boundary": "M7 Contract publication and conformance boundary.",
       "status": "canonical"
+    },
+    "docs/M7_CLOSURE_REPORT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M7",
+      "rationale": "Closure claims, nonclaims, release pin, and downstream streaming handoff.",
+      "replacement_or_target_boundary": "M7 payload sharding and streaming validation closure.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

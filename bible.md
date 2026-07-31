@@ -2201,3 +2201,12 @@ characterization, portable contract, and Contract-publication pin documents.
 This is an inventory-only closure correction required by the repository's
 tracked-surface audit; it does not change payload, identity, authority, archive,
 Contract, Student, Golden, or runtime behavior.
+
+## 2026-07-31 — M7F Closure and Downstream Handoff
+
+M7 closes with the Contract v0.3.0 streaming publication, Tome's verified
+offline mirror, v4 source/package adapters, deterministic direct transport,
+and portable streaming validation. The closure report records the exact pin,
+consumer discovery APIs, claims, nonclaims, and cache-disabled reproduction
+commands. M7 makes no claims about Student training, random archive seeks,
+accelerator execution, M8 batching, UX, corpus work, or model performance.
