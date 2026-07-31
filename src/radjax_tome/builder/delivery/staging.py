@@ -35,8 +35,6 @@ def _selected_payloads_from_backend(
         for record_index, record in enumerate(selected_records)
         if record_index not in completed_record_indices
     ]
-    from .rerun import _unique_selected_example_ids
-
     selected_example_ids = _unique_selected_example_ids(
         [record for _, record in pending_records]
     )

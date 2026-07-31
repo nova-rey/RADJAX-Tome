@@ -5,6 +5,8 @@ this module is intentionally dependency-light and owns its stable data
 boundary so rerun, assembly, and validation can split without a flag day.
 """
 
+# ruff: noqa: F401
+
 from __future__ import annotations
 
 import json
@@ -13,6 +15,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from radjax_tome.artifact_validation.delivery import (
+    CURRICULUM_ROUTES_FILENAME,
+    CURRICULUM_ROUTES_SCHEMA,
+    EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA,
+    EXEMPLAR_DELIVERY_REPORT_FILENAME,
+    EXEMPLAR_DELIVERY_REPORT_SCHEMA,
+    EXEMPLAR_SCORE_POLICY,
+    NATIVE_C6_PATH_B_EXECUTION,
+    ONE_PASS_PRUNED_CANDIDATE,
+    SELECTED_EXEMPLARS_FILENAME,
+    SELECTED_LINKAGE_MISMATCH,
+    TWO_PASS_RERUN_SELECTED,
+    SelectedExemplarDeliveryError,
+)
 from radjax_tome.backends import TeacherBackendConfig
 from radjax_tome.builder.corridor_artifacts import CorridorArtifactBuildResult
 from radjax_tome.builder.long_tail import (
@@ -23,32 +39,8 @@ from radjax_tome.builder.long_tail import (
 from radjax_tome.builder.teacher_textbook import TinyTextExample
 from radjax_tome.targets.store import TeacherTargetStore
 
-EXEMPLAR_DELIVERY_REPORT_FILENAME = "delivery_report.json"
-EXEMPLAR_DELIVERY_REPORT_SCHEMA = "selected_exemplar_delivery_report_v1"
-EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA = "exemplar_delivery_parity_report_v1"
 LEADERBOARD_REPORT_FILENAME = "leaderboard_report.json"
-SELECTED_EXEMPLARS_FILENAME = "selected_exemplars.json"
-CURRICULUM_ROUTES_FILENAME = "selected_routes.json"
-CURRICULUM_ROUTES_SCHEMA = "selected_exemplar_curriculum_routes_v1"
-SELECTED_LINKAGE_MISMATCH = (
-    "selected exemplar linkage mismatch: selected record/payload does not match "
-    "source candidate coordinate"
-)
-ONE_PASS_PRUNED_CANDIDATE = "one_pass_pruned_candidate"
-TWO_PASS_RERUN_SELECTED = "two_pass_rerun_selected"
-NATIVE_C6_PATH_B_EXECUTION = "native_c6_path_b_v1"
-EXEMPLAR_SCORE_POLICY = "entropy_top_n_v1"
 DeliveryProgressCallback = Callable[[dict[str, Any]], None]
-
-
-class SelectedExemplarDeliveryError(ValueError):
-    """Preserves a machine-readable coordinate trace for delivery failures."""
-
-    def __init__(self, diagnostic: dict[str, Any]) -> None:
-        self.diagnostic = diagnostic
-        super().__init__(
-            f"{SELECTED_LINKAGE_MISMATCH}: {json.dumps(diagnostic, sort_keys=True)}"
-        )
 
 
 class SelectedRerunCudaOOMError(RuntimeError):

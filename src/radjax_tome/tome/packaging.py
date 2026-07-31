@@ -14,7 +14,10 @@ import numpy as np
 
 from radjax_tome.io.json import read_json_object, write_json
 from radjax_tome.provenance.hashes import sha256_file
-from radjax_tome.tome.artifact_descriptor import ValidatedTomeArtifact
+from radjax_tome.tome.artifact_descriptor import (
+    ValidatedProducerArtifact,
+    ValidatedTomeArtifact,
+)
 from radjax_tome.tome.bundle import pack_tome_bundle
 from radjax_tome.tome.canonical_artifact import (
     build_canonical_artifact_cover,
@@ -137,7 +140,7 @@ def package_tome_artifact(
     _require_profile(profile)
     if archive not in {"none", "tgz"}:
         raise ValueError("archive must be one of: none, tgz")
-    source_artifact = ValidatedTomeArtifact.from_directory(artifact_dir)
+    source_artifact = ValidatedProducerArtifact.from_directory(artifact_dir)
     source = source_artifact.root
     if output.exists() and not overwrite:
         raise ValueError(f"package output already exists: {output}")
@@ -158,6 +161,11 @@ def package_tome_artifact(
             semantic_identity=semantic_identity,
             transport="tgz" if archive == "tgz" else "directory",
         )
+        # Packaging only proceeds from the complete canonical descriptor.  The
+        # path-taking API above is a source compatibility adapter; this typed
+        # handoff owns cover, identity, manifest, profile inventory, validation
+        # evidence, and authority references for the emitted package.
+        ValidatedTomeArtifact.from_canonical_directory(temporary_root)
         report = validate_tome_package(temporary_root, profile=profile)
         if not report.ok:
             raise ValueError(

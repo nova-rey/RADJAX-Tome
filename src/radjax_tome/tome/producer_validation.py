@@ -10,12 +10,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from radjax_tome.artifact_validation.long_tail import long_tail_summary
+from radjax_tome.artifact_validation.selection import (
+    load_curriculum_route_records,
+    validate_integrated_selection_contract,
+)
+from radjax_tome.artifact_validation.teacher_textbook import validate_teacher_textbook
 from radjax_tome.io.json import read_json_object
 
 
 def validate_full_debug_producer(root: Path) -> tuple[str, tuple[str, ...]]:
-    from radjax_tome.builder.teacher_textbook import validate_teacher_textbook
-
     report = validate_teacher_textbook(root)
     return report.status, tuple(report.blockers)
 
@@ -27,8 +31,6 @@ def audit_selected_package(root: Path, *, profile: str) -> Any:
 
 
 def summarize_long_tail(records: list[dict[str, Any]]) -> dict[str, Any]:
-    from radjax_tome.builder.long_tail import long_tail_summary
-
     return long_tail_summary(records)
 
 
@@ -41,10 +43,6 @@ def validate_c6_package_parity(
     c5_root = root / "c6" / "multi-role-selection"
     if not c5_root.is_dir():
         return None
-    from radjax_tome.builder.c6_integration import (
-        load_curriculum_route_records,
-        validate_integrated_selection_contract,
-    )
     from radjax_tome.fingerprint.multi_role_selection import (
         load_multi_role_selection_artifact,
     )

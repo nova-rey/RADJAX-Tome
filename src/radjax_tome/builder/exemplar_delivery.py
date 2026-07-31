@@ -7,6 +7,7 @@ the focused owner modules.
 
 from __future__ import annotations
 
+from radjax_tome.artifact_validation import delivery as _delivery_validation
 from radjax_tome.builder.delivery import _legacy as _legacy
 from radjax_tome.builder.delivery._legacy import *  # noqa: F403
 
@@ -16,6 +17,13 @@ from radjax_tome.builder.delivery._legacy import *  # noqa: F403
 # target those owner modules rather than relying on this compatibility detail.
 globals().update(
     {name: value for name, value in vars(_legacy).items() if not name.startswith("__")}
+)
+globals().update(
+    {
+        name: value
+        for name, value in vars(_delivery_validation).items()
+        if name.startswith("_") and not name.startswith("__")
+    }
 )
 
 # Rebind public operations to their focused owners after compatibility symbols

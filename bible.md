@@ -2006,3 +2006,20 @@ authority recipe, Golden fixture, Contract, Student, or accelerator work
 changed. Focused native/production and selected-delivery characterization is
 recorded with this correction; broader dependency and closure evidence remains
 open until the validation-boundary and graph-policy checkpoints complete.
+
+## 2026-07-31 — M6 Corrective Validation Boundary and Graph Policy
+
+Reusable teacher-textbook, C6 selection, long-tail, corridor, and selected
+delivery/linkage validation now has a Builder-independent
+`artifact_validation` owner. Builder compatibility modules forward retained
+imports while Tome packaging and producer validation reach the shared owner
+without a Builder edge. Package materialization converts its emitted canonical
+directory into a complete `ValidatedTomeArtifact` containing the cover,
+semantic identity, manifest, profile/inventory, validation evidence, and
+authority references before proceeding. A static transitive import graph now
+reports the complete forbidden path, detects cycles in production layers, and
+includes a forwarding-module regression. Focused architecture, packaging,
+descriptor, validation, delivery, and production tests passed during this
+checkpoint. No M4/M5/v3 semantics, authority projection, Golden fixture,
+Contract, Student, or accelerator behavior changed; final full-suite and
+closure evidence remain pending.

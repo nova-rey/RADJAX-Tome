@@ -369,24 +369,4 @@ def _flatten_selected_records(
     return records
 
 
-def _unique_selected_example_ids(selected_records: list[dict[str, Any]]) -> list[str]:
-    seen: set[str] = set()
-    ids: list[str] = []
-    for record in sorted(selected_records, key=_selected_record_source_key):
-        example_id = str(record["selected_example_id"])
-        if example_id in seen:
-            continue
-        seen.add(example_id)
-        ids.append(example_id)
-    return ids
-
-
-def _selected_record_source_key(record: dict[str, Any]) -> tuple[int, int, str]:
-    return (
-        int(record.get("source_shard_id", 999_999_999)),
-        int(record.get("source_row", 999_999_999)),
-        str(record.get("selected_example_id", "")),
-    )
-
-
 __all__ = [name for name in globals() if not name.startswith("__")]
