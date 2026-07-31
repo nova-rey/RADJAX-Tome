@@ -27,5 +27,14 @@ Numbers must be finite before canonical JSON encoding. The semantic payload
 digest is canonical JSON over exactly those 38 fields plus, when present, an
 `opaque_extensions` map. It excludes wrapper, shard/address, raw-byte, and
 transport fields. Each opaque extension key is lower-snake-case and its value
-is `{schema_id, semantic_digest}`; it is opaque only when that declaration is
-present, otherwise it is rejected.
+is `{schema_id, value, semantic_digest}`; `semantic_digest` is the canonical
+digest of `value`. A recognized profile may preserve and hash that opaque value
+without interpreting it; unknown profiles, required capabilities, digest
+methods, or closed-core fields fail closed.
+
+The compact v2 semantic identity never repeats a payload collection. Its
+canonical digest is exactly the canonical JSON object containing
+`schema_version`, `payload_sequence_digest`, `selected_count`,
+`training_contract`, and `authority`; its stored `semantic_digest` is excluded
+from the digest input. This makes identity validation constant-space with
+respect to the record collection while binding the streaming sequence digest.

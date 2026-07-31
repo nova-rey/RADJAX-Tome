@@ -2083,3 +2083,21 @@ clean package initializer as sufficient. Its new synthetic regression proves a
 forbidden dependency in a descendant module is reported with the complete path.
 No runtime behavior, public API, Contract pin/mirror, Golden fixture, v3 asset,
 Contract repository, or Student repository changed.
+
+## 2026-07-31 — M7B Portable Streaming Validator Correction
+
+The proposed Tome-local v2 sharding contract now has black-box proof rather
+than only schema/checksum proof. Its standard-library directory validator
+streams the payload index and JSONL shards with scalar digest state, verifies
+the acyclic cover/header/inventory graph, fixed paths, raw digests, contiguous
+count-based shard ranges, index-to-row bindings, per-shard and whole-sequence
+digests, the compact v2 semantic identity, and all 38 semantic payload fields.
+The identity binds the sequence digest and count rather than an eager payload
+array. Opaque extensions now preserve a declared value and its canonical digest
+without interpreting it; unknown profile/capability/digest contracts still fail
+closed. New generated package cases prove that stale layout counts, index
+addresses, shard sequence digests, raw-envelope-refreshed payload tampering,
+and rehashed stale identities are rejected. This remains a Tome-local proposed
+contract: RADJAX-Contract, Student, M4/M5 semantics, authority recipes, Golden
+fixtures, and accelerator execution are untouched pending the explicit M7
+Contract review gate.
