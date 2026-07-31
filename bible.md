@@ -2101,3 +2101,14 @@ and rehashed stale identities are rejected. This remains a Tome-local proposed
 contract: RADJAX-Contract, Student, M4/M5 semantics, authority recipes, Golden
 fixtures, and accelerator execution are untouched pending the explicit M7
 Contract review gate.
+
+## 2026-07-31 — M7C Tome-Local Conformance Corpus
+
+The checksum-pinned v2 conformance catalog now names the generated valid and
+adversarial streaming packages and their stable fail-closed categories. It
+also explicitly retains v3 as native historical evidence and v2/package-v1 as
+incomplete non-inferential descriptors; no historical artifact is promoted to
+the new v4 identity. The corpus stays compact and reproducible: payload bytes
+are generated in temporary test directories, while the reviewed schemas,
+vectors, catalog, and checksum inventory are checked in. Contract, Student,
+Golden fixtures, authority behavior, and accelerator work remain untouched.
