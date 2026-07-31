@@ -2217,3 +2217,17 @@ and portable streaming validation. The closure report records the exact pin,
 consumer discovery APIs, claims, nonclaims, and cache-disabled reproduction
 commands. M7 makes no claims about Student training, random archive seeks,
 accelerator execution, M8 batching, UX, corpus work, or model performance.
+
+## 2026-07-31 — M7 Corrective Characterization
+
+Independent review rejected the earlier M7 closure because its v4 writer was
+additive rather than the native Path-B paved road and its archive validation
+spooled complete input. The corrective branch now locks three reproduced
+baseline failures before implementation: a missing required semantic field was
+published successfully, a `.tgz` retaining a `directory` cover declaration
+validated successfully, and the deterministic archive writer emitted that
+wrong declaration. The focused characterization command failed `3` tests at
+the verified `f0b1e2e` / `v0.3.1` baseline for those exact reasons. This is
+not a closure claim; production integration, transactional resume, direct
+streaming, indexed access, adversarial coverage, and bounded-memory proof are
+still pending independent review.
