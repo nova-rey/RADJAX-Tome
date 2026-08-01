@@ -2377,3 +2377,15 @@ archive promotion.  Historical v3 and full-debug packages retain their
 existing cover family and behavior.  This is a Tome integration candidate;
 the Tome fixture receipt and independent cross-repository closure review remain
 pending.
+
+## 2026-08-01 — Native-v3 Student-Consumption v2 Fixture Receipt
+
+The ordinary CPU reference production path generated the current
+native-v3 Student fixture, then produced both directory and deterministic
+`.tgz` Student deliveries.  The published Contract `v0.4.1` resolver admitted
+both forms with `native_v3_student_v2`; the student and full-debug packages
+shared the same base native-v3 root while the derived sidecars bound a separate
+consumption digest.  `docs/C3_NATIVE_V3_STUDENT_CONSUMPTION_V2_RECEIPT.md`
+records the exact commits and run digests.  This receipt is integration
+evidence, not an official closure declaration; independent review remains
+required.

@@ -2183,6 +2183,14 @@
       "replacement_or_target_boundary": "Contract v0.4.1 Student-consumption publication pin.",
       "status": "canonical"
     },
+    "docs/C3_NATIVE_V3_STUDENT_CONSUMPTION_V2_RECEIPT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "C3",
+      "rationale": "Records the ordinary Tome-generated v2 fixture and published Contract admission evidence.",
+      "replacement_or_target_boundary": "Cross-repository native-v3 Student-consumption v2 handoff.",
+      "status": "canonical"
+    },
     "src/radjax_tome/tome/student_consumption_v2.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
