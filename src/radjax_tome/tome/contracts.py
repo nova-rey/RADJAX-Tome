@@ -18,6 +18,9 @@ from pathlib import PurePosixPath
 from typing import Any
 
 CANONICAL_TOME_COVER_SCHEMA = "radjax_tome_cover_v3"
+CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA = (
+    "radjax_tome_cover_v3_student_consumption_v2"
+)
 CANONICAL_CONTENT_MANIFEST_SCHEMA = "tome_content_manifest_v2"
 TOME_SEMANTIC_IDENTITY_SCHEMA = "radjax_tome_semantic_identity_v1"
 HISTORICAL_PACKAGE_COVER_SCHEMA = "radjax_tome_package_cover_v1"
@@ -73,8 +76,22 @@ _COVER_KEYS = frozenset(
         "validation",
     }
 )
+_STUDENT_CONSUMPTION_V2_COVER_KEYS = _COVER_KEYS | frozenset({"student_consumption"})
 _PACKAGE_KEYS = frozenset({"profile", "transport"})
 _MANIFEST_WRAPPER_KEYS = frozenset({"content"})
+_STUDENT_CONSUMPTION_V2_KEYS = frozenset(
+    {
+        "profile_id",
+        "manifest_path",
+        "manifest_sha256",
+        "semantic_digest",
+        "digest_method",
+        "required_capabilities",
+    }
+)
+_STUDENT_CONSUMPTION_V2_REQUIRED_KEYS = frozenset(
+    {"profile_id", "manifest_path", "manifest_sha256", "semantic_digest"}
+)
 _RUNTIME_ONLY_KEYS = frozenset(
     {
         "created_at",
@@ -399,10 +416,26 @@ def build_canonical_tome_cover(
 
 
 def validate_canonical_tome_cover(cover: Mapping[str, Any]) -> None:
-    """Fail closed on a malformed v3 cover or mismatched nested contracts."""
+    """Fail closed on a base-v3 or closed Student-consumption-v2 cover.
 
-    payload = _require_exact_object(cover, "canonical cover", _COVER_KEYS)
-    if payload["schema_version"] != CANONICAL_TOME_COVER_SCHEMA:
+    The additive v2 declaration is deliberately outside the base v3 semantic
+    identity and the profile inventory's identity reference.  It identifies
+    independently-digested derived sidecars; it does not make those sidecars
+    retroactively appear in the historical base training payload.
+    """
+
+    declared_schema = (
+        cover.get("schema_version") if isinstance(cover, Mapping) else None
+    )
+    if declared_schema == CANONICAL_TOME_COVER_SCHEMA:
+        payload = _require_exact_object(cover, "canonical cover", _COVER_KEYS)
+    elif declared_schema == CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA:
+        payload = _require_exact_object(
+            cover,
+            "canonical Student-consumption v2 cover",
+            _STUDENT_CONSUMPTION_V2_COVER_KEYS,
+        )
+    else:
         raise ValueError("canonical cover schema_version mismatch")
     identity = _require_exact_object(payload["identity"], "identity", _IDENTITY_KEYS)
     validate_canonical_tome_semantic_identity(identity)
@@ -434,6 +467,38 @@ def validate_canonical_tome_cover(cover: Mapping[str, Any]) -> None:
         raise ValueError("canonical content manifest profile mismatch")
     _require_json_object(payload["provenance"], "canonical cover provenance")
     _require_json_object(payload["validation"], "canonical cover validation")
+    if declared_schema == CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA:
+        _validate_student_consumption_v2_declaration(payload["student_consumption"])
+
+
+def _validate_student_consumption_v2_declaration(value: Any) -> None:
+    """Validate the closed additive declaration without changing v3 identity."""
+
+    payload = _require_allowed_object(
+        value,
+        "canonical cover student_consumption",
+        required_keys=_STUDENT_CONSUMPTION_V2_REQUIRED_KEYS,
+        allowed_keys=_STUDENT_CONSUMPTION_V2_KEYS,
+    )
+    if payload["profile_id"] != "native_v3_student_v2":
+        raise ValueError("canonical cover Student-consumption profile is invalid")
+    if payload["manifest_path"] != "manifests/student_consumption_v2.json":
+        raise ValueError("canonical cover Student-consumption manifest path is invalid")
+    _require_sha256(
+        payload["manifest_sha256"],
+        "canonical cover Student-consumption manifest_sha256",
+    )
+    _require_sha256(
+        payload["semantic_digest"],
+        "canonical cover Student-consumption semantic_digest",
+    )
+    if payload.get("digest_method", "sha256") != "sha256":
+        raise ValueError("canonical cover Student-consumption digest_method is invalid")
+    capabilities = payload.get("required_capabilities", [])
+    if not isinstance(capabilities, list) or capabilities:
+        raise ValueError(
+            "canonical cover Student-consumption required_capabilities must be empty"
+        )
 
 
 def compare_canonical_tome_identities(
@@ -523,6 +588,29 @@ def _require_exact_object(
     return payload
 
 
+def _require_allowed_object(
+    value: Any,
+    location: str,
+    *,
+    required_keys: frozenset[str],
+    allowed_keys: frozenset[str],
+) -> dict[str, Any]:
+    """Validate a closed object with explicitly documented optional fields."""
+
+    payload = _require_json_object(value, location)
+    keys = frozenset(payload)
+    missing = sorted(required_keys - keys)
+    unexpected = sorted(keys - allowed_keys)
+    if missing or unexpected:
+        details: list[str] = []
+        if missing:
+            details.append("missing " + ", ".join(missing))
+        if unexpected:
+            details.append("unexpected " + ", ".join(unexpected))
+        raise ValueError(f"{location} must contain allowed keys: " + "; ".join(details))
+    return payload
+
+
 def _require_json_object(value: Any, name: str) -> dict[str, Any]:
     if not isinstance(value, Mapping):
         raise ValueError(f"{name} must be a JSON object")
@@ -586,6 +674,7 @@ def _reject_runtime_only_keys(value: Any, location: str) -> None:
 __all__ = [
     "CANONICAL_CONTENT_MANIFEST_SCHEMA",
     "CANONICAL_TOME_COVER_SCHEMA",
+    "CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA",
     "HISTORICAL_PACKAGE_COVER_SCHEMA",
     "TOME_SEMANTIC_IDENTITY_SCHEMA",
     "CanonicalContentManifest",

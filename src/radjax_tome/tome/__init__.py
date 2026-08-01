@@ -16,6 +16,7 @@ from radjax_tome.tome.compatibility import (
 from radjax_tome.tome.contracts import (
     CANONICAL_CONTENT_MANIFEST_SCHEMA,
     CANONICAL_TOME_COVER_SCHEMA,
+    CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
     HISTORICAL_PACKAGE_COVER_SCHEMA,
     TOME_SEMANTIC_IDENTITY_SCHEMA,
     CanonicalContentManifest,
@@ -62,6 +63,7 @@ from radjax_tome.tome.payload_sharding_v4 import (
 __all__ = [
     "CANONICAL_CONTENT_MANIFEST_SCHEMA",
     "CANONICAL_TOME_COVER_SCHEMA",
+    "CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA",
     "COVER_PAGE_FILENAME",
     "CanonicalContentManifest",
     "FULL_DEBUG_PROVENANCE",

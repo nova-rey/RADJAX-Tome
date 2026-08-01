@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://radjax.dev/contracts/radjax_tome/student_consumption/v2/schemas/student_consumption_semantic_identity_v2.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "profile_id", "vocabulary", "sequence", "resources", "joins", "authority", "semantic_digest"],
+  "properties": {
+    "schema_version": {"const": "radjax_tome_student_consumption_semantic_identity_v2"},
+    "profile_id": {"const": "native_v3_student_v2"},
+    "vocabulary": {"type": "object", "additionalProperties": false, "required": ["vocab_size", "tokenizer_identity"], "properties": {"vocab_size": {"type": "integer", "minimum": 1}, "tokenizer_identity": {"type": "string", "minLength": 1}}},
+    "sequence": {"type": "object", "additionalProperties": false, "required": ["sequence_length", "alignment"], "properties": {"sequence_length": {"type": "integer", "minimum": 1}, "alignment": {"const": "teacher_logit_position"}}},
+    "resources": {"type": "array", "minItems": 10, "uniqueItems": true, "items": {"$ref": "#/$defs/resource"}},
+    "joins": {"type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": {"$ref": "#/$defs/join"}, "allOf": [{"contains": {"properties": {"kind": {"const": "assignment_to_logit_position"}}, "required": ["kind"]}}, {"contains": {"properties": {"kind": {"const": "exemplar_to_passport"}}, "required": ["kind"]}}, {"contains": {"properties": {"kind": {"const": "exemplar_to_corridor"}}, "required": ["kind"]}}]},
+    "authority": {"type": "object", "additionalProperties": false, "required": ["selection_integration_config_hash"], "properties": {"selection_integration_config_hash": {"$ref": "#/$defs/sha256"}}},
+    "semantic_digest": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "resource": {"type": "object", "additionalProperties": false, "required": ["resource_id", "role", "instance_id", "semantic_digest"], "properties": {"resource_id": {"type": "string", "minLength": 1}, "role": {"type": "string", "minLength": 1}, "instance_id": {"type": "string", "minLength": 1}, "semantic_digest": {"$ref": "#/$defs/sha256"}}},
+    "join": {"type": "object", "additionalProperties": false, "required": ["kind"], "properties": {"kind": {"enum": ["assignment_to_logit_position", "exemplar_to_passport", "exemplar_to_corridor"]}}}
+  }
+}

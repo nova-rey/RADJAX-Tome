@@ -1,0 +1,19 @@
+{
+  "schema_version": "radjax_student_consumption_descriptor_vector_v2",
+  "result_schema": "radjax_student_consumption_validation_result_v2",
+  "descriptor_schema": "radjax_student_consumption_descriptor_v2",
+  "canonical_issue_order": ["profile_cover", "archive_safety", "inventory_integrity", "binding", "encoding", "structural_join", "corridor", "exemplar", "provenance", "semantic_digest"],
+  "normative_material_descriptor": {
+    "source_manifest": "fixtures/valid/native_v3_student_v2.json",
+    "profile_id": "native_v3_student_v2",
+    "base_artifact_semantic_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "consumption_semantic_digest": "sha256:c6b1ec44cfbd5e2c9abba5bb19eef54bc6228733a4330ebd7dc9d8013730f36e",
+    "vocabulary": {"vocab_size": 8, "tokenizer_identity": "test-tokenizer"},
+    "sequence": {"sequence_length": 2, "alignment": "teacher_logit_position"},
+    "resource_ids": ["target_shard/default", "example_registry/default", "corridor_mode_table/default", "corridor_assignment/default", "selected_passport_index/default", "selected_exemplar_payload/default", "corridor_observed_statistics/default", "row_range_declaration/default", "delivery_receipt/default", "authority_reference/default"]
+  },
+  "relocation_invariant": "Changing only inventory_binding or other physical locators preserves consumption_semantic_digest.",
+  "legacy_training_payload_binding": "forbidden",
+  "negative_zero": "rejected",
+  "nonfinite": "rejected"
+}

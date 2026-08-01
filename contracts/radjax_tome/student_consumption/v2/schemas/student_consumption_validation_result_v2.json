@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://radjax.dev/contracts/radjax_tome/student_consumption/v2/schemas/student_consumption_validation_result_v2.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "ok", "profile_id", "issues", "warnings", "descriptor"],
+  "properties": {"schema_version": {"const": "radjax_student_consumption_validation_result_v2"}, "ok": {"type": "boolean"}, "profile_id": {"const": "native_v3_student_v2"}, "issues": {"type": "array", "items": {"$ref": "#/$defs/issue"}}, "warnings": {"type": "array", "items": {"$ref": "#/$defs/issue"}}, "descriptor": {"type": ["object", "null"]}},
+  "$defs": {"issue": {"type": "object", "additionalProperties": false, "required": ["code", "phase", "profile_id", "context"], "properties": {"code": {"pattern": "^TSC[0-9]{3}_[A-Z_]+$"}, "phase": {"type": "string"}, "profile_id": {"const": "native_v3_student_v2"}, "context": {"type": "object"}}}}
+}

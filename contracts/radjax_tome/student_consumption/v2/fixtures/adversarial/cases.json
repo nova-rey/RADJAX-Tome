@@ -1,0 +1,19 @@
+{
+  "schema_version": "radjax_tome_student_consumption_adversarial_cases_v2",
+  "cases": [
+    {"id": "legacy-v3-not-consumable", "mutation": "remove_consumption_extension", "primary_issue": "TSC001_PROFILE_UNSUPPORTED", "expected_issues": ["TSC001_PROFILE_UNSUPPORTED"]},
+    {"id": "missing-derived-resource-role", "mutation": "remove_required_role", "primary_issue": "TSC010_ROLE_MISSING", "expected_issues": ["TSC010_ROLE_MISSING"]},
+    {"id": "duplicate-derived-role-instance", "mutation": "duplicate_role_instance", "primary_issue": "TSC011_ROLE_DUPLICATE", "expected_issues": ["TSC011_ROLE_DUPLICATE"]},
+    {"id": "derived-inventory-binding-absent", "mutation": "remove_inventory_binding", "primary_issue": "TSC013_INVENTORY_BINDING_ABSENT", "expected_issues": ["TSC013_INVENTORY_BINDING_ABSENT"]},
+    {"id": "derived-inventory-binding-ambiguous", "mutation": "bind_two_inventory_members", "primary_issue": "TSC014_INVENTORY_BINDING_AMBIGUOUS", "expected_issues": ["TSC014_INVENTORY_BINDING_AMBIGUOUS"]},
+    {"id": "derived-semantic-digest-conflict", "mutation": "derived_resource_semantic_digest_conflict", "primary_issue": "TSC015_DERIVED_SEMANTIC_INCONSISTENT", "expected_issues": ["TSC015_DERIVED_SEMANTIC_INCONSISTENT"]},
+    {"id": "derived-inventory-reference-invalid", "mutation": "missing_inventory_member", "primary_issue": "TSC016_INVENTORY_REFERENCE_INVALID", "expected_issues": ["TSC016_INVENTORY_REFERENCE_INVALID"]},
+    {"id": "legacy-training-binding-forbidden", "mutation": "add_training_payload_binding", "primary_issue": "TSC017_LEGACY_TRAINING_BINDING_FORBIDDEN", "expected_issues": ["TSC017_LEGACY_TRAINING_BINDING_FORBIDDEN"]},
+    {"id": "derived-npz-container-mismatch", "mutation": "wrong_npz_container", "primary_issue": "TSC030_CONTAINER_ENCODING_MISMATCH", "expected_issues": ["TSC030_CONTAINER_ENCODING_MISMATCH"]},
+    {"id": "derived-join-invalid", "mutation": "exemplar_corridor_disagree", "primary_issue": "TSC054_CORRIDOR_LINKAGE_INVALID", "expected_issues": ["TSC054_CORRIDOR_LINKAGE_INVALID"]},
+    {"id": "derived-canonicalization-invalid", "mutation": "duplicate_json_key", "primary_issue": "TSC060_CONSUMPTION_CANONICALIZATION", "expected_issues": ["TSC060_CONSUMPTION_CANONICALIZATION"]},
+    {"id": "derived-semantic-identity-stale", "mutation": "semantic_payload_tamper", "primary_issue": "TSC061_CONSUMPTION_DIGEST_MISMATCH", "expected_issues": ["TSC061_CONSUMPTION_DIGEST_MISMATCH"]},
+    {"id": "base-native-v3-identity-mismatch", "mutation": "base_identity_tamper", "primary_issue": "TSC062_BASE_IDENTITY_MISMATCH", "expected_issues": ["TSC062_BASE_IDENTITY_MISMATCH"]}
+  ],
+  "completion_rule": "A public v2 resolver MUST materialize every named mutation as an executable artifact with the declared primary issue and complete deterministic issue tuple."
+}

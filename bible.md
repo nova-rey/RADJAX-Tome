@@ -2363,3 +2363,17 @@ single Python snippet in `docs/M7_CLOSURE_REPORT.md`; lint and every earlier
 CI step passed on both Python 3.11 and 3.12. The snippet now uses Ruff's
 canonical single-line form. This documentation-only repair changes no runtime,
 contract, artifact, authority, Golden fixture, or M7 claim.
+
+## 2026-08-01 — Native-v3 Student-Consumption v2 Integration Candidate
+
+Tome now pins the published RADJAX-Contract `v0.4.1` authority at
+`a6877178d5f07d68f5e0bc28419d0e8e1a58890e` and carries its byte-verified,
+offline-capable v2 asset mirror.  The ordinary `student` package path emits a
+closed `radjax_tome_cover_v3_student_consumption_v2` declaration and derives
+the required NPZ/JSON sidecars inside the package transaction.  The base
+native-v3 semantic root remains unchanged; Contract validates the independent
+consumption identity and every inventory-backed resource before directory or
+archive promotion.  Historical v3 and full-debug packages retain their
+existing cover family and behavior.  This is a Tome integration candidate;
+the Tome fixture receipt and independent cross-repository closure review remain
+pending.

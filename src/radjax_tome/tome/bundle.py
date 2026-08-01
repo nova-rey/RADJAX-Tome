@@ -12,8 +12,10 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from radjax_tome.io.json import read_json_object
+from radjax_tome.tome.canonical_artifact import validate_canonical_artifact_directory
 from radjax_tome.tome.contracts import (
     CANONICAL_TOME_COVER_SCHEMA,
+    CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
     validate_canonical_tome_cover,
 )
 from radjax_tome.tome.cover_page import (
@@ -26,6 +28,15 @@ from radjax_tome.tome.cover_page import (
 )
 
 SUPPORTED_COMPRESSION = {"none", "gz"}
+
+
+def _is_canonical_cover(cover_page: dict[str, Any]) -> bool:
+    """Return whether a cover uses either supported canonical v3 family."""
+
+    return cover_page.get("schema_version") in {
+        CANONICAL_TOME_COVER_SCHEMA,
+        CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
+    }
 
 
 @dataclass(frozen=True)
@@ -58,13 +69,22 @@ def pack_tome_bundle(
     _require_supported_compression(compression)
     if output.exists() and not overwrite:
         raise ValueError(f"bundle already exists: {output}")
-    cover_report = validate_tome_cover_page(root)
-    if not cover_report.ok:
-        raise ValueError(
-            "cannot pack invalid Tome cover page: " + "; ".join(cover_report.blockers)
-        )
-
     cover_page = read_json_object(root / COVER_PAGE_FILENAME)
+    if _is_canonical_cover(cover_page):
+        try:
+            validate_canonical_tome_cover(cover_page)
+            validate_canonical_artifact_directory(root, cover_page)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"cannot pack invalid canonical Tome cover page: {exc}"
+            ) from exc
+    else:
+        cover_report = validate_tome_cover_page(root)
+        if not cover_report.ok:
+            raise ValueError(
+                "cannot pack invalid Tome cover page: "
+                + "; ".join(cover_report.blockers)
+            )
     entry_paths = _bundle_entry_paths(cover_page)
     output.parent.mkdir(parents=True, exist_ok=True)
     with _open_bundle_for_write(output, compression) as archive:
@@ -80,7 +100,7 @@ def inspect_tome_bundle(bundle_path: str | Path) -> dict[str, object]:
     path = Path(bundle_path)
     with tarfile.open(path, mode="r:*") as archive:
         cover_page = _read_cover_page_from_archive(archive)
-    if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+    if _is_canonical_cover(cover_page):
         training = cover_page["training"]
         inventory = cover_page["manifests"]["content"]["inventory"]
         return {
@@ -227,7 +247,7 @@ def _add_file(archive: tarfile.TarFile, source: Path, relative_path: str) -> Non
 
 def _bundle_entry_paths(cover_page: dict[str, Any]) -> tuple[str, ...]:
     paths = {COVER_PAGE_FILENAME}
-    if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+    if _is_canonical_cover(cover_page):
         inventory = cover_page["manifests"]["content"]["inventory"]
         paths.update(str(entry["path"]) for entry in inventory)
         return tuple(sorted(paths))
@@ -287,7 +307,7 @@ def _validate_member_names(
 
 def _validate_embedded_cover_page(cover_page: dict[str, Any]) -> list[str]:
     blockers: list[str] = []
-    if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+    if _is_canonical_cover(cover_page):
         try:
             validate_canonical_tome_cover(cover_page)
         except ValueError as exc:
@@ -316,7 +336,7 @@ def _validate_archive_contents(
 ) -> tuple[list[str], list[str]]:
     blockers: list[str] = []
     warnings: list[str] = []
-    if cover_page.get("schema_version") == CANONICAL_TOME_COVER_SCHEMA:
+    if _is_canonical_cover(cover_page):
         return _validate_v3_archive_contents(
             archive, members, cover_page, duplicate_names
         )

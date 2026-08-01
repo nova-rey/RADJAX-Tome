@@ -200,7 +200,9 @@ def test_m5d_profiles_share_source_identity_but_bind_distinct_inventories(
 
     student_cover = _json(student / "cover_page.json")
     debug_cover = _json(debug / "cover_page.json")
-    assert student_cover["schema_version"] == "radjax_tome_cover_v3"
+    assert (
+        student_cover["schema_version"] == "radjax_tome_cover_v3_student_consumption_v2"
+    )
     assert (
         student_cover["identity"]["semantic_digest"]
         == debug_cover["identity"]["semantic_digest"]

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://radjax.dev/contracts/radjax_tome/student_consumption/v2/schemas/student_consumption_descriptor_v2.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "contract_id", "profile_id", "base_artifact_semantic_digest", "consumption_semantic_digest", "vocabulary", "sequence", "corridor_resources", "exemplar_resources", "validation_resources", "joins", "delivery", "provenance", "warnings", "nonclaims"],
+  "properties": {
+    "schema_version": {"const": "radjax_student_consumption_descriptor_v2"},
+    "contract_id": {"const": "radjax_tome_student_consumption_contract"},
+    "profile_id": {"const": "native_v3_student_v2"},
+    "base_artifact_semantic_digest": {"$ref": "#/$defs/sha256"},
+    "consumption_semantic_digest": {"$ref": "#/$defs/sha256"},
+    "vocabulary": {"type": "object"}, "sequence": {"type": "object"},
+    "corridor_resources": {"type": "array", "items": {"$ref": "#/$defs/resource"}},
+    "exemplar_resources": {"type": "array", "items": {"$ref": "#/$defs/resource"}},
+    "validation_resources": {"type": "array", "items": {"$ref": "#/$defs/resource"}},
+    "joins": {"type": "array", "items": {"type": "object"}}, "delivery": {"type": "object"}, "provenance": {"type": "object"},
+    "warnings": {"type": "array", "items": {"type": "object"}}, "nonclaims": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "resource": {"type": "object", "additionalProperties": false, "required": ["resource_id", "role", "instance_id", "semantic_digest", "inventory_binding", "encoding", "classification", "consumption"], "properties": {"resource_id": {"type": "string"}, "role": {"type": "string"}, "instance_id": {"type": "string"}, "semantic_digest": {"$ref": "#/$defs/sha256"}, "inventory_binding": {"type": "string"}, "encoding": {"enum": ["json", "jsonl", "npy", "npz"]}, "classification": {"enum": ["batch", "validation", "diagnostic", "provenance"]}, "consumption": {"type": "object"}}}}
+}

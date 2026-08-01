@@ -7,6 +7,8 @@ import sys
 import tarfile
 from pathlib import Path
 
+from radjax_contract.tome import validate_and_resolve_student_consumption
+
 from radjax_tome.tome import (
     pack_tome_bundle,
     validate_tome_bundle,
@@ -69,7 +71,14 @@ def test_m6d_profiles_preserve_identity_and_validate_in_both_paths(
         student_cover["manifests"]["content"]["manifest_digest"]
         != debug_cover["manifests"]["content"]["manifest_digest"]
     )
-    assert _portable(student)["ok"] is True
+    # The student package now carries the closed v2 consumption extension;
+    # its portable authority is the published Contract v2 resolver, not the
+    # deliberately base-v3-only M6 standalone checker.
+    assert validate_and_resolve_student_consumption(
+        student,
+        profile_id="native_v3_student_v2",
+        strict=True,
+    ).ok
     assert _portable(debug)["ok"] is True
 
 

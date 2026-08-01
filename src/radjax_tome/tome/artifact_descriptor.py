@@ -13,6 +13,7 @@ from radjax_tome.tome.canonical_artifact import (
 )
 from radjax_tome.tome.contracts import (
     CANONICAL_TOME_COVER_SCHEMA,
+    CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
     CanonicalContentManifest,
     PackageInventoryEntry,
     TomeSemanticIdentity,
@@ -77,6 +78,7 @@ class ValidatedTomeArtifact:
     inventory: tuple[PackageInventoryEntry, ...]
     validation_evidence: dict[str, Any]
     authority_references: dict[str, Any]
+    student_consumption: dict[str, Any] | None = None
 
     @classmethod
     def from_canonical_directory(cls, artifact_dir: Path) -> ValidatedTomeArtifact:
@@ -84,7 +86,10 @@ class ValidatedTomeArtifact:
         if not root.is_dir():
             raise ValueError(f"artifact directory does not exist: {root}")
         cover = read_json_object(root / "cover_page.json")
-        if cover.get("schema_version") != CANONICAL_TOME_COVER_SCHEMA:
+        if cover.get("schema_version") not in {
+            CANONICAL_TOME_COVER_SCHEMA,
+            CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
+        }:
             raise ValueError("canonical v3 cover_page.json is required")
         validate_canonical_tome_cover(cover)
         validate_canonical_artifact_directory(root, cover)
@@ -119,6 +124,11 @@ class ValidatedTomeArtifact:
             inventory=inventory,
             validation_evidence=dict(cover["validation"]),
             authority_references=dict(cover["authority"]),
+            student_consumption=(
+                dict(cover["student_consumption"])
+                if "student_consumption" in cover
+                else None
+            ),
         )
 
 

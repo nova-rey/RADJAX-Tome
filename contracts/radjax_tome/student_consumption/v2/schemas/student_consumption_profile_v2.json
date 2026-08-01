@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://radjax.dev/contracts/radjax_tome/student_consumption/v2/schemas/student_consumption_profile_v2.json",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "profile_id", "base_artifact_identity", "derived_resource_identity"],
+  "properties": {
+    "schema_version": {"const": "radjax_tome_student_consumption_profile_v2"},
+    "profile_id": {"const": "native_v3_student_v2"},
+    "base_artifact_identity": {"const": "native_v3_semantic_digest"},
+    "derived_resource_identity": {"const": "role_instance_semantic_digest"}
+  }
+}

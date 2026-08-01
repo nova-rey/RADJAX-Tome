@@ -1,0 +1,11 @@
+{
+  "schema_version": "radjax_tome_student_consumption_conformance_catalog_v2",
+  "cases": [
+    {"id": "normative-native-v3-derived-sidecars", "kind": "valid_declaration", "expected_issues": []},
+    {"id": "physical-relocation-preserves-consumption-identity", "kind": "vector", "expected_issues": []},
+    {"id": "legacy-training-binding-forbidden", "kind": "adversarial", "primary_issue": "TSC017_LEGACY_TRAINING_BINDING_FORBIDDEN", "expected_issues": ["TSC017_LEGACY_TRAINING_BINDING_FORBIDDEN"]}
+  ],
+  "source_asset": "valid/native_v3_student_v2.json",
+  "adversarial_asset": "adversarial/cases.json",
+  "regeneration": "Fixture declarations are normative conformance vectors. A future public resolver MUST materialize and validate the named mutations without adding a base training-payload binding for a derived sidecar."
+}
