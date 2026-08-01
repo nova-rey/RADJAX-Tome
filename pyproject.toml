@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 dependencies = [
   "numpy>=1.26",
   "PyYAML>=6.0",
-  "radjax-contract @ git+https://github.com/nova-rey/RADJAX-Contract.git@a6877178d5f07d68f5e0bc28419d0e8e1a58890e",
+  "radjax-contract @ git+https://github.com/nova-rey/RADJAX-Contract.git@f9c9278b6a467a6ba7a3972e1644bfc3d13abd6b",
 ]
 
 [project.optional-dependencies]

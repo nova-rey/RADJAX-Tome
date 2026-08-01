@@ -2399,3 +2399,14 @@ falling back to a globally installed older Contract.  The change affects test
 execution isolation only; it neither changes the runtime dependency declared
 by `pyproject.toml` nor changes package, identity, authority, or fixture
 semantics.
+
+## 2026-08-01 — Native-v3 Student-Consumption v3 Integration Candidate
+
+New ordinary native Path-B Student packages emit the explicit
+`native_v3_student_v3` declaration and the closed row-range, delivery-receipt,
+and authority-reference evidence bodies. Tome pins Contract `v0.5.1` at
+`f9c9278b6a467a6ba7a3972e1644bfc3d13abd6b`; its checked-in v3 assets are an
+offline checksum-verified mirror, not a second authority. The package boundary
+uses Contract validation before directory or `.tgz` promotion. V2 remains an
+untouched historical profile with no v3-to-v2 fallback, and base native-v3
+semantic identity, authority recipes, and M7 behavior remain unchanged.

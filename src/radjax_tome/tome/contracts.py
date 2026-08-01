@@ -21,6 +21,9 @@ CANONICAL_TOME_COVER_SCHEMA = "radjax_tome_cover_v3"
 CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA = (
     "radjax_tome_cover_v3_student_consumption_v2"
 )
+CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA = (
+    "radjax_tome_cover_v3_student_consumption_v3"
+)
 CANONICAL_CONTENT_MANIFEST_SCHEMA = "tome_content_manifest_v2"
 TOME_SEMANTIC_IDENTITY_SCHEMA = "radjax_tome_semantic_identity_v1"
 HISTORICAL_PACKAGE_COVER_SCHEMA = "radjax_tome_package_cover_v1"
@@ -77,6 +80,7 @@ _COVER_KEYS = frozenset(
     }
 )
 _STUDENT_CONSUMPTION_V2_COVER_KEYS = _COVER_KEYS | frozenset({"student_consumption"})
+_STUDENT_CONSUMPTION_V3_COVER_KEYS = _STUDENT_CONSUMPTION_V2_COVER_KEYS
 _PACKAGE_KEYS = frozenset({"profile", "transport"})
 _MANIFEST_WRAPPER_KEYS = frozenset({"content"})
 _STUDENT_CONSUMPTION_V2_KEYS = frozenset(
@@ -429,11 +433,14 @@ def validate_canonical_tome_cover(cover: Mapping[str, Any]) -> None:
     )
     if declared_schema == CANONICAL_TOME_COVER_SCHEMA:
         payload = _require_exact_object(cover, "canonical cover", _COVER_KEYS)
-    elif declared_schema == CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA:
+    elif declared_schema in {
+        CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
+        CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
+    }:
         payload = _require_exact_object(
             cover,
-            "canonical Student-consumption v2 cover",
-            _STUDENT_CONSUMPTION_V2_COVER_KEYS,
+            "canonical Student-consumption cover",
+            _STUDENT_CONSUMPTION_V3_COVER_KEYS,
         )
     else:
         raise ValueError("canonical cover schema_version mismatch")
@@ -469,6 +476,8 @@ def validate_canonical_tome_cover(cover: Mapping[str, Any]) -> None:
     _require_json_object(payload["validation"], "canonical cover validation")
     if declared_schema == CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA:
         _validate_student_consumption_v2_declaration(payload["student_consumption"])
+    if declared_schema == CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA:
+        _validate_student_consumption_v3_declaration(payload["student_consumption"])
 
 
 def _validate_student_consumption_v2_declaration(value: Any) -> None:
@@ -483,6 +492,36 @@ def _validate_student_consumption_v2_declaration(value: Any) -> None:
     if payload["profile_id"] != "native_v3_student_v2":
         raise ValueError("canonical cover Student-consumption profile is invalid")
     if payload["manifest_path"] != "manifests/student_consumption_v2.json":
+        raise ValueError("canonical cover Student-consumption manifest path is invalid")
+    _require_sha256(
+        payload["manifest_sha256"],
+        "canonical cover Student-consumption manifest_sha256",
+    )
+    _require_sha256(
+        payload["semantic_digest"],
+        "canonical cover Student-consumption semantic_digest",
+    )
+    if payload.get("digest_method", "sha256") != "sha256":
+        raise ValueError("canonical cover Student-consumption digest_method is invalid")
+    capabilities = payload.get("required_capabilities", [])
+    if not isinstance(capabilities, list) or capabilities:
+        raise ValueError(
+            "canonical cover Student-consumption required_capabilities must be empty"
+        )
+
+
+def _validate_student_consumption_v3_declaration(value: Any) -> None:
+    """Validate the explicit v3 successor without accepting a v2 fallback."""
+
+    payload = _require_allowed_object(
+        value,
+        "canonical cover Student-consumption",
+        required_keys=_STUDENT_CONSUMPTION_V2_REQUIRED_KEYS,
+        allowed_keys=_STUDENT_CONSUMPTION_V2_KEYS,
+    )
+    if payload["profile_id"] != "native_v3_student_v3":
+        raise ValueError("canonical cover Student-consumption profile is invalid")
+    if payload["manifest_path"] != "manifests/student_consumption_v3.json":
         raise ValueError("canonical cover Student-consumption manifest path is invalid")
     _require_sha256(
         payload["manifest_sha256"],
@@ -675,6 +714,7 @@ __all__ = [
     "CANONICAL_CONTENT_MANIFEST_SCHEMA",
     "CANONICAL_TOME_COVER_SCHEMA",
     "CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA",
+    "CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA",
     "HISTORICAL_PACKAGE_COVER_SCHEMA",
     "TOME_SEMANTIC_IDENTITY_SCHEMA",
     "CanonicalContentManifest",

@@ -76,6 +76,8 @@ def _artifact(
         exemplar_selection_enabled=True,
         exemplar_delivery_path="two_pass_rerun_selected",
         selected_exemplar_budget=2,
+        total_selected_exemplar_budget=2,
+        selection_integration_policy="corridor_first_global_backfill_v1",
         retain_unselected_exemplar_payloads=False,
     )
     report = build_production_gpu_tome(replace(config, **production_overrides))
@@ -201,7 +203,7 @@ def test_m5d_profiles_share_source_identity_but_bind_distinct_inventories(
     student_cover = _json(student / "cover_page.json")
     debug_cover = _json(debug / "cover_page.json")
     assert (
-        student_cover["schema_version"] == "radjax_tome_cover_v3_student_consumption_v2"
+        student_cover["schema_version"] == "radjax_tome_cover_v3_student_consumption_v3"
     )
     assert (
         student_cover["identity"]["semantic_digest"]
@@ -279,7 +281,9 @@ def test_student_package_filters_perverse_tail_board_by_producer_opt_in(
     assert selected["selected_board_summary"]["total_selected_count"] == retained_count
     assert audit["selected_count"] == retained_count
     assert audit["status"] == "pass"
-    if include_perverse:
+    # Canonical Path B retains its selected-linked diagnostic receipt even
+    # when the optional legacy side-board flag is false.
+    if include_perverse or artifact.joinpath("c6").is_dir():
         assert (package / "leaderboards" / "perverse_tail_diagnostic.json").is_file()
         assert boards["perverse_tail_diagnostic"]
         assert (
@@ -412,7 +416,7 @@ def test_package_hash_validation_fails_on_mutation(
     package = tmp_path / profile
     package_tome_artifact(artifact, package, profile=profile, overwrite=True)
     path = (
-        sorted((package / "selected_exemplars").glob("selected-exemplars-*.json"))[0]
+        package / "student_consumption" / "v3" / "target_rows.npz"
         if profile == STUDENT
         else sorted((package / "shards").glob("shard-*.npz"))[0]
     )

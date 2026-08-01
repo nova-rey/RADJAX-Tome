@@ -16,6 +16,7 @@ from radjax_tome.tome.canonical_artifact import validate_canonical_artifact_dire
 from radjax_tome.tome.contracts import (
     CANONICAL_TOME_COVER_SCHEMA,
     CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
+    CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
     validate_canonical_tome_cover,
 )
 from radjax_tome.tome.cover_page import (
@@ -36,6 +37,7 @@ def _is_canonical_cover(cover_page: dict[str, Any]) -> bool:
     return cover_page.get("schema_version") in {
         CANONICAL_TOME_COVER_SCHEMA,
         CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
+        CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
     }
 
 

@@ -1,0 +1,644 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://radjax.dev/contracts/radjax_tome/student_consumption/v3/schemas/student_consumption_manifest_v3.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "base_artifact_semantic_digest",
+    "semantic_identity",
+    "resources",
+    "joins",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "radjax_tome_student_consumption_manifest_v3"
+    },
+    "profile_id": {
+      "const": "native_v3_student_v3"
+    },
+    "base_artifact_semantic_digest": {
+      "$ref": "#/$defs/sha256"
+    },
+    "semantic_identity": {
+      "$ref": "https://radjax.dev/contracts/radjax_tome/student_consumption/v3/schemas/student_consumption_semantic_identity_v3.json"
+    },
+    "resources": {
+      "type": "array",
+      "minItems": 10,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/resource"
+      },
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "target_shard"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "example_registry"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "corridor_mode_table"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "corridor_assignment"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "selected_passport_index"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "selected_exemplar_payload"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "corridor_observed_statistics"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "row_range_declaration"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "delivery_receipt"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "role": {
+                "const": "authority_reference"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          }
+        }
+      ]
+    },
+    "joins": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/join"
+      },
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "kind": {
+                "const": "assignment_to_logit_position"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "kind": {
+                "const": "exemplar_to_passport"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "kind": {
+                "const": "exemplar_to_corridor"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        }
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "derivation"
+      ],
+      "properties": {
+        "derivation": {
+          "const": "independently_semantically_digested_derived_sidecars"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input_ids": {
+          "const": [
+            "example",
+            "token_position"
+          ]
+        },
+        "attention_mask": {
+          "const": [
+            "example",
+            "token_position"
+          ]
+        },
+        "corridor_lengths": {
+          "const": [
+            "example"
+          ]
+        },
+        "position_example_index": {
+          "const": [
+            "assignment"
+          ]
+        },
+        "position": {
+          "const": [
+            "assignment"
+          ]
+        },
+        "mode_id": {
+          "const": [
+            "assignment"
+          ]
+        },
+        "weight": {
+          "const": [
+            "assignment"
+          ]
+        },
+        "entropy": {
+          "const": [
+            "assignment"
+          ]
+        },
+        "top1_margin": {
+          "const": [
+            "assignment"
+          ]
+        },
+        "top8_mass": {
+          "const": [
+            "assignment"
+          ]
+        },
+        "top32_mass": {
+          "const": [
+            "assignment"
+          ]
+        },
+        "tail_mass": {
+          "const": [
+            "assignment"
+          ]
+        }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_id",
+        "role",
+        "instance_id",
+        "semantic_digest",
+        "inventory_binding",
+        "encoding",
+        "classification",
+        "consumption"
+      ],
+      "properties": {
+        "resource_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "target_shard",
+            "example_registry",
+            "corridor_mode_table",
+            "corridor_assignment",
+            "selected_passport_index",
+            "selected_exemplar_payload",
+            "corridor_observed_statistics",
+            "row_range_declaration",
+            "delivery_receipt",
+            "authority_reference"
+          ]
+        },
+        "instance_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "semantic_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "inventory_binding": {
+          "type": "string",
+          "minLength": 1
+        },
+        "encoding": {
+          "enum": [
+            "json",
+            "jsonl",
+            "npz"
+          ]
+        },
+        "classification": {
+          "enum": [
+            "batch",
+            "validation",
+            "provenance"
+          ]
+        },
+        "consumption": {
+          "type": "object",
+          "minProperties": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "target_shard"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "const": "npz"
+              },
+              "classification": {
+                "const": "batch"
+              },
+              "consumption": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "row_start",
+                  "row_end",
+                  "axes"
+                ],
+                "properties": {
+                  "row_start": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row_end": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "axes": {
+                    "allOf": [
+                      {
+                        "$ref": "#/$defs/axes"
+                      },
+                      {
+                        "required": [
+                          "input_ids",
+                          "attention_mask",
+                          "corridor_lengths"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "example_registry"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "const": "json"
+              },
+              "classification": {
+                "const": "batch"
+              },
+              "consumption": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordering"
+                ],
+                "properties": {
+                  "ordering": {
+                    "const": "global_example_index"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "corridor_assignment"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "const": "npz"
+              },
+              "classification": {
+                "const": "batch"
+              },
+              "consumption": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ordering",
+                  "axes"
+                ],
+                "properties": {
+                  "ordering": {
+                    "const": "global_example_index_position"
+                  },
+                  "axes": {
+                    "allOf": [
+                      {
+                        "$ref": "#/$defs/axes"
+                      },
+                      {
+                        "required": [
+                          "position_example_index",
+                          "position",
+                          "mode_id",
+                          "weight"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "corridor_observed_statistics"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "const": "npz"
+              },
+              "classification": {
+                "const": "validation"
+              },
+              "consumption": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "axes"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "corridor_observed_statistics"
+                  },
+                  "axes": {
+                    "allOf": [
+                      {
+                        "$ref": "#/$defs/axes"
+                      },
+                      {
+                        "required": [
+                          "entropy",
+                          "top1_margin",
+                          "top8_mass",
+                          "top32_mass",
+                          "tail_mass"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "row_range_declaration"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "const": "json"
+              },
+              "classification": {
+                "const": "validation"
+              },
+              "consumption": {
+                "const": {
+                  "kind": "row_range_declaration"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "delivery_receipt"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "const": "json"
+              },
+              "classification": {
+                "const": "provenance"
+              },
+              "consumption": {
+                "const": {
+                  "kind": "delivery_receipt"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "authority_reference"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encoding": {
+                "const": "json"
+              },
+              "classification": {
+                "const": "validation"
+              },
+              "consumption": {
+                "const": {
+                  "kind": "authority_reference"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "join": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "assignment_to_logit_position",
+            "exemplar_to_passport",
+            "exemplar_to_corridor"
+          ]
+        }
+      }
+    }
+  }
+}

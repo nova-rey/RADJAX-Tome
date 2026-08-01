@@ -1,0 +1,8 @@
+{
+  "schema_version": "radjax_tome_student_consumption_profile_v3",
+  "profile_id": "native_v3_student_v3",
+  "base_artifact_identity": "native_v3_semantic_digest",
+  "derived_resource_identity": "role_instance_semantic_digest",
+  "required_semantic_declarations": ["row_range", "delivery_receipt", "authority_reference"],
+  "profile_negotiation": "explicit_exact_profile_id_no_fallback"
+}
