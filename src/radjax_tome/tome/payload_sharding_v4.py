@@ -135,6 +135,7 @@ def package_legacy_artifact_as_sharded_tome_v4(
             profile=profile,
             capacity=payload_records_per_shard,
         )
+        _validate_publishable(stage)
         if output.exists():
             shutil.rmtree(output)
         os.replace(stage, output)
@@ -159,46 +160,14 @@ def pack_sharded_tome_v4(
     if output.exists() and not overwrite:
         raise ValueError(f"output already exists: {output}")
     output.parent.mkdir(parents=True, exist_ok=True)
-    with output.open("wb") as raw:
-        stream: Any = (
-            gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0)
-            if compression == "gz"
-            else raw
-        )
-        try:
-            with tarfile.open(
-                fileobj=stream, mode="w", format=tarfile.USTAR_FORMAT
-            ) as archive:
-                for source in sorted(
-                    (path for path in root.rglob("*") if path.is_file()),
-                    key=lambda path: _archive_member_order(
-                        path.relative_to(root).as_posix()
-                    ),
-                ):
-                    relative = source.relative_to(root).as_posix()
-                    info = tarfile.TarInfo(relative)
-                    cover = (
-                        _archive_cover_bytes(source, compression=compression)
-                        if relative == "cover_page.json"
-                        else None
-                    )
-                    info.size = (
-                        len(cover) if cover is not None else source.stat().st_size
-                    )
-                    info.mtime = 0
-                    info.uid = info.gid = 0
-                    info.uname = info.gname = ""
-                    info.mode = 0o644
-                    if cover is not None:
-                        import io
-
-                        archive.addfile(info, io.BytesIO(cover))
-                    else:
-                        with source.open("rb") as handle:
-                            archive.addfile(info, handle)
-        finally:
-            if compression == "gz":
-                stream.close()
+    temporary = _temporary_sibling(output)
+    try:
+        _write_archive(root, temporary, compression=compression)
+        _validate_publishable(temporary)
+        os.replace(temporary, output)
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
     return output
 
 
@@ -246,6 +215,7 @@ def write_sharded_tome_v4(
             profile=profile,
             capacity=payload_records_per_shard,
         )
+        _validate_publishable(stage)
         if output.exists():
             shutil.rmtree(output)
         os.replace(stage, output)
@@ -255,6 +225,78 @@ def write_sharded_tome_v4(
         selected_count=result.selected_count,
         shard_count=result.shard_count,
     )
+
+
+def _temporary_sibling(output: Path) -> Path:
+    """Reserve an unpublished archive path on the final filesystem.
+
+    ``os.replace`` is only atomic when the staged archive is a sibling of its
+    final path.  Keeping the temporary name private also ensures a failed
+    pack cannot leave a truncated final archive visible to consumers.
+    """
+    descriptor, name = tempfile.mkstemp(prefix=f".{output.name}.", dir=output.parent)
+    os.close(descriptor)
+    return Path(name)
+
+
+def _write_archive(root: Path, output: Path, *, compression: str) -> None:
+    """Write a deterministic archive to an unpublished staging file."""
+    with output.open("wb") as raw:
+        stream: Any = (
+            gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0)
+            if compression == "gz"
+            else raw
+        )
+        try:
+            with tarfile.open(
+                fileobj=stream, mode="w", format=tarfile.USTAR_FORMAT
+            ) as archive:
+                for source in sorted(
+                    (path for path in root.rglob("*") if path.is_file()),
+                    key=lambda path: _archive_member_order(
+                        path.relative_to(root).as_posix()
+                    ),
+                ):
+                    relative = source.relative_to(root).as_posix()
+                    info = tarfile.TarInfo(relative)
+                    cover = (
+                        _archive_cover_bytes(source, compression=compression)
+                        if relative == "cover_page.json"
+                        else None
+                    )
+                    info.size = (
+                        len(cover) if cover is not None else source.stat().st_size
+                    )
+                    info.mtime = 0
+                    info.uid = info.gid = 0
+                    info.uname = info.gname = ""
+                    info.mode = 0o644
+                    if cover is not None:
+                        import io
+
+                        archive.addfile(info, io.BytesIO(cover))
+                    else:
+                        with source.open("rb") as handle:
+                            archive.addfile(info, handle)
+        finally:
+            if compression == "gz":
+                stream.close()
+
+
+def _validate_publishable(path: Path) -> None:
+    """Fail closed at the publication boundary using Contract's authority.
+
+    This is deliberately a narrow validation-boundary import rather than a
+    Tome packaging dependency: Contract owns the portable v4 semantics while
+    Tome owns staging and deterministic bytes.  Nothing is promoted before
+    the authoritative portable validator has accepted the staged artifact.
+    """
+    from radjax_contract.tome import validate_streaming_tome
+
+    result = validate_streaming_tome(path, strict=True)
+    if not result.ok:
+        errors = ", ".join(result.errors) or "portable validation failed"
+        raise ValueError(f"staged v4 Tome failed Contract validation: {errors}")
 
 
 def _write_directory(
