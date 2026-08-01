@@ -511,6 +511,7 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument("--gpu-batch-size-auto-min", type=int, default=1)
     production.add_argument("--gpu-batch-size-auto-max", type=int, default=64)
     production.add_argument("--shard-size-examples", type=int, default=1024)
+    production.add_argument("--payload-records-per-shard", type=int, default=128)
     production.add_argument("--max-examples", type=int)
     production.add_argument("--resume", action="store_true")
     production.add_argument("--overwrite", action="store_true")

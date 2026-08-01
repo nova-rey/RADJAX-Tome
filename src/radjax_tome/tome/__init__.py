@@ -40,12 +40,23 @@ from radjax_tome.tome.cover_page import (
 from radjax_tome.tome.packaging import (
     FULL_DEBUG_PROVENANCE,
     STUDENT,
+    IndexedStudentTomeReader,
+    StreamingStudentTomeReader,
     StudentTomeReader,
     TomePackageResult,
     TomePackageValidationReport,
+    open_indexed_student_tome,
+    open_streaming_student_tome,
     open_student_tome,
     package_tome_artifact,
     validate_tome_package,
+)
+from radjax_tome.tome.payload_sharding_v4 import (
+    ShardedTomeV4Result,
+    pack_sharded_tome_v4,
+    package_legacy_artifact_as_sharded_tome_v4,
+    write_sharded_tome_v4,
+    write_sharded_tome_v4_from_legacy_artifact,
 )
 
 __all__ = [
@@ -54,6 +65,7 @@ __all__ = [
     "COVER_PAGE_FILENAME",
     "CanonicalContentManifest",
     "FULL_DEBUG_PROVENANCE",
+    "IndexedStudentTomeReader",
     "HistoricalTomeDescriptor",
     "HISTORICAL_PACKAGE_COVER_SCHEMA",
     "LEGACY_COVER_PAGE_V2",
@@ -63,7 +75,9 @@ __all__ = [
     "TomePackageResult",
     "TomePackageValidationReport",
     "STUDENT",
+    "ShardedTomeV4Result",
     "StudentTomeReader",
+    "StreamingStudentTomeReader",
     "TOME_SEMANTIC_IDENTITY_SCHEMA",
     "TomeSemanticIdentity",
     "TrainingPayloadEntry",
@@ -76,8 +90,12 @@ __all__ = [
     "inspect_tome_bundle",
     "pack_tome_bundle",
     "package_tome_artifact",
+    "package_legacy_artifact_as_sharded_tome_v4",
+    "pack_sharded_tome_v4",
     "read_historical_tome_descriptor",
     "open_student_tome",
+    "open_indexed_student_tome",
+    "open_streaming_student_tome",
     "unpack_tome_bundle",
     "validate_tome_cover_page",
     "validate_tome_bundle",
@@ -86,4 +104,6 @@ __all__ = [
     "validate_canonical_tome_cover",
     "validate_tome_package",
     "write_cover_page",
+    "write_sharded_tome_v4",
+    "write_sharded_tome_v4_from_legacy_artifact",
 ]

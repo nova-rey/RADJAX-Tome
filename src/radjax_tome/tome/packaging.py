@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import tempfile
+from collections.abc import Iterator
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
@@ -127,6 +128,90 @@ class StudentTomeReader:
         if example_index is not None:
             payload["input_ids"] = self.examples_input_ids[example_index]
         return payload
+
+
+@dataclass
+class StreamingStudentTomeReader:
+    """The M7 paved sequential reader for a v4 Student archive.
+
+    It is intentionally a thin Tome-facing adapter over the Contract-owned
+    portable reader.  Unlike :func:`open_student_tome`, it never constructs an
+    eager selected-payload tuple.  A close before exhaustion leaves
+    ``verification_state`` as ``closed_early`` rather than claiming whole-
+    package verification.
+    """
+
+    _reader: Any
+
+    @property
+    def descriptor(self) -> Any:
+        return self._reader.descriptor
+
+    @property
+    def verification_state(self) -> str:
+        return self._reader.verification_state
+
+    @property
+    def warnings(self) -> tuple[str, ...]:
+        return self._reader.warnings
+
+    def __iter__(self) -> Iterator[dict[str, Any]]:
+        return iter(self._reader)
+
+    def close(self) -> None:
+        self._reader.close()
+
+    def __enter__(self) -> StreamingStudentTomeReader:
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+
+def open_streaming_student_tome(
+    archive: Path, *, strict: bool = False
+) -> StreamingStudentTomeReader:
+    """Open the validated direct-streaming v4 Student transport.
+
+    Direct `.tgz` reads are sequential only.  Historical v3 callers retain
+    :func:`open_student_tome`, whose eager behavior is compatibility-only.
+    """
+    from radjax_contract.tome import open_streaming_tome
+
+    reader = open_streaming_tome(archive, strict=strict)
+    if reader.descriptor.profile != STUDENT:
+        reader.close()
+        raise ValueError("streaming reader requires the student package profile")
+    return StreamingStudentTomeReader(reader)
+
+
+@dataclass(frozen=True)
+class IndexedStudentTomeReader:
+    """Validated extracted-directory access for one selected v4 payload."""
+
+    root: Path
+
+    def read(self, *, shard_id: int, row: int) -> dict[str, Any]:
+        """Return one indexed record without scanning other payload shards."""
+        from radjax_contract.tome import read_extracted_payload_record
+
+        return read_extracted_payload_record(self.root, shard_id=shard_id, row=row)
+
+
+def open_indexed_student_tome(root: Path) -> IndexedStudentTomeReader:
+    """Open extracted v4 Student data for Contract-validated indexed access.
+
+    Archive random access is deliberately unsupported: callers must extract or
+    populate an application-owned verified cache before using this adapter.
+    """
+    candidate = root.resolve()
+    if not candidate.is_dir():
+        raise ValueError("random_access_transport_unsupported")
+    cover = read_json_object(candidate / "cover_page.json")
+    package = cover.get("package")
+    if not isinstance(package, dict) or package.get("profile") != STUDENT:
+        raise ValueError("indexed reader requires the student package profile")
+    return IndexedStudentTomeReader(candidate)
 
 
 def package_tome_artifact(

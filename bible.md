@@ -1,5 +1,36 @@
 # RADJAX-Tome Project Ledger
 
+## 2026-07-31 — M7A Payload Sharding Characterization
+
+M7 begins from an explicit characterization of the current selected-payload
+surface. Canonical Path B emits one-record
+`selected_exemplar_payload_shard_v1` JSON files and uses transactional native
+staging/promotion, but package and public student-reader paths retain eager
+payload collections. The current v3 semantic identity hashes physical selected
+payload files, so regrouping unchanged records changes its digest. The approved
+M7 solution is a versioned v4 / semantic-identity-v2 contract; v3 remains
+historical compatibility evidence and is not reinterpreted. The complete
+pre-M7 payload-field census is locked in a characterization test for M7B
+classification.
+
+## 2026-07-31 — M7B Tome-Local Streaming Contract Proposal
+
+The repository now carries a proposed, not-yet-published `radjax_tome/v2`
+contract tree for review. It defines the closed v4 cover, identity v2,
+streamed content-manifest graph, JSONL selected-payload index, bounded
+record-count sharding, exact 38-field selected-payload projection, errors,
+profiles, compatibility declarations, digest vector, and checksum inventory.
+The proposal preserves the v1 publication unchanged and is intentionally
+stopped before any RADJAX-Contract mutation.
+
+## 2026-07-31 — M7B Contract Correction
+
+The v2 inventory exclusion now correctly names `cover_page.json`, and each
+JSONL payload-index record explicitly binds both its coordinate-derived logical
+ID and raw payload digest. This resolves the draft index ambiguity before the
+portable streaming validator and conformance corpus are accepted. Contract and
+Student remain untouched.
+
 Earlier history in this root ledger was reconstructed from current repository
 state because no root `bible.md` existed when Spec 3.1 landed. Existing
 historical notes remain in `docs/BIBLE.md`; future spec commits should append
@@ -2052,3 +2083,275 @@ clean package initializer as sufficient. Its new synthetic regression proves a
 forbidden dependency in a descendant module is reported with the complete path.
 No runtime behavior, public API, Contract pin/mirror, Golden fixture, v3 asset,
 Contract repository, or Student repository changed.
+
+## 2026-07-31 — M7B Portable Streaming Validator Correction
+
+The proposed Tome-local v2 sharding contract now has black-box proof rather
+than only schema/checksum proof. Its standard-library directory validator
+streams the payload index and JSONL shards with scalar digest state, verifies
+the acyclic cover/header/inventory graph, fixed paths, raw digests, contiguous
+count-based shard ranges, index-to-row bindings, per-shard and whole-sequence
+digests, the compact v2 semantic identity, and all 38 semantic payload fields.
+The identity binds the sequence digest and count rather than an eager payload
+array. Opaque extensions now preserve a declared value and its canonical digest
+without interpreting it; unknown profile/capability/digest contracts still fail
+closed. New generated package cases prove that stale layout counts, index
+addresses, shard sequence digests, raw-envelope-refreshed payload tampering,
+and rehashed stale identities are rejected. This remains a Tome-local proposed
+contract: RADJAX-Contract, Student, M4/M5 semantics, authority recipes, Golden
+fixtures, and accelerator execution are untouched pending the explicit M7
+Contract review gate.
+
+## 2026-07-31 — M7C Tome-Local Conformance Corpus
+
+The checksum-pinned v2 conformance catalog now names the generated valid and
+adversarial streaming packages and their stable fail-closed categories. It
+also explicitly retains v3 as native historical evidence and v2/package-v1 as
+incomplete non-inferential descriptors; no historical artifact is promoted to
+the new v4 identity. The corpus stays compact and reproducible: payload bytes
+are generated in temporary test directories, while the reviewed schemas,
+vectors, catalog, and checksum inventory are checked in. Contract, Student,
+Golden fixtures, authority behavior, and accelerator work remain untouched.
+
+## 2026-07-31 — M7D Additive V4 Streaming Writer
+
+The new `tome.payload_sharding_v4` writer is a separate, transactional v4
+artifact boundary. It streams selected records to compact canonical JSONL with
+strict record-count shard boundaries, disk-backed duplicate logical-ID checking,
+per-record/index/shard/sequence integrity, a compact sequence-bound semantic
+identity, and the acyclic cover/header/inventory graph. Its deterministic
+regrouping proof shows physical layout hashes change while semantic identity
+does not. The legacy M4 selected-rerun staging, v3 package writer, archive
+writer, public v3 readers, authority, Golden fixtures, Contract, and Student
+remain unmodified. Further M7D work still needs the source-adapter, transport,
+and native/portable parity boundaries before the Contract review gate.
+
+## 2026-07-31 — M7D Bounded-Memory Duplicate Detection
+
+The portable v2 validator now uses a temporary on-disk uniqueness table for
+logical IDs instead of retaining an in-memory set. Together with its streaming
+JSONL readers and sequence digest sinks, validation retains one encoded record
+plus fixed buffers and scalar state, while still rejecting duplicate IDs. The
+writer uses the same disk-backed uniqueness approach. No v3 validator, writer,
+archive behavior, Contract, Student, Golden fixture, or production runtime
+path changed.
+
+## 2026-07-31 — M7D Legacy Adapter and V4 Transport
+
+The v4 writer now has an explicit read-only legacy-artifact adapter: it derives
+the established training/authority context, projects only the closed selected
+payload fields, and proves the v3 source bytes are unchanged. A separate v4
+tar/gzip transport writer fixes member ordering, timestamps, ownership, modes,
+and gzip mtime; it is byte-deterministic. The portable validator safely streams
+an archive into temporary disk before directory validation, rejecting traversal,
+duplicate, special, corrupt, and unsupported members without loading a package
+into memory. Legacy bundle APIs and v3 semantics remain untouched.
+
+## 2026-07-31 — M7D Streaming Shard Index
+
+The v4 layout no longer embeds a package-size-proportional shard array. It
+references a checksum-bound `payload-shards.jsonl` index, which the writer,
+portable validator, and archive path consume sequentially. This makes the
+declared bounded-memory model precise: one maximum encoded payload record,
+one shard-index record, and fixed digest/database/I/O state; payload and shard
+collections are not materialized. The schema/checksum corpus, docs, and
+black-box fixtures moved together. No legacy v3 artifact, Contract, Student,
+Golden fixture, authority recipe, or production-stage behavior changed.
+
+## 2026-07-31 — M7D Complete Legacy-Artifact Packaging Boundary
+
+The additive v4 package adapter now builds one coherent package from a complete
+legacy artifact: it copies profile-permitted non-payload members into staging,
+omits legacy cover/manifests/selected wrappers, emits v4 selected shards and
+the acyclic v4 manifest graph, validates, and promotes atomically. Student
+packages omit raw producer shards; full-debug packages retain permitted source
+provenance, while the selected payload identity remains profile-independent.
+Tests prove source immutability, complete-package member behavior, legacy
+selected-payload projection, and portable validation. The v3 public package
+and archive routes remain compatibility paths, not inputs to v4 semantics.
+
+## 2026-07-31 — M7D Tome-Wide Semantic Identity Correction
+
+The v4 semantic identity now includes the sorted non-selected v3 training
+payload projection alongside training contract, authority, selected count, and
+the streamed selected-payload sequence digest. Only the grouping-sensitive
+legacy `selected_exemplars/*` entries are replaced by the sequence projection;
+the remainder of the Tome’s training-authoritative semantic boundary is still
+bound. This prevents sharding from accidentally narrowing canonical Tome
+identity to selected records. The source adapter supplies that projection from
+the native v3 identity, while direct synthetic writer callers may explicitly
+provide none. No v3 identity recipe, profile behavior, Golden fixture, Contract,
+Student, or authority semantics changed.
+
+## 2026-07-31 — M7E Streaming Contract Publication Pin
+
+RADJAX-Contract `0.3.1`, tag `v0.3.1`, commit
+`f8ca8c0885d7c539a51d1594ba7a38c4d457b4d` is now the normative owner of the
+M7 v4 streaming contract. Tome pins its established Contract dependency to
+that release and retains `contracts/radjax_tome/v2` as a checksum-enforced,
+offline verified mirror. Source, installed-wheel, and mirror asset parity are
+tested byte-for-byte. M7 introduces no production writer or CLI import of the
+new Contract-resource API; Contract remains a verification/conformance boundary.
+The M6 v1 mirror and v0.2.0 historical evidence remain unchanged.
+
+## 2026-07-31 — M7F Portable Validator Ownership Correction
+
+The reusable M7 portable validator is now Contract-owned at `v0.3.1`; Tome's
+tool is a thin compatibility command. This removes the last producer-only
+implementation of consumer-visible validation while preserving no new runtime
+dependency for Tome production writers or CLI routes.
+
+## 2026-07-31 — M7F Closure Inventory Correction
+
+The Hydra disposition ledger now explicitly owns the M7 v4 streaming writer,
+characterization, portable contract, and Contract-publication pin documents.
+This is an inventory-only closure correction required by the repository's
+tracked-surface audit; it does not change payload, identity, authority, archive,
+Contract, Student, Golden, or runtime behavior.
+
+## 2026-07-31 — M7F Closure and Downstream Handoff
+
+M7 closes with the Contract v0.3.0 streaming publication, Tome's verified
+offline mirror, v4 source/package adapters, deterministic direct transport,
+and portable streaming validation. The closure report records the exact pin,
+consumer discovery APIs, claims, nonclaims, and cache-disabled reproduction
+commands. M7 makes no claims about Student training, random archive seeks,
+accelerator execution, M8 batching, UX, corpus work, or model performance.
+
+## 2026-07-31 — M7 Corrective Characterization
+
+Independent review rejected the earlier M7 closure because its v4 writer was
+additive rather than the native Path-B paved road and its archive validation
+spooled complete input. The corrective branch now locks three reproduced
+baseline failures before implementation: a missing required semantic field was
+published successfully, a `.tgz` retaining a `directory` cover declaration
+validated successfully, and the deterministic archive writer emitted that
+wrong declaration. The focused characterization command failed `3` tests at
+the verified `f0b1e2e` / `v0.3.1` baseline for those exact reasons. This is
+not a closure claim; production integration, transactional resume, direct
+streaming, indexed access, adversarial coverage, and bounded-memory proof are
+still pending independent review.
+
+## 2026-07-31 — M7 Corrective Writer Publication Boundary
+
+The v4 writer now rejects a record missing any declared required semantic field
+while it is still in its private staging directory, before a successful return
+can expose an invalid package. Deterministic archive emission now synthesizes
+the cover's physical transport declaration (`tgz` or `rtome`) without changing
+the unpacked directory cover, inventory, raw member digests, or layout-
+independent semantic identity. The intentionally malformed archive regression
+remains pending the Contract-side transport mismatch enforcement; no closure
+or native Path-B integration claim is made here.
+
+## 2026-07-31 — M7 Corrective Portable Streaming Boundary
+
+Tome now pins its verification and conformance boundary to the untagged,
+additive RADJAX-Contract `0.3.2` candidate commit
+`78ba36300f201d75b016b2fdcf5720e467310815`; no published tag was changed.
+The checked-in v2 mirror was updated byte-for-byte for the expanded portable
+error vocabulary. The Tome-facing Student adapter delegates direct archive
+iteration, verification state, and strict/permissive canonicality to the
+Contract-owned reader. It reports `fully_verified` only after exhaustion and
+`closed_early` after intentional partial consumption. An extracted-directory
+adapter delegates indexed `(shard_id, row)` reads to Contract and rejects
+archive random access. Focused writer, mismatch, streaming, and indexed-reader
+tests pass. Native Path-B publication, resume staging, the full adversarial
+matrix, and bounded-memory closure evidence remain pending.
+
+## 2026-07-31 — M7 Corrective Native Publication and Staging
+
+The ordinary canonical Path-B report now identifies a deterministic sibling
+v4 directory and `.tgz` only after the retained score, selected-rerun, late
+corridor, reconciliation, and validation callbacks complete. The legacy tree
+remains the historical/resume input, while the reported v4 path is the paved
+consumer artifact. A delivery-owned v4 staging primitive provides atomic
+sealed JSONL shards, receipt-backed contiguous-prefix reuse, interruption
+cleanup, and rejection of gaps, overlaps, reordering, and capacity mismatch.
+The legacy adapter projects declared v4 semantic fields while omitting
+legacy-only delivery receipts, and the deterministic tar writer emits the
+cover/header/inventory prelude before inventory-governed members for direct
+sequential Contract validation. Focused native publication, writer, and
+staging tests pass. This remains corrective implementation only; complete
+resume wiring, full adversarial/memory coverage, and independent closure review
+are still pending.
+
+## 2026-07-31 — M7 Corrective Formatting and Import Hygiene
+
+The corrective streaming/publication surfaces were formatted and their public
+imports normalized after integration. Focused native Path-B, staging, writer,
+and streaming tests remain green; this is mechanical hygiene only and changes
+no contract, artifact, authority, or Golden behavior.
+
+## 2026-07-31 — M7 Corrective Status Record
+
+The historical M7 closure document has been corrected: its `f0b1e2e` closure
+claim was rejected by independent review, the preserved v0.3.1 publication is
+distinguished from the untagged v0.3.2 Contract candidate, and no official
+milestone closure is claimed. The Hydra ownership ledger now records the
+terminal native v4 publication stage. This documentation/ledger checkpoint
+does not change published v0.3.1 assets, Student, Golden fixtures, authority
+contracts, or production semantics.
+
+## 2026-07-31 — M7 Corrective Bounded-Memory Evidence
+
+The direct archive reader is now guarded by a local tracemalloc test with
+fixed maximum record size and 8-versus-64-record synthetic payloads. Warmed
+measurements were 1,119,345 bytes for 531,792 logical JSONL bytes and
+1,148,017 bytes for 4,254,552 logical JSONL bytes; the enforced envelope is
+under 1,250,000 bytes, non-scaling by record count, and under half the large
+payload. A tracked tar source proves first yield before 80 percent of archive
+input, rejects unbounded reads, and proves early close consumes no remainder
+or false full-verification state. These are synthetic local correctness tests;
+they make no performance or accelerator claim.
+
+## 2026-07-31 — M7 Corrective Transactional Native Publication
+
+The native v4 publisher now consumes the delivery-owned sealed-shard staging
+transaction instead of bypassing it. It verifies a receipt-backed contiguous
+prefix against native source-order records on resume, seals only missing shards,
+then constructs Contract-validated directory and archive candidates before
+atomic promotion. Existing final directory/archive pairs are Contract-validated
+before resume accepts them; corrupt completed output now fails closed. Focused
+native interruption tests cover after staging prepare, after shard sealing,
+after staging completion, before archive packing, and before final promotion;
+they prove no final partial archive is accepted. The public writer separately
+validates strict Contract conformance before directory promotion and writes an
+archive through a temporary sibling before validation and replacement. This is
+corrective implementation evidence only; independent closure review remains
+required.
+
+## 2026-07-31 — M7 Corrective Review Packet Update
+
+The corrective review record now enumerates the implemented native transaction,
+resume validation, strict pre-promotion Contract validation, and temporary
+archive promotion behavior. It records the adversarial interruption cases
+actually exercised and keeps the status explicit: corrective implementation is
+complete, but independent M7 closure review is pending. Cache-cleared Tome
+validation completed with `939 passed, 23 skipped`; no published v0.3.1 asset,
+Student file, Golden fixture, authority recipe, or fixed selection projection
+changed.
+
+## 2026-07-31 — M7 Corrective Configuration Boundary
+
+`payload_records_per_shard` is now an explicit execution-only control with a
+default of `128`. It flows through legacy intent adaptation, canonical intent,
+resolved configuration, execution planning, CLI overrides, the flat execution
+adapter, and the native delivery configuration. The focused characterization
+proves the value survives every boundary, rejects non-positive/non-integer
+values, and is absent from the fixed 25-field selection-authority payload and
+hash. This checkpoint changes no physical writer, resume behavior, identity,
+authority, or Golden artifact.
+
+## 2026-07-31 — M7 Corrective Native Path-B v4 Publication
+
+The ordinary canonical Path-B terminal reporting callback now publishes the
+validated completed native artifact through the v4 adapter only after the
+existing late-corridor, linkage-validation, and reconciliation proof.  It
+reports one obvious consumer-facing sibling directory and deterministic `.tgz`
+archive, including their v4 identity and shard facts; the retained legacy tree
+is solely the historical/resume source for that transactional projection.
+The focused native integration test proves a configured two-record shard
+capacity reaches the final v4 layout and both physical forms pass the portable
+validator.  This preserves the sole M4 state machine and does not claim M7
+closure; staging-prefix resume and direct-streaming evidence remain separate
+corrective work.

@@ -1,0 +1,278 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radjax_tome_semantic_identity_v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "payload_sequence_digest",
+    "selected_count",
+    "nonselected_training_payload",
+    "training_contract",
+    "authority",
+    "semantic_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "radjax_tome_semantic_identity_v2"
+    },
+    "payload_sequence_digest": {
+      "$ref": "#/$defs/sha256"
+    },
+    "selected_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nonselected_training_payload": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/payload"}
+    },
+    "training_contract": {
+      "type": "object"
+    },
+    "authority": {
+      "type": "object"
+    },
+    "semantic_digest": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logical_id", "semantic_digest"],
+      "properties": {
+        "logical_id": {"type": "string", "minLength": 1},
+        "semantic_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "semantic_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected_example_id",
+        "selected_position",
+        "selected_score",
+        "score_selected_position_entropy",
+        "score_top_token_id",
+        "source_shard_id",
+        "source_row",
+        "source_position",
+        "source_score",
+        "source_top_token_id",
+        "source_score_policy",
+        "payload_ref",
+        "selected_policy",
+        "source_delivery_path",
+        "top_token_ids",
+        "top_log_probs",
+        "top_probs",
+        "top_selection_mask",
+        "effective_top_k",
+        "top_mass",
+        "tail_mass",
+        "bucket_masses",
+        "teacher_entropy",
+        "sequence_length",
+        "vocab_size",
+        "num_buckets",
+        "dynamic_top_k",
+        "dynamic_mass_threshold",
+        "dynamic_top_k_max",
+        "top_k_saturated",
+        "long_tail_class",
+        "long_tail_warnings",
+        "effective_top_k_fraction_of_vocab",
+        "semantic_tail_tag",
+        "selected_board",
+        "corridor_mode_id",
+        "corridor_fingerprint_id",
+        "corridor_assignment_status"
+      ],
+      "properties": {
+        "selected_example_id": {
+          "type": "string"
+        },
+        "selected_position": {
+          "type": "integer"
+        },
+        "selected_score": {
+          "type": "number"
+        },
+        "score_selected_position_entropy": {
+          "type": "number"
+        },
+        "score_top_token_id": {
+          "type": "integer"
+        },
+        "source_shard_id": {
+          "type": "integer"
+        },
+        "source_row": {
+          "type": "integer"
+        },
+        "source_position": {
+          "type": "integer"
+        },
+        "source_score": {
+          "type": "number"
+        },
+        "source_top_token_id": {
+          "type": "integer"
+        },
+        "source_score_policy": {
+          "type": "string"
+        },
+        "payload_ref": {
+          "type": "object"
+        },
+        "selected_policy": {
+          "type": "string"
+        },
+        "source_delivery_path": {
+          "type": "string"
+        },
+        "top_token_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "top_log_probs": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "top_probs": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "top_selection_mask": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "effective_top_k": {
+          "type": "integer"
+        },
+        "top_mass": {
+          "type": "number"
+        },
+        "tail_mass": {
+          "type": "number"
+        },
+        "bucket_masses": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "teacher_entropy": {
+          "type": "number"
+        },
+        "sequence_length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "vocab_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "num_buckets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dynamic_top_k": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        },
+        "dynamic_mass_threshold": {
+          "type": "number"
+        },
+        "dynamic_top_k_max": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "top_k_saturated": {
+          "type": "boolean"
+        },
+        "long_tail_class": {
+          "type": "string"
+        },
+        "long_tail_warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "effective_top_k_fraction_of_vocab": {
+          "type": "number"
+        },
+        "semantic_tail_tag": {
+          "type": "string"
+        },
+        "selected_board": {
+          "type": "string"
+        },
+        "corridor_mode_id": {
+          "type": [
+            "integer",
+            "string"
+          ]
+        },
+        "corridor_fingerprint_id": {
+          "type": [
+            "integer",
+            "string"
+          ]
+        },
+        "corridor_assignment_status": {
+          "type": "string"
+        },
+        "opaque_extensions": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/opaque_extension"
+          }
+        }
+      }
+    },
+    "opaque_extension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "value",
+        "semantic_digest"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "semantic_digest": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

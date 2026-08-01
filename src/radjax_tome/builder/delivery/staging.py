@@ -3,6 +3,9 @@
 # ruff: noqa: F403, F405
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
+
 # Shared constants and low-level, dependency-free helpers.
 from ._shared import *  # noqa: F403
 from .payloads import (
@@ -568,6 +571,278 @@ def _validate_native_staged_payload(
         if field not in item:
             raise ValueError(f"native payload missing {field}: {path.name}")
     return item
+
+
+@dataclass(frozen=True)
+class V4SealedShard:
+    """One verified, immutable shard in a resumable v4 delivery transaction.
+
+    This is deliberately a delivery primitive rather than a second production
+    state machine.  The Path-B orchestrator decides when to emit and promote;
+    this helper only makes a contiguous sequence of JSONL shard files safe to
+    reuse after an interrupted delivery.
+    """
+
+    shard_id: int
+    first_selection_index: int
+    record_count: int
+    sha256: str
+    path: str
+
+
+@dataclass(frozen=True)
+class V4ShardResumeState:
+    """The verified contiguous prefix available to a resumed v4 delivery."""
+
+    stage: Path
+    config_sha256: str
+    payload_records_per_shard: int
+    sealed_shards: tuple[V4SealedShard, ...]
+
+    @property
+    def completed_record_count(self) -> int:
+        return sum(item.record_count for item in self.sealed_shards)
+
+    @property
+    def next_shard_id(self) -> int:
+        return len(self.sealed_shards)
+
+
+_V4_STAGING_RECEIPT = "v4-shard-receipt.json"
+_V4_STAGING_COMPLETE = "v4-shard-transaction-complete.json"
+
+
+def prepare_v4_shard_staging(
+    stage: Path,
+    *,
+    config: Mapping[str, Any],
+    payload_records_per_shard: int,
+) -> V4ShardResumeState:
+    """Open and verify a resumable v4 shard transaction.
+
+    Only a contiguous prefix whose receipt, filenames, counts, and raw digests
+    all agree is reusable.  Interrupted temporary files are never receipts and
+    are discarded before the caller receives the resume state.
+    """
+    if (
+        not isinstance(payload_records_per_shard, int)
+        or isinstance(payload_records_per_shard, bool)
+        or payload_records_per_shard < 1
+    ):
+        raise ValueError("payload_records_per_shard must be a positive integer")
+    stage.mkdir(parents=True, exist_ok=True)
+    shards = stage / "shards"
+    shards.mkdir(exist_ok=True)
+    for temporary in shards.glob("*.tmp"):
+        temporary.unlink()
+    config_sha256 = _v4_staging_digest(config)
+    receipt_path = stage / _V4_STAGING_RECEIPT
+    if not receipt_path.exists():
+        _write_json_atomic(
+            receipt_path,
+            {
+                "schema_version": "radjax_tome_v4_shard_staging_receipt_v1",
+                "config_sha256": config_sha256,
+                "payload_records_per_shard": payload_records_per_shard,
+                "sealed_shards": [],
+            },
+        )
+        return V4ShardResumeState(stage, config_sha256, payload_records_per_shard, ())
+    receipt = read_json_object(receipt_path)
+    if receipt.get("schema_version") != "radjax_tome_v4_shard_staging_receipt_v1":
+        raise ValueError("v4 staging receipt schema mismatch")
+    if receipt.get("config_sha256") != config_sha256:
+        raise ValueError("v4 staging configuration mismatch; refusing resume")
+    if receipt.get("payload_records_per_shard") != payload_records_per_shard:
+        raise ValueError("v4 staging shard capacity mismatch; refusing resume")
+    raw_sealed = receipt.get("sealed_shards")
+    if not isinstance(raw_sealed, list):
+        raise ValueError("v4 staging receipt sealed_shards is invalid")
+    sealed: list[V4SealedShard] = []
+    expected_first = 0
+    for expected_id, raw in enumerate(raw_sealed):
+        if not isinstance(raw, dict):
+            raise ValueError("v4 staging receipt shard is invalid")
+        item = _v4_sealed_shard_from_dict(raw)
+        if item.shard_id != expected_id:
+            raise ValueError("v4 staging receipt has a shard gap or reorder")
+        if item.first_selection_index != expected_first:
+            raise ValueError("v4 staging receipt has overlapping shard ranges")
+        if not 1 <= item.record_count <= payload_records_per_shard:
+            raise ValueError("v4 staging receipt shard record count is invalid")
+        shard_path = stage / item.path
+        if shard_path != shards / f"shard-{item.shard_id:05d}.jsonl":
+            raise ValueError("v4 staging receipt shard path is invalid")
+        if not shard_path.is_file() or _v4_file_digest(shard_path) != item.sha256:
+            raise ValueError("v4 staging sealed shard digest mismatch")
+        if _v4_jsonl_record_count(shard_path) != item.record_count:
+            raise ValueError("v4 staging sealed shard row count mismatch")
+        sealed.append(item)
+        expected_first += item.record_count
+    expected_paths = {item.path for item in sealed}
+    actual_paths = {
+        path.relative_to(stage).as_posix() for path in shards.glob("shard-*.jsonl")
+    }
+    if actual_paths != expected_paths:
+        raise ValueError("v4 staging contains unreceipted or missing sealed shards")
+    return V4ShardResumeState(
+        stage, config_sha256, payload_records_per_shard, tuple(sealed)
+    )
+
+
+def seal_v4_shard(
+    state: V4ShardResumeState,
+    records: Iterable[bytes],
+) -> V4ShardResumeState:
+    """Atomically seal the next count-bounded JSONL shard and its receipt."""
+    if (state.stage / _V4_STAGING_COMPLETE).exists():
+        raise ValueError("v4 staging transaction is already complete")
+    shard_id = state.next_shard_id
+    relative = f"shards/shard-{shard_id:05d}.jsonl"
+    final = state.stage / relative
+    if final.exists():
+        raise ValueError("v4 staging shard already exists without a valid receipt")
+    temporary = final.with_suffix(".jsonl.tmp")
+    digest = hashlib.sha256()
+    count = 0
+    try:
+        with temporary.open("wb") as handle:
+            for record in records:
+                if not isinstance(record, bytes) or not record or b"\n" in record:
+                    raise ValueError("v4 shard records must be nonempty JSONL lines")
+                if count == state.payload_records_per_shard:
+                    raise ValueError("v4 shard exceeds payload_records_per_shard")
+                line = record + b"\n"
+                handle.write(line)
+                digest.update(line)
+                count += 1
+        if count == 0:
+            raise ValueError("v4 shard must contain at least one record")
+        os.replace(temporary, final)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+    item = V4SealedShard(
+        shard_id=shard_id,
+        first_selection_index=state.completed_record_count,
+        record_count=count,
+        sha256="sha256:" + digest.hexdigest(),
+        path=relative,
+    )
+    _write_v4_staging_receipt(state, (*state.sealed_shards, item))
+    return V4ShardResumeState(
+        state.stage,
+        state.config_sha256,
+        state.payload_records_per_shard,
+        (*state.sealed_shards, item),
+    )
+
+
+def complete_v4_shard_staging(
+    state: V4ShardResumeState,
+    *,
+    expected_record_count: int,
+) -> None:
+    """Mark a verified complete transaction ready for later final promotion."""
+    if state.completed_record_count != expected_record_count:
+        raise ValueError(
+            "v4 staging transaction incomplete: "
+            f"expected={expected_record_count} staged={state.completed_record_count}"
+        )
+    _write_json_atomic(
+        state.stage / _V4_STAGING_COMPLETE,
+        {
+            "schema_version": "radjax_tome_v4_shard_staging_complete_v1",
+            "config_sha256": state.config_sha256,
+            "record_count": expected_record_count,
+            "shard_count": len(state.sealed_shards),
+        },
+    )
+
+
+def _write_v4_staging_receipt(
+    state: V4ShardResumeState, sealed: tuple[V4SealedShard, ...]
+) -> None:
+    _write_json_atomic(
+        state.stage / _V4_STAGING_RECEIPT,
+        {
+            "schema_version": "radjax_tome_v4_shard_staging_receipt_v1",
+            "config_sha256": state.config_sha256,
+            "payload_records_per_shard": state.payload_records_per_shard,
+            "sealed_shards": [
+                {
+                    "shard_id": item.shard_id,
+                    "first_selection_index": item.first_selection_index,
+                    "record_count": item.record_count,
+                    "sha256": item.sha256,
+                    "path": item.path,
+                }
+                for item in sealed
+            ],
+        },
+    )
+
+
+def _v4_sealed_shard_from_dict(raw: dict[str, Any]) -> V4SealedShard:
+    required = {
+        "shard_id",
+        "first_selection_index",
+        "record_count",
+        "sha256",
+        "path",
+    }
+    if set(raw) != required:
+        raise ValueError("v4 staging receipt shard keys are invalid")
+    numeric_keys = ("shard_id", "first_selection_index", "record_count")
+    if any(isinstance(raw[key], bool) for key in numeric_keys):
+        raise ValueError("v4 staging receipt shard numeric field is invalid")
+    if not all(isinstance(raw[key], int) for key in numeric_keys):
+        raise ValueError("v4 staging receipt shard numeric field is invalid")
+    if not isinstance(raw["path"], str) or not isinstance(raw["sha256"], str):
+        raise ValueError("v4 staging receipt shard digest or path is invalid")
+    digest = raw["sha256"]
+    if not digest.startswith("sha256:") or len(digest) != 71:
+        raise ValueError("v4 staging receipt shard digest is invalid")
+    try:
+        int(digest.removeprefix("sha256:"), 16)
+    except ValueError as exc:
+        raise ValueError("v4 staging receipt shard digest is invalid") from exc
+    return V4SealedShard(
+        shard_id=raw["shard_id"],
+        first_selection_index=raw["first_selection_index"],
+        record_count=raw["record_count"],
+        sha256=digest,
+        path=raw["path"],
+    )
+
+
+def _v4_staging_digest(config: Mapping[str, Any]) -> str:
+    return (
+        "sha256:"
+        + hashlib.sha256(
+            json.dumps(dict(config), sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+        ).hexdigest()
+    )
+
+
+def _v4_file_digest(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return "sha256:" + digest.hexdigest()
+
+
+def _v4_jsonl_record_count(path: Path) -> int:
+    count = 0
+    with path.open("rb") as handle:
+        for line in handle:
+            if not line.endswith(b"\n") or not line[:-1]:
+                raise ValueError("v4 staging sealed shard JSONL is invalid")
+            count += 1
+    return count
 
 
 __all__ = [name for name in globals() if not name.startswith("__")]

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radjax_tome_payload_index_v2",
+  "description": "Schema for each UTF-8 JSONL index record; there is no enclosing index object.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["logical_id", "selected_example_id", "selected_position", "selection_index", "shard_id", "row", "payload_sha256", "payload_semantic_digest", "shard_sha256"],
+  "properties": {
+    "logical_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "selected_example_id": {"type": "string", "minLength": 1},
+    "selected_position": {"type": "integer", "minimum": 0},
+    "selection_index": {"type": "integer", "minimum": 0},
+    "shard_id": {"type": "integer", "minimum": 0},
+    "row": {"type": "integer", "minimum": 0},
+    "payload_sha256": {"$ref": "#/$defs/sha256"},
+    "payload_semantic_digest": {"$ref": "#/$defs/sha256"},
+    "shard_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}
