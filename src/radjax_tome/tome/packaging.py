@@ -26,6 +26,7 @@ from radjax_tome.tome.canonical_artifact import (
 )
 from radjax_tome.tome.contracts import (
     CANONICAL_TOME_COVER_SCHEMA,
+    CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
     CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
     HISTORICAL_PACKAGE_COVER_SCHEMA,
 )
@@ -317,6 +318,7 @@ def validate_tome_package(
         and cover.get("schema_version")
         in {
             CANONICAL_TOME_COVER_SCHEMA,
+            CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
             CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
         }
     )

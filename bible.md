@@ -2410,3 +2410,11 @@ offline checksum-verified mirror, not a second authority. The package boundary
 uses Contract validation before directory or `.tgz` promotion. V2 remains an
 untouched historical profile with no v3-to-v2 fallback, and base native-v3
 semantic identity, authority recipes, and M7 behavior remain unchanged.
+
+## 2026-08-01 — Native-v3 Student-Consumption v3 Historical-Cover Repair
+
+The v3 package-validator integration retains explicit recognition of the
+published v2 canonical cover family. New production emits v3 only, but a v2
+canonical package continues through the canonical validation path rather than
+being demoted to the legacy package-v1 reader. The added regression locks this
+compatibility boundary without changing v2 assets or semantics.

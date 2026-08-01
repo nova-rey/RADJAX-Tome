@@ -20,6 +20,7 @@ from radjax_tome.tome.contracts import (
     canonical_json_digest,
     validate_canonical_tome_cover,
 )
+from radjax_tome.tome.packaging import validate_tome_package
 
 
 def _sha256(data: bytes) -> str:
@@ -113,6 +114,27 @@ def test_validated_artifact_descriptor_admits_v2_cover_without_reinterpreting_v3
         == cover["identity"]["semantic_digest"]
     )
     assert descriptor.student_consumption == cover["student_consumption"]
+
+
+def test_package_validation_recognizes_historical_v2_canonical_cover(
+    tmp_path: Path,
+) -> None:
+    """V3 production must not demote a v2 canonical cover to package-v1."""
+
+    cover = _v2_cover(tmp_path)
+    for relative in (
+        "manifests/content_manifest.json",
+        "manifests/corridor_assignment_manifest.json",
+    ):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}\n", encoding="utf-8")
+    (tmp_path / "cover_page.json").write_text(
+        json.dumps(cover, sort_keys=True), encoding="utf-8"
+    )
+    report = validate_tome_package(tmp_path, profile="student")
+    assert "cover_page.json schema_version mismatch" not in report.blockers
+    assert "cover_page.json package_profile is invalid" not in report.blockers
 
 
 def test_plain_v3_cover_remains_accepted_without_student_consumption(
