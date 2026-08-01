@@ -2304,6 +2304,22 @@ input, rejects unbounded reads, and proves early close consumes no remainder
 or false full-verification state. These are synthetic local correctness tests;
 they make no performance or accelerator claim.
 
+## 2026-07-31 — M7 Corrective Transactional Native Publication
+
+The native v4 publisher now consumes the delivery-owned sealed-shard staging
+transaction instead of bypassing it. It verifies a receipt-backed contiguous
+prefix against native source-order records on resume, seals only missing shards,
+then constructs Contract-validated directory and archive candidates before
+atomic promotion. Existing final directory/archive pairs are Contract-validated
+before resume accepts them; corrupt completed output now fails closed. Focused
+native interruption tests cover after staging prepare, after shard sealing,
+after staging completion, before archive packing, and before final promotion;
+they prove no final partial archive is accepted. The public writer separately
+validates strict Contract conformance before directory promotion and writes an
+archive through a temporary sibling before validation and replacement. This is
+corrective implementation evidence only; independent closure review remains
+required.
+
 ## 2026-07-31 — M7 Corrective Configuration Boundary
 
 `payload_records_per_shard` is now an explicit execution-only control with a
