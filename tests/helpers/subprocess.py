@@ -7,9 +7,16 @@ from pathlib import Path
 
 
 def repo_python_env(root: Path) -> dict[str, str]:
+    source = str(root / "src")
+    inherited = os.environ.get("PYTHONPATH")
+    pythonpath = source if not inherited else os.pathsep.join((source, inherited))
     return {
         **os.environ,
-        "PYTHONPATH": str(root / "src"),
+        # Keep the caller's dependency/source overlays.  Contract parity
+        # runners intentionally point at a pinned Contract source tree; a
+        # subprocess must not silently fall back to a globally installed,
+        # older Contract while testing Tome's public CLI path.
+        "PYTHONPATH": pythonpath,
     }
 
 

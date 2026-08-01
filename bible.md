@@ -2389,3 +2389,13 @@ consumption digest.  `docs/C3_NATIVE_V3_STUDENT_CONSUMPTION_V2_RECEIPT.md`
 records the exact commits and run digests.  This receipt is integration
 evidence, not an official closure declaration; independent review remains
 required.
+
+## 2026-08-01 — Student-Consumption CLI Contract-Parity Repair
+
+Subprocess helpers now preserve an inherited `PYTHONPATH` after Tome's source
+root.  This keeps the public CLI path aligned with the caller's pinned
+Contract source/wheel during Contract-parity testing rather than silently
+falling back to a globally installed older Contract.  The change affects test
+execution isolation only; it neither changes the runtime dependency declared
+by `pyproject.toml` nor changes package, identity, authority, or fixture
+semantics.
