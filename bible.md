@@ -2418,3 +2418,12 @@ published v2 canonical cover family. New production emits v3 only, but a v2
 canonical package continues through the canonical validation path rather than
 being demoted to the legacy package-v1 reader. The added regression locks this
 compatibility boundary without changing v2 assets or semantics.
+
+## 2026-08-01 — Native-v3 Student-Consumption v3 CPU Receipt
+
+An ordinary canonical Path-B CPU-reference package and its deterministic `.tgz`
+delivery were admitted by Contract `v0.5.1` under the explicit v3 profile. The
+receipt records matching base and v3 consumption semantic identities across
+the two transports, with raw `.tgz` integrity kept separate. This is
+cross-repository integration evidence only; it neither changes the immutable
+Golden fixture nor authorizes Student implementation.
