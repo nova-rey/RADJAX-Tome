@@ -1,0 +1,12 @@
+{"schema_version":"radjax_tome_student_consumption_adversarial_v1","cases":[
+  {"case_id":"missing-role","mutation":"remove logical role","expected_code":"SC005_LOGICAL_ID_MISSING"},
+  {"case_id":"unbound-role","mutation":"remove inventory binding","expected_code":"SC008_INVENTORY_BINDING_MISSING"},
+  {"case_id":"dtype","mutation":"attention_mask float32","expected_code":"SC011_DTYPE_INVALID"},
+  {"case_id":"shape","mutation":"parallel assignment length mismatch","expected_code":"SC012_SHAPE_INVALID"},
+  {"case_id":"mask","mutation":"attention_mask contains 2","expected_code":"SC015_MASK_INVALID"},
+  {"case_id":"weight","mutation":"negative assignment weight","expected_code":"SC016_WEIGHT_INVALID"},
+  {"case_id":"bounds","mutation":"mode min greater than max","expected_code":"SC018_CORRIDOR_BOUNDS_INVALID"},
+  {"case_id":"passport","mutation":"payload selected position differs from index","expected_code":"SC019_EXEMPLAR_PASSPORT_INVALID"},
+  {"case_id":"target","mutation":"top mask count differs from effective_top_k","expected_code":"SC020_EXEMPLAR_TARGET_INVALID"},
+  {"case_id":"delivery","mutation":"unknown source_delivery_path","expected_code":"SC021_DELIVERY_PROVENANCE_INVALID"}
+]}

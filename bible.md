@@ -1,5 +1,15 @@
 # RADJAX-Tome Project Ledger
 
+## 2026-08-01 — Native v3 Student-consumption authority
+
+The frozen v3 `training_payload.logical_id` values are mapped to stable
+Contract-owned consumption roles without changing v3 identity semantics.
+Tome's generated Student-profile fixture must pass
+`radjax_contract.tome.validate_student_tome_consumption`. The mirrored assets
+are byte-identical to Contract publication `1.0.0`; Student remains forbidden
+from importing Tome or inferring layouts.
+
+
 Earlier history in this root ledger was reconstructed from current repository
 state because no root `bible.md` existed when Spec 3.1 landed. Existing
 historical notes remain in `docs/BIBLE.md`; future spec commits should append

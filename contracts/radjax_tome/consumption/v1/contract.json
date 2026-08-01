@@ -1,0 +1,11 @@
+{
+  "contract_id": "radjax_tome_student_consumption",
+  "publication_version": "1.0.0",
+  "applies_to": {"cover_schema": "radjax_tome_cover_v3", "content_manifest_schema": "tome_content_manifest_v2"},
+  "profile": "native_v3_student_v1",
+  "schema_draft": "https://json-schema.org/draft/2020-12/schema",
+  "public_validation_entry_point": "radjax_contract.tome.validate_student_tome_consumption",
+  "canonicalization": "recipes/canonicalization_v1.md",
+  "errors": "errors/errors_v1.json",
+  "conformance_catalog": "fixtures/catalog.json"
+}

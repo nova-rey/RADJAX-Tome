@@ -1,0 +1,5 @@
+{
+  "schema_version": "radjax_tome_student_consumption_conformance_v1",
+  "valid": ["valid/native_v3_student.json"],
+  "adversarial": ["adversarial/cases.json"]
+}

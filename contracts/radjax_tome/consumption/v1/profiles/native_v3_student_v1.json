@@ -1,0 +1,55 @@
+{
+  "schema_version": "radjax_tome_student_consumption_profile_v1",
+  "profile_id": "native_v3_student_v1",
+  "cover_schema": "radjax_tome_cover_v3",
+  "package_profiles": ["unpacked", "student", "full_debug_provenance"],
+  "delivery_paths": {
+    "path_a": "one_pass_pruned_candidate",
+    "path_b": "two_pass_rerun_selected",
+    "authority": "provenance_only",
+    "rule": "delivery path MUST NOT alter target, alignment, loss, or weight semantics"
+  },
+  "logical_roles": [
+    {"logical_id": "core.metadata", "path": "metadata.json", "required": true, "encoding": "json"},
+    {"logical_id": "core.vocab_contract", "path": "vocab_contract.json", "required": true, "encoding": "json"},
+    {"logical_id": "core.teacher_manifest", "path": "teacher_manifest.json", "required": true, "encoding": "json"},
+    {"logical_id": "core.emission_config", "path": "emission_config.json", "required": true, "encoding": "json"},
+    {"logical_id": "corridor.summary", "path": "corridors/corridor_summary.json", "required": true, "encoding": "json"},
+    {"logical_id": "corridor.mode_table", "path": "corridors/corridor_modes.json", "required": true, "encoding": "json"},
+    {"logical_id": "corridor.assignment_manifest", "path": "corridors/mode_assignments.json", "required": true, "encoding": "json"},
+    {"logical_id": "corridor.example_passports", "path": "corridors/mode_assignments/examples_metadata.jsonl", "required": true, "encoding": "jsonl"},
+    {"logical_id": "corridor.assignment.example_index", "path": "corridors/mode_assignments/position_example_index.npy", "required": true, "encoding": "npy", "dtype": "int32", "shape": ["assignment"], "axes": ["assignment"]},
+    {"logical_id": "corridor.assignment.position", "path": "corridors/mode_assignments/position.npy", "required": true, "encoding": "npy", "dtype": "int32", "shape": ["assignment"], "axes": ["assignment"]},
+    {"logical_id": "corridor.assignment.mode_id", "path": "corridors/mode_assignments/mode_id.npy", "required": true, "encoding": "npy", "dtype": "int32", "shape": ["assignment"], "axes": ["assignment"]},
+    {"logical_id": "corridor.assignment.weight", "path": "corridors/mode_assignments/weight.npy", "required": true, "encoding": "npy", "dtype": "float32", "shape": ["assignment"], "axes": ["assignment"]},
+    {"logical_id": "corridor.assignment.fingerprint_index", "path": "corridors/mode_assignments/fingerprint_index.npy", "required": false, "encoding": "npy", "dtype": "int32", "shape": ["assignment"], "axes": ["assignment"]},
+    {"logical_id": "exemplar.index", "path": "leaderboards/selected_exemplars.json", "required": true, "encoding": "json"}
+  ],
+  "logical_role_families": [
+    {"logical_id_pattern": "target.shard.{index:05d}", "path_pattern": "shards/shard-{index:05d}.npz", "minimum_count": 1, "encoding": "npz"},
+    {"logical_id_pattern": "exemplar.payload.{index:05d}", "path_pattern": "selected_exemplars/selected-exemplars-{index:05d}.json", "minimum_count": 1, "encoding": "json"}
+    ,{"logical_id_pattern": "curriculum.{name}", "path_pattern": "curriculum/{name}.json", "minimum_count": 0, "encoding": "json"}
+  ],
+  "target_shard_arrays": [
+    {"role": "tokens.input", "member": "input_ids", "dtype": "int32", "shape": ["example", "token"], "axes": ["example", "token_position"]},
+    {"role": "tokens.attention_mask", "member": "attention_mask", "dtype": "int32", "shape": ["example", "token"], "axes": ["example", "token_position"], "values": [0, 1]},
+    {"role": "corridor.top_token_id", "member": "corridor_top_token_ids", "dtype": "int32", "shape": ["example", "token"], "axes": ["example", "token_position"]},
+    {"role": "corridor.teacher_entropy", "member": "corridor_teacher_entropy", "dtype": "float32", "shape": ["example", "token"], "axes": ["example", "token_position"]},
+    {"role": "corridor.top1_margin", "member": "corridor_top1_margin", "dtype": "float32", "shape": ["example", "token"], "axes": ["example", "token_position"]},
+    {"role": "corridor.top8_mass", "member": "corridor_top8_mass", "dtype": "float32", "shape": ["example", "token"], "axes": ["example", "token_position"]},
+    {"role": "corridor.top32_mass", "member": "corridor_top32_mass", "dtype": "float32", "shape": ["example", "token"], "axes": ["example", "token_position"]},
+    {"role": "corridor.tail_mass", "member": "corridor_tail_mass", "dtype": "float32", "shape": ["example", "token"], "axes": ["example", "token_position"]}
+  ],
+  "alignment": {
+    "token_axis": "zero_based token position within the example row",
+    "attention_mask": "0 excludes a token position; 1 admits it",
+    "target_alignment": "corridor targets at [example, token] describe input_ids[example, token]",
+    "corridor_assignment": "parallel assignment arrays form rows (example_index, position, mode_id, weight)",
+    "corridor_bounds": "inclusive finite min/max bounds; min <= observed statistic <= max; means are descriptive only",
+    "exemplar_passport": "(selected_example_id, selected_position) is the join key; index and payload metadata must match exactly",
+    "exemplar_target": "top_token_ids/top_log_probs/top_probs/top_selection_mask share slot axis; true mask count equals effective_top_k; top_mass + tail_mass = 1; bucket masses partition tail_mass",
+    "loss_weight": "corridor assignment weight is a nonnegative multiplicative example-position weight; attention_mask is applied before it"
+  },
+  "optional_payloads": ["corridor.assignment.fingerprint_index", "corridor.fingerprints", "diagnostic.*", "human_readable.*"],
+  "delivery": {"directory": "resolve only through content manifest inventory", "rtome": "extract or use a Contract-conforming safe member reader", "tgz": "extract or use a Contract-conforming safe member reader", "private_paths_forbidden": true}
+}

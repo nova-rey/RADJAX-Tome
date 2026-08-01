@@ -118,6 +118,14 @@ def build_production_contract_fixture(
             "generated fixture failed cover-page validation: "
             + "; ".join(cover_report.blockers)
         )
+    from radjax_contract.tome import validate_student_tome_consumption
+
+    consumption = validate_student_tome_consumption(artifact)
+    if not consumption.ok:
+        raise ValueError(
+            "generated fixture failed Student-consumption validation: "
+            + "; ".join(consumption.errors)
+        )
     write_json(
         fixture_root / "FIXTURE_PROVENANCE.json",
         {
