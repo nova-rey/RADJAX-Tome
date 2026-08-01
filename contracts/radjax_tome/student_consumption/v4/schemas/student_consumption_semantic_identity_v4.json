@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://radjax.dev/contracts/radjax_tome/student_consumption/v4/schemas/student_consumption_semantic_identity_v4.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "vocabulary",
+    "sequence",
+    "resources",
+    "joins",
+    "authority",
+    "semantic_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "radjax_tome_student_consumption_semantic_identity_v4"
+    },
+    "profile_id": {
+      "const": "native_v3_student_v4"
+    },
+    "vocabulary": {
+      "type": "object"
+    },
+    "sequence": {
+      "type": "object"
+    },
+    "resources": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "$ref": "#/$defs/resource"
+      }
+    },
+    "joins": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object"
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selection_integration_config_hash"
+      ],
+      "properties": {
+        "selection_integration_config_hash": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "semantic_digest": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_id",
+        "role",
+        "instance_id",
+        "semantic_digest"
+      ],
+      "properties": {
+        "resource_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "instance_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "semantic_digest": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

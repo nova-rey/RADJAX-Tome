@@ -27,7 +27,7 @@ from radjax_tome.tome.canonical_artifact import (
 from radjax_tome.tome.contracts import (
     CANONICAL_TOME_COVER_SCHEMA,
     CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
-    CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
+    CANONICAL_TOME_STUDENT_CONSUMPTION_V4_COVER_SCHEMA,
     HISTORICAL_PACKAGE_COVER_SCHEMA,
 )
 from radjax_tome.tome.producer_validation import (
@@ -36,9 +36,9 @@ from radjax_tome.tome.producer_validation import (
     validate_c6_package_parity,
     validate_full_debug_producer,
 )
-from radjax_tome.tome.student_consumption_v3 import (
-    NativeV3StudentConsumptionV3Materialization,
-    materialize_native_v3_student_consumption_v3,
+from radjax_tome.tome.student_consumption_v4 import (
+    NativeV3StudentConsumptionV4Materialization,
+    materialize_native_v3_student_consumption_v4,
 )
 
 FULL_DEBUG_PROVENANCE = "full_debug_provenance"
@@ -179,7 +179,7 @@ def open_streaming_student_tome(
 ) -> StreamingStudentTomeReader:
     """Open the validated direct-streaming v4 Student transport.
 
-    Direct `.tgz` reads are sequential only.  Historical v3 callers retain
+    Direct `.tgz` reads are sequential only.  Historical v4 callers retain
     :func:`open_student_tome`, whose eager behavior is compatibility-only.
     """
     from radjax_contract.tome import open_streaming_tome
@@ -244,9 +244,9 @@ def package_tome_artifact(
     ) as tmp:
         temporary_root = Path(tmp) / _package_root_name(output, archive)
         _materialize_package(source, temporary_root, profile=profile)
-        student_consumption: NativeV3StudentConsumptionV3Materialization | None = None
+        student_consumption: NativeV3StudentConsumptionV4Materialization | None = None
         if profile == STUDENT:
-            student_consumption = materialize_native_v3_student_consumption_v3(
+            student_consumption = materialize_native_v3_student_consumption_v4(
                 source,
                 destination_root=temporary_root,
                 selection_integration_config_hash=semantic_identity.authority[
@@ -256,7 +256,7 @@ def package_tome_artifact(
         _write_package_audit(temporary_root, profile=profile)
         _write_package_manifests(temporary_root, profile=profile)
         if student_consumption is not None:
-            _write_student_consumption_v3_manifest(
+            _write_student_consumption_v4_manifest(
                 temporary_root,
                 materialization=student_consumption,
                 semantic_identity=semantic_identity,
@@ -286,7 +286,7 @@ def package_tome_artifact(
         # emission; validating the staging directory itself would correctly
         # reject the intentional directory/container mismatch.
         if student_consumption is not None and archive == "none":
-            _validate_student_consumption_v3_with_contract(temporary_root)
+            _validate_student_consumption_v4_with_contract(temporary_root)
         if archive == "none":
             _replace_output_path(temporary_root, output, overwrite=overwrite)
             return TomePackageResult(
@@ -299,7 +299,7 @@ def package_tome_artifact(
         temporary_archive = Path(tmp) / output.name
         pack_tome_bundle(temporary_root, temporary_archive, compression="gz")
         if student_consumption is not None:
-            _validate_student_consumption_v3_with_contract(temporary_archive)
+            _validate_student_consumption_v4_with_contract(temporary_archive)
         _replace_output_path(temporary_archive, output, overwrite=overwrite)
     return TomePackageResult(output_path=output, profile=profile, archive=archive)
 
@@ -319,7 +319,7 @@ def validate_tome_package(
         in {
             CANONICAL_TOME_COVER_SCHEMA,
             CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
-            CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
+            CANONICAL_TOME_STUDENT_CONSUMPTION_V4_COVER_SCHEMA,
         }
     )
     if canonical_cover:
@@ -794,21 +794,21 @@ def _write_package_manifests(root: Path, *, profile: str) -> None:
     write_json(manifests / "content_manifest.json", _content_manifest(root, profile))
 
 
-def _write_student_consumption_v3_manifest(
+def _write_student_consumption_v4_manifest(
     root: Path,
     *,
-    materialization: NativeV3StudentConsumptionV3Materialization,
+    materialization: NativeV3StudentConsumptionV4Materialization,
     semantic_identity: Any,
 ) -> None:
-    """Write the Contract-owned v3 declaration before inventory construction.
+    """Write the Contract-owned v4 declaration before inventory construction.
 
     This is a producer adapter only: semantic resource digests are calculated
     by the pinned Contract implementation, while this package owns physical
     locators and raw-byte inventory inclusion.
     """
 
-    # V3 retains the established framed resource-digest recipe; the v3
-    # Contract validator owns its use in the distinct v3 identity envelope.
+    # V4 retains the established framed resource-digest recipe; the v4
+    # Contract validator owns its use in the distinct v4 identity envelope.
     from radjax_contract.tome.student_consumption_v2 import resource_semantic_digest
 
     role_order = (
@@ -906,8 +906,8 @@ def _write_student_consumption_v3_manifest(
     tokenizer_identity = _sha256(root / "vocab_contract.json")
     training = semantic_identity.training_contract
     identity = {
-        "schema_version": "radjax_tome_student_consumption_semantic_identity_v3",
-        "profile_id": "native_v3_student_v3",
+        "schema_version": "radjax_tome_student_consumption_semantic_identity_v4",
+        "profile_id": "native_v3_student_v4",
         "vocabulary": {
             "vocab_size": int(training["vocab_size"]),
             "tokenizer_identity": tokenizer_identity,
@@ -916,12 +916,17 @@ def _write_student_consumption_v3_manifest(
             "sequence_length": int(training["sequence_length"]),
             "alignment": "teacher_logit_position",
         },
+        # V4 binds delivery and authority receipt resources through the raw
+        # manifest and Contract validation, but excludes their body digests
+        # from the batch-semantic identity. Path A and Path B therefore retain
+        # one consumption identity for identical training semantics.
         "resources": [
             {
                 key: resource[key]
                 for key in ("resource_id", "role", "instance_id", "semantic_digest")
             }
             for resource in resources
+            if resource["role"] not in {"delivery_receipt", "authority_reference"}
         ],
         "joins": [
             {"kind": "assignment_to_logit_position"},
@@ -936,8 +941,8 @@ def _write_student_consumption_v3_manifest(
     }
     identity["semantic_digest"] = _canonical_contract_digest(identity)
     manifest = {
-        "schema_version": "radjax_tome_student_consumption_manifest_v3",
-        "profile_id": "native_v3_student_v3",
+        "schema_version": "radjax_tome_student_consumption_manifest_v4",
+        "profile_id": "native_v3_student_v4",
         "base_artifact_semantic_digest": semantic_identity.semantic_digest,
         "semantic_identity": identity,
         "resources": resources,
@@ -946,7 +951,7 @@ def _write_student_consumption_v3_manifest(
             "derivation": "independently_semantically_digested_derived_sidecars"
         },
     }
-    write_json(root / "manifests" / "student_consumption_v3.json", manifest)
+    write_json(root / "manifests" / "student_consumption_v4.json", manifest)
 
 
 def _canonical_contract_digest(payload: dict[str, Any]) -> str:
@@ -961,21 +966,21 @@ def _canonical_contract_digest(payload: dict[str, Any]) -> str:
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
-def _validate_student_consumption_v3_with_contract(artifact: Path) -> None:
+def _validate_student_consumption_v4_with_contract(artifact: Path) -> None:
     """Refuse publication unless the pinned portable Contract admits it."""
 
     from radjax_contract.tome import validate_and_resolve_student_consumption
 
     result = validate_and_resolve_student_consumption(
         artifact,
-        profile_id="native_v3_student_v3",
+        profile_id="native_v3_student_v4",
         strict=True,
     )
     if not result.ok:
         codes = ",".join(
             f"{issue.code}:{dict(issue.context)}" for issue in result.issues
         )
-        raise ValueError(f"Contract native_v3_student_v3 validation failed: {codes}")
+        raise ValueError(f"Contract native_v3_student_v4 validation failed: {codes}")
 
 
 def _write_package_cover_page(root: Path, *, profile: str) -> None:
@@ -1048,13 +1053,13 @@ def _write_canonical_package_cover_page(
     profile: str,
     semantic_identity: Any,
     transport: str,
-    student_consumption: NativeV3StudentConsumptionV3Materialization | None = None,
+    student_consumption: NativeV3StudentConsumptionV4Materialization | None = None,
 ) -> None:
     """Materialize the one M5D public cover after all package manifests exist."""
 
     # Preserve the historical package report as provenance only.  It remains
     # useful to old diagnostics/readers but cannot become a second public
-    # cover contract or alter v3 semantic identity.
+    # cover contract or alter v4 semantic identity.
     _write_package_cover_page(root, profile=profile)
     legacy_receipt = read_json_object(root / "cover_page.json")
     cover = build_canonical_artifact_cover(
@@ -1065,12 +1070,12 @@ def _write_canonical_package_cover_page(
     )
     cover["provenance"]["historical_package_cover_v1"] = legacy_receipt
     if student_consumption is not None:
-        manifest_path = root / "manifests" / "student_consumption_v3.json"
+        manifest_path = root / "manifests" / "student_consumption_v4.json"
         manifest = read_json_object(manifest_path)
-        cover["schema_version"] = "radjax_tome_cover_v3_student_consumption_v3"
+        cover["schema_version"] = "radjax_tome_cover_v3_student_consumption_v4"
         cover["student_consumption"] = {
-            "profile_id": "native_v3_student_v3",
-            "manifest_path": "manifests/student_consumption_v3.json",
+            "profile_id": "native_v3_student_v4",
+            "manifest_path": "manifests/student_consumption_v4.json",
             "manifest_sha256": _sha256(manifest_path),
             "semantic_digest": manifest["semantic_identity"]["semantic_digest"],
             "digest_method": "sha256",
@@ -1081,7 +1086,7 @@ def _write_canonical_package_cover_page(
 
 
 def _legacy_manifest_references(root: Path) -> dict[str, Any]:
-    """Keep v1 manifest validators reusable beneath the v3 public cover."""
+    """Keep v1 manifest validators reusable beneath the v4 public cover."""
 
     cover = {
         "content_manifest": _manifest_reference(

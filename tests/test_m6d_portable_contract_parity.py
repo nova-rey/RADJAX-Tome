@@ -71,12 +71,12 @@ def test_m6d_profiles_preserve_identity_and_validate_in_both_paths(
         student_cover["manifests"]["content"]["manifest_digest"]
         != debug_cover["manifests"]["content"]["manifest_digest"]
     )
-    # The student package now carries the closed v3 consumption extension;
-    # its portable authority is the published Contract v3 resolver, not the
+    # The student package now carries the closed v4 consumption extension;
+    # its portable authority is the published Contract v4 resolver, not the
     # deliberately base-v3-only M6 standalone checker.
     assert validate_and_resolve_student_consumption(
         student,
-        profile_id="native_v3_student_v3",
+        profile_id="native_v3_student_v4",
         strict=True,
     ).ok
     assert _portable(debug)["ok"] is True

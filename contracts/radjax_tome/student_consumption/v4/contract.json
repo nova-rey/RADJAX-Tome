@@ -1,0 +1,15 @@
+{
+  "contract_id": "radjax_tome_student_consumption_contract",
+  "publication_version": "4.0.0",
+  "schema_draft": "https://json-schema.org/draft/2020-12/schema",
+  "base_artifact_family": "radjax_tome_cover_v3",
+  "cover_extension_schema": "radjax_tome_cover_v3_student_consumption_v4",
+  "profile_id": "native_v3_student_v4",
+  "semantic_identity_schema": "radjax_tome_student_consumption_semantic_identity_v4",
+  "resource_semantics": "batch_semantic_resources_with_integrity_bound_validation_and_provenance_sidecars",
+  "profile_negotiation": "explicit_exact_profile_id_no_v3_to_v2_fallback",
+  "supersedes_for_new_production": "native_v3_student_v2",
+  "extension_policy": "closed_core_new_version_required",
+  "status": "normative",
+  "provenance_identity_policy": "delivery_receipt_and_authority_reference_are_integrity_bound_and_validated_but_excluded_from_consumption_semantic_identity"
+}

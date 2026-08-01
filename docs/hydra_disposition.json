@@ -2179,8 +2179,8 @@
       "archive_or_removal_condition": null,
       "kind": "top-level-doc",
       "owning_milestone": "C3",
-      "rationale": "Pins Contract native-v3 Student-consumption v2 authority and the offline verification mirror.",
-      "replacement_or_target_boundary": "Contract v0.4.1 Student-consumption publication pin.",
+      "rationale": "Pins Contract native-v3 Student-consumption v4 authority and the offline verification mirror.",
+      "replacement_or_target_boundary": "Contract v0.6.0 Student-consumption publication pin.",
       "status": "canonical"
     },
     "docs/C3_NATIVE_V3_STUDENT_CONSUMPTION_V2_RECEIPT.md": {
@@ -2213,6 +2213,14 @@
       "owning_milestone": "C5",
       "rationale": "Records v3 Contract pin and ordinary native Path-B CPU integration evidence.",
       "replacement_or_target_boundary": "Cross-repository native-v3 Student-consumption v3 handoff.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tome/student_consumption_v4.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "C6",
+      "rationale": "Producer-side native-v3 v4 materialization preserving Path A/Path B batch-semantic identity equivalence while emitting integrity-bound provenance.",
+      "replacement_or_target_boundary": "Published Contract v0.6.0 native_v3_student_v4 profile.",
       "status": "canonical"
     }
   },

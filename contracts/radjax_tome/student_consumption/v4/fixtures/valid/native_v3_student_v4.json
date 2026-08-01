@@ -1,0 +1,263 @@
+{
+  "schema_version": "radjax_tome_student_consumption_manifest_v4",
+  "profile_id": "native_v3_student_v4",
+  "base_artifact_semantic_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "semantic_identity": {
+    "schema_version": "radjax_tome_student_consumption_semantic_identity_v4",
+    "profile_id": "native_v3_student_v4",
+    "vocabulary": {
+      "vocab_size": 8,
+      "tokenizer_identity": "test-tokenizer"
+    },
+    "sequence": {
+      "sequence_length": 2,
+      "alignment": "teacher_logit_position"
+    },
+    "resources": [
+      {
+        "resource_id": "target_shard/default",
+        "role": "target_shard",
+        "instance_id": "default",
+        "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000001"
+      },
+      {
+        "resource_id": "example_registry/default",
+        "role": "example_registry",
+        "instance_id": "default",
+        "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000002"
+      },
+      {
+        "resource_id": "corridor_mode_table/default",
+        "role": "corridor_mode_table",
+        "instance_id": "default",
+        "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000003"
+      },
+      {
+        "resource_id": "corridor_assignment/default",
+        "role": "corridor_assignment",
+        "instance_id": "default",
+        "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000004"
+      },
+      {
+        "resource_id": "selected_passport_index/default",
+        "role": "selected_passport_index",
+        "instance_id": "default",
+        "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000005"
+      },
+      {
+        "resource_id": "selected_exemplar_payload/default",
+        "role": "selected_exemplar_payload",
+        "instance_id": "default",
+        "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000006"
+      },
+      {
+        "resource_id": "corridor_observed_statistics/default",
+        "role": "corridor_observed_statistics",
+        "instance_id": "default",
+        "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000007"
+      },
+      {
+        "resource_id": "row_range_declaration/default",
+        "role": "row_range_declaration",
+        "instance_id": "default",
+        "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000008"
+      }
+    ],
+    "joins": [
+      {
+        "kind": "assignment_to_logit_position"
+      },
+      {
+        "kind": "exemplar_to_passport"
+      },
+      {
+        "kind": "exemplar_to_corridor"
+      }
+    ],
+    "authority": {
+      "selection_integration_config_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    "semantic_digest": "sha256:351a059a8747505408530b06cdcadd5eb92c3d5daeac00a701df11905ae2d38a"
+  },
+  "resources": [
+    {
+      "resource_id": "target_shard/default",
+      "role": "target_shard",
+      "instance_id": "default",
+      "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+      "inventory_binding": "derived/00.npz",
+      "encoding": "npz",
+      "classification": "batch",
+      "consumption": {
+        "row_start": 0,
+        "row_end": 1,
+        "axes": {
+          "input_ids": [
+            "example",
+            "token_position"
+          ],
+          "attention_mask": [
+            "example",
+            "token_position"
+          ],
+          "corridor_lengths": [
+            "example"
+          ]
+        }
+      }
+    },
+    {
+      "resource_id": "example_registry/default",
+      "role": "example_registry",
+      "instance_id": "default",
+      "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000002",
+      "inventory_binding": "derived/01.json",
+      "encoding": "json",
+      "classification": "batch",
+      "consumption": {
+        "ordering": "global_example_index"
+      }
+    },
+    {
+      "resource_id": "corridor_mode_table/default",
+      "role": "corridor_mode_table",
+      "instance_id": "default",
+      "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000003",
+      "inventory_binding": "derived/02.json",
+      "encoding": "json",
+      "classification": "batch",
+      "consumption": {
+        "kind": "corridor_mode_table"
+      }
+    },
+    {
+      "resource_id": "corridor_assignment/default",
+      "role": "corridor_assignment",
+      "instance_id": "default",
+      "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000004",
+      "inventory_binding": "derived/03.npz",
+      "encoding": "npz",
+      "classification": "batch",
+      "consumption": {
+        "ordering": "global_example_index_position",
+        "axes": {
+          "position_example_index": [
+            "assignment"
+          ],
+          "position": [
+            "assignment"
+          ],
+          "mode_id": [
+            "assignment"
+          ],
+          "weight": [
+            "assignment"
+          ]
+        }
+      }
+    },
+    {
+      "resource_id": "selected_passport_index/default",
+      "role": "selected_passport_index",
+      "instance_id": "default",
+      "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000005",
+      "inventory_binding": "derived/04.json",
+      "encoding": "json",
+      "classification": "batch",
+      "consumption": {
+        "kind": "selected_passport_index"
+      }
+    },
+    {
+      "resource_id": "selected_exemplar_payload/default",
+      "role": "selected_exemplar_payload",
+      "instance_id": "default",
+      "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000006",
+      "inventory_binding": "derived/05.json",
+      "encoding": "json",
+      "classification": "batch",
+      "consumption": {
+        "kind": "selected_exemplar_payload"
+      }
+    },
+    {
+      "resource_id": "corridor_observed_statistics/default",
+      "role": "corridor_observed_statistics",
+      "instance_id": "default",
+      "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000007",
+      "inventory_binding": "derived/06.npz",
+      "encoding": "npz",
+      "classification": "validation",
+      "consumption": {
+        "kind": "corridor_observed_statistics",
+        "axes": {
+          "entropy": [
+            "assignment"
+          ],
+          "top1_margin": [
+            "assignment"
+          ],
+          "top8_mass": [
+            "assignment"
+          ],
+          "top32_mass": [
+            "assignment"
+          ],
+          "tail_mass": [
+            "assignment"
+          ]
+        }
+      }
+    },
+    {
+      "resource_id": "row_range_declaration/default",
+      "role": "row_range_declaration",
+      "instance_id": "default",
+      "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000008",
+      "inventory_binding": "derived/07.json",
+      "encoding": "json",
+      "classification": "validation",
+      "consumption": {
+        "kind": "row_range_declaration"
+      }
+    },
+    {
+      "resource_id": "delivery_receipt/default",
+      "role": "delivery_receipt",
+      "instance_id": "default",
+      "semantic_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000009",
+      "inventory_binding": "derived/08.json",
+      "encoding": "json",
+      "classification": "provenance",
+      "consumption": {
+        "kind": "delivery_receipt"
+      }
+    },
+    {
+      "resource_id": "authority_reference/default",
+      "role": "authority_reference",
+      "instance_id": "default",
+      "semantic_digest": "sha256:000000000000000000000000000000000000000000000000000000000000000a",
+      "inventory_binding": "derived/09.json",
+      "encoding": "json",
+      "classification": "validation",
+      "consumption": {
+        "kind": "authority_reference"
+      }
+    }
+  ],
+  "joins": [
+    {
+      "kind": "assignment_to_logit_position"
+    },
+    {
+      "kind": "exemplar_to_passport"
+    },
+    {
+      "kind": "exemplar_to_corridor"
+    }
+  ],
+  "provenance": {
+    "derivation": "independently_semantically_digested_derived_sidecars"
+  }
+}

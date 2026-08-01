@@ -2436,3 +2436,16 @@ The v3 receipt maps the legacy one-pass producer label
 The Hydra disposition ledger now owns the v3 materializer and receipt. This
 restores ordinary native Path-B coverage without weakening profile selection,
 authority, or historical v2 validation.
+
+## 2026-08-01 — Native-v3 Student-Consumption v4 Candidate
+
+New Student packages now explicitly emit `native_v3_student_v4` and pin
+Contract `v0.6.0` at `b1209f21fef9405776a757f1a5749d3152bbc3c6`; the checked-in
+v4 assets are a byte-verified offline mirror. Delivery-receipt and
+authority-reference sidecars remain inventory-bound and Contract-validated,
+but their body digests are excluded from the v4 batch-semantic identity. The
+paired Path A/Path B regression proves identical payloads retain one
+consumption digest while preserving distinct receipt evidence. Published v2
+and v3 profile handling remains historical and explicit; base native-v3
+identity, authority recipes, M7 transport behavior, and Golden data are
+unchanged.

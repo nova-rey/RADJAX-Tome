@@ -186,6 +186,49 @@ def test_student_package_is_self_contained_training_contract(
     assert validate_tome_package(package, profile=STUDENT).ok
 
 
+def test_student_v4_path_a_and_path_b_share_consumption_identity(
+    artifact: Path, tmp_path: Path
+) -> None:
+    """Production delivery evidence is integrity-bound, not batch semantics."""
+
+    from radjax_contract.tome import validate_and_resolve_student_consumption
+
+    path_b = package_tome_artifact(
+        artifact, tmp_path / "student-path-b", profile=STUDENT, overwrite=True
+    ).output_path
+    delivery_path = artifact / "delivery_report.json"
+    delivery = json.loads(delivery_path.read_text(encoding="utf-8"))
+    delivery["delivery_path"] = "one_pass_pruned_candidate"
+    delivery_path.write_text(json.dumps(delivery, sort_keys=True), encoding="utf-8")
+    path_a = package_tome_artifact(
+        artifact, tmp_path / "student-path-a", profile=STUDENT, overwrite=True
+    ).output_path
+
+    path_b_manifest = json.loads(
+        (path_b / "manifests/student_consumption_v4.json").read_text(encoding="utf-8")
+    )
+    path_a_manifest = json.loads(
+        (path_a / "manifests/student_consumption_v4.json").read_text(encoding="utf-8")
+    )
+    assert (
+        path_a_manifest["semantic_identity"]["semantic_digest"]
+        == path_b_manifest["semantic_identity"]["semantic_digest"]
+    )
+    assert (
+        path_a_manifest["semantic_identity"]["resources"]
+        == path_b_manifest["semantic_identity"]["resources"]
+    )
+    assert (path_a / "student_consumption/v4/delivery_receipt.json").read_bytes() != (
+        path_b / "student_consumption/v4/delivery_receipt.json"
+    ).read_bytes()
+    assert validate_and_resolve_student_consumption(
+        path_a, profile_id="native_v3_student_v4", strict=True
+    ).ok
+    assert validate_and_resolve_student_consumption(
+        path_b, profile_id="native_v3_student_v4", strict=True
+    ).ok
+
+
 def test_m5d_profiles_share_source_identity_but_bind_distinct_inventories(
     artifact: Path,
     tmp_path: Path,
@@ -203,7 +246,7 @@ def test_m5d_profiles_share_source_identity_but_bind_distinct_inventories(
     student_cover = _json(student / "cover_page.json")
     debug_cover = _json(debug / "cover_page.json")
     assert (
-        student_cover["schema_version"] == "radjax_tome_cover_v3_student_consumption_v3"
+        student_cover["schema_version"] == "radjax_tome_cover_v3_student_consumption_v4"
     )
     assert (
         student_cover["identity"]["semantic_digest"]
@@ -416,7 +459,7 @@ def test_package_hash_validation_fails_on_mutation(
     package = tmp_path / profile
     package_tome_artifact(artifact, package, profile=profile, overwrite=True)
     path = (
-        package / "student_consumption" / "v3" / "target_rows.npz"
+        package / "student_consumption" / "v4" / "target_rows.npz"
         if profile == STUDENT
         else sorted((package / "shards").glob("shard-*.npz"))[0]
     )
