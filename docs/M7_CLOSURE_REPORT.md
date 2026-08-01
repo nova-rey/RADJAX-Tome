@@ -33,9 +33,7 @@ from radjax_contract.tome import (
 )
 
 root = tome_streaming_contract_root()
-layout_schema = tome_streaming_contract_asset_path(
-    "schemas/payload_layout_v1.json"
-)
+layout_schema = tome_streaming_contract_asset_path("schemas/payload_layout_v1.json")
 ```
 
 The v4 cover is the entry point. Validate the acyclic cover/header/inventory

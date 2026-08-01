@@ -2355,3 +2355,11 @@ capacity reaches the final v4 layout and both physical forms pass the portable
 validator.  This preserves the sole M4 state machine and does not claim M7
 closure; staging-prefix resume and direct-streaming evidence remain separate
 corrective work.
+
+## 2026-08-01 — Tome CI Formatting Repair
+
+GitHub Actions run `30701169362` failed only at Ruff's formatting check for a
+single Python snippet in `docs/M7_CLOSURE_REPORT.md`; lint and every earlier
+CI step passed on both Python 3.11 and 3.12. The snippet now uses Ruff's
+canonical single-line form. This documentation-only repair changes no runtime,
+contract, artifact, authority, Golden fixture, or M7 claim.
