@@ -2320,6 +2320,17 @@ archive through a temporary sibling before validation and replacement. This is
 corrective implementation evidence only; independent closure review remains
 required.
 
+## 2026-07-31 — M7 Corrective Review Packet Update
+
+The corrective review record now enumerates the implemented native transaction,
+resume validation, strict pre-promotion Contract validation, and temporary
+archive promotion behavior. It records the adversarial interruption cases
+actually exercised and keeps the status explicit: corrective implementation is
+complete, but independent M7 closure review is pending. Cache-cleared Tome
+validation completed with `939 passed, 23 skipped`; no published v0.3.1 asset,
+Student file, Golden fixture, authority recipe, or fixed selection projection
+changed.
+
 ## 2026-07-31 — M7 Corrective Configuration Boundary
 
 `payload_records_per_shard` is now an explicit execution-only control with a

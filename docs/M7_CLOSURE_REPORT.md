@@ -55,6 +55,13 @@ shard count and archive wrapping remain raw-integrity/transport facts.
 - Student and full-debug profiles share identity while permitted provenance
   inventory differs. Legacy v3 remains historical and native; it is not
   silently promoted to v4.
+- Native Path B now consumes the sealed-shard receipt transaction before v4
+  materialization. Resume revalidates any completed directory/archive pair and
+  rejects corrupt output; candidate directory and archive forms each pass the
+  strict Contract validator before atomic promotion.
+- The public v4 writer rejects Contract-invalid semantic types before its
+  directory becomes visible, and archive creation uses a temporary sibling,
+  validates it, then atomically replaces the final path.
 
 ## Remaining nonclaims and review obligations
 
@@ -62,7 +69,11 @@ M7 does not implement Student training, model inference, accelerator runs,
 selected-pass batching, UX, corpus building, or an M8+ performance program.
 Direct archive support is sequential streaming; selective random access is an
 extracted/indexed-consumer responsibility. This record does not claim the
-complete adversarial/memory matrix or an independent closure review.
+independent closure review. The adverse cases exercised locally include missing
+semantic fields, invalid semantic types, transport mismatch, corrupt completed
+resume output, interrupted shard sealing, interrupted materialization, failed
+archive packing, and interruption before final promotion. The broader published
+Contract corpus remains the source of portable error-category coverage.
 
 ## Reproduction
 
