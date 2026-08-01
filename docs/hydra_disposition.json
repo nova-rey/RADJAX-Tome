@@ -2198,6 +2198,22 @@
       "rationale": "Producer-side native-v3 to Contract v2 derived-resource materialization seam.",
       "replacement_or_target_boundary": "Published Contract v0.4.1 native_v3_student_v2 profile.",
       "status": "canonical"
+    },
+    "src/radjax_tome/tome/student_consumption_v3.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "C5",
+      "rationale": "Producer-side native-v3 v3 evidence materialization with closed row, delivery, and authority sidecars.",
+      "replacement_or_target_boundary": "Published Contract v0.5.1 native_v3_student_v3 profile.",
+      "status": "canonical"
+    },
+    "docs/C5_NATIVE_V3_STUDENT_CONSUMPTION_V3_RECEIPT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "C5",
+      "rationale": "Records v3 Contract pin and ordinary native Path-B CPU integration evidence.",
+      "replacement_or_target_boundary": "Cross-repository native-v3 Student-consumption v3 handoff.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

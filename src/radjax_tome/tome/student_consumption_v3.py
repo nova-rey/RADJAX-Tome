@@ -123,7 +123,11 @@ def _delivery_receipt(source_root: Path) -> dict[str, Any]:
         "production_build_report.json",
         "c6/authority_manifest.json",
     )
-    delivery_path = delivery.get("delivery_path")
+    delivery_path = {
+        "one_pass_pruned_candidate": "one_pass_full",
+        "one_pass_full": "one_pass_full",
+        "two_pass_rerun_selected": "two_pass_rerun_selected",
+    }.get(delivery.get("delivery_path"))
     if delivery_path not in {"one_pass_full", "two_pass_rerun_selected"}:
         raise ValueError("native v3 artifact has no recognized delivery_path evidence")
     return {

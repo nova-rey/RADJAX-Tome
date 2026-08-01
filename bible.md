@@ -2427,3 +2427,12 @@ receipt records matching base and v3 consumption semantic identities across
 the two transports, with raw `.tgz` integrity kept separate. This is
 cross-repository integration evidence only; it neither changes the immutable
 Golden fixture nor authorizes Student implementation.
+
+## 2026-08-01 — Native-v3 Student-Consumption v3 CI Repair
+
+The v3 receipt maps the legacy one-pass producer label
+`one_pass_pruned_candidate` to the Contract-owned semantic delivery class
+`one_pass_full`; two-pass remains explicitly `two_pass_rerun_selected`.
+The Hydra disposition ledger now owns the v3 materializer and receipt. This
+restores ordinary native Path-B coverage without weakening profile selection,
+authority, or historical v2 validation.
