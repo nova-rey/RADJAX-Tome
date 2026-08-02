@@ -2342,6 +2342,22 @@
       "rationale": "Sanitized content-addressed receipt for external private T4 anchor and replay evidence.",
       "replacement_or_target_boundary": "M8A representative baseline independent-review evidence.",
       "status": "canonical"
+    },
+    "docs/B3_NATIVE_V3_STUDENT_V6.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "B3",
+      "rationale": "Records the explicit v6 composition boundary, immutable Contract v0.8.0 pin, and preserved defaults/nonclaims.",
+      "replacement_or_target_boundary": "B3 native_v3_student_v6 Contract-validated package integration.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tome/student_consumption_v6.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "B3",
+      "rationale": "Producer-side explicit v6 behavioral resource projection and composition materializer.",
+      "replacement_or_target_boundary": "Contract v0.8.0 native_v3_student_v6 behavioral authority profile.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

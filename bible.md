@@ -2647,3 +2647,12 @@ The focused M7 dynamic-reducer regression test was normalized with the
 repository formatter after the M8A full-suite validation. This is a
 format-only follow-up: no test assertion, production code, authority,
 measurement evidence, or milestone status changed.
+
+## 2026-08-02 — B3 Explicit v6 Composition
+
+Tome now has an explicit, opt-in native_v3_student_v6 package path pinned to
+the immutable Contract v0.8.0 commit. It composes the existing v5
+language/tokenizer binding with closed behavioral resource projections and
+requires Contract admission before publication. The default remains v5; this
+does not change M8A, start M8B or B4, alter Student, create a canonical
+fixture, or infer missing full-grid assignments.

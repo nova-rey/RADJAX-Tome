@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pytest
 from radjax_contract.tome import validate_and_resolve_student_consumption
 
@@ -83,6 +84,57 @@ def test_t2_v4_remains_available_only_by_explicit_historical_selection(
         strict=True,
     )
     assert admitted.ok, admitted.issues
+
+
+@pytest.mark.parametrize("archive", ["none", "tgz"])
+def test_b3_v6_composes_the_v5_binding_without_changing_default(
+    tmp_path: Path, archive: str
+) -> None:
+    source = _v5_source(tmp_path)
+    output = tmp_path / ("student-v6.tgz" if archive == "tgz" else "student-v6")
+
+    package_tome_artifact(
+        source,
+        output,
+        profile="student",
+        student_contract_profile="v6",
+        archive=archive,
+    )
+
+    admitted = validate_and_resolve_student_consumption(
+        output,
+        profile_id="native_v3_student_v6",
+        strict=True,
+    )
+    assert admitted.ok, admitted.issues
+    if archive == "none":
+        assert (output / "manifests/language_tokenizer_binding_v1.json").is_file()
+        assert (output / "manifests/behavioral_resource_binding_v1.json").is_file()
+        assert "native_v3_student_v6" in (output / "cover_page.json").read_text(
+            encoding="utf-8"
+        )
+
+
+def test_b3_v6_contract_rejects_a_tampered_authority_member(tmp_path: Path) -> None:
+    source = _v5_source(tmp_path)
+    output = tmp_path / "student-v6"
+    package_tome_artifact(
+        source, output, profile="student", student_contract_profile="v6"
+    )
+    input_path = output / "student_consumption/v6/input_ids.npy"
+    values = np.load(input_path, allow_pickle=False)
+    values[0, 0] = values[0, 0] + 1
+    np.save(input_path, values)
+
+    admitted = validate_and_resolve_student_consumption(
+        output,
+        profile_id="native_v3_student_v6",
+        strict=True,
+    )
+    assert [issue.code for issue in admitted.issues] == [
+        "BRC010_RAW_INTEGRITY_MISMATCH",
+        "BRC012_REQUIRED_ROLE_MISSING",
+    ]
 
 
 @pytest.mark.parametrize("archive", ["none", "tgz"])

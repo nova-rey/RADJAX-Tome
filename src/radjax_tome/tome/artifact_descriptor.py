@@ -17,6 +17,7 @@ from radjax_tome.tome.contracts import (
     CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
     CANONICAL_TOME_STUDENT_CONSUMPTION_V4_COVER_SCHEMA,
     CANONICAL_TOME_STUDENT_CONSUMPTION_V5_COVER_SCHEMA,
+    CANONICAL_TOME_STUDENT_CONSUMPTION_V6_COVER_SCHEMA,
     CanonicalContentManifest,
     PackageInventoryEntry,
     TomeSemanticIdentity,
@@ -95,6 +96,7 @@ class ValidatedTomeArtifact:
             CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
             CANONICAL_TOME_STUDENT_CONSUMPTION_V4_COVER_SCHEMA,
             CANONICAL_TOME_STUDENT_CONSUMPTION_V5_COVER_SCHEMA,
+            CANONICAL_TOME_STUDENT_CONSUMPTION_V6_COVER_SCHEMA,
         }:
             raise ValueError("canonical v3 cover_page.json is required")
         validate_canonical_tome_cover(cover)

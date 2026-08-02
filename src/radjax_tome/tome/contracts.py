@@ -30,6 +30,9 @@ CANONICAL_TOME_STUDENT_CONSUMPTION_V4_COVER_SCHEMA = (
 CANONICAL_TOME_STUDENT_CONSUMPTION_V5_COVER_SCHEMA = (
     "radjax_tome_cover_v3_student_consumption_v5"
 )
+CANONICAL_TOME_STUDENT_CONSUMPTION_V6_COVER_SCHEMA = (
+    "radjax_tome_cover_v3_student_consumption_v6"
+)
 CANONICAL_CONTENT_MANIFEST_SCHEMA = "tome_content_manifest_v2"
 TOME_SEMANTIC_IDENTITY_SCHEMA = "radjax_tome_semantic_identity_v1"
 HISTORICAL_PACKAGE_COVER_SCHEMA = "radjax_tome_package_cover_v1"
@@ -444,6 +447,7 @@ def validate_canonical_tome_cover(cover: Mapping[str, Any]) -> None:
         CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA,
         CANONICAL_TOME_STUDENT_CONSUMPTION_V4_COVER_SCHEMA,
         CANONICAL_TOME_STUDENT_CONSUMPTION_V5_COVER_SCHEMA,
+        CANONICAL_TOME_STUDENT_CONSUMPTION_V6_COVER_SCHEMA,
     }:
         payload = _require_exact_object(
             cover,
@@ -490,6 +494,8 @@ def validate_canonical_tome_cover(cover: Mapping[str, Any]) -> None:
         _validate_student_consumption_v4_declaration(payload["student_consumption"])
     if declared_schema == CANONICAL_TOME_STUDENT_CONSUMPTION_V5_COVER_SCHEMA:
         _validate_student_consumption_v5_declaration(payload["student_consumption"])
+    if declared_schema == CANONICAL_TOME_STUDENT_CONSUMPTION_V6_COVER_SCHEMA:
+        _validate_student_consumption_v6_declaration(payload["student_consumption"])
 
 
 def _validate_student_consumption_v2_declaration(value: Any) -> None:
@@ -607,6 +613,37 @@ def _validate_student_consumption_v5_declaration(value: Any) -> None:
         raise ValueError("canonical cover Student-consumption digest_method is invalid")
     capabilities = payload.get("required_capabilities", [])
     if not isinstance(capabilities, list) or capabilities:
+        raise ValueError(
+            "canonical cover Student-consumption required_capabilities must be empty"
+        )
+
+
+def _validate_student_consumption_v6_declaration(value: Any) -> None:
+    """Validate the explicit v6 composition declaration without fallback."""
+
+    payload = _require_allowed_object(
+        value,
+        "canonical cover student_consumption",
+        required_keys=_STUDENT_CONSUMPTION_V2_REQUIRED_KEYS,
+        allowed_keys=_STUDENT_CONSUMPTION_V2_KEYS,
+    )
+    if payload["profile_id"] != "native_v3_student_v6":
+        raise ValueError("canonical cover Student-consumption profile is invalid")
+    if payload["manifest_path"] != "manifests/behavioral_resource_binding_v1.json":
+        raise ValueError("canonical cover Student-consumption manifest path is invalid")
+    _require_sha256(
+        payload["manifest_sha256"],
+        "canonical cover Student-consumption manifest_sha256",
+    )
+    _require_sha256(
+        payload["semantic_digest"],
+        "canonical cover Student-consumption semantic_digest",
+    )
+    if payload.get("digest_method", "sha256") != "sha256":
+        raise ValueError("canonical cover Student-consumption digest_method is invalid")
+    if not isinstance(payload.get("required_capabilities", []), list) or payload.get(
+        "required_capabilities"
+    ):
         raise ValueError(
             "canonical cover Student-consumption required_capabilities must be empty"
         )
@@ -789,6 +826,7 @@ __all__ = [
     "CANONICAL_TOME_STUDENT_CONSUMPTION_V3_COVER_SCHEMA",
     "CANONICAL_TOME_STUDENT_CONSUMPTION_V4_COVER_SCHEMA",
     "CANONICAL_TOME_STUDENT_CONSUMPTION_V5_COVER_SCHEMA",
+    "CANONICAL_TOME_STUDENT_CONSUMPTION_V6_COVER_SCHEMA",
     "HISTORICAL_PACKAGE_COVER_SCHEMA",
     "TOME_SEMANTIC_IDENTITY_SCHEMA",
     "CanonicalContentManifest",
