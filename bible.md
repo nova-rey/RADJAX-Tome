@@ -2667,3 +2667,13 @@ before either directory or archive promotion. Focused tests cover both
 transports, bounded verified opening states, and forced Contract-admission
 failure with no promoted output. No default-profile, M8B, B4, Student, or
 Contract change is made.
+
+## 2026-08-02 — B3 v6 M7 Semantic-Rejection and Pin Repair
+
+The Tome B3 suite now rebuilds the real native M7 sibling with an internally
+consistent inner exemplar mutation, verifies the M7 archive itself still
+admits, and proves v6 rejects it at exemplar semantics with BRC027 rather
+than raw integrity. Historical v5 mirror provenance remains pinned to its
+v0.7.0 source commit while the active dependency assertion separately pins
+the immutable Contract v0.8.0 commit. No default-profile, M8B, B4, Student,
+or Contract change is made.

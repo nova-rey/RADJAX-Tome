@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import hashlib
+import io
+import json
+import tarfile
+from gzip import GzipFile
 from pathlib import Path
 
 import numpy as np
 import pytest
+from radjax_contract.tome import streaming_validation as m7_validation
 from radjax_contract.tome import validate_and_resolve_student_consumption
+from radjax_contract.tome.streaming_validation import validate_streaming_tome
 
 from radjax_tome.tome import (
     pack_sharded_tome_v4,
@@ -21,6 +28,111 @@ def _v5_source(tmp_path: Path) -> Path:
         vocab_size=512,
         top_k=4,
     )
+
+
+def _mutate_m7_inner_exemplar(archive_path: Path, destination: Path) -> Path:
+    """Rebuild a self-consistent M7 archive with v6-invalid exemplar semantics."""
+    root = destination.parent / "mutated-m7"
+    with tarfile.open(archive_path, "r:gz") as archive:
+        archive.extractall(root, filter="data")
+    shard = root / "selected_exemplars/shards/shard-00000.jsonl"
+    records = [json.loads(line) for line in shard.read_text().splitlines()]
+    records[0]["top_probs"][0] = 0.0
+    shard.write_text("".join(json.dumps(row, sort_keys=True) + "\n" for row in records))
+
+    def digest(path: Path) -> tuple[str, int]:
+        return (
+            "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
+            path.stat().st_size,
+        )
+
+    shard_digest, shard_size = digest(shard)
+    index = root / "selected_exemplars/payload-index.jsonl"
+    index_rows = [json.loads(line) for line in index.read_text().splitlines()]
+    sequence = m7_validation._SequenceDigest()
+    for row, record in zip(index_rows, records, strict=True):
+        logical_id, semantic = m7_validation._semantic_record(record)
+        row.update(
+            {
+                "logical_id": logical_id,
+                "payload_sha256": m7_validation._canonical(record),
+                "payload_semantic_digest": semantic,
+                "shard_sha256": shard_digest,
+            }
+        )
+        sequence.add({"logical_id": logical_id, "payload_semantic_digest": semantic})
+    sequence_digest = sequence.finish()
+    index.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in index_rows)
+    )
+    index_digest, index_size = digest(index)
+    shard_index = root / "selected_exemplars/payload-shards.jsonl"
+    shard_row = json.loads(shard_index.read_text())
+    shard_row.update(
+        {
+            "sha256": shard_digest,
+            "size_bytes": shard_size,
+            "semantic_digest": sequence_digest,
+        }
+    )
+    shard_index.write_text(json.dumps(shard_row, sort_keys=True) + "\n")
+    shard_index_digest, shard_index_size = digest(shard_index)
+    layout = root / "selected_exemplars/payload-layout.json"
+    layout_doc = json.loads(layout.read_text())
+    layout_doc["sequence_digest"] = sequence_digest
+    layout_doc["payload_index"].update(
+        {"sha256": index_digest, "size_bytes": index_size}
+    )
+    layout_doc["shard_index"].update(
+        {"sha256": shard_index_digest, "size_bytes": shard_index_size}
+    )
+    layout.write_text(json.dumps(layout_doc, sort_keys=True))
+    cover = root / "cover_page.json"
+    cover_doc = json.loads(cover.read_text())
+    cover_doc["identity"]["payload_sequence_digest"] = sequence_digest
+    cover_doc["identity"]["semantic_digest"] = m7_validation._canonical(
+        {
+            key: value
+            for key, value in cover_doc["identity"].items()
+            if key != "semantic_digest"
+        }
+    )
+    cover.write_text(json.dumps(cover_doc, sort_keys=True))
+    inventory = root / "manifests/content-manifest-inventory.jsonl"
+    rows = [json.loads(line) for line in inventory.read_text().splitlines()]
+    for row in rows:
+        row["sha256"], row["size_bytes"] = digest(root / row["path"])
+    inventory.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows)
+    )
+    inventory_digest, inventory_size = digest(inventory)
+    header = root / "manifests/content-manifest-header.json"
+    header_doc = json.loads(header.read_text())
+    header_doc.update(
+        {
+            "inventory_sha256": inventory_digest,
+            "inventory_size_bytes": inventory_size,
+            "semantic_identity_digest": cover_doc["identity"]["semantic_digest"],
+        }
+    )
+    header.write_text(json.dumps(header_doc, sort_keys=True))
+    header_digest, header_size = digest(header)
+    cover_doc["manifests"]["header"].update(
+        {"sha256": header_digest, "size_bytes": header_size}
+    )
+    cover.write_text(json.dumps(cover_doc, sort_keys=True))
+    with (
+        destination.open("wb") as raw,
+        GzipFile(filename="", fileobj=raw, mode="wb", mtime=0) as gzip,
+        tarfile.open(fileobj=gzip, mode="w") as out,
+    ):
+        ordered = [cover, header, inventory, *(root / row["path"] for row in rows)]
+        for path in ordered:
+            payload = path.read_bytes()
+            member = tarfile.TarInfo(path.relative_to(root).as_posix())
+            member.size, member.mtime, member.mode = len(payload), 0, 0o644
+            out.addfile(member, io.BytesIO(payload))
+    return destination
 
 
 @pytest.mark.parametrize("archive", ["none", "tgz"])
@@ -209,6 +321,24 @@ def test_b3_v6_binds_the_native_m7_sibling_and_streams_it(
     ) as reader:
         list(reader)
         assert reader.verification_state == "fully_verified"
+
+
+def test_b3_v6_rejects_self_consistent_inner_m7_exemplar_semantics(
+    tmp_path: Path,
+) -> None:
+    source = _v5_source(tmp_path)
+    m7_archive = source.with_name(f"{source.name}.v4.tgz")
+    _mutate_m7_inner_exemplar(m7_archive, m7_archive)
+    assert validate_streaming_tome(m7_archive).ok
+
+    with pytest.raises(ValueError, match="BRC027_EXEMPLAR_SEMANTICS_INVALID"):
+        package_tome_artifact(
+            source,
+            tmp_path / "rejected",
+            profile="student",
+            student_contract_profile="v6",
+        )
+    assert not (tmp_path / "rejected").exists()
 
 
 @pytest.mark.parametrize("archive", ["none", "tgz"])

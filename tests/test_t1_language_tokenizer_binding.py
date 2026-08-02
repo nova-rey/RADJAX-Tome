@@ -17,6 +17,7 @@ from radjax_tome.corpora import (
 ROOT = Path(__file__).resolve().parents[1]
 MIRROR = ROOT / "contracts/radjax_tome/student_consumption/v5"
 PINNED_COMMIT = "cac3dd21e0d56df5a9e6fd50b20267e0b8960995"
+ACTIVE_CONTRACT_COMMIT = "b3275b8769c36b6261f4f241c47f0066c651e869"
 
 
 def _entries(root: Path) -> dict[str, str]:
@@ -38,8 +39,14 @@ def test_t1_v5_mirror_is_checksum_pinned_to_contract_v070() -> None:
     observed = _entries(MIRROR)
     observed.pop("SHA256SUMS")
     assert observed == sums
+    # This is a historical mirror provenance pin, not the active dependency.
+    assert PINNED_COMMIT in (
+        ROOT / "docs/C5_LANGUAGE_TOKENIZER_CONTRACT_PIN.md"
+    ).read_text(encoding="utf-8")
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert any(PINNED_COMMIT in item for item in project["project"]["dependencies"])
+    assert any(
+        ACTIVE_CONTRACT_COMMIT in item for item in project["project"]["dependencies"]
+    )
 
 
 def test_t1_v5_source_assets_match_offline_mirror_when_configured() -> None:
