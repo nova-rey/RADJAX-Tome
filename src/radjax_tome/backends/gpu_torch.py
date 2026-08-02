@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from importlib import import_module
+from time import perf_counter
 from typing import Any
 
 import numpy as np
@@ -110,6 +111,12 @@ class GPUTorchTeacherEmissionBackend:
         self._tokenizer: Any | None = None
         self._model: Any | None = None
         self._device: TorchAcceleratorDetection | None = None
+        self._selected_pass_measurement_observer: Any | None = None
+
+    def _attach_selected_pass_measurement_observer(self, observer: Any) -> None:
+        """Attach private M8A instrumentation without changing backend config."""
+
+        self._selected_pass_measurement_observer = observer
 
     @classmethod
     def available(cls, config: TeacherBackendConfig) -> bool:
@@ -205,27 +212,49 @@ class GPUTorchTeacherEmissionBackend:
         )
 
     def emit_batch(self, batch: TeacherBatchInput) -> TeacherEmissionResult:
-        torch, tokenizer, model, device = self._load_model_and_tokenizer()
-        encoded = tokenizer(
-            list(batch.texts),
-            padding="max_length",
-            truncation=True,
-            max_length=self.config.sequence_length,
-            return_tensors="pt",
+        phase_seconds: dict[str, float] | None = (
+            {} if self._selected_pass_measurement_observer is not None else None
+        )
+        torch, tokenizer, model, device = _measure_backend_phase(
+            phase_seconds,
+            "model_tokenizer_load",
+            self._load_model_and_tokenizer,
+        )
+        encoded = _measure_backend_phase(
+            phase_seconds,
+            "tokenization_input_preparation",
+            lambda: tokenizer(
+                list(batch.texts),
+                padding="max_length",
+                truncation=True,
+                max_length=self.config.sequence_length,
+                return_tensors="pt",
+            ),
         )
         try:
-            input_ids_tensor = encoded["input_ids"].to(device.device)
-            attention_mask_tensor = encoded["attention_mask"].to(device.device)
+            input_ids_tensor, attention_mask_tensor = _measure_backend_phase(
+                phase_seconds,
+                "h2d_input_transfer",
+                lambda: (
+                    encoded["input_ids"].to(device.device),
+                    encoded["attention_mask"].to(device.device),
+                ),
+            )
         except Exception as exc:
             raise _wrap_device_error(
                 "input tensor transfer to device", exc, device
             ) from exc
         try:
-            with torch.no_grad():
-                output = model(
+            output = _measure_backend_phase(
+                phase_seconds,
+                "teacher_forward",
+                lambda: _torch_model_forward(
+                    torch,
+                    model,
                     input_ids=input_ids_tensor,
                     attention_mask=attention_mask_tensor,
-                )
+                ),
+            )
         except Exception as exc:
             raise _wrap_device_error("model forward", exc, device) from exc
         try:
@@ -239,7 +268,11 @@ class GPUTorchTeacherEmissionBackend:
             ) from exc
         logits = output.logits
         effective_vocab_size = int(logits.shape[-1])
-        reduction_logits = _gpu_selected_position_logits(torch, logits, batch)
+        reduction_logits = _measure_backend_phase(
+            phase_seconds,
+            "selected_position_index_gather",
+            lambda: _gpu_selected_position_logits(torch, logits, batch),
+        )
         estimated_dense_logits_dtype = _logits_dtype_name(logits)
         chunking_plan = _vocab_chunking_plan(self.config, self.config.target_policy)
         if self.config.target_policy == "dense_logits":
@@ -252,36 +285,52 @@ class GPUTorchTeacherEmissionBackend:
             payload = {"logits": dense_logits}
         elif self.config.target_policy == "cascaded_soft_labels_v1":
             try:
-                compact_payload = _gpu_cascaded_reduce(
-                    torch,
-                    reduction_logits,
-                    top_k=self.config.top_k,
-                    num_buckets=self.config.num_buckets,
-                    vocab_chunk_size=chunking_plan.effective_size,
+                compact_payload = _measure_backend_phase(
+                    phase_seconds,
+                    "compact_reduction",
+                    lambda: _gpu_cascaded_reduce(
+                        torch,
+                        reduction_logits,
+                        top_k=self.config.top_k,
+                        num_buckets=self.config.num_buckets,
+                        vocab_chunk_size=chunking_plan.effective_size,
+                    ),
                 )
             except Exception as exc:
                 raise _wrap_device_error("compact reduction", exc, device) from exc
             try:
-                payload = _compact_payload_to_numpy(compact_payload)
+                payload = _measure_backend_phase(
+                    phase_seconds,
+                    "compact_d2h_transfer",
+                    lambda: _compact_payload_to_numpy(compact_payload),
+                )
             except Exception as exc:
                 raise _wrap_device_error(
                     "compact tensor transfer to CPU", exc, device
                 ) from exc
         elif self.config.target_policy == "dynamic_cascaded_soft_labels_v1":
             try:
-                compact_payload = _gpu_dynamic_cascaded_reduce(
-                    torch,
-                    reduction_logits,
-                    dynamic_top_k_min=self.config.dynamic_top_k_min,
-                    dynamic_top_k_max=self.config.dynamic_top_k_max,
-                    dynamic_mass_threshold=self.config.dynamic_mass_threshold,
-                    num_buckets=self.config.num_buckets,
-                    vocab_chunk_size=chunking_plan.effective_size,
+                compact_payload = _measure_backend_phase(
+                    phase_seconds,
+                    "compact_reduction",
+                    lambda: _gpu_dynamic_cascaded_reduce(
+                        torch,
+                        reduction_logits,
+                        dynamic_top_k_min=self.config.dynamic_top_k_min,
+                        dynamic_top_k_max=self.config.dynamic_top_k_max,
+                        dynamic_mass_threshold=self.config.dynamic_mass_threshold,
+                        num_buckets=self.config.num_buckets,
+                        vocab_chunk_size=chunking_plan.effective_size,
+                    ),
                 )
             except Exception as exc:
                 raise _wrap_device_error("compact reduction", exc, device) from exc
             try:
-                payload = _compact_payload_to_numpy(compact_payload)
+                payload = _measure_backend_phase(
+                    phase_seconds,
+                    "compact_d2h_transfer",
+                    lambda: _compact_payload_to_numpy(compact_payload),
+                )
             except Exception as exc:
                 raise _wrap_device_error(
                     "compact tensor transfer to CPU", exc, device
@@ -296,25 +345,37 @@ class GPUTorchTeacherEmissionBackend:
                     )
                     == "two_pass_sparse_exemplar"
                 ):
-                    compact_payload = _gpu_corridor_exemplar_score_reduce(
-                        torch,
-                        reduction_logits,
-                        config=self.config,
-                        vocab_chunk_size=chunking_plan.effective_size,
+                    compact_payload = _measure_backend_phase(
+                        phase_seconds,
+                        "compact_reduction",
+                        lambda: _gpu_corridor_exemplar_score_reduce(
+                            torch,
+                            reduction_logits,
+                            config=self.config,
+                            vocab_chunk_size=chunking_plan.effective_size,
+                        ),
                     )
                 else:
-                    compact_payload = _gpu_corridor_exemplar_reduce(
-                        torch,
-                        reduction_logits,
-                        config=self.config,
-                        vocab_chunk_size=chunking_plan.effective_size,
+                    compact_payload = _measure_backend_phase(
+                        phase_seconds,
+                        "compact_reduction",
+                        lambda: _gpu_corridor_exemplar_reduce(
+                            torch,
+                            reduction_logits,
+                            config=self.config,
+                            vocab_chunk_size=chunking_plan.effective_size,
+                        ),
                     )
             except Exception as exc:
                 raise _wrap_device_error(
                     "corridor/exemplar compact reduction", exc, device
                 ) from exc
             try:
-                payload = _compact_payload_to_numpy(compact_payload)
+                payload = _measure_backend_phase(
+                    phase_seconds,
+                    "compact_d2h_transfer",
+                    lambda: _compact_payload_to_numpy(compact_payload),
+                )
                 if (
                     _effective_exemplar_capture_mode(
                         self.config,
@@ -346,20 +407,35 @@ class GPUTorchTeacherEmissionBackend:
                 ) from exc
         else:
             try:
-                compact_payload = _gpu_topk_tail_reduce(
-                    torch,
-                    reduction_logits,
-                    top_k=self.config.top_k,
-                    vocab_chunk_size=chunking_plan.effective_size,
+                compact_payload = _measure_backend_phase(
+                    phase_seconds,
+                    "compact_reduction",
+                    lambda: _gpu_topk_tail_reduce(
+                        torch,
+                        reduction_logits,
+                        top_k=self.config.top_k,
+                        vocab_chunk_size=chunking_plan.effective_size,
+                    ),
                 )
             except Exception as exc:
                 raise _wrap_device_error("compact reduction", exc, device) from exc
             try:
-                payload = _compact_payload_to_numpy(compact_payload)
+                payload = _measure_backend_phase(
+                    phase_seconds,
+                    "compact_d2h_transfer",
+                    lambda: _compact_payload_to_numpy(compact_payload),
+                )
             except Exception as exc:
                 raise _wrap_device_error(
                     "compact tensor transfer to CPU", exc, device
                 ) from exc
+        metadata = self.metadata(
+            actual_batch_size=len(batch.texts),
+            effective_vocab_size=effective_vocab_size,
+            compact_payload=payload,
+            estimated_dense_logits_dtype=estimated_dense_logits_dtype,
+        )
+        self._record_selected_pass_measurement(metadata, phase_seconds)
         return TeacherEmissionResult(
             backend_id=self.backend_id,
             runtime_mode="cpu_gpu",
@@ -367,13 +443,46 @@ class GPUTorchTeacherEmissionBackend:
             input_ids=input_ids,
             attention_mask=attention_mask,
             payload=payload,
-            metadata=self.metadata(
-                actual_batch_size=len(batch.texts),
-                effective_vocab_size=effective_vocab_size,
-                compact_payload=payload,
-                estimated_dense_logits_dtype=estimated_dense_logits_dtype,
-            ),
+            metadata=metadata,
         )
+
+    def _record_selected_pass_measurement(
+        self, metadata: dict[str, object], phase_seconds: dict[str, float] | None
+    ) -> None:
+        observer = self._selected_pass_measurement_observer
+        if observer is None or phase_seconds is None:
+            return
+        phases = (
+            "model_tokenizer_load",
+            "tokenization_input_preparation",
+            "h2d_input_transfer",
+            "teacher_forward",
+            "selected_position_index_gather",
+            "compact_reduction",
+            "compact_d2h_transfer",
+        )
+        backend_metadata = {
+            "phases": {phase: phase_seconds.get(phase, 0.0) for phase in phases},
+            "phase_statuses": {
+                phase: (
+                    "measured_host_wall" if phase in phase_seconds else "not_applicable"
+                )
+                for phase in phases
+            },
+            "execution_engine": "eager",
+            "compilation": {
+                "status": "not_authorized",
+                "cache_status": "not_authorized",
+            },
+            "cuda_event_timing": {
+                "status": "not_available",
+                "reason": "not_authorized_for_m8a",
+            },
+        }
+        metadata["selected_pass_execution_v1_backend"] = backend_metadata
+        record = getattr(observer, "add_backend_diagnostics", None)
+        if callable(record):
+            record(backend_metadata)
 
     def metadata(
         self,
@@ -617,6 +726,31 @@ class GPUTorchTeacherEmissionBackend:
         self._model = model
         self._device = device
         return torch, tokenizer, model, device
+
+
+def _measure_backend_phase(
+    phase_seconds: dict[str, float] | None, phase: str, operation: Any
+) -> Any:
+    if phase_seconds is None:
+        return operation()
+    started = perf_counter()
+    try:
+        return operation()
+    finally:
+        phase_seconds[phase] = phase_seconds.get(phase, 0.0) + (
+            perf_counter() - started
+        )
+
+
+def _torch_model_forward(
+    torch: Any,
+    model: Any,
+    *,
+    input_ids: Any,
+    attention_mask: Any,
+) -> Any:
+    with torch.no_grad():
+        return model(input_ids=input_ids, attention_mask=attention_mask)
 
 
 def check_gpu_torch_backend_available(config: TeacherBackendConfig) -> bool:

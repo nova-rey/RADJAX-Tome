@@ -85,6 +85,7 @@ def _selected_payloads_from_backend(
     )
     construction_started = perf_counter()
     backend = create_backend(backend_config)
+    backend_observer_attached = _attach_measurement_observer(backend, diagnostics)
     if diagnostics is not None:
         diagnostics.add("backend_construction", _elapsed(construction_started))
     payloads_by_record: dict[int, dict[str, Any]] = {
@@ -134,7 +135,7 @@ def _selected_payloads_from_backend(
             )
             if diagnostics is not None:
                 diagnostics.add(
-                    "selected_position_index_preparation", _elapsed(position_started)
+                    "selected_position_index_gather", _elapsed(position_started)
                 )
             teacher_started = perf_counter()
             try:
@@ -184,6 +185,9 @@ def _selected_payloads_from_backend(
                     close()
                 batch_size = next_batch_size
                 backend = create_backend(replace(backend_config, batch_size=batch_size))
+                backend_observer_attached = _attach_measurement_observer(
+                    backend, diagnostics
+                )
                 if diagnostics is not None:
                     diagnostics.add("retry_reload", _elapsed(retry_started))
                     diagnostics.oom_events.append(
@@ -196,7 +200,8 @@ def _selected_payloads_from_backend(
             effective_batch_sizes.append(batch_size)
             teacher_seconds += _elapsed(teacher_started)
             if diagnostics is not None:
-                diagnostics.add_backend_diagnostics(result.metadata)
+                if not backend_observer_attached:
+                    diagnostics.add_backend_diagnostics(result.metadata)
                 diagnostics.record_batch(
                     source_count=len(chunk),
                     coordinate_count=sum(
@@ -365,6 +370,18 @@ def _selected_payloads_from_backend(
 
 def _native_streamed_payloads(config: ExemplarDeliveryConfig) -> bool:
     return config.execution_mode == NATIVE_C6_PATH_B_EXECUTION
+
+
+def _attach_measurement_observer(
+    backend: Any, diagnostics: SelectedPassExecutionDiagnostics | None
+) -> bool:
+    if diagnostics is None:
+        return False
+    attach = getattr(backend, "_attach_selected_pass_measurement_observer", None)
+    if not callable(attach):
+        return False
+    attach(diagnostics)
+    return True
 
 
 def _is_recoverable_cuda_oom(exc: BaseException) -> bool:

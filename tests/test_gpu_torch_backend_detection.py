@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from contextlib import nullcontext
 from importlib import import_module
 from pathlib import Path
 from types import SimpleNamespace
@@ -115,6 +116,92 @@ def test_gpu_torch_constructs_without_loading_optional_deps() -> None:
     assert backend.backend_family == "gpu_torch"
     assert backend.runtime_mode == "cpu_gpu"
     assert backend.config.exemplar_capture_mode == "one_pass_candidate"
+
+
+def test_gpu_torch_emits_private_selected_pass_phase_metadata_when_observed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Mocked class-level proof only; it is not accelerator performance evidence."""
+
+    class FakeTensor:
+        def __init__(self, value: np.ndarray) -> None:
+            self.value = value
+
+        @property
+        def shape(self):
+            return self.value.shape
+
+        @property
+        def dtype(self):
+            return self.value.dtype
+
+        def to(self, _device: str):
+            return self
+
+        def detach(self):
+            return self
+
+        def cpu(self):
+            return self
+
+        def numpy(self) -> np.ndarray:
+            return self.value
+
+    class FakeTorch:
+        @staticmethod
+        def no_grad():
+            return nullcontext()
+
+    class Spy:
+        def __init__(self) -> None:
+            self.items: list[dict[str, object]] = []
+
+        def add_backend_diagnostics(self, item: dict[str, object]) -> None:
+            self.items.append(item)
+
+    def tokenizer(*_args, **_kwargs):
+        return {
+            "input_ids": FakeTensor(np.ones((2, 4), dtype=np.int32)),
+            "attention_mask": FakeTensor(np.ones((2, 4), dtype=np.int32)),
+        }
+
+    def model(**_kwargs):
+        return SimpleNamespace(logits=FakeTensor(np.ones((2, 4, 7), dtype=np.float32)))
+
+    backend = GPUTorchTeacherEmissionBackend(_config())
+    monkeypatch.setattr(
+        backend,
+        "_load_model_and_tokenizer",
+        lambda: (FakeTorch(), tokenizer, model, SimpleNamespace(device="cuda")),
+    )
+    monkeypatch.setattr(backend, "metadata", lambda **_kwargs: {})
+    monkeypatch.setattr(
+        "radjax_tome.backends.gpu_torch._gpu_selected_position_logits",
+        lambda _torch, logits, _batch: logits,
+    )
+    assert (
+        "selected_pass_execution_v1_backend"
+        not in backend.emit_batch(_batch()).metadata
+    )
+    spy = Spy()
+    backend._attach_selected_pass_measurement_observer(spy)
+
+    result = backend.emit_batch(_batch())
+
+    metadata = result.metadata["selected_pass_execution_v1_backend"]
+    assert set(metadata["phases"]) == {
+        "model_tokenizer_load",
+        "tokenization_input_preparation",
+        "h2d_input_transfer",
+        "teacher_forward",
+        "selected_position_index_gather",
+        "compact_reduction",
+        "compact_d2h_transfer",
+    }
+    assert metadata["compilation"]["status"] == "not_authorized"
+    assert metadata["cuda_event_timing"]["status"] == "not_available"
+    assert metadata["phase_statuses"]["compact_reduction"] == "not_applicable"
+    assert spy.items == [metadata]
 
 
 @pytest.mark.parametrize("runtime_mode", ("cpu", "cpu_tpu"))

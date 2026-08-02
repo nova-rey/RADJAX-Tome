@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,6 +18,20 @@ from radjax_tome.builder.delivery.measurement import (
 )
 from radjax_tome.builder.exemplar_delivery_contracts import ExemplarDeliveryConfig
 from radjax_tome.builder.teacher_textbook import TinyTextExample
+
+
+def _checkpoint(root: Path) -> replay.ImmutablePostC5Checkpoint:
+    role_paths: dict[str, Path] = {}
+    for role in sorted(replay._REQUIRED_POST_C5_ROLES):
+        path = root / "post-c5" / f"{role}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f'{{"role":"{role}"}}', encoding="utf-8")
+        role_paths[role] = path
+    return replay.ImmutablePostC5Checkpoint.capture(
+        root,
+        role_paths=role_paths,
+        manifest_path=root.parent / "post-c5-checkpoint-manifest.json",
+    )
 
 
 def _control(
@@ -71,8 +87,14 @@ def test_measurement_control_rejects_production_or_unsafe_outputs(
 ) -> None:
     checkpoint_root = tmp_path / "checkpoint"
     checkpoint_root.mkdir()
-    (checkpoint_root / "evidence.json").write_text("{}", encoding="utf-8")
-    checkpoint = replay.ImmutablePostC5Checkpoint.capture(checkpoint_root)
+    checkpoint = _checkpoint(checkpoint_root)
+
+    with pytest.raises(ValueError, match="missing required roles"):
+        replay.ImmutablePostC5Checkpoint.capture(
+            checkpoint_root,
+            role_paths={},
+            manifest_path=tmp_path / "missing-roles.json",
+        )
 
     with pytest.raises(ValueError, match="benchmark_only=True"):
         SelectedPassMeasurementControl(
@@ -93,12 +115,13 @@ def test_checkpoint_copy_is_hash_protected_and_replay_requires_frozen_c5(
 ) -> None:
     checkpoint_root = tmp_path / "checkpoint"
     checkpoint_root.mkdir()
-    (checkpoint_root / "score.json").write_text('{"score":"frozen"}', encoding="utf-8")
-    checkpoint = replay.ImmutablePostC5Checkpoint.capture(checkpoint_root)
+    checkpoint = _checkpoint(checkpoint_root)
     output = tmp_path / "measurement-output"
     control = _control(checkpoint, output)
     checkpoint.prepare_temporary_output(output)
-    assert (output / "score.json").read_text(encoding="utf-8") == '{"score":"frozen"}'
+    assert (output / "post-c5" / "score.json").read_text(encoding="utf-8") == (
+        '{"role":"score"}'
+    )
 
     config = SimpleNamespace(
         artifact_dir=output,
@@ -114,13 +137,29 @@ def test_checkpoint_copy_is_hash_protected_and_replay_requires_frozen_c5(
     checkpoint.verify_unchanged()
 
 
+def test_checkpoint_manifest_persists_every_required_role_and_fails_if_changed(
+    tmp_path: Path,
+) -> None:
+    checkpoint_root = tmp_path / "checkpoint"
+    checkpoint_root.mkdir()
+    checkpoint = _checkpoint(checkpoint_root)
+
+    persisted = json.loads(checkpoint.manifest_path.read_text(encoding="utf-8"))
+    assert set(persisted["roles"]) == replay._REQUIRED_POST_C5_ROLES
+    assert persisted["checkpoint_digest"] == checkpoint.digest
+
+    persisted["roles"]["c5"]["sha256"] = "stale"
+    checkpoint.manifest_path.write_text(json.dumps(persisted), encoding="utf-8")
+    with pytest.raises(ValueError, match="manifest changed"):
+        checkpoint.verify_unchanged()
+
+
 def test_replay_uses_the_canonical_owner_without_score_or_selection_writers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     checkpoint_root = tmp_path / "checkpoint"
     checkpoint_root.mkdir()
-    (checkpoint_root / "authority.json").write_text("{}", encoding="utf-8")
-    checkpoint = replay.ImmutablePostC5Checkpoint.capture(checkpoint_root)
+    checkpoint = _checkpoint(checkpoint_root)
     output = tmp_path / "measurement-output"
     control = _control(checkpoint, output)
     checkpoint.prepare_temporary_output(output)
@@ -166,8 +205,7 @@ def test_private_cap_reuses_canonical_batch_loop_and_preserves_requested_size(
     """Nonrepresentative fake-backend check: this is not accelerator evidence."""
     checkpoint_root = tmp_path / "checkpoint"
     checkpoint_root.mkdir()
-    (checkpoint_root / "c5.json").write_text("{}", encoding="utf-8")
-    checkpoint = replay.ImmutablePostC5Checkpoint.capture(checkpoint_root)
+    checkpoint = _checkpoint(checkpoint_root)
     output = tmp_path / "measurement-output"
     control = _control(checkpoint, output, cap=1)
     emitted: list[tuple[str, ...]] = []
@@ -236,6 +274,30 @@ def test_private_cap_reuses_canonical_batch_loop_and_preserves_requested_size(
     assert diagnostics["benchmark_only_effective_execution_cap"] == 1
     assert diagnostics["accounting_within_five_percent"] is True
     assert diagnostics["compilation"]["status"] == "not_authorized"
+
+    # The fake backend is nonrepresentative, but cap-only execution must retain
+    # exact canonical selected payload values and their serialized sequence.
+    cap_eight_output = tmp_path / "measurement-output-cap-eight"
+    cap_eight_metrics: dict[str, object] = {}
+    cap_eight_config = replace(
+        config,
+        artifact_dir=cap_eight_output,
+        rerun_metrics=cap_eight_metrics,
+    )
+    payloads_at_eight = staging._selected_payloads_from_backend(
+        records,
+        store=SimpleNamespace(),
+        examples=tuple(
+            TinyTextExample(example_id=f"example-{index}", text=str(index))
+            for index in range(3)
+        ),
+        config=cap_eight_config,
+        _measurement_control=_control(checkpoint, cap_eight_output, cap=8),
+    )
+    assert json.dumps(payloads, sort_keys=True) == json.dumps(
+        payloads_at_eight, sort_keys=True
+    )
+    assert cap_eight_config.selected_rerun_batch_size == 8
 
 
 def test_deterministic_sampler_uses_largest_remainder_and_stable_source_order() -> None:

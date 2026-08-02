@@ -2522,3 +2522,20 @@ or performance proof. This commit changes no public CLI/configuration,
 selection/authority hash, Contract, M7 publication, Golden fixture, Student,
 production batch policy, or M8B behavior; canonical-anchor and representative
 T4 evidence remain pending independent M8A review.
+
+## 2026-08-02 — M8A Instrumentation and Checkpoint Remediation
+
+The M8A readiness seam now attaches its observer privately to the actual
+`gpu_torch` backend and emits phase-separated host-wall metadata only for that
+private measurement path: model/tokenizer load, tokenization, H2D, forward,
+selected-position index/gather, compact reduction, and compact D2H. The
+metadata records eager execution plus explicit compilation-not-authorized and
+CUDA-event-not-available state; no backend configuration, authority, or public
+metadata contract gains a measurement flag. Post-C5 replay capture now fails
+closed unless a persisted, content-addressed manifest binds named score,
+corridor, authority, C2-C5, passport, model, tokenizer, corpus, and resolved
+config evidence. Focused mocked GPU and fake-artifact checks prove observer
+attachment, manifest tamper rejection, cap-isolated exact payload sequence,
+and replay ownership; they remain nonrepresentative. This remediation does not
+begin M8B, run a T4 anchor, change production selection or M7 semantics, or
+make any accelerator/performance claim.

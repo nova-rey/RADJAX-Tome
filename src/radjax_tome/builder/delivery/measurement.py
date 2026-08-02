@@ -114,8 +114,7 @@ _PHASES = (
     "tokenization_input_preparation",
     "h2d_input_transfer",
     "teacher_forward",
-    "selected_position_index_preparation",
-    "selected_row_gather",
+    "selected_position_index_gather",
     "compact_reduction",
     "compact_d2h_transfer",
     "payload_conversion_linkage_validation",
@@ -156,7 +155,7 @@ class SelectedPassExecutionDiagnostics:
             "tokenization_input_preparation",
             "h2d_input_transfer",
             "teacher_forward",
-            "selected_row_gather",
+            "selected_position_index_gather",
             "compact_reduction",
             "compact_d2h_transfer",
         ):
@@ -172,7 +171,7 @@ class SelectedPassExecutionDiagnostics:
             self.peak_cuda = current
 
     def add_backend_diagnostics(self, metadata: Mapping[str, object]) -> None:
-        value = metadata.get("selected_pass_execution_v1_backend")
+        value = metadata.get("selected_pass_execution_v1_backend", metadata)
         if not isinstance(value, Mapping):
             return
         phases = value.get("phases")
@@ -181,6 +180,11 @@ class SelectedPassExecutionDiagnostics:
                 if phase in self.phase_seconds and isinstance(seconds, (int, float)):
                     self.add(phase, float(seconds))
                     self.phase_status[phase] = "measured"
+        statuses = value.get("phase_statuses")
+        if isinstance(statuses, Mapping):
+            for phase, status in statuses.items():
+                if phase in self.phase_status and isinstance(status, str):
+                    self.phase_status[phase] = status
 
     def record_batch(
         self,
