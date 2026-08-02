@@ -2686,3 +2686,10 @@ machine-readable receipt. The evidence resolves every declared resource via
 Contract and records distinct behavioral, composition, package, and raw
 domains. This does not migrate the default profile or alter Student, Contract,
 M8B, or B4-external behavior.
+
+## 2026-08-02 — B4 Fixture Inventory Completion
+
+The B4 fixture command and verifier are recorded in the required Hydra
+inventory. This completes the repository-owned fixture evidence inventory
+without changing artifact authority, default selection, Contract, Student,
+M8B, or B4 scope.
