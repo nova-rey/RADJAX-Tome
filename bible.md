@@ -2502,3 +2502,23 @@ mirror remains historical evidence while current Tome uses a later Contract
 pin. This wording-only reconciliation changes no production behavior, schema,
 Contract asset, Golden fixture, authority recipe, fixed 25-field projection,
 Student surface, or M8 scope.
+
+## 2026-08-02 — M8A Selected-Pass Measurement Readiness
+
+M8A adds a private, benchmark-only measurement seam around the existing
+canonical Path-B selected-delivery rerun. The control is not public build
+configuration: it requires an immutable post-C5 checkpoint digest, a distinct
+temporary output root, and a cap of 1, 2, 4, or 8 while leaving the requested
+selected-rerun batch size and all authority inputs unchanged. The replay guard
+hashes checkpoint files before and after the canonical rerun, requires frozen
+C5 records, and copies rather than hard-links upstream files so measurement
+writes cannot alter score or selection evidence. Additive
+`selected_pass_execution_v1` diagnostics record phase accounting, source and
+coordinate shape observations, process/optional CUDA resources, OOM/reload
+events, and explicit compilation-not-authorized state; the deterministic
+64-source largest-remainder sampler is marked approximation-only. Focused
+fake-backend tests are nonrepresentative readiness evidence, not accelerator
+or performance proof. This commit changes no public CLI/configuration,
+selection/authority hash, Contract, M7 publication, Golden fixture, Student,
+production batch policy, or M8B behavior; canonical-anchor and representative
+T4 evidence remain pending independent M8A review.

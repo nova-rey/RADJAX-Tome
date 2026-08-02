@@ -2294,6 +2294,38 @@
       "rationale": "Human-readable scope, command, and interpretation for the machine-verified v5 fixture receipt.",
       "replacement_or_target_boundary": "T3 native_v3_student_v5 acceptance evidence.",
       "status": "canonical"
+    },
+    "docs/M8A_SELECTED_PASS_MEASUREMENT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M8A",
+      "rationale": "Defines the private benchmark-only selected-pass measurement and replay boundary without changing production authority.",
+      "replacement_or_target_boundary": "Accepted M8A representative baseline evidence.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/measurement.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M8A",
+      "rationale": "Private selected-pass phase diagnostics, temporary-root control, optional resource observer, and deterministic sampler.",
+      "replacement_or_target_boundary": "M8A benchmark-only instrumentation seam.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/replay.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M8A",
+      "rationale": "Content-addressed immutable post-C5 checkpoint and canonical selected-stage replay guard.",
+      "replacement_or_target_boundary": "M8A read-only selected-delivery replay seam.",
+      "status": "canonical"
+    },
+    "tests/test_m8a_selected_pass_measurement.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M8A",
+      "rationale": "Nonrepresentative deterministic fake-backend tests for benchmark control isolation, replay guards, accounting, and sampling.",
+      "replacement_or_target_boundary": "M8A instrumentation readiness acceptance tests.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

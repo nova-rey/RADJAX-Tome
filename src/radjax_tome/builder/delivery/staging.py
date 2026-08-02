@@ -8,6 +8,10 @@ from dataclasses import dataclass
 
 # Shared constants and low-level, dependency-free helpers.
 from ._shared import *  # noqa: F403
+from .measurement import (
+    SelectedPassExecutionDiagnostics,
+    SelectedPassMeasurementControl,
+)
 from .payloads import (
     _attach_long_tail_diagnostics,
     _long_tail_policy,
@@ -26,6 +30,7 @@ def _selected_payloads_from_backend(
     config: ExemplarDeliveryConfig,
     completed_record_indices: set[int] | None = None,
     existing_payload_summaries: Mapping[int, dict[str, Any]] | None = None,
+    _measurement_control: SelectedPassMeasurementControl | None = None,
 ) -> list[dict[str, Any]]:
     if not selected_records:
         return []
@@ -58,14 +63,30 @@ def _selected_payloads_from_backend(
     selected_record_order = [
         str(record["selected_example_id"]) for record in selected_records
     ]
-    batch_size = max(1, config.selected_rerun_batch_size)
+    requested_batch_size = max(1, config.selected_rerun_batch_size)
+    batch_size = (
+        min(requested_batch_size, _measurement_control.effective_execution_cap)
+        if _measurement_control is not None
+        else requested_batch_size
+    )
     backend_config = replace(
         config.backend_config,
         target_policy="dynamic_cascaded_soft_labels_v1",  # type: ignore[arg-type]
         exemplar_source_policy="dynamic_cascaded_soft_labels_v1",
         batch_size=batch_size,
     )
+    diagnostics = (
+        SelectedPassExecutionDiagnostics(
+            control=_measurement_control,
+            requested_batch_size=requested_batch_size,
+        )
+        if _measurement_control is not None
+        else None
+    )
+    construction_started = perf_counter()
     backend = create_backend(backend_config)
+    if diagnostics is not None:
+        diagnostics.add("backend_construction", _elapsed(construction_started))
     payloads_by_record: dict[int, dict[str, Any]] = {
         int(record_index): dict(summary)
         for record_index, summary in existing_payload_summaries.items()
@@ -96,7 +117,6 @@ def _selected_payloads_from_backend(
     compression_seconds = 0.0
     peak_host_memory_bytes = _host_rss_bytes()
     batch_count = 0
-    requested_batch_size = batch_size
     effective_batch_sizes: list[int] = []
     cuda_oom_retry_count = 0
     cuda_oom_retry_transitions: list[dict[str, int]] = []
@@ -107,10 +127,15 @@ def _selected_payloads_from_backend(
     try:
         while start < len(selected_examples):
             chunk = selected_examples[start : start + batch_size]
+            position_started = perf_counter()
             batch_selected_row_offset = sum(
                 len(positions_by_example_id[example_id])
                 for example_id in selected_example_ids[:start]
             )
+            if diagnostics is not None:
+                diagnostics.add(
+                    "selected_position_index_preparation", _elapsed(position_started)
+                )
             teacher_started = perf_counter()
             try:
                 result = backend.emit_batch(
@@ -153,14 +178,38 @@ def _selected_payloads_from_backend(
                 cuda_oom_retry_transitions.append(
                     {"from": batch_size, "to": next_batch_size}
                 )
+                retry_started = perf_counter()
                 close = getattr(backend, "close", None)
                 if callable(close):
                     close()
                 batch_size = next_batch_size
                 backend = create_backend(replace(backend_config, batch_size=batch_size))
+                if diagnostics is not None:
+                    diagnostics.add("retry_reload", _elapsed(retry_started))
+                    diagnostics.oom_events.append(
+                        {
+                            "from": cuda_oom_retry_transitions[-1]["from"],
+                            "to": next_batch_size,
+                        }
+                    )
                 continue
             effective_batch_sizes.append(batch_size)
             teacher_seconds += _elapsed(teacher_started)
+            if diagnostics is not None:
+                diagnostics.add_backend_diagnostics(result.metadata)
+                diagnostics.record_batch(
+                    source_count=len(chunk),
+                    coordinate_count=sum(
+                        len(positions_by_example_id[example.example_id])
+                        for example in chunk
+                    ),
+                    selected_positions_per_source=(
+                        len(positions_by_example_id[example.example_id])
+                        for example in chunk
+                    ),
+                    result=result,
+                    effective_size=batch_size,
+                )
             compression_started = perf_counter()
             row_by_example_id = {
                 example.example_id: row for row, example in enumerate(chunk)
@@ -226,6 +275,7 @@ def _selected_payloads_from_backend(
                         )
                         record["selected_board"] = selected_board
                         selected_payload["selected_board"] = selected_board
+                        write_started = perf_counter()
                         payload_hash = _write_native_payload_shard(
                             _native_payload_stage_dir(config),
                             record_index=record_index,
@@ -239,10 +289,20 @@ def _selected_payloads_from_backend(
                         payload_summary["payload_hash"] = payload_hash
                         payload_summaries.append(payload_summary)
                         coordinates_committed += 1
+                        if diagnostics is not None:
+                            diagnostics.add(
+                                "hashing_json_atomic_write_fsync",
+                                _elapsed(write_started),
+                            )
                         del selected_payload
                     else:
                         payloads_by_record[record_index] = selected_payload
             compression_seconds += _elapsed(compression_started)
+            if diagnostics is not None:
+                diagnostics.add(
+                    "payload_conversion_linkage_validation",
+                    _elapsed(compression_started),
+                )
             batch_count += 1
             peak_host_memory_bytes = max(peak_host_memory_bytes, _host_rss_bytes())
             _notify_delivery_progress(
@@ -257,9 +317,12 @@ def _selected_payloads_from_backend(
             del result
             start += len(chunk)
     finally:
+        cleanup_started = perf_counter()
         close = getattr(backend, "close", None)
         if callable(close):
             close()
+        if diagnostics is not None:
+            diagnostics.add("backend_close_cleanup", _elapsed(cleanup_started))
     if config.rerun_metrics is not None:
         config.rerun_metrics.update(
             {
@@ -293,6 +356,8 @@ def _selected_payloads_from_backend(
                 "coordinates_committed_before_each_retry": committed_before_retries,
             }
         )
+        if diagnostics is not None:
+            config.rerun_metrics["selected_pass_execution_v1"] = diagnostics.finish()
     if native_streaming:
         return sorted(payload_summaries, key=lambda item: int(item["_record_index"]))
     return [payloads_by_record[index] for index in range(len(selected_records))]

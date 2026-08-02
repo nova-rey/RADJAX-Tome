@@ -5,6 +5,7 @@ from __future__ import annotations
 
 # Shared constants and low-level, dependency-free helpers.
 from ._shared import *  # noqa: F403
+from .measurement import SelectedPassMeasurementControl
 from .payloads import (
     _attach_long_tail_diagnostics,
     _candidate_is_perverse,
@@ -32,6 +33,7 @@ def _materialize_selected_payloads(
     config: ExemplarDeliveryConfig,
     completed_record_indices: set[int] | None = None,
     existing_payload_summaries: Mapping[int, dict[str, Any]] | None = None,
+    _measurement_control: SelectedPassMeasurementControl | None = None,
 ) -> list[dict[str, Any]]:
     """Choose the Path-A or Path-B payload mechanism from the owner layer."""
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
@@ -42,6 +44,7 @@ def _materialize_selected_payloads(
             config=config,
             completed_record_indices=completed_record_indices,
             existing_payload_summaries=existing_payload_summaries,
+            _measurement_control=_measurement_control,
         )
     return _selected_payloads_from_one_pass_capture(
         selected_records,
@@ -52,10 +55,22 @@ def _materialize_selected_payloads(
 
 def run_selected_delivery_rerun(
     config: ExemplarDeliveryConfig,
+    *,
+    _measurement_control: SelectedPassMeasurementControl | None = None,
 ) -> PreparedSelectedDelivery:
     """Select and materialize rerun payloads before final corridor export."""
 
     _validate_delivery_config(config)
+    if _measurement_control is not None:
+        _measurement_control.validate_for_output(config.artifact_dir)
+        if config.authoritative_records is None or not config.authoritative_selection:
+            raise ValueError(
+                "selected-pass measurement requires frozen authoritative C5 records"
+            )
+        if config.rerun_metrics is None:
+            raise ValueError(
+                "selected-pass measurement requires an evidence metrics sink"
+            )
     created_at = _now()
     delivery_started = perf_counter()
     store = TeacherTargetStore.open(config.artifact_dir)
@@ -152,6 +167,7 @@ def run_selected_delivery_rerun(
         config=config,
         completed_record_indices=set(staged_payload_summaries),
         existing_payload_summaries=staged_payload_summaries,
+        _measurement_control=_measurement_control,
     )
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
         _notify_delivery_progress(
