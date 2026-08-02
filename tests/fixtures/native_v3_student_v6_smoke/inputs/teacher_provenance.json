@@ -9,7 +9,7 @@
     }
   ],
   "config_hash": "sha256:6729cd4f2fe4052cd17f3864dd50a15f295026232c880730ae497161dea214d2",
-  "created_at": "2026-08-02T23:13:57+00:00",
+  "created_at": "2026-08-02T23:37:22+00:00",
   "downloaded_by_radjax_tome": false,
   "hf_identity_source": "unavailable",
   "hf_repo_id": null,
@@ -31,7 +31,7 @@
   "model_identity_confidence": "declared",
   "model_name": "radjax/v5-fixture",
   "model_name_source": "user_declared",
-  "model_path": "/tmp/b4-v6-fixture/inputs/model",
+  "model_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/model",
   "model_provenance_mode": "user_declared",
   "model_revision": null,
   "model_revision_source": "unknown",

@@ -1,8 +1,8 @@
 {
   "blockers": [],
   "file_hashes": {
-    "legacy_selected_exemplars.json": "7cf3d51db02c844619323599c5bf7e802af6eca970ccd1ee2475aceb34388ae5",
-    "selected_exemplars.jsonl": "1f7b9387e4214af10ac7de8346fa89f66f8f01671758d716a339f8c524c65abe"
+    "legacy_selected_exemplars.json": "6d86808ee56c431728a8ad34a6e8e95244474298ab2f04b94e70c3600e8148bb",
+    "selected_exemplars.jsonl": "48ae48a7befbc46797d64240de195ff73053be6da6046d83d7a0c0f5632da123"
   },
   "schema_version": "radjax.multi_role_selected_exemplar_validation.v1",
   "status": "pass",

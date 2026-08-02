@@ -15,6 +15,7 @@ from radjax_contract.tome import (
 
 from radjax_tome.builder import ProductionBuildConfig, build_production_gpu_tome
 from radjax_tome.io.json import write_json
+from radjax_tome.tome.bundle import validate_tome_bundle
 from radjax_tome.tome.packaging import (
     STUDENT,
     package_tome_artifact,
@@ -80,6 +81,10 @@ def build_v6_behavioral_fixture(
     ).output_path
     directory_result = _exercise(directory)
     archive_result = _exercise(archive)
+    source_m7 = producer.with_name(f"{producer.name}.v4.tgz")
+    packaged_m7 = directory / "student_consumption/v6/selected_exemplar_payload.m7.tgz"
+    if source_m7.read_bytes() != packaged_m7.read_bytes():
+        raise ValueError("fixture packaged M7 member differs from native sibling")
     write_json(
         root / "FIXTURE_RECEIPT.json",
         {
@@ -90,6 +95,14 @@ def build_v6_behavioral_fixture(
             "historical_v5_mirror_commit": V5_HISTORICAL_CONTRACT_COMMIT,
             "directory": directory_result,
             "archive": {**archive_result, "raw_sha256": sha256_file(archive)},
+            "native_m7_sibling": {
+                "locator": f"{producer.name}.v4.tgz",
+                "sha256": sha256_file(source_m7),
+                "size_bytes": source_m7.stat().st_size,
+                "packaged_locator": (
+                    "student_consumption/v6/selected_exemplar_payload.m7.tgz"
+                ),
+            },
             "production_config": _PRODUCTION_CONFIG,
             "environment": {
                 "python": sys.version.split()[0],
@@ -106,14 +119,10 @@ def build_v6_behavioral_fixture(
 
 
 def _exercise(artifact: Path) -> dict[str, object]:
-    if (
-        not validate_tome_package(
-            artifact if artifact.is_dir() else artifact.parent / "student",
-            profile=STUDENT,
-        ).ok
-        and artifact.is_dir()
-    ):
+    if artifact.is_dir() and not validate_tome_package(artifact, profile=STUDENT).ok:
         raise ValueError("fixture Tome package validation failed")
+    if artifact.is_file() and not validate_tome_bundle(artifact).ok:
+        raise ValueError("fixture Tome archive validation failed")
     result = validate_and_resolve_student_consumption(
         artifact, profile_id=PROFILE_ID, strict=True
     )

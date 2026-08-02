@@ -13,7 +13,7 @@
     },
     "schema_version": "radjax.c2_corridor_feature_provenance.v1",
     "source_artifact_hash": "0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
-    "source_artifact_id": "/tmp/b4-v6-fixture/producer_artifact/c6/corridor-features/candidate_features.jsonl",
+    "source_artifact_id": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact/c6/corridor-features/candidate_features.jsonl",
     "source_artifact_schema": "radjax.corridor_artifact.v3"
   },
   "files": {

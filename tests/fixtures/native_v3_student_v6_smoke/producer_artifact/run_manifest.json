@@ -10,7 +10,7 @@
   },
   "completed_shards": [
     {
-      "completed_at": "2026-08-02T23:13:57+00:00",
+      "completed_at": "2026-08-02T23:37:22+00:00",
       "example_end_index_exclusive": 2,
       "example_start_index": 0,
       "num_examples": 2,
@@ -19,7 +19,7 @@
       "shard_id": 0
     },
     {
-      "completed_at": "2026-08-02T23:13:57+00:00",
+      "completed_at": "2026-08-02T23:37:22+00:00",
       "example_end_index_exclusive": 4,
       "example_start_index": 2,
       "num_examples": 2,
@@ -28,12 +28,12 @@
       "shard_id": 1
     }
   ],
-  "corpus_hash": "sha256:b9ae752701a6aa7d4ec6660f8119cf80c3fddd555c02ecda437a6b5e628c2ba8",
-  "corpus_manifest_path": "/tmp/b4-v6-fixture/inputs/corpus/corpus_manifest.json",
-  "created_at": "2026-08-02T23:13:57+00:00",
-  "dataset_hash": "sha256:b9ae752701a6aa7d4ec6660f8119cf80c3fddd555c02ecda437a6b5e628c2ba8",
-  "dataset_path": "/tmp/b4-v6-fixture/inputs/corpus/corpus.jsonl",
-  "emission_config_hash": "sha256:9c835a0bdd0078104aa4e9e018e5c5751011383c244a59ba4aaeaef0ba8cc070",
+  "corpus_hash": "sha256:198feb31ebb81304a173661ac31ecc815eef656691571a7b9edf97bf8f5478f2",
+  "corpus_manifest_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus_manifest.json",
+  "created_at": "2026-08-02T23:37:22+00:00",
+  "dataset_hash": "sha256:198feb31ebb81304a173661ac31ecc815eef656691571a7b9edf97bf8f5478f2",
+  "dataset_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus.jsonl",
+  "emission_config_hash": "sha256:56ccb7fc2b710acc9b4d549c54f71748a7a40566d398b2aaa115148384c56932",
   "failure_report_path": null,
   "incomplete_shards": [],
   "last_completed_example_index": 3,
@@ -41,8 +41,8 @@
   "num_examples_planned": 4,
   "num_shards_completed": 2,
   "num_shards_planned": 2,
-  "output_dir": "/tmp/b4-v6-fixture/producer_artifact",
-  "resume_config_hash": "sha256:9c835a0bdd0078104aa4e9e018e5c5751011383c244a59ba4aaeaef0ba8cc070",
+  "output_dir": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact",
+  "resume_config_hash": "sha256:56ccb7fc2b710acc9b4d549c54f71748a7a40566d398b2aaa115148384c56932",
   "runtime_mode": "cpu",
   "schema_version": "streaming_run_manifest_v1",
   "sequence_length": 8,
@@ -56,7 +56,7 @@
     "tokenizer_hash": "sha256:859a0e3542a2522d4d0e1b7d6fbb1356ddd9ffbd5d390766933d5612e4dd2082",
     "weights_hash": "sha256:3764033f6770dba67dcdc6d7d6be34e141dc61501c044a5140cf7d53d094f975"
   },
-  "teacher_model_provenance_path": "/tmp/b4-v6-fixture/inputs/teacher_provenance.json",
-  "updated_at": "2026-08-02T23:13:57+00:00",
+  "teacher_model_provenance_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/teacher_provenance.json",
+  "updated_at": "2026-08-02T23:37:22+00:00",
   "vocab_size": 512
 }

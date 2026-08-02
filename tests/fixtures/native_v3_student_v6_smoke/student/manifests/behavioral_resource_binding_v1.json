@@ -1,18 +1,18 @@
 {
-  "behavioral_authority_digest": "sha256:bc4fa23a158b28e86c0e44b948ad15ea1f7aa6a29c721c6711156e74f2706146",
-  "composition_digest": "sha256:4da0df97067cb532b49ba9b8a939a6024ac6eade224583dfcaab427deb422a8a",
-  "package_semantic_identity": "sha256:b8489f6b0bf45c7415038dee3793e7ea3cd0e63240fca07c9a2c22896db1438b",
+  "behavioral_authority_digest": "sha256:441d32f61ec699157b60bec2889d5263d539f8265ef0e65f621cf3fca10a05ee",
+  "composition_digest": "sha256:c1e078a8cec071d8d68b5b75604b77a481c850f762393c9907d34e22459a618b",
+  "package_semantic_identity": "sha256:2c437fd9e36b47c06f7d3a6c842852e1af35f341835e5c8d49c25868415aad14",
   "profile_id": "native_v3_student_v6",
   "resources": [
     {
       "encoding": "json",
       "locator": "student_consumption/v6/authority_reference.json",
-      "raw_sha256": "sha256:fdd40b7f58ad03f20a059bc59d669ed688de4ad9a0c58d596b7c517703c4eb8e",
+      "raw_sha256": "sha256:2631e7c765c3bb253ae9ec50575f49a7365a28a42e3fa5adb5827039d06662dd",
       "raw_size_bytes": 391,
       "resource_id": "authority_reference/default",
       "role": "authority_reference",
       "schema": "radjax_authority_reference_v6",
-      "semantic_identity": "sha256:515637978c9ae777e09ffe2fde255b97f4c6aec163486959f025051cd11143bd"
+      "semantic_identity": "sha256:d11f7f3368bcf8c7c5b13dd8da3623ac4656882548a141d111355036963619b1"
     },
     {
       "components": [
@@ -95,22 +95,22 @@
     {
       "encoding": "m7_tome_archive",
       "locator": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
-      "raw_sha256": "sha256:b191d871f4a915d6d2a4a164d07e783d41ad68bd202d32ec824a391b13bd4be6",
-      "raw_size_bytes": 34513,
+      "raw_sha256": "sha256:68f887c1e4166303d403e1cb7b44351848397e9df1978c14d8b8049d2c74d865",
+      "raw_size_bytes": 34618,
       "resource_id": "selected_exemplar_payload/default",
       "role": "selected_exemplar_payload",
       "schema": "radjax_selected_exemplar_payload_v6",
-      "semantic_identity": "sha256:eb5b8b4e7d5296dbd64d5f3da3bc377904217ab753fde2390f6fdb963f015863"
+      "semantic_identity": "sha256:3df808424b790a94e7073ce73656a41c314b74e7d556fa2f8c1abf5a233626ad"
     },
     {
       "encoding": "jsonl",
       "locator": "student_consumption/v6/selected_passport_index.jsonl",
-      "raw_sha256": "sha256:b3ebc45d567deb0afc51ab975e31efab94bf13f406849cd0872bef7bcead4691",
+      "raw_sha256": "sha256:c8126fea4fecb483b26bd62e9b516a8107c264e416a909306741f4faa445e258",
       "raw_size_bytes": 804,
       "resource_id": "selected_passport_index/default",
       "role": "selected_passport_index",
       "schema": "radjax_selected_passport_index_v6",
-      "semantic_identity": "sha256:40c6cdbd6a9b482287521275d70efa43eb5bb8c90c9e6be0eff299a7dba92d63"
+      "semantic_identity": "sha256:e51f9d99ffe4a12af884cd97f887a73d33114501223ae15f86d34329c8b4a756"
     },
     {
       "components": [

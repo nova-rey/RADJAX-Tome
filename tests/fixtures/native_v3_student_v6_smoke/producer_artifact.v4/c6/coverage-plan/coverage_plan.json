@@ -41,8 +41,8 @@
     "compatibility_proxy_used": false,
     "coverage_holes": 0,
     "feature_fidelity": "derived",
-    "leaderboard_artifact_id": "/private/tmp/b4-v6-fixture/producer_artifact/c6/corridor-leaderboards",
-    "leaderboard_manifest_sha256": "3ef8e6cd4115f4ea232b8da52b7d79e160edeba8fd4d119221f14902ec2985c4",
+    "leaderboard_artifact_id": "/Users/Cooper/code/RADJAX-Tome/tests/fixtures/native_v3_student_v6_smoke/producer_artifact/c6/corridor-leaderboards",
+    "leaderboard_manifest_sha256": "7b02995bf6cab8fe8cf22b7dad536787a74f116e38af799f529b9dd2b6ed83c0",
     "mode_leaderboards_sha256": "931b7a68d86f4a58834e2d568850276d063d391ccf77fbc908a3e1738c73920d",
     "modes_observed": 1,
     "pool_occupancy": {
@@ -53,7 +53,7 @@
     "production_grade": true,
     "retained_candidate_count": 4,
     "source_artifact_hash": "0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
-    "source_artifact_id": "/tmp/b4-v6-fixture/producer_artifact/c6/corridor-features/candidate_features.jsonl",
+    "source_artifact_id": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact/c6/corridor-features/candidate_features.jsonl",
     "status": "pass",
     "warnings": []
   },

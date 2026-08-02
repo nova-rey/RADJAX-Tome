@@ -17,7 +17,7 @@
       "effective_top_k_min": 32,
       "path": "selected_exemplars/selected-exemplars-00000.json",
       "record_count": 1,
-      "sha256": "sha256:6f57d46a1bff683ea960bbe9f346e5ad535e568344b63be316a3974d5d103ea4",
+      "sha256": "sha256:7514aa53e9f925ae0a264e56595cf80b1c4cd6a0d236accd802e08b8566b6871",
       "size_bytes": 6218,
       "top_mass_max": 0.24616041779518127,
       "top_mass_min": 0.24616041779518127
@@ -27,7 +27,7 @@
       "effective_top_k_min": 32,
       "path": "selected_exemplars/selected-exemplars-00001.json",
       "record_count": 1,
-      "sha256": "sha256:92243d952ad6abeb9874ba46202e6f9293e84e95e77e35083c795ce02c5cac8a",
+      "sha256": "sha256:705fac786ff11b9a195b45aef50b8da64f2f4ce234c13ae19e6bb14c60b241a3",
       "size_bytes": 6314,
       "top_mass_max": 0.23057186603546143,
       "top_mass_min": 0.23057186603546143

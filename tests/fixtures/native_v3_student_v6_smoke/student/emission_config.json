@@ -119,22 +119,16 @@
   "corpus_provenance": {
     "source_corpus_chunking_policy": "char_window_v1",
     "source_corpus_deduplication_policy": "exact_normalized_text_sha256_v1",
-    "source_corpus_hash": "sha256:b9ae752701a6aa7d4ec6660f8119cf80c3fddd555c02ecda437a6b5e628c2ba8",
-    "source_corpus_manifest_hash": "sha256:7e6b077798c2d22de9b57b2a36dc09ff3f30e4c142ee12e232a5a7aeb2f62ddc",
-    "source_corpus_manifest_path": {
-      "non_portable_source_path": "/tmp/b4-v6-fixture/inputs/corpus/corpus_manifest.json",
-      "portable_basename": "corpus_manifest.json"
-    },
+    "source_corpus_hash": "sha256:198feb31ebb81304a173661ac31ecc815eef656691571a7b9edf97bf8f5478f2",
+    "source_corpus_manifest_hash": "sha256:98254633970101c0ffcb57d25730aff6e32443fdf37009cb5605e519e358828b",
+    "source_corpus_manifest_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus_manifest.json",
     "source_corpus_normalization_policy": "text_normalize_lf_strip_trailing_ws_v1",
     "source_corpus_num_examples": "4",
     "source_corpus_num_sources": "4",
     "source_corpus_schema_version": "corpus_manifest_v1"
   },
   "corridor_stat_top_k": 32,
-  "dataset_source": {
-    "non_portable_source_path": "/tmp/b4-v6-fixture/inputs/corpus/corpus.jsonl",
-    "portable_basename": "corpus.jsonl"
-  },
+  "dataset_source": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus.jsonl",
   "dynamic_mass_threshold": 0.95,
   "dynamic_top_k_max": 32,
   "dynamic_top_k_min": 1,
@@ -147,14 +141,14 @@
   "min_corridor_stat_top_k": 32,
   "native_execution_mode": "native_c6_path_b_v1",
   "progress_log_path": "progress_log.jsonl",
-  "resume_config_hash": "sha256:9c835a0bdd0078104aa4e9e018e5c5751011383c244a59ba4aaeaef0ba8cc070",
+  "resume_config_hash": "sha256:56ccb7fc2b710acc9b4d549c54f71748a7a40566d398b2aaa115148384c56932",
   "resume_supported": true,
   "run_manifest_path": "run_manifest.json",
   "runtime_mode": "cpu",
   "sampling_used": false,
   "seed": 0,
   "selection_authority_manifest": "c6/authority_manifest.json",
-  "selection_integration_config_hash": "sha256:9dd0546ee2b68c4e4a409bf144ac81673d30989b35a4f50383b1e037a5c134ab",
+  "selection_integration_config_hash": "sha256:7bc02dccfadc170b11af686303477e8e23504c73ffe718e21d4e671ab5a1d629",
   "selection_integration_policy": "corridor_first_global_backfill_v1",
   "sequence_length": 8,
   "shard_size_examples": 2,
@@ -177,10 +171,7 @@
     "model_source_kind": "local_directory",
     "network_used": false,
     "schema_version": "teacher_model_provenance_v1",
-    "teacher_model_provenance_path": {
-      "non_portable_source_path": "/tmp/b4-v6-fixture/inputs/teacher_provenance.json",
-      "portable_basename": "teacher_provenance.json"
-    },
+    "teacher_model_provenance_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/teacher_provenance.json",
     "tokenizer_hash": "sha256:859a0e3542a2522d4d0e1b7d6fbb1356ddd9ffbd5d390766933d5612e4dd2082",
     "weights_hash": "sha256:3764033f6770dba67dcdc6d7d6be34e141dc61501c044a5140cf7d53d094f975"
   },

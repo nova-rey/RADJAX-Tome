@@ -3,7 +3,7 @@
   "c2_schema_version": "radjax.c2_corridor_candidate_leaderboards.v1",
   "c3_artifact_hash": "0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
   "c3_schema_version": "radjax.c3_corridor_coverage_plan.v1",
-  "c4_claims_sha256": "57ace38b78e55a351316f59bb9e1461183adac949ffd62d62ae98bf9d8fb00cf",
+  "c4_claims_sha256": "aa2990f186590bdad39cfb0d4d4dece35ddaf84e156481a697f483af98a048b0",
   "c4_schema_version": "radjax.c4_corridor_global_claims.v1",
   "c5_production_grade": true,
   "c5_schema_version": "radjax.multi_role_selected_exemplar.v1",
@@ -41,7 +41,7 @@
   "delivery_path": "two_pass_rerun_selected",
   "feature_derivation": {
     "c2_policy_id": "corridor_candidate_micro_leaderboard_v1",
-    "c2_source_artifact_id": "/tmp/b4-v6-fixture/producer_artifact/c6/corridor-features/candidate_features.jsonl"
+    "c2_source_artifact_id": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact/c6/corridor-features/candidate_features.jsonl"
   },
   "feature_fidelity": "derived",
   "global_backfill_count": 0,

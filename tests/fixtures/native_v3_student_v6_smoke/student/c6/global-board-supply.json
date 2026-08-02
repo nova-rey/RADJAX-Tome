@@ -221,13 +221,10 @@
   "schema_version": "radjax.c4_global_board_supply.v1",
   "source_provenance": {
     "production_grade": true,
-    "score_pass_authority_hash": "sha256:777ae7df5ea300898a8c36010270328684c044fb97d2ee955f974b05e8238fc3",
+    "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
     "selector_policy": "multi_leaderboard_exemplar_selector_v1",
     "selector_schema_version": "exemplar_selection_manifest_v1",
-    "source_artifact_hash": "sha256:777ae7df5ea300898a8c36010270328684c044fb97d2ee955f974b05e8238fc3",
-    "source_artifact_id": {
-      "non_portable_source_path": "/tmp/b4-v6-fixture/producer_artifact",
-      "portable_basename": "producer_artifact"
-    }
+    "source_artifact_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+    "source_artifact_id": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact"
   }
 }

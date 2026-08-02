@@ -2693,3 +2693,11 @@ The B4 fixture command and verifier are recorded in the required Hydra
 inventory. This completes the repository-owned fixture evidence inventory
 without changing artifact authority, default selection, Contract, Student,
 M8B, or B4 scope.
+
+## 2026-08-02 — B4 Fixture Verification Strengthening
+
+The B4 receipt now binds the native M7 sibling to the packaged M7 member and
+the fixture builder validates both directory and archive transports before
+recording evidence. Repeated ordinary production proves the recorded v6
+identity domains stable, while the verifier exercises every Contract opener.
+No Contract, Student, default profile, M8B, or B4-external change is made.

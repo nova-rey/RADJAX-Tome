@@ -42,27 +42,27 @@
     "no_tpu_jax": true
   },
   "corpus_provenance": {
-    "corpus_manifest_path": "/tmp/b4-v6-fixture/inputs/corpus/corpus_manifest.json",
+    "corpus_manifest_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus_manifest.json",
     "provided": true,
     "source_corpus_chunking_policy": "char_window_v1",
     "source_corpus_deduplication_policy": "exact_normalized_text_sha256_v1",
-    "source_corpus_hash": "sha256:b9ae752701a6aa7d4ec6660f8119cf80c3fddd555c02ecda437a6b5e628c2ba8",
-    "source_corpus_manifest_hash": "sha256:7e6b077798c2d22de9b57b2a36dc09ff3f30e4c142ee12e232a5a7aeb2f62ddc",
-    "source_corpus_manifest_path": "/tmp/b4-v6-fixture/inputs/corpus/corpus_manifest.json",
+    "source_corpus_hash": "sha256:198feb31ebb81304a173661ac31ecc815eef656691571a7b9edf97bf8f5478f2",
+    "source_corpus_manifest_hash": "sha256:98254633970101c0ffcb57d25730aff6e32443fdf37009cb5605e519e358828b",
+    "source_corpus_manifest_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus_manifest.json",
     "source_corpus_normalization_policy": "text_normalize_lf_strip_trailing_ws_v1",
     "source_corpus_num_examples": 4,
     "source_corpus_num_sources": 4,
     "source_corpus_schema_version": "corpus_manifest_v1",
     "status": "pass"
   },
-  "created_at": "2026-08-02T23:13:57+00:00",
+  "created_at": "2026-08-02T23:37:22+00:00",
   "dataset": {
-    "dataset_path": "/tmp/b4-v6-fixture/inputs/corpus/corpus.jsonl",
+    "dataset_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus.jsonl",
     "exists": true,
     "max_examples_effective": null,
     "num_examples": 4,
-    "sha256": "sha256:b9ae752701a6aa7d4ec6660f8119cf80c3fddd555c02ecda437a6b5e628c2ba8",
-    "size_bytes": 2695
+    "sha256": "sha256:198feb31ebb81304a173661ac31ecc815eef656691571a7b9edf97bf8f5478f2",
+    "size_bytes": 3247
   },
   "doctor_diagnostics": {
     "accelerator_available": null,
@@ -119,7 +119,7 @@
     "jax_available": false,
     "local_files_only": true,
     "model_available": null,
-    "model_id": "/tmp/b4-v6-fixture/inputs/model",
+    "model_id": "tests/fixtures/native_v3_student_v6_smoke/inputs/model",
     "mps_available": false,
     "multidevice_enabled": false,
     "optimized": false,
@@ -174,11 +174,11 @@
     "observed_peak_memory_bytes": null
   },
   "model": {
-    "model_id": "/tmp/b4-v6-fixture/inputs/model",
-    "teacher_model_provenance_path": "/tmp/b4-v6-fixture/inputs/teacher_provenance.json"
+    "model_id": "tests/fixtures/native_v3_student_v6_smoke/inputs/model",
+    "teacher_model_provenance_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/teacher_provenance.json"
   },
   "planner_version": "spec_4_5_gpu_run_planner_v1",
-  "recommended_command": "radjax-tome build --teacher-backend smoke_tokenizer --runtime-mode cpu --target-policy corridor_exemplar_v1 --teacher-model /tmp/b4-v6-fixture/inputs/model --batch-size 2 --dataset ./corpus_out/corpus.jsonl --corpus-manifest ./corpus_out/corpus_manifest.json --teacher-model-provenance ./teacher_model_provenance.json --output ./gpu_tome",
+  "recommended_command": "radjax-tome build --teacher-backend smoke_tokenizer --runtime-mode cpu --target-policy corridor_exemplar_v1 --teacher-model tests/fixtures/native_v3_student_v6_smoke/inputs/model --batch-size 2 --dataset ./corpus_out/corpus.jsonl --corpus-manifest ./corpus_out/corpus_manifest.json --teacher-model-provenance ./teacher_model_provenance.json --output ./gpu_tome",
   "requested_batch_policy": {
     "gpu_batch_size_auto_max": 64,
     "gpu_batch_size_auto_min": 1,
@@ -214,7 +214,7 @@
     "provided": true,
     "schema_version": "teacher_model_provenance_v1",
     "status": "pass",
-    "teacher_model_provenance_path": "/tmp/b4-v6-fixture/inputs/teacher_provenance.json",
+    "teacher_model_provenance_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/teacher_provenance.json",
     "tokenizer_hash": "sha256:859a0e3542a2522d4d0e1b7d6fbb1356ddd9ffbd5d390766933d5612e4dd2082",
     "warnings": [],
     "weights_hash": "sha256:3764033f6770dba67dcdc6d7d6be34e141dc61501c044a5140cf7d53d094f975"

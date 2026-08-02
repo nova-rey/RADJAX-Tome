@@ -1,6 +1,6 @@
 {
   "blockers": [],
-  "coverage_plan_sha256": "45616e87eae0431c2fa9484b9e76def18705b72a68faceecd83f41a267c9a36a",
+  "coverage_plan_sha256": "6a466ba63b055bb64a2fbf7b1fb1a3fe720b3bdbe0934300cff84b713a342987",
   "schema_version": "radjax.c3_corridor_coverage_validation.v1",
   "status": "pass",
   "summary": {

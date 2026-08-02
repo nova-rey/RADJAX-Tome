@@ -8,6 +8,6 @@
   "record_count": 32,
   "schema_version": "radjax.c6_corridor_feature_export.v1",
   "score_pass_authority_contract_version": "radjax.c6.score_pass_authority.v2",
-  "score_pass_authority_hash": "sha256:777ae7df5ea300898a8c36010270328684c044fb97d2ee955f974b05e8238fc3",
-  "source_artifact": "/tmp/b4-v6-fixture/producer_artifact"
+  "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+  "source_artifact": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact"
 }
