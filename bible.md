@@ -2449,3 +2449,14 @@ consumption digest while preserving distinct receipt evidence. Published v2
 and v3 profile handling remains historical and explicit; base native-v3
 identity, authority recipes, M7 transport behavior, and Golden data are
 unchanged.
+
+## 2026-08-01 — Phase 5 T1 Language/Tokenizer Binding Pin And Capture
+
+Tome pins published RADJAX-Contract `v0.7.0` at
+`cac3dd21e0d56df5a9e6fd50b20267e0b8960995` and carries its closed v5 assets
+as a checksum-verified offline mirror.  `language_tokenizer_binding.py`
+captures Contract-v5-compatible binding and canonical vocabulary evidence from
+the instantiated Smoke or explicit fast Hugging Face tokenizer used by the
+tokenization loop.  Incomplete vocabulary, normalization/configuration,
+added/special-token, or immutable-revision evidence fails closed; metadata is
+not promoted into a binding.  V4 remains untouched historical behavior.

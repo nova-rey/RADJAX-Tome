@@ -1,0 +1,39 @@
+{
+  "schema_version": "radjax_language_tokenizer_binding_v1",
+  "profile_id": "native_v3_student_v5",
+  "tokenizer": {
+    "family": "test_bpe",
+    "implementation_id": "radjax.test.tokenizer",
+    "revision": {"kind": "content_digest", "value": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+    "configuration_identity": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "normalization_identity": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "behavior_content_inventory": [
+    {
+      "resource_id": "tokenizer_vocabulary",
+      "role": "vocabulary",
+      "content_digest": "sha256:fff7da3cf4edce18d91cd4361cacc8f06e45938cd5c0381057bb8dca58e823cb",
+      "inventory_binding": "resources/vocabulary.jsonl",
+      "raw_sha256": "sha256:fff7da3cf4edce18d91cd4361cacc8f06e45938cd5c0381057bb8dca58e823cb",
+      "raw_size_bytes": 160
+    }
+  ],
+  "canonical_inventory_digest": "sha256:74d2aa48147a49b4496503709f1a2b550d07b8cc2e25e25244254c07ed2a5959",
+  "vocabulary": {
+    "resource_id": "tokenizer_vocabulary",
+    "vocabulary_map_digest": "sha256:fff7da3cf4edce18d91cd4361cacc8f06e45938cd5c0381057bb8dca58e823cb",
+    "vocabulary_identity": "sha256:fff7da3cf4edce18d91cd4361cacc8f06e45938cd5c0381057bb8dca58e823cb",
+    "vocabulary_size": 4,
+    "token_domain": {"start": 0, "end_exclusive": 4},
+    "added_tokens": [
+      {"token_id": 2, "token_utf8_b64": "PHM+"},
+      {"token_id": 3, "token_utf8_b64": "PC9zPg=="}
+    ],
+    "reserved_token_ids": [],
+    "special_tokens": [
+      {"name": "bos", "token_id": 2},
+      {"name": "eos", "token_id": 3}
+    ]
+  },
+  "canonical_binding_digest": "sha256:79b98e8a155fdccdd31b3be0ed7ceec4c6097f7342615a399b60ace7b19bb68b"
+}

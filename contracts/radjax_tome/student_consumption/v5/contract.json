@@ -1,0 +1,17 @@
+{
+  "contract_id": "radjax_tome_student_consumption_contract",
+  "publication_version": "5.0.0",
+  "profile_id": "native_v3_student_v5",
+  "binding_schema": "radjax_language_tokenizer_binding_v1",
+  "status": "normative",
+  "extension_policy": "closed_core_new_version_required",
+  "profile_negotiation": "explicit_exact_profile_id_no_fallback",
+  "supersedes_for_new_production": "native_v3_student_v4",
+  "semantic_scope": "generic_language_tokenizer_binding_only",
+  "nonclaims": [
+    "not_an_architecture_descriptor",
+    "not_a_plugin_descriptor",
+    "not_a_student_loader",
+    "not_a_training_policy"
+  ]
+}

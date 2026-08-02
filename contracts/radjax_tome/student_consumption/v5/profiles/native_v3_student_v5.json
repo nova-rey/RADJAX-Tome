@@ -1,0 +1,9 @@
+{
+  "schema_version": "radjax_tome_student_consumption_profile_v5",
+  "profile_id": "native_v3_student_v5",
+  "binding_schema": "radjax_language_tokenizer_binding_v1",
+  "binding_manifest_path": "manifests/language_tokenizer_binding_v1.json",
+  "profile_negotiation": "explicit_exact_profile_id_no_fallback",
+  "semantic_scope": "generic_language_tokenizer_binding_only",
+  "sequence_length_policy": "outside_language_tokenizer_binding"
+}

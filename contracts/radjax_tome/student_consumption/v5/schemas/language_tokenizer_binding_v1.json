@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://radjax.dev/contracts/radjax_tome/student_consumption/v5/schemas/language_tokenizer_binding_v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "profile_id", "tokenizer", "behavior_content_inventory", "canonical_inventory_digest", "vocabulary", "canonical_binding_digest"],
+  "properties": {
+    "schema_version": {"const": "radjax_language_tokenizer_binding_v1"},
+    "profile_id": {"const": "native_v3_student_v5"},
+    "tokenizer": {"$ref": "#/$defs/tokenizer"},
+    "behavior_content_inventory": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/inventory_resource"}},
+    "canonical_inventory_digest": {"$ref": "#/$defs/sha256"},
+    "vocabulary": {"$ref": "#/$defs/vocabulary"},
+    "canonical_binding_digest": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "tokenizer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["family", "implementation_id", "revision", "configuration_identity", "normalization_identity"],
+      "properties": {
+        "family": {"type": "string", "minLength": 1},
+        "implementation_id": {"type": "string", "minLength": 1},
+        "revision": {"type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": {"kind": {"enum": ["git_commit", "immutable_release", "content_digest"]}, "value": {"type": "string", "minLength": 1}}},
+        "configuration_identity": {"$ref": "#/$defs/sha256"},
+        "normalization_identity": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "inventory_resource": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resource_id", "role", "content_digest", "inventory_binding", "raw_sha256", "raw_size_bytes"],
+      "properties": {
+        "resource_id": {"type": "string", "pattern": "^[a-z][a-z0-9_/-]*$"},
+        "role": {"enum": ["vocabulary", "tokenizer_configuration", "normalization", "behavior_content"]},
+        "content_digest": {"$ref": "#/$defs/sha256"},
+        "inventory_binding": {"type": "string", "minLength": 1},
+        "raw_sha256": {"$ref": "#/$defs/sha256"},
+        "raw_size_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "vocabulary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resource_id", "vocabulary_map_digest", "vocabulary_identity", "vocabulary_size", "token_domain", "added_tokens", "reserved_token_ids", "special_tokens"],
+      "properties": {
+        "resource_id": {"type": "string", "pattern": "^[a-z][a-z0-9_/-]*$"},
+        "vocabulary_map_digest": {"$ref": "#/$defs/sha256"},
+        "vocabulary_identity": {"$ref": "#/$defs/sha256"},
+        "vocabulary_size": {"type": "integer", "minimum": 1},
+        "token_domain": {"type": "object", "additionalProperties": false, "required": ["start", "end_exclusive"], "properties": {"start": {"const": 0}, "end_exclusive": {"type": "integer", "minimum": 1}}},
+        "added_tokens": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["token_id", "token_utf8_b64"], "properties": {"token_id": {"type": "integer", "minimum": 0}, "token_utf8_b64": {"type": "string", "minLength": 1}}}},
+        "reserved_token_ids": {"type": "array", "items": {"type": "integer", "minimum": 0}, "uniqueItems": true},
+        "special_tokens": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["name", "token_id"], "properties": {"name": {"type": "string", "minLength": 1}, "token_id": {"type": "integer", "minimum": 0}}}}
+      }
+    }
+  }
+}

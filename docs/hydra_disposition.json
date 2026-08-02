@@ -2215,6 +2215,22 @@
       "replacement_or_target_boundary": "Cross-repository native-v3 Student-consumption v3 handoff.",
       "status": "canonical"
     },
+    "docs/C5_LANGUAGE_TOKENIZER_CONTRACT_PIN.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "Phase 5 T1",
+      "rationale": "Pins Contract v0.7.0 and states the fail-closed tokenizer binding capture boundary.",
+      "replacement_or_target_boundary": "Published v5 generic language/tokenizer binding authority.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/language_tokenizer_binding.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "Phase 5 T1",
+      "rationale": "Captures complete immutable tokenizer binding evidence from supported instantiated encoders.",
+      "replacement_or_target_boundary": "Contract v5 generic LanguageTokenizerBindingV1 producer seam.",
+      "status": "canonical"
+    },
     "src/radjax_tome/tome/student_consumption_v4.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",

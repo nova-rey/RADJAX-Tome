@@ -17,6 +17,10 @@ from radjax_tome.corpora.builder import (
     stringify_corpus_provenance,
     validate_corpus_artifact,
 )
+from radjax_tome.corpora.language_tokenizer_binding import (
+    CapturedLanguageTokenizerBinding,
+    capture_language_tokenizer_binding,
+)
 from radjax_tome.corpora.loaders import load_jsonl_corpus
 from radjax_tome.corpora.prompts import (
     PromptCorpus,
@@ -55,6 +59,7 @@ __all__ = [
     "CORPUS_MANIFEST_SCHEMA",
     "CorpusBuildConfig",
     "CorpusValidationReport",
+    "CapturedLanguageTokenizerBinding",
     "DEFAULT_EXCLUDE_GLOBS",
     "SmokeTokenizer",
     "PromptCorpus",
@@ -68,6 +73,7 @@ __all__ = [
     "available_tokenizer_backends",
     "build_corpus_artifact",
     "build_prompt_corpus_manifest",
+    "capture_language_tokenizer_binding",
     "compute_prompt_corpus_hash",
     "corpus_provenance_from_manifest",
     "create_tokenizer",

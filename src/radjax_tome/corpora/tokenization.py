@@ -7,6 +7,9 @@ from pathlib import Path
 
 import numpy as np
 
+from radjax_tome.corpora.language_tokenizer_binding import (
+    capture_language_tokenizer_binding,
+)
 from radjax_tome.corpora.loaders import load_jsonl_corpus
 from radjax_tome.corpora.tokenizer import Tokenizer
 from radjax_tome.provenance.hashes import stable_hash
@@ -57,6 +60,10 @@ def tokenize_jsonl_corpus(
                 "token_count": len(token_ids),
             }
         )
+    # The capture is intentionally taken from this instantiated object after
+    # the encode loop.  If its immutable vocabulary/configuration evidence is
+    # unavailable, no tokenized-corpus manifest is published.
+    binding = capture_language_tokenizer_binding(tokenizer)
     shard_path = root / "tokens-00000.jsonl"
     shard_path.write_text(
         "".join(json.dumps(row, sort_keys=True) + "\n" for row in token_rows),
@@ -76,4 +83,5 @@ def tokenize_jsonl_corpus(
         json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    binding.write_to(root)
     return manifest
