@@ -9,6 +9,7 @@ from pathlib import Path
 from radjax_contract.tome import (
     open_verified_student_jsonl_records_v6,
     open_verified_student_m7_payload_v6,
+    open_verified_student_resource,
     open_verified_student_resource_v6,
     validate_and_resolve_student_consumption,
 )
@@ -149,6 +150,12 @@ def _exercise(artifact: Path) -> dict[str, object]:
             ) as records:
                 list(records)
         else:
+            # Exercise the stable public dispatcher as well as the v6-specific
+            # byte opener. M7 intentionally has its dedicated stream protocol.
+            with open_verified_student_resource(
+                artifact, resource.resource_id, profile_id=PROFILE_ID, strict=True
+            ) as handle:
+                handle.read()
             with open_verified_student_resource_v6(
                 artifact, resource.resource_id, strict=True
             ) as handle:

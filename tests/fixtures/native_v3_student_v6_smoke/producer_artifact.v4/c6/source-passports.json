@@ -8,6 +8,6 @@
   "schema_version": "radjax.c6_source_passports.v1",
   "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
   "storage_kind": "jsonl_v1",
-  "target_store_metadata_sha256": "sha256:f51697bce100e5e0dacfe207724fecbaa689b4cf78fe07e86290d1c3163d9925",
+  "target_store_metadata_sha256": "sha256:add0e5918cbbec8672427eefd524ea3aa30319758d463a02775f0fd45f264a03",
   "unique_coordinate_count": 32
 }

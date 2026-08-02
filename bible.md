@@ -2701,3 +2701,11 @@ the fixture builder validates both directory and archive transports before
 recording evidence. Repeated ordinary production proves the recorded v6
 identity domains stable, while the verifier exercises every Contract opener.
 No Contract, Student, default profile, M8B, or B4-external change is made.
+
+## 2026-08-02 — B4 Public Router and Receipt Audit Repair
+
+The fixture now exercises the public generic v6 resource dispatcher for every
+non-M7 role and verifies every recorded descriptor identity and resource
+declaration against a fresh Contract resolution. M7 remains on its dedicated
+bounded stream opener. This is evidence-only and leaves Contract, Student,
+the default profile, M8B, and B4 scope unchanged.

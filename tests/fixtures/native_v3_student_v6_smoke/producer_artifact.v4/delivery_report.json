@@ -5,7 +5,7 @@
     "no_path_b_quality_parity_without_report": true,
     "no_student_training_quality_claim": true
   },
-  "completed_at": "2026-08-02T23:37:22+00:00",
+  "completed_at": "2026-08-02T23:40:33+00:00",
   "coordinate_compression_batch_count": 1,
   "coordinates_committed_before_each_retry": [],
   "corridor_artifact_built": true,
@@ -32,7 +32,7 @@
     "top32_mass",
     "tail_mass"
   ],
-  "created_at": "2026-08-02T23:37:22+00:00",
+  "created_at": "2026-08-02T23:40:33+00:00",
   "cuda_oom_failure_stage_counts": {},
   "cuda_oom_retry_batch_transitions": [],
   "cuda_oom_retry_count": 0,
@@ -104,7 +104,7 @@
   "selected_payload_source": "backend_dynamic_cascaded_soft_labels_v1",
   "selected_rerun_batch_count": 1,
   "selected_rerun_batch_size": 2,
-  "selected_rerun_compression_seconds": 0.0019965429964940995,
+  "selected_rerun_compression_seconds": 0.0020709939999505877,
   "selected_rerun_effective_batch_sizes": [
     2
   ],
@@ -113,12 +113,12 @@
     "corpus_000000003"
   ],
   "selected_rerun_examples": 1,
-  "selected_rerun_examples_per_second": 1303.6756142015065,
+  "selected_rerun_examples_per_second": 1305.2819558894914,
   "selected_rerun_io_seconds": 0.0,
   "selected_rerun_peak_device_memory_bytes": null,
-  "selected_rerun_peak_host_memory_bytes": 47095808,
+  "selected_rerun_peak_host_memory_bytes": 46649344,
   "selected_rerun_requested_batch_size": 2,
-  "selected_rerun_teacher_seconds": 0.0007670619816053659,
+  "selected_rerun_teacher_seconds": 0.0007661179988645017,
   "selected_row_gather_seconds": null,
   "selected_source_example_count": 1,
   "selection_enabled": true,

@@ -3,7 +3,7 @@
   "corpus_hash": "sha256:198feb31ebb81304a173661ac31ecc815eef656691571a7b9edf97bf8f5478f2",
   "corpus_jsonl_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus.jsonl",
   "corpus_manifest_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus_manifest.json",
-  "created_at": "2026-08-02T23:37:22.348171+00:00",
+  "created_at": "2026-08-02T23:40:33.253555+00:00",
   "excluded_sources": [],
   "manifest_hash": "sha256:98254633970101c0ffcb57d25730aff6e32443fdf37009cb5605e519e358828b",
   "manifest_hash_policy": "exclude_self_hash_and_created_at_v1",

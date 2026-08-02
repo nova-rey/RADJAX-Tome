@@ -91,8 +91,8 @@
         "components": [],
         "encoding": "m7_tome_archive",
         "locator": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
-        "raw_sha256": "sha256:68f887c1e4166303d403e1cb7b44351848397e9df1978c14d8b8049d2c74d865",
-        "raw_size_bytes": 34618,
+        "raw_sha256": "sha256:aab25a300db0d45371c5e8eb0a56c4795eec1f4c46c388c9ce3fdd994635cb80",
+        "raw_size_bytes": 34612,
         "resource_id": "selected_exemplar_payload/default",
         "role": "selected_exemplar_payload",
         "schema": "radjax_selected_exemplar_payload_v6",
@@ -163,7 +163,7 @@
       }
     ],
     "package_semantic_identity": "sha256:2c437fd9e36b47c06f7d3a6c842852e1af35f341835e5c8d49c25868415aad14",
-    "raw_sha256": "sha256:29e00b97a08f42bca39fc97fa6e529fa4a8b0cc091c83038f4185948f648db09",
+    "raw_sha256": "sha256:f7b7e89c1d83f9e5d4d180ef1e94bf3dcab159fcd80311d550f3164a60f75166",
     "raw_tree_digest": null,
     "required_joins": [
       "assignment_to_target_grid",
@@ -273,8 +273,8 @@
         "components": [],
         "encoding": "m7_tome_archive",
         "locator": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
-        "raw_sha256": "sha256:68f887c1e4166303d403e1cb7b44351848397e9df1978c14d8b8049d2c74d865",
-        "raw_size_bytes": 34618,
+        "raw_sha256": "sha256:aab25a300db0d45371c5e8eb0a56c4795eec1f4c46c388c9ce3fdd994635cb80",
+        "raw_size_bytes": 34612,
         "resource_id": "selected_exemplar_payload/default",
         "role": "selected_exemplar_payload",
         "schema": "radjax_selected_exemplar_payload_v6",
@@ -345,13 +345,13 @@
       }
     ],
     "package_semantic_identity": "sha256:2c437fd9e36b47c06f7d3a6c842852e1af35f341835e5c8d49c25868415aad14",
-    "raw_tree_digest": "sha256:02182f08b11a3f4aafc999f3da961e741b61e8fefc530a423e6062c51741d5ba",
+    "raw_tree_digest": "sha256:090423def1be436eed3b84c657ae616225e7155ae3002ca255e3cdda1978b063",
     "required_joins": [
       "assignment_to_target_grid",
       "selected_passport_to_target",
       "selected_exemplar_to_passport"
     ],
-    "tree_digest": "sha256:a68cebf726068344c1299d507d191d5a9b54ba066837135decee2f63b06f1af0"
+    "tree_digest": "sha256:502e7c0f02333727a148207358101fb544159466678f5bc94f4b23058de1ba41"
   },
   "environment": {
     "platform": "macOS-15.7.7-x86_64-i386-64bit-Mach-O",
@@ -362,8 +362,8 @@
   "native_m7_sibling": {
     "locator": "producer_artifact.v4.tgz",
     "packaged_locator": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
-    "sha256": "sha256:68f887c1e4166303d403e1cb7b44351848397e9df1978c14d8b8049d2c74d865",
-    "size_bytes": 34618
+    "sha256": "sha256:aab25a300db0d45371c5e8eb0a56c4795eec1f4c46c388c9ce3fdd994635cb80",
+    "size_bytes": 34612
   },
   "production_config": {
     "exemplar_delivery_path": "two_pass_rerun_selected",

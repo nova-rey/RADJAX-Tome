@@ -9,8 +9,8 @@
   "hashes": {
     "corridor_features_sha256": "sha256:0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
     "global_board_supply_sha256": "sha256:bcb4c00720087150d95c54de956fec63138caa3700222882e6d87c952367aa53",
-    "selector_sha256": "sha256:b76457ba75da5f6e996580199007d09506df37d7dfc493aa7213351e4e6c2c15",
-    "source_passports_manifest_sha256": "sha256:be20b920aa848a132de50d5143e65e692ff1f536753e2fad5afbbbd211681590"
+    "selector_sha256": "sha256:f3f49c4bba32e2eba1f41b234220c2ca8e2cdc9c4ee635de0c4ca26f5aeaa603",
+    "source_passports_manifest_sha256": "sha256:f979a1eee6dcdd13001e8df91911c115ceee77ffad1996d37c33f2695be45b57"
   },
   "paths": {
     "corridor_features": "c6/corridor-features/candidate_features.jsonl",
@@ -20,17 +20,17 @@
   },
   "production_grade": true,
   "raw_artifact_digests": {
-    "c6/production_global_selector.json": "sha256:b76457ba75da5f6e996580199007d09506df37d7dfc493aa7213351e4e6c2c15",
+    "c6/production_global_selector.json": "sha256:f3f49c4bba32e2eba1f41b234220c2ca8e2cdc9c4ee635de0c4ca26f5aeaa603",
     "corridors/corridor_modes.json": "sha256:79e80c036010552bf060cd3ecda77ec17948639670b0635a9011b9763b6aeaf8",
     "corridors/mode_assignments.json": "sha256:4ffb81ac0c9929b691309357e2a66b481eb4f418aa8eef1e4f626fe5de6228ae",
-    "metadata.json": "sha256:f51697bce100e5e0dacfe207724fecbaa689b4cf78fe07e86290d1c3163d9925"
+    "metadata.json": "sha256:add0e5918cbbec8672427eefd524ea3aa30319758d463a02775f0fd45f264a03"
   },
   "schema_version": "radjax.c6_selection_authority.v2",
   "score_pass_authority_contract_version": "radjax.c6.score_pass_authority.v2",
   "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
-  "score_pass_authority_hash_v1": "sha256:6716941f174789ea93f460ccec92054991e3895b0aff912988a46cc59d8cf457",
+  "score_pass_authority_hash_v1": "sha256:936d6f4445784b9c00e4ee618ba3056411359ebaa81fc4a9e066e7c9609779be",
   "score_pass_config_hash": "sha256:56ccb7fc2b710acc9b4d549c54f71748a7a40566d398b2aaa115148384c56932",
   "score_pass_resume_hash": "sha256:56ccb7fc2b710acc9b4d549c54f71748a7a40566d398b2aaa115148384c56932",
   "selection_integration_config_hash": "sha256:7bc02dccfadc170b11af686303477e8e23504c73ffe718e21d4e671ab5a1d629",
-  "target_store_metadata_sha256": "sha256:f51697bce100e5e0dacfe207724fecbaa689b4cf78fe07e86290d1c3163d9925"
+  "target_store_metadata_sha256": "sha256:add0e5918cbbec8672427eefd524ea3aa30319758d463a02775f0fd45f264a03"
 }

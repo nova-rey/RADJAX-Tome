@@ -34,6 +34,25 @@ def test_b4_committed_fixture_resolves_all_v6_authority_domains() -> None:
         FIXTURE / "student.tgz", profile_id=PROFILE_ID, strict=True
     )
     assert directory_result.ok and archive_result.ok
+    assert directory_result.descriptor is not None
+    assert archive_result.descriptor is not None
+    for name in (
+        "language_binding_digest",
+        "behavioral_source_identity",
+        "behavioral_authority_digest",
+        "package_semantic_identity",
+        "composition_digest",
+    ):
+        assert receipt["directory"][name] == getattr(directory_result.descriptor, name)
+        assert receipt["archive"][name] == getattr(archive_result.descriptor, name)
+    assert _receipt_resources(receipt["directory"]["authority_resources"]) == [
+        _descriptor_resource(item.to_dict())
+        for item in directory_result.descriptor.authority_resources
+    ]
+    assert _receipt_resources(receipt["directory"]["non_authority_resources"]) == [
+        _descriptor_resource(item.to_dict())
+        for item in directory_result.descriptor.non_authority_resources
+    ]
     assert (
         directory_result.descriptor.behavioral_authority_digest
         == archive_result.descriptor.behavioral_authority_digest
@@ -67,3 +86,18 @@ def test_b4_fresh_ordinary_production_is_repeatably_admitted(tmp_path: Path) -> 
         "composition_digest",
     ):
         assert first_receipt["directory"][key] == second_receipt["directory"][key]
+
+
+def _receipt_resources(rows: object) -> list[dict[str, object]]:
+    assert isinstance(rows, list)
+    return [
+        {key: value for key, value in row.items() if key != "authority"} for row in rows
+    ]
+
+
+def _descriptor_resource(row: dict[str, object]) -> dict[str, object]:
+    return {
+        key: value
+        for key, value in {**row, "components": list(row["components"])}.items()
+        if key != "authority"
+    }
