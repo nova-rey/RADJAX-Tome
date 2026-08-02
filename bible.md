@@ -2608,3 +2608,26 @@ report while continuing to fail closed if repeated runs at the same cap differ.
 It does not alter payloads, hashes, tolerance, batching, selection, authority,
 M7, Contract, or production behavior. The result excludes a batch-shape change
 from M8B consideration; M8A remains a measurement/evidence milestone only.
+
+## 2026-08-02 — M8A Representative T4 Baseline Evidence
+
+The accepted fresh T4 anchor completed its canonical production sequence,
+strict selected linkage, and Contract-validated v4 directory/archive
+publication, yielding 256 selected records and semantic identity
+`sha256:9d5796a7ff2d4db5000b9a128502cc68d0933f13be4786c4cefc1982a615dea7`.
+The content-addressed post-C5 checkpoint bound 43 required upstream files.
+Three 213-source/256-coordinate full cap-eight replays and the complete
+64-source cap 1/2/4/8 warm-up-plus-three matrix all proved zero score/selection
+writer invocation, unchanged checkpoint evidence, fixed requested batch eight,
+shared authority, no OOM/fallback, and exact phase reconciliation.
+
+Measured full selected-pass wall times were 365.188, 358.474, and 357.258
+seconds. Hash/JSON/atomic staging dominated at approximately 324 seconds per
+run (about 90 percent); payload conversion/linkage was about 23 seconds and
+teacher forward 2.3–5.4 seconds. The 64-source approximation found cap one
+faster but its exact payload hash sequence differed from the cap-eight
+reference, whereas caps two, four, and eight matched. This is an
+equivalence-rejection fact, so M8A selects no production batch-shape change
+and authorizes neither M8B nor M8C. Raw path-bearing evidence remains outside
+the repository; the committed measurement document records the reproducible,
+bounded conclusion. M8A stops for independent review.
