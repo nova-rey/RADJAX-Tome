@@ -1,0 +1,738 @@
+{
+  "backfill_attempt_count": 14,
+  "backfill_success_count": 0,
+  "boards": [
+    {
+      "assigned_winner_count": 1,
+      "backfill_count": 0,
+      "board_id": "global_max_entropy",
+      "candidate_count_seen": 4,
+      "capacity": 16,
+      "cutoff_score": 5.831199645996094,
+      "duplicate_suppression_count": 3,
+      "pool_capacity": 64,
+      "ranked_candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "score": 5.831199645996094,
+          "selected_position": 3
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "score": 5.830536842346191,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "score": 5.828897476196289,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "score": 5.8205485343933105,
+          "selected_position": 2
+        }
+      ],
+      "runner_up_count": 3,
+      "score_policy": "higher max_entropy wins",
+      "winner_count": 1,
+      "winners": [
+        {
+          "example_id": "corpus_000000003",
+          "score": 5.831199645996094,
+          "selected_position": 3
+        }
+      ]
+    },
+    {
+      "assigned_winner_count": 0,
+      "backfill_count": 0,
+      "board_id": "global_mean_entropy",
+      "candidate_count_seen": 4,
+      "capacity": 16,
+      "cutoff_score": null,
+      "duplicate_suppression_count": 4,
+      "pool_capacity": 64,
+      "ranked_candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "score": 5.815186500549316,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "score": 5.814723014831543,
+          "selected_position": 3
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "score": 5.812613487243652,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "score": 5.810352802276611,
+          "selected_position": 2
+        }
+      ],
+      "runner_up_count": 4,
+      "score_policy": "higher mean_entropy wins",
+      "winner_count": 0,
+      "winners": []
+    },
+    {
+      "assigned_winner_count": 0,
+      "backfill_count": 0,
+      "board_id": "length_bucket_entropy:0",
+      "candidate_count_seen": 4,
+      "capacity": 16,
+      "cutoff_score": null,
+      "duplicate_suppression_count": 4,
+      "pool_capacity": 64,
+      "ranked_candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "score": 5.831199645996094,
+          "selected_position": 3
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "score": 5.830536842346191,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "score": 5.828897476196289,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "score": 5.8205485343933105,
+          "selected_position": 2
+        }
+      ],
+      "runner_up_count": 4,
+      "score_policy": "higher selected_position_entropy wins within length bucket",
+      "winner_count": 0,
+      "winners": []
+    },
+    {
+      "assigned_winner_count": 0,
+      "backfill_count": 0,
+      "board_id": "low_confidence",
+      "candidate_count_seen": 4,
+      "capacity": 16,
+      "cutoff_score": null,
+      "duplicate_suppression_count": 4,
+      "pool_capacity": 64,
+      "ranked_candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "score": 0.9913368923589587,
+          "selected_position": 3
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "score": 0.9910103948786855,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "score": 0.9908788651227951,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "score": 0.9908539848402143,
+          "selected_position": 2
+        }
+      ],
+      "runner_up_count": 4,
+      "score_policy": "lower confidence wins as 1 - confidence",
+      "winner_count": 0,
+      "winners": []
+    },
+    {
+      "assigned_winner_count": 0,
+      "backfill_count": 0,
+      "board_id": "position_bucket_entropy:1",
+      "candidate_count_seen": 4,
+      "capacity": 16,
+      "cutoff_score": null,
+      "duplicate_suppression_count": 4,
+      "pool_capacity": 64,
+      "ranked_candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "score": 5.831199645996094,
+          "selected_position": 3
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "score": 5.830536842346191,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "score": 5.828897476196289,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "score": 5.8205485343933105,
+          "selected_position": 2
+        }
+      ],
+      "runner_up_count": 4,
+      "score_policy": "higher selected_position_entropy wins within position bucket",
+      "winner_count": 0,
+      "winners": []
+    },
+    {
+      "assigned_winner_count": 2,
+      "backfill_count": 0,
+      "board_id": "shard_coverage:0",
+      "candidate_count_seen": 2,
+      "capacity": 16,
+      "cutoff_score": 5.8205485343933105,
+      "duplicate_suppression_count": 0,
+      "pool_capacity": 64,
+      "ranked_candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "score": 5.830536842346191,
+          "selected_position": 2
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "score": 5.8205485343933105,
+          "selected_position": 2
+        }
+      ],
+      "runner_up_count": 0,
+      "score_policy": "higher selected_position_entropy wins within source shard",
+      "winner_count": 2,
+      "winners": [
+        {
+          "example_id": "corpus_000000001",
+          "score": 5.830536842346191,
+          "selected_position": 2
+        },
+        {
+          "example_id": "corpus_000000002",
+          "score": 5.8205485343933105,
+          "selected_position": 2
+        }
+      ]
+    },
+    {
+      "assigned_winner_count": 1,
+      "backfill_count": 0,
+      "board_id": "shard_coverage:1",
+      "candidate_count_seen": 2,
+      "capacity": 16,
+      "cutoff_score": 5.828897476196289,
+      "duplicate_suppression_count": 1,
+      "pool_capacity": 64,
+      "ranked_candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "score": 5.831199645996094,
+          "selected_position": 3
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "score": 5.828897476196289,
+          "selected_position": 2
+        }
+      ],
+      "runner_up_count": 1,
+      "score_policy": "higher selected_position_entropy wins within source shard",
+      "winner_count": 1,
+      "winners": [
+        {
+          "example_id": "corpus_000000004",
+          "score": 5.828897476196289,
+          "selected_position": 2
+        }
+      ]
+    }
+  ],
+  "boards_with_backfill": [],
+  "budget_applied": false,
+  "budget_requested_examples": null,
+  "budget_requested_fraction": null,
+  "budget_trimmed_example_count": 0,
+  "budget_trimmed_position_count": 0,
+  "budget_trimming_policy": "score_aware_assigned_board_rank_v1",
+  "capture_mode": "two_pass_sparse_exemplar",
+  "created_at": "2026-08-02T00:35:34+00:00",
+  "deduplication_policy": "rank_aware_board_assignment_with_backfill_v1",
+  "duplicate_candidate_count": 4,
+  "fulfillment_policy": "rerun_selected_capture",
+  "num_board_winners": 4,
+  "num_boards": 7,
+  "num_candidates_seen": 4,
+  "num_unique_examples_selected": 4,
+  "num_unique_positions_selected": 4,
+  "production_global_selector": true,
+  "retention_policy": "rerun_requisition_only",
+  "runner_up_pool_multiplier": 4,
+  "schema_version": "exemplar_selection_manifest_v1",
+  "score_aware_budget_trimming": true,
+  "selected_examples": [
+    {
+      "example_id": "corpus_000000003",
+      "payload_ref": {
+        "kind": "corridor_exemplar_score_pass_v1",
+        "source_position": 3,
+        "source_row": 0,
+        "source_score": 5.831199645996094,
+        "source_shard_id": 1,
+        "source_top_token_id": 0
+      },
+      "rerun_for_pass_2": true,
+      "retain_from_existing_capture": false,
+      "scores_by_board": {
+        "global_max_entropy": 5.831199645996094,
+        "global_mean_entropy": 5.814723014831543,
+        "length_bucket_entropy:0": 5.831199645996094,
+        "low_confidence": 0.9913368923589587,
+        "position_bucket_entropy:1": 5.831199645996094,
+        "shard_coverage:1": 5.831199645996094
+      },
+      "selected_position_records": [
+        {
+          "assigned_board": "global_max_entropy",
+          "diagnostic_effective_top_k": 32.0,
+          "diagnostic_top_mass": 0.23057186603546143,
+          "payload_ref": {
+            "kind": "corridor_exemplar_score_pass_v1",
+            "source_position": 3,
+            "source_row": 0,
+            "source_score": 5.831199645996094,
+            "source_shard_id": 1,
+            "source_top_token_id": 0
+          },
+          "rank_by_board": {
+            "global_max_entropy": 1,
+            "global_mean_entropy": 2,
+            "length_bucket_entropy:0": 1,
+            "low_confidence": 1,
+            "position_bucket_entropy:1": 1,
+            "shard_coverage:1": 1
+          },
+          "score_selected_position_entropy": 5.831199645996094,
+          "score_top_token_id": 0,
+          "scores_by_board": {
+            "global_max_entropy": 5.831199645996094,
+            "global_mean_entropy": 5.814723014831543,
+            "length_bucket_entropy:0": 5.831199645996094,
+            "low_confidence": 0.9913368923589587,
+            "position_bucket_entropy:1": 5.831199645996094,
+            "shard_coverage:1": 5.831199645996094
+          },
+          "selected_position": 3,
+          "selected_score": 5.831199645996094,
+          "selection_reasons": [
+            "higher max_entropy wins",
+            "lower confidence wins as 1 - confidence",
+            "higher mean_entropy wins",
+            "higher selected_position_entropy wins within position bucket",
+            "higher selected_position_entropy wins within length bucket",
+            "higher selected_position_entropy wins within source shard"
+          ],
+          "source_position": 3,
+          "source_row": 0,
+          "source_score": 5.831199645996094,
+          "source_score_policy": "entropy_top_n_v1",
+          "source_shard_id": 1,
+          "source_top_token_id": 0,
+          "suppressed_duplicate_boards": [
+            "low_confidence",
+            "global_mean_entropy",
+            "position_bucket_entropy:1",
+            "length_bucket_entropy:0",
+            "shard_coverage:1"
+          ],
+          "winning_boards": [
+            "global_max_entropy",
+            "low_confidence",
+            "global_mean_entropy",
+            "position_bucket_entropy:1",
+            "length_bucket_entropy:0",
+            "shard_coverage:1"
+          ]
+        }
+      ],
+      "selected_positions": [
+        3
+      ],
+      "selection_reasons": [
+        "higher max_entropy wins",
+        "higher mean_entropy wins",
+        "higher selected_position_entropy wins within length bucket",
+        "higher selected_position_entropy wins within position bucket",
+        "higher selected_position_entropy wins within source shard",
+        "lower confidence wins as 1 - confidence"
+      ],
+      "source_row": 0,
+      "source_shard_id": 1,
+      "winning_boards": [
+        "global_max_entropy",
+        "global_mean_entropy",
+        "length_bucket_entropy:0",
+        "low_confidence",
+        "position_bucket_entropy:1",
+        "shard_coverage:1"
+      ]
+    },
+    {
+      "example_id": "corpus_000000001",
+      "payload_ref": {
+        "kind": "corridor_exemplar_score_pass_v1",
+        "source_position": 2,
+        "source_row": 0,
+        "source_score": 5.830536842346191,
+        "source_shard_id": 0,
+        "source_top_token_id": 402
+      },
+      "rerun_for_pass_2": true,
+      "retain_from_existing_capture": false,
+      "scores_by_board": {
+        "global_max_entropy": 5.830536842346191,
+        "global_mean_entropy": 5.815186500549316,
+        "length_bucket_entropy:0": 5.830536842346191,
+        "low_confidence": 0.9910103948786855,
+        "position_bucket_entropy:1": 5.830536842346191,
+        "shard_coverage:0": 5.830536842346191
+      },
+      "selected_position_records": [
+        {
+          "assigned_board": "shard_coverage:0",
+          "diagnostic_effective_top_k": 32.0,
+          "diagnostic_top_mass": 0.23177623748779297,
+          "payload_ref": {
+            "kind": "corridor_exemplar_score_pass_v1",
+            "source_position": 2,
+            "source_row": 0,
+            "source_score": 5.830536842346191,
+            "source_shard_id": 0,
+            "source_top_token_id": 402
+          },
+          "rank_by_board": {
+            "global_max_entropy": 2,
+            "global_mean_entropy": 1,
+            "length_bucket_entropy:0": 2,
+            "low_confidence": 2,
+            "position_bucket_entropy:1": 2,
+            "shard_coverage:0": 1
+          },
+          "score_selected_position_entropy": 5.830536842346191,
+          "score_top_token_id": 402,
+          "scores_by_board": {
+            "global_max_entropy": 5.830536842346191,
+            "global_mean_entropy": 5.815186500549316,
+            "length_bucket_entropy:0": 5.830536842346191,
+            "low_confidence": 0.9910103948786855,
+            "position_bucket_entropy:1": 5.830536842346191,
+            "shard_coverage:0": 5.830536842346191
+          },
+          "selected_position": 2,
+          "selected_score": 5.830536842346191,
+          "selection_reasons": [
+            "higher max_entropy wins",
+            "lower confidence wins as 1 - confidence",
+            "higher mean_entropy wins",
+            "higher selected_position_entropy wins within position bucket",
+            "higher selected_position_entropy wins within length bucket",
+            "higher selected_position_entropy wins within source shard"
+          ],
+          "source_position": 2,
+          "source_row": 0,
+          "source_score": 5.830536842346191,
+          "source_score_policy": "entropy_top_n_v1",
+          "source_shard_id": 0,
+          "source_top_token_id": 402,
+          "suppressed_duplicate_boards": [
+            "global_max_entropy",
+            "low_confidence",
+            "global_mean_entropy",
+            "position_bucket_entropy:1",
+            "length_bucket_entropy:0"
+          ],
+          "winning_boards": [
+            "global_max_entropy",
+            "low_confidence",
+            "global_mean_entropy",
+            "position_bucket_entropy:1",
+            "length_bucket_entropy:0",
+            "shard_coverage:0"
+          ]
+        }
+      ],
+      "selected_positions": [
+        2
+      ],
+      "selection_reasons": [
+        "higher max_entropy wins",
+        "higher mean_entropy wins",
+        "higher selected_position_entropy wins within length bucket",
+        "higher selected_position_entropy wins within position bucket",
+        "higher selected_position_entropy wins within source shard",
+        "lower confidence wins as 1 - confidence"
+      ],
+      "source_row": 0,
+      "source_shard_id": 0,
+      "winning_boards": [
+        "global_max_entropy",
+        "global_mean_entropy",
+        "length_bucket_entropy:0",
+        "low_confidence",
+        "position_bucket_entropy:1",
+        "shard_coverage:0"
+      ]
+    },
+    {
+      "example_id": "corpus_000000004",
+      "payload_ref": {
+        "kind": "corridor_exemplar_score_pass_v1",
+        "source_position": 2,
+        "source_row": 1,
+        "source_score": 5.828897476196289,
+        "source_shard_id": 1,
+        "source_top_token_id": 0
+      },
+      "rerun_for_pass_2": true,
+      "retain_from_existing_capture": false,
+      "scores_by_board": {
+        "global_max_entropy": 5.828897476196289,
+        "global_mean_entropy": 5.812613487243652,
+        "length_bucket_entropy:0": 5.828897476196289,
+        "low_confidence": 0.9908788651227951,
+        "position_bucket_entropy:1": 5.828897476196289,
+        "shard_coverage:1": 5.828897476196289
+      },
+      "selected_position_records": [
+        {
+          "assigned_board": "shard_coverage:1",
+          "diagnostic_effective_top_k": 32.0,
+          "diagnostic_top_mass": 0.23212864995002747,
+          "payload_ref": {
+            "kind": "corridor_exemplar_score_pass_v1",
+            "source_position": 2,
+            "source_row": 1,
+            "source_score": 5.828897476196289,
+            "source_shard_id": 1,
+            "source_top_token_id": 0
+          },
+          "rank_by_board": {
+            "global_max_entropy": 3,
+            "global_mean_entropy": 3,
+            "length_bucket_entropy:0": 3,
+            "low_confidence": 3,
+            "position_bucket_entropy:1": 3,
+            "shard_coverage:1": 2
+          },
+          "score_selected_position_entropy": 5.828897476196289,
+          "score_top_token_id": 0,
+          "scores_by_board": {
+            "global_max_entropy": 5.828897476196289,
+            "global_mean_entropy": 5.812613487243652,
+            "length_bucket_entropy:0": 5.828897476196289,
+            "low_confidence": 0.9908788651227951,
+            "position_bucket_entropy:1": 5.828897476196289,
+            "shard_coverage:1": 5.828897476196289
+          },
+          "selected_position": 2,
+          "selected_score": 5.828897476196289,
+          "selection_reasons": [
+            "higher max_entropy wins",
+            "lower confidence wins as 1 - confidence",
+            "higher mean_entropy wins",
+            "higher selected_position_entropy wins within position bucket",
+            "higher selected_position_entropy wins within length bucket",
+            "higher selected_position_entropy wins within source shard"
+          ],
+          "source_position": 2,
+          "source_row": 1,
+          "source_score": 5.828897476196289,
+          "source_score_policy": "entropy_top_n_v1",
+          "source_shard_id": 1,
+          "source_top_token_id": 0,
+          "suppressed_duplicate_boards": [
+            "global_max_entropy",
+            "low_confidence",
+            "global_mean_entropy",
+            "position_bucket_entropy:1",
+            "length_bucket_entropy:0"
+          ],
+          "winning_boards": [
+            "global_max_entropy",
+            "low_confidence",
+            "global_mean_entropy",
+            "position_bucket_entropy:1",
+            "length_bucket_entropy:0",
+            "shard_coverage:1"
+          ]
+        }
+      ],
+      "selected_positions": [
+        2
+      ],
+      "selection_reasons": [
+        "higher max_entropy wins",
+        "higher mean_entropy wins",
+        "higher selected_position_entropy wins within length bucket",
+        "higher selected_position_entropy wins within position bucket",
+        "higher selected_position_entropy wins within source shard",
+        "lower confidence wins as 1 - confidence"
+      ],
+      "source_row": 1,
+      "source_shard_id": 1,
+      "winning_boards": [
+        "global_max_entropy",
+        "global_mean_entropy",
+        "length_bucket_entropy:0",
+        "low_confidence",
+        "position_bucket_entropy:1",
+        "shard_coverage:1"
+      ]
+    },
+    {
+      "example_id": "corpus_000000002",
+      "payload_ref": {
+        "kind": "corridor_exemplar_score_pass_v1",
+        "source_position": 2,
+        "source_row": 1,
+        "source_score": 5.8205485343933105,
+        "source_shard_id": 0,
+        "source_top_token_id": 400
+      },
+      "rerun_for_pass_2": true,
+      "retain_from_existing_capture": false,
+      "scores_by_board": {
+        "global_max_entropy": 5.8205485343933105,
+        "global_mean_entropy": 5.810352802276611,
+        "length_bucket_entropy:0": 5.8205485343933105,
+        "low_confidence": 0.9908539848402143,
+        "position_bucket_entropy:1": 5.8205485343933105,
+        "shard_coverage:0": 5.8205485343933105
+      },
+      "selected_position_records": [
+        {
+          "assigned_board": "shard_coverage:0",
+          "diagnostic_effective_top_k": 32.0,
+          "diagnostic_top_mass": 0.24350683391094208,
+          "payload_ref": {
+            "kind": "corridor_exemplar_score_pass_v1",
+            "source_position": 2,
+            "source_row": 1,
+            "source_score": 5.8205485343933105,
+            "source_shard_id": 0,
+            "source_top_token_id": 400
+          },
+          "rank_by_board": {
+            "global_max_entropy": 4,
+            "global_mean_entropy": 4,
+            "length_bucket_entropy:0": 4,
+            "low_confidence": 4,
+            "position_bucket_entropy:1": 4,
+            "shard_coverage:0": 2
+          },
+          "score_selected_position_entropy": 5.8205485343933105,
+          "score_top_token_id": 400,
+          "scores_by_board": {
+            "global_max_entropy": 5.8205485343933105,
+            "global_mean_entropy": 5.810352802276611,
+            "length_bucket_entropy:0": 5.8205485343933105,
+            "low_confidence": 0.9908539848402143,
+            "position_bucket_entropy:1": 5.8205485343933105,
+            "shard_coverage:0": 5.8205485343933105
+          },
+          "selected_position": 2,
+          "selected_score": 5.8205485343933105,
+          "selection_reasons": [
+            "higher max_entropy wins",
+            "lower confidence wins as 1 - confidence",
+            "higher mean_entropy wins",
+            "higher selected_position_entropy wins within position bucket",
+            "higher selected_position_entropy wins within length bucket",
+            "higher selected_position_entropy wins within source shard"
+          ],
+          "source_position": 2,
+          "source_row": 1,
+          "source_score": 5.8205485343933105,
+          "source_score_policy": "entropy_top_n_v1",
+          "source_shard_id": 0,
+          "source_top_token_id": 400,
+          "suppressed_duplicate_boards": [
+            "global_max_entropy",
+            "low_confidence",
+            "global_mean_entropy",
+            "position_bucket_entropy:1",
+            "length_bucket_entropy:0"
+          ],
+          "winning_boards": [
+            "global_max_entropy",
+            "low_confidence",
+            "global_mean_entropy",
+            "position_bucket_entropy:1",
+            "length_bucket_entropy:0",
+            "shard_coverage:0"
+          ]
+        }
+      ],
+      "selected_positions": [
+        2
+      ],
+      "selection_reasons": [
+        "higher max_entropy wins",
+        "higher mean_entropy wins",
+        "higher selected_position_entropy wins within length bucket",
+        "higher selected_position_entropy wins within position bucket",
+        "higher selected_position_entropy wins within source shard",
+        "lower confidence wins as 1 - confidence"
+      ],
+      "source_row": 1,
+      "source_shard_id": 0,
+      "winning_boards": [
+        "global_max_entropy",
+        "global_mean_entropy",
+        "length_bucket_entropy:0",
+        "low_confidence",
+        "position_bucket_entropy:1",
+        "shard_coverage:0"
+      ]
+    }
+  ],
+  "selection_application": "rerun_selected_examples",
+  "selection_policy": "multi_leaderboard_exemplar_selector_v1",
+  "semantic_diversity_used": false,
+  "total_board_capacity": 112,
+  "utility_calibrated": false
+}

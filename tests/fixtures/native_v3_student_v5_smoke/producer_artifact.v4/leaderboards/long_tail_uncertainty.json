@@ -1,0 +1,21 @@
+{
+  "delivery_path": "two_pass_rerun_selected",
+  "schema_version": "selected_exemplar_side_board_v1",
+  "selected_board": "long_tail_uncertainty",
+  "selected_board_summary": {
+    "long_tail_class_counts": {
+      "normal": 2
+    },
+    "long_tail_uncertainty_count": 0,
+    "perverse_tail_diagnostic_count": 0,
+    "primary_count": 2,
+    "semantic_tail_class_counts": {
+      "unknown_open_class_tail": 2
+    },
+    "source_score_board_counts": {
+      "unassigned": 2
+    },
+    "total_selected_count": 2
+  },
+  "selected_exemplars": []
+}

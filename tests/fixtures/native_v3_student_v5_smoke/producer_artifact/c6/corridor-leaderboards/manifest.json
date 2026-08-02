@@ -1,0 +1,63 @@
+{
+  "feature_provenance": {
+    "compatibility_proxy_used": false,
+    "core_distance_derivation": "one_minus_membership_strength_v1",
+    "difficulty_derivation": "entropy_over_log_vocab_v1",
+    "fidelity": "derived",
+    "membership_derivation": "mode_entropy_center_distance_v1",
+    "normalization_parameters": {
+      "assignment_manifest_sha256": "sha256:4ffb81ac0c9929b691309357e2a66b481eb4f418aa8eef1e4f626fe5de6228ae",
+      "difficulty": "clamp(entropy/log(vocab_size),0,1)",
+      "membership": "abs(entropy-mode_mean)/max(mode_half_width,1e-6)",
+      "modes_sha256": "sha256:79e80c036010552bf060cd3ecda77ec17948639670b0635a9011b9763b6aeaf8"
+    },
+    "schema_version": "radjax.c2_corridor_feature_provenance.v1",
+    "source_artifact_hash": "0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+    "source_artifact_id": "tests/fixtures/native_v3_student_v5_smoke/producer_artifact/c6/corridor-features/candidate_features.jsonl",
+    "source_artifact_schema": "radjax.corridor_artifact.v3"
+  },
+  "files": {
+    "mode_leaderboards.jsonl": {
+      "sha256": "931b7a68d86f4a58834e2d568850276d063d391ccf77fbc908a3e1738c73920d",
+      "size_bytes": 1997
+    }
+  },
+  "policy": {
+    "allow_compatibility_proxies": false,
+    "archetype_policy": {
+      "centrality_weight": 0.4,
+      "difficulty_weight": 0.15,
+      "maximum_core_distance": 0.5,
+      "membership_weight": 0.45,
+      "minimum_membership_strength": 0.5,
+      "minimum_mode_support": 1,
+      "policy_id": "corridor_archetype_v1",
+      "quality_weight": 0.0,
+      "schema_version": "radjax.c1_corridor_archetype_policy.v1"
+    },
+    "candidate_pool_cap": 4,
+    "compatibility_proxy_override_enabled": false,
+    "policy_id": "corridor_candidate_micro_leaderboard_v1",
+    "proxy_override_reason": null,
+    "schema_version": "radjax.c2_corridor_candidate_leaderboards.v1"
+  },
+  "schema_version": "radjax.c2_corridor_candidate_leaderboards.v1",
+  "summary": {
+    "candidate_pool_cap": 4,
+    "candidates_eligible": 27,
+    "candidates_rejected": 5,
+    "candidates_seen": 32,
+    "compatibility_proxy_used": false,
+    "duplicates_collapsed": 0,
+    "modes_observed": 1,
+    "modes_with_eligible_candidates": 1,
+    "modes_with_empty_pools": 0,
+    "production_grade": true,
+    "rejection_counts_by_reason": {
+      "membership_below_minimum": 5,
+      "outside_corridor_core": 5
+    },
+    "retained_candidate_count": 4
+  },
+  "warnings": []
+}

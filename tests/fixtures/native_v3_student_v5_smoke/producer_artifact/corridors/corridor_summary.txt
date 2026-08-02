@@ -1,0 +1,13 @@
+This Tome artifact contains:
+  - 4 scored examples
+  - 32 scored token positions
+  - 32 corridor positions used for fingerprinting
+  - 1 discovered corridor modes
+  - corridor mode policy: stat_bands_v0
+  - corridor assignment storage: packed_numpy_v1
+  - 15 corridor fingerprints
+  - 2 selected exemplars
+  - selected exemplar payloads retained: yes
+  - non-selected exemplar payloads retained: no
+  - corridor observation basis: full_token_position_corridor
+  - delivery path: two_pass_rerun_selected

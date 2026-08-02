@@ -1,0 +1,54 @@
+{
+  "long_tail_summary": {
+    "count": 2,
+    "full_vocab_or_near_full_vocab_count": 0,
+    "long_tail_count": 0,
+    "max_effective_top_k": 32,
+    "max_effective_top_k_fraction_of_vocab": 0.0625,
+    "mean_effective_top_k": 32.0,
+    "normal_count": 2,
+    "saturated_count": 2,
+    "suspicious_flat_count": 0,
+    "very_long_tail_count": 0
+  },
+  "payload_shards": [
+    {
+      "effective_top_k_max": 32,
+      "effective_top_k_min": 32,
+      "path": "selected_exemplars/selected-exemplars-00000.json",
+      "record_count": 1,
+      "sha256": "sha256:845d45fef7591c473a962ecd697e43cad5bef7e6ca420759306763f5bd4a213d",
+      "size_bytes": 6218,
+      "top_mass_max": 0.24616041779518127,
+      "top_mass_min": 0.24616041779518127
+    },
+    {
+      "effective_top_k_max": 32,
+      "effective_top_k_min": 32,
+      "path": "selected_exemplars/selected-exemplars-00001.json",
+      "record_count": 1,
+      "sha256": "sha256:0bef81a7f66f68e183573728b21fed7c50f60d13bbfef2de690aae4e12c65e06",
+      "size_bytes": 6314,
+      "top_mass_max": 0.23057186603546143,
+      "top_mass_min": 0.23057186603546143
+    }
+  ],
+  "schema_version": "selected_payload_manifest_v1",
+  "selected_board_summary": {
+    "long_tail_class_counts": {
+      "normal": 2
+    },
+    "long_tail_uncertainty_count": 0,
+    "perverse_tail_diagnostic_count": 0,
+    "primary_count": 2,
+    "semantic_tail_class_counts": {
+      "unknown_open_class_tail": 2
+    },
+    "source_score_board_counts": {
+      "unassigned": 2
+    },
+    "total_selected_count": 2
+  },
+  "selected_count": 2,
+  "shard_count": 2
+}

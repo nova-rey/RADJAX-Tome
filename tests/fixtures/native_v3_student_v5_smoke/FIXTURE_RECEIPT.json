@@ -1,0 +1,58 @@
+{
+  "binding_sha256": "sha256:24940247e1abe4a465749325baf6633b94feb36970112dff35e429b5b9367452",
+  "claims_not_made": [
+    "no_model_quality_claim",
+    "no_network_verification_claim",
+    "no_student_training_claim",
+    "no_accelerator_execution_claim"
+  ],
+  "contract": {
+    "commit": "cac3dd21e0d56df5a9e6fd50b20267e0b8960995",
+    "version": "v0.7.0"
+  },
+  "deterministic_producer": {
+    "command": "python3 scripts/build_v5_language_tokenizer_fixture.py --output tests/fixtures/native_v3_student_v5_smoke",
+    "entry_point": "radjax_tome.tome.v5_fixture.build_v5_language_tokenizer_fixture",
+    "production_config": {
+      "exemplar_delivery_path": "two_pass_rerun_selected",
+      "exemplar_selection_enabled": true,
+      "gpu_batch_size_mode": "preset",
+      "gpu_batch_size_preset": 2,
+      "max_examples": 4,
+      "num_buckets": 3,
+      "retain_unselected_exemplar_payloads": false,
+      "runtime_mode": "cpu",
+      "selected_exemplar_budget": 2,
+      "selection_integration_policy": "corridor_first_global_backfill_v1",
+      "sequence_length": 8,
+      "shard_size_examples": 2,
+      "target_policy": "corridor_exemplar_v1",
+      "teacher_backend": "smoke_tokenizer",
+      "top_k": 4,
+      "total_selected_exemplar_budget": 2,
+      "vocab_size": 512
+    },
+    "source_texts": [
+      "alpha",
+      "beta",
+      "gamma",
+      "delta"
+    ]
+  },
+  "fixture_id": "native_v3_student_v5_smoke_v1",
+  "fixture_raw_digest": "sha256:3512f96e6201fb560ee626a7ba0eb496d91abf315ef0968994a45d2945c1a93b",
+  "fixture_semantic_digest": "sha256:ab3c571f9b69e389efd2b84345b5332dcca763eb1a814b43a9781503ddecc903",
+  "fixture_tree_digest": "sha256:c07e21a5e474d617c195bcd5f9ec343f1424a8b5c2538506e42f19d05913d11e",
+  "generic_binding_digest": "sha256:9419614278eebaddd4d016b884afe21f4ab83e749ec04be3bb597d212f1d02cf",
+  "profile_id": "native_v3_student_v5",
+  "schema_version": "radjax_tome_v5_fixture_v1",
+  "tome_commit_at_production": "3861c23",
+  "validator": {
+    "arguments": {
+      "profile_id": "native_v3_student_v5",
+      "strict": true
+    },
+    "entry_point": "radjax_contract.tome.validate_and_resolve_student_consumption"
+  },
+  "vocabulary_sha256": "sha256:3f039ddf7734eb0fec15f3af7087e7c615b152288ba5b92f635471acad1dfb61"
+}

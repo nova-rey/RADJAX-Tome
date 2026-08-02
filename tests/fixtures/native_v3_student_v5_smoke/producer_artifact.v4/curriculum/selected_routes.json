@@ -1,0 +1,26 @@
+{
+  "route_count": 2,
+  "route_policy": "selected_board_consumption_v1",
+  "routes": [
+    {
+      "curriculum_board": "primary",
+      "payload_key": "coordinate_v1:acfbc12df4be3db47e10bb527481f953995f1d177f7946b525d54e80d1856d23",
+      "selected_example_id": "corpus_000000003",
+      "selected_position": 0,
+      "selection_roles": [
+        "fingerprint_corridor_representative"
+      ]
+    },
+    {
+      "curriculum_board": "primary",
+      "payload_key": "coordinate_v1:68626a267b7d9934662e212ff52f89bdfe0a5b6847dc4ffd2997531d6886bccb",
+      "selected_example_id": "corpus_000000003",
+      "selected_position": 3,
+      "selection_roles": [
+        "global_board"
+      ]
+    }
+  ],
+  "schema_version": "selected_exemplar_curriculum_routes_v1",
+  "unique_coordinate_count": 2
+}

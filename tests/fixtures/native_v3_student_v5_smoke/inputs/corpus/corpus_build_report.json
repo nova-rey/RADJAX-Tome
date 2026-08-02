@@ -1,0 +1,22 @@
+{
+  "blockers": [],
+  "corpus_hash": "sha256:4d52012980d9383d3ad76bbd1244bce7fb3d11e5f1a049339e4e49671d2f638e",
+  "corpus_jsonl_path": "tests/fixtures/native_v3_student_v5_smoke/inputs/corpus/corpus.jsonl",
+  "corpus_manifest_path": "tests/fixtures/native_v3_student_v5_smoke/inputs/corpus/corpus_manifest.json",
+  "created_at": "2026-08-02T00:35:34.477344+00:00",
+  "excluded_sources": [],
+  "manifest_hash": "sha256:b3ca2f8aa9d3aeccdab76a46602aef4c0965953770d5eb575ce4406996f003de",
+  "manifest_hash_policy": "exclude_self_hash_and_created_at_v1",
+  "num_chars": 19,
+  "num_duplicates_removed": 0,
+  "num_empty_removed": 0,
+  "num_examples": 4,
+  "num_sources_excluded": 0,
+  "num_sources_included": 4,
+  "num_sources_seen": 4,
+  "num_unsupported_removed": 0,
+  "output_dir": "tests/fixtures/native_v3_student_v5_smoke/inputs/corpus",
+  "schema_version": "corpus_build_report_v1",
+  "status": "pass",
+  "warnings": []
+}

@@ -1,0 +1,29 @@
+{
+  "blockers": [],
+  "file_hashes": {
+    "legacy_selected_exemplars.json": "d37ff843fdb5930226a5aa45c2741c24dfb7ceebca38059fdd9f09dc0d86a818",
+    "selected_exemplars.jsonl": "a4823d5c0d1fd9a3842bb045579d9b07491e9d9bbccdfbe5695af29c6ea97f04"
+  },
+  "schema_version": "radjax.multi_role_selected_exemplar_validation.v1",
+  "status": "pass",
+  "summary": {
+    "corridor_role_count": 1,
+    "counts_by_corridor_mode": {
+      "0": 1
+    },
+    "counts_by_global_board": {
+      "global_max_entropy": 1
+    },
+    "global_role_count": 1,
+    "legacy_projection_count": 2,
+    "multi_role_coordinate_count": 0,
+    "obligation_count": 2,
+    "payload_status_counts": {
+      "not_materialized_in_c5": 2
+    },
+    "primary_corridor_count": 1,
+    "primary_global_count": 1,
+    "unique_selected_count": 2
+  },
+  "warnings": []
+}

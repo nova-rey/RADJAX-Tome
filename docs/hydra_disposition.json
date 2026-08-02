@@ -2254,6 +2254,46 @@
       "rationale": "Copies Contract-admitted tokenizer capture resources and proves source token-domain agreement for v5 packages.",
       "replacement_or_target_boundary": "Generic v5 language/tokenizer binding materialization seam.",
       "status": "canonical"
+    },
+    "src/radjax_tome/tome/v5_fixture.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "Phase 5 T3",
+      "rationale": "Builds the deterministic ordinary smoke-tokenizer v5 fixture and binds its physical and semantic evidence.",
+      "replacement_or_target_boundary": "T3 native_v3_student_v5 reproducibility receipt.",
+      "status": "canonical"
+    },
+    "scripts/build_v5_language_tokenizer_fixture.py": {
+      "archive_or_removal_condition": null,
+      "kind": "script",
+      "owning_milestone": "Phase 5 T3",
+      "rationale": "Explicit reproducible command for the ordinary v5 smoke-tokenizer fixture producer.",
+      "replacement_or_target_boundary": "T3 native_v3_student_v5 reproducibility receipt.",
+      "status": "canonical"
+    },
+    "tests/test_t3_v5_fixture_receipt.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "Phase 5 T3",
+      "rationale": "Proves the committed v5 receipt, Contract/Tome admission, and repeated binding/vocabulary semantic stability.",
+      "replacement_or_target_boundary": "T3 native_v3_student_v5 acceptance evidence.",
+      "status": "canonical"
+    },
+    "tests/fixtures/native_v3_student_v5_smoke/FIXTURE_RECEIPT.json": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "Phase 5 T3",
+      "rationale": "Machine-readable Contract, Tome, binding, semantic, raw, tree, profile, and validator evidence for the committed v5 fixture.",
+      "replacement_or_target_boundary": "T3 native_v3_student_v5 reproducibility receipt.",
+      "status": "canonical"
+    },
+    "docs/T3_NATIVE_V3_STUDENT_V5_FIXTURE_RECEIPT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "Phase 5 T3",
+      "rationale": "Human-readable scope, command, and interpretation for the machine-verified v5 fixture receipt.",
+      "replacement_or_target_boundary": "T3 native_v3_student_v5 acceptance evidence.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

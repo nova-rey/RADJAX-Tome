@@ -1,0 +1,680 @@
+{
+  "authority": {
+    "authority_hash_contract": null,
+    "score_pass_authority_hash": "sha256:765365a1b72374f9c5ecfd358253644b7bd701c753261b330a366cd91b15ee11",
+    "selection_integration_config_hash": "sha256:f7c25243b4a7f0a3af9bd869438da70918945fe9413dfb159e62bc1eee01d197"
+  },
+  "identity": {
+    "authority": {
+      "authority_hash_contract": null,
+      "score_pass_authority_hash": "sha256:765365a1b72374f9c5ecfd358253644b7bd701c753261b330a366cd91b15ee11",
+      "selection_integration_config_hash": "sha256:f7c25243b4a7f0a3af9bd869438da70918945fe9413dfb159e62bc1eee01d197"
+    },
+    "schema_version": "radjax_tome_semantic_identity_v1",
+    "semantic_digest": "sha256:ab3c571f9b69e389efd2b84345b5332dcca763eb1a814b43a9781503ddecc903",
+    "training_contract": {
+      "sequence_length": 8,
+      "target_type": "corridor_exemplar_score_pass_v1",
+      "tome_version": null,
+      "vocab_size": 512
+    },
+    "training_payload": [
+      {
+        "logical_id": "corridors/corridor_modes.json",
+        "semantic_digest": "sha256:4ca2a2d13b9b1ce11c2e73964e133ec3426e92fcfacfd4e999d56159d0e1ec89"
+      },
+      {
+        "logical_id": "corridors/corridor_summary.json",
+        "semantic_digest": "sha256:7dcd983b89d970a0bd507d8fd181b4d9eb3098b91bdf79f04f373835b2aa7448"
+      },
+      {
+        "logical_id": "corridors/mode_assignments.json",
+        "semantic_digest": "sha256:7b223fec5bbe6417e90ee3eb18834aeb1a379872a7ba1dd32573a059f805b2f4"
+      },
+      {
+        "logical_id": "corridors/mode_assignments/examples_metadata.jsonl",
+        "semantic_digest": "sha256:2650ae98c9084ab12eac27e02f7499246c697de021d51355fe5ee8e904dea939"
+      },
+      {
+        "logical_id": "corridors/mode_assignments/fingerprint_index.npy",
+        "semantic_digest": "sha256:e6095d7edc1a8ff39ae6b195cde075e23126833d9075db36ceb65685a119df6f"
+      },
+      {
+        "logical_id": "corridors/mode_assignments/mode_id.npy",
+        "semantic_digest": "sha256:8c2f06a2cdfe41ce6c7f03c623462031674e39f4be790a072fa85db68b7d048e"
+      },
+      {
+        "logical_id": "corridors/mode_assignments/position.npy",
+        "semantic_digest": "sha256:0be7c92b2cc3d470c540f9f5018931193863290beb7d9a0f61f9b471383b97c8"
+      },
+      {
+        "logical_id": "corridors/mode_assignments/position_example_index.npy",
+        "semantic_digest": "sha256:a789609dd33c6aefa9e48e68e9d331642f6dc15da3f8845f4211ba16ee989d60"
+      },
+      {
+        "logical_id": "corridors/mode_assignments/weight.npy",
+        "semantic_digest": "sha256:8878e1a4803f03da31924259bbdd1a2a3530b81eb580e14fdc3a55a7fd36f093"
+      },
+      {
+        "logical_id": "curriculum/selected_routes.json",
+        "semantic_digest": "sha256:c5a3479301b1a4209b4cebe5f87a8fc5b5e766827c6e27e53c4293e09df230e6"
+      },
+      {
+        "logical_id": "emission_config.json",
+        "semantic_digest": "sha256:59df3afde2f625e3b0f906c3121da2565652c0a810c309c4bd83d4df21b66da8"
+      },
+      {
+        "logical_id": "leaderboards/selected_exemplars.json",
+        "semantic_digest": "sha256:73d1c785bbe211c20b8d61e0e00725a2ee08303d08c81480ca4147641aec75f0"
+      },
+      {
+        "logical_id": "metadata.json",
+        "semantic_digest": "sha256:daf6cb7ec994ff5feaad0d5e9d574eccdb71f0736c011dcf2f78a9abde773824"
+      },
+      {
+        "logical_id": "selected_exemplars/payload_index.json",
+        "semantic_digest": "sha256:5d31a768d8c918d3782c7a1f8f4dc6d5bac32ad81c617e3b6d575858e57bddf1"
+      },
+      {
+        "logical_id": "selected_exemplars/selected-exemplars-00000.json",
+        "semantic_digest": "sha256:cc7ac754c3665e19b76fc949372f1e018212e8960a49a917fdee2ed93548df4d"
+      },
+      {
+        "logical_id": "selected_exemplars/selected-exemplars-00001.json",
+        "semantic_digest": "sha256:0f11cc225a3d82914effefa3017cf283d4721a0af47557e0ce0f282c4357567e"
+      },
+      {
+        "logical_id": "shards/shard-00000.npz",
+        "semantic_digest": "sha256:60f168b98897f807eb188664ec40aca5da247494e2ec48c913dc768aad18262b"
+      },
+      {
+        "logical_id": "shards/shard-00001.npz",
+        "semantic_digest": "sha256:d7b86d66dcb012e1f74c267ee3c6fb74d633a4a67b20517a4f6084296e6d13bd"
+      },
+      {
+        "logical_id": "teacher_manifest.json",
+        "semantic_digest": "sha256:44ad2ccc07b8dc5f11809e836df25141ccccb0faf497ecfb11abbba21215dcf9"
+      },
+      {
+        "logical_id": "vocab_contract.json",
+        "semantic_digest": "sha256:7a1e48633a2379de7425ec314cd926e842f89e1e66a3c67f7b2c82283611d49e"
+      }
+    ]
+  },
+  "manifests": {
+    "content": {
+      "inventory": [
+        {
+          "classification": "operational",
+          "path": "c6/authority_manifest.json",
+          "sha256": "sha256:b4250add9f1709e6603181b6debc0a5e796c95863450f1740267520567a80b42",
+          "size_bytes": 2429,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/claims/backfill_lineage.jsonl",
+          "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/claims/claim_manifest.json",
+          "sha256": "sha256:fd0230efdd435c541852e11703f9c5de2f67c10a3cba99c9d4e6f3e606a87b40",
+          "size_bytes": 5625,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/claims/collision_obligations.jsonl",
+          "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size_bytes": 0,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/claims/corridor_claims.jsonl",
+          "sha256": "sha256:71dc5a5cdd6c670e227f11edd5329f83e104fd4073ece9c3c361f16479f3e5cd",
+          "size_bytes": 560,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/claims/global_claims.jsonl",
+          "sha256": "sha256:6dced817109b1727fbd1de97ac30296d5379042bc925c90838878da184a984b8",
+          "size_bytes": 296,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/claims/selected_coordinates.jsonl",
+          "sha256": "sha256:bb5aa15d84899a22045312fd2897e6919a650a49a2981f784b9d3a16fadc5d5d",
+          "size_bytes": 649,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/claims/validation_report.json",
+          "sha256": "sha256:5607d8cc7ecc2f2b5c6112d9f357928dd235c8c5820f1b437fd700f1eeb9ea40",
+          "size_bytes": 3198,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/corridor-features/candidate_features.jsonl",
+          "sha256": "sha256:0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+          "size_bytes": 26443,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/corridor-features/manifest.json",
+          "sha256": "sha256:5f55fdd2551a04f0eb4c3b04ba9a6073c3d3992fa3d64f4c7523b5d698e61f8c",
+          "size_bytes": 749,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/corridor-leaderboards/manifest.json",
+          "sha256": "sha256:872323cd8ae6770ff6cda846949fec687603e38ef064648d4371a7312e8cac43",
+          "size_bytes": 2445,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/corridor-leaderboards/mode_leaderboards.jsonl",
+          "sha256": "sha256:931b7a68d86f4a58834e2d568850276d063d391ccf77fbc908a3e1738c73920d",
+          "size_bytes": 1997,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/corridor-leaderboards/validation_report.json",
+          "sha256": "sha256:c62ea4277a1a764e1d1ce40105e2679ce7512aeace2673446ccb35636cabedc5",
+          "size_bytes": 610,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/coverage-plan/coverage_plan.json",
+          "sha256": "sha256:d33676536ddf45dd722afd0b7269be5b0442db70a3b23555445b1f846b5bccaa",
+          "size_bytes": 2583,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/coverage-plan/validation_report.json",
+          "sha256": "sha256:6b7a1d12e5419a438477b6ae10003360b10d8e0ffdc432f198a190e322ebe827",
+          "size_bytes": 518,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/global-board-supply.json",
+          "sha256": "sha256:e91fe57c5faa5dc97fa0c897d9d1a8d918f27fb8f93e03ec7b7b3f167ed32e2e",
+          "size_bytes": 5727,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/multi-role-selection/legacy_selected_exemplars.json",
+          "sha256": "sha256:d37ff843fdb5930226a5aa45c2741c24dfb7ceebca38059fdd9f09dc0d86a818",
+          "size_bytes": 4039,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/multi-role-selection/manifest.json",
+          "sha256": "sha256:2cda9799931317efeddf6812f65764e434cbaf98c92d9f2423573f748373cc2f",
+          "size_bytes": 3467,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/multi-role-selection/selected_exemplars.jsonl",
+          "sha256": "sha256:a4823d5c0d1fd9a3842bb045579d9b07491e9d9bbccdfbe5695af29c6ea97f04",
+          "size_bytes": 2371,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/multi-role-selection/validation_report.json",
+          "sha256": "sha256:748d08a95f62f660ebd754e6b197a588cc7af6fa2c7a4621a077bd82aaaa01ad",
+          "size_bytes": 827,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/production_global_selector.json",
+          "sha256": "sha256:3f9c490aee554be0ba482e78aa8748ae7fa998d22ad51036df84467bfd4c1df5",
+          "size_bytes": 24202,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/selection_budget_diagnostics.json",
+          "sha256": "sha256:3ef6db2f85c398987cc9971fd64c12b157776eb171adf352720bfebc17b9815b",
+          "size_bytes": 698,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/source-passports.json",
+          "sha256": "sha256:66d9ac574fbe6a4f085117f31d6adbecaf2bcd6b3fb7323331c9f5fadb3a7ec3",
+          "size_bytes": 731,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "c6/source-passports.jsonl",
+          "sha256": "sha256:5ccad1a4d9c1db2dbf198576a1f7dd8bb4010460ca50f45d9a30668c61a4b1ca",
+          "size_bytes": 14908,
+          "training_authoritative": false
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/corridor_modes.json",
+          "sha256": "sha256:79e80c036010552bf060cd3ecda77ec17948639670b0635a9011b9763b6aeaf8",
+          "size_bytes": 1958,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/corridor_summary.json",
+          "sha256": "sha256:3525ef1de58ff93aeb4e4c37f49ba81eb4329636f50914a72bf89f97c200a827",
+          "size_bytes": 1136,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/mode_assignments.json",
+          "sha256": "sha256:4ffb81ac0c9929b691309357e2a66b481eb4f418aa8eef1e4f626fe5de6228ae",
+          "size_bytes": 1186,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/mode_assignments/examples_attention_mask.npy",
+          "sha256": "sha256:675a218989692894cb472ebb39984e1e7a83fab33ecc78a416a8629a475e1f89",
+          "size_bytes": 160,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/mode_assignments/examples_input_ids.npy",
+          "sha256": "sha256:7d09f5ad2928dfeb3a7fa8c9d21afe25c0f2a2db30b2f1a8f2b1b79fea35e893",
+          "size_bytes": 256,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/mode_assignments/examples_metadata.jsonl",
+          "sha256": "sha256:2650ae98c9084ab12eac27e02f7499246c697de021d51355fe5ee8e904dea939",
+          "size_bytes": 220,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/mode_assignments/fingerprint_index.npy",
+          "sha256": "sha256:e6095d7edc1a8ff39ae6b195cde075e23126833d9075db36ceb65685a119df6f",
+          "size_bytes": 256,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/mode_assignments/mode_id.npy",
+          "sha256": "sha256:8c2f06a2cdfe41ce6c7f03c623462031674e39f4be790a072fa85db68b7d048e",
+          "size_bytes": 256,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/mode_assignments/position.npy",
+          "sha256": "sha256:0be7c92b2cc3d470c540f9f5018931193863290beb7d9a0f61f9b471383b97c8",
+          "size_bytes": 256,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/mode_assignments/position_example_index.npy",
+          "sha256": "sha256:a789609dd33c6aefa9e48e68e9d331642f6dc15da3f8845f4211ba16ee989d60",
+          "size_bytes": 256,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "corridors/mode_assignments/weight.npy",
+          "sha256": "sha256:8878e1a4803f03da31924259bbdd1a2a3530b81eb580e14fdc3a55a7fd36f093",
+          "size_bytes": 256,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "curriculum/selected_routes.json",
+          "sha256": "sha256:a204467834b2d9365198432ad0a1e97c8294d67afa8f2b2f7f5bdcf52442f493",
+          "size_bytes": 789,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "emission_config.json",
+          "sha256": "sha256:6aabc288ac3c564fe09636909c73bedf9461ae9464aac7e17d98ac814c5dbbe4",
+          "size_bytes": 7852,
+          "training_authoritative": true
+        },
+        {
+          "classification": "diagnostic",
+          "path": "leaderboards/long_tail_uncertainty.json",
+          "sha256": "sha256:f5b6bb85c838b12ba2ac9594c28db9fc23c333f0d80c65cc2d7023688ac2ef14",
+          "size_bytes": 796,
+          "training_authoritative": false
+        },
+        {
+          "classification": "diagnostic",
+          "path": "leaderboards/perverse_tail_diagnostic.json",
+          "sha256": "sha256:9e77a6825baf93ef009828f962bc32ed57ba2f51ab64133d646b423f2529cb53",
+          "size_bytes": 799,
+          "training_authoritative": false
+        },
+        {
+          "classification": "training_critical",
+          "path": "leaderboards/selected_exemplars.json",
+          "sha256": "sha256:9112472ba824c2f65c62b6cb475985364c8032dae953bd5da9a6f655d4bce8ea",
+          "size_bytes": 12427,
+          "training_authoritative": true
+        },
+        {
+          "classification": "integrity_or_provenance",
+          "path": "manifests/content_manifest.json",
+          "sha256": "sha256:ba559a51e2fbcb3e1dc013d9715c2d062df31f76a134797bd23eb3be2918f039",
+          "size_bytes": 13466,
+          "training_authoritative": false
+        },
+        {
+          "classification": "integrity_or_provenance",
+          "path": "manifests/corridor_assignment_manifest.json",
+          "sha256": "sha256:d810af738cf1d18ead9f569c5624d6c4a7049b6b44abad572e38ed9311d95f2e",
+          "size_bytes": 2435,
+          "training_authoritative": false
+        },
+        {
+          "classification": "integrity_or_provenance",
+          "path": "manifests/language_tokenizer_binding_v1.json",
+          "sha256": "sha256:24940247e1abe4a465749325baf6633b94feb36970112dff35e429b5b9367452",
+          "size_bytes": 1508,
+          "training_authoritative": false
+        },
+        {
+          "classification": "integrity_or_provenance",
+          "path": "manifests/selected_payload_manifest.json",
+          "sha256": "sha256:36112ee78935ad328fa307e237e31ecd9c6a72694817fa99b7379284d1d7f98b",
+          "size_bytes": 1582,
+          "training_authoritative": false
+        },
+        {
+          "classification": "training_critical",
+          "path": "metadata.json",
+          "sha256": "sha256:b5ba25a15badb54d112d0edefc23e34a27fda013083bb8b9b867258737a30006",
+          "size_bytes": 8733,
+          "training_authoritative": true
+        },
+        {
+          "classification": "diagnostic",
+          "path": "reports/c6_integrated_selection_validation.json",
+          "sha256": "sha256:fa1672f378095d9695bcb0e539e120dda78412e89830bbaa301fac07abec01ef",
+          "size_bytes": 294,
+          "training_authoritative": false
+        },
+        {
+          "classification": "diagnostic",
+          "path": "reports/fingerprint_corridor_coverage.json",
+          "sha256": "sha256:dde743d30a9ebb90aaf79366f23abf0d96b4d72913c844ab995a2cd765dcc1a0",
+          "size_bytes": 2405,
+          "training_authoritative": false
+        },
+        {
+          "classification": "operational",
+          "path": "resources/tokenizer_vocabulary.jsonl",
+          "sha256": "sha256:3f039ddf7734eb0fec15f3af7087e7c615b152288ba5b92f635471acad1dfb61",
+          "size_bytes": 23938,
+          "training_authoritative": false
+        },
+        {
+          "classification": "training_critical",
+          "path": "selected_exemplars/payload_index.json",
+          "sha256": "sha256:f0b4c46f80fd6438a9c27e9e3d1d0213fe72ed93a4eb23cee07d444fc11ee4ea",
+          "size_bytes": 5631,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "selected_exemplars/selected-exemplars-00000.json",
+          "sha256": "sha256:845d45fef7591c473a962ecd697e43cad5bef7e6ca420759306763f5bd4a213d",
+          "size_bytes": 6218,
+          "training_authoritative": true
+        },
+        {
+          "classification": "training_critical",
+          "path": "selected_exemplars/selected-exemplars-00001.json",
+          "sha256": "sha256:0bef81a7f66f68e183573728b21fed7c50f60d13bbfef2de690aae4e12c65e06",
+          "size_bytes": 6314,
+          "training_authoritative": true
+        },
+        {
+          "classification": "operational",
+          "path": "selected_linkage_audit.json",
+          "sha256": "sha256:01460e827ef68173c86153af369500ef2f87293c1c1454bae867008df56824e1",
+          "size_bytes": 878,
+          "training_authoritative": false
+        },
+        {
+          "classification": "training_critical",
+          "path": "teacher_manifest.json",
+          "sha256": "sha256:0409bc699b5f385cad63fc8a2c17ca6eb89ac3071d2fb8b0b4e3a62e16afb654",
+          "size_bytes": 3027,
+          "training_authoritative": true
+        },
+        {
+          "classification": "operational",
+          "path": "validation_report.json",
+          "sha256": "sha256:724dde14ea2040754754a4bc7638b581f0c0ad41612ca818a9522b08d0ee0565",
+          "size_bytes": 1786,
+          "training_authoritative": false
+        },
+        {
+          "classification": "training_critical",
+          "path": "vocab_contract.json",
+          "sha256": "sha256:56510aa1c84966ee36e57121379a9508d09d07b58f19c46cb31f5128d416a940",
+          "size_bytes": 204,
+          "training_authoritative": true
+        }
+      ],
+      "manifest_digest": "sha256:d7bb3321d50841449cc2beb508c4cf8586f0961c0d5e60b3ca090d87e56950eb",
+      "profile": "student",
+      "schema_version": "tome_content_manifest_v2",
+      "semantic_identity_digest": "sha256:ab3c571f9b69e389efd2b84345b5332dcca763eb1a814b43a9781503ddecc903"
+    }
+  },
+  "package": {
+    "profile": "student",
+    "transport": "directory"
+  },
+  "provenance": {
+    "historical_package_cover_v1": {
+      "artifact_kind": "radjax_tome",
+      "claims_made": {
+        "content_hashes_verified": true,
+        "corridor_assignments_loadable": true,
+        "derived_from_full_tome": true,
+        "selected_payloads_linked": true,
+        "self_consistent_training_contract": true,
+        "student_batches_constructible": true
+      },
+      "claims_not_made": {
+        "does_not_include_full_producer_shards": true,
+        "does_not_include_non_selected_exemplar_payloads": true,
+        "does_not_include_raw_teacher_logits": true,
+        "does_not_prove_recomputability_without_full_debug_tome": true,
+        "producer_shard_authority": "not_available_in_student_profile"
+      },
+      "content_manifest": {
+        "path": "manifests/content_manifest.json",
+        "sha256": "sha256:ba559a51e2fbcb3e1dc013d9715c2d062df31f76a134797bd23eb3be2918f039",
+        "size_bytes": 13466
+      },
+      "corridor_assignment_manifest": {
+        "path": "manifests/corridor_assignment_manifest.json",
+        "sha256": "sha256:d810af738cf1d18ead9f569c5624d6c4a7049b6b44abad572e38ed9311d95f2e",
+        "size_bytes": 2435
+      },
+      "created_at": "2026-08-02T00:35:34+00:00",
+      "created_by": "radjax_tome.tome.packaging",
+      "diagnostics": {
+        "fingerprint_corridor_coverage": {
+          "c2_artifact_hash": "0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+          "c2_schema_version": "radjax.c2_corridor_candidate_leaderboards.v1",
+          "c3_artifact_hash": "0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+          "c3_schema_version": "radjax.c3_corridor_coverage_plan.v1",
+          "c4_claims_sha256": "6d2115ade5936394939ea6d79a17c47df5ffa70039fec78db7f0ef9d817369be",
+          "c4_schema_version": "radjax.c4_corridor_global_claims.v1",
+          "c5_production_grade": true,
+          "c5_schema_version": "radjax.multi_role_selected_exemplar.v1",
+          "candidate_pool_occupancy": {
+            "max": 4,
+            "median": 4.0,
+            "min": 4
+          },
+          "claims_by_mode": {
+            "0": {
+              "allocated_slots": 1,
+              "claimed_count": 1,
+              "fulfilled": true,
+              "zero_allocation_reason": null
+            }
+          },
+          "claims_not_made": {
+            "student_training_quality": true,
+            "t4_rehearsal_executed": true,
+            "tpu_jax_execution": true
+          },
+          "collision_count": 0,
+          "corridor_budget_actual": 1,
+          "corridor_budget_ceiling": 1,
+          "corridor_budget_requested": 1,
+          "corridor_mode_count_observed": 1,
+          "corridor_modes_allocated": 1,
+          "corridor_modes_capacity_positive": 1,
+          "corridor_modes_fulfilled": 1,
+          "corridor_modes_uncovered": [],
+          "counts_by_global_board": {
+            "global_max_entropy": 1
+          },
+          "coverage_fraction": 0.5,
+          "delivery_path": "two_pass_rerun_selected",
+          "feature_derivation": {
+            "c2_policy_id": "corridor_candidate_micro_leaderboard_v1",
+            "c2_source_artifact_id": "tests/fixtures/native_v3_student_v5_smoke/producer_artifact/c6/corridor-features/candidate_features.jsonl"
+          },
+          "feature_fidelity": "derived",
+          "global_backfill_count": 0,
+          "global_budget": 1,
+          "global_supply_schema_version": "radjax.c4_global_board_supply.v1",
+          "global_supply_source_production_grade": true,
+          "integrated_validation_path": "reports/c6_integrated_selection_validation.json",
+          "integrated_validation_status": "pass",
+          "multi_role_coordinate_count": 0,
+          "payload_count": 2,
+          "production_grade": true,
+          "schema_version": "radjax.fingerprint_corridor_coverage.v1",
+          "selected_coordinate_set_authoritative": "c5",
+          "selected_obligation_count": 2,
+          "selected_unique_count": 2,
+          "selection_integration_policy": "corridor_first_global_backfill_v1",
+          "t4_rehearsal_status": "not_executed",
+          "total_selected_budget": 2,
+          "unresolved_backfill_count": 0,
+          "zero_allocation_reasons": []
+        },
+        "long_tail_summary": {
+          "count": 2,
+          "full_vocab_or_near_full_vocab_count": 0,
+          "long_tail_count": 0,
+          "max_effective_top_k": 32,
+          "max_effective_top_k_fraction_of_vocab": 0.0625,
+          "mean_effective_top_k": 32.0,
+          "normal_count": 2,
+          "saturated_count": 2,
+          "suspicious_flat_count": 0,
+          "very_long_tail_count": 0
+        },
+        "selected_board_summary": {
+          "long_tail_class_counts": {
+            "normal": 2
+          },
+          "long_tail_uncertainty_count": 0,
+          "perverse_tail_diagnostic_count": 0,
+          "primary_count": 2,
+          "semantic_tail_class_counts": {
+            "unknown_open_class_tail": 2
+          },
+          "source_score_board_counts": {
+            "unassigned": 2
+          },
+          "total_selected_count": 2
+        }
+      },
+      "layout": "unpacked_directory",
+      "package_profile": "student",
+      "schema_version": "radjax_tome_package_cover_v1",
+      "selected_payload_manifest": {
+        "path": "manifests/selected_payload_manifest.json",
+        "sha256": "sha256:36112ee78935ad328fa307e237e31ecd9c6a72694817fa99b7379284d1d7f98b",
+        "size_bytes": 1582
+      },
+      "top_level_summary": {
+        "corridor_assignment_count": 32,
+        "corridor_coverage_report_path": "reports/fingerprint_corridor_coverage.json",
+        "corridor_mode_count": 1,
+        "delivery_path": "two_pass_rerun_selected",
+        "num_examples_scored": 4,
+        "num_positions_scored": 32,
+        "num_selected_exemplars": 2,
+        "package_profile": "student",
+        "producer_shard_authority": "not_available_in_student_profile",
+        "selected_linkage_audit_status": "pass",
+        "selected_multi_role_count": 0,
+        "selected_obligation_count": 2,
+        "selected_unique_count": 2,
+        "selection_integration_policy": "corridor_first_global_backfill_v1",
+        "validation_status": "pass"
+      }
+    },
+    "legacy_cover_schema": "radjax_tome_package_cover_v1",
+    "raw_artifact_digests": {
+      "c6/production_global_selector.json": "sha256:3f9c490aee554be0ba482e78aa8748ae7fa998d22ad51036df84467bfd4c1df5",
+      "corridors/corridor_modes.json": "sha256:79e80c036010552bf060cd3ecda77ec17948639670b0635a9011b9763b6aeaf8",
+      "corridors/mode_assignments.json": "sha256:4ffb81ac0c9929b691309357e2a66b481eb4f418aa8eef1e4f626fe5de6228ae",
+      "metadata.json": "sha256:b5ba25a15badb54d112d0edefc23e34a27fda013083bb8b9b867258737a30006"
+    }
+  },
+  "schema_version": "radjax_tome_cover_v3_student_consumption_v5",
+  "student_consumption": {
+    "digest_method": "sha256",
+    "manifest_path": "manifests/language_tokenizer_binding_v1.json",
+    "manifest_sha256": "sha256:24940247e1abe4a465749325baf6633b94feb36970112dff35e429b5b9367452",
+    "profile_id": "native_v3_student_v5",
+    "required_capabilities": [],
+    "semantic_digest": "sha256:9419614278eebaddd4d016b884afe21f4ab83e749ec04be3bb597d212f1d02cf"
+  },
+  "training": {
+    "sequence_length": 8,
+    "target_type": "corridor_exemplar_score_pass_v1",
+    "tome_version": null,
+    "vocab_size": 512
+  },
+  "validation": {
+    "status": "pass",
+    "validation_report_path": "validation_report.json"
+  }
+}

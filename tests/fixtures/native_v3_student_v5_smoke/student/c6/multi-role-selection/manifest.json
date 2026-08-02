@@ -1,0 +1,87 @@
+{
+  "c4_claims_sha256": "6d2115ade5936394939ea6d79a17c47df5ffa70039fec78db7f0ef9d817369be",
+  "files": {
+    "legacy_selected_exemplars.json": {
+      "sha256": "d37ff843fdb5930226a5aa45c2741c24dfb7ceebca38059fdd9f09dc0d86a818"
+    },
+    "selected_exemplars.jsonl": {
+      "sha256": "a4823d5c0d1fd9a3842bb045579d9b07491e9d9bbccdfbe5695af29c6ea97f04"
+    }
+  },
+  "production_grade": true,
+  "schema_version": "radjax.multi_role_selected_exemplar.v1",
+  "source_provenance": {
+    "c4": {
+      "c2": {
+        "feature_fidelity": "derived",
+        "policy_id": "corridor_candidate_micro_leaderboard_v1",
+        "source_artifact_hash": "0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+        "source_artifact_id": "tests/fixtures/native_v3_student_v5_smoke/producer_artifact/c6/corridor-features/candidate_features.jsonl"
+      },
+      "c3": {
+        "blockers": [],
+        "c2_policy_id": "corridor_candidate_micro_leaderboard_v1",
+        "candidate_pool_cap": 4,
+        "compatibility_proxy_used": false,
+        "coverage_holes": 0,
+        "feature_fidelity": "derived",
+        "leaderboard_artifact_id": {
+          "non_portable_source_path": "/Users/Cooper/code/RADJAX-Tome/tests/fixtures/native_v3_student_v5_smoke/producer_artifact/c6/corridor-leaderboards",
+          "portable_basename": "corridor-leaderboards"
+        },
+        "leaderboard_manifest_sha256": "872323cd8ae6770ff6cda846949fec687603e38ef064648d4371a7312e8cac43",
+        "mode_leaderboards_sha256": "931b7a68d86f4a58834e2d568850276d063d391ccf77fbc908a3e1738c73920d",
+        "modes_observed": 1,
+        "pool_occupancy": {
+          "max": 4,
+          "median": 4.0,
+          "min": 4
+        },
+        "production_grade": true,
+        "retained_candidate_count": 4,
+        "source_artifact_hash": "0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+        "source_artifact_id": "tests/fixtures/native_v3_student_v5_smoke/producer_artifact/c6/corridor-features/candidate_features.jsonl",
+        "status": "pass",
+        "warnings": []
+      },
+      "global": {
+        "production_grade": true,
+        "score_pass_authority_hash": "sha256:765365a1b72374f9c5ecfd358253644b7bd701c753261b330a366cd91b15ee11",
+        "selector_policy": "multi_leaderboard_exemplar_selector_v1",
+        "selector_schema_version": "exemplar_selection_manifest_v1",
+        "source_artifact_hash": "sha256:765365a1b72374f9c5ecfd358253644b7bd701c753261b330a366cd91b15ee11",
+        "source_artifact_id": "tests/fixtures/native_v3_student_v5_smoke/producer_artifact"
+      },
+      "production_grade": true
+    },
+    "c4_claim_policy": {
+      "allow_nonproduction_sources": false,
+      "claim_policy_id": "corridor_first_global_backfill_v1",
+      "nonproduction_override_reason": null,
+      "require_full_budget": false,
+      "schema_version": "radjax.c4_corridor_global_claims.v1",
+      "total_selected_exemplar_budget": 2
+    },
+    "production_grade": true
+  },
+  "summary": {
+    "corridor_role_count": 1,
+    "counts_by_corridor_mode": {
+      "0": 1
+    },
+    "counts_by_global_board": {
+      "global_max_entropy": 1
+    },
+    "global_role_count": 1,
+    "legacy_projection_count": 2,
+    "multi_role_coordinate_count": 0,
+    "obligation_count": 2,
+    "payload_status_counts": {
+      "not_materialized_in_c5": 2
+    },
+    "primary_corridor_count": 1,
+    "primary_global_count": 1,
+    "unique_selected_count": 2
+  },
+  "warnings": []
+}

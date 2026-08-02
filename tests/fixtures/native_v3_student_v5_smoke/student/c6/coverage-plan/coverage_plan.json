@@ -1,0 +1,75 @@
+{
+  "actual_corridor_budget": 1,
+  "allocation_policy_id": "breadth_first_round_robin_v1",
+  "corridor_budget_ceiling": 1,
+  "fractional_ceiling": 1,
+  "global_budget": 1,
+  "modes": [
+    {
+      "allocatable_capacity": 4,
+      "allocated_slots": 1,
+      "candidates_rejected": 5,
+      "candidates_seen": 32,
+      "corridor_mode_id": 0,
+      "coverage_priority": {
+        "top_candidate_centrality": 0.91614511509494,
+        "top_candidate_membership": 0.95807255754747,
+        "top_candidate_utility": 0.9373509420382218
+      },
+      "eligible_candidate_count": 27,
+      "mode_support": 32,
+      "retained_pool_count": 4,
+      "zero_allocation_reason": null
+    }
+  ],
+  "policy": {
+    "allocation_policy": "breadth_first_round_robin_v1",
+    "allow_nonproduction_leaderboards": false,
+    "corridor_budget_fraction": "0.5",
+    "corridor_budget_max": null,
+    "corridor_mode_cap": 10,
+    "nonproduction_override_reason": null,
+    "schema_version": "radjax.c3_corridor_coverage_plan.v1",
+    "total_selected_exemplar_budget": 2
+  },
+  "raw_mode_capacity": 4,
+  "schema_version": "radjax.c3_corridor_coverage_plan.v1",
+  "source_leaderboard_provenance": {
+    "blockers": [],
+    "c2_policy_id": "corridor_candidate_micro_leaderboard_v1",
+    "candidate_pool_cap": 4,
+    "compatibility_proxy_used": false,
+    "coverage_holes": 0,
+    "feature_fidelity": "derived",
+    "leaderboard_artifact_id": {
+      "non_portable_source_path": "/Users/Cooper/code/RADJAX-Tome/tests/fixtures/native_v3_student_v5_smoke/producer_artifact/c6/corridor-leaderboards",
+      "portable_basename": "corridor-leaderboards"
+    },
+    "leaderboard_manifest_sha256": "872323cd8ae6770ff6cda846949fec687603e38ef064648d4371a7312e8cac43",
+    "mode_leaderboards_sha256": "931b7a68d86f4a58834e2d568850276d063d391ccf77fbc908a3e1738c73920d",
+    "modes_observed": 1,
+    "pool_occupancy": {
+      "max": 4,
+      "median": 4.0,
+      "min": 4
+    },
+    "production_grade": true,
+    "retained_candidate_count": 4,
+    "source_artifact_hash": "0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+    "source_artifact_id": "tests/fixtures/native_v3_student_v5_smoke/producer_artifact/c6/corridor-features/candidate_features.jsonl",
+    "status": "pass",
+    "warnings": []
+  },
+  "summary": {
+    "actual_corridor_budget": 1,
+    "allocated_slots": 1,
+    "global_budget": 1,
+    "modes_budget_starved": 0,
+    "modes_capacity_positive": 1,
+    "modes_covered": 1,
+    "modes_empty": 0,
+    "modes_observed": 1,
+    "raw_mode_capacity": 4,
+    "unused_corridor_ceiling": 0
+  }
+}

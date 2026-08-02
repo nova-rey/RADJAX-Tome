@@ -1,0 +1,593 @@
+{
+  "corridor_observation_basis": "full_token_position_corridor",
+  "corridor_observation_count": 32,
+  "corridor_positions_available": 32,
+  "corridor_positions_used": 32,
+  "degraded_corridor_export": false,
+  "fingerprint_count": 15,
+  "fingerprint_policy": "top_token_entropy_confidence_v1",
+  "fingerprints": [
+    {
+      "count": 8,
+      "example_count": 4,
+      "fingerprint_id": "fp_000000",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.8087029457092285,
+      "mean_confidence": 0.008944250643253326,
+      "mean_entropy": 5.808629989624023,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 8,
+      "representatives": [
+        {
+          "confidence": 0.008953382261097431,
+          "entropy": 5.8087029457092285,
+          "example_id": "corpus_000000001",
+          "position": 5
+        },
+        {
+          "confidence": 0.008953382261097431,
+          "entropy": 5.8087029457092285,
+          "example_id": "corpus_000000002",
+          "position": 5
+        },
+        {
+          "confidence": 0.008953382261097431,
+          "entropy": 5.8087029457092285,
+          "example_id": "corpus_000000003",
+          "position": 5
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_late",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "late",
+        "top_token_ids": [
+          229
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 4,
+      "example_count": 4,
+      "fingerprint_id": "fp_000001",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.808549880981445,
+      "mean_confidence": 0.008975145407021046,
+      "mean_entropy": 5.808549880981445,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 4,
+      "representatives": [
+        {
+          "confidence": 0.008975145407021046,
+          "entropy": 5.808549880981445,
+          "example_id": "corpus_000000001",
+          "position": 7
+        },
+        {
+          "confidence": 0.008975145407021046,
+          "entropy": 5.808549880981445,
+          "example_id": "corpus_000000002",
+          "position": 7
+        },
+        {
+          "confidence": 0.008975145407021046,
+          "entropy": 5.808549880981445,
+          "example_id": "corpus_000000003",
+          "position": 7
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_final",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "final",
+        "top_token_ids": [
+          228
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 3,
+      "example_count": 3,
+      "fingerprint_id": "fp_000002",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.830610275268555,
+      "mean_confidence": 0.009060203097760677,
+      "mean_entropy": 5.829065799713135,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 3,
+      "representatives": [
+        {
+          "confidence": 0.008861083537340164,
+          "entropy": 5.830610275268555,
+          "example_id": "corpus_000000003",
+          "position": 2
+        },
+        {
+          "confidence": 0.009121134877204895,
+          "entropy": 5.828897476196289,
+          "example_id": "corpus_000000004",
+          "position": 2
+        },
+        {
+          "confidence": 0.009198390878736973,
+          "entropy": 5.827689170837402,
+          "example_id": "corpus_000000001",
+          "position": 1
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_early",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "early",
+        "top_token_ids": [
+          0
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 3,
+      "example_count": 3,
+      "fingerprint_id": "fp_000003",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.808536052703857,
+      "mean_confidence": 0.00895695947110653,
+      "mean_entropy": 5.808536052703857,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 3,
+      "representatives": [
+        {
+          "confidence": 0.00895695947110653,
+          "entropy": 5.808536052703857,
+          "example_id": "corpus_000000001",
+          "position": 4
+        },
+        {
+          "confidence": 0.00895695947110653,
+          "entropy": 5.808536052703857,
+          "example_id": "corpus_000000003",
+          "position": 4
+        },
+        {
+          "confidence": 0.00895695947110653,
+          "entropy": 5.808536052703857,
+          "example_id": "corpus_000000004",
+          "position": 4
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_middle",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "middle",
+        "top_token_ids": [
+          228
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 2,
+      "example_count": 2,
+      "fingerprint_id": "fp_000004",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.810001373291016,
+      "mean_confidence": 0.008957996964454651,
+      "mean_entropy": 5.810001373291016,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 2,
+      "representatives": [
+        {
+          "confidence": 0.008957996964454651,
+          "entropy": 5.810001373291016,
+          "example_id": "corpus_000000002",
+          "position": 1
+        },
+        {
+          "confidence": 0.008957996964454651,
+          "entropy": 5.810001373291016,
+          "example_id": "corpus_000000004",
+          "position": 1
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_early",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "early",
+        "top_token_ids": [
+          115
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 2,
+      "example_count": 2,
+      "fingerprint_id": "fp_000005",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.809163570404053,
+      "mean_confidence": 0.00892048329114914,
+      "mean_entropy": 5.809017181396484,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 2,
+      "representatives": [
+        {
+          "confidence": 0.008899115025997162,
+          "entropy": 5.809163570404053,
+          "example_id": "corpus_000000003",
+          "position": 1
+        },
+        {
+          "confidence": 0.008941851556301117,
+          "entropy": 5.808870315551758,
+          "example_id": "corpus_000000002",
+          "position": 0
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_early",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "early",
+        "top_token_ids": [
+          229
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 2,
+      "example_count": 1,
+      "fingerprint_id": "fp_000006",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.8089752197265625,
+      "mean_confidence": 0.008939350955188274,
+      "mean_entropy": 5.808795928955078,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 2,
+      "representatives": [
+        {
+          "confidence": 0.008928745985031128,
+          "entropy": 5.8089752197265625,
+          "example_id": "corpus_000000002",
+          "position": 4
+        },
+        {
+          "confidence": 0.00894995592534542,
+          "entropy": 5.808616638183594,
+          "example_id": "corpus_000000002",
+          "position": 3
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_middle",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "middle",
+        "top_token_ids": [
+          229
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 1,
+      "example_count": 1,
+      "fingerprint_id": "fp_000007",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.831199645996094,
+      "mean_confidence": 0.008663107641041279,
+      "mean_entropy": 5.831199645996094,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 1,
+      "representatives": [
+        {
+          "confidence": 0.008663107641041279,
+          "entropy": 5.831199645996094,
+          "example_id": "corpus_000000003",
+          "position": 3
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_middle",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "middle",
+        "top_token_ids": [
+          0
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 1,
+      "example_count": 1,
+      "fingerprint_id": "fp_000008",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.819312572479248,
+      "mean_confidence": 0.009058843366801739,
+      "mean_entropy": 5.819312572479248,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 1,
+      "representatives": [
+        {
+          "confidence": 0.009058843366801739,
+          "entropy": 5.819312572479248,
+          "example_id": "corpus_000000001",
+          "position": 3
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_middle",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "middle",
+        "top_token_ids": [
+          1
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 1,
+      "example_count": 1,
+      "fingerprint_id": "fp_000009",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.812465190887451,
+      "mean_confidence": 0.009046000428497791,
+      "mean_entropy": 5.812465190887451,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 1,
+      "representatives": [
+        {
+          "confidence": 0.009046000428497791,
+          "entropy": 5.812465190887451,
+          "example_id": "corpus_000000003",
+          "position": 0
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_early",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "early",
+        "top_token_ids": [
+          114
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 1,
+      "example_count": 1,
+      "fingerprint_id": "fp_000010",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.808701992034912,
+      "mean_confidence": 0.008976409211754799,
+      "mean_entropy": 5.808701992034912,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 1,
+      "representatives": [
+        {
+          "confidence": 0.008976409211754799,
+          "entropy": 5.808701992034912,
+          "example_id": "corpus_000000004",
+          "position": 0
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_early",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "early",
+        "top_token_ids": [
+          228
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 1,
+      "example_count": 1,
+      "fingerprint_id": "fp_000011",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.809605598449707,
+      "mean_confidence": 0.008823304437100887,
+      "mean_entropy": 5.809605598449707,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 1,
+      "representatives": [
+        {
+          "confidence": 0.008823304437100887,
+          "entropy": 5.809605598449707,
+          "example_id": "corpus_000000001",
+          "position": 0
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_early",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "early",
+        "top_token_ids": [
+          230
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 1,
+      "example_count": 1,
+      "fingerprint_id": "fp_000012",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.818958282470703,
+      "mean_confidence": 0.009136003442108631,
+      "mean_entropy": 5.818958282470703,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 1,
+      "representatives": [
+        {
+          "confidence": 0.009136003442108631,
+          "entropy": 5.818958282470703,
+          "example_id": "corpus_000000004",
+          "position": 3
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_middle",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "middle",
+        "top_token_ids": [
+          399
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 1,
+      "example_count": 1,
+      "fingerprint_id": "fp_000013",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.8205485343933105,
+      "mean_confidence": 0.009146015159785748,
+      "mean_entropy": 5.8205485343933105,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 1,
+      "representatives": [
+        {
+          "confidence": 0.009146015159785748,
+          "entropy": 5.8205485343933105,
+          "example_id": "corpus_000000002",
+          "position": 2
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_early",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "early",
+        "top_token_ids": [
+          400
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    },
+    {
+      "count": 1,
+      "example_count": 1,
+      "fingerprint_id": "fp_000014",
+      "fingerprint_policy": "top_token_entropy_confidence_v1",
+      "max_entropy": 5.830536842346191,
+      "mean_confidence": 0.008989605121314526,
+      "mean_entropy": 5.830536842346191,
+      "num_examples_scored": 4,
+      "num_positions_scored": 32,
+      "positions_observed": 1,
+      "representatives": [
+        {
+          "confidence": 0.008989605121314526,
+          "entropy": 5.830536842346191,
+          "example_id": "corpus_000000001",
+          "position": 2
+        }
+      ],
+      "signature": {
+        "bucket": "high_very_low_early",
+        "confidence_bucket": "very_low",
+        "entropy_bucket": "high",
+        "position_bucket": "early",
+        "top_token_ids": [
+          402
+        ],
+        "top_token_ranks": [
+          0
+        ]
+      },
+      "source_target_type": "corridor_exemplar_score_pass_v1",
+      "target_type": "corridor_exemplar_v1"
+    }
+  ],
+  "num_examples_scored": 4,
+  "num_positions_scored": 32,
+  "schema_version": "corridor_fingerprints_v1",
+  "source_store_target_type": "corridor_exemplar_score_pass_v1",
+  "source_target_type": "corridor_exemplar_score_pass_v1",
+  "target_type": "corridor_exemplar_v1"
+}

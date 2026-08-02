@@ -1,0 +1,7 @@
+{
+  "model_family": "smoke_tokenizer",
+  "model_id": "tests/fixtures/native_v3_student_v5_smoke/inputs/model",
+  "tokenizer_hash": null,
+  "tokenizer_id": "radjax/smoke-v5-fixture",
+  "vocab_size": 512
+}

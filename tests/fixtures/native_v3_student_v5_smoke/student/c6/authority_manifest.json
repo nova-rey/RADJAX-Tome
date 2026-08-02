@@ -1,0 +1,36 @@
+{
+  "authority_paths_used": {
+    "global_board_supply": "tests/fixtures/native_v3_student_v5_smoke/producer_artifact/c6/global-board-supply.json",
+    "source_passports": "tests/fixtures/native_v3_student_v5_smoke/producer_artifact/c6/source-passports.json"
+  },
+  "corpus_hash": "sha256:4d52012980d9383d3ad76bbd1244bce7fb3d11e5f1a049339e4e49671d2f638e",
+  "delivery_path": "two_pass_rerun_selected",
+  "external_authority_override_used": false,
+  "hashes": {
+    "corridor_features_sha256": "sha256:0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+    "global_board_supply_sha256": "sha256:e91fe57c5faa5dc97fa0c897d9d1a8d918f27fb8f93e03ec7b7b3f167ed32e2e",
+    "selector_sha256": "sha256:3f9c490aee554be0ba482e78aa8748ae7fa998d22ad51036df84467bfd4c1df5",
+    "source_passports_manifest_sha256": "sha256:66d9ac574fbe6a4f085117f31d6adbecaf2bcd6b3fb7323331c9f5fadb3a7ec3"
+  },
+  "paths": {
+    "corridor_features": "c6/corridor-features/candidate_features.jsonl",
+    "global_board_supply": "c6/global-board-supply.json",
+    "selector": "c6/production_global_selector.json",
+    "source_passports": "c6/source-passports.json"
+  },
+  "production_grade": true,
+  "raw_artifact_digests": {
+    "c6/production_global_selector.json": "sha256:3f9c490aee554be0ba482e78aa8748ae7fa998d22ad51036df84467bfd4c1df5",
+    "corridors/corridor_modes.json": "sha256:79e80c036010552bf060cd3ecda77ec17948639670b0635a9011b9763b6aeaf8",
+    "corridors/mode_assignments.json": "sha256:4ffb81ac0c9929b691309357e2a66b481eb4f418aa8eef1e4f626fe5de6228ae",
+    "metadata.json": "sha256:b5ba25a15badb54d112d0edefc23e34a27fda013083bb8b9b867258737a30006"
+  },
+  "schema_version": "radjax.c6_selection_authority.v2",
+  "score_pass_authority_contract_version": "radjax.c6.score_pass_authority.v2",
+  "score_pass_authority_hash": "sha256:765365a1b72374f9c5ecfd358253644b7bd701c753261b330a366cd91b15ee11",
+  "score_pass_authority_hash_v1": "sha256:06661de4ace249b74c3f9b5a76c68218f4f889c77168da7b930db7a3f18a3a7c",
+  "score_pass_config_hash": "sha256:f209a949becf98203ad7c99d74e053ece1ec28db179cb91cdc5ca742466283a2",
+  "score_pass_resume_hash": "sha256:f209a949becf98203ad7c99d74e053ece1ec28db179cb91cdc5ca742466283a2",
+  "selection_integration_config_hash": "sha256:f7c25243b4a7f0a3af9bd869438da70918945fe9413dfb159e62bc1eee01d197",
+  "target_store_metadata_sha256": "sha256:b5ba25a15badb54d112d0edefc23e34a27fda013083bb8b9b867258737a30006"
+}

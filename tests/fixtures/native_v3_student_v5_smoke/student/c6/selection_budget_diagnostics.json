@@ -1,0 +1,20 @@
+{
+  "accepted_cross_role_overlap": 0,
+  "accepted_global_rank_depth": 1,
+  "budget_shortfall": 0,
+  "budget_shortfall_reason": null,
+  "cross_role_duplicate_count": 0,
+  "final_unique_selected_count": 2,
+  "fingerprint_corridor_budget_requested": 1,
+  "fingerprint_corridor_candidates_eligible_unique": 4,
+  "fingerprint_corridor_claims_accepted": 1,
+  "fingerprint_corridor_claims_before_dedup": 1,
+  "fingerprint_corridor_global_intersection_size": 0,
+  "fingerprint_corridor_global_jaccard": 0.0,
+  "global_candidates_examined": 0,
+  "global_claims_accepted": 1,
+  "global_supply_exported": 4,
+  "global_supply_remaining": 4,
+  "total_budget_requested": 2,
+  "within_role_duplicate_count": 20
+}

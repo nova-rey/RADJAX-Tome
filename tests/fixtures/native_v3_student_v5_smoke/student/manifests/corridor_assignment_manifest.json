@@ -1,0 +1,79 @@
+{
+  "assignment_count": 32,
+  "example_count": 4,
+  "files": [
+    {
+      "dtype": "int8",
+      "path": "corridors/mode_assignments/examples_attention_mask.npy",
+      "sha256": "sha256:675a218989692894cb472ebb39984e1e7a83fab33ecc78a416a8629a475e1f89",
+      "shape": [
+        4,
+        8
+      ],
+      "size_bytes": 160
+    },
+    {
+      "dtype": "int32",
+      "path": "corridors/mode_assignments/examples_input_ids.npy",
+      "sha256": "sha256:7d09f5ad2928dfeb3a7fa8c9d21afe25c0f2a2db30b2f1a8f2b1b79fea35e893",
+      "shape": [
+        4,
+        8
+      ],
+      "size_bytes": 256
+    },
+    {
+      "path": "corridors/mode_assignments/examples_metadata.jsonl",
+      "sha256": "sha256:2650ae98c9084ab12eac27e02f7499246c697de021d51355fe5ee8e904dea939",
+      "size_bytes": 220
+    },
+    {
+      "dtype": "int32",
+      "path": "corridors/mode_assignments/mode_id.npy",
+      "sha256": "sha256:8c2f06a2cdfe41ce6c7f03c623462031674e39f4be790a072fa85db68b7d048e",
+      "shape": [
+        32
+      ],
+      "size_bytes": 256
+    },
+    {
+      "dtype": "int32",
+      "path": "corridors/mode_assignments/position.npy",
+      "sha256": "sha256:0be7c92b2cc3d470c540f9f5018931193863290beb7d9a0f61f9b471383b97c8",
+      "shape": [
+        32
+      ],
+      "size_bytes": 256
+    },
+    {
+      "dtype": "int32",
+      "path": "corridors/mode_assignments/position_example_index.npy",
+      "sha256": "sha256:a789609dd33c6aefa9e48e68e9d331642f6dc15da3f8845f4211ba16ee989d60",
+      "shape": [
+        32
+      ],
+      "size_bytes": 256
+    },
+    {
+      "dtype": "float32",
+      "path": "corridors/mode_assignments/weight.npy",
+      "sha256": "sha256:8878e1a4803f03da31924259bbdd1a2a3530b81eb580e14fdc3a55a7fd36f093",
+      "shape": [
+        32
+      ],
+      "size_bytes": 256
+    }
+  ],
+  "paths": {
+    "examples_attention_mask": "corridors/mode_assignments/examples_attention_mask.npy",
+    "examples_input_ids": "corridors/mode_assignments/examples_input_ids.npy",
+    "examples_metadata": "corridors/mode_assignments/examples_metadata.jsonl",
+    "mode_id": "corridors/mode_assignments/mode_id.npy",
+    "position": "corridors/mode_assignments/position.npy",
+    "position_example_index": "corridors/mode_assignments/position_example_index.npy",
+    "weight": "corridors/mode_assignments/weight.npy"
+  },
+  "schema_version": "corridor_assignment_manifest_v1",
+  "sequence_length": 8,
+  "storage_kind": "packed_numpy_v1"
+}
