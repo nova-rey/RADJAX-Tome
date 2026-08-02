@@ -2553,3 +2553,18 @@ those fields. This scoped diagnostic remediation remains private to
 benchmark-only M8A measurement: it does not start M8B or alter authority,
 production behavior, M7, Contract, Golden, Student, model, corpus, or
 performance claims.
+
+## 2026-08-02 — M7 Selected-Rerun Entropy Accumulation Correction
+
+A representative current-main T4 anchor exposed a reproducible strict Path-B
+linkage failure: score-pass and selected-rerun top-token identities agreed,
+but entropy differed by two quantization steps for a frozen C5 coordinate.
+The underlying Gemma logits were identical across the two batch compositions.
+The corrective change makes the dynamic selected-rerun reducer use the same
+log-probability representation and chunk-wise entropy accumulation as the
+score reducer, while retaining the existing one-step linkage tolerance. A
+focused GPU reducer regression asserts exact score/rerun entropy agreement
+under chunked vocabulary reduction. This is a narrow M7 correctness repair;
+it does not relax validation, alter selection, authority, requested batch
+size, Contract, Golden fixtures, Student, or M8B policy. A fresh canonical T4
+anchor remains required before M7 or M8A acceptance is claimed.

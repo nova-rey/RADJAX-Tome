@@ -1364,13 +1364,11 @@ def _gpu_topk_tail_reduce_from_workspace(
     if workspace["chunked"]:
         top_log_prob_chunks = []
         top_token_id_chunks = []
-        entropy = None
         for start, stop in _chunk_slices(
             effective_vocab_size=int(logits.shape[-1]),
             vocab_chunk_size=int(workspace["vocab_chunk_size"]),
         ):
             chunk_log_probs = logits[..., start:stop] - workspace["logsumexp"]
-            chunk_probs = torch.exp(chunk_log_probs)
             chunk_top_k = min(effective_top_k, stop - start)
             chunk_top_log_probs, chunk_top_token_ids = torch.topk(
                 chunk_log_probs,
@@ -1379,8 +1377,6 @@ def _gpu_topk_tail_reduce_from_workspace(
             )
             top_log_prob_chunks.append(chunk_top_log_probs)
             top_token_id_chunks.append(chunk_top_token_ids + start)
-            contribution = -torch.sum(chunk_probs * chunk_log_probs, dim=-1)
-            entropy = contribution if entropy is None else entropy + contribution
         candidate_log_probs = torch.cat(top_log_prob_chunks, dim=-1)
         candidate_token_ids = torch.cat(top_token_id_chunks, dim=-1)
         top_log_probs, candidate_indices = torch.topk(
@@ -1398,7 +1394,7 @@ def _gpu_topk_tail_reduce_from_workspace(
             "top_probs": top_probs,
             "top_mass": top_mass,
             "tail_mass": tail_mass,
-            "teacher_entropy": entropy,
+            "teacher_entropy": _entropy_from_workspace(torch, workspace),
         }
     log_probs = workspace["log_probs"]
     probs = workspace["probs"]
@@ -1460,7 +1456,7 @@ def _gpu_dynamic_cascaded_reduce(
         vocab_chunk_size=vocab_chunk_size,
     )
     probs = _probs_from_workspace(torch, workspace)
-    log_probs = torch.log(torch.clamp(probs, min=torch.finfo(probs.dtype).tiny))
+    log_probs = _log_probs_from_workspace(torch, workspace)
     effective_max_k = min(dynamic_top_k_max, int(logits.shape[-1]))
     effective_min_k = min(dynamic_top_k_min, effective_max_k)
     head_payload = _dynamic_cascaded_head_from_probs(
@@ -1478,7 +1474,7 @@ def _gpu_dynamic_cascaded_reduce(
         num_buckets=num_buckets,
     )
     tail_mass = torch.clamp(1.0 - head_payload["top_mass"], min=0.0, max=1.0)
-    teacher_entropy = -torch.sum(probs * log_probs, dim=-1)
+    teacher_entropy = _entropy_from_workspace(torch, workspace)
     return {
         "top_token_ids": head_payload["top_token_ids"],
         "top_log_probs": head_payload["top_log_probs"],
@@ -2200,6 +2196,44 @@ def _probs_from_workspace(torch: Any, workspace: dict[str, Any]) -> Any:
     ):
         chunks.append(torch.exp(logits[..., start:stop] - workspace["logsumexp"]))
     return torch.cat(chunks, dim=-1)
+
+
+def _log_probs_from_workspace(torch: Any, workspace: dict[str, Any]) -> Any:
+    """Return the same log-probability representation used by score reduction."""
+
+    if not workspace["chunked"]:
+        return workspace["log_probs"]
+    logits = workspace["logits"]
+    return torch.cat(
+        [
+            logits[..., start:stop] - workspace["logsumexp"]
+            for start, stop in _chunk_slices(
+                effective_vocab_size=int(logits.shape[-1]),
+                vocab_chunk_size=int(workspace["vocab_chunk_size"]),
+            )
+        ],
+        dim=-1,
+    )
+
+
+def _entropy_from_workspace(torch: Any, workspace: dict[str, Any]) -> Any:
+    """Accumulate entropy identically for score and selected rerun reductions."""
+
+    if not workspace["chunked"]:
+        return -torch.sum(workspace["probs"] * workspace["log_probs"], dim=-1)
+    logits = workspace["logits"]
+    entropy = None
+    for start, stop in _chunk_slices(
+        effective_vocab_size=int(logits.shape[-1]),
+        vocab_chunk_size=int(workspace["vocab_chunk_size"]),
+    ):
+        chunk_log_probs = logits[..., start:stop] - workspace["logsumexp"]
+        chunk_probs = torch.exp(chunk_log_probs)
+        contribution = -torch.sum(chunk_probs * chunk_log_probs, dim=-1)
+        entropy = contribution if entropy is None else entropy + contribution
+    if entropy is None:  # pragma: no cover - every tensor has a positive vocabulary.
+        raise ValueError("entropy reduction requires a non-empty vocabulary")
+    return entropy
 
 
 def _tail_bucket_masses_on_device(

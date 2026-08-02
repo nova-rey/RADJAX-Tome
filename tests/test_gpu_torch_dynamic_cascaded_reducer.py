@@ -163,6 +163,39 @@ def test_gpu_dynamic_cascaded_reducer_honors_min_and_max() -> None:
     assert max_payload["top_token_ids"].shape == (1, 2, 2)
 
 
+def test_gpu_dynamic_entropy_uses_score_pass_chunk_accumulation() -> None:
+    """Path-B score and rerun must retain the same strict entropy tuple."""
+    if not _optional_torch_available():
+        pytest.skip("optional torch dependency is not installed")
+    torch = import_module("torch")
+    gpu_torch = import_module("radjax_tome.backends.gpu_torch")
+    logits = torch.linspace(-8.0, 8.0, steps=2 * 3 * 257, dtype=torch.float32).reshape(
+        2, 3, 257
+    )
+    workspace = gpu_torch._gpu_probability_workspace(
+        torch, logits, vocab_chunk_size=32
+    )
+    score_payload = gpu_torch._gpu_topk_tail_reduce_from_workspace(
+        torch, workspace, top_k=32
+    )
+    rerun_payload = gpu_torch._gpu_dynamic_cascaded_reduce(
+        torch,
+        logits,
+        dynamic_top_k_min=32,
+        dynamic_top_k_max=128,
+        dynamic_mass_threshold=0.99,
+        num_buckets=4,
+        vocab_chunk_size=32,
+    )
+
+    torch.testing.assert_close(
+        score_payload["teacher_entropy"],
+        rerun_payload["teacher_entropy"],
+        rtol=0.0,
+        atol=0.0,
+    )
+
+
 def test_dynamic_cascaded_head_vectorizes_mixed_position_cutoffs() -> None:
     if not _optional_torch_available():
         pytest.skip("optional torch dependency is not installed")
