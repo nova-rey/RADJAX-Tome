@@ -2334,6 +2334,14 @@
       "rationale": "Private T4 evidence driver that snapshots validated post-C5 inputs and invokes the sole canonical selected-rerun owner.",
       "replacement_or_target_boundary": "M8A representative baseline evidence package.",
       "status": "canonical"
+    },
+    "docs/M8A_T4_BASELINE_RECEIPT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M8A",
+      "rationale": "Sanitized content-addressed receipt for external private T4 anchor and replay evidence.",
+      "replacement_or_target_boundary": "M8A representative baseline independent-review evidence.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

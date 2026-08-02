@@ -2631,3 +2631,12 @@ equivalence-rejection fact, so M8A selects no production batch-shape change
 and authorizes neither M8B nor M8C. Raw path-bearing evidence remains outside
 the repository; the committed measurement document records the reproducible,
 bounded conclusion. M8A stops for independent review.
+
+## 2026-08-02 — M8A External Evidence Receipt
+
+The private T4 raw baseline report, post-C5 manifest, canonical production
+report, validation report, and selected-linkage audit now have a committed
+sanitized SHA-256 receipt. This preserves the required no-private-path/no-raw
+artifact boundary while giving an authorized independent reviewer exact bytes
+to verify. The receipt changes no benchmark result, authority, production
+behavior, M7 claim, or M8B status.
