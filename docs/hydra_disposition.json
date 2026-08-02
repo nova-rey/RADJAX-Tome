@@ -2326,6 +2326,14 @@
       "rationale": "Nonrepresentative deterministic fake-backend tests for benchmark control isolation, replay guards, accounting, and sampling.",
       "replacement_or_target_boundary": "M8A instrumentation readiness acceptance tests.",
       "status": "canonical"
+    },
+    "scripts/run_m8a_selected_pass_measurements.py": {
+      "archive_or_removal_condition": "Archive after M8A evidence is independently accepted or superseded by a governed successor.",
+      "kind": "script",
+      "owning_milestone": "M8A",
+      "rationale": "Private T4 evidence driver that snapshots validated post-C5 inputs and invokes the sole canonical selected-rerun owner.",
+      "replacement_or_target_boundary": "M8A representative baseline evidence package.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

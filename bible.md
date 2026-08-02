@@ -2568,3 +2568,18 @@ under chunked vocabulary reduction. This is a narrow M7 correctness repair;
 it does not relax validation, alter selection, authority, requested batch
 size, Contract, Golden fixtures, Student, or M8B policy. A fresh canonical T4
 anchor remains required before M7 or M8A acceptance is claimed.
+
+## 2026-08-02 — M8A Private T4 Replay Evidence Driver
+
+The M8A driver is a development-only script with no package or production CLI
+entry point. It rejects a non-passing canonical anchor, snapshots only the
+post-C5 score store, C2-C5/corridor authority evidence, source passports, and
+model/tokenizer/corpus/config identities into a content-addressed checkpoint,
+then invokes the existing selected-rerun owner in fresh system-temporary
+outputs. Each replay rehashes the snapshot, asserts zero score and selection
+writer invocations, preserves requested batch size eight, checks the five
+percent phase-accounting gate, and compares authority, frozen records, and
+payload hashes across the required full and capped runs. Raw evidence remains
+outside the repository. This adds no production path, policy, M7 semantic
+change, or M8B work; representative results remain pending the corrected
+canonical anchor's terminal acceptance.
