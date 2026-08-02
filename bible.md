@@ -2640,3 +2640,10 @@ sanitized SHA-256 receipt. This preserves the required no-private-path/no-raw
 artifact boundary while giving an authorized independent reviewer exact bytes
 to verify. The receipt changes no benchmark result, authority, production
 behavior, M7 claim, or M8B status.
+
+## 2026-08-02 — M7 Regression Test Format Normalization
+
+The focused M7 dynamic-reducer regression test was normalized with the
+repository formatter after the M8A full-suite validation. This is a
+format-only follow-up: no test assertion, production code, authority,
+measurement evidence, or milestone status changed.

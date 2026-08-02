@@ -172,9 +172,7 @@ def test_gpu_dynamic_entropy_uses_score_pass_chunk_accumulation() -> None:
     logits = torch.linspace(-8.0, 8.0, steps=2 * 3 * 257, dtype=torch.float32).reshape(
         2, 3, 257
     )
-    workspace = gpu_torch._gpu_probability_workspace(
-        torch, logits, vocab_chunk_size=32
-    )
+    workspace = gpu_torch._gpu_probability_workspace(torch, logits, vocab_chunk_size=32)
     score_payload = gpu_torch._gpu_topk_tail_reduce_from_workspace(
         torch, workspace, top_k=32
     )
