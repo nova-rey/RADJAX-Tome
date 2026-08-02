@@ -2595,3 +2595,16 @@ denominator unchanged. Focused selected-delivery and M8A readiness tests pass
 after the change. This is a private measurement-accounting repair only: it
 does not change the canonical rerun's payload bytes, selection, authority,
 batching, M7 behavior, Contract, or any production output.
+
+## 2026-08-02 — M8A Batch-Shape Equivalence Evidence Handling
+
+The representative M8A cap matrix reached its intended cross-cap comparison:
+each replay independently passed immutable-checkpoint, zero score/selection
+writer, authority, linkage, and accounting gates, while the canonical payload
+hash sequence differed across at least one execution cap. That is an
+equivalence-rejection result, not a measurement failure to suppress. The
+private driver now records the exact cross-cap comparison outcome in its raw
+report while continuing to fail closed if repeated runs at the same cap differ.
+It does not alter payloads, hashes, tolerance, batching, selection, authority,
+M7, Contract, or production behavior. The result excludes a batch-shape change
+from M8B consideration; M8A remains a measurement/evidence milestone only.

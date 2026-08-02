@@ -238,11 +238,17 @@ def _run_once(
         shutil.rmtree(output, ignore_errors=True)
 
 
+def _equivalence_mismatches(
+    reference: dict[str, object], candidate: dict[str, object]
+) -> list[str]:
+    fields = ("authority_hash", "record_digest", "payload_hashes")
+    return [field for field in fields if reference[field] != candidate[field]]
+
+
 def _assert_equivalent(
     reference: dict[str, object], candidate: dict[str, object]
 ) -> None:
-    fields = ("authority_hash", "record_digest", "payload_hashes")
-    mismatches = [field for field in fields if reference[field] != candidate[field]]
+    mismatches = _equivalence_mismatches(reference, candidate)
     if mismatches:
         raise AssertionError(
             "non-equivalent selected payload evidence: " + ", ".join(mismatches)
@@ -312,9 +318,13 @@ def main() -> None:
             _assert_equivalent(warmup, run)
         cap_runs[str(cap)] = [warmup, *measured]
     sample_reference = cap_runs["8"][1]
-    for runs in cap_runs.values():
-        for run in runs:
-            _assert_equivalent(sample_reference, run)
+    evidence["sample_cross_cap_equivalence"] = {
+        cap: {
+            "exact": not _equivalence_mismatches(sample_reference, runs[1]),
+            "mismatches": _equivalence_mismatches(sample_reference, runs[1]),
+        }
+        for cap, runs in cap_runs.items()
+    }
     evidence["sample_caps"] = cap_runs
     args.evidence_dir.mkdir(parents=True, exist_ok=True)
     output = args.evidence_dir / "m8a_selected_pass_baseline.json"
