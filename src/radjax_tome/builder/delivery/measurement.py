@@ -114,7 +114,8 @@ _PHASES = (
     "tokenization_input_preparation",
     "h2d_input_transfer",
     "teacher_forward",
-    "selected_position_index_gather",
+    "selected_position_index_preparation",
+    "selected_row_gather",
     "compact_reduction",
     "compact_d2h_transfer",
     "payload_conversion_linkage_validation",
@@ -155,7 +156,8 @@ class SelectedPassExecutionDiagnostics:
             "tokenization_input_preparation",
             "h2d_input_transfer",
             "teacher_forward",
-            "selected_position_index_gather",
+            "selected_position_index_preparation",
+            "selected_row_gather",
             "compact_reduction",
             "compact_d2h_transfer",
         ):
@@ -163,6 +165,8 @@ class SelectedPassExecutionDiagnostics:
 
     def add(self, phase: str, seconds: float) -> None:
         self.phase_seconds[phase] += max(0.0, seconds)
+        if self.phase_status[phase] == "not_available":
+            self.phase_status[phase] = "measured_host_wall"
 
     def observe(self) -> None:
         self.peak_rss_bytes = max(self.peak_rss_bytes, _host_rss_bytes())
@@ -175,16 +179,22 @@ class SelectedPassExecutionDiagnostics:
         if not isinstance(value, Mapping):
             return
         phases = value.get("phases")
+        statuses = value.get("phase_statuses")
         if isinstance(phases, Mapping):
             for phase, seconds in phases.items():
-                if phase in self.phase_seconds and isinstance(seconds, (int, float)):
+                status = statuses.get(phase) if isinstance(statuses, Mapping) else None
+                if (
+                    phase in self.phase_seconds
+                    and isinstance(seconds, (int, float))
+                    and status == "measured_host_wall"
+                ):
                     self.add(phase, float(seconds))
-                    self.phase_status[phase] = "measured"
-        statuses = value.get("phase_statuses")
+                    self.phase_status[phase] = "measured_host_wall"
         if isinstance(statuses, Mapping):
             for phase, status in statuses.items():
                 if phase in self.phase_status and isinstance(status, str):
-                    self.phase_status[phase] = status
+                    if self.phase_status[phase] != "measured_host_wall":
+                        self.phase_status[phase] = status
 
     def record_batch(
         self,
@@ -203,6 +213,34 @@ class SelectedPassExecutionDiagnostics:
             "attention_mask": _shape_dtype(attention),
             "compact_result": _mapping_shape_dtype(payload),
         }
+        metadata = getattr(result, "metadata", {})
+        backend_metadata = (
+            metadata.get("selected_pass_execution_v1_backend", {})
+            if isinstance(metadata, Mapping)
+            else {}
+        )
+        observations = (
+            backend_metadata.get("tensor_observations")
+            if isinstance(backend_metadata, Mapping)
+            else None
+        )
+        if isinstance(observations, Mapping):
+            # The GPU observer owns device-side tensor facts.  Keep the
+            # returned input/payload summaries for generic backend parity.
+            shapes.update(
+                {
+                    str(name): value
+                    for name, value in observations.items()
+                    if name
+                    in {
+                        "input",
+                        "attention_mask",
+                        "logits",
+                        "gathered_logits",
+                        "compact_result",
+                    }
+                }
+            )
         padded_tokens = _tensor_size(input_ids)
         attended_tokens = _tensor_sum(attention)
         shape_key = tuple(sorted((name, repr(value)) for name, value in shapes.items()))

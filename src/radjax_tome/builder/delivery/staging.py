@@ -97,6 +97,7 @@ def _selected_payloads_from_backend(
         dict(existing_payload_summaries[index])
         for index in sorted(existing_payload_summaries)
     ]
+    position_preparation_started = perf_counter() if diagnostics is not None else None
     records_by_example_id: dict[str, list[tuple[int, dict[str, Any]]]] = {}
     for record_index, record in pending_records:
         records_by_example_id.setdefault(str(record["selected_example_id"]), []).append(
@@ -114,6 +115,11 @@ def _selected_payloads_from_backend(
         for record_index, _ in records_by_example_id[example_id]:
             selected_row_by_record[record_index] = selected_row_offset
             selected_row_offset += 1
+    if diagnostics is not None and position_preparation_started is not None:
+        diagnostics.add(
+            "selected_position_index_preparation",
+            _elapsed(position_preparation_started),
+        )
     teacher_seconds = 0.0
     compression_seconds = 0.0
     peak_host_memory_bytes = _host_rss_bytes()
@@ -135,7 +141,8 @@ def _selected_payloads_from_backend(
             )
             if diagnostics is not None:
                 diagnostics.add(
-                    "selected_position_index_gather", _elapsed(position_started)
+                    "selected_position_index_preparation",
+                    _elapsed(position_started),
                 )
             teacher_started = perf_counter()
             try:

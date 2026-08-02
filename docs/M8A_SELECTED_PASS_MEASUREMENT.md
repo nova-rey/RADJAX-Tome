@@ -23,8 +23,12 @@ selected-pass wall-time denominator, phase ledger, 5-percent accounting
 reconciliation, effective source sizes, tensor shapes and dtypes, process and
 optional CUDA observations, OOM/reload events, and explicit
 `not_authorized` compilation status. The real GPU Torch backend emits its
-private phase metadata only while that observer is attached; CUDA event timing
-is explicitly unavailable because M8A does not authorize it. M7 publication,
+private phase metadata only while that observer is attached: selected-position
+index preparation is measured by the canonical staging owner and selected-row
+gather by the GPU backend. Each observed GPU batch reports input, logits,
+gathered-logits, and compact-result shapes and dtypes without materializing an
+additional tensor. CUDA event timing is explicitly unavailable because M8A
+does not authorize it. M7 publication,
 Contract validation,
 archive creation, and v5 packaging remain separately marked as unmeasured
 post-selected-pass phases. A deterministic largest-remainder source sampler

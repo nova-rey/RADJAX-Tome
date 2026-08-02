@@ -168,7 +168,9 @@ def test_gpu_torch_emits_private_selected_pass_phase_metadata_when_observed(
     def model(**_kwargs):
         return SimpleNamespace(logits=FakeTensor(np.ones((2, 4, 7), dtype=np.float32)))
 
-    backend = GPUTorchTeacherEmissionBackend(_config())
+    backend = GPUTorchTeacherEmissionBackend(
+        _config(target_policy="dynamic_cascaded_soft_labels_v1", top_k=2)
+    )
     monkeypatch.setattr(
         backend,
         "_load_model_and_tokenizer",
@@ -178,6 +180,14 @@ def test_gpu_torch_emits_private_selected_pass_phase_metadata_when_observed(
     monkeypatch.setattr(
         "radjax_tome.backends.gpu_torch._gpu_selected_position_logits",
         lambda _torch, logits, _batch: logits,
+    )
+    monkeypatch.setattr(
+        "radjax_tome.backends.gpu_torch._gpu_dynamic_cascaded_reduce",
+        lambda *_args, **_kwargs: object(),
+    )
+    monkeypatch.setattr(
+        "radjax_tome.backends.gpu_torch._compact_payload_to_numpy",
+        lambda _result: {"top_token_ids": np.zeros((2, 4, 2), dtype=np.int32)},
     )
     assert (
         "selected_pass_execution_v1_backend"
@@ -194,13 +204,25 @@ def test_gpu_torch_emits_private_selected_pass_phase_metadata_when_observed(
         "tokenization_input_preparation",
         "h2d_input_transfer",
         "teacher_forward",
-        "selected_position_index_gather",
+        "selected_position_index_preparation",
+        "selected_row_gather",
         "compact_reduction",
         "compact_d2h_transfer",
     }
     assert metadata["compilation"]["status"] == "not_authorized"
     assert metadata["cuda_event_timing"]["status"] == "not_available"
-    assert metadata["phase_statuses"]["compact_reduction"] == "not_applicable"
+    assert metadata["phase_statuses"]["selected_position_index_preparation"] == (
+        "not_applicable"
+    )
+    assert metadata["phase_statuses"]["selected_row_gather"] == "measured_host_wall"
+    assert metadata["phase_statuses"]["compact_reduction"] == "measured_host_wall"
+    assert metadata["tensor_observations"] == {
+        "input": {"shape": [2, 4], "dtype": "int32"},
+        "attention_mask": {"shape": [2, 4], "dtype": "int32"},
+        "logits": {"shape": [2, 4, 7], "dtype": "float32"},
+        "gathered_logits": {"shape": [2, 4, 7], "dtype": "float32"},
+        "compact_result": {"top_token_ids": {"shape": [2, 4, 2], "dtype": "int32"}},
+    }
     assert spy.items == [metadata]
 
 

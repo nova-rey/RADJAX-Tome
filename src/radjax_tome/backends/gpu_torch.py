@@ -270,7 +270,7 @@ class GPUTorchTeacherEmissionBackend:
         effective_vocab_size = int(logits.shape[-1])
         reduction_logits = _measure_backend_phase(
             phase_seconds,
-            "selected_position_index_gather",
+            "selected_row_gather",
             lambda: _gpu_selected_position_logits(torch, logits, batch),
         )
         estimated_dense_logits_dtype = _logits_dtype_name(logits)
@@ -435,7 +435,17 @@ class GPUTorchTeacherEmissionBackend:
             compact_payload=payload,
             estimated_dense_logits_dtype=estimated_dense_logits_dtype,
         )
-        self._record_selected_pass_measurement(metadata, phase_seconds)
+        self._record_selected_pass_measurement(
+            metadata,
+            phase_seconds,
+            input_ids=input_ids_tensor,
+            attention_mask=attention_mask_tensor,
+            logits=logits,
+            gathered_logits=reduction_logits,
+            compact_result=(
+                payload if self.config.target_policy != "dense_logits" else None
+            ),
+        )
         return TeacherEmissionResult(
             backend_id=self.backend_id,
             runtime_mode="cpu_gpu",
@@ -447,7 +457,15 @@ class GPUTorchTeacherEmissionBackend:
         )
 
     def _record_selected_pass_measurement(
-        self, metadata: dict[str, object], phase_seconds: dict[str, float] | None
+        self,
+        metadata: dict[str, object],
+        phase_seconds: dict[str, float] | None,
+        *,
+        input_ids: Any,
+        attention_mask: Any,
+        logits: Any,
+        gathered_logits: Any,
+        compact_result: Any,
     ) -> None:
         observer = self._selected_pass_measurement_observer
         if observer is None or phase_seconds is None:
@@ -457,7 +475,8 @@ class GPUTorchTeacherEmissionBackend:
             "tokenization_input_preparation",
             "h2d_input_transfer",
             "teacher_forward",
-            "selected_position_index_gather",
+            "selected_position_index_preparation",
+            "selected_row_gather",
             "compact_reduction",
             "compact_d2h_transfer",
         )
@@ -477,6 +496,13 @@ class GPUTorchTeacherEmissionBackend:
             "cuda_event_timing": {
                 "status": "not_available",
                 "reason": "not_authorized_for_m8a",
+            },
+            "tensor_observations": {
+                "input": _measurement_tensor_shape_dtype(input_ids),
+                "attention_mask": _measurement_tensor_shape_dtype(attention_mask),
+                "logits": _measurement_tensor_shape_dtype(logits),
+                "gathered_logits": _measurement_tensor_shape_dtype(gathered_logits),
+                "compact_result": _measurement_compact_shape_dtype(compact_result),
             },
         }
         metadata["selected_pass_execution_v1_backend"] = backend_metadata
@@ -740,6 +766,29 @@ def _measure_backend_phase(
         phase_seconds[phase] = phase_seconds.get(phase, 0.0) + (
             perf_counter() - started
         )
+
+
+def _measurement_tensor_shape_dtype(value: Any) -> dict[str, object]:
+    """Describe a tensor-like value without materializing or transferring it."""
+
+    shape = getattr(value, "shape", None)
+    if shape is None:
+        return {"status": "not_applicable"}
+    return {
+        "shape": [int(dimension) for dimension in shape],
+        "dtype": str(getattr(value, "dtype", "unknown")),
+    }
+
+
+def _measurement_compact_shape_dtype(value: Any) -> dict[str, object]:
+    if value is None:
+        return {"status": "not_applicable"}
+    if isinstance(value, Mapping):
+        return {
+            str(name): _measurement_tensor_shape_dtype(item)
+            for name, item in value.items()
+        }
+    return _measurement_tensor_shape_dtype(value)
 
 
 def _torch_model_forward(

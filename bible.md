@@ -2539,3 +2539,17 @@ attachment, manifest tamper rejection, cap-isolated exact payload sequence,
 and replay ownership; they remain nonrepresentative. This remediation does not
 begin M8B, run a T4 anchor, change production selection or M7 semantics, or
 make any accelerator/performance claim.
+
+## 2026-08-02 — M8A Final Observer Phase Reconciliation
+
+The private M8A observer now keeps selected-position index preparation and
+selected-row gather as distinct phase names without changing canonical
+selection, batching, reduction, or payload computation. The staging owner
+measures index preparation, while `gpu_torch` measures the existing selected
+row gather. Its attached-only metadata now records shape and dtype facts for
+input, logits, gathered logits, and the compact result without an extra device
+transfer or materialization; mocked GPU tests cover both phase separation and
+those fields. This scoped diagnostic remediation remains private to
+benchmark-only M8A measurement: it does not start M8B or alter authority,
+production behavior, M7, Contract, Golden, Student, model, corpus, or
+performance claims.
