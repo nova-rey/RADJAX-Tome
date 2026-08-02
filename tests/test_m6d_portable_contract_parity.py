@@ -53,7 +53,10 @@ def test_m6d_profiles_preserve_identity_and_validate_in_both_paths(
 ) -> None:
     artifact = build_package_artifact(tmp_path / "source")
     student = package_tome_artifact(
-        artifact, tmp_path / "student", profile="student"
+        artifact,
+        tmp_path / "student",
+        profile="student",
+        student_contract_profile="v4",
     ).output_path
     debug = package_tome_artifact(
         artifact, tmp_path / "debug", profile="full_debug_provenance"

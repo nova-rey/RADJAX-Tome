@@ -36,7 +36,10 @@ from radjax_tome.builder.teacher_textbook import (
     validate_teacher_textbook,
     write_teacher_textbook_validation_report,
 )
-from radjax_tome.corpora import stringify_corpus_provenance
+from radjax_tome.corpora import (
+    capture_language_tokenizer_binding,
+    stringify_corpus_provenance,
+)
 from radjax_tome.io.json import write_json
 from radjax_tome.provenance import (
     teacher_model_provenance_summary,
@@ -226,6 +229,7 @@ def build_backend_teacher_textbook(
         target_type=target_type,
         shard_count=shard_count,
     )
+    _write_v5_tokenizer_capture(config.output_dir, backend)
     report = validate_teacher_textbook(config.output_dir)
     write_teacher_textbook_validation_report(
         report,
@@ -494,6 +498,7 @@ def build_streaming_backend_teacher_textbook(
         resume_config_hash=resume_hash,
         shard_size_examples=shard_size,
     )
+    _write_v5_tokenizer_capture(output_dir, backend)
     report = validate_teacher_textbook(output_dir)
     write_teacher_textbook_validation_report(
         report,
@@ -543,6 +548,15 @@ def build_streaming_backend_teacher_textbook(
     _notify_progress(config, progress_log_path, "run_completed")
     write_cover_page(output_dir)
     return validate_teacher_textbook(output_dir)
+
+
+def _write_v5_tokenizer_capture(output_dir: Path, backend: Any) -> None:
+    """Persist only the tokenizer object that emitted this source's IDs."""
+
+    tokenizer = getattr(backend, "tokenizer", None)
+    if tokenizer is None:
+        return
+    capture_language_tokenizer_binding(tokenizer).write_to(output_dir)
 
 
 def teacher_backend_config_from_build_config(

@@ -15,6 +15,7 @@ from radjax_tome.backends.base import (
     resolve_gpu_batch_size_policy,
     validate_gpu_batch_size_policy_config,
 )
+from radjax_tome.corpora import SmokeTokenizer
 
 _SUPPORTED_EMISSION_POLICIES = {
     "dense_logits",
@@ -208,11 +209,7 @@ class CPUReferenceTeacherEmissionBackend:
         )
 
     def emit_batch(self, batch: TeacherBatchInput) -> TeacherEmissionResult:
-        input_ids, attention_mask = _encode_texts(
-            batch.texts,
-            sequence_length=self.config.sequence_length,
-            vocab_size=self.config.vocab_size,
-        )
+        input_ids, attention_mask = self._encode_texts(batch.texts)
         logits = _deterministic_logits(input_ids, vocab_size=self.config.vocab_size)
         payload_logits = _selected_position_logits(logits, batch)
         payload = self._payload_for_policy(payload_logits)
@@ -302,11 +299,7 @@ class CPUReferenceTeacherEmissionBackend:
         self,
         batch: TeacherBatchInput,
     ) -> TeacherEmissionResult:
-        input_ids, attention_mask = _encode_texts(
-            batch.texts,
-            sequence_length=self.config.sequence_length,
-            vocab_size=self.config.vocab_size,
-        )
+        input_ids, attention_mask = self._encode_texts(batch.texts)
         logits = _deterministic_logits(input_ids, vocab_size=self.config.vocab_size)
         payload = _corridor_exemplar_score_payload(logits, config=self.config)
         return TeacherEmissionResult(
@@ -325,11 +318,7 @@ class CPUReferenceTeacherEmissionBackend:
         *,
         corpus_level_finalized: bool = False,
     ) -> TeacherEmissionResult:
-        input_ids, attention_mask = _encode_texts(
-            batch.texts,
-            sequence_length=self.config.sequence_length,
-            vocab_size=self.config.vocab_size,
-        )
+        input_ids, attention_mask = self._encode_texts(batch.texts)
         logits = _deterministic_logits(input_ids, vocab_size=self.config.vocab_size)
         payload = _corridor_exemplar_selected_payload(
             logits,
@@ -390,6 +379,46 @@ class CPUReferenceTeacherEmissionBackend:
                 config=self.config,
             )
         raise ValueError(f"unsupported target_policy: {self.config.target_policy}")
+
+    def _encode_texts(self, texts: tuple[str, ...]) -> tuple[np.ndarray, np.ndarray]:
+        return _encode_texts(
+            texts,
+            sequence_length=self.config.sequence_length,
+            vocab_size=self.config.vocab_size,
+        )
+
+
+class SmokeTokenizerTeacherEmissionBackend(CPUReferenceTeacherEmissionBackend):
+    """Explicit v5 producer backend whose payload IDs come from SmokeTokenizer.
+
+    This is intentionally separate from ``cpu_reference``.  The historical
+    reference encoder remains byte-for-byte unchanged, while this backend
+    keeps the instantiated tokenizer available for v5 capture after emission.
+    """
+
+    backend_id = "smoke_tokenizer"
+    backend_family = "smoke_tokenizer"
+
+    def __init__(self, config: TeacherBackendConfig) -> None:
+        super().__init__(config)
+        self.tokenizer: SmokeTokenizer | None = (
+            SmokeTokenizer(vocab_size=config.vocab_size)
+            if config.vocab_size >= 257
+            else None
+        )
+
+    def _encode_texts(self, texts: tuple[str, ...]) -> tuple[np.ndarray, np.ndarray]:
+        if self.tokenizer is None:
+            raise ValueError("smoke_tokenizer requires vocab_size >= 257")
+        input_ids = np.zeros((len(texts), self.config.sequence_length), dtype=np.int32)
+        attention_mask = np.zeros_like(input_ids)
+        for row, text in enumerate(texts):
+            encoded = self.tokenizer.encode(
+                text, max_length=self.config.sequence_length
+            )
+            input_ids[row, : len(encoded)] = np.asarray(encoded, dtype=np.int32)
+            attention_mask[row, : len(encoded)] = 1
+        return input_ids, attention_mask
 
 
 def _encode_texts(

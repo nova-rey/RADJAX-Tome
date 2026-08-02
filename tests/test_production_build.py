@@ -273,7 +273,13 @@ def test_c6_cpu_path_generates_features_audit_and_curriculum(
     else:
         assert report["selected_teacher_rerun_count"] == 0
     package = tmp_path / f"student-{delivery_path}"
-    package_tome_artifact(config.output_dir, package, profile=STUDENT, overwrite=True)
+    package_tome_artifact(
+        config.output_dir,
+        package,
+        profile=STUDENT,
+        overwrite=True,
+        student_contract_profile="v4",
+    )
     assert validate_tome_package(package, profile=STUDENT).ok
     assert (
         _json(package / "selected_linkage_audit.json")["c6_integration"]["status"]

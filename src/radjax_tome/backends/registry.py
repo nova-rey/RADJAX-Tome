@@ -7,7 +7,10 @@ from radjax_tome.backends.base import (
     TeacherBackendConfig,
     TeacherEmissionBackend,
 )
-from radjax_tome.backends.cpu import CPUReferenceTeacherEmissionBackend
+from radjax_tome.backends.cpu import (
+    CPUReferenceTeacherEmissionBackend,
+    SmokeTokenizerTeacherEmissionBackend,
+)
 from radjax_tome.backends.fake import FakeNumpyTeacherEmissionBackend
 from radjax_tome.backends.gpu_torch import GPUTorchTeacherEmissionBackend
 from radjax_tome.backends.hf_torch import HFTorchTeacherEmissionBackend
@@ -50,5 +53,6 @@ def list_backend_capabilities() -> tuple[BackendCapability, ...]:
 
 register_backend(FakeNumpyTeacherEmissionBackend)
 register_backend(CPUReferenceTeacherEmissionBackend)
+register_backend(SmokeTokenizerTeacherEmissionBackend)
 register_backend(HFTorchTeacherEmissionBackend)
 register_backend(GPUTorchTeacherEmissionBackend)

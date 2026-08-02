@@ -913,7 +913,7 @@ def validate_tome_build_intent(
     ):
         if value is not None:
             _require_path(errors, value, name)
-    if intent.teacher.backend not in {"gpu_torch", "cpu_reference"}:
+    if intent.teacher.backend not in {"gpu_torch", "cpu_reference", "smoke_tokenizer"}:
         errors.append("teacher.backend is unsupported")
     if intent.teacher.runtime_mode not in {"cpu", "cpu_gpu"}:
         errors.append("teacher.runtime_mode is unsupported")
@@ -927,6 +927,11 @@ def validate_tome_build_intent(
         and intent.teacher.runtime_mode != "cpu"
     ):
         errors.append("teacher.backend cpu_reference requires runtime_mode cpu")
+    if (
+        intent.teacher.backend == "smoke_tokenizer"
+        and intent.teacher.runtime_mode != "cpu"
+    ):
+        errors.append("teacher.backend smoke_tokenizer requires runtime_mode cpu")
     if intent.behavior.target_policy not in _TARGET_POLICIES:
         errors.append("behavior.target_policy is unsupported")
     for name, value in _integer_fields(intent):

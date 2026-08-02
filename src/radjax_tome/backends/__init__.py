@@ -41,6 +41,10 @@ _LAZY_EXPORTS: LazyExportMap = {
         "radjax_tome.backends.cpu",
         "CPUReferenceTeacherEmissionBackend",
     ),
+    "SmokeTokenizerTeacherEmissionBackend": (
+        "radjax_tome.backends.cpu",
+        "SmokeTokenizerTeacherEmissionBackend",
+    ),
     "emit_teacher_target_store": (
         "radjax_tome.backends.emission",
         "emit_teacher_target_store",
@@ -83,6 +87,7 @@ __all__ = [
     "BackendRunConfig",
     "BackendRunResult",
     "CPUReferenceTeacherEmissionBackend",
+    "SmokeTokenizerTeacherEmissionBackend",
     "CpuOrchestrationMode",
     "FallbackPolicy",
     "MIN_CORRIDOR_STAT_TOP_K",

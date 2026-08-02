@@ -680,6 +680,14 @@ def _build_parser() -> argparse.ArgumentParser:
         required=True,
     )
     package_artifact.add_argument("--archive", choices=("none", "tgz"), default="none")
+    package_artifact.add_argument(
+        "--student-contract-profile",
+        choices=("v4", "v5"),
+        default="v5",
+        help=(
+            "Use v5 for new Student packages; v4 is explicit historical compatibility."
+        ),
+    )
     package_artifact.add_argument("--overwrite", action="store_true")
     package_artifact.set_defaults(func=_cmd_package_artifact)
 
@@ -1697,6 +1705,7 @@ def _cmd_package_artifact(args: argparse.Namespace) -> int:
         profile=args.profile,
         archive=args.archive,
         overwrite=args.overwrite,
+        student_contract_profile=args.student_contract_profile,
     )
     print(
         f"status=pass package={result.output_path} profile={result.profile} "

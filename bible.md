@@ -2460,3 +2460,16 @@ the instantiated Smoke or explicit fast Hugging Face tokenizer used by the
 tokenization loop.  Incomplete vocabulary, normalization/configuration,
 added/special-token, or immutable-revision evidence fails closed; metadata is
 not promoted into a binding.  V4 remains untouched historical behavior.
+
+## 2026-08-01 — Phase 5 T2 v5 Package Transaction
+
+New Student packages emit the explicit `native_v3_student_v5` binding manifest,
+inventory-backed vocabulary resource, and v5 cover declaration.  The package
+transaction first requires Contract-admitted source capture and verifies every
+source payload token ID is in its declared vocabulary domain.  Directory and
+archive candidates are strictly admitted before atomic public promotion; the
+archive path validates its deterministic inventory before safe extraction for
+the Contract's directory-based v5 resolver.  `smoke_tokenizer` is a separate
+CPU-only producer whose instantiated SmokeTokenizer both encodes the payloads
+and supplies capture.  Historical CPU/fake artifacts have no inferred v5
+binding and fail closed; their v4 behavior is not rewritten or reinterpreted.

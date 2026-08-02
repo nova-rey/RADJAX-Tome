@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import shutil
+import tarfile
 import tempfile
 from collections.abc import Iterator
 from dataclasses import asdict, dataclass
@@ -19,7 +20,7 @@ from radjax_tome.tome.artifact_descriptor import (
     ValidatedProducerArtifact,
     ValidatedTomeArtifact,
 )
-from radjax_tome.tome.bundle import pack_tome_bundle
+from radjax_tome.tome.bundle import pack_tome_bundle, validate_tome_bundle
 from radjax_tome.tome.canonical_artifact import (
     build_canonical_artifact_cover,
     validate_canonical_artifact_directory,
@@ -28,6 +29,7 @@ from radjax_tome.tome.contracts import (
     CANONICAL_TOME_COVER_SCHEMA,
     CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
     CANONICAL_TOME_STUDENT_CONSUMPTION_V4_COVER_SCHEMA,
+    CANONICAL_TOME_STUDENT_CONSUMPTION_V5_COVER_SCHEMA,
     HISTORICAL_PACKAGE_COVER_SCHEMA,
 )
 from radjax_tome.tome.producer_validation import (
@@ -38,7 +40,10 @@ from radjax_tome.tome.producer_validation import (
 )
 from radjax_tome.tome.student_consumption_v4 import (
     NativeV3StudentConsumptionV4Materialization,
-    materialize_native_v3_student_consumption_v4,
+)
+from radjax_tome.tome.student_consumption_v5 import (
+    LanguageTokenizerBindingV5Materialization,
+    materialize_language_tokenizer_binding_v5,
 )
 
 FULL_DEBUG_PROVENANCE = "full_debug_provenance"
@@ -227,8 +232,11 @@ def package_tome_artifact(
     profile: str,
     archive: str = "none",
     overwrite: bool = False,
+    student_contract_profile: str = "v5",
 ) -> TomePackageResult:
     _require_profile(profile)
+    if student_contract_profile not in {"v4", "v5"}:
+        raise ValueError("student_contract_profile must be one of: v4, v5")
     if archive not in {"none", "tgz"}:
         raise ValueError("archive must be one of: none, tgz")
     source_artifact = ValidatedProducerArtifact.from_directory(artifact_dir)
@@ -244,32 +252,50 @@ def package_tome_artifact(
     ) as tmp:
         temporary_root = Path(tmp) / _package_root_name(output, archive)
         _materialize_package(source, temporary_root, profile=profile)
-        student_consumption: NativeV3StudentConsumptionV4Materialization | None = None
+        language_tokenizer_binding: LanguageTokenizerBindingV5Materialization | None = (
+            None
+        )
+        student_consumption_v4: NativeV3StudentConsumptionV4Materialization | None = (
+            None
+        )
         if profile == STUDENT:
-            student_consumption = materialize_native_v3_student_consumption_v4(
-                source,
-                destination_root=temporary_root,
-                selection_integration_config_hash=semantic_identity.authority[
-                    "selection_integration_config_hash"
-                ],
-            )
+            if student_contract_profile == "v5":
+                language_tokenizer_binding = materialize_language_tokenizer_binding_v5(
+                    source,
+                    destination_root=temporary_root,
+                )
+            else:
+                from radjax_tome.tome.student_consumption_v4 import (
+                    materialize_native_v3_student_consumption_v4,
+                )
+
+                student_consumption_v4 = materialize_native_v3_student_consumption_v4(
+                    source,
+                    destination_root=temporary_root,
+                    selection_integration_config_hash=semantic_identity.authority[
+                        "selection_integration_config_hash"
+                    ],
+                )
         _write_package_audit(temporary_root, profile=profile)
         _write_package_manifests(temporary_root, profile=profile)
-        if student_consumption is not None:
+        if language_tokenizer_binding is not None:
+            # The ordinary content manifest binds the generic binding and its
+            # vocabulary resource before the public cover is created.
+            _write_package_manifests(temporary_root, profile=profile)
+        if student_consumption_v4 is not None:
             _write_student_consumption_v4_manifest(
                 temporary_root,
-                materialization=student_consumption,
+                materialization=student_consumption_v4,
                 semantic_identity=semantic_identity,
             )
-            # The historical package manifest remains complete evidence for
-            # old readers, so rebuild it once the additive sidecar exists.
             _write_package_manifests(temporary_root, profile=profile)
         _write_canonical_package_cover_page(
             temporary_root,
             profile=profile,
             semantic_identity=semantic_identity,
             transport="tgz" if archive == "tgz" else "directory",
-            student_consumption=student_consumption,
+            language_tokenizer_binding=language_tokenizer_binding,
+            student_consumption_v4=student_consumption_v4,
         )
         # Packaging only proceeds from the complete canonical descriptor.  The
         # path-taking API above is a source compatibility adapter; this typed
@@ -285,7 +311,9 @@ def package_tome_artifact(
         # transport.  Validate that declaration only after deterministic tar
         # emission; validating the staging directory itself would correctly
         # reject the intentional directory/container mismatch.
-        if student_consumption is not None and archive == "none":
+        if language_tokenizer_binding is not None and archive == "none":
+            _validate_language_tokenizer_binding_v5_with_contract(temporary_root)
+        if student_consumption_v4 is not None and archive == "none":
             _validate_student_consumption_v4_with_contract(temporary_root)
         if archive == "none":
             _replace_output_path(temporary_root, output, overwrite=overwrite)
@@ -298,7 +326,9 @@ def package_tome_artifact(
 
         temporary_archive = Path(tmp) / output.name
         pack_tome_bundle(temporary_root, temporary_archive, compression="gz")
-        if student_consumption is not None:
+        if language_tokenizer_binding is not None:
+            _validate_language_tokenizer_binding_v5_with_contract(temporary_archive)
+        if student_consumption_v4 is not None:
             _validate_student_consumption_v4_with_contract(temporary_archive)
         _replace_output_path(temporary_archive, output, overwrite=overwrite)
     return TomePackageResult(output_path=output, profile=profile, archive=archive)
@@ -320,6 +350,7 @@ def validate_tome_package(
             CANONICAL_TOME_COVER_SCHEMA,
             CANONICAL_TOME_STUDENT_CONSUMPTION_V2_COVER_SCHEMA,
             CANONICAL_TOME_STUDENT_CONSUMPTION_V4_COVER_SCHEMA,
+            CANONICAL_TOME_STUDENT_CONSUMPTION_V5_COVER_SCHEMA,
         }
     )
     if canonical_cover:
@@ -983,6 +1014,58 @@ def _validate_student_consumption_v4_with_contract(artifact: Path) -> None:
         raise ValueError(f"Contract native_v3_student_v4 validation failed: {codes}")
 
 
+def _validate_language_tokenizer_binding_v5_with_contract(artifact: Path) -> None:
+    """Refuse directory or archive promotion unless Contract v5 admits it."""
+
+    from radjax_contract.tome import validate_and_resolve_student_consumption
+
+    if artifact.is_file():
+        # Contract v5 is deliberately transport-neutral and resolves only its
+        # fixed directory manifest.  The Tome archive validator first proves
+        # the candidate's exact archive inventory, then this safe extraction
+        # lets the Contract admit those archived bytes before promotion.
+        with tempfile.TemporaryDirectory(prefix=".radjax-v5-admission-") as tmp:
+            archive_report = validate_tome_bundle(artifact)
+            if not archive_report.ok:
+                raise ValueError(
+                    "v5 archive candidate failed Tome validation: "
+                    + "; ".join(archive_report.blockers)
+                )
+            extracted = Path(tmp) / "artifact"
+            extracted.mkdir()
+            with tarfile.open(artifact, mode="r:*") as archive:
+                for member in archive.getmembers():
+                    relative = PurePosixPath(member.name)
+                    if (
+                        relative.is_absolute()
+                        or ".." in relative.parts
+                        or not member.isfile()
+                    ):
+                        raise ValueError("v5 archive candidate has unsafe member")
+                    handle = archive.extractfile(member)
+                    if handle is None:
+                        raise ValueError("v5 archive candidate member is unreadable")
+                    target = extracted / relative.as_posix()
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(handle.read())
+            result = validate_and_resolve_student_consumption(
+                extracted,
+                profile_id="native_v3_student_v5",
+                strict=True,
+            )
+    else:
+        result = validate_and_resolve_student_consumption(
+            artifact,
+            profile_id="native_v3_student_v5",
+            strict=True,
+        )
+    if not result.ok:
+        codes = ",".join(
+            f"{issue.code}:{dict(issue.context)}" for issue in result.issues
+        )
+        raise ValueError(f"Contract native_v3_student_v5 validation failed: {codes}")
+
+
 def _write_package_cover_page(root: Path, *, profile: str) -> None:
     metadata = read_json_object(root / "metadata.json")
     corridor_summary = read_json_object(root / "corridors" / "corridor_summary.json")
@@ -1053,7 +1136,8 @@ def _write_canonical_package_cover_page(
     profile: str,
     semantic_identity: Any,
     transport: str,
-    student_consumption: NativeV3StudentConsumptionV4Materialization | None = None,
+    language_tokenizer_binding: LanguageTokenizerBindingV5Materialization | None = None,
+    student_consumption_v4: NativeV3StudentConsumptionV4Materialization | None = None,
 ) -> None:
     """Materialize the one M5D public cover after all package manifests exist."""
 
@@ -1069,7 +1153,19 @@ def _write_canonical_package_cover_page(
         semantic_identity=semantic_identity,
     )
     cover["provenance"]["historical_package_cover_v1"] = legacy_receipt
-    if student_consumption is not None:
+    if language_tokenizer_binding is not None:
+        manifest_path = root / language_tokenizer_binding.manifest_path
+        manifest = read_json_object(manifest_path)
+        cover["schema_version"] = "radjax_tome_cover_v3_student_consumption_v5"
+        cover["student_consumption"] = {
+            "profile_id": "native_v3_student_v5",
+            "manifest_path": language_tokenizer_binding.manifest_path,
+            "manifest_sha256": _sha256(manifest_path),
+            "semantic_digest": manifest["canonical_binding_digest"],
+            "digest_method": "sha256",
+            "required_capabilities": [],
+        }
+    if student_consumption_v4 is not None:
         manifest_path = root / "manifests" / "student_consumption_v4.json"
         manifest = read_json_object(manifest_path)
         cover["schema_version"] = "radjax_tome_cover_v3_student_consumption_v4"

@@ -870,12 +870,12 @@
       "status": "canonical"
     },
     "src/radjax_tome/backends/cpu.py": {
-      "archive_or_removal_condition": "M2 parity and no canonical import dependency.",
+      "archive_or_removal_condition": "Retain CPU reference behavior and the separate v5 SmokeTokenizer producer.",
       "kind": "source-module",
-      "owning_milestone": "M6",
-      "rationale": "Legacy reader, reference backend, or toy compatibility route.",
-      "replacement_or_target_boundary": "Canonical reader, validator, or test fixture boundary.",
-      "status": "compatibility-only"
+      "owning_milestone": "Phase 5 T2",
+      "rationale": "Retains CPU reference behavior while exposing a separate SmokeTokenizer-backed v5 producer backend.",
+      "replacement_or_target_boundary": "Explicit smoke_tokenizer production configuration for v5 evidence.",
+      "status": "canonical"
     },
     "src/radjax_tome/backends/emission.py": {
       "archive_or_removal_condition": null,
@@ -2237,6 +2237,22 @@
       "owning_milestone": "C6",
       "rationale": "Producer-side native-v3 v4 materialization preserving Path A/Path B batch-semantic identity equivalence while emitting integrity-bound provenance.",
       "replacement_or_target_boundary": "Published Contract v0.6.0 native_v3_student_v4 profile.",
+      "status": "canonical"
+    },
+    "docs/C5_LANGUAGE_TOKENIZER_BINDING_V5.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "Phase 5 T2",
+      "rationale": "Documents explicit v5 package emission, pre-promotion admission, and preserved legacy rejection.",
+      "replacement_or_target_boundary": "Published Contract v0.7.0 native_v3_student_v5 package transaction.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tome/student_consumption_v5.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "Phase 5 T2",
+      "rationale": "Copies Contract-admitted tokenizer capture resources and proves source token-domain agreement for v5 packages.",
+      "replacement_or_target_boundary": "Generic v5 language/tokenizer binding materialization seam.",
       "status": "canonical"
     }
   },

@@ -127,7 +127,13 @@ def test_student_package_is_self_contained_training_contract(
     tmp_path: Path,
 ) -> None:
     package = tmp_path / "student"
-    package_tome_artifact(artifact, package, profile=STUDENT, overwrite=True)
+    package_tome_artifact(
+        artifact,
+        package,
+        profile=STUDENT,
+        overwrite=True,
+        student_contract_profile="v4",
+    )
 
     assert not (package / "shards").exists()
     assert (
@@ -194,14 +200,22 @@ def test_student_v4_path_a_and_path_b_share_consumption_identity(
     from radjax_contract.tome import validate_and_resolve_student_consumption
 
     path_b = package_tome_artifact(
-        artifact, tmp_path / "student-path-b", profile=STUDENT, overwrite=True
+        artifact,
+        tmp_path / "student-path-b",
+        profile=STUDENT,
+        overwrite=True,
+        student_contract_profile="v4",
     ).output_path
     delivery_path = artifact / "delivery_report.json"
     delivery = json.loads(delivery_path.read_text(encoding="utf-8"))
     delivery["delivery_path"] = "one_pass_pruned_candidate"
     delivery_path.write_text(json.dumps(delivery, sort_keys=True), encoding="utf-8")
     path_a = package_tome_artifact(
-        artifact, tmp_path / "student-path-a", profile=STUDENT, overwrite=True
+        artifact,
+        tmp_path / "student-path-a",
+        profile=STUDENT,
+        overwrite=True,
+        student_contract_profile="v4",
     ).output_path
 
     path_b_manifest = json.loads(
@@ -235,7 +249,13 @@ def test_m5d_profiles_share_source_identity_but_bind_distinct_inventories(
 ) -> None:
     student = tmp_path / "student"
     debug = tmp_path / "debug"
-    package_tome_artifact(artifact, student, profile=STUDENT, overwrite=True)
+    package_tome_artifact(
+        artifact,
+        student,
+        profile=STUDENT,
+        overwrite=True,
+        student_contract_profile="v4",
+    )
     package_tome_artifact(
         artifact,
         debug,
@@ -263,7 +283,13 @@ def test_m5e_historical_package_v1_remains_native_and_adapts_explicitly(
     tmp_path: Path,
 ) -> None:
     package = tmp_path / "student"
-    package_tome_artifact(artifact, package, profile=STUDENT, overwrite=True)
+    package_tome_artifact(
+        artifact,
+        package,
+        profile=STUDENT,
+        overwrite=True,
+        student_contract_profile="v4",
+    )
     cover_path = package / "cover_page.json"
     canonical_cover = _json(cover_path)
     historical_cover = canonical_cover["provenance"]["historical_package_cover_v1"]
@@ -297,7 +323,13 @@ def test_student_package_filters_perverse_tail_board_by_producer_opt_in(
     package_name = "student-included" if include_perverse else "student-excluded"
     package = tmp_path / package_name
 
-    package_tome_artifact(artifact, package, profile=STUDENT, overwrite=True)
+    package_tome_artifact(
+        artifact,
+        package,
+        profile=STUDENT,
+        overwrite=True,
+        student_contract_profile="v4",
+    )
 
     selected = _json(package / "leaderboards" / "selected_exemplars.json")
     payload_manifest = _json(package / "manifests" / "selected_payload_manifest.json")
@@ -376,7 +408,13 @@ def test_student_inputs_match_full_source_shards(
     artifact: Path, tmp_path: Path
 ) -> None:
     package = tmp_path / "student"
-    package_tome_artifact(artifact, package, profile=STUDENT, overwrite=True)
+    package_tome_artifact(
+        artifact,
+        package,
+        profile=STUDENT,
+        overwrite=True,
+        student_contract_profile="v4",
+    )
     manifest = _json(package / "corridors" / "mode_assignments.json")
     metadata_path = package / manifest["examples_metadata"]["path"]
     metadata = [json.loads(line) for line in metadata_path.read_text().splitlines()]
@@ -402,7 +440,13 @@ def test_packaged_cover_page_summary_uses_package_local_truth(
     profile: str,
 ) -> None:
     package = tmp_path / profile
-    package_tome_artifact(artifact, package, profile=profile, overwrite=True)
+    package_tome_artifact(
+        artifact,
+        package,
+        profile=profile,
+        overwrite=True,
+        student_contract_profile="v4",
+    )
 
     cover = _json(package / "cover_page.json")
     top = cover["provenance"]["historical_package_cover_v1"]["top_level_summary"]
@@ -457,7 +501,13 @@ def test_package_hash_validation_fails_on_mutation(
     profile: str,
 ) -> None:
     package = tmp_path / profile
-    package_tome_artifact(artifact, package, profile=profile, overwrite=True)
+    package_tome_artifact(
+        artifact,
+        package,
+        profile=profile,
+        overwrite=True,
+        student_contract_profile="v4",
+    )
     path = (
         package / "student_consumption" / "v4" / "target_rows.npz"
         if profile == STUDENT
@@ -479,6 +529,7 @@ def test_student_tgz_round_trip_and_cli(artifact: Path, tmp_path: Path) -> None:
         profile=STUDENT,
         archive="tgz",
         overwrite=True,
+        student_contract_profile="v4",
     )
     extracted = tmp_path / "extracted"
     with tarfile.open(archive, "r:gz") as handle:
@@ -494,6 +545,8 @@ def test_student_tgz_round_trip_and_cli(artifact: Path, tmp_path: Path) -> None:
         str(package_cli_output),
         "--profile",
         STUDENT,
+        "--student-contract-profile",
+        "v4",
         "--overwrite",
     )
     cli = run_cli(
