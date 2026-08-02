@@ -1,0 +1,14 @@
+{
+  "config_sha256": "sha256:1ba9dd0de2c7563dd23ecd8f9426fec63c628ec3592f591d132a6c9a3ae8741b",
+  "payload_records_per_shard": 128,
+  "schema_version": "radjax_tome_v4_shard_staging_receipt_v1",
+  "sealed_shards": [
+    {
+      "first_selection_index": 0,
+      "path": "shards/shard-00000.jsonl",
+      "record_count": 2,
+      "sha256": "sha256:41350d68d1840c01e10f689134fb202216cd31f41b9e6704c3c44e8f7d0ad26f",
+      "shard_id": 0
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "corridor_max_modes": 256,
+  "corridor_mode_policy": "stat_bands_v0",
+  "corridor_observation_basis": "full_token_position_corridor",
+  "corridor_positions_available": 32,
+  "corridor_positions_used": 32,
+  "corridor_stat_top_k": 32,
+  "degraded_corridor_export": false,
+  "min_corridor_stat_top_k": 32,
+  "mode_count": 1,
+  "mode_policy": "stat_bands_v0",
+  "modes": [
+    {
+      "bounds": {
+        "entropy": {
+          "max": 5.831199645996094,
+          "mean": 5.81321907043457,
+          "min": 5.808536052703857
+        },
+        "tail_mass": {
+          "max": 0.7694281339645386,
+          "mean": 0.7557947039604187,
+          "min": 0.7524781227111816
+        },
+        "top1_margin": {
+          "max": 0.0005131345242261887,
+          "mean": 0.00010773577378131449,
+          "min": 5.22565096616745e-06
+        },
+        "top32_mass": {
+          "max": 0.24752190709114075,
+          "mean": 0.24420525133609772,
+          "min": 0.23057186603546143
+        },
+        "top8_mass": {
+          "max": 0.07061032205820084,
+          "mean": 0.06885702908039093,
+          "min": 0.06594015657901764
+        }
+      },
+      "count": 32,
+      "description": "stat_bands_v0 teacher-side corridor mode.",
+      "mode_id": 0,
+      "mode_key": {
+        "entropy_bin": 3,
+        "top1_margin_bin": 0,
+        "top32_mass_bin": 0
+      },
+      "mode_policy": "stat_bands_v0",
+      "name": "stat_bands_v0/e3_m0_t0",
+      "record_count": 32,
+      "representative_examples": [
+        {
+          "example_id": "corpus_000000003",
+          "position": 3
+        },
+        {
+          "example_id": "corpus_000000003",
+          "position": 2
+        },
+        {
+          "example_id": "corpus_000000001",
+          "position": 2
+        }
+      ],
+      "share": 1.0
+    }
+  ],
+  "schema_version": "corridor_modes_v2",
+  "tracked_stats": [
+    "entropy",
+    "top1_margin",
+    "top8_mass",
+    "top32_mass",
+    "tail_mass"
+  ]
+}

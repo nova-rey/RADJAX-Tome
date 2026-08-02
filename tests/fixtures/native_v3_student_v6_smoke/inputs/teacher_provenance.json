@@ -1,0 +1,62 @@
+{
+  "allow_downloads": false,
+  "blockers": [],
+  "config_files": [
+    {
+      "relative_path": "config.json",
+      "sha256": "sha256:bb2dea58f91f89786107df81a9754e9bafc8434d40a580193265a7d268b51536",
+      "size_bytes": 21
+    }
+  ],
+  "config_hash": "sha256:6729cd4f2fe4052cd17f3864dd50a15f295026232c880730ae497161dea214d2",
+  "created_at": "2026-08-02T23:13:57+00:00",
+  "downloaded_by_radjax_tome": false,
+  "hf_identity_source": "unavailable",
+  "hf_repo_id": null,
+  "hf_revision": null,
+  "load_check": {
+    "blockers": [],
+    "config_loadable": null,
+    "mode": "metadata_only",
+    "model_loadable": null,
+    "status": "pass",
+    "tiny_forward_ran": false,
+    "tokenizer_loadable": null,
+    "warnings": [
+      "metadata_only does not import transformers or load weights"
+    ]
+  },
+  "local_files_only": true,
+  "model_directory_hash": "sha256:61483b1636e164b9f482228b0adb3e4857942b689e14f62e307adf12e80112b1",
+  "model_identity_confidence": "declared",
+  "model_name": "radjax/v5-fixture",
+  "model_name_source": "user_declared",
+  "model_path": "/tmp/b4-v6-fixture/inputs/model",
+  "model_provenance_mode": "user_declared",
+  "model_revision": null,
+  "model_revision_source": "unknown",
+  "model_source_kind": "local_directory",
+  "network_used": false,
+  "schema_version": "teacher_model_provenance_v1",
+  "tokenizer_files": [
+    {
+      "relative_path": "tokenizer.json",
+      "sha256": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "size_bytes": 2
+    }
+  ],
+  "tokenizer_hash": "sha256:859a0e3542a2522d4d0e1b7d6fbb1356ddd9ffbd5d390766933d5612e4dd2082",
+  "total_config_bytes": 21,
+  "total_model_bytes": 30,
+  "total_tokenizer_bytes": 2,
+  "total_weight_bytes": 7,
+  "warnings": [],
+  "weight_files": [
+    {
+      "relative_path": "model.safetensors",
+      "sha256": "sha256:9a129038d9a00aed0cf6a7ea059ca50a813449061ab87848cf1a13eafdf33b2c",
+      "size_bytes": 7
+    }
+  ],
+  "weights_hash": "sha256:3764033f6770dba67dcdc6d7d6be34e141dc61501c044a5140cf7d53d094f975"
+}

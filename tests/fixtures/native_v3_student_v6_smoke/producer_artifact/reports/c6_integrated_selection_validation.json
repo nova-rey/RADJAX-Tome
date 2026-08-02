@@ -1,0 +1,11 @@
+{
+  "blockers": [],
+  "coordinate_set_authority": "c5",
+  "curriculum_route_count": 2,
+  "multi_role_coordinate_count": 0,
+  "schema_version": "radjax.c6_integrated_selection_validation.v1",
+  "selected_obligation_count": 2,
+  "selected_unique_count": 2,
+  "status": "pass",
+  "warnings": []
+}

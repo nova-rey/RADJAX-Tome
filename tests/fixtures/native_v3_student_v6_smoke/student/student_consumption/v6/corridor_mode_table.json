@@ -1,0 +1,34 @@
+{
+  "modes": [
+    {
+      "mode_id": 0,
+      "statistics": {
+        "entropy": {
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0
+        },
+        "tail_mass": {
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0
+        },
+        "top1_margin": {
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0
+        },
+        "top32_mass": {
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0
+        },
+        "top8_mass": {
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0
+        }
+      }
+    }
+  ]
+}

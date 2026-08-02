@@ -1,0 +1,19 @@
+{
+  "blockers": [],
+  "coverage_plan_sha256": "45616e87eae0431c2fa9484b9e76def18705b72a68faceecd83f41a267c9a36a",
+  "schema_version": "radjax.c3_corridor_coverage_validation.v1",
+  "status": "pass",
+  "summary": {
+    "actual_corridor_budget": 1,
+    "allocated_slots": 1,
+    "global_budget": 1,
+    "modes_budget_starved": 0,
+    "modes_capacity_positive": 1,
+    "modes_covered": 1,
+    "modes_empty": 0,
+    "modes_observed": 1,
+    "raw_mode_capacity": 4,
+    "unused_corridor_ceiling": 0
+  },
+  "warnings": []
+}

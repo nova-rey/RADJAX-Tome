@@ -1,0 +1,29 @@
+{
+  "bad_count": 0,
+  "c6_integration": {
+    "blockers": [],
+    "coordinate_set_authority": "c5",
+    "curriculum_route_count": 2,
+    "multi_role_coordinate_count": 0,
+    "schema_version": "radjax.c6_integrated_selection_validation.v1",
+    "selected_obligation_count": 2,
+    "selected_unique_count": 2,
+    "status": "pass",
+    "warnings": []
+  },
+  "checked_count": 2,
+  "corridor_assignment_linkage": "pass",
+  "delivery_path": "two_pass_rerun_selected",
+  "entropy_absolute_delta": 0.0,
+  "entropy_allowed_tolerance": 0.00390625,
+  "entropy_parity_status": "pass",
+  "errors": [],
+  "path_a_payload_authority": null,
+  "path_b_score_pass_authority": "pass",
+  "producer_shard_authority": "not_available_in_student_profile",
+  "profile": "student",
+  "schema_version": "selected_exemplar_linkage_audit_v1",
+  "selected_count": 2,
+  "status": "pass",
+  "warnings": []
+}

@@ -2358,6 +2358,22 @@
       "rationale": "Producer-side explicit v6 behavioral resource projection and composition materializer.",
       "replacement_or_target_boundary": "Contract v0.8.0 native_v3_student_v6 behavioral authority profile.",
       "status": "canonical"
+    },
+    "src/radjax_tome/tome/v6_fixture.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "B4",
+      "rationale": "Canonical ordinary-production explicit-v6 fixture and receipt builder.",
+      "replacement_or_target_boundary": "B4 explicit-v6 fixture closure evidence.",
+      "status": "canonical"
+    },
+    "docs/B4_NATIVE_V3_STUDENT_V6_FIXTURE.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "B4",
+      "rationale": "Documents the bounded explicit-v6 fixture evidence and nonclaims.",
+      "replacement_or_target_boundary": "B4 fixture closure documentation.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

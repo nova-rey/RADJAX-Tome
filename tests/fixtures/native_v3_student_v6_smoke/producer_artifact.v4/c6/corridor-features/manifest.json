@@ -1,0 +1,13 @@
+{
+  "assignment_manifest_sha256": "sha256:4ffb81ac0c9929b691309357e2a66b481eb4f418aa8eef1e4f626fe5de6228ae",
+  "feature_path": "candidate_features.jsonl",
+  "feature_sha256": "sha256:0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+  "fidelity": "derived",
+  "modes_sha256": "sha256:79e80c036010552bf060cd3ecda77ec17948639670b0635a9011b9763b6aeaf8",
+  "production_grade": true,
+  "record_count": 32,
+  "schema_version": "radjax.c6_corridor_feature_export.v1",
+  "score_pass_authority_contract_version": "radjax.c6.score_pass_authority.v2",
+  "score_pass_authority_hash": "sha256:777ae7df5ea300898a8c36010270328684c044fb97d2ee955f974b05e8238fc3",
+  "source_artifact": "/tmp/b4-v6-fixture/producer_artifact"
+}

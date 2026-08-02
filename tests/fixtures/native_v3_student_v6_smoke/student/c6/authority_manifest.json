@@ -1,0 +1,42 @@
+{
+  "authority_paths_used": {
+    "global_board_supply": {
+      "non_portable_source_path": "/tmp/b4-v6-fixture/producer_artifact/c6/global-board-supply.json",
+      "portable_basename": "global-board-supply.json"
+    },
+    "source_passports": {
+      "non_portable_source_path": "/tmp/b4-v6-fixture/producer_artifact/c6/source-passports.json",
+      "portable_basename": "source-passports.json"
+    }
+  },
+  "corpus_hash": "sha256:b9ae752701a6aa7d4ec6660f8119cf80c3fddd555c02ecda437a6b5e628c2ba8",
+  "delivery_path": "two_pass_rerun_selected",
+  "external_authority_override_used": false,
+  "hashes": {
+    "corridor_features_sha256": "sha256:0903e2f213e68652769b9fd28a869f26ab0517a4a53494c4f5574429ff45a385",
+    "global_board_supply_sha256": "sha256:089f201376794362ddc8f8f1852a92a2987c063dba22317f6be4c61dd41fdb58",
+    "selector_sha256": "sha256:7c80598d2e440b275a89e156360e562c0886395b681859dea2b6d4dc8c8b4cbb",
+    "source_passports_manifest_sha256": "sha256:22225373899fd6c754b271a02ddbcbabffec9ab3b5674c7c6c9812f8089a7bdb"
+  },
+  "paths": {
+    "corridor_features": "c6/corridor-features/candidate_features.jsonl",
+    "global_board_supply": "c6/global-board-supply.json",
+    "selector": "c6/production_global_selector.json",
+    "source_passports": "c6/source-passports.json"
+  },
+  "production_grade": true,
+  "raw_artifact_digests": {
+    "c6/production_global_selector.json": "sha256:7c80598d2e440b275a89e156360e562c0886395b681859dea2b6d4dc8c8b4cbb",
+    "corridors/corridor_modes.json": "sha256:79e80c036010552bf060cd3ecda77ec17948639670b0635a9011b9763b6aeaf8",
+    "corridors/mode_assignments.json": "sha256:4ffb81ac0c9929b691309357e2a66b481eb4f418aa8eef1e4f626fe5de6228ae",
+    "metadata.json": "sha256:6dad8744a301d658421a6a46362c651e52cda004b8dd54fca0f78ecc7e924d26"
+  },
+  "schema_version": "radjax.c6_selection_authority.v2",
+  "score_pass_authority_contract_version": "radjax.c6.score_pass_authority.v2",
+  "score_pass_authority_hash": "sha256:777ae7df5ea300898a8c36010270328684c044fb97d2ee955f974b05e8238fc3",
+  "score_pass_authority_hash_v1": "sha256:bbc07416ebb3656bf52f6161b6cc207fdb6f685e6feb050fb035ec4e1841f3d7",
+  "score_pass_config_hash": "sha256:9c835a0bdd0078104aa4e9e018e5c5751011383c244a59ba4aaeaef0ba8cc070",
+  "score_pass_resume_hash": "sha256:9c835a0bdd0078104aa4e9e018e5c5751011383c244a59ba4aaeaef0ba8cc070",
+  "selection_integration_config_hash": "sha256:9dd0546ee2b68c4e4a409bf144ac81673d30989b35a4f50383b1e037a5c134ab",
+  "target_store_metadata_sha256": "sha256:6dad8744a301d658421a6a46362c651e52cda004b8dd54fca0f78ecc7e924d26"
+}

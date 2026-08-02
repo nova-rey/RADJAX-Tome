@@ -1,0 +1,149 @@
+{
+  "behavioral_authority_digest": "sha256:bc4fa23a158b28e86c0e44b948ad15ea1f7aa6a29c721c6711156e74f2706146",
+  "composition_digest": "sha256:4da0df97067cb532b49ba9b8a939a6024ac6eade224583dfcaab427deb422a8a",
+  "package_semantic_identity": "sha256:b8489f6b0bf45c7415038dee3793e7ea3cd0e63240fca07c9a2c22896db1438b",
+  "profile_id": "native_v3_student_v6",
+  "resources": [
+    {
+      "encoding": "json",
+      "locator": "student_consumption/v6/authority_reference.json",
+      "raw_sha256": "sha256:fdd40b7f58ad03f20a059bc59d669ed688de4ad9a0c58d596b7c517703c4eb8e",
+      "raw_size_bytes": 391,
+      "resource_id": "authority_reference/default",
+      "role": "authority_reference",
+      "schema": "radjax_authority_reference_v6",
+      "semantic_identity": "sha256:515637978c9ae777e09ffe2fde255b97f4c6aec163486959f025051cd11143bd"
+    },
+    {
+      "components": [
+        {
+          "axes": [
+            "assignment"
+          ],
+          "component": "example_index",
+          "locator": "student_consumption/v6/example_index.npy",
+          "raw_sha256": "sha256:a789609dd33c6aefa9e48e68e9d331642f6dc15da3f8845f4211ba16ee989d60",
+          "raw_size_bytes": 256
+        },
+        {
+          "axes": [
+            "assignment"
+          ],
+          "component": "mode_id",
+          "locator": "student_consumption/v6/mode_id.npy",
+          "raw_sha256": "sha256:8c2f06a2cdfe41ce6c7f03c623462031674e39f4be790a072fa85db68b7d048e",
+          "raw_size_bytes": 256
+        },
+        {
+          "axes": [
+            "assignment"
+          ],
+          "component": "position",
+          "locator": "student_consumption/v6/position.npy",
+          "raw_sha256": "sha256:0be7c92b2cc3d470c540f9f5018931193863290beb7d9a0f61f9b471383b97c8",
+          "raw_size_bytes": 256
+        },
+        {
+          "axes": [
+            "assignment"
+          ],
+          "component": "weight",
+          "locator": "student_consumption/v6/weight.npy",
+          "raw_sha256": "sha256:8878e1a4803f03da31924259bbdd1a2a3530b81eb580e14fdc3a55a7fd36f093",
+          "raw_size_bytes": 256
+        }
+      ],
+      "encoding": "multipart_npy",
+      "locator": "student_consumption/v6/example_index.npy",
+      "raw_sha256": "sha256:a789609dd33c6aefa9e48e68e9d331642f6dc15da3f8845f4211ba16ee989d60",
+      "raw_size_bytes": 256,
+      "resource_id": "corridor_assignment/default",
+      "role": "corridor_assignment",
+      "schema": "radjax_corridor_assignment_v6",
+      "semantic_identity": "sha256:849ea662c00c0a25fb8f98ca831788603216fee46f6eff2a2767f4aa8373a5e0"
+    },
+    {
+      "encoding": "json",
+      "locator": "student_consumption/v6/corridor_mode_table.json",
+      "raw_sha256": "sha256:c2c5104ecffff7eb2eb4b505ffbbcea575e127875e12d441dfa109127efb2a71",
+      "raw_size_bytes": 583,
+      "resource_id": "corridor_mode_table/default",
+      "role": "corridor_mode_table",
+      "schema": "radjax_corridor_mode_table_v6",
+      "semantic_identity": "sha256:95e7bbc8f0ef3255ce24107da7fa17afd8d88d5e0b0590f4241e86032d2f547e"
+    },
+    {
+      "encoding": "json",
+      "locator": "student_consumption/v6/delivery_receipt.json",
+      "raw_sha256": "sha256:788835ad11360663f34c855ca338e2cdd48c5daa5607c01c148aa2392e6c2374",
+      "raw_size_bytes": 49,
+      "resource_id": "delivery_receipt/default",
+      "role": "delivery_receipt",
+      "schema": "radjax_delivery_receipt_v6",
+      "semantic_identity": "sha256:bcccc91b00229cc0972d385690d48000564f6fd1cc9f9e98e160fa6038f37fc4"
+    },
+    {
+      "encoding": "jsonl",
+      "locator": "student_consumption/v6/example_registry.jsonl",
+      "raw_sha256": "sha256:23d9ba6d9cc12ac304a60138bdca8367edb6a4a43930e1c40ad4721be1b46744",
+      "raw_size_bytes": 136,
+      "resource_id": "example_registry/default",
+      "role": "example_registry",
+      "schema": "radjax_example_registry_v6",
+      "semantic_identity": "sha256:bea0bec8145460088140f5ab78871cf95e4f10e48d41a7cfdd32f14753157209"
+    },
+    {
+      "encoding": "m7_tome_archive",
+      "locator": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
+      "raw_sha256": "sha256:b191d871f4a915d6d2a4a164d07e783d41ad68bd202d32ec824a391b13bd4be6",
+      "raw_size_bytes": 34513,
+      "resource_id": "selected_exemplar_payload/default",
+      "role": "selected_exemplar_payload",
+      "schema": "radjax_selected_exemplar_payload_v6",
+      "semantic_identity": "sha256:eb5b8b4e7d5296dbd64d5f3da3bc377904217ab753fde2390f6fdb963f015863"
+    },
+    {
+      "encoding": "jsonl",
+      "locator": "student_consumption/v6/selected_passport_index.jsonl",
+      "raw_sha256": "sha256:b3ebc45d567deb0afc51ab975e31efab94bf13f406849cd0872bef7bcead4691",
+      "raw_size_bytes": 804,
+      "resource_id": "selected_passport_index/default",
+      "role": "selected_passport_index",
+      "schema": "radjax_selected_passport_index_v6",
+      "semantic_identity": "sha256:40c6cdbd6a9b482287521275d70efa43eb5bb8c90c9e6be0eff299a7dba92d63"
+    },
+    {
+      "components": [
+        {
+          "axes": [
+            "example",
+            "sequence_position"
+          ],
+          "component": "attention_mask",
+          "locator": "student_consumption/v6/attention_mask.npy",
+          "raw_sha256": "sha256:675a218989692894cb472ebb39984e1e7a83fab33ecc78a416a8629a475e1f89",
+          "raw_size_bytes": 160
+        },
+        {
+          "axes": [
+            "example",
+            "sequence_position"
+          ],
+          "component": "input_ids",
+          "locator": "student_consumption/v6/input_ids.npy",
+          "raw_sha256": "sha256:7d09f5ad2928dfeb3a7fa8c9d21afe25c0f2a2db30b2f1a8f2b1b79fea35e893",
+          "raw_size_bytes": 256
+        }
+      ],
+      "encoding": "multipart_npy",
+      "locator": "student_consumption/v6/attention_mask.npy",
+      "raw_sha256": "sha256:675a218989692894cb472ebb39984e1e7a83fab33ecc78a416a8629a475e1f89",
+      "raw_size_bytes": 160,
+      "resource_id": "target_shard/default",
+      "role": "target_shard",
+      "schema": "radjax_target_shard_v6",
+      "semantic_identity": "sha256:58fcebd48e73fbea90aca12fec83f329b1662e9484a6475a374a2c14c7586291"
+    }
+  ],
+  "schema_version": "radjax_behavioral_resource_binding_v1"
+}

@@ -1,0 +1,50 @@
+{
+  "arrays": {
+    "fingerprint_index": {
+      "dtype": "int32",
+      "path": "corridors/mode_assignments/fingerprint_index.npy",
+      "shape": [
+        32
+      ]
+    },
+    "mode_id": {
+      "dtype": "int32",
+      "path": "corridors/mode_assignments/mode_id.npy",
+      "shape": [
+        32
+      ]
+    },
+    "position": {
+      "dtype": "int32",
+      "path": "corridors/mode_assignments/position.npy",
+      "shape": [
+        32
+      ]
+    },
+    "position_example_index": {
+      "dtype": "int32",
+      "path": "corridors/mode_assignments/position_example_index.npy",
+      "shape": [
+        32
+      ]
+    },
+    "weight": {
+      "dtype": "float32",
+      "path": "corridors/mode_assignments/weight.npy",
+      "shape": [
+        32
+      ]
+    }
+  },
+  "assignment_policy": "full_token_position_stat_bands_v0",
+  "corridor_observation_basis": "full_token_position_corridor",
+  "examples_metadata": {
+    "num_examples": 4,
+    "path": "corridors/mode_assignments/examples_metadata.jsonl"
+  },
+  "full_assignment_retained": true,
+  "num_assignments": 32,
+  "num_examples": 4,
+  "schema_version": "corridor_mode_assignments_v3",
+  "storage_kind": "packed_numpy_v1"
+}

@@ -1,0 +1,105 @@
+{
+  "blockers": [],
+  "file_hashes": {
+    "backfill_lineage.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "collision_obligations.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "corridor_claims.jsonl": "71dc5a5cdd6c670e227f11edd5329f83e104fd4073ece9c3c361f16479f3e5cd",
+    "global_claims.jsonl": "6dced817109b1727fbd1de97ac30296d5379042bc925c90838878da184a984b8",
+    "selected_coordinates.jsonl": "bb5aa15d84899a22045312fd2897e6919a650a49a2981f784b9d3a16fadc5d5d"
+  },
+  "schema_version": "radjax.c4_corridor_global_claims_validation.v1",
+  "status": "pass",
+  "summary": {
+    "backfill_lineage_count": 0,
+    "board_summaries": [
+      {
+        "backfill_count": 0,
+        "board_id": "global_max_entropy",
+        "board_priority": 0,
+        "collision_count": 0,
+        "fulfilled_slots": 1,
+        "requested_slots": 16,
+        "skipped_ineligible_count": 0,
+        "supply_exhausted": false,
+        "target_slots": 1
+      },
+      {
+        "backfill_count": 0,
+        "board_id": "global_mean_entropy",
+        "board_priority": 0,
+        "collision_count": 0,
+        "fulfilled_slots": 0,
+        "requested_slots": 16,
+        "skipped_ineligible_count": 0,
+        "supply_exhausted": false,
+        "target_slots": 0
+      },
+      {
+        "backfill_count": 0,
+        "board_id": "length_bucket_entropy:0",
+        "board_priority": 0,
+        "collision_count": 0,
+        "fulfilled_slots": 0,
+        "requested_slots": 16,
+        "skipped_ineligible_count": 0,
+        "supply_exhausted": false,
+        "target_slots": 0
+      },
+      {
+        "backfill_count": 0,
+        "board_id": "low_confidence",
+        "board_priority": 0,
+        "collision_count": 0,
+        "fulfilled_slots": 0,
+        "requested_slots": 16,
+        "skipped_ineligible_count": 0,
+        "supply_exhausted": false,
+        "target_slots": 0
+      },
+      {
+        "backfill_count": 0,
+        "board_id": "position_bucket_entropy:1",
+        "board_priority": 0,
+        "collision_count": 0,
+        "fulfilled_slots": 0,
+        "requested_slots": 16,
+        "skipped_ineligible_count": 0,
+        "supply_exhausted": false,
+        "target_slots": 0
+      },
+      {
+        "backfill_count": 0,
+        "board_id": "shard_coverage:0",
+        "board_priority": 0,
+        "collision_count": 0,
+        "fulfilled_slots": 0,
+        "requested_slots": 16,
+        "skipped_ineligible_count": 0,
+        "supply_exhausted": false,
+        "target_slots": 0
+      },
+      {
+        "backfill_count": 0,
+        "board_id": "shard_coverage:1",
+        "board_priority": 0,
+        "collision_count": 0,
+        "fulfilled_slots": 0,
+        "requested_slots": 16,
+        "skipped_ineligible_count": 0,
+        "supply_exhausted": false,
+        "target_slots": 0
+      }
+    ],
+    "collision_count": 0,
+    "coordinates_with_multiple_obligations": 0,
+    "corridor_budget": 1,
+    "corridor_claim_count": 1,
+    "global_budget": 1,
+    "global_unique_claim_count": 1,
+    "requested_total_budget": 2,
+    "underfilled": false,
+    "unfilled_slots": 0,
+    "unique_selected_count": 2
+  },
+  "warnings": []
+}

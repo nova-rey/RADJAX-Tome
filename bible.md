@@ -2677,3 +2677,12 @@ than raw integrity. Historical v5 mirror provenance remains pinned to its
 v0.7.0 source commit while the active dependency assertion separately pins
 the immutable Contract v0.8.0 commit. No default-profile, M8B, B4, Student,
 or Contract change is made.
+
+## 2026-08-02 — B4 Ordinary v6 Fixture
+
+An ordinary CPU smoke production run now supplies a committed explicit-v6
+fixture, its native M7 sibling, directory and archive package forms, and a
+machine-readable receipt. The evidence resolves every declared resource via
+Contract and records distinct behavioral, composition, package, and raw
+domains. This does not migrate the default profile or alter Student, Contract,
+M8B, or B4-external behavior.

@@ -1,0 +1,27 @@
+{
+  "delivery_path": "two_pass_rerun_selected",
+  "long_tail_summary": {
+    "count": 0,
+    "full_vocab_or_near_full_vocab_count": 0,
+    "long_tail_count": 0,
+    "max_effective_top_k": 0,
+    "max_effective_top_k_fraction_of_vocab": 0.0,
+    "mean_effective_top_k": 0.0,
+    "normal_count": 0,
+    "saturated_count": 0,
+    "suspicious_flat_count": 0,
+    "very_long_tail_count": 0
+  },
+  "schema_version": "selected_exemplar_side_board_v1",
+  "selected_board": "long_tail_uncertainty",
+  "selected_board_summary": {
+    "long_tail_class_counts": {},
+    "long_tail_uncertainty_count": 0,
+    "perverse_tail_diagnostic_count": 0,
+    "primary_count": 0,
+    "semantic_tail_class_counts": {},
+    "source_score_board_counts": {},
+    "total_selected_count": 0
+  },
+  "selected_exemplars": []
+}

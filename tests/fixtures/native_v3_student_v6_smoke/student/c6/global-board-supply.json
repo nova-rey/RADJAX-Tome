@@ -1,0 +1,233 @@
+{
+  "boards": [
+    {
+      "board_id": "global_max_entropy",
+      "candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "position": 3,
+          "rank": 1,
+          "score": 5.831199645996094
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "position": 2,
+          "rank": 2,
+          "score": 5.830536842346191
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "position": 2,
+          "rank": 3,
+          "score": 5.828897476196289
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "position": 2,
+          "rank": 4,
+          "score": 5.8205485343933105
+        }
+      ],
+      "priority": 0,
+      "requested_slots": 16
+    },
+    {
+      "board_id": "global_mean_entropy",
+      "candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "position": 2,
+          "rank": 1,
+          "score": 5.815186500549316
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "position": 3,
+          "rank": 2,
+          "score": 5.814723014831543
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "position": 2,
+          "rank": 3,
+          "score": 5.812613487243652
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "position": 2,
+          "rank": 4,
+          "score": 5.810352802276611
+        }
+      ],
+      "priority": 0,
+      "requested_slots": 16
+    },
+    {
+      "board_id": "length_bucket_entropy:0",
+      "candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "position": 3,
+          "rank": 1,
+          "score": 5.831199645996094
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "position": 2,
+          "rank": 2,
+          "score": 5.830536842346191
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "position": 2,
+          "rank": 3,
+          "score": 5.828897476196289
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "position": 2,
+          "rank": 4,
+          "score": 5.8205485343933105
+        }
+      ],
+      "priority": 0,
+      "requested_slots": 16
+    },
+    {
+      "board_id": "low_confidence",
+      "candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "position": 3,
+          "rank": 1,
+          "score": 0.9913368923589587
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "position": 2,
+          "rank": 2,
+          "score": 0.9910103948786855
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "position": 2,
+          "rank": 3,
+          "score": 0.9908788651227951
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "position": 2,
+          "rank": 4,
+          "score": 0.9908539848402143
+        }
+      ],
+      "priority": 0,
+      "requested_slots": 16
+    },
+    {
+      "board_id": "position_bucket_entropy:1",
+      "candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "position": 3,
+          "rank": 1,
+          "score": 5.831199645996094
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "position": 2,
+          "rank": 2,
+          "score": 5.830536842346191
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "position": 2,
+          "rank": 3,
+          "score": 5.828897476196289
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "position": 2,
+          "rank": 4,
+          "score": 5.8205485343933105
+        }
+      ],
+      "priority": 0,
+      "requested_slots": 16
+    },
+    {
+      "board_id": "shard_coverage:0",
+      "candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000001",
+          "position": 2,
+          "rank": 1,
+          "score": 5.830536842346191
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000002",
+          "position": 2,
+          "rank": 2,
+          "score": 5.8205485343933105
+        }
+      ],
+      "priority": 0,
+      "requested_slots": 16
+    },
+    {
+      "board_id": "shard_coverage:1",
+      "candidates": [
+        {
+          "eligible": true,
+          "example_id": "corpus_000000003",
+          "position": 3,
+          "rank": 1,
+          "score": 5.831199645996094
+        },
+        {
+          "eligible": true,
+          "example_id": "corpus_000000004",
+          "position": 2,
+          "rank": 2,
+          "score": 5.828897476196289
+        }
+      ],
+      "priority": 0,
+      "requested_slots": 16
+    }
+  ],
+  "schema_version": "radjax.c4_global_board_supply.v1",
+  "source_provenance": {
+    "production_grade": true,
+    "score_pass_authority_hash": "sha256:777ae7df5ea300898a8c36010270328684c044fb97d2ee955f974b05e8238fc3",
+    "selector_policy": "multi_leaderboard_exemplar_selector_v1",
+    "selector_schema_version": "exemplar_selection_manifest_v1",
+    "source_artifact_hash": "sha256:777ae7df5ea300898a8c36010270328684c044fb97d2ee955f974b05e8238fc3",
+    "source_artifact_id": {
+      "non_portable_source_path": "/tmp/b4-v6-fixture/producer_artifact",
+      "portable_basename": "producer_artifact"
+    }
+  }
+}

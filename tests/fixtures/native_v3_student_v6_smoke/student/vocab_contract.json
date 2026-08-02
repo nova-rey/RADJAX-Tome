@@ -1,0 +1,10 @@
+{
+  "model_family": "smoke_tokenizer",
+  "model_id": {
+    "non_portable_source_path": "/tmp/b4-v6-fixture/inputs/model",
+    "portable_basename": "model"
+  },
+  "tokenizer_hash": null,
+  "tokenizer_id": "radjax/smoke-v6-fixture",
+  "vocab_size": 512
+}

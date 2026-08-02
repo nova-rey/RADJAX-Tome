@@ -1,0 +1,22 @@
+{
+  "blockers": [],
+  "corpus_hash": "sha256:b9ae752701a6aa7d4ec6660f8119cf80c3fddd555c02ecda437a6b5e628c2ba8",
+  "corpus_jsonl_path": "/tmp/b4-v6-fixture/inputs/corpus/corpus.jsonl",
+  "corpus_manifest_path": "/tmp/b4-v6-fixture/inputs/corpus/corpus_manifest.json",
+  "created_at": "2026-08-02T23:13:57.769065+00:00",
+  "excluded_sources": [],
+  "manifest_hash": "sha256:7e6b077798c2d22de9b57b2a36dc09ff3f30e4c142ee12e232a5a7aeb2f62ddc",
+  "manifest_hash_policy": "exclude_self_hash_and_created_at_v1",
+  "num_chars": 19,
+  "num_duplicates_removed": 0,
+  "num_empty_removed": 0,
+  "num_examples": 4,
+  "num_sources_excluded": 0,
+  "num_sources_included": 4,
+  "num_sources_seen": 4,
+  "num_unsupported_removed": 0,
+  "output_dir": "/tmp/b4-v6-fixture/inputs/corpus",
+  "schema_version": "corpus_build_report_v1",
+  "status": "pass",
+  "warnings": []
+}
