@@ -2656,3 +2656,14 @@ language/tokenizer binding with closed behavioral resource projections and
 requires Contract admission before publication. The default remains v5; this
 does not change M8A, start M8B or B4, alter Student, create a canonical
 fixture, or infer missing full-grid assignments.
+
+## 2026-08-02 — B3 v6 Native M7 Binding Repair
+
+The v6 package adapter now discovers the accepted native Path-B M7 sibling
+`output_dir.v4.tgz` and binds its exact bytes as the selected-exemplar
+authority resource with `m7_tome_archive` encoding. It preserves the M7
+archive rather than flattening or re-sharding it, and Contract admission runs
+before either directory or archive promotion. Focused tests cover both
+transports, bounded verified opening states, and forced Contract-admission
+failure with no promoted output. No default-profile, M8B, B4, Student, or
+Contract change is made.

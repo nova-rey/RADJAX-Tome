@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -46,7 +47,7 @@ def materialize_native_v3_student_consumption_v6(
     v2 = materialize_native_v3_student_consumption_v2(
         artifact_root, destination_root=root
     )
-    paths = _write_v6_projections(root, v2)
+    paths = _write_v6_projections(root, v2, source_root=Path(artifact_root))
     resources = _resources(root, paths)
     from radjax_contract.tome import validate_and_resolve_language_tokenizer_binding
     from radjax_contract.tome.student_consumption_v6 import (
@@ -106,7 +107,10 @@ def materialize_native_v3_student_consumption_v6(
 
 
 def _write_v6_projections(
-    root: Path, v2: NativeV3StudentConsumptionV2Materialization
+    root: Path,
+    v2: NativeV3StudentConsumptionV2Materialization,
+    *,
+    source_root: Path,
 ) -> dict[str, str]:
     """Write only closed logical projections; source arrays stay native NPY."""
 
@@ -162,7 +166,15 @@ def _write_v6_projections(
         [{"example_id": row["selected_example_id"]} for row in registry],
     )
     _write_jsonl(directory / "selected_passport_index.jsonl", _passports(root, v2))
-    _write_jsonl(directory / "selected_exemplar_payload.jsonl", _exemplars(root, v2))
+    m7_archive = source_root.with_name(f"{source_root.name}.v4.tgz")
+    if m7_archive.is_file():
+        shutil.copyfile(m7_archive, directory / "selected_exemplar_payload.m7.tgz")
+        exemplar_name = "selected_exemplar_payload.m7.tgz"
+    else:
+        _write_jsonl(
+            directory / "selected_exemplar_payload.jsonl", _exemplars(root, v2)
+        )
+        exemplar_name = "selected_exemplar_payload.jsonl"
     write_json(directory / "corridor_mode_table.json", _mode_table(root, v6_mode))
     authority = _authority_reference(root, v2)
     write_json(directory / "authority_reference.json", authority)
@@ -192,7 +204,7 @@ def _write_v6_projections(
             "weight.npy",
             "example_registry.jsonl",
             "selected_passport_index.jsonl",
-            "selected_exemplar_payload.jsonl",
+            exemplar_name,
             "corridor_mode_table.json",
             "authority_reference.json",
             "delivery_receipt.json",
@@ -297,6 +309,8 @@ def _authority_reference(
 
 
 def _resources(root: Path, paths: dict[str, str]) -> list[dict[str, Any]]:
+    from radjax_contract.tome.language_tokenizer_binding_v1 import canonical_json_bytes
+    from radjax_contract.tome.streaming_validation import open_streaming_tome
     from radjax_contract.tome.student_consumption_v6 import (
         canonical_authority_reference_identity,
         canonical_multipart_npy_identity,
@@ -359,11 +373,7 @@ def _resources(root: Path, paths: dict[str, str]) -> list[dict[str, Any]]:
                 ],
             )
         )
-    jsonl_roles = (
-        "example_registry",
-        "selected_passport_index",
-        "selected_exemplar_payload",
-    )
+    jsonl_roles = ("example_registry", "selected_passport_index")
     for role in jsonl_roles:
         locator = paths[f"{role}.jsonl"]
         records = [
@@ -376,6 +386,42 @@ def _resources(root: Path, paths: dict[str, str]) -> list[dict[str, Any]]:
             else canonical_record_sequence_identity(role=role, records=records)
         )
         rows.append(_resource(root, role, "jsonl", locator, identity))
+    m7_locator = paths.get("selected_exemplar_payload.m7.tgz")
+    if m7_locator is not None:
+        with open_streaming_tome(root / m7_locator) as reader:
+            for _ in reader:
+                pass
+            if reader.verification_state != "fully_verified":
+                raise ValueError("native M7 payload did not fully verify")
+            identity = sha256_identity(
+                canonical_json_bytes(reader.descriptor.semantic_identity)
+            )
+        rows.append(
+            _resource(
+                root,
+                "selected_exemplar_payload",
+                "m7_tome_archive",
+                m7_locator,
+                identity,
+            )
+        )
+    else:
+        locator = paths["selected_exemplar_payload.jsonl"]
+        records = [
+            json.loads(line)
+            for line in (root / locator).read_text(encoding="utf-8").splitlines()
+        ]
+        rows.append(
+            _resource(
+                root,
+                "selected_exemplar_payload",
+                "jsonl",
+                locator,
+                canonical_record_sequence_identity(
+                    role="selected_exemplar_payload", records=records
+                ),
+            )
+        )
     mode = read_json_object(root / paths["corridor_mode_table.json"])
     projection = [
         {"mode_id": item["mode_id"], "statistic_names": sorted(item["statistics"])}

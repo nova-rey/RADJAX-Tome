@@ -17,3 +17,10 @@ semantic identities, resolver behavior, verified opening, M7 streaming
 semantics, and v6 failure codes; Tome invokes it before publication.  This
 does not claim a v6 default migration, M8B performance work, B4, canonical
 fixture production, or a new research run.
+
+When native Path-B has published its accepted M7 sibling, the authoritative
+resource is `output_dir.v4.tgz`, produced beside the legacy `output_dir` by
+the terminal M7 v4 publication stage.  V6 copies that exact verified archive
+as one package member and declares `selected_exemplar_payload/default` as
+`m7_tome_archive`; it never flattens that payload to JSONL.  The ordinary
+JSONL projection is retained only for legacy layouts without this sibling.
