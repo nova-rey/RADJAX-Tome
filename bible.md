@@ -2488,3 +2488,17 @@ resources plus equal generic-binding and package semantic digests; physical
 raw/tree digests remain explicitly non-semantic evidence. Contract and Tome
 validators admit the committed package. This does not modify historical v4,
 V64/T5, Golden, runtime, training, accelerator, or quality claims.
+
+## 2026-08-02 — M7 Corrective Acceptance Status Reconciliation
+
+The earlier `f0b1e2e` M7 closure claim remains correctly recorded as rejected
+while corrective work was incomplete. The corrective implementation completed
+the native transaction and resume obligations at `43d7816`, recorded its
+evidence at `77fd342`, and was accepted into `main` by merge `48a7b2f`
+("Merge M7 payload sharding and streaming validation"). With no affirmative
+post-merge M7 blocker, M7 is now recorded as closed. The historical untagged
+Contract `0.3.2` candidate is not rewritten as a release; the M7 v0.3.1/v2
+mirror remains historical evidence while current Tome uses a later Contract
+pin. This wording-only reconciliation changes no production behavior, schema,
+Contract asset, Golden fixture, authority recipe, fixed 25-field projection,
+Student surface, or M8 scope.

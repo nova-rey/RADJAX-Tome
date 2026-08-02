@@ -1,9 +1,11 @@
-# M7 Corrective Implementation Record — Payload Sharding and Streaming Validation
+# M7 Closure Record — Accepted Payload Sharding and Streaming Validation
 
-> Historical status: the prior `f0b1e2e` closure claim was rejected by
-> independent review. This document records the useful v4 foundation and the
-> corrective branch work; M7 is **not** officially closed. Corrective
-> implementation is in progress and independent closure review is pending.
+> Current status: **closed**. The prior `f0b1e2e` closure claim was correctly
+> rejected by independent review while the corrective work was incomplete.
+> The completed corrective branch, including transactional native-v4 resume
+> publication at `43d7816` and its evidence record at `77fd342`, was accepted
+> into `main` by merge `48a7b2f` ("Merge M7 payload sharding and streaming
+> validation"). No post-merge M7 blocker is recorded.
 
 The original M7 foundation added an additive v4 physical payload layout. The
 corrective branch routes ordinary native Path B to a reported canonical v4
@@ -12,13 +14,18 @@ legacy tree only as historical/resume input. It does not alter M5 canonical-v3
 behavior, M6 dependency direction, authority v1/v2, the fixed 25-field
 selection projection, or immutable Golden fixtures.
 
-## Released shared contract
+## Contract publication chronology
 
 - Published RADJAX-Contract baseline: `0.3.1`, tag `v0.3.1`, commit
   `f8ca8c0885d7c539a51d1594ba7a38c4d457b4d` (unchanged).
-- Corrective RADJAX-Contract candidate: `0.3.2`, untagged commit
-  `78ba36300f201d75b016b2fdcf5720e467310815`; release approval is pending.
-- Tome corrective branch: `m7-corrective-production-streaming`.
+- The corrective branch verified against additive `0.3.2` commit
+  `78ba36300f201d75b016b2fdcf5720e467310815`. It was never tagged as a
+  Contract release; M7 acceptance at `48a7b2f` accepted Tome's corrective
+  implementation, not a retroactive Contract publication.
+- Later Contract releases supersede that active dependency context; current
+  Tome pins Contract `v0.7.0` at
+  `cac3dd21e0d56df5a9e6fd50b20267e0b8960995`. The M7 v2 mirror remains
+  historical, checksum-verified M7 evidence.
 - Tome's `contracts/radjax_tome/v2` is a checked-in offline mirror verified
   byte-for-byte against Contract source and installed wheel assets.
 
@@ -42,7 +49,7 @@ graph, then stream `payload-shards.jsonl`, each shard JSONL, and
 non-selected v3 semantic projection plus the selected sequence digest; physical
 shard count and archive wrapping remain raw-integrity/transport facts.
 
-## Corrective claims under review
+## Accepted corrective claims
 
 - Count-only deterministic shards, stable coordinate-derived logical IDs, raw
   per-record/per-shard/index/inventory digests, and a streamed sequence digest.
@@ -61,17 +68,17 @@ shard count and archive wrapping remain raw-integrity/transport facts.
   directory becomes visible, and archive creation uses a temporary sibling,
   validates it, then atomically replaces the final path.
 
-## Remaining nonclaims and review obligations
+## Nonclaims
 
 M7 does not implement Student training, model inference, accelerator runs,
 selected-pass batching, UX, corpus building, or an M8+ performance program.
 Direct archive support is sequential streaming; selective random access is an
-extracted/indexed-consumer responsibility. This record does not claim the
-independent closure review. The adverse cases exercised locally include missing
-semantic fields, invalid semantic types, transport mismatch, corrupt completed
-resume output, interrupted shard sealing, interrupted materialization, failed
-archive packing, and interruption before final promotion. The broader published
-Contract corpus remains the source of portable error-category coverage.
+extracted/indexed-consumer responsibility. The adverse cases exercised locally
+include missing semantic fields, invalid semantic types, transport mismatch,
+corrupt completed resume output, interrupted shard sealing, interrupted
+materialization, failed archive packing, and interruption before final
+promotion. The broader published Contract corpus remains the source of portable
+error-category coverage.
 
 ## Reproduction
 

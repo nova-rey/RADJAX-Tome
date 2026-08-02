@@ -2163,16 +2163,16 @@
       "archive_or_removal_condition": null,
       "kind": "top-level-doc",
       "owning_milestone": "M7",
-      "rationale": "Pins Contract v0.3.0 and the verified offline v2 mirror.",
-      "replacement_or_target_boundary": "M7 Contract publication and conformance boundary.",
+      "rationale": "Records the historical Contract v0.3.1 pin and verified offline v2 mirror for accepted M7 closure evidence.",
+      "replacement_or_target_boundary": "Accepted M7 Contract publication and conformance boundary.",
       "status": "canonical"
     },
     "docs/M7_CLOSURE_REPORT.md": {
       "archive_or_removal_condition": null,
       "kind": "top-level-doc",
       "owning_milestone": "M7",
-      "rationale": "Closure claims, nonclaims, release pin, and downstream streaming handoff.",
-      "replacement_or_target_boundary": "M7 payload sharding and streaming validation closure.",
+      "rationale": "Accepted M7 closure claims, nonclaims, historical pins, and downstream streaming handoff.",
+      "replacement_or_target_boundary": "Accepted M7 payload sharding and streaming validation closure at 48a7b2f.",
       "status": "canonical"
     },
     "docs/C3_STUDENT_CONSUMPTION_CONTRACT_PIN.md": {
