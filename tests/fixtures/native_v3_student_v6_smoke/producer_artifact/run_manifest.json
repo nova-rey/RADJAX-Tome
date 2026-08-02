@@ -10,7 +10,7 @@
   },
   "completed_shards": [
     {
-      "completed_at": "2026-08-02T23:40:33+00:00",
+      "completed_at": "2026-08-02T23:45:34+00:00",
       "example_end_index_exclusive": 2,
       "example_start_index": 0,
       "num_examples": 2,
@@ -19,7 +19,7 @@
       "shard_id": 0
     },
     {
-      "completed_at": "2026-08-02T23:40:33+00:00",
+      "completed_at": "2026-08-02T23:45:34+00:00",
       "example_end_index_exclusive": 4,
       "example_start_index": 2,
       "num_examples": 2,
@@ -30,7 +30,7 @@
   ],
   "corpus_hash": "sha256:198feb31ebb81304a173661ac31ecc815eef656691571a7b9edf97bf8f5478f2",
   "corpus_manifest_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus_manifest.json",
-  "created_at": "2026-08-02T23:40:33+00:00",
+  "created_at": "2026-08-02T23:45:34+00:00",
   "dataset_hash": "sha256:198feb31ebb81304a173661ac31ecc815eef656691571a7b9edf97bf8f5478f2",
   "dataset_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus.jsonl",
   "emission_config_hash": "sha256:56ccb7fc2b710acc9b4d549c54f71748a7a40566d398b2aaa115148384c56932",
@@ -57,6 +57,6 @@
     "weights_hash": "sha256:3764033f6770dba67dcdc6d7d6be34e141dc61501c044a5140cf7d53d094f975"
   },
   "teacher_model_provenance_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/teacher_provenance.json",
-  "updated_at": "2026-08-02T23:40:33+00:00",
+  "updated_at": "2026-08-02T23:45:34+00:00",
   "vocab_size": 512
 }

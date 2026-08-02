@@ -53,6 +53,14 @@ def test_b4_committed_fixture_resolves_all_v6_authority_domains() -> None:
         _descriptor_resource(item.to_dict())
         for item in directory_result.descriptor.non_authority_resources
     ]
+    assert _receipt_resources(receipt["archive"]["authority_resources"]) == [
+        _descriptor_resource(item.to_dict())
+        for item in archive_result.descriptor.authority_resources
+    ]
+    assert _receipt_resources(receipt["archive"]["non_authority_resources"]) == [
+        _descriptor_resource(item.to_dict())
+        for item in archive_result.descriptor.non_authority_resources
+    ]
     assert (
         directory_result.descriptor.behavioral_authority_digest
         == archive_result.descriptor.behavioral_authority_digest

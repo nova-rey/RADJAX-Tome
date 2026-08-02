@@ -1,12 +1,12 @@
 {
   "artifact_root": ".",
-  "created_at": "2026-08-02T23:40:34.334972+00:00",
+  "created_at": "2026-08-02T23:45:35.991585+00:00",
   "entries": [
     {
       "path": "c6/authority_manifest.json",
       "required": true,
       "role": "authority_manifest",
-      "sha256": "sha256:033ca47608412011f75d25169548585f546ffc7851599b13d29ccb7cd63213e6",
+      "sha256": "sha256:0a6ab75273ade531f23a0ff1dbfb514758868c0d2a918c36e3a650fee6f7df25",
       "size_bytes": 2429
     },
     {
@@ -146,7 +146,7 @@
       "path": "c6/production_global_selector.json",
       "required": true,
       "role": "production_global_selector",
-      "sha256": "sha256:f3f49c4bba32e2eba1f41b234220c2ca8e2cdc9c4ee635de0c4ca26f5aeaa603",
+      "sha256": "sha256:7701cc13ec2bc32ae594d03dfa7428c2dca748702b331f8025c9c1c16d53af36",
       "size_bytes": 24202
     },
     {
@@ -160,7 +160,7 @@
       "path": "c6/source-passports.json",
       "required": true,
       "role": "source-passports",
-      "sha256": "sha256:f979a1eee6dcdd13001e8df91911c115ceee77ffad1996d37c33f2695be45b57",
+      "sha256": "sha256:6fc5d85c9b2309e168cda3e9a8227e6b23cbe4808259706a1ae63a53a9cd2e1b",
       "size_bytes": 731
     },
     {
@@ -279,14 +279,14 @@
       "path": "leaderboards/selected_exemplars.json",
       "required": true,
       "role": "selected_exemplar_index",
-      "sha256": "sha256:5c5d020400227ec79d7d2513631dfc039dcc5cb066c151b8d1d7ef2219e8fead",
+      "sha256": "sha256:04c96f91f7ecd5f09d46dc457d931fa7b2f79fb5337e7e057624356a396fa0da",
       "size_bytes": 12427
     },
     {
       "path": "manifests/behavioral_resource_binding_v1.json",
       "required": true,
       "role": "behavioral_resource_binding_v1",
-      "sha256": "sha256:820f8df7c1a3caf2ba92805d45ef4f00400a2c33ce4a28f9e48c9d34e7fc617a",
+      "sha256": "sha256:405e3c5913f1e29279f90655349f6543f88c9a93fa96c2c62e87fd8ab7ff06d1",
       "size_bytes": 6184
     },
     {
@@ -314,7 +314,7 @@
       "path": "metadata.json",
       "required": true,
       "role": "metadata",
-      "sha256": "sha256:add0e5918cbbec8672427eefd524ea3aa30319758d463a02775f0fd45f264a03",
+      "sha256": "sha256:267893d16c67c4916aa0254697a2e952858d5d21645535ac8726da1f0c17814a",
       "size_bytes": 8733
     },
     {
@@ -496,8 +496,8 @@
       "path": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
       "required": true,
       "role": "selected_exemplar_payload.m7",
-      "sha256": "sha256:aab25a300db0d45371c5e8eb0a56c4795eec1f4c46c388c9ce3fdd994635cb80",
-      "size_bytes": 34612
+      "sha256": "sha256:9ffa9dd25c15d54b861801b040f6e73fe216d0a4cd2f175e3ea629cb05cc6e1a",
+      "size_bytes": 34611
     },
     {
       "path": "student_consumption/v6/selected_passport_index.jsonl",
@@ -517,7 +517,7 @@
       "path": "teacher_manifest.json",
       "required": true,
       "role": "teacher_manifest",
-      "sha256": "sha256:dd404acfb16b663e9c277c35d19e8a1e4bc831bc54150a579978cfe45a05abb0",
+      "sha256": "sha256:ab6ba5c2c2ea493ea14980f2401a501fe816a9f4adca70a2f98fa17a43cdfb9f",
       "size_bytes": 3027
     },
     {
@@ -538,5 +538,5 @@
   "entry_count": 76,
   "package_profile": "student",
   "schema_version": "tome_content_manifest_v1",
-  "total_size_bytes": 259585
+  "total_size_bytes": 259584
 }

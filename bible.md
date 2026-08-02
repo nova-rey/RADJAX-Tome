@@ -2709,3 +2709,11 @@ non-M7 role and verifies every recorded descriptor identity and resource
 declaration against a fresh Contract resolution. M7 remains on its dedicated
 bounded stream opener. This is evidence-only and leaves Contract, Student,
 the default profile, M8B, and B4 scope unchanged.
+
+## 2026-08-02 — B4 JSONL Opener Closure Repair
+
+The fixture now exercises ordinary JSONL roles through the whole-resource
+iterator and both public verified-byte openers, while M7 remains dedicated to
+its stream opener. Receipt verification now independently compares both
+directory and archive resource registries. No behavioral, Contract, Student,
+default-profile, M8B, or B4 scope change is made.

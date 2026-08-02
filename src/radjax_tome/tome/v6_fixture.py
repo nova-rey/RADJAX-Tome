@@ -149,6 +149,14 @@ def _exercise(artifact: Path) -> dict[str, object]:
                 artifact, resource.resource_id, strict=True
             ) as records:
                 list(records)
+            with open_verified_student_resource(
+                artifact, resource.resource_id, profile_id=PROFILE_ID, strict=True
+            ) as handle:
+                handle.read()
+            with open_verified_student_resource_v6(
+                artifact, resource.resource_id, strict=True
+            ) as handle:
+                handle.read()
         else:
             # Exercise the stable public dispatcher as well as the v6-specific
             # byte opener. M7 intentionally has its dedicated stream protocol.

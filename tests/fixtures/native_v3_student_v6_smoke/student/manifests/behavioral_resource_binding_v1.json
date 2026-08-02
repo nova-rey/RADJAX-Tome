@@ -95,8 +95,8 @@
     {
       "encoding": "m7_tome_archive",
       "locator": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
-      "raw_sha256": "sha256:aab25a300db0d45371c5e8eb0a56c4795eec1f4c46c388c9ce3fdd994635cb80",
-      "raw_size_bytes": 34612,
+      "raw_sha256": "sha256:9ffa9dd25c15d54b861801b040f6e73fe216d0a4cd2f175e3ea629cb05cc6e1a",
+      "raw_size_bytes": 34611,
       "resource_id": "selected_exemplar_payload/default",
       "role": "selected_exemplar_payload",
       "schema": "radjax_selected_exemplar_payload_v6",
