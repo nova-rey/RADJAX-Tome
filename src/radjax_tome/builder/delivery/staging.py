@@ -223,6 +223,7 @@ def _selected_payloads_from_backend(
                     effective_size=batch_size,
                 )
             compression_started = perf_counter()
+            payload_write_seconds = 0.0
             row_by_example_id = {
                 example.example_id: row for row, example in enumerate(chunk)
             }
@@ -302,18 +303,21 @@ def _selected_payloads_from_backend(
                         payload_summaries.append(payload_summary)
                         coordinates_committed += 1
                         if diagnostics is not None:
+                            write_seconds = _elapsed(write_started)
                             diagnostics.add(
                                 "hashing_json_atomic_write_fsync",
-                                _elapsed(write_started),
+                                write_seconds,
                             )
+                            payload_write_seconds += write_seconds
                         del selected_payload
                     else:
                         payloads_by_record[record_index] = selected_payload
-            compression_seconds += _elapsed(compression_started)
+            compression_elapsed = _elapsed(compression_started)
+            compression_seconds += compression_elapsed
             if diagnostics is not None:
                 diagnostics.add(
                     "payload_conversion_linkage_validation",
-                    _elapsed(compression_started),
+                    max(0.0, compression_elapsed - payload_write_seconds),
                 )
             batch_count += 1
             peak_host_memory_bytes = max(peak_host_memory_bytes, _host_rss_bytes())

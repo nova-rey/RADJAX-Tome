@@ -2583,3 +2583,15 @@ payload hashes across the required full and capped runs. Raw evidence remains
 outside the repository. This adds no production path, policy, M7 semantic
 change, or M8B work; representative results remain pending the corrected
 canonical anchor's terminal acceptance.
+
+## 2026-08-02 — M8A Exclusive Phase Accounting Correction
+
+The first representative replay correctly rejected its own measurement report:
+the observer had counted each native payload write both as an explicit
+hash/JSON/atomic-write phase and inside the enclosing payload-conversion
+phase. The correction subtracts the measured nested write interval from the
+conversion/linkage interval, leaving the two additive and the selected-pass
+denominator unchanged. Focused selected-delivery and M8A readiness tests pass
+after the change. This is a private measurement-accounting repair only: it
+does not change the canonical rerun's payload bytes, selection, authority,
+batching, M7 behavior, Contract, or any production output.
