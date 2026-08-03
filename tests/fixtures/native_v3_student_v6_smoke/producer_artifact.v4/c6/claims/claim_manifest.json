@@ -5,7 +5,7 @@
     "nonproduction_override_reason": null,
     "require_full_budget": false,
     "schema_version": "radjax.c4_corridor_global_claims.v1",
-    "total_selected_exemplar_budget": 2
+    "total_selected_exemplar_budget": 3
   },
   "files": {
     "backfill_lineage.jsonl": {
@@ -18,10 +18,10 @@
       "sha256": "71dc5a5cdd6c670e227f11edd5329f83e104fd4073ece9c3c361f16479f3e5cd"
     },
     "global_claims.jsonl": {
-      "sha256": "6dced817109b1727fbd1de97ac30296d5379042bc925c90838878da184a984b8"
+      "sha256": "9703a62dc7494d397b87ee7dc9a152ee5eb7c871dfd051d7abd8f256e7804b10"
     },
     "selected_coordinates.jsonl": {
-      "sha256": "bb5aa15d84899a22045312fd2897e6919a650a49a2981f784b9d3a16fadc5d5d"
+      "sha256": "71d31eec75807822f004a375e281263f42c96c85d6149dffacd1eef5bfdf19ec"
     }
   },
   "schema_version": "radjax.c4_corridor_global_claims.v1",
@@ -57,10 +57,10 @@
     },
     "global": {
       "production_grade": true,
-      "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+      "score_pass_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
       "selector_policy": "multi_leaderboard_exemplar_selector_v1",
       "selector_schema_version": "exemplar_selection_manifest_v1",
-      "source_artifact_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+      "source_artifact_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
       "source_artifact_id": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact"
     },
     "production_grade": true
@@ -73,11 +73,11 @@
         "board_id": "global_max_entropy",
         "board_priority": 0,
         "collision_count": 0,
-        "fulfilled_slots": 1,
+        "fulfilled_slots": 2,
         "requested_slots": 16,
         "skipped_ineligible_count": 0,
         "supply_exhausted": false,
-        "target_slots": 1
+        "target_slots": 2
       },
       {
         "backfill_count": 0,
@@ -150,11 +150,11 @@
     "coordinates_with_multiple_obligations": 0,
     "corridor_budget": 1,
     "corridor_claim_count": 1,
-    "global_budget": 1,
-    "global_unique_claim_count": 1,
-    "requested_total_budget": 2,
+    "global_budget": 2,
+    "global_unique_claim_count": 2,
+    "requested_total_budget": 3,
     "underfilled": false,
     "unfilled_slots": 0,
-    "unique_selected_count": 2
+    "unique_selected_count": 3
   }
 }

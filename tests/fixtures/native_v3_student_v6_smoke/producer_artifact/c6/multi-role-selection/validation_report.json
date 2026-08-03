@@ -1,8 +1,8 @@
 {
   "blockers": [],
   "file_hashes": {
-    "legacy_selected_exemplars.json": "6d86808ee56c431728a8ad34a6e8e95244474298ab2f04b94e70c3600e8148bb",
-    "selected_exemplars.jsonl": "48ae48a7befbc46797d64240de195ff73053be6da6046d83d7a0c0f5632da123"
+    "legacy_selected_exemplars.json": "61a13b2b9992d36754e146fa8a608e8e00b9cd541194c58a65f1a178f91cd38c",
+    "selected_exemplars.jsonl": "476a773997fb8ac6900e6363261b7945e1f0f8b82e8ebd42911d75a4f07fe9a8"
   },
   "schema_version": "radjax.multi_role_selected_exemplar_validation.v1",
   "status": "pass",
@@ -12,18 +12,18 @@
       "0": 1
     },
     "counts_by_global_board": {
-      "global_max_entropy": 1
+      "global_max_entropy": 2
     },
-    "global_role_count": 1,
-    "legacy_projection_count": 2,
+    "global_role_count": 2,
+    "legacy_projection_count": 3,
     "multi_role_coordinate_count": 0,
-    "obligation_count": 2,
+    "obligation_count": 3,
     "payload_status_counts": {
-      "not_materialized_in_c5": 2
+      "not_materialized_in_c5": 3
     },
     "primary_corridor_count": 1,
-    "primary_global_count": 1,
-    "unique_selected_count": 2
+    "primary_global_count": 2,
+    "unique_selected_count": 3
   },
   "warnings": []
 }

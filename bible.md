@@ -2717,3 +2717,15 @@ iterator and both public verified-byte openers, while M7 remains dedicated to
 its stream opener. Receipt verification now independently compares both
 directory and archive resource registries. No behavioral, Contract, Student,
 default-profile, M8B, or B4 scope change is made.
+
+## 2026-08-02 — P5.U1 Leakage-Free v6 Fixture Refresh
+
+The ordinary `native_v3_student_v6_smoke` production configuration now selects
+three exemplars through the canonical builder and normal Student packager. Its
+committed directory, archive, M7 sibling, manifests, and receipt are refreshed
+from that run. The verification binds the exact deterministic coordinates
+`corpus_000000003:0`, `corpus_000000003:3`, and `corpus_000000001:2`, proves
+at least two exemplar-bearing example identities, and requires all five public
+identity domains to agree across strict directory/archive resolution. Contract,
+Student, the default profile, M8B, and Tome behavior outside this ordinary
+proof fixture remain unchanged.

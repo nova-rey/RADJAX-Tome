@@ -23,14 +23,16 @@ from radjax_tome.tome.packaging import (
     validate_tome_package,
 )
 from radjax_tome.tome.v5_fixture import (
-    _PRODUCTION_CONFIG,
+    _PRODUCTION_CONFIG as _V5_PRODUCTION_CONFIG,
+)
+from radjax_tome.tome.v5_fixture import (
+    CONTRACT_COMMIT as V5_HISTORICAL_CONTRACT_COMMIT,
+)
+from radjax_tome.tome.v5_fixture import (
     _prepare_inputs,
     raw_tree_digest,
     sha256_file,
     tree_digest,
-)
-from radjax_tome.tome.v5_fixture import (
-    CONTRACT_COMMIT as V5_HISTORICAL_CONTRACT_COMMIT,
 )
 
 FIXTURE_ID = "native_v3_student_v6_smoke_v1"
@@ -38,6 +40,14 @@ FIXTURE_SCHEMA_VERSION = "radjax_tome_v6_fixture_v1"
 CONTRACT_VERSION = "v0.8.0"
 CONTRACT_COMMIT = "b3275b8769c36b6261f4f241c47f0066c651e869"
 PROFILE_ID = "native_v3_student_v6"
+
+# Keep the v5 smoke fixture immutable while making this ordinary v6 fixture
+# large enough to provide leakage-free exemplar train/held-out evidence.
+_PRODUCTION_CONFIG = {
+    **_V5_PRODUCTION_CONFIG,
+    "selected_exemplar_budget": 3,
+    "total_selected_exemplar_budget": 3,
+}
 
 
 def build_v6_behavioral_fixture(

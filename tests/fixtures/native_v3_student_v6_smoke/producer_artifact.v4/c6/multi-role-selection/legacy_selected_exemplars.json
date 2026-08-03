@@ -51,7 +51,7 @@
           "storage_kind": "full_sequence"
         },
         "position": 0,
-        "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+        "score_pass_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
         "source_position": 0,
         "source_row": 0,
         "source_score": 5.812465190887451,
@@ -108,7 +108,7 @@
           "storage_kind": "full_sequence"
         },
         "position": 3,
-        "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+        "score_pass_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
         "source_position": 3,
         "source_row": 0,
         "source_score": 5.831199645996094,
@@ -121,6 +121,63 @@
       "source_score": 5.831199645996094,
       "source_shard_id": 1,
       "source_top_token_id": 0
+    },
+    {
+      "corridor_assignment_status": "linked",
+      "global_board_ids": [
+        "global_max_entropy"
+      ],
+      "multi_role": false,
+      "payload_identity": {
+        "materialization_status": "not_materialized_in_c5",
+        "payload_key": "coordinate_v1:e9c844afe4fc4225a69814633657b09867baab2a292cb77c8f31cdf82ba113e3"
+      },
+      "primary_claim": "global_board",
+      "rank": 3,
+      "represented_fingerprint_corridor_ids": [],
+      "schema_version": "selected_exemplars_v1",
+      "selected_example_id": "corpus_000000001",
+      "selected_position": 2,
+      "selected_score": 5.830536842346191,
+      "selection_index": 2,
+      "selection_obligations": [
+        {
+          "metadata": {
+            "board_priority": 0
+          },
+          "rank": 2,
+          "role": "global_board",
+          "score": 5.830536842346191,
+          "source_id": "global_max_entropy"
+        }
+      ],
+      "selection_roles": [
+        "global_board"
+      ],
+      "source_passport": {
+        "corridor_assignment_status": "linked",
+        "corridor_mode_id": 0,
+        "example_id": "corpus_000000001",
+        "payload_slot": {
+          "source_position": 2,
+          "source_row": 0,
+          "source_shard_id": 0,
+          "storage_kind": "full_sequence"
+        },
+        "position": 2,
+        "score_pass_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
+        "source_position": 2,
+        "source_row": 0,
+        "source_score": 5.830536842346191,
+        "source_score_policy": "entropy_top_n_v1",
+        "source_shard_id": 0,
+        "source_top_token_id": 402
+      },
+      "source_position": 2,
+      "source_row": 0,
+      "source_score": 5.830536842346191,
+      "source_shard_id": 0,
+      "source_top_token_id": 402
     }
   ]
 }

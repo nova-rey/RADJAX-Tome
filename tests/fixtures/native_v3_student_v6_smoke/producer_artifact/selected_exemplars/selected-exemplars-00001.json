@@ -1,7 +1,7 @@
 {
-  "delivery_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+  "delivery_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
   "delivery_path": "two_pass_rerun_selected",
-  "payload_hash": "b806afe6eb4b92136d348e3f8a8f80054b17174bc8f0b068d883aea8ad484bb1",
+  "payload_hash": "f0afee4385f13a5b152263bea51d6d71e1c717ede61a6469da31c87f843c9fad",
   "record_index": 1,
   "schema_version": "selected_exemplar_payload_shard_v1",
   "selected_exemplars": [
@@ -14,7 +14,7 @@
       "corridor_assignment_status": "linked",
       "corridor_fingerprint_id": "fp_000007",
       "corridor_mode_id": 0,
-      "delivery_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+      "delivery_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
       "dynamic_mass_threshold": 0.95,
       "dynamic_top_k": {
         "dynamic_mass_threshold": 0.95,

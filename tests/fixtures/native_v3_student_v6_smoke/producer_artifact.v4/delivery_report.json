@@ -5,7 +5,7 @@
     "no_path_b_quality_parity_without_report": true,
     "no_student_training_quality_claim": true
   },
-  "completed_at": "2026-08-02T23:45:35+00:00",
+  "completed_at": "2026-08-03T00:17:19+00:00",
   "coordinate_compression_batch_count": 1,
   "coordinates_committed_before_each_retry": [],
   "corridor_artifact_built": true,
@@ -32,16 +32,16 @@
     "top32_mass",
     "tail_mass"
   ],
-  "created_at": "2026-08-02T23:45:35+00:00",
+  "created_at": "2026-08-03T00:17:19+00:00",
   "cuda_oom_failure_stage_counts": {},
   "cuda_oom_retry_batch_transitions": [],
   "cuda_oom_retry_count": 0,
-  "curriculum_route_count": 2,
+  "curriculum_route_count": 3,
   "curriculum_routes_path": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact/curriculum/selected_routes.json",
-  "curriculum_unique_coordinate_count": 2,
+  "curriculum_unique_coordinate_count": 3,
   "dataset_path": "tests/fixtures/native_v3_student_v6_smoke/inputs/corpus/corpus.jsonl",
   "degraded_corridor_export": false,
-  "delivery_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+  "delivery_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
   "delivery_path": "two_pass_rerun_selected",
   "effective_source_batch_sizes": [
     2
@@ -49,7 +49,7 @@
   "entropy_parity_tolerance": 0.00390625,
   "entropy_quantization_step": 0.00390625,
   "execution_mode": "native_c6_path_b_v1",
-  "final_retained_bytes": 54517,
+  "final_retained_bytes": 68120,
   "include_long_tail_in_primary": false,
   "include_perverse_tail_in_primary": false,
   "include_perverse_tail_in_student": false,
@@ -57,14 +57,14 @@
   "long_tail_observations": [],
   "long_tail_side_board_cap": 128,
   "long_tail_summary": {
-    "count": 2,
+    "count": 3,
     "full_vocab_or_near_full_vocab_count": 0,
     "long_tail_count": 0,
     "max_effective_top_k": 32,
     "max_effective_top_k_fraction_of_vocab": 0.0625,
     "mean_effective_top_k": 32.0,
-    "normal_count": 2,
-    "saturated_count": 2,
+    "normal_count": 3,
+    "saturated_count": 3,
     "suspicious_flat_count": 0,
     "very_long_tail_count": 0
   },
@@ -72,64 +72,65 @@
   "non_selected_exemplar_payload_retained": false,
   "num_examples_scored": 4,
   "num_positions_scored": 32,
-  "num_selected_exemplars": 2,
+  "num_selected_exemplars": 3,
   "payload_write_seconds": 0.0,
   "perverse_tail_side_board_cap": 32,
-  "primary_selected_exemplar_budget": 2,
+  "primary_selected_exemplar_budget": 3,
   "pruned_candidate_payload_bytes": 0,
   "requested_source_batch_size": 2,
   "schema_version": "selected_exemplar_delivery_report_v1",
   "score_policy": "entropy_top_n_v1",
   "selected_board_summary": {
     "long_tail_class_counts": {
-      "normal": 2
+      "normal": 3
     },
     "long_tail_uncertainty_count": 0,
     "perverse_tail_diagnostic_count": 0,
-    "primary_count": 2,
+    "primary_count": 3,
     "semantic_tail_class_counts": {
-      "unknown_open_class_tail": 2
+      "unknown_open_class_tail": 3
     },
     "source_score_board_counts": {
-      "unassigned": 2
+      "unassigned": 3
     },
-    "total_selected_count": 2
+    "total_selected_count": 3
   },
-  "selected_coordinate_count": 2,
-  "selected_example_count": 1,
+  "selected_coordinate_count": 3,
+  "selected_example_count": 2,
   "selected_exemplar_payload_retained": true,
   "selected_exemplars_linked_to_corridor_modes": true,
   "selected_exemplars_path": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact/leaderboards/selected_exemplars.json",
-  "selected_payload_shard_count": 2,
+  "selected_payload_shard_count": 3,
   "selected_payload_source": "backend_dynamic_cascaded_soft_labels_v1",
   "selected_rerun_batch_count": 1,
   "selected_rerun_batch_size": 2,
-  "selected_rerun_compression_seconds": 0.00219440899672918,
+  "selected_rerun_compression_seconds": 0.003027344006113708,
   "selected_rerun_effective_batch_sizes": [
     2
   ],
-  "selected_rerun_example_count": 1,
+  "selected_rerun_example_count": 2,
   "selected_rerun_example_ids": [
+    "corpus_000000001",
     "corpus_000000003"
   ],
-  "selected_rerun_examples": 1,
-  "selected_rerun_examples_per_second": 1190.7696203661692,
+  "selected_rerun_examples": 2,
+  "selected_rerun_examples_per_second": 2168.7928510589736,
   "selected_rerun_io_seconds": 0.0,
   "selected_rerun_peak_device_memory_bytes": null,
-  "selected_rerun_peak_host_memory_bytes": 47136768,
+  "selected_rerun_peak_host_memory_bytes": 44965888,
   "selected_rerun_requested_batch_size": 2,
-  "selected_rerun_teacher_seconds": 0.0008397930068895221,
+  "selected_rerun_teacher_seconds": 0.000922171981073916,
   "selected_row_gather_seconds": null,
-  "selected_source_example_count": 1,
+  "selected_source_example_count": 2,
   "selection_enabled": true,
   "source_batch_count": 1,
-  "staging_directory": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact/.staging-native-c6/sha256-eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+  "staging_directory": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact/.staging-native-c6/sha256-c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
   "staging_payload_count": 0,
   "staging_preserved": false,
   "staging_quarantine_directory": null,
   "staging_quarantined_count": 0,
   "status": "pass",
-  "teacher_rerun_count": 1,
+  "teacher_rerun_count": 2,
   "temporary_candidate_bytes": 0,
   "warnings": []
 }

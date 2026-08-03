@@ -1,11 +1,11 @@
 {
-  "c4_claims_sha256": "aa2990f186590bdad39cfb0d4d4dece35ddaf84e156481a697f483af98a048b0",
+  "c4_claims_sha256": "8ebbebae9219bca6dce4d6bb0d1b5039d725b1fd6e8b45f55dfa34fb209894f5",
   "files": {
     "legacy_selected_exemplars.json": {
-      "sha256": "6d86808ee56c431728a8ad34a6e8e95244474298ab2f04b94e70c3600e8148bb"
+      "sha256": "61a13b2b9992d36754e146fa8a608e8e00b9cd541194c58a65f1a178f91cd38c"
     },
     "selected_exemplars.jsonl": {
-      "sha256": "48ae48a7befbc46797d64240de195ff73053be6da6046d83d7a0c0f5632da123"
+      "sha256": "476a773997fb8ac6900e6363261b7945e1f0f8b82e8ebd42911d75a4f07fe9a8"
     }
   },
   "production_grade": true,
@@ -43,10 +43,10 @@
       },
       "global": {
         "production_grade": true,
-        "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+        "score_pass_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
         "selector_policy": "multi_leaderboard_exemplar_selector_v1",
         "selector_schema_version": "exemplar_selection_manifest_v1",
-        "source_artifact_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+        "source_artifact_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
         "source_artifact_id": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact"
       },
       "production_grade": true
@@ -57,7 +57,7 @@
       "nonproduction_override_reason": null,
       "require_full_budget": false,
       "schema_version": "radjax.c4_corridor_global_claims.v1",
-      "total_selected_exemplar_budget": 2
+      "total_selected_exemplar_budget": 3
     },
     "production_grade": true
   },
@@ -67,18 +67,18 @@
       "0": 1
     },
     "counts_by_global_board": {
-      "global_max_entropy": 1
+      "global_max_entropy": 2
     },
-    "global_role_count": 1,
-    "legacy_projection_count": 2,
+    "global_role_count": 2,
+    "legacy_projection_count": 3,
     "multi_role_coordinate_count": 0,
-    "obligation_count": 2,
+    "obligation_count": 3,
     "payload_status_counts": {
-      "not_materialized_in_c5": 2
+      "not_materialized_in_c5": 3
     },
     "primary_corridor_count": 1,
-    "primary_global_count": 1,
-    "unique_selected_count": 2
+    "primary_global_count": 2,
+    "unique_selected_count": 3
   },
   "warnings": []
 }

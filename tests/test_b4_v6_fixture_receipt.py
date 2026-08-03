@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from radjax_contract.tome import validate_and_resolve_student_consumption
+from radjax_contract.tome import (
+    open_verified_student_m7_payload_v6,
+    validate_and_resolve_student_consumption,
+)
 
 from radjax_tome.tome import STUDENT, validate_tome_bundle, validate_tome_package
 from radjax_tome.tome.v6_fixture import (
@@ -61,10 +64,16 @@ def test_b4_committed_fixture_resolves_all_v6_authority_domains() -> None:
         _descriptor_resource(item.to_dict())
         for item in archive_result.descriptor.non_authority_resources
     ]
-    assert (
-        directory_result.descriptor.behavioral_authority_digest
-        == archive_result.descriptor.behavioral_authority_digest
-    )
+    for name in (
+        "language_binding_digest",
+        "behavioral_source_identity",
+        "behavioral_authority_digest",
+        "package_semantic_identity",
+        "composition_digest",
+    ):
+        assert getattr(directory_result.descriptor, name) == getattr(
+            archive_result.descriptor, name
+        )
     assert receipt["directory"]["raw_tree_digest"] == raw_tree_digest(directory)
     assert receipt["archive"]["raw_sha256"] == sha256_file(FIXTURE / "student.tgz")
     assert receipt["native_m7_sibling"]["sha256"] == sha256_file(
@@ -79,6 +88,14 @@ def test_b4_committed_fixture_resolves_all_v6_authority_domains() -> None:
         if item.role == "selected_exemplar_payload"
     )
     assert selected.encoding == "m7_tome_archive"
+    assert receipt["production_config"]["selected_exemplar_budget"] == 3
+    assert receipt["production_config"]["total_selected_exemplar_budget"] == 3
+    assert _selected_coordinates(directory) == [
+        ("corpus_000000003", 0),
+        ("corpus_000000003", 3),
+        ("corpus_000000001", 2),
+    ]
+    assert len({example_id for example_id, _ in _selected_coordinates(directory)}) >= 2
 
 
 def test_b4_fresh_ordinary_production_is_repeatably_admitted(tmp_path: Path) -> None:
@@ -109,3 +126,13 @@ def _descriptor_resource(row: dict[str, object]) -> dict[str, object]:
         for key, value in {**row, "components": list(row["components"])}.items()
         if key != "authority"
     }
+
+
+def _selected_coordinates(directory: Path) -> list[tuple[str, int]]:
+    with open_verified_student_m7_payload_v6(
+        directory, "selected_exemplar_payload/default", strict=True
+    ) as reader:
+        rows = list(reader)
+    return [
+        (str(row["selected_example_id"]), int(row["selected_position"])) for row in rows
+    ]

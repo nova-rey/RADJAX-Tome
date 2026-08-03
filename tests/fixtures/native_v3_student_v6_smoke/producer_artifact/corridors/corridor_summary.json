@@ -29,7 +29,7 @@
   "num_examples_scored": 4,
   "num_positions_scored": 32,
   "schema_version": "corridor_summary_v3",
-  "selected_exemplar_count": 2,
+  "selected_exemplar_count": 3,
   "selected_exemplars_linked_to_corridor_modes": true,
   "selected_exemplars_linked_to_modes": true
 }

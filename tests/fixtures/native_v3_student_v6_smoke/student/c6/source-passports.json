@@ -4,10 +4,10 @@
   "production_grade": true,
   "record_count": 32,
   "records_path": "source-passports.jsonl",
-  "records_sha256": "sha256:8136202dfedf6d17d0e430731f344ccbfcdffbf9a36c0e52179efd2905afb99b",
+  "records_sha256": "sha256:810c75c4c03ed3676e03c6923bb76417ee218815469a544930e5bfe6745387f6",
   "schema_version": "radjax.c6_source_passports.v1",
-  "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+  "score_pass_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
   "storage_kind": "jsonl_v1",
-  "target_store_metadata_sha256": "sha256:267893d16c67c4916aa0254697a2e952858d5d21645535ac8726da1f0c17814a",
+  "target_store_metadata_sha256": "sha256:156c3d97909f8c8cf30e23531a300385d1fcef6338c2a03979817395ea60d4fd",
   "unique_coordinate_count": 32
 }

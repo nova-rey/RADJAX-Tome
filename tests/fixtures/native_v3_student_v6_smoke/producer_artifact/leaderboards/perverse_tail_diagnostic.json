@@ -4,18 +4,18 @@
   "selected_board": "perverse_tail_diagnostic",
   "selected_board_summary": {
     "long_tail_class_counts": {
-      "normal": 2
+      "normal": 3
     },
     "long_tail_uncertainty_count": 0,
     "perverse_tail_diagnostic_count": 0,
-    "primary_count": 2,
+    "primary_count": 3,
     "semantic_tail_class_counts": {
-      "unknown_open_class_tail": 2
+      "unknown_open_class_tail": 3
     },
     "source_score_board_counts": {
-      "unassigned": 2
+      "unassigned": 3
     },
-    "total_selected_count": 2
+    "total_selected_count": 3
   },
   "selected_exemplars": []
 }

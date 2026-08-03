@@ -2,11 +2,11 @@
   "bad_count": 0,
   "c6_integration": {
     "coordinate_set_authority": "c5",
-    "selected_obligation_count": 2,
-    "selected_unique_count": 2,
+    "selected_obligation_count": 3,
+    "selected_unique_count": 3,
     "status": "pass"
   },
-  "checked_count": 2,
+  "checked_count": 3,
   "corridor_assignment_linkage": "pass",
   "delivery_path": "two_pass_rerun_selected",
   "entropy_absolute_delta": 0.0,
@@ -18,7 +18,7 @@
   "producer_shard_authority": "available",
   "profile": "full_debug_provenance",
   "schema_version": "selected_exemplar_linkage_audit_v1",
-  "selected_count": 2,
+  "selected_count": 3,
   "status": "pass",
   "warnings": []
 }

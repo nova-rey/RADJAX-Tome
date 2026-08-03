@@ -221,10 +221,10 @@
   "schema_version": "radjax.c4_global_board_supply.v1",
   "source_provenance": {
     "production_grade": true,
-    "score_pass_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+    "score_pass_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
     "selector_policy": "multi_leaderboard_exemplar_selector_v1",
     "selector_schema_version": "exemplar_selection_manifest_v1",
-    "source_artifact_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+    "source_artifact_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
     "source_artifact_id": "tests/fixtures/native_v3_student_v6_smoke/producer_artifact"
   }
 }

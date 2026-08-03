@@ -6,12 +6,12 @@
         "components": [],
         "encoding": "json",
         "locator": "student_consumption/v6/authority_reference.json",
-        "raw_sha256": "sha256:2631e7c765c3bb253ae9ec50575f49a7365a28a42e3fa5adb5827039d06662dd",
+        "raw_sha256": "sha256:6aaab9406e33724e5e9b13e04328de858f21115ae0a11f69b71444b53083adfc",
         "raw_size_bytes": 391,
         "resource_id": "authority_reference/default",
         "role": "authority_reference",
         "schema": "radjax_authority_reference_v6",
-        "semantic_identity": "sha256:d11f7f3368bcf8c7c5b13dd8da3623ac4656882548a141d111355036963619b1"
+        "semantic_identity": "sha256:955d49f861164445fef6787765fbf696e66a84944bbdef1d7dc526b7868af030"
       },
       {
         "authority": true,
@@ -91,24 +91,24 @@
         "components": [],
         "encoding": "m7_tome_archive",
         "locator": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
-        "raw_sha256": "sha256:9ffa9dd25c15d54b861801b040f6e73fe216d0a4cd2f175e3ea629cb05cc6e1a",
-        "raw_size_bytes": 34611,
+        "raw_sha256": "sha256:909a817e93871251cf7bcde88a76a7a15bff5ed0885af334722a35c2661df424",
+        "raw_size_bytes": 37204,
         "resource_id": "selected_exemplar_payload/default",
         "role": "selected_exemplar_payload",
         "schema": "radjax_selected_exemplar_payload_v6",
-        "semantic_identity": "sha256:3df808424b790a94e7073ce73656a41c314b74e7d556fa2f8c1abf5a233626ad"
+        "semantic_identity": "sha256:ce3249e0288302207a6e999f164e94f3b66f81e06cfc97c3259a662944f64642"
       },
       {
         "authority": true,
         "components": [],
         "encoding": "jsonl",
         "locator": "student_consumption/v6/selected_passport_index.jsonl",
-        "raw_sha256": "sha256:c8126fea4fecb483b26bd62e9b516a8107c264e416a909306741f4faa445e258",
-        "raw_size_bytes": 804,
+        "raw_sha256": "sha256:7e90e6ed24874f4f70b809a802dd880cb65ec57c3f1203a4e0492ae54120159f",
+        "raw_size_bytes": 1206,
         "resource_id": "selected_passport_index/default",
         "role": "selected_passport_index",
         "schema": "radjax_selected_passport_index_v6",
-        "semantic_identity": "sha256:e51f9d99ffe4a12af884cd97f887a73d33114501223ae15f86d34329c8b4a756"
+        "semantic_identity": "sha256:5cc980589ae46cd19c812df6befebabce9ff9402481175d96fca53705bc724a5"
       },
       {
         "authority": true,
@@ -144,9 +144,9 @@
         "semantic_identity": "sha256:58fcebd48e73fbea90aca12fec83f329b1662e9484a6475a374a2c14c7586291"
       }
     ],
-    "behavioral_authority_digest": "sha256:441d32f61ec699157b60bec2889d5263d539f8265ef0e65f621cf3fca10a05ee",
+    "behavioral_authority_digest": "sha256:f5a7e1c042aedd9c4919a6ed0d2565a458341ff05a234e5eaafd51871b83313b",
     "behavioral_source_identity": "sha256:b5525f5983c9b12f37e24c830b9d72e767607ef40294e82599c58723bc86f091",
-    "composition_digest": "sha256:c1e078a8cec071d8d68b5b75604b77a481c850f762393c9907d34e22459a618b",
+    "composition_digest": "sha256:311bab6eb2d2c6aa447cc57893acce66dbf862f9fc5fdb413de3c7f14131738f",
     "language_binding_digest": "sha256:9419614278eebaddd4d016b884afe21f4ab83e749ec04be3bb597d212f1d02cf",
     "non_authority_resources": [
       {
@@ -162,8 +162,8 @@
         "semantic_identity": "sha256:bcccc91b00229cc0972d385690d48000564f6fd1cc9f9e98e160fa6038f37fc4"
       }
     ],
-    "package_semantic_identity": "sha256:2c437fd9e36b47c06f7d3a6c842852e1af35f341835e5c8d49c25868415aad14",
-    "raw_sha256": "sha256:3069b965482cbcaf5eaf017748f898baae5954445634465f3f8becf5424be3ca",
+    "package_semantic_identity": "sha256:a2f108cac868e446974088f91dc546f085f9c3e92bc122d2bbb633c860dc6ca9",
+    "raw_sha256": "sha256:a870f19a3351727b2f98f31044ebe3553b9ab6b5d7b0b2c0c8ddf52bf05a25ea",
     "raw_tree_digest": null,
     "required_joins": [
       "assignment_to_target_grid",
@@ -188,12 +188,12 @@
         "components": [],
         "encoding": "json",
         "locator": "student_consumption/v6/authority_reference.json",
-        "raw_sha256": "sha256:2631e7c765c3bb253ae9ec50575f49a7365a28a42e3fa5adb5827039d06662dd",
+        "raw_sha256": "sha256:6aaab9406e33724e5e9b13e04328de858f21115ae0a11f69b71444b53083adfc",
         "raw_size_bytes": 391,
         "resource_id": "authority_reference/default",
         "role": "authority_reference",
         "schema": "radjax_authority_reference_v6",
-        "semantic_identity": "sha256:d11f7f3368bcf8c7c5b13dd8da3623ac4656882548a141d111355036963619b1"
+        "semantic_identity": "sha256:955d49f861164445fef6787765fbf696e66a84944bbdef1d7dc526b7868af030"
       },
       {
         "authority": true,
@@ -273,24 +273,24 @@
         "components": [],
         "encoding": "m7_tome_archive",
         "locator": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
-        "raw_sha256": "sha256:9ffa9dd25c15d54b861801b040f6e73fe216d0a4cd2f175e3ea629cb05cc6e1a",
-        "raw_size_bytes": 34611,
+        "raw_sha256": "sha256:909a817e93871251cf7bcde88a76a7a15bff5ed0885af334722a35c2661df424",
+        "raw_size_bytes": 37204,
         "resource_id": "selected_exemplar_payload/default",
         "role": "selected_exemplar_payload",
         "schema": "radjax_selected_exemplar_payload_v6",
-        "semantic_identity": "sha256:3df808424b790a94e7073ce73656a41c314b74e7d556fa2f8c1abf5a233626ad"
+        "semantic_identity": "sha256:ce3249e0288302207a6e999f164e94f3b66f81e06cfc97c3259a662944f64642"
       },
       {
         "authority": true,
         "components": [],
         "encoding": "jsonl",
         "locator": "student_consumption/v6/selected_passport_index.jsonl",
-        "raw_sha256": "sha256:c8126fea4fecb483b26bd62e9b516a8107c264e416a909306741f4faa445e258",
-        "raw_size_bytes": 804,
+        "raw_sha256": "sha256:7e90e6ed24874f4f70b809a802dd880cb65ec57c3f1203a4e0492ae54120159f",
+        "raw_size_bytes": 1206,
         "resource_id": "selected_passport_index/default",
         "role": "selected_passport_index",
         "schema": "radjax_selected_passport_index_v6",
-        "semantic_identity": "sha256:e51f9d99ffe4a12af884cd97f887a73d33114501223ae15f86d34329c8b4a756"
+        "semantic_identity": "sha256:5cc980589ae46cd19c812df6befebabce9ff9402481175d96fca53705bc724a5"
       },
       {
         "authority": true,
@@ -326,9 +326,9 @@
         "semantic_identity": "sha256:58fcebd48e73fbea90aca12fec83f329b1662e9484a6475a374a2c14c7586291"
       }
     ],
-    "behavioral_authority_digest": "sha256:441d32f61ec699157b60bec2889d5263d539f8265ef0e65f621cf3fca10a05ee",
+    "behavioral_authority_digest": "sha256:f5a7e1c042aedd9c4919a6ed0d2565a458341ff05a234e5eaafd51871b83313b",
     "behavioral_source_identity": "sha256:b5525f5983c9b12f37e24c830b9d72e767607ef40294e82599c58723bc86f091",
-    "composition_digest": "sha256:c1e078a8cec071d8d68b5b75604b77a481c850f762393c9907d34e22459a618b",
+    "composition_digest": "sha256:311bab6eb2d2c6aa447cc57893acce66dbf862f9fc5fdb413de3c7f14131738f",
     "language_binding_digest": "sha256:9419614278eebaddd4d016b884afe21f4ab83e749ec04be3bb597d212f1d02cf",
     "non_authority_resources": [
       {
@@ -344,26 +344,26 @@
         "semantic_identity": "sha256:bcccc91b00229cc0972d385690d48000564f6fd1cc9f9e98e160fa6038f37fc4"
       }
     ],
-    "package_semantic_identity": "sha256:2c437fd9e36b47c06f7d3a6c842852e1af35f341835e5c8d49c25868415aad14",
-    "raw_tree_digest": "sha256:96513379f2f14deec106d5489b2b59a9da8088d765c598774dd5cf6cfa0a60f0",
+    "package_semantic_identity": "sha256:a2f108cac868e446974088f91dc546f085f9c3e92bc122d2bbb633c860dc6ca9",
+    "raw_tree_digest": "sha256:ef6d6f47fba7257f3d8fdf876c927a521c0f3557b7a0820e74aca315eaa72753",
     "required_joins": [
       "assignment_to_target_grid",
       "selected_passport_to_target",
       "selected_exemplar_to_passport"
     ],
-    "tree_digest": "sha256:50016f161aa36cfe9d4f2665ffde20d137f7ff4fecec48f690bf9e294bae56d5"
+    "tree_digest": "sha256:bbeb87514f502fb4ea6fc3f0d8ba485f46c84b204847c6af3f55a4c60eb52b39"
   },
   "environment": {
-    "platform": "macOS-15.7.7-x86_64-i386-64bit-Mach-O",
-    "python": "3.14.5"
+    "platform": "macOS-15.7.7-x86_64-i386-64bit",
+    "python": "3.11.15"
   },
   "fixture_id": "native_v3_student_v6_smoke_v1",
   "historical_v5_mirror_commit": "cac3dd21e0d56df5a9e6fd50b20267e0b8960995",
   "native_m7_sibling": {
     "locator": "producer_artifact.v4.tgz",
     "packaged_locator": "student_consumption/v6/selected_exemplar_payload.m7.tgz",
-    "sha256": "sha256:9ffa9dd25c15d54b861801b040f6e73fe216d0a4cd2f175e3ea629cb05cc6e1a",
-    "size_bytes": 34611
+    "sha256": "sha256:909a817e93871251cf7bcde88a76a7a15bff5ed0885af334722a35c2661df424",
+    "size_bytes": 37204
   },
   "production_config": {
     "exemplar_delivery_path": "two_pass_rerun_selected",
@@ -374,14 +374,14 @@
     "num_buckets": 3,
     "retain_unselected_exemplar_payloads": false,
     "runtime_mode": "cpu",
-    "selected_exemplar_budget": 2,
+    "selected_exemplar_budget": 3,
     "selection_integration_policy": "corridor_first_global_backfill_v1",
     "sequence_length": 8,
     "shard_size_examples": 2,
     "target_policy": "corridor_exemplar_v1",
     "teacher_backend": "smoke_tokenizer",
     "top_k": 4,
-    "total_selected_exemplar_budget": 2,
+    "total_selected_exemplar_budget": 3,
     "vocab_size": 512
   },
   "profile_id": "native_v3_student_v6",

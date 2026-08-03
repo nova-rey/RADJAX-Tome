@@ -1,5 +1,5 @@
 {
-  "route_count": 2,
+  "route_count": 3,
   "route_policy": "selected_board_consumption_v1",
   "routes": [
     {
@@ -19,8 +19,17 @@
       "selection_roles": [
         "global_board"
       ]
+    },
+    {
+      "curriculum_board": "primary",
+      "payload_key": "coordinate_v1:e9c844afe4fc4225a69814633657b09867baab2a292cb77c8f31cdf82ba113e3",
+      "selected_example_id": "corpus_000000001",
+      "selected_position": 2,
+      "selection_roles": [
+        "global_board"
+      ]
     }
   ],
   "schema_version": "selected_exemplar_curriculum_routes_v1",
-  "unique_coordinate_count": 2
+  "unique_coordinate_count": 3
 }

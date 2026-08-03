@@ -1,13 +1,13 @@
 {
   "long_tail_summary": {
-    "count": 2,
+    "count": 3,
     "full_vocab_or_near_full_vocab_count": 0,
     "long_tail_count": 0,
     "max_effective_top_k": 32,
     "max_effective_top_k_fraction_of_vocab": 0.0625,
     "mean_effective_top_k": 32.0,
-    "normal_count": 2,
-    "saturated_count": 2,
+    "normal_count": 3,
+    "saturated_count": 3,
     "suspicious_flat_count": 0,
     "very_long_tail_count": 0
   },
@@ -17,7 +17,7 @@
       "effective_top_k_min": 32,
       "path": "selected_exemplars/selected-exemplars-00000.json",
       "record_count": 1,
-      "sha256": "sha256:7514aa53e9f925ae0a264e56595cf80b1c4cd6a0d236accd802e08b8566b6871",
+      "sha256": "sha256:6295aae096680d983ee45888f8c23c9279e2ade3b46023d4dde798e70c76fb8a",
       "size_bytes": 6218,
       "top_mass_max": 0.24616041779518127,
       "top_mass_min": 0.24616041779518127
@@ -27,28 +27,38 @@
       "effective_top_k_min": 32,
       "path": "selected_exemplars/selected-exemplars-00001.json",
       "record_count": 1,
-      "sha256": "sha256:705fac786ff11b9a195b45aef50b8da64f2f4ce234c13ae19e6bb14c60b241a3",
+      "sha256": "sha256:27c5258c2e8fba800adb22c751b0d843528eedd8b853693317fe9200bb35b2a5",
       "size_bytes": 6314,
       "top_mass_max": 0.23057186603546143,
       "top_mass_min": 0.23057186603546143
+    },
+    {
+      "effective_top_k_max": 32,
+      "effective_top_k_min": 32,
+      "path": "selected_exemplars/selected-exemplars-00002.json",
+      "record_count": 1,
+      "sha256": "sha256:804c2d510f81d48c990f293d4dacac32ef9dee562df75d83a4a9869ea1dd13f2",
+      "size_bytes": 6321,
+      "top_mass_max": 0.23177623748779297,
+      "top_mass_min": 0.23177623748779297
     }
   ],
   "schema_version": "selected_payload_manifest_v1",
   "selected_board_summary": {
     "long_tail_class_counts": {
-      "normal": 2
+      "normal": 3
     },
     "long_tail_uncertainty_count": 0,
     "perverse_tail_diagnostic_count": 0,
-    "primary_count": 2,
+    "primary_count": 3,
     "semantic_tail_class_counts": {
-      "unknown_open_class_tail": 2
+      "unknown_open_class_tail": 3
     },
     "source_score_board_counts": {
-      "unassigned": 2
+      "unassigned": 3
     },
-    "total_selected_count": 2
+    "total_selected_count": 3
   },
-  "selected_count": 2,
-  "shard_count": 2
+  "selected_count": 3,
+  "shard_count": 3
 }

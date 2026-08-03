@@ -1,5 +1,5 @@
 {
-  "delivery_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+  "delivery_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
   "delivery_path": "two_pass_rerun_selected",
   "long_tail_summary": {
     "count": 1,
@@ -13,7 +13,7 @@
     "suspicious_flat_count": 0,
     "very_long_tail_count": 0
   },
-  "payload_hash": "6160320ec416714ce2df42951e0b54a651826bd5196d46b2f773bfebec777951",
+  "payload_hash": "687f6cbdb9a4740e7c5c4430dccc03b8f761bdca9cb42f907da815a5683e55a6",
   "record_index": 0,
   "schema_version": "selected_exemplar_payload_shard_v1",
   "selected_board_summary": {
@@ -41,7 +41,7 @@
       "corridor_assignment_status": "linked",
       "corridor_fingerprint_id": "fp_000009",
       "corridor_mode_id": 0,
-      "delivery_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+      "delivery_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
       "dynamic_mass_threshold": 0.95,
       "dynamic_top_k": {
         "dynamic_mass_threshold": 0.95,

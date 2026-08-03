@@ -3,7 +3,7 @@
   "allocation_policy_id": "breadth_first_round_robin_v1",
   "corridor_budget_ceiling": 1,
   "fractional_ceiling": 1,
-  "global_budget": 1,
+  "global_budget": 2,
   "modes": [
     {
       "allocatable_capacity": 4,
@@ -30,7 +30,7 @@
     "corridor_mode_cap": 10,
     "nonproduction_override_reason": null,
     "schema_version": "radjax.c3_corridor_coverage_plan.v1",
-    "total_selected_exemplar_budget": 2
+    "total_selected_exemplar_budget": 3
   },
   "raw_mode_capacity": 4,
   "schema_version": "radjax.c3_corridor_coverage_plan.v1",
@@ -60,7 +60,7 @@
   "summary": {
     "actual_corridor_budget": 1,
     "allocated_slots": 1,
-    "global_budget": 1,
+    "global_budget": 2,
     "modes_budget_starved": 0,
     "modes_capacity_positive": 1,
     "modes_covered": 1,

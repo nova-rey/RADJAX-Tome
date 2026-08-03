@@ -6,7 +6,7 @@
       "corridor_assignment_status": "linked",
       "corridor_fingerprint_id": "fp_000009",
       "corridor_mode_id": 0,
-      "delivery_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+      "delivery_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
       "dynamic_mass_threshold": 0.95,
       "dynamic_top_k": {
         "dynamic_mass_threshold": 0.95,
@@ -27,7 +27,7 @@
       ],
       "mode_key": 0,
       "num_buckets": 3,
-      "payload_hash": "30bb45a99841c07bd82d936877c0321efc5beac87b0f332e401cdd3d27c6c060",
+      "payload_hash": "b50afd36735db0cc46c3d4d7714f7ce720ce9bb3d5fe94fd068810a0378135c4",
       "payload_ref": {
         "c5_authoritative_coordinate": true,
         "kind": "corridor_exemplar_score_pass_v1",
@@ -69,7 +69,7 @@
       "corridor_assignment_status": "linked",
       "corridor_fingerprint_id": "fp_000007",
       "corridor_mode_id": 0,
-      "delivery_authority_hash": "sha256:eb2e3ec4a767cfae3a6ae72b6c9483c9def654aa7712356e35defe1fb277e9ba",
+      "delivery_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
       "dynamic_mass_threshold": 0.95,
       "dynamic_top_k": {
         "dynamic_mass_threshold": 0.95,
@@ -90,7 +90,7 @@
       ],
       "mode_key": null,
       "num_buckets": 3,
-      "payload_hash": "b806afe6eb4b92136d348e3f8a8f80054b17174bc8f0b068d883aea8ad484bb1",
+      "payload_hash": "f0afee4385f13a5b152263bea51d6d71e1c717ede61a6469da31c87f843c9fad",
       "payload_ref": {
         "c5_authoritative_coordinate": true,
         "kind": "corridor_exemplar_score_pass_v1",
@@ -129,6 +129,73 @@
       "teacher_entropy": 5.831199645996094,
       "top_k_saturated": true,
       "top_mass": 0.23057186603546143,
+      "top_mass_clamped": false,
+      "vocab_size": 512
+    },
+    {
+      "corridor_assignment_status": "linked",
+      "corridor_fingerprint_id": "fp_000014",
+      "corridor_mode_id": 0,
+      "delivery_authority_hash": "sha256:c2e01ab2cfffdef9866c81e556141fccfc02391501ba17ccae42d71be057b6ce",
+      "dynamic_mass_threshold": 0.95,
+      "dynamic_top_k": {
+        "dynamic_mass_threshold": 0.95,
+        "dynamic_top_k_max": 32,
+        "effective_top_k": 32,
+        "policy": "mass_threshold_v1",
+        "requested_top_k": 4,
+        "score_policy": "entropy_top_n_v1",
+        "source_payload": "backend_emit_batch",
+        "top_k_saturated": true
+      },
+      "dynamic_top_k_max": 32,
+      "effective_top_k": 32,
+      "effective_top_k_fraction_of_vocab": 0.0625,
+      "long_tail_class": "normal",
+      "long_tail_warnings": [
+        "dynamic_top_k_max reached: effective_top_k=32, dynamic_top_k_max=32"
+      ],
+      "mode_key": null,
+      "num_buckets": 3,
+      "payload_hash": "60ff9ad15a91198a41f80c5eb129541eacac4ba8b67bc8d528378a0171128f72",
+      "payload_ref": {
+        "c5_authoritative_coordinate": true,
+        "kind": "corridor_exemplar_score_pass_v1",
+        "source_position": 2,
+        "source_row": 0,
+        "source_score": 5.830536842346191,
+        "source_shard_id": 0,
+        "source_top_token_id": 402,
+        "storage_kind": "full_sequence"
+      },
+      "payload_top_token_id": 402,
+      "rank_by_board": {
+        "global_max_entropy": 2
+      },
+      "raw_top_mass": 0.23177623748779297,
+      "score_selected_position_entropy": 5.830536842346191,
+      "score_top_token_id": 402,
+      "scores_by_board": {
+        "global_max_entropy": 5.830536842346191
+      },
+      "selected_board": "primary",
+      "selected_example_id": "corpus_000000001",
+      "selected_policy": "entropy_top_n_v1",
+      "selected_position": 2,
+      "selected_score": 5.830536842346191,
+      "semantic_tail_tag": "unknown_open_class_tail",
+      "sequence_length": 8,
+      "source_delivery_path": "two_pass_rerun_selected",
+      "source_position": 2,
+      "source_row": 0,
+      "source_score": 5.830536842346191,
+      "source_score_policy": "entropy_top_n_v1",
+      "source_shard_id": 0,
+      "source_top_token_id": 402,
+      "tail_mass": 0.768223762512207,
+      "teacher_entropy": 5.830536842346191,
+      "top_k_saturated": true,
+      "top_mass": 0.23177623748779297,
       "top_mass_clamped": false,
       "vocab_size": 512
     }
