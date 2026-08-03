@@ -2343,6 +2343,22 @@
       "replacement_or_target_boundary": "M8A representative baseline evidence package.",
       "status": "canonical"
     },
+    "scripts/run_m8b_selected_staging_baseline.py": {
+      "archive_or_removal_condition": "Archive after M8B.1 baseline evidence is independently accepted or superseded by governed successor evidence.",
+      "kind": "script",
+      "owning_milestone": "M8B.1",
+      "rationale": "Private cap-eight baseline driver with frozen selected-staging statistics and digest-only repository evidence boundary.",
+      "replacement_or_target_boundary": "M8B.1 representative current-base selected-staging baseline evidence.",
+      "status": "canonical"
+    },
+    "tests/test_m8b_selected_staging_driver.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M8B.1",
+      "rationale": "Verifies the private M8B baseline driver's frozen receipt and initial-staging stop-gate calculation.",
+      "replacement_or_target_boundary": "M8B.1 raw selected-staging baseline evidence collection.",
+      "status": "canonical"
+    },
     "docs/M8A_T4_BASELINE_RECEIPT.md": {
       "archive_or_removal_condition": null,
       "kind": "top-level-doc",

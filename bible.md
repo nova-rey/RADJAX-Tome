@@ -2747,3 +2747,13 @@ The historical M8A aggregate is retained and is not relabeled. Production has
 no measurement control and therefore preserves its former path and bytes; no
 writer strategy, authority, payload, batch policy, Contract, Student, Golden,
 or v5 behavior changes in this measurement-only commit.
+
+## 2026-08-03 — M8B.1 Current-Base Baseline Driver
+
+The private M8B driver reuses only the immutable post-C5 checkpoint and the
+canonical selected-rerun owner for three requested/effective cap-eight runs.
+It binds the frozen statistical projection, validates same-cap payload parity,
+and writes path-bearing raw evidence outside the repository. This driver is
+not a public CLI, does not rerun score or selection work, and does not change
+production behavior, artifacts, authority, batch policy, Contract, Student,
+Golden evidence, or the v5 default.
