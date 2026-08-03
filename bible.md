@@ -2738,3 +2738,12 @@ material-regression predicates, and host/device peak limits. The receipt
 validator rejects altered formula projections. This is measurement-only: it
 does not alter the canonical selected-delivery path, authority, artifacts,
 batch policy, Contract, Student, Golden evidence, or v5 default.
+
+## 2026-08-03 — M8B.1 Initial-Staging Diagnostic Split
+
+Private selected-pass diagnostics now separate canonical body encoding/hash,
+pretty staging JSON encoding, temporary write, close, and atomic replacement.
+The historical M8A aggregate is retained and is not relabeled. Production has
+no measurement control and therefore preserves its former path and bytes; no
+writer strategy, authority, payload, batch policy, Contract, Student, Golden,
+or v5 behavior changes in this measurement-only commit.

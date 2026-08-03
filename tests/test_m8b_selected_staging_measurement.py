@@ -6,8 +6,11 @@ import pytest
 
 from radjax_tome.builder.delivery.measurement import (
     M8BStagingStatistics,
+    SelectedPassExecutionDiagnostics,
+    SelectedPassMeasurementControl,
     validate_m8b_statistics_receipt,
 )
+from radjax_tome.builder.delivery.staging import _write_native_payload_shard
 
 
 def test_frozen_statistics_follow_the_approved_formulas() -> None:
@@ -47,3 +50,37 @@ def test_zero_median_with_nonzero_spread_is_explicitly_undefined() -> None:
         "spread": 2.0,
         "normalized_spread": None,
     }
+
+
+def test_private_staging_diagnostics_split_initial_write_without_relabeling_m8a(
+    tmp_path,
+) -> None:
+    control = SelectedPassMeasurementControl(
+        benchmark_only=True,
+        effective_execution_cap=8,
+        immutable_checkpoint_digest="sha256:" + "a" * 64,
+        checkpoint_root=tmp_path / "checkpoint",
+        temporary_output_root=tmp_path / "output",
+    )
+    diagnostics = SelectedPassExecutionDiagnostics(
+        control=control,
+        requested_batch_size=8,
+    )
+    _write_native_payload_shard(
+        tmp_path / "stage",
+        record_index=0,
+        payload={"delivery_authority_hash": "sha256:authority"},
+        delivery_path="two_pass_rerun_selected",
+        _measurement_diagnostics=diagnostics,
+    )
+    phases = diagnostics.finish()["phases"]
+    assert phases["hashing_json_atomic_write_fsync"]["seconds"] == 0.0
+    for phase in (
+        "canonical_body_encoding_hash",
+        "staging_json_encoding",
+        "temporary_file_write",
+        "temporary_file_close",
+        "atomic_replacement",
+    ):
+        assert phases[phase]["status"] == "measured_host_wall"
+        assert phases[phase]["seconds"] >= 0.0

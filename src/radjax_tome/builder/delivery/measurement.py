@@ -124,6 +124,7 @@ _PHASES = (
     # aggregate when they are observed.  The aggregate remains in the schema
     # so pre-M8B evidence is neither reinterpreted nor invalidated.
     "canonical_body_encoding_hash",
+    "staging_json_encoding",
     "temporary_file_write",
     "temporary_file_close",
     "atomic_replacement",
@@ -309,6 +310,7 @@ class SelectedPassExecutionDiagnostics:
     oom_events: list[dict[str, int]] = field(default_factory=list)
     peak_rss_bytes: int = 0
     peak_cuda: dict[str, object] = field(default_factory=dict)
+    staging_subphases_observed: bool = False
     _seen_shapes: set[tuple[object, ...]] = field(default_factory=set)
 
     def __post_init__(self) -> None:
@@ -327,11 +329,36 @@ class SelectedPassExecutionDiagnostics:
             "compact_d2h_transfer",
         ):
             self.phase_status[phase] = "not_available"
+        for phase in (
+            "canonical_body_encoding_hash",
+            "staging_json_encoding",
+            "temporary_file_write",
+            "temporary_file_close",
+            "atomic_replacement",
+            "resume_validation",
+            "corridor_synchronization_rewrite",
+        ):
+            self.phase_status[phase] = "not_measured"
 
     def add(self, phase: str, seconds: float) -> None:
         self.phase_seconds[phase] += max(0.0, seconds)
         if self.phase_status[phase] == "not_available":
             self.phase_status[phase] = "measured_host_wall"
+
+    def add_staging_phase(self, phase: str, seconds: float) -> None:
+        """Record one exclusive M8B initial-staging interval."""
+
+        if phase not in {
+            "canonical_body_encoding_hash",
+            "staging_json_encoding",
+            "temporary_file_write",
+            "temporary_file_close",
+            "atomic_replacement",
+        }:
+            raise ValueError(f"unsupported M8B staging phase: {phase}")
+        self.staging_subphases_observed = True
+        self.phase_seconds[phase] += max(0.0, seconds)
+        self.phase_status[phase] = "measured_host_wall"
 
     def observe(self) -> None:
         self.peak_rss_bytes = max(self.peak_rss_bytes, _host_rss_bytes())

@@ -294,6 +294,7 @@ def _selected_payloads_from_backend(
                             record_index=record_index,
                             payload=selected_payload,
                             delivery_path=config.delivery_path,
+                            _measurement_diagnostics=diagnostics,
                         )
                         payload_summary = _payload_scalar_summary(
                             selected_payload,
@@ -304,10 +305,11 @@ def _selected_payloads_from_backend(
                         coordinates_committed += 1
                         if diagnostics is not None:
                             write_seconds = _elapsed(write_started)
-                            diagnostics.add(
-                                "hashing_json_atomic_write_fsync",
-                                write_seconds,
-                            )
+                            if not diagnostics.staging_subphases_observed:
+                                diagnostics.add(
+                                    "hashing_json_atomic_write_fsync",
+                                    write_seconds,
+                                )
                             payload_write_seconds += write_seconds
                         del selected_payload
                     else:
@@ -412,6 +414,7 @@ def _write_native_payload_shard(
     record_index: int,
     payload: dict[str, Any],
     delivery_path: str,
+    _measurement_diagnostics: SelectedPassExecutionDiagnostics | None = None,
 ) -> str:
     selected_dir.mkdir(parents=True, exist_ok=True)
     shard = {
@@ -421,9 +424,16 @@ def _write_native_payload_shard(
         "record_index": record_index,
         "selected_exemplars": [payload],
     }
+    hash_started = perf_counter() if _measurement_diagnostics is not None else None
     shard["payload_hash"] = _native_payload_hash(shard)
+    if _measurement_diagnostics is not None and hash_started is not None:
+        _measurement_diagnostics.add_staging_phase(
+            "canonical_body_encoding_hash", _elapsed(hash_started)
+        )
     _write_json_atomic(
-        selected_dir / f"selected-exemplars-{record_index:05d}.json", shard
+        selected_dir / f"selected-exemplars-{record_index:05d}.json",
+        shard,
+        _measurement_diagnostics=_measurement_diagnostics,
     )
     return str(shard["payload_hash"])
 
@@ -435,14 +445,41 @@ def _native_payload_hash(payload: dict[str, Any]) -> str:
     ).hexdigest()
 
 
-def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+def _write_json_atomic(
+    path: Path,
+    payload: dict[str, Any],
+    *,
+    _measurement_diagnostics: SelectedPassExecutionDiagnostics | None = None,
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
-    temporary.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    encode_started = perf_counter() if _measurement_diagnostics is not None else None
+    encoded = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+    if _measurement_diagnostics is not None and encode_started is not None:
+        _measurement_diagnostics.add_staging_phase(
+            "staging_json_encoding", _elapsed(encode_started)
+        )
+    handle = temporary.open("w", encoding="utf-8")
+    try:
+        write_started = perf_counter() if _measurement_diagnostics is not None else None
+        handle.write(encoded)
+        if _measurement_diagnostics is not None and write_started is not None:
+            _measurement_diagnostics.add_staging_phase(
+                "temporary_file_write", _elapsed(write_started)
+            )
+    finally:
+        close_started = perf_counter() if _measurement_diagnostics is not None else None
+        handle.close()
+        if _measurement_diagnostics is not None and close_started is not None:
+            _measurement_diagnostics.add_staging_phase(
+                "temporary_file_close", _elapsed(close_started)
+            )
+    replace_started = perf_counter() if _measurement_diagnostics is not None else None
     os.replace(temporary, path)
+    if _measurement_diagnostics is not None and replace_started is not None:
+        _measurement_diagnostics.add_staging_phase(
+            "atomic_replacement", _elapsed(replace_started)
+        )
 
 
 def _host_rss_bytes() -> int:

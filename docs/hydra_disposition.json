@@ -2306,9 +2306,9 @@
     "src/radjax_tome/builder/delivery/measurement.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
-      "owning_milestone": "M8A",
-      "rationale": "Private selected-pass phase diagnostics, temporary-root control, optional resource observer, and deterministic sampler.",
-      "replacement_or_target_boundary": "M8A benchmark-only instrumentation seam.",
+      "owning_milestone": "M8A/M8B.1",
+      "rationale": "Private selected-pass diagnostics, temporary-root control, optional resource observer, deterministic sampler, and frozen M8B benchmark statistics.",
+      "replacement_or_target_boundary": "M8A instrumentation and M8B.1 current-base staging measurement seams.",
       "status": "canonical"
     },
     "src/radjax_tome/builder/delivery/replay.py": {
