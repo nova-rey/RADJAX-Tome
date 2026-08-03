@@ -120,9 +120,174 @@ _PHASES = (
     "compact_d2h_transfer",
     "payload_conversion_linkage_validation",
     "hashing_json_atomic_write_fsync",
+    # M8B records these private sub-phases in place of the historical
+    # aggregate when they are observed.  The aggregate remains in the schema
+    # so pre-M8B evidence is neither reinterpreted nor invalidated.
+    "canonical_body_encoding_hash",
+    "temporary_file_write",
+    "temporary_file_close",
+    "atomic_replacement",
+    "resume_validation",
+    "corridor_synchronization_rewrite",
     "retry_reload",
     "backend_close_cleanup",
 )
+
+
+M8B_STATISTICS_SCHEMA_VERSION = "m8b_selected_staging_statistics_v1"
+
+
+def _median(observations: Iterable[float]) -> float:
+    values = sorted(float(value) for value in observations)
+    if not values:
+        raise ValueError("statistics require at least one observation")
+    midpoint = len(values) // 2
+    if len(values) % 2:
+        return values[midpoint]
+    return (values[midpoint - 1] + values[midpoint]) / 2.0
+
+
+def _spread(observations: Iterable[float]) -> float:
+    values = [float(value) for value in observations]
+    if not values:
+        raise ValueError("statistics require at least one observation")
+    return max(values) - min(values)
+
+
+@dataclass(frozen=True)
+class M8BStagingStatistics:
+    """Frozen, nonsemantic comparison rules for M8B evidence only."""
+
+    schema_version: str = M8B_STATISTICS_SCHEMA_VERSION
+    measured_run_count: int = 3
+    staging_gate_fraction: float = 0.50
+    initial_staging_improvement_fraction: float = 0.25
+    selected_pass_improvement_fraction: float = 0.15
+    selected_delivery_improvement_fraction: float = 0.10
+    material_regression_fraction: float = 0.05
+    noise_multiplier: float = 2.0
+
+    def __post_init__(self) -> None:
+        if self.schema_version != M8B_STATISTICS_SCHEMA_VERSION:
+            raise ValueError("unsupported M8B statistics schema version")
+        if self.measured_run_count != 3:
+            raise ValueError("M8B comparisons require exactly three measured runs")
+        for field_name in (
+            "staging_gate_fraction",
+            "initial_staging_improvement_fraction",
+            "selected_pass_improvement_fraction",
+            "selected_delivery_improvement_fraction",
+            "material_regression_fraction",
+            "noise_multiplier",
+        ):
+            if float(getattr(self, field_name)) < 0.0:
+                raise ValueError(f"M8B statistic {field_name} must be nonnegative")
+
+    def receipt_projection(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "measured_run_count": self.measured_run_count,
+            "median": "sorted_middle_or_mean_of_two_middle_v1",
+            "spread": "max_minus_min_v1",
+            "combined_spread": (
+                "sqrt(baseline_spread_squared_plus_candidate_spread_squared)_v1"
+            ),
+            "improvement_beyond_noise": (
+                "improvement_gt_noise_multiplier_times_combined_spread_v1"
+            ),
+            "material_regression": (
+                "candidate_minus_baseline_gt_max("
+                "fraction_times_baseline,noise_multiplier_times_combined_spread)_v1"
+            ),
+            "host_memory_limit": "baseline_max_plus_baseline_range_v1",
+            "device_memory_limit": "baseline_max_plus_baseline_range_v1",
+            "staging_gate_fraction": self.staging_gate_fraction,
+            "initial_staging_improvement_fraction": (
+                self.initial_staging_improvement_fraction
+            ),
+            "selected_pass_improvement_fraction": (
+                self.selected_pass_improvement_fraction
+            ),
+            "selected_delivery_improvement_fraction": (
+                self.selected_delivery_improvement_fraction
+            ),
+            "material_regression_fraction": self.material_regression_fraction,
+            "noise_multiplier": self.noise_multiplier,
+        }
+
+    def summarize(self, observations: Iterable[float]) -> dict[str, float | None]:
+        values = self._three_measurements(observations)
+        median = _median(values)
+        spread = _spread(values)
+        return {
+            "median": median,
+            "spread": spread,
+            "normalized_spread": (
+                0.0
+                if median == 0.0 and spread == 0.0
+                else spread / median
+                if median != 0.0
+                else None
+            ),
+        }
+
+    def combined_spread(
+        self, baseline: Iterable[float], candidate: Iterable[float]
+    ) -> float:
+        import math
+
+        return math.sqrt(
+            _spread(self._three_measurements(baseline)) ** 2
+            + _spread(self._three_measurements(candidate)) ** 2
+        )
+
+    def improvement_beyond_noise(
+        self, baseline: Iterable[float], candidate: Iterable[float]
+    ) -> bool:
+        baseline_values = self._three_measurements(baseline)
+        candidate_values = self._three_measurements(candidate)
+        return _median(baseline_values) - _median(candidate_values) > (
+            self.noise_multiplier
+            * self.combined_spread(baseline_values, candidate_values)
+        )
+
+    def materially_regresses(
+        self, baseline: Iterable[float], candidate: Iterable[float]
+    ) -> bool:
+        baseline_values = self._three_measurements(baseline)
+        candidate_values = self._three_measurements(candidate)
+        baseline_median = _median(baseline_values)
+        candidate_median = _median(candidate_values)
+        return candidate_median - baseline_median > max(
+            self.material_regression_fraction * baseline_median,
+            self.noise_multiplier
+            * self.combined_spread(baseline_values, candidate_values),
+        )
+
+    def memory_limit(self, baseline_peaks: Iterable[int]) -> int:
+        values = [int(value) for value in baseline_peaks]
+        if len(values) != self.measured_run_count:
+            raise ValueError("M8B memory limits require exactly three baseline peaks")
+        return max(values) + max(values) - min(values)
+
+    def _three_measurements(self, observations: Iterable[float]) -> list[float]:
+        values = [float(value) for value in observations]
+        if len(values) != self.measured_run_count:
+            raise ValueError(
+                "M8B statistics require exactly three measured observations"
+            )
+        return values
+
+
+def validate_m8b_statistics_receipt(receipt: Mapping[str, object]) -> None:
+    """Reject evidence that silently changes the frozen M8B comparison rules."""
+
+    projection = receipt.get("statistics")
+    if not isinstance(projection, Mapping):
+        raise ValueError("M8B receipt is missing frozen statistics")
+    expected = M8BStagingStatistics().receipt_projection()
+    if dict(projection) != expected:
+        raise ValueError("M8B receipt statistics do not match frozen definitions")
 
 
 @dataclass

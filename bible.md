@@ -2729,3 +2729,12 @@ at least two exemplar-bearing example identities, and requires all five public
 identity domains to agree across strict directory/archive resolution. Contract,
 Student, the default profile, M8B, and Tome behavior outside this ordinary
 proof fixture remain unchanged.
+
+## 2026-08-03 — M8B.1 Frozen Selected-Staging Statistics
+
+M8B now fixes its private three-run benchmark definitions before collecting
+new representative evidence: median, spread, combined spread, noise and
+material-regression predicates, and host/device peak limits. The receipt
+validator rejects altered formula projections. This is measurement-only: it
+does not alter the canonical selected-delivery path, authority, artifacts,
+batch policy, Contract, Student, Golden evidence, or v5 default.

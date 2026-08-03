@@ -2327,6 +2327,14 @@
       "replacement_or_target_boundary": "M8A instrumentation readiness acceptance tests.",
       "status": "canonical"
     },
+    "tests/test_m8b_selected_staging_measurement.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M8B.1",
+      "rationale": "Locks the private M8B selected-staging statistical definitions and rejects altered benchmark receipts without changing authority.",
+      "replacement_or_target_boundary": "M8B.1 current-base selected-staging baseline evidence.",
+      "status": "canonical"
+    },
     "scripts/run_m8a_selected_pass_measurements.py": {
       "archive_or_removal_condition": "Archive after M8A evidence is independently accepted or superseded by a governed successor.",
       "kind": "script",
