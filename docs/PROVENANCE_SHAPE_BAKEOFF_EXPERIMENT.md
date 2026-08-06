@@ -1,6 +1,8 @@
 # Private Provenance-Shape Bake-Off
 
 Status: **private audit-branch experiment; not a Tome, Contract, or Student format**.
+The original self-consistent-substitution interpretation below is superseded by
+the corrected threat model in `PROVENANCE_SHAPE_THREAT_MODEL.md`.
 
 Base: `b78821c6aec17335125df2e7f5823dce285735cf`. Inputs are the three
 already-selected records from the committed v6 M7 fixture; no teacher,
@@ -22,7 +24,7 @@ an index with stable locations and one record digest, an acyclic public
 cover/header/inventory graph, an archive digest, and a private
 authority-bound journal with sealed contiguous ranges and a completion marker.
 
-## Measurements
+## Historical three-record exploratory measurement
 
 | Metric, median of 3 | Current model | Candidate | Result |
 | --- | ---: | ---: | --- |
@@ -42,7 +44,7 @@ current-maximum-plus-spread tolerance. This small fixture is not
 representative performance evidence and does not isolate SHA-256 arithmetic;
 the reductions arise from avoided canonical-byte production, parsing, and I/O.
 
-## Gate disposition
+## Corrected gate disposition
 
 The private candidate validates each completed shard's raw hash before parsing
 or yielding rows; rejects stale/cross-authority/incomplete journal state and
@@ -62,23 +64,30 @@ sealed final-shard index. A capacity-one versus capacity-three reshard preserves
 the logical sequence digest while changing raw archive identity.
 
 A fully recomputed candidate with a changed token is internally valid, as
-expected: no experimental outer behavioral binding exists. This proves the
-proposed public outer semantic binding would be required to preserve the
-existing v6 behavioral-rejection claim. The existing Contract-path v6 rejection
-test remains unchanged and passes.
+expected. That is not an ordinary internal-integrity failure: an actor able to
+replace all package bytes and receipts has no externally supplied expected
+identity to contradict. The mutation is retained and now proves the intended
+classification boundary:
 
-The experiment is nevertheless **not adoptable**:
+1. Standard public validation accepts the self-consistent replacement.
+2. Immutable expected-identity comparison rejects it as an accidental
+   behavioral regression during Golden/Contract development.
+3. Optional external-attestation comparison rejects it when a distinct-trust
+   original semantic root is supplied.
+4. A malicious producer, compromised source, compromised validator, and truthful
+   teacher-origin claim remain explicit nonclaims without independent anchors.
 
-1. Its wall-time reduction is not material under the frozen noise-aware rule.
-2. Contract v0.8.0 correctly cannot admit the experimental schema.
-3. The candidate needs a new public outer semantic binding to reject a fully
-   recomputed but behaviorally invalid inner M7; current v6 proof of that claim
-   remains exclusively the existing Contract path.
-4. Its immutable three-record fixture input is materialized by the private
-   harness, so it supplies no large-scale bounded-memory construction proof.
+The corrected experimental result is that the standard candidate preserves the
+required operational checks while removing duplicate staging work. The later
+five-run 256/2,048-record synthetic benchmark in
+`PROVENANCE_SHAPE_THREAT_MODEL.md` meets its frozen materiality and RSS gates.
+This supports a future **Contract-owned next-version design discussion**, not a
+format approval or implementation. Contract v0.8.0 correctly cannot admit this
+experimental schema, and all released verification paths remain unchanged.
 
 Consequently this branch makes no production, Contract, Student, fixture,
-Golden, default-profile, M8, or M9 claim. Raw path-bearing measurement evidence
-is retained outside the repository as
+Golden, default-profile, M8, or M9 change. The historical raw path-bearing
+three-record measurement evidence is retained outside the repository as
 `sha256:c6458db30a764a97569cf40777ffed17c4befa17a1ed0fc31e986e55505f547f`;
-this document contains only sanitized evidence.
+the corrected synthetic benchmark receipt is recorded in the threat-model
+document. These documents contain sanitized evidence only.

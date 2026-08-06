@@ -2355,7 +2355,7 @@
       "archive_or_removal_condition": "Remove after independent review of the private provenance-shape experiment.",
       "kind": "source-module",
       "owning_milestone": "Audit-only provenance bake-off",
-      "rationale": "Branch-local current-versus-candidate proof-lifecycle harness; never imported by production Tome.",
+      "rationale": "Branch-local operational-integrity, transaction, immutable-identity, and external-attestation comparison harness; never imported by production Tome.",
       "replacement_or_target_boundary": "Independent review of a future Contract-owned provenance version.",
       "status": "research-frozen"
     },
@@ -2379,7 +2379,23 @@
       "archive_or_removal_condition": null,
       "kind": "top-level-doc",
       "owning_milestone": "Audit-only provenance bake-off",
-      "rationale": "Sanitized protocol, measurements, and non-adoption result for independent review.",
+      "rationale": "Sanitized protocol, corrected threat-model disposition, and experimental results for independent review.",
+      "replacement_or_target_boundary": "Independent review; no production provenance change.",
+      "status": "research-frozen"
+    },
+    "experiments/provenance_shape_benchmark.py": {
+      "archive_or_removal_condition": "Remove after independent review of the private provenance-shape experiment.",
+      "kind": "source-module",
+      "owning_milestone": "Audit-only provenance bake-off",
+      "rationale": "Private deterministic no-inference construction benchmark for the experimental current and lean proof projections.",
+      "replacement_or_target_boundary": "Independent review of a future Contract-owned provenance version.",
+      "status": "research-frozen"
+    },
+    "docs/PROVENANCE_SHAPE_THREAT_MODEL.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "Audit-only provenance bake-off",
+      "rationale": "Defines operational integrity, development comparison, external authenticity, and explicit nonclaims for the experimental projection.",
       "replacement_or_target_boundary": "Independent review; no production provenance change.",
       "status": "research-frozen"
     },

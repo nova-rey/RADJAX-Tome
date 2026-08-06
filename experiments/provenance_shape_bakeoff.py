@@ -1,12 +1,20 @@
-"""Private next-version provenance-shape construction bake-off.
+"""Private provenance-shape experiment; never imported by production Tome.
 
-This is intentionally not a Tome writer, package format, or public validator.
-It consumes already-selected records and writes disposable audit projections.
+The module deliberately distinguishes four boundaries:
+
+* standard package validation detects operational faults in one declared Tome;
+* transaction validation is producer-only and never required by a consumer;
+* immutable expected-identity comparison models Golden/Contract development use;
+* external attestation compares an independently obtained expected identity.
+
+None of those mechanisms proves that a malicious producer, validator, or model
+origin claim is honest.  This code is a disposable next-version projection only.
 """
 
 from __future__ import annotations
 
 import hashlib
+import itertools
 import json
 import os
 import resource
@@ -18,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 SCHEMA = "radjax_tome_provenance_bakeoff_experimental_vnext"
+ATTESTATION_SCHEMA = SCHEMA + ".external_attestation.v1"
 RUNS = 3
 MATERIAL_REDUCTION = 0.20
 NOISE_MULTIPLIER = 2.0
@@ -42,7 +51,7 @@ def _file_digest(path: Path) -> str:
 
 
 def _configuration(shape: str, capacity: int) -> dict[str, Any]:
-    """Return private construction settings that must not cross a resume."""
+    """Private construction settings that a resumed producer must match."""
     return {
         "schema_version": SCHEMA + ".transaction.v1",
         "shape": shape,
@@ -51,7 +60,7 @@ def _configuration(shape: str, capacity: int) -> dict[str, Any]:
 
 
 def _member_path(root: Path, value: Any, *, label: str) -> Path:
-    """Resolve an experimental public member without accepting path traversal."""
+    """Resolve a declared member without permitting traversal or absolutes."""
     if not isinstance(value, str):
         raise ValueError(f"invalid {label} pointer")
     member = Path(value)
@@ -63,11 +72,19 @@ def _member_path(root: Path, value: Any, *, label: str) -> Path:
     return path
 
 
+def _is_public_member(root: Path, path: Path) -> bool:
+    return path.is_file() and not any(
+        part.startswith(".") for part in path.relative_to(root).parts
+    )
+
+
 @dataclass
 class Counters:
     serialization_calls: int = 0
     serialization_bytes: int = 0
     bytes_written: int = 0
+    temporary_bytes_written: int = 0
+    final_bytes_written: int = 0
     bytes_reread: int = 0
     bytes_rewritten: int = 0
     parse_calls: int = 0
@@ -88,12 +105,58 @@ class Counters:
         self.hashed_bytes += len(value)
         return _digest(value)
 
-    def write(self, path: Path, value: bytes, *, rewrite: bool = False) -> None:
+    def digest_file(self, path: Path) -> str:
+        """Hash a member without materializing an unbounded index in memory."""
+        digest = hashlib.sha256()
+        self.hash_calls += 1
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+                self.bytes_reread += len(chunk)
+                self.hashed_bytes += len(chunk)
+        return "sha256:" + digest.hexdigest()
+
+    def write(
+        self,
+        path: Path,
+        value: bytes,
+        *,
+        surface: str,
+        rewrite: bool = False,
+    ) -> None:
+        if surface not in {"temporary", "final"}:
+            raise ValueError("unknown evidence surface")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(value)
         self.bytes_written += len(value)
+        if surface == "temporary":
+            self.temporary_bytes_written += len(value)
+        else:
+            self.final_bytes_written += len(value)
         if rewrite:
             self.bytes_rewritten += len(value)
+
+    def append(self, path: Path, value: bytes, *, surface: str) -> None:
+        if surface not in {"temporary", "final"}:
+            raise ValueError("unknown evidence surface")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("ab") as handle:
+            handle.write(value)
+        self.bytes_written += len(value)
+        if surface == "temporary":
+            self.temporary_bytes_written += len(value)
+        else:
+            self.final_bytes_written += len(value)
+
+    def note_written_file(self, path: Path, *, surface: str) -> None:
+        size = path.stat().st_size
+        self.bytes_written += size
+        if surface == "temporary":
+            self.temporary_bytes_written += size
+        elif surface == "final":
+            self.final_bytes_written += size
+        else:
+            raise ValueError("unknown evidence surface")
 
     def read(self, path: Path) -> bytes:
         value = path.read_bytes()
@@ -109,13 +172,37 @@ class Counters:
         return self.__dict__.copy()
 
 
+class _FramedSequence:
+    """One ordered semantic-root hash without retaining every record."""
+
+    def __init__(self, counter: Counters) -> None:
+        self._counter = counter
+        self._digest = hashlib.sha256()
+        prefix = b"radjax-tome-selected-sequence-vnext\x00"
+        self._digest.update(prefix)
+        counter.hash_calls += 1
+        counter.hashed_bytes += len(prefix)
+        self.count = 0
+
+    def add_encoded(self, encoded: bytes) -> None:
+        frame = len(encoded).to_bytes(8, "big") + encoded
+        self._digest.update(frame)
+        self._counter.hashed_bytes += len(frame)
+        self.count += 1
+
+    def finish(self) -> str:
+        return "sha256:" + self._digest.hexdigest()
+
+
 @dataclass(frozen=True)
 class BakeoffResult:
     root: Path
     sequence_digest: str
+    semantic_root: str
     archive_digest: str
     counters: dict[str, int]
-    wall_seconds: float
+    construction_seconds: float
+    archive_seconds: float
     peak_rss_bytes: int
     configuration: dict[str, Any]
 
@@ -131,13 +218,33 @@ def _logical_id(record: Mapping[str, Any], counter: Counters) -> str:
     )
 
 
-def _sequence(records: Iterable[Mapping[str, Any]], counter: Counters) -> str:
-    """Hash full canonical records in an unambiguous ordered frame stream."""
-    frames = [b"radjax-tome-selected-sequence-vnext\\x00"]
-    for record in records:
-        encoded = counter.canonical(dict(record))
-        frames.extend((len(encoded).to_bytes(8, "big"), encoded))
-    return counter.digest(b"".join(frames))
+def _semantic_root(
+    *,
+    sequence_digest: str,
+    authority_digest: str,
+    contract_version: str,
+    behavioral_policy_identity: str,
+    counter: Counters,
+) -> str:
+    """Bind one standard sequence identity to governed public semantics."""
+    return counter.digest(
+        counter.canonical(
+            {
+                "schema_version": SCHEMA + ".semantic_root.v1",
+                "sequence_digest": sequence_digest,
+                "semantic_authority_identity": authority_digest,
+                "contract_version": contract_version,
+                "behavioral_policy_identity": behavioral_policy_identity,
+            }
+        )
+    )
+
+
+def _iter_jsonl(counter: Counters, path: Path) -> Iterator[dict[str, Any]]:
+    with path.open("rb") as handle:
+        for line in handle:
+            counter.bytes_reread += len(line)
+            yield counter.parse(line)
 
 
 def build_projection(
@@ -147,37 +254,54 @@ def build_projection(
     authority: Mapping[str, Any],
     capacity: int,
     shape: str,
+    contract_version: str = "experimental-contract-vnext",
+    behavioral_policy_identity: str = "experimental-behavior-policy-vnext",
 ) -> BakeoffResult:
-    """Build a disposable current-model or candidate-model projection.
+    """Build a disposable current-model or standard-candidate projection.
 
-    ``current`` models the temporary per-record hash and duplicate final index
-    fields. ``candidate`` replaces it with an authority-bound sealed-shard
-    journal and writes each final shard/index field exactly once.
+    The iterator is consumed in bounded shards.  The current model alone writes
+    the discarded native wrapper and models its reread/rehash/rewrite.  Both
+    shapes use the same lean private journal so the comparison isolates the
+    disputed staging surfaces rather than duplicating transaction policy.
     """
     if shape not in {"current", "candidate"} or capacity < 1:
         raise ValueError("invalid private bake-off shape or capacity")
+    if output.exists():
+        raise ValueError("projection output must be fresh")
     started = time.perf_counter()
     counter = Counters()
-    material = [dict(r) for r in records]
     authority_digest = counter.digest(counter.canonical(dict(authority)))
-    sequence_digest = _sequence(material, counter)
     configuration = _configuration(shape, capacity)
+    journal_path = output / ".journal.json"
+    sealed_log_path = output / ".journal-sealed.jsonl"
     journal = {
-        "schema_version": SCHEMA + ".journal.v1",
+        "schema_version": SCHEMA + ".journal.v2",
         "authority_digest": authority_digest,
         "configuration_digest": counter.digest(counter.canonical(configuration)),
+        "sealed_log": sealed_log_path.relative_to(output).as_posix(),
         "state": "open",
-        "sealed": [],
+        "committed_count": 0,
+        "committed_end": 0,
     }
     counter.journal_operations += 1
-    counter.write(output / ".journal.json", counter.canonical(journal))
-    index: list[dict[str, Any]] = []
-    shard_entries: list[dict[str, Any]] = []
-    for shard_id, first in enumerate(range(0, len(material), capacity)):
-        chunk = material[first : first + capacity]
+    counter.write(journal_path, counter.canonical(journal), surface="temporary")
+    payload_index_path = output / "payload-index.jsonl"
+    shard_index_path = output / "shard-index.jsonl"
+    counter.write(payload_index_path, b"", surface="final")
+    counter.write(shard_index_path, b"", surface="final")
+
+    sequence = _FramedSequence(counter)
+    selected_count = 0
+    shard_count = 0
+    record_iterator = iter(records)
+    while chunk := list(itertools.islice(record_iterator, capacity)):
+        first = selected_count
         lines: list[bytes] = []
-        for row, record in enumerate(chunk):
+        index_rows: list[dict[str, Any]] = []
+        for row, source_record in enumerate(chunk):
+            record = dict(source_record)
             encoded = counter.canonical(record)
+            sequence.add_encoded(encoded)
             record_digest = counter.digest(encoded)
             if shape == "current":
                 native = {
@@ -186,130 +310,333 @@ def build_projection(
                         counter.canonical({"record": record})
                     ),
                 }
-                native_path = output / ".native" / f"{first + row:05d}.json"
-                counter.write(native_path, counter.canonical(native))
-                # Model post-linkage reread/rehash/rewrite on this private copy.
+                native_path = output / ".native" / f"{first + row:08d}.json"
+                counter.write(
+                    native_path, counter.canonical(native), surface="temporary"
+                )
                 reread = counter.read(native_path)
                 parsed = counter.parse(reread)
                 parsed["payload_hash"] = counter.digest(
                     counter.canonical({"record": parsed["record"]})
                 )
-                counter.write(native_path, counter.canonical(parsed), rewrite=True)
+                counter.write(
+                    native_path,
+                    counter.canonical(parsed),
+                    surface="temporary",
+                    rewrite=True,
+                )
             lines.append(encoded + b"\n")
-            index.append(
+            index_rows.append(
                 {
                     "logical_id": _logical_id(record, counter),
                     "selection_index": first + row,
-                    "shard_id": shard_id,
+                    "shard_id": shard_count,
                     "row": row,
                     "record_digest": record_digest,
                 }
             )
-        shard_path = output / "shards" / f"shard-{shard_id:05d}.jsonl"
+        shard_path = output / "shards" / f"shard-{shard_count:05d}.jsonl"
         shard_bytes = b"".join(lines)
-        counter.write(shard_path, shard_bytes)
+        counter.write(shard_path, shard_bytes, surface="final")
         shard_hash = counter.digest(counter.read(shard_path))
         counter.shard_seals += 1
         entry = {
-            "shard_id": shard_id,
+            "shard_id": shard_count,
             "path": shard_path.relative_to(output).as_posix(),
             "sha256": shard_hash,
             "size_bytes": len(shard_bytes),
             "first": first,
             "count": len(chunk),
         }
-        shard_entries.append(entry)
-        journal["sealed"].append(entry)
+        entry_bytes = counter.canonical(entry) + b"\n"
+        counter.append(shard_index_path, entry_bytes, surface="final")
+        counter.append(sealed_log_path, entry_bytes, surface="temporary")
+        journal["committed_count"] = first + len(chunk)
+        journal["committed_end"] = first + len(chunk)
         counter.journal_operations += 1
         counter.write(
-            output / ".journal.json", counter.canonical(journal), rewrite=True
+            journal_path,
+            counter.canonical(journal),
+            surface="temporary",
+            rewrite=True,
         )
-        for row in index[first : first + len(chunk)]:
+        for index_row in index_rows:
             if shape == "current":
-                row["payload_sha256"] = row["record_digest"]
-                row["payload_semantic_digest"] = row["record_digest"]
-                row["shard_sha256"] = shard_hash
-    counter.write(
-        output / "payload-index.jsonl",
-        b"".join(counter.canonical(row) + b"\n" for row in index),
-    )
-    counter.write(
-        output / "shard-index.jsonl",
-        b"".join(counter.canonical(row) + b"\n" for row in shard_entries),
+                index_row["payload_sha256"] = index_row["record_digest"]
+                index_row["payload_semantic_digest"] = index_row["record_digest"]
+                index_row["shard_sha256"] = shard_hash
+            counter.append(
+                payload_index_path,
+                counter.canonical(index_row) + b"\n",
+                surface="final",
+            )
+        selected_count += len(chunk)
+        shard_count += 1
+
+    sequence_digest = sequence.finish()
+    semantic_root = _semantic_root(
+        sequence_digest=sequence_digest,
+        authority_digest=authority_digest,
+        contract_version=contract_version,
+        behavioral_policy_identity=behavioral_policy_identity,
+        counter=counter,
     )
     layout = {
-        "schema_version": SCHEMA + ".public.v1",
+        "schema_version": SCHEMA + ".public.v2",
         "shape": shape,
-        "authority_digest": authority_digest,
+        "semantic_authority_identity": authority_digest,
+        "contract_version": contract_version,
+        "behavioral_policy_identity": behavioral_policy_identity,
         "sequence_digest": sequence_digest,
-        "selected_count": len(material),
+        "semantic_root": semantic_root,
+        "selected_count": selected_count,
         "shard_index": {
-            "path": "shard-index.jsonl",
-            "sha256": counter.digest(counter.read(output / "shard-index.jsonl")),
+            "path": shard_index_path.relative_to(output).as_posix(),
+            "sha256": counter.digest_file(shard_index_path),
         },
         "payload_index": {
-            "path": "payload-index.jsonl",
-            "sha256": counter.digest(counter.read(output / "payload-index.jsonl")),
+            "path": payload_index_path.relative_to(output).as_posix(),
+            "sha256": counter.digest_file(payload_index_path),
         },
     }
-    counter.write(output / "layout.json", counter.canonical(layout))
-    inventory = []
-    for path in sorted(
-        p
-        for p in output.rglob("*")
-        if p.is_file() and not p.name.startswith(".journal")
-    ):
-        inventory.append(
-            {
-                "path": path.relative_to(output).as_posix(),
-                "sha256": counter.digest(counter.read(path)),
-                "size_bytes": path.stat().st_size,
-            }
-        )
-    counter.write(output / "inventory.json", counter.canonical(inventory))
+    counter.write(output / "layout.json", counter.canonical(layout), surface="final")
+    inventory = [
+        {
+            "path": path.relative_to(output).as_posix(),
+            "sha256": counter.digest_file(path),
+            "size_bytes": path.stat().st_size,
+        }
+        for path in sorted(output.rglob("*"))
+        if _is_public_member(output, path)
+    ]
+    counter.write(
+        output / "inventory.json", counter.canonical(inventory), surface="final"
+    )
     header = {
-        "schema_version": SCHEMA + ".manifest.v1",
+        "schema_version": SCHEMA + ".manifest.v2",
         "inventory": "inventory.json",
         "inventory_sha256": counter.digest(counter.read(output / "inventory.json")),
-        "sequence_digest": sequence_digest,
+        "semantic_root": semantic_root,
     }
-    counter.write(output / "manifest-header.json", counter.canonical(header))
+    counter.write(
+        output / "manifest-header.json", counter.canonical(header), surface="final"
+    )
     cover = {
-        "schema_version": SCHEMA + ".cover.v1",
-        "authority_digest": authority_digest,
-        "sequence_digest": sequence_digest,
+        "schema_version": SCHEMA + ".cover.v2",
+        "semantic_authority_identity": authority_digest,
+        "contract_version": contract_version,
+        "behavioral_policy_identity": behavioral_policy_identity,
+        "semantic_root": semantic_root,
         "manifest_header": {
             "path": "manifest-header.json",
             "sha256": counter.digest(counter.read(output / "manifest-header.json")),
         },
     }
-    counter.write(output / "cover.json", counter.canonical(cover))
+    counter.write(output / "cover.json", counter.canonical(cover), surface="final")
     journal["state"] = "complete"
     journal["promotion_marker"] = {
+        "semantic_root": semantic_root,
         "sequence_digest": sequence_digest,
-        "shard_count": len(shard_entries),
+        "shard_count": shard_count,
+        "selected_count": selected_count,
     }
     counter.journal_operations += 1
-    counter.write(output / ".journal.json", counter.canonical(journal), rewrite=True)
+    counter.write(
+        journal_path,
+        counter.canonical(journal),
+        surface="temporary",
+        rewrite=True,
+    )
+    archive_started = time.perf_counter()
     archive = output.with_suffix(".tar")
     with tarfile.open(archive, "w") as tar:
-        for path in sorted(
-            p for p in output.rglob("*") if p.is_file() and not p.name.startswith(".")
-        ):
-            tar.add(path, arcname=path.relative_to(output).as_posix(), recursive=False)
+        for path in sorted(output.rglob("*")):
+            if _is_public_member(output, path):
+                tar.add(
+                    path, arcname=path.relative_to(output).as_posix(), recursive=False
+                )
+    archive_seconds = time.perf_counter() - archive_started
+    counter.note_written_file(archive, surface="final")
     archive_digest = counter.digest(counter.read(archive))
     rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * (
         1 if os.uname().sysname == "Darwin" else 1024
     )
     return BakeoffResult(
-        output,
-        sequence_digest,
-        archive_digest,
-        counter.projection(),
-        time.perf_counter() - started,
-        rss,
-        configuration,
+        root=output,
+        sequence_digest=sequence_digest,
+        semantic_root=semantic_root,
+        archive_digest=archive_digest,
+        counters=counter.projection(),
+        construction_seconds=time.perf_counter() - started,
+        archive_seconds=archive_seconds,
+        peak_rss_bytes=rss,
+        configuration=configuration,
     )
+
+
+def _public_documents(
+    root: Path, counter: Counters
+) -> tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], dict[str, Any]]:
+    cover = counter.parse(counter.read(root / "cover.json"))
+    header_path = _member_path(
+        root, cover.get("manifest_header", {}).get("path"), label="manifest header"
+    )
+    header = counter.parse(counter.read(header_path))
+    inventory_path = _member_path(root, header.get("inventory"), label="inventory")
+    inventory = counter.parse(counter.read(inventory_path))
+    layout = counter.parse(counter.read(root / "layout.json"))
+    return cover, header, inventory, layout
+
+
+def validate_standard_projection(
+    root: Path, *, authority: Mapping[str, Any]
+) -> Iterator[dict[str, Any]]:
+    """Validate one public artifact without touching private producer state."""
+    counter = Counters()
+    cover, header, inventory, layout = _public_documents(root, counter)
+    authority_digest = counter.digest(counter.canonical(dict(authority)))
+    if (
+        cover.get("semantic_authority_identity") != authority_digest
+        or layout.get("semantic_authority_identity") != authority_digest
+        or cover.get("semantic_root") != header.get("semantic_root")
+        or cover.get("semantic_root") != layout.get("semantic_root")
+    ):
+        raise ValueError("semantic authority or root mismatch")
+    header_path = _member_path(
+        root, cover.get("manifest_header", {}).get("path"), label="manifest header"
+    )
+    inventory_path = _member_path(root, header.get("inventory"), label="inventory")
+    if cover["manifest_header"].get("sha256") != counter.digest(
+        counter.read(header_path)
+    ) or header.get("inventory_sha256") != counter.digest(counter.read(inventory_path)):
+        raise ValueError("cover or manifest mismatch")
+    inventory_paths = {member["path"] for member in inventory}
+    actual_paths = {
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if _is_public_member(root, path)
+    }
+    control_paths = {"cover.json", "manifest-header.json", "inventory.json"}
+    if actual_paths - control_paths != inventory_paths:
+        raise ValueError("partial or unreceipted public member")
+    for member in inventory:
+        path = _member_path(root, member.get("path"), label="inventory")
+        if member.get("sha256") != counter.digest_file(path):
+            raise ValueError(
+                f"inventory member mismatch: {member.get('path', '<unknown>')}"
+            )
+    expected_root = _semantic_root(
+        sequence_digest=layout.get("sequence_digest", ""),
+        authority_digest=authority_digest,
+        contract_version=layout.get("contract_version", ""),
+        behavioral_policy_identity=layout.get("behavioral_policy_identity", ""),
+        counter=counter,
+    )
+    if expected_root != cover.get("semantic_root"):
+        raise ValueError("semantic-root binding mismatch")
+    shard_index_path = _member_path(
+        root, layout.get("shard_index", {}).get("path"), label="shard index"
+    )
+    payload_index_path = _member_path(
+        root, layout.get("payload_index", {}).get("path"), label="payload index"
+    )
+    if layout["shard_index"].get("sha256") != counter.digest_file(
+        shard_index_path
+    ) or layout["payload_index"].get("sha256") != counter.digest_file(
+        payload_index_path
+    ):
+        raise ValueError("layout index mismatch")
+    expected = 0
+    sequence = _FramedSequence(counter)
+    index_rows = _iter_jsonl(counter, payload_index_path)
+    for shard in _iter_jsonl(counter, shard_index_path):
+        raw = counter.read(_member_path(root, shard.get("path"), label="shard"))
+        if shard.get("sha256") != counter.digest(raw) or shard.get("first") != expected:
+            raise ValueError("unsealed, corrupt, or noncontiguous shard")
+        rows = [counter.parse(line) for line in raw.splitlines()]
+        if len(rows) != shard.get("count"):
+            raise ValueError("shard count mismatch")
+        for row, record in enumerate(rows):
+            try:
+                index = next(index_rows)
+            except StopIteration as exc:
+                raise ValueError("missing payload index row") from exc
+            encoded = counter.canonical(record)
+            expected_index = {
+                "logical_id": _logical_id(record, counter),
+                "selection_index": expected + row,
+                "shard_id": shard.get("shard_id"),
+                "row": row,
+                "record_digest": counter.digest(encoded),
+            }
+            if any(index.get(key) != value for key, value in expected_index.items()):
+                raise ValueError("payload index does not bind the shard row")
+            sequence.add_encoded(encoded)
+        expected += len(rows)
+        yield from rows
+    if expected != layout.get("selected_count"):
+        raise ValueError("payload index count mismatch")
+    try:
+        next(index_rows)
+    except StopIteration:
+        pass
+    else:
+        raise ValueError("excess payload index row")
+    if sequence.finish() != layout.get("sequence_digest"):
+        raise ValueError("sequence mismatch")
+
+
+def validate_transaction(
+    root: Path,
+    *,
+    authority: Mapping[str, Any],
+    configuration: Mapping[str, Any],
+) -> None:
+    """Validate producer-only resume/promotion state; public consumers skip it."""
+    counter = Counters()
+    journal = counter.parse(counter.read(root / ".journal.json"))
+    authority_digest = counter.digest(counter.canonical(dict(authority)))
+    configuration_digest = counter.digest(counter.canonical(dict(configuration)))
+    if (
+        journal.get("state") != "complete"
+        or journal.get("authority_digest") != authority_digest
+    ):
+        raise ValueError("unsafe or cross-authority journal")
+    if journal.get("configuration_digest") != configuration_digest:
+        raise ValueError("stale transaction configuration")
+    sealed_path = _member_path(root, journal.get("sealed_log"), label="sealed log")
+    expected = 0
+    sealed_count = 0
+    shards = _iter_jsonl(counter, root / "shard-index.jsonl")
+    for shard in _iter_jsonl(counter, sealed_path):
+        try:
+            public_shard = next(shards)
+        except StopIteration as exc:
+            raise ValueError("unreceipted shard") from exc
+        if shard != public_shard:
+            raise ValueError("unreceipted shard")
+        if shard.get("first") != expected or shard.get("count", 0) < 1:
+            raise ValueError("noncontiguous journal range")
+        expected += shard["count"]
+        sealed_count += 1
+    try:
+        next(shards)
+    except StopIteration:
+        pass
+    else:
+        raise ValueError("unreceipted shard")
+    cover = counter.parse(counter.read(root / "cover.json"))
+    marker = journal.get("promotion_marker", {})
+    if (
+        marker.get("semantic_root") != cover.get("semantic_root")
+        or marker.get("sequence_digest")
+        != counter.parse(counter.read(root / "layout.json")).get("sequence_digest")
+        or marker.get("shard_count") != sealed_count
+        or marker.get("selected_count") != expected
+        or journal.get("committed_count") != expected
+        or journal.get("committed_end") != expected
+    ):
+        raise ValueError("unreceipted shard or incomplete promotion")
 
 
 def validate_candidate(
@@ -318,109 +645,47 @@ def validate_candidate(
     authority: Mapping[str, Any],
     configuration: Mapping[str, Any] | None = None,
 ) -> Iterator[dict[str, Any]]:
-    """Validate the private projection before yielding any final-shard row.
+    """Compatibility helper for full private-lifecycle experiment validation."""
+    if configuration is not None:
+        validate_transaction(root, authority=authority, configuration=configuration)
+    yield from validate_standard_projection(root, authority=authority)
 
-    This is deliberately an experimental producer-side lifecycle validator, not
-    a public or Student-facing Tome opener.  It checks the private journal only
-    to exercise transaction and promotion safety for this bake-off.
+
+def compare_immutable_expected_identity(
+    root: Path, *, expected_semantic_root: str
+) -> None:
+    """Model a Golden/Contract comparison against an already trusted identity."""
+    cover = json.loads((root / "cover.json").read_text(encoding="utf-8"))
+    if cover.get("semantic_root") != expected_semantic_root:
+        raise ValueError("immutable expected semantic identity mismatch")
+
+
+def require_external_attestation(root: Path, *, attestation: Mapping[str, Any]) -> None:
+    """Compare a separately obtained expected identity; do not verify signatures.
+
+    The caller is responsible for obtaining and verifying the attestation in a
+    distinct trust domain (for example a signed release receipt or transparency
+    log).  This local interface intentionally cannot authenticate the issuer.
     """
-    counter = Counters()
-    cover = counter.parse(counter.read(root / "cover.json"))
-    header_path = _member_path(
-        root, cover.get("manifest_header", {}).get("path"), label="manifest header"
-    )
-    header = counter.parse(counter.read(header_path))
-    inventory_path = _member_path(root, header.get("inventory"), label="inventory")
-    inventory = counter.parse(counter.read(inventory_path))
-    journal = counter.parse(counter.read(root / ".journal.json"))
-    authority_digest = counter.digest(counter.canonical(dict(authority)))
-    if (
-        journal.get("state") != "complete"
-        or journal.get("authority_digest") != authority_digest
-        or cover.get("authority_digest") != authority_digest
-    ):
-        raise ValueError("unsafe or cross-authority journal")
-    if configuration is not None and journal.get(
-        "configuration_digest"
-    ) != counter.digest(counter.canonical(dict(configuration))):
-        raise ValueError("stale transaction configuration")
-    if cover["manifest_header"]["sha256"] != counter.digest(
-        counter.read(header_path)
-    ) or header["inventory_sha256"] != counter.digest(counter.read(inventory_path)):
-        raise ValueError("cover or manifest mismatch")
-    inventory_paths = {member["path"] for member in inventory}
-    actual_paths = {
-        path.relative_to(root).as_posix()
-        for path in root.rglob("*")
-        if path.is_file() and path.name != ".journal.json"
+    cover = json.loads((root / "cover.json").read_text(encoding="utf-8"))
+    required = {
+        "schema_version": ATTESTATION_SCHEMA,
+        "semantic_root": cover.get("semantic_root"),
+        "semantic_authority_identity": cover.get("semantic_authority_identity"),
+        "contract_version": cover.get("contract_version"),
+        "behavioral_policy_identity": cover.get("behavioral_policy_identity"),
     }
-    public_control_paths = {
-        "cover.json",
-        "manifest-header.json",
-        "inventory.json",
-    }
-    if actual_paths - public_control_paths != inventory_paths:
-        raise ValueError("partial or unreceipted public member")
-    for member in inventory:
-        path = root / member["path"]
-        if not path.is_file() or member["sha256"] != counter.digest(counter.read(path)):
-            raise ValueError("inventory member mismatch")
-    layout = counter.parse(counter.read(root / "layout.json"))
+    if any(attestation.get(key) != value for key, value in required.items()):
+        raise ValueError("external attestation identity mismatch")
     if (
-        layout.get("authority_digest") != authority_digest
-        or layout.get("sequence_digest") != cover.get("sequence_digest")
-        or header.get("sequence_digest") != cover.get("sequence_digest")
+        not isinstance(attestation.get("reference"), str)
+        or not attestation["reference"]
     ):
-        raise ValueError("cover, authority, or sequence incoherence")
-    shards = [
-        counter.parse(line)
-        for line in counter.read(root / "shard-index.jsonl").splitlines()
-    ]
-    if (
-        journal.get("sealed") != shards
-        or journal.get("promotion_marker", {}).get("sequence_digest")
-        != cover.get("sequence_digest")
-        or journal.get("promotion_marker", {}).get("shard_count") != len(shards)
-    ):
-        raise ValueError("unreceipted shard or incomplete promotion")
-    index_rows = [
-        counter.parse(line)
-        for line in counter.read(root / "payload-index.jsonl").splitlines()
-    ]
-    expected = 0
-    observed: list[dict[str, Any]] = []
-    for shard in shards:
-        raw = counter.read(root / shard["path"])
-        if shard["sha256"] != counter.digest(raw) or shard["first"] != expected:
-            raise ValueError("unsealed, corrupt, or noncontiguous shard")
-        rows = [counter.parse(line) for line in raw.splitlines()]
-        if len(rows) != shard["count"]:
-            raise ValueError("shard count mismatch")
-        for row, record in enumerate(rows):
-            try:
-                index = index_rows[expected + row]
-            except IndexError as exc:
-                raise ValueError("missing payload index row") from exc
-            expected_index = {
-                "logical_id": _logical_id(record, counter),
-                "selection_index": expected + row,
-                "shard_id": shard["shard_id"],
-                "row": row,
-                "record_digest": counter.digest(counter.canonical(record)),
-            }
-            if any(index.get(key) != value for key, value in expected_index.items()):
-                raise ValueError("payload index does not bind the shard row")
-            observed.append(record)
-        expected += len(rows)
-        yield from rows
-    if expected != layout.get("selected_count") or len(index_rows) != expected:
-        raise ValueError("payload index count mismatch")
-    if _sequence(observed, counter) != cover["sequence_digest"]:
-        raise ValueError("sequence mismatch")
+        raise ValueError("external attestation requires an external reference")
 
 
 def validate_archive(archive: Path, *, expected_digest: str) -> None:
-    """Check the experimental transport-level raw identity before extraction."""
+    """Check transport raw identity before extracting an experimental archive."""
     if _file_digest(archive) != expected_digest:
         raise ValueError("archive raw-integrity mismatch")
 

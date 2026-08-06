@@ -2833,3 +2833,19 @@ modeled serialization and I/O on the tiny fixture but does not meet the frozen
 noise-aware wall-time gate and cannot be admitted by Contract v0.8.0. No Tome,
 Contract, Student, fixture, Golden, default, M8 status, or M9 behavior changes;
 the experiment stops for independent review.
+
+## 2026-08-06 — Corrected Provenance-Shape Threat Boundary
+
+The private provenance-shape experiment now distinguishes ordinary operational
+integrity from externally anchored authenticity. A fully self-consistent
+replacement is accepted by standard validation when no independently obtained
+expected identity is supplied; this is not a failure of internal checksum
+design. Immutable development comparison and optional external-attestation
+comparison reject it only when they receive an original expected semantic root
+from a separate trust boundary. The revised synthetic no-inference construction
+benchmark shows material reductions in serialization, temporary I/O, rewrite,
+and construction wall time while retaining standard operational fault and
+transaction checks. This records an experimental future-Contract design result
+only: no production Tome, Contract, Student, fixture, Golden, v5/v6, M8, or M9
+behavior changes, and no model-origin, producer-honesty, or source-integrity
+claim is made.
