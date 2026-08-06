@@ -2822,3 +2822,14 @@ The negative candidate report and baseline report are committed as exact raw
 evidence digests only. The T4 studio was stopped after collection. M8B now
 stops for independent review with the restored pre-optimization production
 staging path; no M9 or further engineering starts here.
+
+## 2026-08-06 — Private Provenance-Shape Bake-Off
+
+An audit-branch-only experiment compares two disposable proof-construction
+projections from the same already-selected records. The candidate replaces the
+temporary native wrapper hash and duplicated final index fields with a private
+authority-bound sealed-shard journal and a leaner public proof graph. It reduces
+modeled serialization and I/O on the tiny fixture but does not meet the frozen
+noise-aware wall-time gate and cannot be admitted by Contract v0.8.0. No Tome,
+Contract, Student, fixture, Golden, default, M8 status, or M9 behavior changes;
+the experiment stops for independent review.

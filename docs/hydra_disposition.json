@@ -2351,6 +2351,38 @@
       "replacement_or_target_boundary": "M8B.1 representative current-base selected-staging baseline evidence.",
       "status": "canonical"
     },
+    "experiments/provenance_shape_bakeoff.py": {
+      "archive_or_removal_condition": "Remove after independent review of the private provenance-shape experiment.",
+      "kind": "source-module",
+      "owning_milestone": "Audit-only provenance bake-off",
+      "rationale": "Branch-local current-versus-candidate proof-lifecycle harness; never imported by production Tome.",
+      "replacement_or_target_boundary": "Independent review of a future Contract-owned provenance version.",
+      "status": "research-frozen"
+    },
+    "experiments/__init__.py": {
+      "archive_or_removal_condition": "Remove after independent review of the private provenance-shape experiment.",
+      "kind": "source-module",
+      "owning_milestone": "Audit-only provenance bake-off",
+      "rationale": "Marks the branch-local experiment namespace and is not imported by production Tome.",
+      "replacement_or_target_boundary": "Private experiment namespace only.",
+      "status": "research-frozen"
+    },
+    "tests/test_provenance_shape_bakeoff.py": {
+      "archive_or_removal_condition": "Remove with the private experiment unless separately adopted under a new Contract version.",
+      "kind": "source-module",
+      "owning_milestone": "Audit-only provenance bake-off",
+      "rationale": "Confines candidate proof and private-journal checks to the audit branch.",
+      "replacement_or_target_boundary": "Private experiment verification only.",
+      "status": "research-frozen"
+    },
+    "docs/PROVENANCE_SHAPE_BAKEOFF_EXPERIMENT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "Audit-only provenance bake-off",
+      "rationale": "Sanitized protocol, measurements, and non-adoption result for independent review.",
+      "replacement_or_target_boundary": "Independent review; no production provenance change.",
+      "status": "research-frozen"
+    },
     "tests/test_m8b_selected_staging_driver.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
