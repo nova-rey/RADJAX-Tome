@@ -2784,3 +2784,14 @@ target on replacement failure and clean orphaned non-resumable temporaries.
 This is an internal staging strategy only: the selected owner, authority,
 record order, later synchronization, promoted bytes, batch policy, Contract,
 Student, Golden evidence, v5 default, and M7 behavior remain unchanged.
+
+## 2026-08-06 — M8B.3 Selected-Staging Regression Closure
+
+The M8B.2 streaming implementation passed its grammar, measurement, selected
+delivery, M7 resume/streaming, B4 v6 receipt, and Hydra-ledger regression
+suite, plus the repository-wide regression run. The test boundary includes the
+existing canonical v5/v6 and native M7 checks; no fixture or Golden artifact
+was regenerated. The implementation remains a private execution strategy of
+the sole canonical selected-delivery owner, with no Contract or Student change,
+no v5-default change, no batch-policy change, and no Candidate-3 rewrite
+avoidance.
