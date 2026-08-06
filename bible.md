@@ -2795,3 +2795,13 @@ was regenerated. The implementation remains a private execution strategy of
 the sole canonical selected-delivery owner, with no Contract or Student change,
 no v5-default change, no batch-policy change, and no Candidate-3 rewrite
 avoidance.
+
+## 2026-08-06 — M8B.4 Candidate Replay Protocol
+
+The private M8B driver can now perform the required isolated cap-eight warm-up
+and three-run candidate replay against the retained digest-bound M8B.1 raw
+receipt. It refuses a different immutable checkpoint and records the baseline
+report digest plus frozen staging and selected-pass comparisons. The script
+remains private, invokes only the canonical selected-rerun owner, and changes
+no production path, authority, batch size, Contract, Student, fixture, Golden,
+or public CLI.

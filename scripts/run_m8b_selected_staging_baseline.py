@@ -105,6 +105,44 @@ def _receipt(
     }
 
 
+def _candidate_receipt(
+    *,
+    checkpoint: ImmutablePostC5Checkpoint,
+    runs: list[dict[str, object]],
+    expected_tome_commit: str,
+    baseline_path: Path,
+) -> dict[str, object]:
+    baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+    if baseline.get("schema_version") != "m8b_selected_staging_baseline_v1":
+        raise ValueError("candidate comparison requires an M8B.1 baseline receipt")
+    if baseline.get("checkpoint", {}).get("digest") != checkpoint.digest:
+        raise ValueError("candidate checkpoint does not match baseline checkpoint")
+    candidate = _receipt(
+        checkpoint=checkpoint, runs=runs, expected_tome_commit=expected_tome_commit
+    )
+    statistics = M8BStagingStatistics()
+    baseline_staging = float(baseline["initial_staging_seconds"]["median"])
+    candidate_staging = float(candidate["initial_staging_seconds"]["median"])
+    baseline_wall = float(baseline["selected_pass_wall_seconds"]["median"])
+    candidate_wall = float(candidate["selected_pass_wall_seconds"]["median"])
+    return {
+        **candidate,
+        "schema_version": "m8b_selected_staging_candidate_v1",
+        "baseline_report_sha256": _sha256(baseline_path),
+        "baseline_tome_commit": baseline.get("tome_commit"),
+        "initial_staging_improvement_fraction": (
+            (baseline_staging - candidate_staging) / baseline_staging
+        ),
+        "selected_pass_improvement_fraction": (
+            (baseline_wall - candidate_wall) / baseline_wall
+        ),
+        "initial_staging_improvement_beyond_noise": statistics.improvement_beyond_noise(
+            [_initial_staging_seconds(run) for run in baseline["runs"]],
+            [_initial_staging_seconds(run) for run in runs],
+        ),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--anchor", type=Path, required=True)
@@ -116,11 +154,21 @@ def main() -> None:
     parser.add_argument("--corpus-manifest", type=Path, required=True)
     parser.add_argument("--teacher-model-provenance", type=Path, required=True)
     parser.add_argument("--expected-tome-commit", required=True)
+    parser.add_argument("--baseline-report", type=Path)
+    parser.add_argument("--candidate-warmup", action="store_true")
     args = parser.parse_args()
 
     if _commit() != args.expected_tome_commit:
         raise ValueError("Tome HEAD does not match the M8B baseline commit")
     checkpoint = m8a._build_snapshot(args)
+    if args.candidate_warmup:
+        m8a._run_once(
+            args,
+            checkpoint,
+            label="m8b-candidate-cap-eight-warmup",
+            cap=8,
+            records=m8a._records(checkpoint),
+        )
     runs = [
         m8a._run_once(
             args,
@@ -133,12 +181,22 @@ def main() -> None:
     ]
     for run in runs[1:]:
         m8a._assert_equivalent(runs[0], run)
-    receipt = _receipt(
-        checkpoint=checkpoint,
-        runs=runs,
-        expected_tome_commit=args.expected_tome_commit,
-    )
-    _write_atomic(args.evidence_dir / "m8b_selected_staging_baseline.json", receipt)
+    if args.baseline_report is None:
+        receipt = _receipt(
+            checkpoint=checkpoint,
+            runs=runs,
+            expected_tome_commit=args.expected_tome_commit,
+        )
+        output_name = "m8b_selected_staging_baseline.json"
+    else:
+        receipt = _candidate_receipt(
+            checkpoint=checkpoint,
+            runs=runs,
+            expected_tome_commit=args.expected_tome_commit,
+            baseline_path=args.baseline_report,
+        )
+        output_name = "m8b_selected_staging_candidate.json"
+    _write_atomic(args.evidence_dir / output_name, receipt)
 
 
 if __name__ == "__main__":
