@@ -19,7 +19,6 @@ from .payloads import (
     _selected_payload_from_emission,
 )
 from .reporting import _elapsed, _now, _rate
-from .streaming_json import stream_canonical_object_with_hash
 from .validation import _path_b_delivery_error, _path_b_rerun_payload_mismatch
 
 
@@ -425,95 +424,18 @@ def _write_native_payload_shard(
         "record_index": record_index,
         "selected_exemplars": [payload],
     }
-    return _write_native_payload_shard_streaming(
+    hash_started = perf_counter() if _measurement_diagnostics is not None else None
+    shard["payload_hash"] = _native_payload_hash(shard)
+    if _measurement_diagnostics is not None and hash_started is not None:
+        _measurement_diagnostics.add_staging_phase(
+            "canonical_body_encoding_hash", _elapsed(hash_started)
+        )
+    _write_json_atomic(
         selected_dir / f"selected-exemplars-{record_index:05d}.json",
         shard,
         _measurement_diagnostics=_measurement_diagnostics,
     )
-
-
-def _write_native_payload_shard_streaming(
-    path: Path,
-    shard: dict[str, Any],
-    *,
-    _measurement_diagnostics: SelectedPassExecutionDiagnostics | None = None,
-) -> str:
-    """Atomically stage one canonical payload without retaining an encoded body."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.tmp")
-    if temporary.exists():
-        _discard_native_payload_temporary(temporary, path.parent)
-    handle = temporary.open("w", encoding="utf-8")
-    try:
-        encode_started = (
-            perf_counter() if _measurement_diagnostics is not None else None
-        )
-        payload_hash = stream_canonical_object_with_hash(shard, write=handle.write)
-        if _measurement_diagnostics is not None and encode_started is not None:
-            _measurement_diagnostics.add_staging_phase(
-                "canonical_body_encoding_hash", _elapsed(encode_started)
-            )
-            # M8B.2 has no second pretty-JSON traversal; retain the phase as an
-            # explicit zero so receipts remain comparable with the M8B.1 split.
-            _measurement_diagnostics.add_staging_phase("staging_json_encoding", 0.0)
-        write_started = perf_counter() if _measurement_diagnostics is not None else None
-        handle.write(',"payload_hash":')
-        handle.write(json.dumps(payload_hash, separators=(",", ":")))
-        handle.write("}")
-        if _measurement_diagnostics is not None and write_started is not None:
-            _measurement_diagnostics.add_staging_phase(
-                "temporary_file_write", _elapsed(write_started)
-            )
-    except BaseException:
-        try:
-            handle.close()
-        finally:
-            _discard_native_payload_temporary(temporary, path.parent)
-        raise
-    close_started = perf_counter() if _measurement_diagnostics is not None else None
-    try:
-        handle.close()
-    except BaseException:
-        _discard_native_payload_temporary(temporary, path.parent)
-        raise
-    if _measurement_diagnostics is not None and close_started is not None:
-        _measurement_diagnostics.add_staging_phase(
-            "temporary_file_close", _elapsed(close_started)
-        )
-    replace_started = perf_counter() if _measurement_diagnostics is not None else None
-    try:
-        os.replace(temporary, path)
-    except BaseException:
-        _discard_native_payload_temporary(temporary, path.parent)
-        raise
-    if _measurement_diagnostics is not None and replace_started is not None:
-        _measurement_diagnostics.add_staging_phase(
-            "atomic_replacement", _elapsed(replace_started)
-        )
-    staged = read_json_object(path)
-    if staged.get("payload_hash") != _native_payload_hash(staged):
-        raise ValueError(f"native payload hash mismatch after staging: {path.name}")
-    return payload_hash
-
-
-def _discard_native_payload_temporary(temporary: Path, stage: Path) -> None:
-    """Delete a failed private temporary, or quarantine it outside resume discovery."""
-    if not temporary.exists():
-        return
-    try:
-        temporary.unlink()
-        return
-    except OSError as cleanup_error:
-        quarantine = stage.parent / f"quarantine-{_now().replace(':', '-')}"
-        try:
-            quarantine.mkdir(parents=True, exist_ok=True)
-            os.replace(temporary, quarantine / f"orphaned-{temporary.name}")
-            return
-        except OSError as quarantine_error:
-            raise RuntimeError(
-                "failed to delete or quarantine native staging temporary: "
-                f"cleanup={cleanup_error}; quarantine={quarantine_error}"
-            ) from quarantine_error
+    return str(shard["payload_hash"])
 
 
 def _native_payload_hash(payload: dict[str, Any]) -> str:
@@ -633,8 +555,6 @@ def _prepare_native_payload_staging(
 ) -> dict[int, dict[str, Any]]:
     stage = _native_payload_stage_dir(config)
     stage.mkdir(parents=True, exist_ok=True)
-    for temporary in sorted(stage.glob(".selected-exemplars-*.json.tmp")):
-        _discard_native_payload_temporary(temporary, stage)
     public = config.artifact_dir / "selected_exemplars"
     for path in public.glob("selected-exemplars-*.json"):
         path.unlink()

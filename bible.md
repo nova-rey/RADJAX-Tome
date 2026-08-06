@@ -2771,7 +2771,6 @@ accounting. The committed receipt binds the path-bearing raw report by digest
 only. This authorizes the bounded M8B.2 staging implementation, but makes no
 performance-success, batch-policy, Contract, Student, Golden, publication, or
 production-behavior claim.
-
 ## 2026-08-06 — M8B.2 Bounded Canonical Payload Staging
 
 The canonical native selected-payload staging owner now encodes each initial
@@ -2805,3 +2804,14 @@ report digest plus frozen staging and selected-pass comparisons. The script
 remains private, invokes only the canonical selected-rerun owner, and changes
 no production path, authority, batch size, Contract, Student, fixture, Golden,
 or public CLI.
+
+## 2026-08-06 — M8B.4 Negative Result and M8B.2 Revert
+
+The representative T4 candidate receipt showed median initial staging of
+712.649 seconds and selected-pass wall time of 842.997 seconds, versus the
+M8B.1 baselines of 236.268 and 262.905 seconds. The bounded streaming writer
+therefore regressed both required metrics and failed the frozen noise-aware
+improvement gate. The M8B.2 production implementation is reverted in this new
+append-only commit; its private benchmark evidence remains retained. This
+records no justified production optimization and does not authorize batching,
+Candidate 3, Contract or Student work, or M9.

@@ -2311,14 +2311,6 @@
       "replacement_or_target_boundary": "M8A instrumentation and M8B.1 current-base staging measurement seams.",
       "status": "canonical"
     },
-    "src/radjax_tome/builder/delivery/streaming_json.py": {
-      "archive_or_removal_condition": null,
-      "kind": "source-module",
-      "owning_milestone": "M8B.2",
-      "rationale": "Bounded standard-library canonical-object encoder and grammar state for the sole native selected-payload staging path.",
-      "replacement_or_target_boundary": "M8B.2 internal single-traversal selected-payload staging strategy.",
-      "status": "canonical"
-    },
     "src/radjax_tome/builder/delivery/replay.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
@@ -2365,14 +2357,6 @@
       "owning_milestone": "M8B.1",
       "rationale": "Verifies the private M8B baseline driver's frozen receipt and initial-staging stop-gate calculation.",
       "replacement_or_target_boundary": "M8B.1 raw selected-staging baseline evidence collection.",
-      "status": "canonical"
-    },
-    "tests/test_m8b_streaming_json.py": {
-      "archive_or_removal_condition": null,
-      "kind": "source-module",
-      "owning_milestone": "M8B.2",
-      "rationale": "Exercises chunk-boundary grammar, exact canonical hashes, atomic failure preservation, and temporary cleanup for M8B.2.",
-      "replacement_or_target_boundary": "M8B.2 streaming staging correctness and transaction evidence.",
       "status": "canonical"
     },
     "docs/M8A_T4_BASELINE_RECEIPT.md": {
