@@ -2367,6 +2367,14 @@
       "replacement_or_target_boundary": "M8A representative baseline independent-review evidence.",
       "status": "canonical"
     },
+    "docs/M8B1_T4_BASELINE_RECEIPT.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M8B.1",
+      "rationale": "Sanitized content-addressed receipt for the private three-run current-base selected-staging T4 evidence.",
+      "replacement_or_target_boundary": "M8B.1 representative current-base gate evidence.",
+      "status": "canonical"
+    },
     "docs/B3_NATIVE_V3_STUDENT_V6.md": {
       "archive_or_removal_condition": null,
       "kind": "top-level-doc",

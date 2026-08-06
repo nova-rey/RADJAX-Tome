@@ -2757,3 +2757,17 @@ and writes path-bearing raw evidence outside the repository. This driver is
 not a public CLI, does not rerun score or selection work, and does not change
 production behavior, artifacts, authority, batch policy, Contract, Student,
 Golden evidence, or the v5 default.
+
+## 2026-08-06 — M8B.1 Representative T4 Current-Base Evidence
+
+The frozen three-run cap-eight T4 current-base replay completed at
+`31b94ad8cea639d23eeb7b569a3c5041d52e742f` against the immutable 43-file
+post-C5 checkpoint. Median selected-pass wall time was 262.905 seconds and
+median initial staging was 236.268 seconds, or 89.868 percent of selected-pass
+time; the required 50-percent M8B.1 gate passes. Every replay preserved
+same-cap payload parity, batch-eight authority, immutable checkpoint evidence,
+zero score/selection invocations, no CUDA OOM retry, and exact phase
+accounting. The committed receipt binds the path-bearing raw report by digest
+only. This authorizes the bounded M8B.2 staging implementation, but makes no
+performance-success, batch-policy, Contract, Student, Golden, publication, or
+production-behavior claim.
