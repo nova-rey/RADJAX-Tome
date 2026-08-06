@@ -2771,3 +2771,16 @@ accounting. The committed receipt binds the path-bearing raw report by digest
 only. This authorizes the bounded M8B.2 staging implementation, but makes no
 performance-success, batch-policy, Contract, Student, Golden, publication, or
 production-behavior claim.
+
+## 2026-08-06 — M8B.2 Bounded Canonical Payload Staging
+
+The canonical native selected-payload staging owner now encodes each initial
+payload once through a bounded standard-library JSON stream. It hashes the
+exact compact canonical object while retaining only grammar state and encoder
+chunks, appends the hash member atomically, and reopens the completed file to
+verify the existing payload-hash rule. Grammar tests exercise outer-object and
+string/escape chunk boundaries, while transaction checks preserve an existing
+target on replacement failure and clean orphaned non-resumable temporaries.
+This is an internal staging strategy only: the selected owner, authority,
+record order, later synchronization, promoted bytes, batch policy, Contract,
+Student, Golden evidence, v5 default, and M7 behavior remain unchanged.
