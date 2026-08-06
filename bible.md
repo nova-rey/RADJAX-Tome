@@ -2815,3 +2815,10 @@ improvement gate. The M8B.2 production implementation is reverted in this new
 append-only commit; its private benchmark evidence remains retained. This
 records no justified production optimization and does not authorize batching,
 Candidate 3, Contract or Student work, or M9.
+
+## 2026-08-06 — M8B.4 Sanitized Candidate Receipt
+
+The negative candidate report and baseline report are committed as exact raw
+evidence digests only. The T4 studio was stopped after collection. M8B now
+stops for independent review with the restored pre-optimization production
+staging path; no M9 or further engineering starts here.
