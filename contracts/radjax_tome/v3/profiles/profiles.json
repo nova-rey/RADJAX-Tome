@@ -1,0 +1,24 @@
+{
+  "schema_version": "radjax_tome_profiles_v3",
+  "profiles": [
+    {
+      "id": "selected_exemplar_semantic_profile_v3",
+      "semantic_record_schema": "selected_exemplar_semantic_record_v3",
+      "semantic_identity_schema": "radjax_tome_semantic_identity_v3",
+      "required_capabilities": [
+        "standard_integrity_v3",
+        "streaming_shard_receipts_v3"
+      ],
+      "extension_policy": "closed_new_profile_required"
+    }
+  ],
+  "classifications": [
+    "training_critical",
+    "integrity_or_provenance",
+    "diagnostic",
+    "human_readable",
+    "operational"
+  ],
+  "transports": ["directory", "rtome", "tgz"],
+  "cover_page_inventory_rule": "excluded"
+}

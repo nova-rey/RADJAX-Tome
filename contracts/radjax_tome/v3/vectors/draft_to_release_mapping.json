@@ -1,0 +1,32 @@
+{
+  "identifier_mapping": {
+    "capabilities": "standard_integrity_v3_draft, streaming_shard_receipts_v3_draft -> standard_integrity_v3, streaming_shard_receipts_v3",
+    "contract_version": "radjax_tome_artifact_contract@3.0.0-draft.1 -> radjax_tome_artifact_contract@3.0.0",
+    "profile_id": "selected_exemplar_semantic_profile_v3_draft -> selected_exemplar_semantic_profile_v3",
+    "schema_versions": "each approved v3 wire/schema identifier removes its terminal _draft suffix"
+  },
+  "recomputation": {
+    "expected_updates": "all version/profile/schema-bound preimages and their identity digests were regenerated; nonroot numeric and lexical vectors retain their FV3 expectations",
+    "method": "independent standard-library reference calculation: JSON input -> explicit FV3 value encoder -> FRAME -> SHA-256"
+  },
+  "schema_version": "radjax_tome_provenance_v3_draft_to_release_mapping_v1",
+  "source": {
+    "path": "docs/drafts/tome_provenance_v3_vectors.json",
+    "sha256": "sha256:e14e9330c401ba23a99f8bf5cd71d44caca6d49f84ec527fe6be094707f279bb",
+    "status": "approved_design_evidence_immutable"
+  },
+  "target": {
+    "artifact_contract": "radjax_tome_artifact_contract@3.0.0",
+    "path": "src/radjax_contract/contracts/radjax_tome/v3/vectors/tome_provenance_v3_vectors.json",
+    "profile_id": "selected_exemplar_semantic_profile_v3",
+    "sha256": "sha256:b251ac23676079e6ac3bf847fad86c4fd772a063dbb6245344d075b99c4abfdb"
+  },
+  "unchanged_semantic_rules": [
+    "FV3-1 frame magic",
+    "domain-label bytes",
+    "closed record projection",
+    "selection ordering",
+    "authority/policy source fields",
+    "nonsemantic packaging exclusion"
+  ]
+}

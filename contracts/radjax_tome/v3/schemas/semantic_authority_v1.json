@@ -1,0 +1,60 @@
+{
+  "$id": "radjax_tome_semantic_authority_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "radjax_tome_artifact_contract@3.0.0"
+    },
+    "entries": {
+      "items": {
+        "$id": "radjax_tome_semantic_authority_entry_v1",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "identity": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "teacher",
+              "tokenizer_vocabulary",
+              "corpus",
+              "score_pass",
+              "selection",
+              "delivery"
+            ]
+          },
+          "schema_id": {
+            "minLength": 1,
+            "pattern": "^[^\\x00\\r\\n]+$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "schema_id",
+          "identity"
+        ],
+        "type": "object"
+      },
+      "maxItems": 6,
+      "minItems": 6,
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "radjax_tome_semantic_authority_v1"
+    },
+    "semantic_profile_id": {
+      "const": "selected_exemplar_semantic_profile_v3"
+    }
+  },
+  "required": [
+    "schema_version",
+    "contract_version",
+    "semantic_profile_id",
+    "entries"
+  ],
+  "type": "object"
+}

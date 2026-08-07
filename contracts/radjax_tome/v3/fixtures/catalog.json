@@ -1,0 +1,10 @@
+{
+  "schema_version": "radjax_tome_conformance_catalog_v3",
+  "cases": [
+    {"id": "tome-provenance-v3-vectors", "kind": "vector", "expected": "pass"},
+    {"id": "pc01-pc57", "kind": "generated-conformance", "expected": "see_conformance_catalog"},
+    {"id": "historical-v1", "kind": "historical", "expected": "native-historical-only"},
+    {"id": "historical-v2", "kind": "historical", "expected": "native-historical-only"}
+  ],
+  "fixture_policy": "Generated public packages are test-local. This checksum-pinned catalog, release vectors, schemas, and conformance catalog are portable Contract assets. Historical inputs are never normalized into v3."
+}

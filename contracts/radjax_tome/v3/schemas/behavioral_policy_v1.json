@@ -1,0 +1,40 @@
+{
+  "$id": "radjax_tome_behavioral_policy_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "radjax_tome_artifact_contract@3.0.0"
+    },
+    "corridor_link_policy": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "dynamic_top_k_policy": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "radjax_tome_behavioral_policy_v1"
+    },
+    "selection_policy": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "semantic_profile_id": {
+      "const": "selected_exemplar_semantic_profile_v3"
+    }
+  },
+  "required": [
+    "schema_version",
+    "contract_version",
+    "semantic_profile_id",
+    "selection_policy",
+    "dynamic_top_k_policy",
+    "corridor_link_policy"
+  ],
+  "type": "object"
+}

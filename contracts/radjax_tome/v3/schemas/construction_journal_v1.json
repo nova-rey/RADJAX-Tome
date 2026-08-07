@@ -1,0 +1,104 @@
+{
+  "$id": "radjax_tome_construction_journal_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "committed_next_selection_index": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "completion_intent": {
+      "type": "boolean"
+    },
+    "configuration_identity": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "promotion_marker": {
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "radjax_tome_construction_journal_v1"
+    },
+    "sealed_shards": {
+      "items": {
+        "$id": "radjax_tome_sealed_shard_receipt_v1",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "first_selection_index": {
+            "maximum": 9223372036854775807,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "member_path": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$",
+            "type": "string"
+          },
+          "record_count": {
+            "maximum": 9223372036854775807,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sha256": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "shard_id": {
+            "maximum": 9223372036854775807,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "size_bytes": {
+            "maximum": 9223372036854775807,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "shard_id",
+          "member_path",
+          "sha256",
+          "size_bytes",
+          "first_selection_index",
+          "record_count"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "semantic_authority_identity": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "state": {
+      "enum": [
+        "OPEN",
+        "SEALING",
+        "COMPLETE_INTENT",
+        "PROMOTING",
+        "PROMOTED",
+        "ABORTED"
+      ]
+    },
+    "transaction_id": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "transaction_id",
+    "configuration_identity",
+    "semantic_authority_identity",
+    "state",
+    "sealed_shards",
+    "committed_next_selection_index",
+    "completion_intent",
+    "promotion_marker"
+  ],
+  "type": "object"
+}

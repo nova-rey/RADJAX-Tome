@@ -2822,3 +2822,14 @@ The negative candidate report and baseline report are committed as exact raw
 evidence digests only. The T4 studio was stopped after collection. M8B now
 stops for independent review with the restored pre-optimization production
 staging path; no M9 or further engineering starts here.
+
+## 2026-08-06 — Program C Contract v3 Adoption Pin
+
+The isolated `adopt/tome-artifact-contract-v3` branch pins the explicit v3
+Tome artifact path to RADJAX-Contract release `0.9.0`, peeled commit
+`1fa43e1aea2e198511db86dafb0aeefa525d48c7`, and mirrors the byte-verified v3
+asset tree under `contracts/radjax_tome/v3`. The default artifact Contract v2,
+Student v5/v6 contracts, M7/v4 transport, Golden evidence, M8, and M9 remain
+unchanged. This commit only establishes the release identity and offline
+verification surface; no production v3 emission or default migration is
+claimed yet.

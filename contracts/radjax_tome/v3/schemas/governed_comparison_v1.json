@@ -1,0 +1,43 @@
+{
+  "$id": "radjax_tome_governed_comparison_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_reference": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "expected_authority_identity": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "expected_contract_version": {
+      "const": "radjax_tome_artifact_contract@3.0.0"
+    },
+    "expected_policy_identity": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "expected_profile_id": {
+      "const": "selected_exemplar_semantic_profile_v3"
+    },
+    "expected_semantic_root": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "radjax_tome_governed_comparison_v1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "expected_semantic_root",
+    "expected_authority_identity",
+    "expected_contract_version",
+    "expected_profile_id",
+    "expected_policy_identity"
+  ],
+  "type": "object"
+}

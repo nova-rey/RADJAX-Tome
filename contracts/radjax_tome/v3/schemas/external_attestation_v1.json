@@ -1,0 +1,76 @@
+{
+  "$id": "radjax_tome_external_attestation_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_reference": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "behavioral_policy_identity": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "contract_version": {
+      "const": "radjax_tome_artifact_contract@3.0.0"
+    },
+    "envelope": {
+      "pattern": "^[A-Za-z0-9+/]*={0,2}$",
+      "type": "string"
+    },
+    "envelope_algorithm_id": {
+      "const": "fv3_raw_base64_v1"
+    },
+    "expires_at": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "format": "date-time",
+          "type": "string"
+        }
+      ]
+    },
+    "issued_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "issuer_id": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "radjax_tome_external_attestation_v1"
+    },
+    "semantic_authority_identity": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "semantic_profile_id": {
+      "const": "selected_exemplar_semantic_profile_v3"
+    },
+    "semantic_root": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "semantic_root",
+    "semantic_authority_identity",
+    "contract_version",
+    "semantic_profile_id",
+    "behavioral_policy_identity",
+    "artifact_reference",
+    "issuer_id",
+    "issued_at",
+    "expires_at",
+    "envelope_algorithm_id",
+    "envelope"
+  ],
+  "type": "object"
+}

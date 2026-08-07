@@ -1,0 +1,278 @@
+{
+  "artifact": "release_candidate_contract_asset",
+  "artifact_reference": {
+    "external_attestation_binding_participation": true,
+    "forbidden_codepoints": [
+      "NUL",
+      "CR",
+      "LF"
+    ],
+    "max_bytes": 512,
+    "nullable": false,
+    "tome_semantic_identity_participation": false,
+    "type": "nonempty_utf8_text"
+  },
+  "closed": true,
+  "digest": "sha256:<64-lowercase-hex>",
+  "index_reference": {
+    "additional": false,
+    "required": [
+      "path",
+      "sha256",
+      "size_bytes",
+      "schema_version",
+      "record_count"
+    ]
+  },
+  "member_paths": {
+    "fixed": [
+      "cover_page.json",
+      "manifests/content-manifest-header.json",
+      "manifests/content-manifest-inventory.jsonl",
+      "provenance/semantic-identity.json",
+      "provenance/semantic-authority.json",
+      "provenance/behavioral-policy.json",
+      "provenance/capabilities.json",
+      "selected_exemplars/layout.json",
+      "selected_exemplars/payload-index.jsonl",
+      "selected_exemplars/payload-shards.jsonl"
+    ],
+    "inventory_excludes": [
+      "cover_page.json",
+      "manifests/content-manifest-header.json",
+      "manifests/content-manifest-inventory.jsonl"
+    ],
+    "path_pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"
+  },
+  "objects": {
+    "archive_receipt_external_only": {
+      "additional": false,
+      "algorithm_id": "sha256",
+      "artifact_reference": "#/artifact_reference",
+      "optional": [
+        "artifact_reference"
+      ],
+      "required": [
+        "schema_version",
+        "algorithm_id",
+        "archive_sha256",
+        "archive_size_bytes",
+        "transport"
+      ],
+      "schema_version": "radjax_tome_archive_receipt_v1"
+    },
+    "behavioral_policy": {
+      "additional": false,
+      "required": [
+        "schema_version",
+        "contract_version",
+        "semantic_profile_id",
+        "selection_policy",
+        "dynamic_top_k_policy",
+        "corridor_link_policy"
+      ],
+      "schema_version": "radjax_tome_behavioral_policy_v1"
+    },
+    "capabilities": {
+      "additional": false,
+      "required": [
+        "schema_version",
+        "required",
+        "optional"
+      ],
+      "required_contains": [
+        "standard_integrity_v3",
+        "streaming_shard_receipts_v3"
+      ],
+      "schema_version": "radjax_tome_capabilities_v1"
+    },
+    "cover": {
+      "additional": false,
+      "required": [
+        "schema_version",
+        "contract_version",
+        "package",
+        "capabilities_ref",
+        "semantic_identity_ref",
+        "semantic_authority_ref",
+        "behavioral_policy_ref",
+        "manifest_header_ref",
+        "record_count",
+        "shard_count"
+      ],
+      "schema_version": "radjax_tome_cover_v5"
+    },
+    "external_attestation_external_only": {
+      "additional": false,
+      "artifact_reference": "#/artifact_reference",
+      "envelope_algorithm_id": "fv3_raw_base64_v1",
+      "required": [
+        "schema_version",
+        "semantic_root",
+        "semantic_authority_identity",
+        "contract_version",
+        "semantic_profile_id",
+        "behavioral_policy_identity",
+        "artifact_reference",
+        "issuer_id",
+        "issued_at",
+        "expires_at",
+        "envelope_algorithm_id",
+        "envelope"
+      ],
+      "schema_version": "radjax_tome_external_attestation_v1"
+    },
+    "governed_comparison_external_only": {
+      "additional": false,
+      "artifact_reference": "#/artifact_reference",
+      "optional": [
+        "artifact_reference"
+      ],
+      "required": [
+        "schema_version",
+        "expected_semantic_root",
+        "expected_authority_identity",
+        "expected_contract_version",
+        "expected_profile_id",
+        "expected_policy_identity"
+      ],
+      "schema_version": "radjax_tome_governed_comparison_v1"
+    },
+    "inventory_row": {
+      "additional": false,
+      "classification": [
+        "training_critical",
+        "integrity_or_provenance",
+        "diagnostic",
+        "human_readable",
+        "operational"
+      ],
+      "member_role": [
+        "semantic_identity",
+        "semantic_authority",
+        "behavioral_policy",
+        "capabilities",
+        "payload_layout",
+        "payload_index",
+        "payload_shard_index",
+        "payload_shard"
+      ],
+      "required": [
+        "path",
+        "sha256",
+        "size_bytes",
+        "member_role",
+        "classification",
+        "required_for_standard_validation"
+      ]
+    },
+    "layout": {
+      "additional": false,
+      "required": [
+        "schema_version",
+        "semantic_identity_ref",
+        "payload_index_ref",
+        "shard_index_ref",
+        "record_count",
+        "shard_capacity"
+      ],
+      "schema_version": "radjax_tome_payload_layout_v2"
+    },
+    "manifest_header": {
+      "additional": false,
+      "required": [
+        "schema_version",
+        "contract_version",
+        "profile_id",
+        "capabilities_ref",
+        "semantic_identity_ref",
+        "layout_ref",
+        "inventory_ref",
+        "entry_count"
+      ],
+      "schema_version": "tome_content_manifest_header_v4"
+    },
+    "package": {
+      "additional": false,
+      "profile_id": "selected_exemplar_semantic_profile_v3",
+      "required": [
+        "profile_id",
+        "transport"
+      ],
+      "transport": [
+        "directory",
+        "rtome",
+        "tgz"
+      ]
+    },
+    "payload_index_row": {
+      "additional": false,
+      "required": [
+        "logical_record_id",
+        "selection_index",
+        "shard_id",
+        "row"
+      ]
+    },
+    "semantic_authority": {
+      "additional": false,
+      "entry_required": [
+        "role",
+        "schema_id",
+        "identity"
+      ],
+      "required": [
+        "schema_version",
+        "contract_version",
+        "semantic_profile_id",
+        "entries"
+      ],
+      "roles": [
+        "teacher",
+        "tokenizer_vocabulary",
+        "corpus",
+        "score_pass",
+        "selection",
+        "delivery"
+      ],
+      "schema_version": "radjax_tome_semantic_authority_v1"
+    },
+    "semantic_identity": {
+      "additional": false,
+      "required": [
+        "schema_version",
+        "contract_version",
+        "semantic_profile_id",
+        "semantic_authority_identity",
+        "behavioral_policy_identity",
+        "record_count",
+        "ordered_record_sequence_digest",
+        "semantic_root"
+      ],
+      "schema_version": "radjax_tome_semantic_identity_v3"
+    },
+    "shard_index_row": {
+      "additional": false,
+      "required": [
+        "shard_id",
+        "path",
+        "sha256",
+        "size_bytes",
+        "first_selection_index",
+        "record_count"
+      ]
+    }
+  },
+  "reference": {
+    "additional": false,
+    "required": [
+      "path",
+      "sha256",
+      "size_bytes",
+      "schema_version"
+    ]
+  },
+  "release_status": "candidate",
+  "schema_version": "radjax_tome_provenance_v3_field_registry_v1",
+  "unknown_field_policy": "reject_for_all_closed_v3_objects"
+}

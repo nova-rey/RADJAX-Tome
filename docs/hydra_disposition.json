@@ -36,6 +36,22 @@
     }
   ],
   "records": {
+    "contract-mirror:radjax_tome_v3": {
+      "archive_or_removal_condition": "Remove only when the explicit v3 adoption branch is abandoned.",
+      "kind": "offline-contract-mirror",
+      "owning_milestone": "Program-C",
+      "rationale": "Byte-verified mirror of released RADJAX Contract v3 assets for offline Tome verification.",
+      "replacement_or_target_boundary": "RADJAX-Contract v0.9.0 release assets",
+      "status": "canonical"
+    },
+    "docs:C1_TOME_ARTIFACT_CONTRACT_V3_PIN": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "release-pin",
+      "owning_milestone": "Program-C",
+      "rationale": "Records the immutable Contract v3 release and mirror identity.",
+      "replacement_or_target_boundary": "RADJAX-Contract v0.9.0",
+      "status": "canonical"
+    },
     "cli:allocate-fingerprint-corridor-coverage": {
       "archive_or_removal_condition": "M2 parity and M3 archive pointer.",
       "kind": "public-cli-command",

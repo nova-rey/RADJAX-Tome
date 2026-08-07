@@ -1,0 +1,315 @@
+{
+  "$id": "selected_exemplar_semantic_record_v3",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Schema-directed numeric lexeme normalization and profile cross-field constraints are enforced by the v3 decoder; this closed schema supplies the wire field set.",
+  "properties": {
+    "bucket_masses": {
+      "items": {
+        "maximum": 1,
+        "minimum": 0,
+        "type": "number"
+      },
+      "type": "array"
+    },
+    "corridor_assignment_status": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "corridor_fingerprint_id": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "corridor_mode_id": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "dynamic_mass_threshold": {
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "dynamic_top_k": {
+      "oneOf": [
+        {
+          "$id": "radjax_tome_dynamic_top_k_disabled_v1",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "disabled_v1"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "$id": "radjax_tome_dynamic_top_k_mass_threshold_v1",
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "mass_threshold"
+            },
+            "max_k": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "threshold": {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "threshold",
+            "max_k"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "dynamic_top_k_max": {
+      "maximum": 9223372036854775807,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "effective_top_k": {
+      "maximum": 9223372036854775807,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "effective_top_k_fraction_of_vocab": {
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "long_tail_class": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "long_tail_warnings": {
+      "items": {
+        "minLength": 1,
+        "pattern": "^[^\\x00\\r\\n]+$",
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "num_buckets": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "payload_ref": {
+      "$id": "radjax_tome_payload_ref_source_coordinate_v1",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "source_coordinate"
+        },
+        "source_position": {
+          "maximum": 9223372036854775807,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_row": {
+          "maximum": 9223372036854775807,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source_shard_id": {
+          "maximum": 9223372036854775807,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "source_shard_id",
+        "source_row",
+        "source_position"
+      ],
+      "type": "object"
+    },
+    "score_selected_position_entropy": {
+      "type": "number"
+    },
+    "score_top_token_id": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "selected_board": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "selected_example_id": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "selected_policy": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "selected_position": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "selected_score": {
+      "type": "number"
+    },
+    "selection_index": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "semantic_tail_tag": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "sequence_length": {
+      "maximum": 9223372036854775807,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "source_delivery_path": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "source_position": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "source_row": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "source_score": {
+      "type": "number"
+    },
+    "source_score_policy": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    },
+    "source_shard_id": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "source_top_token_id": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "tail_mass": {
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "teacher_entropy": {
+      "type": "number"
+    },
+    "top_k_saturated": {
+      "type": "boolean"
+    },
+    "top_log_probs": {
+      "items": {
+        "type": "number"
+      },
+      "type": "array"
+    },
+    "top_mass": {
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "top_probs": {
+      "items": {
+        "maximum": 1,
+        "minimum": 0,
+        "type": "number"
+      },
+      "type": "array"
+    },
+    "top_selection_mask": {
+      "items": {
+        "type": "boolean"
+      },
+      "type": "array"
+    },
+    "top_token_ids": {
+      "items": {
+        "maximum": 9223372036854775807,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "type": "array"
+    },
+    "vocab_size": {
+      "maximum": 9223372036854775807,
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "selected_example_id",
+    "selected_position",
+    "selected_score",
+    "score_selected_position_entropy",
+    "score_top_token_id",
+    "source_shard_id",
+    "source_row",
+    "source_position",
+    "source_score",
+    "source_top_token_id",
+    "source_score_policy",
+    "payload_ref",
+    "selected_policy",
+    "source_delivery_path",
+    "top_token_ids",
+    "top_log_probs",
+    "top_probs",
+    "top_selection_mask",
+    "effective_top_k",
+    "top_mass",
+    "tail_mass",
+    "bucket_masses",
+    "teacher_entropy",
+    "sequence_length",
+    "vocab_size",
+    "num_buckets",
+    "dynamic_top_k",
+    "dynamic_mass_threshold",
+    "dynamic_top_k_max",
+    "top_k_saturated",
+    "long_tail_class",
+    "long_tail_warnings",
+    "effective_top_k_fraction_of_vocab",
+    "semantic_tail_tag",
+    "selected_board",
+    "corridor_mode_id",
+    "corridor_fingerprint_id",
+    "corridor_assignment_status",
+    "selection_index"
+  ],
+  "type": "object"
+}
