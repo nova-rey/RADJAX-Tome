@@ -364,6 +364,14 @@
       "replacement_or_target_boundary": "M9 supported command surface or research namespace.",
       "status": "supporting"
     },
+    "cli:verify-artifact": {
+      "archive_or_removal_condition": null,
+      "kind": "public-cli-command",
+      "owning_milestone": "Program-C",
+      "rationale": "Opt-in Contract v3 standard, governed, and external-attestation verification adapter.",
+      "replacement_or_target_boundary": "Program C v3 adoption verification surface.",
+      "status": "canonical"
+    },
     "docs/ARCHITECTURE.md": {
       "archive_or_removal_condition": null,
       "kind": "top-level-doc",

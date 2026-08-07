@@ -170,6 +170,7 @@ EXPECTED_COMMANDS = (
     "unpack",
     "validate",
     "validate-package",
+    "verify-artifact",
 )
 
 _PROBE = r"""
@@ -316,7 +317,7 @@ def test_m3b_parser_and_help_keep_inventory_and_isolation() -> None:
     assert "Recommended commands:" in str(help_snapshot["help_text"])
     for command in EXPECTED_COMMANDS:
         assert command in str(help_snapshot["help_text"])
-    assert len(EXPECTED_COMMANDS) == 23
+    assert len(EXPECTED_COMMANDS) == 24
     _assert_isolated(parser_snapshot)
     _assert_isolated(help_snapshot)
 

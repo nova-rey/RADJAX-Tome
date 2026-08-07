@@ -2873,3 +2873,26 @@ coherent-replacement behavior are covered by focused tests. The v2 default,
 historical v4/v5/v6 paths, Student, Golden data, M8, and M9 remain unchanged;
 this is adoption evidence only and makes no default-migration or performance
 claim.
+
+## 2026-08-06 — Program C Historical Regression Inventory Reconciliation
+
+The full-suite inventory expectations now include the authorized opt-in
+`verify-artifact` command and the `artifact_contract_version` configuration
+field. Historical Student v4/v5 tests continue to validate their frozen
+mirrors while recognizing the released Contract v3 commit as the active
+dependency pin. No historical package behavior, v2 default, Student path, or
+Golden evidence was changed.
+
+## 2026-08-06 — Program C Ledger Regression Surface
+
+Hydra validation now recognizes the repository's existing append-only record
+kinds and historical `docs:` aliases while including the new v3 verification
+command and fixture surfaces. This is ledger/test reconciliation only; no
+production behavior or released artifact was changed.
+
+## 2026-08-06 — Program C Hydra Verification Surface
+
+Hydra now records the opt-in `cli:verify-artifact` command as a canonical
+Program-C surface. The append-only inventory continues to distinguish
+historical compatibility entries and special `docs:` aliases; no default CLI,
+released behavior, or prior artifact contract was altered.

@@ -38,6 +38,7 @@ EXPECTED_COMMANDS = (
     "unpack",
     "validate",
     "validate-package",
+    "verify-artifact",
 )
 
 
