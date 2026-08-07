@@ -55,9 +55,12 @@ independently. A report may bind both to the same semantic root, but does not
 claim atomic visibility of the pair.
 
 The publisher validates a complete staged package before directory promotion,
-fsyncs the parent directory after promotion, then constructs and validates the
-archive in its own transaction *before* archive promotion. Archive bytes are
-fsynced and promoted with an atomic no-replace link; directory promotion uses
+fsyncs the parent directory after promotion, and validates the promoted
+directory before its completion marker. It then constructs and validates the
+archive in its own transaction *before* archive promotion; after the no-replace
+promotion and parent-directory fsync it validates the promoted archive before
+the archive completion marker. Archive bytes are promoted with an atomic
+no-replace link; directory promotion uses
 same-filesystem rename under a per-target exclusive lock and target check. The
 lock serializes cooperating Tome publishers; this adapter does not claim to
 exclude an unrelated writer that ignores the lock, so callers must provide

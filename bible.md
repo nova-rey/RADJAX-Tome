@@ -2937,3 +2937,11 @@ metadata for the immutable RADJAX Contract v0.9.0 release. Source, release
 asset, and offline mirror identities are checked without introducing network
 or mutable dependency assumptions; no Contract, Student, Golden, M8, or M9
 behavior changed.
+
+## 2026-08-06 — Program C Archive-Resume Journal Closure
+
+Archive-only resume now records its own private Contract journal transitions,
+reuses a matching interrupted journal, validates the promoted directory before
+creating archive bytes, and removes private state only after the archive is
+durably promoted. This closes the transactional recovery correction without
+changing any released format, default v2 behavior, Student, Golden, M8, or M9.

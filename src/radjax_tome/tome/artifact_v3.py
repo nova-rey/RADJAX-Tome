@@ -694,6 +694,7 @@ def publish_v3_from_handoff(
         _rename_noreplace(root, directory)
         _publication_event(publication_hook, "PC45_after_target_visible")
         _fsync_directory(output_base.parent)
+        validate_tome_artifact_v3(directory)
         _publication_event(publication_hook, "PC46_after_atomic_rename")
         _write_journal(
             _journal_path(journal_root),
@@ -772,6 +773,7 @@ def publish_v3_from_handoff(
             _rename_noreplace(archive_tmp, archive)
             _publication_event(publication_hook, "ARCHIVE_after_target_visible")
             _fsync_directory(output_base.parent)
+            validate_tome_artifact_v3(archive)
             _publication_event(publication_hook, "ARCHIVE_after_atomic_rename")
         finally:
             archive_tmp.unlink(missing_ok=True)
