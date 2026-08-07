@@ -3,8 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from radjax_contract.tome.v3.validation import validate_tome_artifact_v3
-from radjax_tome.builder.production import build_production_gpu_tome
 
+from radjax_tome.builder.production import build_production_gpu_tome
 from tests.test_m4_live_canonical_execution import _canonical_config
 
 

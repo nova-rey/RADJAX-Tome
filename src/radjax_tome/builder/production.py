@@ -915,7 +915,9 @@ def _native_final_reporting_operation(state: _ProductionRunState, inputs: Any) -
                 report["canonical_tome_directory"] = str(publication.directory)
                 report["canonical_tome_archive"] = str(publication.archive)
                 report["canonical_tome_semantic_identity"] = publication.semantic_root
-                report["canonical_tome_authority_identity"] = publication.authority_identity
+                report["canonical_tome_authority_identity"] = (
+                    publication.authority_identity
+                )
                 report["canonical_tome_policy_identity"] = publication.policy_identity
                 report["canonical_tome_contract_id"] = "radjax_tome_artifact_contract"
                 report["canonical_tome_contract_version"] = "3.0.0"
@@ -947,8 +949,12 @@ def _native_final_reporting_operation(state: _ProductionRunState, inputs: Any) -
         operations=FinalReportingOperations(
             report=lambda config, **kwargs: report_with_native_v4(
                 config,
-                prepared=inputs.assembly.get("prepared") if isinstance(inputs.assembly, dict) else None,
-                context=inputs.assembly.get("context") if isinstance(inputs.assembly, dict) else None,
+                prepared=inputs.assembly.get("prepared")
+                if isinstance(inputs.assembly, dict)
+                else None,
+                context=inputs.assembly.get("context")
+                if isinstance(inputs.assembly, dict)
+                else None,
                 **kwargs,
             ),
             finalize_report=_finalize_production_report,

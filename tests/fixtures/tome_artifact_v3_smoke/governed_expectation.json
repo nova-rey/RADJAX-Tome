@@ -1,0 +1,9 @@
+{
+  "artifact_reference": "tome-artifact-v3-smoke",
+  "expected_authority_identity": "sha256:bfe7a5d58c0fe32d7f2b233381e8e863ea5bf0432ca2f813ac44e7c23113cc2b",
+  "expected_contract_version": "radjax_tome_artifact_contract@3.0.0",
+  "expected_policy_identity": "sha256:ba7308cee1889a8059c2bc5fd110a9cb93f33d6d83e697dd15b5ac9bea8ab82f",
+  "expected_profile_id": "selected_exemplar_semantic_profile_v3",
+  "expected_semantic_root": "sha256:f4b765aa0ca3dcd2e551d431e239e7504c5c34ef22c50d9766544a73de934ce2",
+  "schema_version": "radjax_tome_governed_comparison_v1"
+}

@@ -1,0 +1,1 @@
+{"contract_version":"radjax_tome_artifact_contract@3.0.0","corridor_link_policy":"c5_authoritative_linkage_v1","dynamic_top_k_policy":"mass_threshold_v1","schema_version":"radjax_tome_behavioral_policy_v1","selection_policy":"entropy_top_n_v1","semantic_profile_id":"selected_exemplar_semantic_profile_v3"}

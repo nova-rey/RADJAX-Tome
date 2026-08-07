@@ -2502,6 +2502,30 @@
       "rationale": "Verifies committed ordinary v6 fixture identities and Contract admission.",
       "replacement_or_target_boundary": "B4 fixture closure acceptance tests.",
       "status": "canonical"
+    },
+    "docs/C5_TOME_V3_FIXTURE.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "C5",
+      "rationale": "Records the opt-in Contract v3 canonical-production fixture, external evidence, and bounded compatibility proofs.",
+      "replacement_or_target_boundary": "Program C v3 adoption fixture and independent-review evidence.",
+      "status": "canonical"
+    },
+    "tests/test_tome_v3_fixture_receipt.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "C5",
+      "rationale": "Verifies Contract v3 directory/archive fixture integrity, governed comparison, external attestation, streaming, resharding, and coherent-replacement behavior.",
+      "replacement_or_target_boundary": "Program C v3 adoption fixture acceptance tests.",
+      "status": "canonical"
+    },
+    "tests/fixtures/tome_artifact_v3_smoke": {
+      "archive_or_removal_condition": null,
+      "kind": "fixture",
+      "owning_milestone": "C5",
+      "rationale": "Deterministic ordinary-CPU Contract v3 canonical-production artifact and externally supplied proof inputs.",
+      "replacement_or_target_boundary": "Program C v3 adoption fixture identities and compatibility evidence.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

@@ -1,0 +1,20 @@
+{
+  "archive_sha256": "sha256:8336d925e520fddf3f59c740cdc7f71c100e76d7aa42aca761e6bc3a1b3585d1",
+  "archive_size_bytes": 6493,
+  "archive_receipt_sha256": "sha256:8ce4eff039cc3058086f80667cb94ab57518226071d5b24089d789ea6bb26515",
+  "artifact_contract": "radjax_tome_artifact_contract@3.0.0",
+  "claims_not_made": [
+    "Student training",
+    "accelerator execution",
+    "M8 performance",
+    "default v2 migration"
+  ],
+  "contract_pin": "1fa43e1aea2e198511db86dafb0aeefa525d48c7",
+  "directory_semantic_root": "sha256:f4b765aa0ca3dcd2e551d431e239e7504c5c34ef22c50d9766544a73de934ce2",
+  "fixture_id": "tome_artifact_v3_smoke_v1",
+  "profile_id": "selected_exemplar_semantic_profile_v3",
+  "record_count": 4,
+  "schema_version": "radjax_tome_v3_fixture_receipt_v1",
+  "shard_count": 2,
+  "transport_pair_atomicity": false
+}

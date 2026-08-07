@@ -160,9 +160,7 @@ def _closed_record(
         "source_row": int(payload_ref["source_row"]),
         "source_position": int(payload_ref["source_position"]),
     }
-    if "corridor_mode_id" in merged and not isinstance(
-        merged["corridor_mode_id"], str
-    ):
+    if "corridor_mode_id" in merged and not isinstance(merged["corridor_mode_id"], str):
         merged["corridor_mode_id"] = str(merged["corridor_mode_id"])
     missing = sorted(RECORD_FIELDS - set(merged))
     if missing:

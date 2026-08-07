@@ -198,8 +198,7 @@ def run_selected_delivery_rerun(
     publication_payloads = None
     if config.retain_full_payloads_for_publication:
         full_by_index = {
-            int(item["_record_index"]): item
-            for item in (full_payloads or [])
+            int(item["_record_index"]): item for item in (full_payloads or [])
         }
         publication_payloads = tuple(
             dict(full_by_index[int(summary["_record_index"])])

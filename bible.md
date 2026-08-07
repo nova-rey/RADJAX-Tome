@@ -2862,3 +2862,14 @@ handoff. It does not reread staged or v4 files, repeat score/selection logic, or
 alter the v2 summary-only default path. The handoff also carries the existing
 selection-authority identity explicitly; all Contract v3 validation remains
 owned by the released Contract.
+
+## 2026-08-06 — Program C v3 Fixture and Compatibility Proof
+
+The opt-in Contract v3 canonical path produced the committed ordinary-CPU
+four-record, two-shard fixture and separately validated directory/archive
+transports. Standard integrity, governed comparison, external attestation,
+archive receipt, raw/graph corruption, pre-yield streaming, resharding, and
+coherent-replacement behavior are covered by focused tests. The v2 default,
+historical v4/v5/v6 paths, Student, Golden data, M8, and M9 remain unchanged;
+this is adoption evidence only and makes no default-migration or performance
+claim.
