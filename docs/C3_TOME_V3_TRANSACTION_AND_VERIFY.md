@@ -19,10 +19,11 @@ requested mode to exit codes 0, 2, 3, 4, 5, and 6.
 
 The publisher uses same-filesystem private staging and a private journal. The
 Contract-owned journal state is wrapped by the Tome-private
-`radjax_tome_private_publication_binding_v1` object. That binding records the
+`radjax_tome_private_publication_binding_v2` object. That binding records the
 transaction relationship, directory/archive names, staging and journal-root
 ownership, configuration/layout identity, authority and policy identities,
 semantic root, ordered-sequence identity, and expected sealed-shard shape. It
+also records the explicit private topology (`canonical` or `archive_only`). It
 is checked against the visible promoted directory and (when present) archive;
 filenames, directory counts, and public-output presence alone never select a
 resume candidate. Contract validates both journal state machines, receipt
@@ -39,6 +40,41 @@ ordinary consumers or Student.
 Directory and archive states are stored in separate private journal records;
 the archive transaction never overwrites the directory transaction's durable
 `PROMOTED` marker.
+
+The reachable private/public topologies are deliberately finite:
+
+* Before directory visibility (PC39--PC44), the canonical journal contains
+  `directory-journal.json` only; no public directory is consumable. Recovery
+  resumes or refuses the directory transaction according to the Contract
+  restart disposition.
+* After PC45 or PC46, the directory is visible and the canonical root contains
+  only `directory-journal.json` while that journal is `PROMOTING`. After PC47,
+  it contains the same single directory journal in `PROMOTED`. Recovery first
+  validates the directory, completes the legal `PROMOTING` to `PROMOTED`
+  transition when needed, then creates the archive journal. It never fabricates
+  a missing historical archive journal or assumes that both journals must
+  already exist.
+* Once archive publication starts, a canonical root contains both journals.
+  Archive construction, promotion, completion marking, and cleanup resume from
+  the independently validated archive state while the directory remains
+  independently `PROMOTED`.
+* An independently validated promoted directory with no private state may be
+  explicitly repacked. This creates an `archive_only` root containing only
+  `archive-journal.json`, with an archive transaction ID equal to its bound
+  archive ID. It is a new, explicitly bound transaction, not a stripped
+  canonical run. Every archive fault boundary and interrupted cleanup resumes
+  through this topology; a malformed or ambiguous root is refused.
+* After both independent transactions are durably `PROMOTED` and validated,
+  cleanup removes the bound staging and journals. A repeated call with valid
+  public outputs and no private state is a completed no-op.
+
+Every private root, journal file, receipt, marker, staging path, and nested
+private component is inspected with no-follow `lstat` checks before parsing,
+adoption, mutation, promotion, or cleanup. Symlinks, aliases, path escapes,
+non-regular journal files, and private roots containing undeclared members fail
+closed without following or deleting the target. This ownership check belongs
+to Tome; Contract remains authoritative for journal schemas, state transitions,
+restart dispositions, and receipt validation.
 
 The Contract state machine is used without reinterpretation:
 
@@ -57,7 +93,11 @@ or promoting the archive.
 An incomplete or stale state is not publicly visible. A fresh directory
 publication refuses any surviving private transaction; the explicit archive
 resume adapter first validates every relevant private journal object and the
-already visible directory before producing or promoting the archive.
+already visible directory before producing or promoting the archive. It accepts
+only the three topologies above (canonical directory-only, canonical
+directory-plus-archive, or explicit archive-only); a journal-less staging
+remnant, a canonical root missing its directory journal, or extra undeclared
+private members is not inferred or repaired.
 Cross-authority, cross-configuration, mixed-run, unreceipted, malformed, or
 otherwise invalid state fails closed before any journal overwrite. Directory
 and archive publication are separate transactions; each is validated and

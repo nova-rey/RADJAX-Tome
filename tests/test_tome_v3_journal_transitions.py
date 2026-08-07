@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -226,6 +227,114 @@ def test_tome_publisher_fault_boundary_preserves_private_state(
             shutil.rmtree(path)
         else:
             path.unlink()
+
+
+@pytest.mark.parametrize(
+    "case",
+    (
+        "PC45_after_target_visible",
+        "PC46_after_atomic_rename",
+        "PC47_after_completion_marker",
+    ),
+)
+def test_directory_only_pc45_pc47_recovery_promotes_and_publishes_archive(
+    tmp_path: Path, case: str
+) -> None:
+    output_base = tmp_path / f"directory-only-{case}"
+
+    def interrupt(event: str) -> None:
+        if event == case:
+            raise V3PublicationCrash(event)
+
+    with pytest.raises(V3PublicationCrash):
+        publish_v3_from_handoff(
+            _publication_handoff(), output_base, publication_hook=interrupt
+        )
+    directory = output_base.with_name(output_base.name + ".v3")
+    archive = output_base.with_name(output_base.name + ".v3.tgz")
+    assert directory.is_dir() and not archive.exists()
+    assert len(list(tmp_path.glob(f".{output_base.name}.v3-journal-*"))) == 1
+    resume_v3_archive_from_directory(directory, archive)
+    assert archive.is_file()
+    assert not list(tmp_path.glob(f".{output_base.name}.v3-*"))
+    assert not list(tmp_path.glob(f".{output_base.name}.v3-journal-*"))
+    assert resume_v3_archive_from_directory(directory, archive) == archive
+
+
+@pytest.mark.parametrize(
+    "case",
+    (
+        "RESUME_ARCHIVE_after_completion_intent",
+        "RESUME_ARCHIVE_after_promotion_intent",
+        "RESUME_ARCHIVE_after_target_visible",
+        "RESUME_ARCHIVE_after_atomic_rename",
+        "RESUME_ARCHIVE_after_completion_marker",
+    ),
+)
+def test_fresh_archive_only_recovery_is_explicit_and_idempotent(
+    tmp_path: Path, case: str
+) -> None:
+    source = publish_v3_from_handoff(_publication_handoff(), tmp_path / "source")
+    source.archive.unlink()
+    output = tmp_path / "fresh.v3.tgz"
+
+    def interrupt(event: str) -> None:
+        if event == case:
+            raise V3PublicationCrash(event)
+
+    with pytest.raises(V3PublicationCrash):
+        resume_v3_archive_from_directory(
+            source.directory, output, publication_hook=interrupt
+        )
+    assert source.directory.is_dir()
+    assert output.exists() is (
+        case
+        in {
+            "RESUME_ARCHIVE_after_target_visible",
+            "RESUME_ARCHIVE_after_atomic_rename",
+            "RESUME_ARCHIVE_after_completion_marker",
+        }
+    )
+    roots = sorted(tmp_path.glob(".fresh.v3-journal-*"))
+    assert len(roots) == 1
+    assert {path.name for path in roots[0].iterdir()} == {"archive-journal.json"}
+    resume_v3_archive_from_directory(source.directory, output)
+    assert output.is_file()
+    assert not list(tmp_path.glob(".fresh.v3-journal-*"))
+    assert not list(tmp_path.glob(".fresh.v3-archive-*"))
+    assert resume_v3_archive_from_directory(source.directory, output) == output
+
+
+@pytest.mark.parametrize("private_component", ("root", "staging", "journal"))
+def test_private_symlink_is_rejected_before_archive_mutation(
+    tmp_path: Path, private_component: str
+) -> None:
+    directory, archive = _crashed_archive_publication(
+        tmp_path, f"symlink-{private_component}"
+    )
+    root = _archive_journal_root(directory)
+    external = tmp_path / f"external-{private_component}"
+    external.mkdir()
+    if private_component == "root":
+        moved = external / "root"
+        shutil.move(root, moved)
+        os.symlink(moved, root)
+    elif private_component == "staging":
+        binding = json.loads((root / "archive-journal.json").read_text())["binding"]
+        staging = tmp_path / binding["staging_name"]
+        moved = external / "staging"
+        shutil.move(staging, moved)
+        os.symlink(moved, staging)
+    else:
+        journal = root / "archive-journal.json"
+        moved = external / "archive-journal.json"
+        shutil.move(journal, moved)
+        os.symlink(moved, journal)
+    with pytest.raises(ValueError, match="symlink"):
+        resume_v3_archive_from_directory(directory, archive)
+    assert not archive.exists()
+    assert directory.is_dir()
+    assert list(external.iterdir())
 
 
 def test_new_v3_run_refuses_stale_private_transaction(tmp_path: Path) -> None:

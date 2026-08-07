@@ -2960,3 +2960,16 @@ both independently promoted outputs are valid, so completion-marker and
 interrupted-cleanup recovery are idempotent. This bounded correction leaves
 the v3 public identity, Contract release, v2 default, historical paths,
 Student, Golden evidence, M8, and M9 unchanged.
+
+## 2026-08-07 — Program C Recovery Topology and Private Ownership Correction
+
+The v3 recovery dispatcher now recognizes only explicitly bound private
+topologies: canonical directory-only state after PC45--PC47, canonical
+directory-plus-archive state, and fresh archive-only repack state. Directory
+promotion is validated and completed through the released Contract restart
+disposition before archive publication begins; archive-only state never
+fabricates a directory journal. All private roots, journals, staging paths,
+receipts, markers, and nested components are inspected without following
+symlinks before mutation or cleanup. Directory and archive remain independent
+transactions, public v3 bytes and identities are unchanged, and the v2 default,
+historical paths, Student, Golden evidence, M8, and M9 remain untouched.
