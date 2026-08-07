@@ -2910,3 +2910,11 @@ The adopted v3 path now provides a transport-only wrapper for an already
 promoted v3 directory and proves Contract acceptance of `.rtome`. It does not
 emit an additional canonical sibling or construct a second semantic package;
 directory and `.tgz` remain the canonical publication outputs.
+
+## 2026-08-06 — Program C Released Contract Parity Evidence
+
+The v3 adoption branch now records sanitized release receipt and asset-hash
+metadata for the immutable RADJAX Contract v0.9.0 release. Source, release
+asset, and offline mirror identities are checked without introducing network
+or mutable dependency assumptions; no Contract, Student, Golden, M8, or M9
+behavior changed.
