@@ -31,7 +31,9 @@ def test_hydra_disposition_has_complete_tracked_inventory() -> None:
     expected = _tracked_python_modules() | _tracked_scripts() | _top_level_docs()
     expected |= {f"cli:{command}" for command in _public_commands(_build_parser())}
     expected = {
-        path if path in records else f"docs:{Path(path).stem}"
+        path
+        if path in records
+        else f"docs:{Path(path).stem}"
         if path.startswith("docs/")
         else path
         for path in expected

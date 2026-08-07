@@ -352,7 +352,9 @@ def adapt_legacy_production_build_config(
             c5_selection_path=config.c5_selection_path,
             source_passports_path=config.source_passports_path,
         ),
-        package=PackageIntent(artifact_contract_version=config.artifact_contract_version),
+        package=PackageIntent(
+            artifact_contract_version=config.artifact_contract_version
+        ),
     )
 
 

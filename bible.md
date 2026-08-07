@@ -2896,3 +2896,10 @@ Hydra now records the opt-in `cli:verify-artifact` command as a canonical
 Program-C surface. The append-only inventory continues to distinguish
 historical compatibility entries and special `docs:` aliases; no default CLI,
 released behavior, or prior artifact contract was altered.
+
+## 2026-08-06 — Program C Formatting Gate
+
+The source-bound Ruff format gate was applied to the v3 configuration adapter,
+Contract pin test, and Hydra inventory test. The changes are formatting-only;
+the v3 handoff, default v2 behavior, historical compatibility, and all artifact
+identities remain unchanged.

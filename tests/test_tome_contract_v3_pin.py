@@ -4,11 +4,12 @@ import hashlib
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).parents[1]
 CONTRACT_ROOT = ROOT / "contracts" / "radjax_tome" / "v3"
 CONTRACT_COMMIT = "1fa43e1aea2e198511db86dafb0aeefa525d48c7"
-ASSET_TREE_DIGEST = "sha256:4f81cd901ad074cc24e279e37b7fbfbe25c22fb6b7fd77cbcc747b202995acf8"
+ASSET_TREE_DIGEST = (
+    "sha256:4f81cd901ad074cc24e279e37b7fbfbe25c22fb6b7fd77cbcc747b202995acf8"
+)
 
 
 def _sha256(path: Path) -> str:
