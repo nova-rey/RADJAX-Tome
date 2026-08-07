@@ -181,6 +181,7 @@ class PackageIntent:
 
     profile: Literal["unpacked", "student", "full_debug_provenance"] = "unpacked"
     transport: Literal["directory", "rtome", "tgz"] = "directory"
+    artifact_contract_version: Literal["v2", "v3"] = "v2"
 
 
 @dataclass(frozen=True)
@@ -351,6 +352,7 @@ def adapt_legacy_production_build_config(
             c5_selection_path=config.c5_selection_path,
             source_passports_path=config.source_passports_path,
         ),
+        package=PackageIntent(artifact_contract_version=config.artifact_contract_version),
     )
 
 
@@ -543,6 +545,7 @@ def apply_production_preset(
 
 
 _PRODUCTION_OVERRIDE_SECTIONS = {
+    "artifact_contract_version": ("package", "artifact_contract_version"),
     "teacher_model": ("teacher", "model"),
     "tokenizer_id": ("teacher", "tokenizer_id"),
     "teacher_backend": ("teacher", "backend"),
@@ -743,6 +746,7 @@ def production_build_config_from_resolved(
         corpus_manifest_path=intent.corpus.corpus_manifest_path,
         teacher_model_provenance_path=intent.teacher.model_provenance_path,
         output_dir=intent.outputs.output_dir,
+        artifact_contract_version=intent.package.artifact_contract_version,
         teacher_backend=intent.teacher.backend,
         runtime_mode=intent.teacher.runtime_mode,
         target_policy=intent.behavior.target_policy,
@@ -1044,6 +1048,8 @@ def validate_tome_build_intent(
         errors.append("package.profile is invalid")
     if intent.package.transport not in {"directory", "rtome", "tgz"}:
         errors.append("package.transport is invalid")
+    if intent.package.artifact_contract_version not in {"v2", "v3"}:
+        errors.append("package.artifact_contract_version is invalid")
     return tuple(errors)
 
 

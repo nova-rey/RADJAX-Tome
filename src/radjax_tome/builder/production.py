@@ -85,6 +85,7 @@ class ProductionBuildConfig:
     corpus_manifest_path: Path
     teacher_model_provenance_path: Path
     output_dir: Path
+    artifact_contract_version: str = "v2"
     tokenizer_id: str | None = None
     teacher_backend: str = "gpu_torch"
     runtime_mode: str = "cpu_gpu"
@@ -894,8 +895,31 @@ def _native_final_reporting_operation(state: _ProductionRunState, inputs: Any) -
     ) -> dict[str, Any]:
         """Publish the paved v4 package only after all retained Path-B proof."""
 
+        prepared = kwargs.pop("prepared", None)
+        context = kwargs.pop("context", None) or {}
         report = _production_report(config, **kwargs)
         if report["status"] != "fail":
+            if config.artifact_contract_version == "v3":
+                from radjax_tome.tome.artifact_v3 import (
+                    publish_v3_from_handoff,
+                    snapshot_finalized_handoff,
+                )
+
+                handoff = snapshot_finalized_handoff(prepared, context)
+                publication = publish_v3_from_handoff(handoff, config.output_dir)
+                report["canonical_tome_schema_version"] = "radjax_tome_cover_v5"
+                report["canonical_tome_directory"] = str(publication.directory)
+                report["canonical_tome_archive"] = str(publication.archive)
+                report["canonical_tome_semantic_identity"] = publication.semantic_root
+                report["canonical_tome_authority_identity"] = publication.authority_identity
+                report["canonical_tome_policy_identity"] = publication.policy_identity
+                report["canonical_tome_contract_id"] = "radjax_tome_artifact_contract"
+                report["canonical_tome_contract_version"] = "3.0.0"
+                report["canonical_tome_profile_id"] = publication.layout
+                report["canonical_tome_selected_count"] = publication.record_count
+                report["canonical_tome_shard_count"] = publication.shard_count
+                report["canonical_tome_transport_pair_atomicity"] = False
+                return report
             from radjax_tome.builder.production_stages.v4_publication import (
                 publish_native_path_b_v4,
             )
@@ -917,7 +941,12 @@ def _native_final_reporting_operation(state: _ProductionRunState, inputs: Any) -
         state,
         inputs,
         operations=FinalReportingOperations(
-            report=report_with_native_v4,
+            report=lambda config, **kwargs: report_with_native_v4(
+                config,
+                prepared=inputs.assembly.get("prepared") if isinstance(inputs.assembly, dict) else None,
+                context=inputs.assembly.get("context") if isinstance(inputs.assembly, dict) else None,
+                **kwargs,
+            ),
             finalize_report=_finalize_production_report,
             timing_fields=_production_timing_fields,
             now=_now,

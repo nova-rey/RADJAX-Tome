@@ -36,6 +36,22 @@
     }
   ],
   "records": {
+    "src/radjax_tome/tome/artifact_v3.py": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "production-module",
+      "owning_milestone": "Program-C",
+      "rationale": "Tome-side v3 publication adapter consuming the finalized typed handoff.",
+      "replacement_or_target_boundary": "Released Contract v3 publication path",
+      "status": "canonical"
+    },
+    "tests/test_tome_artifact_v3_publication.py": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "test",
+      "owning_milestone": "Program-C",
+      "rationale": "Validates v3 directory/archive publication and semantic resharding invariance.",
+      "replacement_or_target_boundary": "Program-C v3 publication conformance",
+      "status": "canonical"
+    },
     "contract-mirror:radjax_tome_v3": {
       "archive_or_removal_condition": "Remove only when the explicit v3 adoption branch is abandoned.",
       "kind": "offline-contract-mirror",

@@ -459,6 +459,11 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument("--teacher-model-provenance", type=Path, required=True)
     production.add_argument("--output", type=Path, required=True)
     production.add_argument(
+        "--artifact-contract-version",
+        choices=("v2", "v3"),
+        help="Select the artifact contract explicitly; default remains v2.",
+    )
+    production.add_argument(
         "--teacher-backend",
         choices=("gpu_torch", "cpu_reference"),
         default="gpu_torch",

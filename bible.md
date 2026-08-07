@@ -2833,3 +2833,13 @@ Student v5/v6 contracts, M7/v4 transport, Golden evidence, M8, and M9 remain
 unchanged. This commit only establishes the release identity and offline
 verification surface; no production v3 emission or default migration is
 claimed yet.
+
+## 2026-08-06 — Program C Explicit v3 Production Projection
+
+The canonical Path-B terminal handoff now supports an opt-in
+`--artifact-contract-version v3` projection. It snapshots the finalized
+selected records and payloads after late corridor linkage, projects only the
+released Contract v3 closed record fields, and publishes independently
+validated directory and `.v3.tgz` artifacts. The existing v2/default and M7/v4
+publication paths remain unchanged; this commit makes no performance or
+default-migration claim.
