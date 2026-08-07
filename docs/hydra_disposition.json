@@ -60,14 +60,46 @@
       "replacement_or_target_boundary": "RADJAX-Contract v0.9.0 release assets",
       "status": "canonical"
     },
-    "docs:C1_TOME_ARTIFACT_CONTRACT_V3_PIN": {
+      "docs:C1_TOME_ARTIFACT_CONTRACT_V3_PIN": {
       "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
       "kind": "release-pin",
       "owning_milestone": "Program-C",
       "rationale": "Records the immutable Contract v3 release and mirror identity.",
       "replacement_or_target_boundary": "RADJAX-Contract v0.9.0",
-      "status": "canonical"
-    },
+        "status": "canonical"
+      },
+      "docs:C3_TOME_V3_TRANSACTION_AND_VERIFY": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "top-level-doc",
+        "owning_milestone": "Program-C",
+        "rationale": "Documents the v3 verification-mode boundary and private transactional publication semantics.",
+        "replacement_or_target_boundary": "Released RADJAX Contract v3 adoption evidence.",
+        "status": "canonical"
+      },
+      "src/radjax_tome/cli/main.py:verify-artifact": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "public-cli-command",
+        "owning_milestone": "Program-C",
+        "rationale": "Thin standard, governed, and external-attestation adapter over Contract v3 validation APIs.",
+        "replacement_or_target_boundary": "Released RADJAX Contract v3 verification path.",
+        "status": "canonical"
+      },
+      "tests/test_tome_v3_verification_cli.py": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "test",
+        "owning_milestone": "Program-C",
+        "rationale": "Verifies v3 CLI mode selection, caller-input failures, and private journal visibility boundary.",
+        "replacement_or_target_boundary": "Program-C v3 verification conformance.",
+        "status": "canonical"
+      },
+      "tests/test_tome_v3_journal_transitions.py": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "test",
+        "owning_milestone": "Program-C",
+        "rationale": "Exercises each private Contract journal restart boundary and fail-closed bindings.",
+        "replacement_or_target_boundary": "Program-C v3 transaction recovery conformance.",
+        "status": "canonical"
+      },
     "cli:allocate-fingerprint-corridor-coverage": {
       "archive_or_removal_condition": "M2 parity and M3 archive pointer.",
       "kind": "public-cli-command",

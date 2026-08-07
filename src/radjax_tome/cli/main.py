@@ -276,6 +276,27 @@ def _build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--metadata-sanity", action="store_true")
     validate.set_defaults(func=_cmd_validate)
 
+    verify_artifact = subparsers.add_parser(
+        "verify-artifact",
+        help="Verify an explicit Contract v3 Tome artifact.",
+        description="Standard, governed, or externally attested v3 verification.",
+    )
+    verify_artifact.add_argument("--artifact", type=Path, required=True)
+    verify_artifact.add_argument(
+        "--mode",
+        choices=("standard", "governed", "external-attestation"),
+        default="standard",
+    )
+    verify_artifact.add_argument("--expected", type=Path)
+    verify_artifact.add_argument("--attestation", type=Path)
+    verify_artifact.add_argument(
+        "--attestation-policy", choices=("optional", "required"), default="required"
+    )
+    verify_artifact.add_argument(
+        "--evaluation-time", help="UTC RFC3339 evaluation time."
+    )
+    verify_artifact.set_defaults(func=_cmd_verify_artifact)
+
     inspect = subparsers.add_parser(
         "inspect",
         help="Inspect a generated artifact.",
@@ -1699,6 +1720,109 @@ def _cmd_audit_selected_linkage(args: argparse.Namespace) -> int:
         write_selected_linkage_audit(report, args.output)
     print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
     return 0 if report.status == "pass" else 1
+
+
+def _cmd_verify_artifact(args: argparse.Namespace) -> int:
+    """Thin CLI adapter; Contract owns all v3 parsing and classifications."""
+
+    from datetime import UTC, datetime
+
+    from radjax_contract.tome.v3 import (
+        AttestationRequirement,
+        compare_governed_tome_artifact_v3,
+        validate_tome_artifact_v3,
+        verify_external_tome_attestation_v3,
+    )
+    from radjax_contract.tome.v3.issues import TomeV3ValidationError
+
+    if args.mode == "governed" and args.expected is None:
+        print("status=fail error=governed_expected_file_required", file=sys.stderr)
+        return 2
+    if args.mode == "external-attestation" and not args.evaluation_time:
+        print("status=fail error=evaluation_time_required", file=sys.stderr)
+        return 2
+    try:
+        standard = validate_tome_artifact_v3(args.artifact)
+        if args.mode == "standard":
+            print(
+                json.dumps(
+                    {
+                        "status": "pass",
+                        "mode": "standard",
+                        "semantic_root": standard.semantic_root,
+                        "record_count": standard.record_count,
+                        "shard_count": standard.shard_count,
+                    },
+                    sort_keys=True,
+                )
+            )
+            return 0
+        if args.mode == "governed":
+            report = compare_governed_tome_artifact_v3(args.artifact, args.expected)
+            print(
+                json.dumps(
+                    {
+                        "status": "pass",
+                        "mode": "governed",
+                        "semantic_root": report.expected_semantic_root,
+                    },
+                    sort_keys=True,
+                )
+            )
+            return 0
+        evaluated = datetime.fromisoformat(args.evaluation_time.replace("Z", "+00:00"))
+        if evaluated.tzinfo is None:
+            raise ValueError("evaluation_time_must_include_timezone")
+        report = verify_external_tome_attestation_v3(
+            args.artifact,
+            args.attestation,
+            requirement=AttestationRequirement(args.attestation_policy),
+            evaluation_time_utc=evaluated.astimezone(UTC),
+        )
+        print(
+            json.dumps(
+                {
+                    "status": "pass",
+                    "mode": "external-attestation",
+                    "attestation_status": report.status,
+                    "semantic_root": report.standard.semantic_root,
+                },
+                sort_keys=True,
+            )
+        )
+        return 0
+    except TomeV3ValidationError as exc:
+        issue = exc.issue
+        if args.mode == "governed":
+            return_code = 4
+        elif args.mode == "external-attestation":
+            return_code = 5
+        else:
+            return_code = 3
+        print(
+            json.dumps(
+                {
+                    "status": "fail",
+                    "mode": args.mode,
+                    "phase": int(issue.phase),
+                    "code": issue.code,
+                    "detail": issue.detail,
+                    "location": issue.location,
+                },
+                sort_keys=True,
+            ),
+            file=sys.stderr,
+        )
+        return return_code
+    except ValueError as exc:
+        if args.mode == "external-attestation":
+            print(f"status=fail mode={args.mode} error={exc}", file=sys.stderr)
+            return 2
+        print(f"status=fail mode={args.mode} error={exc}", file=sys.stderr)
+        return 6
+    except (OSError, TypeError) as exc:
+        print(f"status=fail mode={args.mode} error={exc}", file=sys.stderr)
+        return 6
 
 
 def _cmd_package_artifact(args: argparse.Namespace) -> int:

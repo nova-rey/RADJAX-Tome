@@ -4,12 +4,12 @@ import json
 from pathlib import Path
 
 import pytest
+from radjax_contract.tome.v3.issues import TomeV3ValidationError
 
 from radjax_tome.tome.artifact_v3 import (
     FinalizedV3Handoff,
     publish_v3_from_handoff,
 )
-
 
 CONTRACT_ROOT = Path("contracts/radjax_tome/v3")
 
@@ -25,11 +25,7 @@ def _handoff() -> FinalizedV3Handoff:
         (CONTRACT_ROOT / "vectors" / "tome_provenance_v3_vectors.json").read_text()
     )["normative_root_vectors"][1]
     records = tuple(
-        {
-            key: value
-            for key, value in record.items()
-            if key != "selection_index"
-        }
+        {key: value for key, value in record.items() if key != "selection_index"}
         for record in vector["ordered_records"]
     )
     return FinalizedV3Handoff(
@@ -73,7 +69,7 @@ def test_v3_projection_rejects_missing_closed_record_field() -> None:
     handoff = _handoff()
     record = dict(handoff.records[0])
     record.pop("selected_score")
-    with pytest.raises(Exception):
+    with pytest.raises((ValueError, TomeV3ValidationError)):
         publish_v3_from_handoff(
             FinalizedV3Handoff((record,), handoff.authority, handoff.policy, (0,), 1),
             Path("/tmp/unused-v3-test-output"),

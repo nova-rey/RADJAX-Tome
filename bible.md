@@ -2843,3 +2843,13 @@ released Contract v3 closed record fields, and publishes independently
 validated directory and `.v3.tgz` artifacts. The existing v2/default and M7/v4
 publication paths remain unchanged; this commit makes no performance or
 default-migration claim.
+
+## 2026-08-06 — Program C v3 Verification and Transactional Publication
+
+The opt-in v3 path now exposes a thin `verify-artifact` adapter for standard,
+governed, and externally attested Contract validation, with external evidence
+required outside the artifact under test. Directory and archive publication
+are separate private journaled transactions using the released Contract state
+machine; each validates before promotion and records no journal state in public
+artifacts. The v2 default, historical v4/v5/v6 paths, Student, Golden data,
+M8, and M9 remain unchanged.
