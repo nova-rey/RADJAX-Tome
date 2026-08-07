@@ -17,14 +17,23 @@ requested mode to exit codes 0, 2, 3, 4, 5, and 6.
 
 ## Private journal boundary
 
-The publisher uses same-filesystem private staging and a private journal. It
-records only the transaction identity, v3 configuration identity,
-semantic-authority identity, sealed shard receipts, contiguous committed
-selection range, completion intent, and promotion marker. Shard bytes are
-fsynced before the receipt state is written; receipt state is fsynced before the
-committed range and completion states. Journal files and staging are removed
-only after both independent transactions reach `PROMOTED`. They are never
-inventoried, archived, included in a semantic identity, or required by
+The publisher uses same-filesystem private staging and a private journal. The
+Contract-owned journal state is wrapped by the Tome-private
+`radjax_tome_private_publication_binding_v1` object. That binding records the
+transaction relationship, directory/archive names, staging and journal-root
+ownership, configuration/layout identity, authority and policy identities,
+semantic root, ordered-sequence identity, and expected sealed-shard shape. It
+is checked against the visible promoted directory and (when present) archive;
+filenames, directory counts, and public-output presence alone never select a
+resume candidate. Contract validates both journal state machines, receipt
+shape/ranges, and transition legality; Tome owns filesystem discovery,
+cross-object comparison, refusal/quarantine, and execution.
+
+Shard bytes are fsynced before receipt state is written; receipt state is
+fsynced before committed range and completion states. Journal files and all
+bound private staging are removed only after both independent transactions
+reach `PROMOTED` and the promoted outputs pass Contract validation. They are
+never inventoried, archived, included in a semantic identity, or required by
 ordinary consumers or Student.
 
 Directory and archive states are stored in separate private journal records;
@@ -47,12 +56,24 @@ or promoting the archive.
 
 An incomplete or stale state is not publicly visible. A fresh directory
 publication refuses any surviving private transaction; the explicit archive
-resume adapter first validates an already visible directory before producing
-and promoting the archive. Cross-authority, mixed-run, unreceipted, or otherwise
-invalid journal state fails closed through Contract validation. Directory and archive
-publication are separate transactions; each is validated and promoted
-independently. A report may bind both to the same semantic root, but does not
-claim atomic visibility of the pair.
+resume adapter first validates every relevant private journal object and the
+already visible directory before producing or promoting the archive.
+Cross-authority, cross-configuration, mixed-run, unreceipted, malformed, or
+otherwise invalid state fails closed before any journal overwrite. Directory
+and archive publication are separate transactions; each is validated and
+promoted independently. A report may bind both to the same semantic root, but
+does not claim atomic visibility of the pair.
+
+Archive recovery is idempotent. If a matching archive is already visible,
+Tome validates its raw and semantic identity, marks a validated interrupted
+promotion complete when necessary, and performs cleanup without rewriting the
+archive. A conflicting archive is refused without modifying or demoting the
+promoted directory. Cleanup removes bound staging before the journal root and
+fsyncs the parent after each removal; interruption therefore leaves a
+deterministically discoverable journal for a later no-op cleanup. A matching
+validated public directory with no private state may be explicitly repacked as
+a new archive transaction; this is not inferred resume of an unknown prior
+run.
 
 The publisher validates a complete staged package before directory promotion,
 fsyncs the parent directory after promotion, and validates the promoted

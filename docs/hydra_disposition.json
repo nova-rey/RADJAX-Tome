@@ -40,7 +40,7 @@
       "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
       "kind": "production-module",
       "owning_milestone": "Program-C",
-      "rationale": "Tome-side v3 publication adapter consuming the finalized typed handoff.",
+      "rationale": "Tome-side v3 publication adapter consuming the finalized typed handoff, validating bound private journal state before archive recovery, and completing idempotent cleanup.",
       "replacement_or_target_boundary": "Released Contract v3 publication path",
       "status": "canonical"
     },
@@ -96,7 +96,7 @@
         "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
         "kind": "test",
         "owning_milestone": "Program-C",
-        "rationale": "Exercises each private Contract journal restart boundary and fail-closed bindings.",
+        "rationale": "Exercises each private Contract journal restart boundary, binding mutation refusal, matching/conflicting archive recovery, and idempotent cleanup.",
         "replacement_or_target_boundary": "Program-C v3 transaction recovery conformance.",
         "status": "canonical"
       },

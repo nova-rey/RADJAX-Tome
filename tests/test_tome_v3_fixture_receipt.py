@@ -105,7 +105,7 @@ def test_fixture_rtome_transport_is_accepted(tmp_path: Path) -> None:
     )
 
 
-def test_fixture_archive_resume_reproduces_promoted_archive_and_refuses_replace(
+def test_fixture_archive_resume_reproduces_and_validates_existing_archive(
     tmp_path: Path,
 ) -> None:
     source = publish_v3_from_handoff(_fixture_handoff(), tmp_path / "source")
@@ -114,8 +114,9 @@ def test_fixture_archive_resume_reproduces_promoted_archive_and_refuses_replace(
     )
     assert resumed.read_bytes() == source.archive.read_bytes()
     assert validate_tome_artifact_v3(resumed).semantic_root == source.semantic_root
-    with pytest.raises(ValueError, match="v3_archive_resume_target_invalid"):
-        resume_v3_archive_from_directory(source.directory, resumed)
+    before = resumed.stat().st_mtime_ns
+    assert resume_v3_archive_from_directory(source.directory, resumed) == resumed
+    assert resumed.stat().st_mtime_ns == before
 
 
 def test_fixture_raw_and_graph_corruption_are_rejected(tmp_path: Path) -> None:

@@ -2945,3 +2945,18 @@ reuses a matching interrupted journal, validates the promoted directory before
 creating archive bytes, and removes private state only after the archive is
 durably promoted. This closes the transactional recovery correction without
 changing any released format, default v2 behavior, Student, Golden, M8, or M9.
+
+## 2026-08-07 — Program C Archive Journal Validation and Idempotent Cleanup
+
+Archive recovery now validates every discovered private journal object through
+the released Contract journal APIs and compares its Tome-owned binding with the
+promoted directory, intended archive, authority, policy, configuration,
+semantic root, transaction relationship, and sealed receipts before any
+overwrite or resume work. Matching pre-existing archives are validated and
+completed without rewriting; conflicting, stale, malformed, mixed-run,
+cross-authority, cross-configuration, or unreceipted state fails closed.
+Bound private staging is fsynced and removed before the journal root only after
+both independently promoted outputs are valid, so completion-marker and
+interrupted-cleanup recovery are idempotent. This bounded correction leaves
+the v3 public identity, Contract release, v2 default, historical paths,
+Student, Golden evidence, M8, and M9 unchanged.

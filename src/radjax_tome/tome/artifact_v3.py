@@ -40,6 +40,7 @@ V3_SCHEMA = CONTRACT_VERSION
 V3_CONTRACT_ID = "radjax_tome_artifact_contract"
 V3_COVER_SCHEMA = "radjax_tome_cover_v5"
 V3_SHARD_CAP = 128
+PRIVATE_BINDING_SCHEMA = "radjax_tome_private_publication_binding_v1"
 
 
 @dataclass(frozen=True)
@@ -123,6 +124,15 @@ def _fsync_directory(path: Path) -> None:
         os.fsync(descriptor)
     finally:
         os.close(descriptor)
+
+
+def _json_no_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"v3_duplicate_journal_key:{key}")
+        result[key] = value
+    return result
 
 
 def _rename_noreplace(source: Path, target: Path) -> None:
@@ -547,21 +557,162 @@ def _journal_path(root: Path, transaction: str = "directory") -> Path:
     return root / f"{transaction}-journal.json"
 
 
-def _write_journal(path: Path, state: JournalStateV3) -> None:
+def _publication_configuration_identity(
+    *, record_count: int, shard_capacity: int
+) -> str:
+    """Bind private recovery to the public v3 layout configuration.
+
+    This is producer-private transaction metadata.  The Contract journal API
+    still owns state-machine validation; Tome adds only the filesystem/layout
+    binding needed to compare a journal with the promoted package.
+    """
+
+    raw = _raw(
+        {
+            "contract_version": V3_SCHEMA,
+            "record_count": int(record_count),
+            "schema_version": PRIVATE_BINDING_SCHEMA,
+            "semantic_profile_id": SEMANTIC_PROFILE_ID,
+            "shard_capacity": int(shard_capacity),
+        }
+    )
+    return _digest(raw)
+
+
+def _journal_binding(
+    *,
+    transaction_kind: str,
+    transaction_id: str,
+    archive_transaction_id: str,
+    output_base_name: str,
+    directory_name: str,
+    archive_name: str,
+    staging_name: str,
+    journal_root_name: str,
+    configuration_identity: str,
+    semantic_root: str | None = None,
+    semantic_authority_identity: str | None = None,
+    behavioral_policy_identity: str | None = None,
+    ordered_record_sequence_digest: str | None = None,
+    record_count: int | None = None,
+    shard_count: int | None = None,
+    shard_capacity: int | None = None,
+    transport: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "archive_transaction_id": archive_transaction_id,
+        "archive_name": archive_name,
+        "behavioral_policy_identity": behavioral_policy_identity,
+        "configuration_identity": configuration_identity,
+        "directory_name": directory_name,
+        "journal_root_name": journal_root_name,
+        "output_base_name": output_base_name,
+        "ordered_record_sequence_digest": ordered_record_sequence_digest,
+        "record_count": record_count,
+        "schema_version": PRIVATE_BINDING_SCHEMA,
+        "semantic_authority_identity": semantic_authority_identity,
+        "semantic_root": semantic_root,
+        "shard_capacity": shard_capacity,
+        "shard_count": shard_count,
+        "staging_name": staging_name,
+        "transaction_id": transaction_id,
+        "transaction_kind": transaction_kind,
+        "transport": transport,
+    }
+
+
+def _write_journal(
+    path: Path,
+    state: JournalStateV3,
+    *,
+    binding: Mapping[str, Any],
+) -> None:
     validate_journal_state_v3(state)
     raw = _raw(
         {
-            "transaction_id": state.transaction_id,
-            "configuration_identity": state.configuration_identity,
-            "semantic_authority_identity": state.semantic_authority_identity,
-            "state": state.state,
-            "sealed_shards": list(state.sealed_shards),
+            "binding": dict(binding),
             "committed_next_selection_index": state.committed_next_selection_index,
             "completion_intent": state.completion_intent,
+            "configuration_identity": state.configuration_identity,
             "promotion_marker": state.promotion_marker,
+            "sealed_shards": list(state.sealed_shards),
+            "semantic_authority_identity": state.semantic_authority_identity,
+            "state": state.state,
+            "transaction_id": state.transaction_id,
         }
     )
     _fsync_bytes(path, raw)
+
+
+def _read_journal(path: Path) -> tuple[JournalStateV3, dict[str, Any]]:
+    try:
+        raw = json.loads(
+            path.read_text(encoding="utf-8"), object_pairs_hook=_json_no_duplicate_keys
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+        raise ValueError(f"v3_private_journal_malformed:{path.name}") from exc
+    if not isinstance(raw, dict):
+        raise ValueError(f"v3_private_journal_malformed:{path.name}")
+    required = {
+        "binding",
+        "committed_next_selection_index",
+        "completion_intent",
+        "configuration_identity",
+        "promotion_marker",
+        "sealed_shards",
+        "semantic_authority_identity",
+        "state",
+        "transaction_id",
+    }
+    if set(raw) != required or not isinstance(raw["binding"], dict):
+        raise ValueError(f"v3_private_journal_shape:{path.name}")
+    state = JournalStateV3(
+        transaction_id=str(raw["transaction_id"]),
+        configuration_identity=str(raw["configuration_identity"]),
+        semantic_authority_identity=str(raw["semantic_authority_identity"]),
+        state=str(raw["state"]),
+        sealed_shards=tuple(raw["sealed_shards"]),
+        committed_next_selection_index=int(raw["committed_next_selection_index"]),
+        completion_intent=bool(raw["completion_intent"]),
+        promotion_marker=bool(raw["promotion_marker"]),
+    )
+    binding = dict(raw["binding"])
+    if binding.get("schema_version") != PRIVATE_BINDING_SCHEMA:
+        raise ValueError(f"v3_private_binding_schema:{path.name}")
+    expected_binding_fields = {
+        "archive_transaction_id",
+        "archive_name",
+        "behavioral_policy_identity",
+        "configuration_identity",
+        "directory_name",
+        "journal_root_name",
+        "output_base_name",
+        "ordered_record_sequence_digest",
+        "record_count",
+        "schema_version",
+        "semantic_authority_identity",
+        "semantic_root",
+        "shard_capacity",
+        "shard_count",
+        "staging_name",
+        "transaction_id",
+        "transaction_kind",
+        "transport",
+    }
+    if set(binding) != expected_binding_fields:
+        raise ValueError(f"v3_private_binding_shape:{path.name}")
+    if state.configuration_identity != binding["configuration_identity"]:
+        raise ValueError(f"v3_private_configuration_mismatch:{path.name}")
+    if state.semantic_authority_identity != binding.get("semantic_authority_identity"):
+        raise ValueError(f"v3_private_authority_mismatch:{path.name}")
+    if state.transaction_id != binding["transaction_id"]:
+        raise ValueError(f"v3_private_transaction_mismatch:{path.name}")
+    validate_journal_state_v3(
+        state,
+        expected_configuration_identity=state.configuration_identity,
+        expected_semantic_authority_identity=state.semantic_authority_identity,
+    )
+    return state, binding
 
 
 def _sealed_receipts(root: Path) -> tuple[dict[str, Any], ...]:
@@ -584,10 +735,174 @@ def _sealed_receipts(root: Path) -> tuple[dict[str, Any], ...]:
     )
 
 
+def _read_json_object(path: Path) -> dict[str, Any]:
+    try:
+        value = json.loads(
+            path.read_text(encoding="utf-8"), object_pairs_hook=_json_no_duplicate_keys
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+        raise ValueError(f"v3_public_json_malformed:{path}") from exc
+    if not isinstance(value, dict):
+        raise ValueError(f"v3_public_json_object_required:{path}")
+    return value
+
+
+def _artifact_public_metadata(artifact: Path) -> dict[str, Any]:
+    """Read only the public identity/layout objects after Contract validation."""
+
+    report = validate_tome_artifact_v3(artifact)
+    artifact = Path(artifact)
+    temporary: Path | None = None
+    root = artifact
+    archive: tarfile.TarFile | None = None
+    if artifact.is_file():
+        temporary = Path(tempfile.mkdtemp(prefix=".v3-identity-", dir=artifact.parent))
+        archive = tarfile.open(artifact, mode="r:*")
+        try:
+            seen_members: set[str] = set()
+            for member in archive.getmembers():
+                member_path = Path(member.name)
+                if (
+                    not member.isfile()
+                    or member.name in seen_members
+                    or member_path.is_absolute()
+                    or ".." in member_path.parts
+                ):
+                    continue
+                seen_members.add(member.name)
+                destination = temporary / member.name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                source = archive.extractfile(member)
+                if source is None:
+                    raise ValueError("v3_archive_member_unreadable")
+                _fsync_bytes(destination, source.read())
+        finally:
+            archive.close()
+        root = temporary
+    try:
+        identity = _read_json_object(root / "provenance/semantic-identity.json")
+        authority = _read_json_object(root / "provenance/semantic-authority.json")
+        policy = _read_json_object(root / "provenance/behavioral-policy.json")
+        layout = _read_json_object(root / "selected_exemplars/layout.json")
+        authority_identity = digest(DOMAIN_LABELS["semantic_authority"], authority)
+        policy_identity = digest(DOMAIN_LABELS["behavioral_policy"], policy)
+        if identity.get("semantic_authority_identity") != authority_identity:
+            raise ValueError("v3_public_authority_identity_mismatch")
+        if identity.get("behavioral_policy_identity") != policy_identity:
+            raise ValueError("v3_public_policy_identity_mismatch")
+        if identity.get("contract_version") != V3_SCHEMA:
+            raise ValueError("v3_public_contract_identity_mismatch")
+        if identity.get("semantic_profile_id") != SEMANTIC_PROFILE_ID:
+            raise ValueError("v3_public_profile_identity_mismatch")
+        if not isinstance(layout.get("record_count"), int) or not isinstance(
+            layout.get("shard_capacity"), int
+        ):
+            raise ValueError("v3_public_layout_configuration_missing")
+        if layout["record_count"] != report.record_count or layout.get(
+            "shard_count"
+        ) not in (None, report.shard_count):
+            raise ValueError("v3_public_layout_count_mismatch")
+        return {
+            "report": report,
+            "semantic_root": identity["semantic_root"],
+            "semantic_authority_identity": authority_identity,
+            "behavioral_policy_identity": policy_identity,
+            "ordered_record_sequence_digest": identity[
+                "ordered_record_sequence_digest"
+            ],
+            "record_count": report.record_count,
+            "shard_count": report.shard_count,
+            "shard_capacity": layout["shard_capacity"],
+            "configuration_identity": _publication_configuration_identity(
+                record_count=report.record_count,
+                shard_capacity=layout["shard_capacity"],
+            ),
+            "receipts": _sealed_receipts(root),
+        }
+    finally:
+        if temporary is not None:
+            shutil.rmtree(temporary, ignore_errors=True)
+
+
+def _expected_binding(
+    metadata: Mapping[str, Any],
+    *,
+    transaction_kind: str,
+    transaction_id: str,
+    archive_transaction_id: str,
+    output_base_name: str,
+    directory_name: str,
+    archive_name: str,
+    staging_name: str,
+    journal_root_name: str,
+    transport: str,
+) -> dict[str, Any]:
+    return _journal_binding(
+        transaction_kind=transaction_kind,
+        transaction_id=transaction_id,
+        archive_transaction_id=archive_transaction_id,
+        output_base_name=output_base_name,
+        directory_name=directory_name,
+        archive_name=archive_name,
+        staging_name=staging_name,
+        journal_root_name=journal_root_name,
+        configuration_identity=metadata["configuration_identity"],
+        semantic_root=metadata["semantic_root"],
+        semantic_authority_identity=metadata["semantic_authority_identity"],
+        behavioral_policy_identity=metadata["behavioral_policy_identity"],
+        ordered_record_sequence_digest=metadata["ordered_record_sequence_digest"],
+        record_count=metadata["record_count"],
+        shard_count=metadata["shard_count"],
+        shard_capacity=metadata["shard_capacity"],
+        transport=transport,
+    )
+
+
+def _require_binding_match(
+    actual: Mapping[str, Any], expected: Mapping[str, Any], *, label: str
+) -> None:
+    if dict(actual) != dict(expected):
+        mismatched = sorted(
+            key
+            for key in set(actual) | set(expected)
+            if actual.get(key) != expected.get(key)
+        )
+        raise ValueError(f"v3_private_binding_mismatch:{label}:{','.join(mismatched)}")
+
+
+def _cleanup_private_state(
+    journal_root: Path,
+    staging_paths: Path | tuple[Path, ...],
+    *,
+    publication_hook: PublicationHook | None = None,
+) -> None:
+    paths = (staging_paths,) if isinstance(staging_paths, Path) else staging_paths
+    seen: set[Path] = set()
+    for staging in paths:
+        if staging in seen:
+            continue
+        seen.add(staging)
+        if staging.exists():
+            if staging.is_dir():
+                shutil.rmtree(staging)
+            else:
+                staging.unlink()
+    _fsync_directory(journal_root.parent)
+    _publication_event(publication_hook, "CLEANUP_after_staging_removed")
+    if journal_root.exists():
+        if journal_root.is_dir():
+            shutil.rmtree(journal_root)
+        else:
+            journal_root.unlink()
+    _fsync_directory(journal_root.parent)
+    _publication_event(publication_hook, "CLEANUP_after_journal_removed")
+
+
 def _journal_state(
     *,
     transaction_id: str,
     authority: str,
+    configuration_identity: str,
     state: str,
     receipts: tuple[dict[str, Any], ...],
     completion: bool = False,
@@ -595,7 +910,7 @@ def _journal_state(
 ) -> JournalStateV3:
     return JournalStateV3(
         transaction_id=transaction_id,
-        configuration_identity=V3_SCHEMA,
+        configuration_identity=configuration_identity,
         semantic_authority_identity=authority,
         state=state,
         sealed_shards=receipts,
@@ -629,7 +944,30 @@ def publish_v3_from_handoff(
         )
     )
     transaction_id = str(uuid.uuid4())
+    archive_transaction_id = transaction_id + ":archive"
+    authority_identity = digest(DOMAIN_LABELS["semantic_authority"], handoff.authority)
+    policy_identity = digest(DOMAIN_LABELS["behavioral_policy"], handoff.policy)
+    configuration_identity = _publication_configuration_identity(
+        record_count=len(handoff.records), shard_capacity=handoff.shard_capacity
+    )
+    directory_binding = _journal_binding(
+        transaction_kind="directory",
+        transaction_id=transaction_id,
+        archive_transaction_id=archive_transaction_id,
+        output_base_name=output_base.name,
+        directory_name=directory.name,
+        archive_name=archive.name,
+        staging_name=staging.name,
+        journal_root_name=journal_root.name,
+        configuration_identity=configuration_identity,
+        semantic_authority_identity=authority_identity,
+        behavioral_policy_identity=policy_identity,
+        record_count=len(handoff.records),
+        shard_capacity=handoff.shard_capacity,
+        transport="directory",
+    )
     preserve_private_state = False
+    private_state_cleaned = False
     archive_transaction_started = False
     try:
         root = staging / "package"
@@ -637,15 +975,26 @@ def publish_v3_from_handoff(
             _journal_path(journal_root),
             _journal_state(
                 transaction_id=transaction_id,
-                authority=digest(
-                    DOMAIN_LABELS["semantic_authority"], handoff.authority
-                ),
+                authority=authority_identity,
+                configuration_identity=configuration_identity,
                 state="OPEN",
                 receipts=(),
             ),
+            binding=directory_binding,
         )
         _publication_event(publication_hook, "PC39_before_shard_sealing")
         semantic, authority, policy, shards = _write_package(root, handoff, "directory")
+        directory_binding.update(
+            {
+                "behavioral_policy_identity": policy,
+                "ordered_record_sequence_digest": record_sequence_digest(
+                    handoff.records, selection_indexes=handoff.selection_indexes
+                ),
+                "semantic_authority_identity": authority,
+                "semantic_root": semantic,
+                "shard_count": shards,
+            }
+        )
         _publication_event(publication_hook, "PC40_after_shard_bytes_durable")
         receipts = _sealed_receipts(root)
         _write_journal(
@@ -653,9 +1002,11 @@ def publish_v3_from_handoff(
             _journal_state(
                 transaction_id=transaction_id,
                 authority=authority,
+                configuration_identity=configuration_identity,
                 state="SEALING",
                 receipts=receipts,
             ),
+            binding=directory_binding,
         )
         _publication_event(publication_hook, "PC41_after_receipt_durable")
         _write_journal(
@@ -663,9 +1014,11 @@ def publish_v3_from_handoff(
             _journal_state(
                 transaction_id=transaction_id,
                 authority=authority,
+                configuration_identity=configuration_identity,
                 state="OPEN",
                 receipts=receipts,
             ),
+            binding=directory_binding,
         )
         _publication_event(publication_hook, "PC42_after_range_commit")
         _write_journal(
@@ -673,10 +1026,12 @@ def publish_v3_from_handoff(
             _journal_state(
                 transaction_id=transaction_id,
                 authority=authority,
+                configuration_identity=configuration_identity,
                 state="COMPLETE_INTENT",
                 receipts=receipts,
                 completion=True,
             ),
+            binding=directory_binding,
         )
         _publication_event(publication_hook, "PC43_after_completion_intent")
         _write_journal(
@@ -684,10 +1039,12 @@ def publish_v3_from_handoff(
             _journal_state(
                 transaction_id=transaction_id,
                 authority=authority,
+                configuration_identity=configuration_identity,
                 state="PROMOTING",
                 receipts=receipts,
                 completion=True,
             ),
+            binding=directory_binding,
         )
         _publication_event(publication_hook, "PC44_after_promotion_intent")
         validate_tome_artifact_v3(root)
@@ -701,34 +1058,47 @@ def publish_v3_from_handoff(
             _journal_state(
                 transaction_id=transaction_id,
                 authority=authority,
+                configuration_identity=configuration_identity,
                 state="PROMOTED",
                 receipts=receipts,
                 completion=True,
                 promoted=True,
             ),
+            binding=directory_binding,
         )
         _publication_event(publication_hook, "PC47_after_completion_marker")
         archive_receipts = receipts
-        archive_transaction_id = transaction_id + ":archive"
         archive_transaction_started = True
-        _write_journal(
-            _journal_path(journal_root, "archive"),
-            _journal_state(
-                transaction_id=archive_transaction_id,
-                authority=authority,
-                state="OPEN",
-                receipts=(),
-            ),
+        archive_binding = dict(directory_binding)
+        archive_binding.update(
+            {
+                "transaction_id": archive_transaction_id,
+                "transaction_kind": "archive",
+                "transport": "tgz",
+            }
         )
         _write_journal(
             _journal_path(journal_root, "archive"),
             _journal_state(
                 transaction_id=archive_transaction_id,
                 authority=authority,
+                configuration_identity=configuration_identity,
+                state="OPEN",
+                receipts=(),
+            ),
+            binding=archive_binding,
+        )
+        _write_journal(
+            _journal_path(journal_root, "archive"),
+            _journal_state(
+                transaction_id=archive_transaction_id,
+                authority=authority,
+                configuration_identity=configuration_identity,
                 state="COMPLETE_INTENT",
                 receipts=archive_receipts,
                 completion=True,
             ),
+            binding=archive_binding,
         )
         _publication_event(publication_hook, "ARCHIVE_after_completion_intent")
         _write_journal(
@@ -736,10 +1106,12 @@ def publish_v3_from_handoff(
             _journal_state(
                 transaction_id=archive_transaction_id,
                 authority=authority,
+                configuration_identity=configuration_identity,
                 state="PROMOTING",
                 receipts=archive_receipts,
                 completion=True,
             ),
+            binding=archive_binding,
         )
         _publication_event(publication_hook, "ARCHIVE_after_promotion_intent")
         with tempfile.NamedTemporaryFile(
@@ -782,13 +1154,21 @@ def publish_v3_from_handoff(
             _journal_state(
                 transaction_id=archive_transaction_id,
                 authority=authority,
+                configuration_identity=configuration_identity,
                 state="PROMOTED",
                 receipts=archive_receipts,
                 completion=True,
                 promoted=True,
             ),
+            binding=archive_binding,
         )
         _publication_event(publication_hook, "ARCHIVE_after_completion_marker")
+        _cleanup_private_state(
+            journal_root,
+            staging,
+            publication_hook=publication_hook,
+        )
+        private_state_cleaned = True
         return V3Publication(
             directory,
             archive,
@@ -811,9 +1191,8 @@ def publish_v3_from_handoff(
             ) from exc
         raise
     finally:
-        if not preserve_private_state:
-            shutil.rmtree(staging, ignore_errors=True)
-            shutil.rmtree(journal_root, ignore_errors=True)
+        if not preserve_private_state and not private_state_cleaned:
+            _cleanup_private_state(journal_root, staging)
 
 
 def pack_v3_rtome(directory: Path, output: Path) -> Path:
@@ -867,70 +1246,223 @@ def pack_v3_rtome(directory: Path, output: Path) -> Path:
 
 
 def resume_v3_archive_from_directory(directory: Path, output: Path) -> Path:
-    """Retry only the archive transaction after a promoted directory exists.
-
-    The directory is standard-validated before it is copied.  The retry never
-    reads legacy output files or private journals and never replaces an
-    existing archive.  A caller can therefore recover a directory/archive
-    partial publication without re-running score, selection, or assembly.
-    """
+    """Validate private state, then recover or complete archive publication."""
 
     directory = Path(directory)
     output = Path(output)
-    if not directory.is_dir() or output.exists():
+    if not directory.is_dir():
         raise ValueError("v3_archive_resume_target_invalid")
-    validate_tome_artifact_v3(directory)
-    semantic_identity = json.loads(
-        (directory / "provenance/semantic-identity.json").read_text(encoding="utf-8")
-    )
-    authority_identity = semantic_identity["semantic_authority_identity"]
     output.parent.mkdir(parents=True, exist_ok=True)
+    metadata = _artifact_public_metadata(directory)
     base_name = (
         output.name[: -len(".v3.tgz")]
         if output.name.endswith(".v3.tgz")
         else output.stem
     )
-    existing_journals = sorted(
+    candidates = sorted(
         path
         for path in output.parent.iterdir()
         if path.name.startswith(f".{base_name}.v3-journal-")
     )
-    if len(existing_journals) > 1:
+    if len(candidates) > 1:
         raise ValueError("v3_archive_resume_multiple_journals")
-    journal_root = (
-        existing_journals[0]
-        if existing_journals
-        else Path(
+
+    journal_root = candidates[0] if candidates else None
+    directory_state: JournalStateV3 | None = None
+    archive_state: JournalStateV3 | None = None
+    original_staging: Path | None = None
+    if journal_root is not None:
+        if not journal_root.is_dir():
+            raise ValueError("v3_private_journal_root_invalid")
+        if {item.name for item in journal_root.iterdir()} != {
+            "directory-journal.json",
+            "archive-journal.json",
+        }:
+            raise ValueError("v3_private_journal_objects_incomplete")
+        directory_state, directory_binding = _read_journal(_journal_path(journal_root))
+        archive_state, archive_binding = _read_journal(
+            _journal_path(journal_root, "archive")
+        )
+        if directory_binding["journal_root_name"] != journal_root.name:
+            raise ValueError("v3_private_journal_root_binding_mismatch")
+        if directory_binding["directory_name"] != directory.name:
+            raise ValueError("v3_private_directory_binding_mismatch")
+        if directory_binding["archive_name"] != output.name:
+            raise ValueError("v3_private_archive_binding_mismatch")
+        if directory_binding["output_base_name"] != base_name:
+            raise ValueError("v3_private_output_base_binding_mismatch")
+        if directory_binding["transaction_kind"] != "directory":
+            raise ValueError("v3_private_directory_transaction_kind")
+        if directory_state.state != "PROMOTED" or not directory_state.promotion_marker:
+            raise ValueError("v3_private_directory_not_promoted")
+        if tuple(directory_state.sealed_shards) != metadata["receipts"]:
+            raise ValueError("v3_private_directory_receipts_mismatch")
+        expected_directory = _expected_binding(
+            metadata,
+            transaction_kind="directory",
+            transaction_id=directory_binding["transaction_id"],
+            archive_transaction_id=directory_binding["archive_transaction_id"],
+            output_base_name=directory_binding["output_base_name"],
+            directory_name=directory.name,
+            archive_name=output.name,
+            staging_name=directory_binding["staging_name"],
+            journal_root_name=journal_root.name,
+            transport="directory",
+        )
+        _require_binding_match(directory_binding, expected_directory, label="directory")
+        if archive_binding["transaction_kind"] != "archive":
+            raise ValueError("v3_private_archive_transaction_kind")
+        if (
+            archive_binding["transaction_id"]
+            != directory_binding["archive_transaction_id"]
+        ):
+            raise ValueError("v3_private_archive_transaction_binding_mismatch")
+        expected_archive = _expected_binding(
+            metadata,
+            transaction_kind="archive",
+            transaction_id=archive_binding["transaction_id"],
+            archive_transaction_id=directory_binding["archive_transaction_id"],
+            output_base_name=directory_binding["output_base_name"],
+            directory_name=directory.name,
+            archive_name=output.name,
+            staging_name=directory_binding["staging_name"],
+            journal_root_name=journal_root.name,
+            transport="tgz",
+        )
+        _require_binding_match(archive_binding, expected_archive, label="archive")
+        staging_name = directory_binding["staging_name"]
+        if (
+            not isinstance(staging_name, str)
+            or Path(staging_name).name != staging_name
+            or not staging_name.startswith(f".{base_name}.v3-")
+        ):
+            raise ValueError("v3_private_staging_binding_invalid")
+        original_staging = output.parent / staging_name
+        if archive_state.state == "PROMOTED" and not output.exists():
+            raise ValueError("v3_private_archive_marker_without_archive")
+        if archive_state.state == "OPEN" and output.exists():
+            raise ValueError("v3_private_archive_visible_before_promotion")
+        if archive_state.state == "OPEN" and archive_state.sealed_shards:
+            raise ValueError("v3_private_archive_receipts_mismatch")
+        if (
+            archive_state.state != "OPEN"
+            and tuple(archive_state.sealed_shards) != metadata["receipts"]
+        ):
+            raise ValueError("v3_private_archive_receipts_mismatch")
+    else:
+        # A validated public directory may be repacked independently after its
+        # original private transaction has been cleaned up.
+        transaction_id = f"directory-promoted:{metadata['semantic_root']}"
+        archive_transaction_id = transaction_id + ":archive"
+        journal_root = None
+        archive_binding = None
+
+    if output.exists():
+        archive_metadata = _artifact_public_metadata(output)
+        for key in (
+            "semantic_root",
+            "semantic_authority_identity",
+            "behavioral_policy_identity",
+            "ordered_record_sequence_digest",
+            "record_count",
+            "shard_count",
+        ):
+            if archive_metadata[key] != metadata[key]:
+                raise ValueError("v3_conflicting_existing_archive")
+        if journal_root is not None:
+            assert archive_state is not None and archive_binding is not None
+            _write_journal(
+                _journal_path(journal_root, "archive"),
+                _journal_state(
+                    transaction_id=archive_binding["transaction_id"],
+                    authority=metadata["semantic_authority_identity"],
+                    configuration_identity=metadata["configuration_identity"],
+                    state="PROMOTED",
+                    receipts=metadata["receipts"],
+                    completion=True,
+                    promoted=True,
+                ),
+                binding=archive_binding,
+            )
+            _cleanup_private_state(journal_root, original_staging or ())
+        return output
+
+    # No private state means a new archive transaction.  Existing journal
+    # state was fully checked above, so the only writes below are legal state
+    # transitions through the released Contract API.
+    if journal_root is None:
+        journal_root = Path(
             tempfile.mkdtemp(prefix=f".{base_name}.v3-journal-", dir=output.parent)
         )
-    )
-    transaction_id = str(uuid.uuid4()) + ":archive-resume"
-    receipts = _sealed_receipts(directory)
-    for state, completion in (
-        ("OPEN", False),
-        ("COMPLETE_INTENT", True),
-        ("PROMOTING", True),
-    ):
+        build_staging = Path(
+            tempfile.mkdtemp(prefix=f".{base_name}.v3-archive-", dir=output.parent)
+        )
+        archive_binding = _expected_binding(
+            metadata,
+            transaction_kind="archive",
+            transaction_id=archive_transaction_id,
+            archive_transaction_id=archive_transaction_id,
+            output_base_name=base_name,
+            directory_name=directory.name,
+            archive_name=output.name,
+            staging_name=build_staging.name,
+            journal_root_name=journal_root.name,
+            transport="tgz",
+        )
         _write_journal(
             _journal_path(journal_root, "archive"),
             _journal_state(
-                transaction_id=transaction_id,
-                authority=authority_identity,
-                state=state,
-                receipts=receipts if completion else (),
-                completion=completion,
+                transaction_id=archive_transaction_id,
+                authority=metadata["semantic_authority_identity"],
+                configuration_identity=metadata["configuration_identity"],
+                state="OPEN",
+                receipts=(),
             ),
+            binding=archive_binding,
         )
-    completed = False
-    staging = Path(
-        tempfile.mkdtemp(prefix=".radjax-tome-v3-archive-resume-", dir=output.parent)
+    else:
+        assert archive_binding is not None and archive_state is not None
+        if archive_state.state not in {"OPEN", "COMPLETE_INTENT", "PROMOTING"}:
+            raise ValueError("v3_private_archive_state_not_resumable")
+        build_staging = Path(
+            tempfile.mkdtemp(
+                prefix=f".{base_name}.v3-archive-resume-", dir=output.parent
+            )
+        )
+
+    assert archive_binding is not None and journal_root is not None
+    receipts = metadata["receipts"]
+    if archive_state is None or archive_state.state == "OPEN":
+        _write_journal(
+            _journal_path(journal_root, "archive"),
+            _journal_state(
+                transaction_id=archive_binding["transaction_id"],
+                authority=metadata["semantic_authority_identity"],
+                configuration_identity=metadata["configuration_identity"],
+                state="COMPLETE_INTENT",
+                receipts=receipts,
+                completion=True,
+            ),
+            binding=archive_binding,
+        )
+    _write_journal(
+        _journal_path(journal_root, "archive"),
+        _journal_state(
+            transaction_id=archive_binding["transaction_id"],
+            authority=metadata["semantic_authority_identity"],
+            configuration_identity=metadata["configuration_identity"],
+            state="PROMOTING",
+            receipts=receipts,
+            completion=True,
+        ),
+        binding=archive_binding,
     )
     archive_tmp: Path | None = None
     try:
-        root = staging / "package"
+        root = build_staging / "package"
         shutil.copytree(directory, root)
         cover_path = root / "cover_page.json"
-        cover = json.loads(cover_path.read_text(encoding="utf-8"))
+        cover = _read_json_object(cover_path)
         cover["package"]["transport"] = "tgz"
         _fsync_bytes(cover_path, _raw(cover))
         with tempfile.NamedTemporaryFile(
@@ -948,26 +1480,36 @@ def resume_v3_archive_from_directory(directory: Path, output: Path) -> Path:
         validate_tome_artifact_v3(archive_tmp)
         _rename_noreplace(archive_tmp, output)
         _fsync_directory(output.parent)
-        validate_tome_artifact_v3(output)
+        archive_metadata = _artifact_public_metadata(output)
+        if archive_metadata["semantic_root"] != metadata["semantic_root"]:
+            raise ValueError("v3_archive_semantic_root_mismatch")
         _write_journal(
             _journal_path(journal_root, "archive"),
             _journal_state(
-                transaction_id=transaction_id,
-                authority=authority_identity,
+                transaction_id=archive_binding["transaction_id"],
+                authority=metadata["semantic_authority_identity"],
+                configuration_identity=metadata["configuration_identity"],
                 state="PROMOTED",
                 receipts=receipts,
                 completion=True,
                 promoted=True,
             ),
+            binding=archive_binding,
         )
-        completed = True
+        _cleanup_private_state(
+            journal_root,
+            tuple(
+                path for path in (original_staging, build_staging) if path is not None
+            ),
+        )
         return output
     finally:
         if archive_tmp is not None:
             archive_tmp.unlink(missing_ok=True)
-        shutil.rmtree(staging, ignore_errors=True)
-        if completed:
-            shutil.rmtree(journal_root, ignore_errors=True)
+        if journal_root.exists():
+            # Preserve validated original state for retry; the fresh build
+            # directory is disposable after any failed attempt.
+            shutil.rmtree(build_staging, ignore_errors=True)
 
 
 __all__ = [
