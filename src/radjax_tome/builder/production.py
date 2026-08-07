@@ -905,7 +905,11 @@ def _native_final_reporting_operation(state: _ProductionRunState, inputs: Any) -
                     snapshot_finalized_handoff,
                 )
 
-                handoff = snapshot_finalized_handoff(prepared, context)
+                handoff = snapshot_finalized_handoff(
+                    prepared,
+                    context,
+                    source_config=config,
+                )
                 publication = publish_v3_from_handoff(handoff, config.output_dir)
                 report["canonical_tome_schema_version"] = "radjax_tome_cover_v5"
                 report["canonical_tome_directory"] = str(publication.directory)

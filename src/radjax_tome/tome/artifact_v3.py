@@ -160,6 +160,10 @@ def _closed_record(
         "source_row": int(payload_ref["source_row"]),
         "source_position": int(payload_ref["source_position"]),
     }
+    if "corridor_mode_id" in merged and not isinstance(
+        merged["corridor_mode_id"], str
+    ):
+        merged["corridor_mode_id"] = str(merged["corridor_mode_id"])
     missing = sorted(RECORD_FIELDS - set(merged))
     if missing:
         raise ValueError("v3_record_fields_missing:" + ",".join(missing))
@@ -227,11 +231,17 @@ def _manifest_hash(path: Path) -> str:
 
 
 def snapshot_finalized_handoff(
-    prepared: Any, context: Mapping[str, Any]
+    prepared: Any,
+    context: Mapping[str, Any],
+    *,
+    source_config: Any | None = None,
 ) -> FinalizedV3Handoff:
     if prepared is None or not getattr(prepared, "selected_records", None):
         raise ValueError("v3_requires_finalized_selected_records")
-    payloads = list(getattr(prepared, "selected_payloads", ()))
+    payloads = list(
+        getattr(prepared, "publication_payloads", None)
+        or getattr(prepared, "selected_payloads", ())
+    )
     records = list(getattr(prepared, "selected_records", ()))
     if len(records) != len(payloads):
         raise ValueError("v3_record_payload_count_mismatch")
@@ -245,7 +255,10 @@ def snapshot_finalized_handoff(
     )
     if indexes != tuple(range(len(records))):
         raise ValueError("v3_selection_order_not_contiguous")
-    authority, policy = _authority_and_policy(prepared.config, context)
+    authority, policy = _authority_and_policy(
+        source_config or prepared.config,
+        context,
+    )
     return FinalizedV3Handoff(
         projected,
         authority,

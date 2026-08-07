@@ -50,3 +50,9 @@ The v3 projection consumes the finalized typed selected-record handoff after
 late corridor linkage. It does not reread emitted v4/staging files, repeat
 score or selection logic, alter fixed 25-field authority projections, change
 historical v2/v4/v5/v6 paths, or make a performance claim.
+
+For explicit v3 production, the handoff retains the already-materialized closed
+selected payload values long enough for the v3 projection. This is a typed
+handoff extension of the same selected-rerun owner, enabled only for v3; it is
+not a second selection or assembly path and it does not reread the staged JSON
+files. The v2 path retains its prior summary-only behavior.

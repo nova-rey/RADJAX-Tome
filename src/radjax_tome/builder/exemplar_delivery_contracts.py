@@ -90,6 +90,7 @@ class ExemplarDeliveryConfig:
     execution_mode: str = "legacy_delivery_v1"
     rerun_metrics: dict[str, Any] | None = None
     delivery_authority_hash: str | None = None
+    retain_full_payloads_for_publication: bool = False
 
 
 @dataclass(frozen=True)
@@ -117,3 +118,4 @@ class PreparedSelectedDelivery:
     selected_dir: Path
     curriculum_dir: Path
     corridor_result: CorridorArtifactBuildResult | None = None
+    publication_payloads: tuple[dict[str, Any], ...] | None = None

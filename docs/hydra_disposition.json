@@ -100,6 +100,14 @@
         "replacement_or_target_boundary": "Program-C v3 transaction recovery conformance.",
         "status": "canonical"
       },
+      "tests/test_tome_v3_canonical_production.py": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "test",
+        "owning_milestone": "Program-C",
+        "rationale": "Proves opt-in v3 emission through the canonical production state machine and both transports.",
+        "replacement_or_target_boundary": "Program-C canonical v3 production conformance.",
+        "status": "canonical"
+      },
     "cli:allocate-fingerprint-corridor-coverage": {
       "archive_or_removal_condition": "M2 parity and M3 archive pointer.",
       "kind": "public-cli-command",

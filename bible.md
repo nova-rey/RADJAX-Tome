@@ -2853,3 +2853,12 @@ are separate private journaled transactions using the released Contract state
 machine; each validates before promotion and records no journal state in public
 artifacts. The v2 default, historical v4/v5/v6 paths, Student, Golden data,
 M8, and M9 remain unchanged.
+
+## 2026-08-06 — Program C v3 Finalized Payload Handoff
+
+Canonical opt-in v3 publication now receives the complete already-materialized
+selected payload values through a typed extension of the existing finalized
+handoff. It does not reread staged or v4 files, repeat score/selection logic, or
+alter the v2 summary-only default path. The handoff also carries the existing
+selection-authority identity explicitly; all Contract v3 validation remains
+owned by the released Contract.

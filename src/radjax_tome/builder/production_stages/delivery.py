@@ -95,6 +95,7 @@ def exemplar_delivery_config(
         ),
         rerun_metrics={},
         delivery_authority_hash=delivery_authority_hash,
+        retain_full_payloads_for_publication=(config.artifact_contract_version == "v3"),
     )
 
 
