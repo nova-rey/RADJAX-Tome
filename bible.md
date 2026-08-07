@@ -2903,3 +2903,10 @@ The source-bound Ruff format gate was applied to the v3 configuration adapter,
 Contract pin test, and Hydra inventory test. The changes are formatting-only;
 the v3 handoff, default v2 behavior, historical compatibility, and all artifact
 identities remain unchanged.
+
+## 2026-08-06 — Program C v3 `.rtome` Transport Proof
+
+The adopted v3 path now provides a transport-only wrapper for an already
+promoted v3 directory and proves Contract acceptance of `.rtome`. It does not
+emit an additional canonical sibling or construct a second semantic package;
+directory and `.tgz` remain the canonical publication outputs.

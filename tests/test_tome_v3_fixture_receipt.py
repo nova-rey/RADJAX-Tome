@@ -17,7 +17,11 @@ from radjax_contract.tome.v3 import (
 )
 from radjax_contract.tome.v3.issues import TomeV3ValidationError
 
-from radjax_tome.tome.artifact_v3 import FinalizedV3Handoff, publish_v3_from_handoff
+from radjax_tome.tome.artifact_v3 import (
+    FinalizedV3Handoff,
+    pack_v3_rtome,
+    publish_v3_from_handoff,
+)
 
 FIXTURE = Path("tests/fixtures/tome_artifact_v3_smoke")
 DIRECTORY = FIXTURE / "artifact.v3"
@@ -82,6 +86,18 @@ def test_fixture_directory_archive_governed_external_and_receipt() -> None:
         assert report.status == "verified"
     receipt = validate_archive_receipt_v3(ARCHIVE, RECEIPT)
     assert receipt.matches
+
+
+def test_fixture_rtome_transport_is_accepted(tmp_path: Path) -> None:
+    rtome = pack_v3_rtome(DIRECTORY, tmp_path / "artifact.rtome")
+    report = validate_tome_artifact_v3(rtome)
+    assert report.transport == "rtome"
+    assert (
+        report.semantic_root
+        == json.loads((DIRECTORY / "provenance/semantic-identity.json").read_text())[
+            "semantic_root"
+        ]
+    )
 
 
 def test_fixture_raw_and_graph_corruption_are_rejected(tmp_path: Path) -> None:

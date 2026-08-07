@@ -648,9 +648,45 @@ def publish_v3_from_handoff(
         shutil.rmtree(journal_root, ignore_errors=True)
 
 
+def pack_v3_rtome(directory: Path, output: Path) -> Path:
+    """Pack an already-promoted v3 directory into the accepted `.rtome` transport.
+
+    This is a transport wrapper only: it does not construct a second semantic
+    package, emit a canonical sibling, or alter any inventoried member bytes.
+    The cover transport declaration is the sole nonsemantic packaging change.
+    """
+
+    directory = Path(directory)
+    output = Path(output)
+    if output.suffix != ".rtome" or not directory.is_dir() or output.exists():
+        raise ValueError("v3_rtome_transport_target_invalid")
+    staging = Path(tempfile.mkdtemp(prefix=".radjax-tome-v3-rtome-"))
+    try:
+        root = staging / "package"
+        shutil.copytree(directory, root)
+        cover_path = root / "cover_page.json"
+        cover = json.loads(cover_path.read_text(encoding="utf-8"))
+        cover["package"]["transport"] = "rtome"
+        _fsync_bytes(cover_path, _raw(cover))
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with tarfile.open(output, "w") as archive:
+            for path in sorted(root.rglob("*")):
+                if path.is_file():
+                    archive.add(
+                        path,
+                        arcname=path.relative_to(root).as_posix(),
+                        recursive=False,
+                    )
+        validate_tome_artifact_v3(output)
+        return output
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+
+
 __all__ = [
     "FinalizedV3Handoff",
     "V3Publication",
     "snapshot_finalized_handoff",
     "publish_v3_from_handoff",
+    "pack_v3_rtome",
 ]

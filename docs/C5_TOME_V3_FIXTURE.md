@@ -62,6 +62,7 @@ not present in either artifact or in the public receipt.
 `tests/test_tome_v3_fixture_receipt.py` proves:
 
 * standard validation of directory and `.tgz` transports;
+* accepted `.rtome` transport wrapping of the already-promoted v3 directory;
 * governed success with the external expected root;
 * required external-attestation success and rejection of evidence supplied from
   inside the artifact;
