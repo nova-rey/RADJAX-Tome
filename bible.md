@@ -2911,6 +2911,16 @@ promoted v3 directory and proves Contract acceptance of `.rtome`. It does not
 emit an additional canonical sibling or construct a second semantic package;
 directory and `.tgz` remain the canonical publication outputs.
 
+## 2026-08-06 — Program C Transactional Publication Hardening
+
+The opt-in v3 publisher now separates directory and archive journal receipts,
+seals bytes before receipt commits, validates archive candidates before public
+visibility, uses deterministic transport metadata, refuses stale private
+transactions, and exposes bounded PC39–PC47 fault-injection boundaries. A
+promoted directory can be resumed into an independently validated archive;
+the pair is never reported as atomically visible. The v2 default and all
+historical paths remain unchanged.
+
 ## 2026-08-06 — Program C Released Contract Parity Evidence
 
 The v3 adoption branch now records sanitized release receipt and asset-hash

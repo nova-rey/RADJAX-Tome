@@ -6,6 +6,7 @@ parses the legacy selected-record files to reconstruct v3 semantics.
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import os
@@ -13,7 +14,7 @@ import shutil
 import tarfile
 import tempfile
 import uuid
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -64,6 +65,30 @@ class V3Publication:
     layout: str = SEMANTIC_PROFILE_ID
 
 
+class V3ArchivePublicationError(RuntimeError):
+    """Directory promotion succeeded but archive promotion did not."""
+
+    def __init__(self, message: str, *, directory: Path, archive: Path):
+        super().__init__(message)
+        self.directory = directory
+        self.archive = archive
+        self.directory_promoted = directory.exists()
+        self.archive_promoted = archive.exists()
+
+
+class V3PublicationCrash(RuntimeError):
+    """Test-only interruption which deliberately preserves private state.
+
+    A real process crash does not execute Python ``finally`` cleanup.  The
+    publisher exposes this narrow fault-injection exception so conformance
+    tests can inspect the same durable staging/journal boundary without
+    terminating the test runner.
+    """
+
+
+PublicationHook = Callable[[str], None]
+
+
 def _raw(value: Any, *, jsonl: bool = False) -> bytes:
     encoded = json.dumps(
         value,
@@ -98,6 +123,87 @@ def _fsync_directory(path: Path) -> None:
         os.fsync(descriptor)
     finally:
         os.close(descriptor)
+
+
+def _rename_noreplace(source: Path, target: Path) -> None:
+    """Publish on one filesystem without intentionally replacing a target.
+
+    Directory rename has no portable no-replace primitive in Python.  The
+    explicit existence check plus same-filesystem rename is therefore a
+    required capability boundary: callers fail closed when the destination is
+    already visible rather than replacing it.  Regular archive files use a
+    hard-link promotion, which is atomic and no-replace on POSIX filesystems.
+    """
+
+    lock = target.with_name(f".{target.name}.v3-lock")
+    try:
+        descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError as exc:
+        raise ValueError("v3_publication_lock_present") from exc
+    try:
+        if os.path.lexists(target):
+            raise FileExistsError(target)
+        if source.is_file():
+            try:
+                os.link(source, target)
+            except (FileExistsError, OSError) as exc:
+                if isinstance(exc, FileExistsError) or os.path.lexists(target):
+                    raise FileExistsError(target) from exc
+                raise RuntimeError("v3_no_replace_file_promotion_unavailable") from exc
+            source.unlink()
+            return
+        os.rename(source, target)
+    finally:
+        os.close(descriptor)
+        lock.unlink(missing_ok=True)
+
+
+def _private_transaction_prefixes(output_base: Path) -> tuple[str, str]:
+    return (
+        f".{output_base.name}.v3",
+        f".{output_base.name}.v3-journal",
+    )
+
+
+def _reject_stale_private_transactions(output_base: Path) -> None:
+    """Refuse to start over while an earlier interrupted transaction remains.
+
+    The private state is intentionally not guessed at or deleted.  A caller
+    must inspect/quarantine it or use the explicit archive-resume helper.  This
+    prevents a new run from mixing authorities or accepting an unreceipted
+    shard left by an earlier process.
+    """
+
+    prefixes = _private_transaction_prefixes(output_base)
+    stale = sorted(
+        path for path in output_base.parent.iterdir() if path.name.startswith(prefixes)
+    )
+    if stale:
+        names = ",".join(path.name for path in stale)
+        raise ValueError("v3_stale_private_transaction_present:" + names)
+
+
+def _publication_event(hook: PublicationHook | None, event: str) -> None:
+    if hook is not None:
+        hook(event)
+
+
+def _tar_add_deterministic(tar: tarfile.TarFile, root: Path) -> None:
+    """Add regular members with stable transport metadata and ordering."""
+
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(root).as_posix()
+        info = tar.gettarinfo(str(path), arcname=relative)
+        info.uid = 0
+        info.gid = 0
+        info.uname = ""
+        info.gname = ""
+        info.mtime = 0
+        info.mode = 0o644
+        with path.open("rb") as handle:
+            tar.addfile(info, handle)
 
 
 def _ref(
@@ -435,8 +541,10 @@ def _write_package(
     )
 
 
-def _journal_path(root: Path) -> Path:
-    return root / "journal.json"
+def _journal_path(root: Path, transaction: str = "directory") -> Path:
+    """Return a private journal path for one independent publication."""
+
+    return root / f"{transaction}-journal.json"
 
 
 def _write_journal(path: Path, state: JournalStateV3) -> None:
@@ -500,12 +608,16 @@ def _journal_state(
 
 
 def publish_v3_from_handoff(
-    handoff: FinalizedV3Handoff, output_base: Path
+    handoff: FinalizedV3Handoff,
+    output_base: Path,
+    *,
+    publication_hook: PublicationHook | None = None,
 ) -> V3Publication:
     output_base = Path(output_base)
     output_base.parent.mkdir(parents=True, exist_ok=True)
     directory = output_base.with_name(output_base.name + ".v3")
     archive = output_base.with_name(output_base.name + ".v3.tgz")
+    _reject_stale_private_transactions(output_base)
     if directory.exists() or archive.exists():
         raise ValueError("v3_publication_target_exists")
     staging = Path(
@@ -517,19 +629,45 @@ def publish_v3_from_handoff(
         )
     )
     transaction_id = str(uuid.uuid4())
+    preserve_private_state = False
+    archive_transaction_started = False
     try:
         root = staging / "package"
+        _write_journal(
+            _journal_path(journal_root),
+            _journal_state(
+                transaction_id=transaction_id,
+                authority=digest(
+                    DOMAIN_LABELS["semantic_authority"], handoff.authority
+                ),
+                state="OPEN",
+                receipts=(),
+            ),
+        )
+        _publication_event(publication_hook, "PC39_before_shard_sealing")
         semantic, authority, policy, shards = _write_package(root, handoff, "directory")
+        _publication_event(publication_hook, "PC40_after_shard_bytes_durable")
         receipts = _sealed_receipts(root)
         _write_journal(
             _journal_path(journal_root),
             _journal_state(
                 transaction_id=transaction_id,
                 authority=authority,
-                state="OPEN",
-                receipts=(),
+                state="SEALING",
+                receipts=receipts,
             ),
         )
+        _publication_event(publication_hook, "PC41_after_receipt_durable")
+        _write_journal(
+            _journal_path(journal_root),
+            _journal_state(
+                transaction_id=transaction_id,
+                authority=authority,
+                state="OPEN",
+                receipts=receipts,
+            ),
+        )
+        _publication_event(publication_hook, "PC42_after_range_commit")
         _write_journal(
             _journal_path(journal_root),
             _journal_state(
@@ -540,6 +678,7 @@ def publish_v3_from_handoff(
                 completion=True,
             ),
         )
+        _publication_event(publication_hook, "PC43_after_completion_intent")
         _write_journal(
             _journal_path(journal_root),
             _journal_state(
@@ -550,9 +689,12 @@ def publish_v3_from_handoff(
                 completion=True,
             ),
         )
+        _publication_event(publication_hook, "PC44_after_promotion_intent")
         validate_tome_artifact_v3(root)
-        os.rename(root, directory)
+        _rename_noreplace(root, directory)
+        _publication_event(publication_hook, "PC45_after_target_visible")
         _fsync_directory(output_base.parent)
+        _publication_event(publication_hook, "PC46_after_atomic_rename")
         _write_journal(
             _journal_path(journal_root),
             _journal_state(
@@ -564,10 +706,12 @@ def publish_v3_from_handoff(
                 promoted=True,
             ),
         )
+        _publication_event(publication_hook, "PC47_after_completion_marker")
         archive_receipts = receipts
         archive_transaction_id = transaction_id + ":archive"
+        archive_transaction_started = True
         _write_journal(
-            _journal_path(journal_root),
+            _journal_path(journal_root, "archive"),
             _journal_state(
                 transaction_id=archive_transaction_id,
                 authority=authority,
@@ -576,7 +720,7 @@ def publish_v3_from_handoff(
             ),
         )
         _write_journal(
-            _journal_path(journal_root),
+            _journal_path(journal_root, "archive"),
             _journal_state(
                 transaction_id=archive_transaction_id,
                 authority=authority,
@@ -585,8 +729,9 @@ def publish_v3_from_handoff(
                 completion=True,
             ),
         )
+        _publication_event(publication_hook, "ARCHIVE_after_completion_intent")
         _write_journal(
-            _journal_path(journal_root),
+            _journal_path(journal_root, "archive"),
             _journal_state(
                 transaction_id=archive_transaction_id,
                 authority=authority,
@@ -595,6 +740,7 @@ def publish_v3_from_handoff(
                 completion=True,
             ),
         )
+        _publication_event(publication_hook, "ARCHIVE_after_promotion_intent")
         with tempfile.NamedTemporaryFile(
             prefix=f".{output_base.name}.v3-",
             suffix=".tgz",
@@ -608,23 +754,29 @@ def publish_v3_from_handoff(
             cover = json.loads((archive_root / "cover_page.json").read_text())
             cover["package"]["transport"] = "tgz"
             _fsync_bytes(archive_root / "cover_page.json", _raw(cover))
-            with tarfile.open(archive_tmp, "w:gz") as tar:
-                for path in sorted(archive_root.rglob("*")):
-                    if path.is_file():
-                        tar.add(
-                            path,
-                            arcname=path.relative_to(archive_root).as_posix(),
-                            recursive=False,
-                        )
-            if archive.exists():
-                raise ValueError("v3_archive_target_exists")
-            os.rename(archive_tmp, archive)
+            with archive_tmp.open("wb") as raw_archive:
+                with gzip.GzipFile(
+                    filename="",
+                    fileobj=raw_archive,
+                    mode="wb",
+                    compresslevel=9,
+                    mtime=0,
+                ) as compressed:
+                    with tarfile.open(fileobj=compressed, mode="w") as tar:
+                        _tar_add_deterministic(tar, archive_root)
+            with archive_tmp.open("rb") as handle:
+                os.fsync(handle.fileno())
+            # Validate the complete archive while it is still private.  A
+            # failed validator must never leave an invalid public archive.
+            validate_tome_artifact_v3(archive_tmp)
+            _rename_noreplace(archive_tmp, archive)
+            _publication_event(publication_hook, "ARCHIVE_after_target_visible")
             _fsync_directory(output_base.parent)
+            _publication_event(publication_hook, "ARCHIVE_after_atomic_rename")
         finally:
             archive_tmp.unlink(missing_ok=True)
-        validate_tome_artifact_v3(archive)
         _write_journal(
-            _journal_path(journal_root),
+            _journal_path(journal_root, "archive"),
             _journal_state(
                 transaction_id=archive_transaction_id,
                 authority=authority,
@@ -634,6 +786,7 @@ def publish_v3_from_handoff(
                 promoted=True,
             ),
         )
+        _publication_event(publication_hook, "ARCHIVE_after_completion_marker")
         return V3Publication(
             directory,
             archive,
@@ -643,9 +796,22 @@ def publish_v3_from_handoff(
             len(handoff.records),
             shards,
         )
+    except V3PublicationCrash:
+        preserve_private_state = True
+        raise
+    except Exception as exc:
+        if archive_transaction_started and directory.exists() and not archive.exists():
+            preserve_private_state = True
+            raise V3ArchivePublicationError(
+                "v3_archive_publication_failed_after_directory_promotion",
+                directory=directory,
+                archive=archive,
+            ) from exc
+        raise
     finally:
-        shutil.rmtree(staging, ignore_errors=True)
-        shutil.rmtree(journal_root, ignore_errors=True)
+        if not preserve_private_state:
+            shutil.rmtree(staging, ignore_errors=True)
+            shutil.rmtree(journal_root, ignore_errors=True)
 
 
 def pack_v3_rtome(directory: Path, output: Path) -> Path:
@@ -660,7 +826,9 @@ def pack_v3_rtome(directory: Path, output: Path) -> Path:
     output = Path(output)
     if output.suffix != ".rtome" or not directory.is_dir() or output.exists():
         raise ValueError("v3_rtome_transport_target_invalid")
-    staging = Path(tempfile.mkdtemp(prefix=".radjax-tome-v3-rtome-"))
+    output.parent.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=".radjax-tome-v3-rtome-", dir=output.parent))
+    archive_tmp: Path | None = None
     try:
         root = staging / "package"
         shutil.copytree(directory, root)
@@ -668,25 +836,145 @@ def pack_v3_rtome(directory: Path, output: Path) -> Path:
         cover = json.loads(cover_path.read_text(encoding="utf-8"))
         cover["package"]["transport"] = "rtome"
         _fsync_bytes(cover_path, _raw(cover))
-        output.parent.mkdir(parents=True, exist_ok=True)
-        with tarfile.open(output, "w") as archive:
-            for path in sorted(root.rglob("*")):
-                if path.is_file():
-                    archive.add(
-                        path,
-                        arcname=path.relative_to(root).as_posix(),
-                        recursive=False,
-                    )
+        with tempfile.NamedTemporaryFile(
+            prefix=f".{output.name}-", suffix=".rtome", dir=output.parent, delete=False
+        ) as handle:
+            archive_tmp = Path(handle.name)
+        with archive_tmp.open("wb") as raw_archive:
+            with tarfile.open(fileobj=raw_archive, mode="w") as archive:
+                _tar_add_deterministic(archive, root)
+            raw_archive.flush()
+            os.fsync(raw_archive.fileno())
+        validate_tome_artifact_v3(archive_tmp)
+        _rename_noreplace(archive_tmp, output)
+        _fsync_directory(output.parent)
         validate_tome_artifact_v3(output)
+        if output.name.endswith(".v3.tgz"):
+            base_name = output.name[: -len(".v3.tgz")]
+            for private in output.parent.iterdir():
+                if private.name.startswith(f".{base_name}.v3"):
+                    if private.is_dir():
+                        shutil.rmtree(private)
+                    else:
+                        private.unlink()
         return output
     finally:
+        if archive_tmp is not None:
+            archive_tmp.unlink(missing_ok=True)
         shutil.rmtree(staging, ignore_errors=True)
+
+
+def resume_v3_archive_from_directory(directory: Path, output: Path) -> Path:
+    """Retry only the archive transaction after a promoted directory exists.
+
+    The directory is standard-validated before it is copied.  The retry never
+    reads legacy output files or private journals and never replaces an
+    existing archive.  A caller can therefore recover a directory/archive
+    partial publication without re-running score, selection, or assembly.
+    """
+
+    directory = Path(directory)
+    output = Path(output)
+    if not directory.is_dir() or output.exists():
+        raise ValueError("v3_archive_resume_target_invalid")
+    validate_tome_artifact_v3(directory)
+    semantic_identity = json.loads(
+        (directory / "provenance/semantic-identity.json").read_text(encoding="utf-8")
+    )
+    authority_identity = semantic_identity["semantic_authority_identity"]
+    output.parent.mkdir(parents=True, exist_ok=True)
+    base_name = (
+        output.name[: -len(".v3.tgz")]
+        if output.name.endswith(".v3.tgz")
+        else output.stem
+    )
+    existing_journals = sorted(
+        path
+        for path in output.parent.iterdir()
+        if path.name.startswith(f".{base_name}.v3-journal-")
+    )
+    if len(existing_journals) > 1:
+        raise ValueError("v3_archive_resume_multiple_journals")
+    journal_root = (
+        existing_journals[0]
+        if existing_journals
+        else Path(
+            tempfile.mkdtemp(prefix=f".{base_name}.v3-journal-", dir=output.parent)
+        )
+    )
+    transaction_id = str(uuid.uuid4()) + ":archive-resume"
+    receipts = _sealed_receipts(directory)
+    for state, completion in (
+        ("OPEN", False),
+        ("COMPLETE_INTENT", True),
+        ("PROMOTING", True),
+    ):
+        _write_journal(
+            _journal_path(journal_root, "archive"),
+            _journal_state(
+                transaction_id=transaction_id,
+                authority=authority_identity,
+                state=state,
+                receipts=receipts if completion else (),
+                completion=completion,
+            ),
+        )
+    completed = False
+    staging = Path(
+        tempfile.mkdtemp(prefix=".radjax-tome-v3-archive-resume-", dir=output.parent)
+    )
+    archive_tmp: Path | None = None
+    try:
+        root = staging / "package"
+        shutil.copytree(directory, root)
+        cover_path = root / "cover_page.json"
+        cover = json.loads(cover_path.read_text(encoding="utf-8"))
+        cover["package"]["transport"] = "tgz"
+        _fsync_bytes(cover_path, _raw(cover))
+        with tempfile.NamedTemporaryFile(
+            prefix=f".{output.name}-", suffix=".tgz", dir=output.parent, delete=False
+        ) as handle:
+            archive_tmp = Path(handle.name)
+        with archive_tmp.open("wb") as raw_archive:
+            with gzip.GzipFile(
+                filename="", fileobj=raw_archive, mode="wb", compresslevel=9, mtime=0
+            ) as compressed:
+                with tarfile.open(fileobj=compressed, mode="w") as tar:
+                    _tar_add_deterministic(tar, root)
+        with archive_tmp.open("rb") as handle:
+            os.fsync(handle.fileno())
+        validate_tome_artifact_v3(archive_tmp)
+        _rename_noreplace(archive_tmp, output)
+        _fsync_directory(output.parent)
+        validate_tome_artifact_v3(output)
+        _write_journal(
+            _journal_path(journal_root, "archive"),
+            _journal_state(
+                transaction_id=transaction_id,
+                authority=authority_identity,
+                state="PROMOTED",
+                receipts=receipts,
+                completion=True,
+                promoted=True,
+            ),
+        )
+        completed = True
+        return output
+    finally:
+        if archive_tmp is not None:
+            archive_tmp.unlink(missing_ok=True)
+        shutil.rmtree(staging, ignore_errors=True)
+        if completed:
+            shutil.rmtree(journal_root, ignore_errors=True)
 
 
 __all__ = [
     "FinalizedV3Handoff",
     "V3Publication",
+    "V3ArchivePublicationError",
+    "V3PublicationCrash",
     "snapshot_finalized_handoff",
     "publish_v3_from_handoff",
     "pack_v3_rtome",
+    "resume_v3_archive_from_directory",
 ]

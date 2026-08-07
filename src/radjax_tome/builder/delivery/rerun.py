@@ -200,6 +200,21 @@ def run_selected_delivery_rerun(
         full_by_index = {
             int(item["_record_index"]): item for item in (full_payloads or [])
         }
+        missing_publication = sorted(
+            {
+                int(summary["_record_index"])
+                for summary in selected_payloads
+                if int(summary["_record_index"]) not in full_by_index
+            }
+        )
+        if missing_publication:
+            # A resumed native staging prefix contains only compact summaries;
+            # it is not an authoritative v3 handoff.  Refuse publication rather
+            # than rereading emitted files or silently reconstructing payloads.
+            raise ValueError(
+                "v3_publication_handoff_incomplete_after_resume:"
+                + ",".join(str(index) for index in missing_publication)
+            )
         publication_payloads = tuple(
             dict(full_by_index[int(summary["_record_index"])])
             for summary in selected_payloads
