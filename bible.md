@@ -2921,6 +2921,15 @@ promoted directory can be resumed into an independently validated archive;
 the pair is never reported as atomically visible. The v2 default and all
 historical paths remain unchanged.
 
+## 2026-08-06 — Program C Fixture Mutation and Rebuild Proofs
+
+The ordinary-CPU v3 fixture now records its expanded build and public-member
+receipt projection, deterministic archive identity, root-change metamorphic
+checks, corruption/index mutation rejection, assurance-mode outcomes,
+streaming guards, and archive-only resume behavior. These are opt-in adoption
+proofs only; no Golden artifact, v2 default, Student path, M8 state, or M9
+work was changed.
+
 ## 2026-08-06 — Program C Released Contract Parity Evidence
 
 The v3 adoption branch now records sanitized release receipt and asset-hash

@@ -16,8 +16,8 @@ The committed fixture is `tests/fixtures/tome_artifact_v3_smoke/`:
 * directory semantic root
   `sha256:f4b765aa0ca3dcd2e551d431e239e7504c5c34ef22c50d9766544a73de934ce2`;
 * archive SHA-256
-  `sha256:8336d925e520fddf3f59c740cdc7f71c100e76d7aa42aca761e6bc3a1b3585d1`;
-* archive size 6493 bytes.
+  `sha256:c2d070d0a6f7997901dbdcb2e7d90615c31eb080271e85ae9bd04c9c21c673e6`;
+* archive size 6182 bytes.
 
 `FIXTURE_RECEIPT.json` is the sanitized machine-readable fixture receipt.
 `governed_expectation.json`, `external_attestation.json`, and
@@ -73,6 +73,9 @@ not present in either artifact or in the public receipt.
 * semantic-root invariance under capacities one and four;
 * a fully coherent changed-token replacement passes standalone validation but
   fails governed comparison and the original external attestation.
+* identical finalized handoffs reproduce identical `.tgz` and `.rtome` bytes;
+* directory/archive partial publication is explicit and archive-only resume
+  validates the promoted directory before visibility.
 
 Existing focused and full Tome tests additionally cover the v2 default, v4/v5/
 v6 historical behavior, fixed 25-field authority projection, journal PC39–PC47

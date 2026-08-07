@@ -1,8 +1,8 @@
 {
-  "schema_version": "radjax_tome_archive_receipt_v1",
   "algorithm_id": "sha256",
-  "archive_sha256": "sha256:8336d925e520fddf3f59c740cdc7f71c100e76d7aa42aca761e6bc3a1b3585d1",
-  "archive_size_bytes": 6493,
-  "transport": "tgz",
-  "artifact_reference": "tome-artifact-v3-smoke.tgz"
+  "archive_sha256": "sha256:c2d070d0a6f7997901dbdcb2e7d90615c31eb080271e85ae9bd04c9c21c673e6",
+  "archive_size_bytes": 6182,
+  "artifact_reference": "tome-artifact-v3-smoke.tgz",
+  "schema_version": "radjax_tome_archive_receipt_v1",
+  "transport": "tgz"
 }
