@@ -22,6 +22,7 @@ from radjax_tome.tome.v6_reduced_burn_fixture import (
     PROFILE_ID,
     SELECTED_ID_COUNT,
     VALID_TOKEN_COUNT,
+    _validate_declared_inputs,
     _validate_input_files,
     build_v6_reduced_burn_pair,
     canonical_declared_input_bytes,
@@ -203,6 +204,27 @@ def test_p6_u1_declared_teacher_mutation_is_rejected_before_production() -> None
             inputs / spec["teacher"]["provenance_path"],
             inputs / spec["teacher"]["model_path"],
         )
+
+
+@pytest.mark.parametrize(
+    ("section", "field", "value"),
+    [
+        ("contract", "package", "forged-contract"),
+        ("input_root", None, "other-input-root"),
+        ("teacher", "tokenizer_id", "forged-tokenizer"),
+    ],
+)
+def test_p6_u1_declared_authority_shape_mutations_are_closed(
+    section: str, field: str | None, value: str
+) -> None:
+    _, spec = load_declared_inputs(SPEC)
+    mutated = json.loads(json.dumps(spec))
+    if field is None:
+        mutated[section] = value
+    else:
+        mutated[section][field] = value
+    with pytest.raises(ValueError, match="authority or input-root|tokenizer"):
+        _validate_declared_inputs(mutated)
 
 
 def _resolve(artifact: Path):

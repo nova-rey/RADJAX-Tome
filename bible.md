@@ -3041,3 +3041,7 @@ identifier, and teacher model-name bindings against their committed sources;
 mutating those identity-bearing inputs is rejected before production. Hydra
 classifies the normalized input record and input directory as fixture surfaces,
 and no public artifact bytes or Contract/Student files changed.
+
+The authority tests also exercise closed-shape mutations for the Contract
+package, input root, and tokenizer identifier, in addition to the teacher model
+provenance mutation; each is rejected before output production.
