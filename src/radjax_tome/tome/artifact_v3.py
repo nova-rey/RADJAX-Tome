@@ -15,7 +15,6 @@ import shutil
 import stat
 import tarfile
 import tempfile
-import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -47,6 +46,7 @@ V3_COVER_SCHEMA = "radjax_tome_cover_v5"
 V3_SHARD_CAP = 128
 PRIVATE_BINDING_SCHEMA = "radjax_tome_private_publication_binding_v2"
 PRIVATE_TOPOLOGIES = frozenset({"canonical", "archive_only"})
+PRIVATE_IDENTITY_SCHEMA = "radjax_tome_private_identity_v1"
 
 
 @dataclass(frozen=True)
@@ -645,6 +645,102 @@ def _publication_configuration_identity(
     return _digest(raw)
 
 
+def _private_identity_digest(value: Mapping[str, Any]) -> str:
+    """Derive a Tome-private identity from non-journal facts."""
+
+    return hashlib.sha256(_raw(value)).hexdigest()
+
+
+def _derive_directory_transaction_id(
+    *,
+    output_base_name: str,
+    directory_name: str,
+    archive_name: str,
+    configuration_identity: str,
+    semantic_authority_identity: str,
+    behavioral_policy_identity: str,
+    record_count: int,
+    shard_capacity: int,
+) -> str:
+    return "directory-v3-" + _private_identity_digest(
+        {
+            "configuration_identity": configuration_identity,
+            "contract_version": V3_SCHEMA,
+            "directory_name": directory_name,
+            "kind": "canonical_directory",
+            "output_base_name": output_base_name,
+            "archive_name": archive_name,
+            "record_count": record_count,
+            "schema_version": PRIVATE_IDENTITY_SCHEMA,
+            "semantic_authority_identity": semantic_authority_identity,
+            "semantic_profile_id": SEMANTIC_PROFILE_ID,
+            "behavioral_policy_identity": behavioral_policy_identity,
+            "shard_capacity": shard_capacity,
+        }
+    )
+
+
+def _derive_archive_transaction_id(directory_transaction_id: str) -> str:
+    return "archive-v3-" + _private_identity_digest(
+        {
+            "directory_transaction_id": directory_transaction_id,
+            "kind": "canonical_archive",
+            "schema_version": PRIVATE_IDENTITY_SCHEMA,
+        }
+    )
+
+
+def _derive_archive_only_transaction_id(
+    *,
+    output_base_name: str,
+    directory_name: str,
+    archive_name: str,
+    metadata: Mapping[str, Any],
+) -> str:
+    return "archive-only-v3-" + _private_identity_digest(
+        {
+            "archive_name": archive_name,
+            "behavioral_policy_identity": metadata["behavioral_policy_identity"],
+            "configuration_identity": metadata["configuration_identity"],
+            "contract_version": V3_SCHEMA,
+            "directory_name": directory_name,
+            "kind": "fresh_archive_only",
+            "output_base_name": output_base_name,
+            "record_count": metadata["record_count"],
+            "schema_version": PRIVATE_IDENTITY_SCHEMA,
+            "semantic_authority_identity": metadata["semantic_authority_identity"],
+            "semantic_profile_id": SEMANTIC_PROFILE_ID,
+            "semantic_root": metadata["semantic_root"],
+            "shard_capacity": metadata["shard_capacity"],
+        }
+    )
+
+
+def _private_journal_root_name(output_base_name: str, transaction_id: str) -> str:
+    return f".{output_base_name}.v3-journal-{transaction_id[-16:]}"
+
+
+def _private_staging_name(output_base_name: str, transaction_id: str, role: str) -> str:
+    return f".{output_base_name}.v3-{role}-{transaction_id[-16:]}"
+
+
+def _create_private_directory(path: Path) -> Path:
+    if os.path.lexists(path):
+        raise ValueError(f"v3_private_transaction_already_exists:{path.name}")
+    path.mkdir(mode=0o700)
+    _private_lstat(path, expected="directory")
+    _fsync_directory(path.parent)
+    return path
+
+
+def _prepare_private_staging(path: Path) -> Path:
+    if os.path.lexists(path):
+        _assert_private_tree_no_symlinks(path)
+        shutil.rmtree(path)
+        _fsync_directory(path.parent)
+    return _create_private_directory(path)
+
+
 def _journal_binding(
     *,
     topology: str,
@@ -1026,21 +1122,31 @@ def publish_v3_from_handoff(
     _reject_stale_private_transactions(output_base)
     if directory.exists() or archive.exists():
         raise ValueError("v3_publication_target_exists")
-    staging = Path(
-        tempfile.mkdtemp(prefix=f".{output_base.name}.v3-", dir=output_base.parent)
-    )
-    journal_root = Path(
-        tempfile.mkdtemp(
-            prefix=f".{output_base.name}.v3-journal-", dir=output_base.parent
-        )
-    )
-    transaction_id = str(uuid.uuid4())
-    archive_transaction_id = transaction_id + ":archive"
     authority_identity = digest(DOMAIN_LABELS["semantic_authority"], handoff.authority)
     policy_identity = digest(DOMAIN_LABELS["behavioral_policy"], handoff.policy)
     configuration_identity = _publication_configuration_identity(
         record_count=len(handoff.records), shard_capacity=handoff.shard_capacity
     )
+    transaction_id = _derive_directory_transaction_id(
+        output_base_name=output_base.name,
+        directory_name=directory.name,
+        archive_name=archive.name,
+        configuration_identity=configuration_identity,
+        semantic_authority_identity=authority_identity,
+        behavioral_policy_identity=policy_identity,
+        record_count=len(handoff.records),
+        shard_capacity=handoff.shard_capacity,
+    )
+    archive_transaction_id = _derive_archive_transaction_id(transaction_id)
+    staging = output_base.parent / _private_staging_name(
+        output_base.name, transaction_id, "directory"
+    )
+    _create_private_directory(staging)
+    journal_root = output_base.parent / _private_journal_root_name(
+        output_base.name, transaction_id
+    )
+    _create_private_directory(journal_root)
+    archive_staging: Path | None = None
     directory_binding = _journal_binding(
         topology="canonical",
         transaction_kind="directory",
@@ -1167,9 +1273,13 @@ def publish_v3_from_handoff(
                 "transaction_id": archive_transaction_id,
                 "transaction_kind": "archive",
                 "topology": "canonical",
+                "staging_name": _private_staging_name(
+                    output_base.name, archive_transaction_id, "archive"
+                ),
                 "transport": "tgz",
             }
         )
+        archive_staging = output_base.parent / archive_binding["staging_name"]
         _write_journal(
             _journal_path(journal_root, "archive"),
             _journal_state(
@@ -1194,6 +1304,7 @@ def publish_v3_from_handoff(
             binding=archive_binding,
         )
         _publication_event(publication_hook, "ARCHIVE_after_completion_intent")
+        _prepare_private_staging(archive_staging)
         _write_journal(
             _journal_path(journal_root, "archive"),
             _journal_state(
@@ -1215,7 +1326,7 @@ def publish_v3_from_handoff(
         ) as handle:
             archive_tmp = Path(handle.name)
         try:
-            archive_root = staging / "archive"
+            archive_root = archive_staging / "package"
             shutil.copytree(directory, archive_root)
             cover = json.loads((archive_root / "cover_page.json").read_text())
             cover["package"]["transport"] = "tgz"
@@ -1258,7 +1369,7 @@ def publish_v3_from_handoff(
         _publication_event(publication_hook, "ARCHIVE_after_completion_marker")
         _cleanup_private_state(
             journal_root,
-            staging,
+            tuple(path for path in (staging, archive_staging) if path is not None),
             publication_hook=publication_hook,
         )
         private_state_cleaned = True
@@ -1285,7 +1396,10 @@ def publish_v3_from_handoff(
         raise
     finally:
         if not preserve_private_state and not private_state_cleaned:
-            _cleanup_private_state(journal_root, staging)
+            _cleanup_private_state(
+                journal_root,
+                tuple(path for path in (staging, archive_staging) if path is not None),
+            )
 
 
 def pack_v3_rtome(directory: Path, output: Path) -> Path:
@@ -1357,6 +1471,40 @@ def resume_v3_archive_from_directory(
         if output.name.endswith(".v3.tgz")
         else output.stem
     )
+    canonical_directory_transaction_id = _derive_directory_transaction_id(
+        output_base_name=base_name,
+        directory_name=directory.name,
+        archive_name=output.name,
+        configuration_identity=metadata["configuration_identity"],
+        semantic_authority_identity=metadata["semantic_authority_identity"],
+        behavioral_policy_identity=metadata["behavioral_policy_identity"],
+        record_count=metadata["record_count"],
+        shard_capacity=metadata["shard_capacity"],
+    )
+    canonical_archive_transaction_id = _derive_archive_transaction_id(
+        canonical_directory_transaction_id
+    )
+    archive_only_transaction_id = _derive_archive_only_transaction_id(
+        output_base_name=base_name,
+        directory_name=directory.name,
+        archive_name=output.name,
+        metadata=metadata,
+    )
+    canonical_journal_name = _private_journal_root_name(
+        base_name, canonical_directory_transaction_id
+    )
+    archive_only_journal_name = _private_journal_root_name(
+        base_name, archive_only_transaction_id
+    )
+    canonical_directory_staging_name = _private_staging_name(
+        base_name, canonical_directory_transaction_id, "directory"
+    )
+    canonical_archive_staging_name = _private_staging_name(
+        base_name, canonical_archive_transaction_id, "archive"
+    )
+    archive_only_staging_name = _private_staging_name(
+        base_name, archive_only_transaction_id, "archive"
+    )
     journal_prefix = f".{base_name}.v3-journal-"
     staging_prefix = f".{base_name}.v3-"
     candidates: list[Path] = []
@@ -1374,8 +1522,23 @@ def resume_v3_archive_from_directory(
             residual_staging.append(path)
     if len(candidates) > 1:
         raise ValueError("v3_archive_resume_multiple_journals")
+    if candidates and candidates[0].name not in {
+        canonical_journal_name,
+        archive_only_journal_name,
+    }:
+        raise ValueError("v3_private_journal_root_binding_mismatch")
     if not candidates and residual_staging:
         raise ValueError("v3_private_staging_without_journal")
+    if candidates and any(
+        path.name
+        not in {
+            canonical_directory_staging_name,
+            canonical_archive_staging_name,
+            archive_only_staging_name,
+        }
+        for path in residual_staging
+    ):
+        raise ValueError("v3_private_foreign_staging_present")
     if os.path.lexists(output) and stat.S_ISLNK(os.lstat(output).st_mode):
         raise ValueError("v3_public_archive_symlink")
 
@@ -1384,20 +1547,20 @@ def resume_v3_archive_from_directory(
     archive_state: JournalStateV3 | None = None
     directory_binding: dict[str, Any] | None = None
     archive_binding: dict[str, Any] | None = None
-    original_staging: Path | None = None
+    directory_staging: Path | None = None
+    archive_staging_bound: Path | None = None
     archive_only = False
 
-    def validate_staging(binding: Mapping[str, Any]) -> Path:
-        name = binding["staging_name"]
-        if (
-            not isinstance(name, str)
-            or Path(name).name != name
-            or not name.startswith(f".{base_name}.v3-")
-        ):
-            raise ValueError("v3_private_staging_binding_invalid")
-        path = output.parent / name
+    def validate_staging(
+        binding: Mapping[str, Any], *, expected_name: str, required: bool
+    ) -> Path:
+        if binding["staging_name"] != expected_name:
+            raise ValueError("v3_private_staging_binding_mismatch")
+        path = output.parent / expected_name
         if os.path.lexists(path):
             _assert_private_tree_no_symlinks(path)
+        elif required:
+            raise ValueError("v3_private_staging_required")
         return path
 
     def check_common(binding: Mapping[str, Any]) -> None:
@@ -1430,13 +1593,13 @@ def resume_v3_archive_from_directory(
                 metadata,
                 topology="canonical",
                 transaction_kind="directory",
-                transaction_id=directory_binding["transaction_id"],
-                archive_transaction_id=directory_binding["archive_transaction_id"],
+                transaction_id=canonical_directory_transaction_id,
+                archive_transaction_id=canonical_archive_transaction_id,
                 output_base_name=base_name,
                 directory_name=directory.name,
                 archive_name=output.name,
-                staging_name=directory_binding["staging_name"],
-                journal_root_name=journal_root.name,
+                staging_name=canonical_directory_staging_name,
+                journal_root_name=canonical_journal_name,
                 transport="directory",
             )
             _require_binding_match(
@@ -1457,7 +1620,11 @@ def resume_v3_archive_from_directory(
                 "open_completed_public_package",
             }:
                 raise ValueError("v3_private_directory_restart_not_permitted")
-            original_staging = validate_staging(directory_binding)
+            directory_staging = validate_staging(
+                directory_binding,
+                expected_name=canonical_directory_staging_name,
+                required=entries == {"directory-journal.json"},
+            )
             if directory_state.state == "PROMOTING":
                 directory_state = _journal_state(
                     transaction_id=directory_state.transaction_id,
@@ -1481,12 +1648,15 @@ def resume_v3_archive_from_directory(
                 archive_binding = dict(directory_binding)
                 archive_binding.update(
                     {
-                        "transaction_id": directory_binding["archive_transaction_id"],
+                        "archive_transaction_id": canonical_archive_transaction_id,
+                        "transaction_id": canonical_archive_transaction_id,
                         "transaction_kind": "archive",
                         "topology": "canonical",
+                        "staging_name": canonical_archive_staging_name,
                         "transport": "tgz",
                     }
                 )
+                archive_staging_bound = output.parent / canonical_archive_staging_name
                 archive_state = _journal_state(
                     transaction_id=archive_binding["transaction_id"],
                     authority=metadata["semantic_authority_identity"],
@@ -1524,19 +1694,24 @@ def resume_v3_archive_from_directory(
                 metadata,
                 topology="archive_only",
                 transaction_kind="archive",
-                transaction_id=archive_binding["transaction_id"],
-                archive_transaction_id=archive_binding["archive_transaction_id"],
+                transaction_id=archive_only_transaction_id,
+                archive_transaction_id=archive_only_transaction_id,
                 output_base_name=base_name,
                 directory_name=directory.name,
                 archive_name=output.name,
-                staging_name=archive_binding["staging_name"],
-                journal_root_name=journal_root.name,
+                staging_name=archive_only_staging_name,
+                journal_root_name=archive_only_journal_name,
                 transport="tgz",
             )
             _require_binding_match(
                 archive_binding, expected_archive, label="archive_only"
             )
-            original_staging = validate_staging(archive_binding)
+            archive_staging_bound = validate_staging(
+                archive_binding,
+                expected_name=archive_only_staging_name,
+                required=not os.path.lexists(output)
+                and archive_state.state in {"COMPLETE_INTENT", "PROMOTING"},
+            )
 
         if archive_binding is None:
             archive_state, archive_binding = _read_journal(
@@ -1547,22 +1722,19 @@ def resume_v3_archive_from_directory(
                 raise ValueError("v3_private_archive_topology_invalid")
             if archive_binding["transaction_kind"] != "archive":
                 raise ValueError("v3_private_archive_transaction_kind")
-            if (
-                archive_binding["transaction_id"]
-                != directory_binding["archive_transaction_id"]
-            ):  # type: ignore[index]
+            if archive_binding["transaction_id"] != canonical_archive_transaction_id:
                 raise ValueError("v3_private_archive_transaction_binding_mismatch")
             expected_archive = _expected_binding(
                 metadata,
                 topology="canonical",
                 transaction_kind="archive",
-                transaction_id=archive_binding["transaction_id"],
-                archive_transaction_id=directory_binding["archive_transaction_id"],  # type: ignore[index]
+                transaction_id=canonical_archive_transaction_id,
+                archive_transaction_id=canonical_archive_transaction_id,
                 output_base_name=base_name,
                 directory_name=directory.name,
                 archive_name=output.name,
-                staging_name=directory_binding["staging_name"],  # type: ignore[index]
-                journal_root_name=journal_root.name,
+                staging_name=canonical_archive_staging_name,
+                journal_root_name=canonical_journal_name,
                 transport="tgz",
             )
             _require_binding_match(archive_binding, expected_archive, label="archive")
@@ -1577,11 +1749,15 @@ def resume_v3_archive_from_directory(
                 raise ValueError("v3_private_archive_visible_before_promotion")
             if archive_state.state == "OPEN" and archive_state.sealed_shards:
                 raise ValueError("v3_private_archive_receipts_mismatch")
-            validate_staging(archive_binding)
+            archive_staging_bound = validate_staging(
+                archive_binding,
+                expected_name=canonical_archive_staging_name,
+                required=not os.path.lexists(output)
+                and archive_state.state in {"COMPLETE_INTENT", "PROMOTING"},
+            )
 
     else:
-        transaction_id = f"directory-promoted:{metadata['semantic_root']}"
-        archive_transaction_id = transaction_id + ":archive"
+        archive_transaction_id = archive_only_transaction_id
         archive_binding = None
 
     if os.path.lexists(output):
@@ -1625,19 +1801,21 @@ def resume_v3_archive_from_directory(
                 binding=archive_binding,
             )
             _cleanup_private_state(
-                journal_root, original_staging or (), publication_hook=publication_hook
+                journal_root,
+                tuple(
+                    path
+                    for path in (directory_staging, archive_staging_bound)
+                    if path is not None
+                ),
+                publication_hook=publication_hook,
             )
         return output
 
     if journal_root is None:
-        journal_root = Path(
-            tempfile.mkdtemp(prefix=f".{base_name}.v3-journal-", dir=output.parent)
+        journal_root = _create_private_directory(
+            output.parent / archive_only_journal_name
         )
-        _assert_private_tree_no_symlinks(journal_root)
-        build_staging = Path(
-            tempfile.mkdtemp(prefix=f".{base_name}.v3-archive-", dir=output.parent)
-        )
-        _assert_private_tree_no_symlinks(build_staging)
+        archive_staging_bound = output.parent / archive_only_staging_name
         archive_binding = _expected_binding(
             metadata,
             topology="archive_only",
@@ -1647,14 +1825,12 @@ def resume_v3_archive_from_directory(
             output_base_name=base_name,
             directory_name=directory.name,
             archive_name=output.name,
-            staging_name=build_staging.name,
-            journal_root_name=journal_root.name,
+            staging_name=archive_only_staging_name,
+            journal_root_name=archive_only_journal_name,
             transport="tgz",
         )
         _write_journal(
-            _private_child(journal_root, "archive-journal.json", expected="file")
-            if os.path.lexists(_journal_path(journal_root, "archive"))
-            else _journal_path(journal_root, "archive"),
+            _journal_path(journal_root, "archive"),
             _journal_state(
                 transaction_id=archive_transaction_id,
                 authority=metadata["semantic_authority_identity"],
@@ -1671,21 +1847,19 @@ def resume_v3_archive_from_directory(
             state="OPEN",
             receipts=(),
         )
+        build_staging = archive_staging_bound
     else:
         assert archive_binding is not None and archive_state is not None
         if archive_state.state not in {"OPEN", "COMPLETE_INTENT", "PROMOTING"}:
             raise ValueError("v3_private_archive_state_not_resumable")
-        build_staging = Path(
-            tempfile.mkdtemp(
-                prefix=f".{base_name}.v3-archive-resume-", dir=output.parent
-            )
-        )
-        _assert_private_tree_no_symlinks(build_staging)
+        assert archive_staging_bound is not None
+        build_staging = archive_staging_bound
 
     assert (
         archive_binding is not None
         and journal_root is not None
         and archive_state is not None
+        and archive_staging_bound is not None
     )
     receipts = metadata["receipts"]
     disposition = journal_restart_disposition_v3(
@@ -1704,6 +1878,7 @@ def resume_v3_archive_from_directory(
         journal_root, "archive-journal.json", expected="file"
     )
     if archive_state.state == "OPEN":
+        _prepare_private_staging(archive_staging_bound)
         _write_journal(
             archive_journal,
             _journal_state(
@@ -1717,6 +1892,8 @@ def resume_v3_archive_from_directory(
             binding=archive_binding,
         )
         _publication_event(publication_hook, "RESUME_ARCHIVE_after_completion_intent")
+    else:
+        _prepare_private_staging(archive_staging_bound)
     _write_journal(
         archive_journal,
         _journal_state(
@@ -1776,7 +1953,9 @@ def resume_v3_archive_from_directory(
         _cleanup_private_state(
             journal_root,
             tuple(
-                path for path in (original_staging, build_staging) if path is not None
+                path
+                for path in (directory_staging, archive_staging_bound)
+                if path is not None
             ),
             publication_hook=publication_hook,
         )

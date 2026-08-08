@@ -2973,3 +2973,17 @@ receipts, markers, and nested components are inspected without following
 symlinks before mutation or cleanup. Directory and archive remain independent
 transactions, public v3 bytes and identities are unchanged, and the v2 default,
 historical paths, Student, Golden evidence, M8, and M9 remain untouched.
+
+## 2026-08-07 — Program C Deterministic Private Identity Correction
+
+The v3 publication path now derives directory and canonical archive transaction
+identities from validated non-journal facts, derives fresh archive-only identity
+from the validated public semantic root and explicit topology, and derives
+journal-root and role-specific staging names from those identities. Recovery
+rejects coherently rewritten transaction or staging claims, foreign sibling
+staging, and stripped canonical journals relabeled as archive-only. Cleanup is
+authorized only for exact derived private paths under Tome's documented local
+ownership model. Contract 0.9.0 remains authoritative for journal structure,
+receipts, transitions, and restart disposition; public v3 bytes and identities,
+the v2 default, historical paths, Student, Golden evidence, M8, and M9 remain
+unchanged.

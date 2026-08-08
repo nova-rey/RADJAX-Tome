@@ -337,6 +337,86 @@ def test_private_symlink_is_rejected_before_archive_mutation(
     assert list(external.iterdir())
 
 
+@pytest.mark.parametrize("mutation", ("foreign", "missing"))
+def test_directory_only_staging_ownership_is_independent(
+    tmp_path: Path, mutation: str
+) -> None:
+    output_base = tmp_path / f"staging-{mutation}"
+
+    def interrupt(event: str) -> None:
+        if event == "PC47_after_completion_marker":
+            raise V3PublicationCrash(event)
+
+    with pytest.raises(V3PublicationCrash):
+        publish_v3_from_handoff(
+            _publication_handoff(), output_base, publication_hook=interrupt
+        )
+    directory = output_base.with_name(output_base.name + ".v3")
+    archive = output_base.with_name(output_base.name + ".v3.tgz")
+    root = _archive_journal_root(directory)
+    journal = root / "directory-journal.json"
+    payload = json.loads(journal.read_text(encoding="utf-8"))
+    if mutation == "foreign":
+        foreign = tmp_path / f".{output_base.name}.v3-foreign-transaction"
+        foreign.mkdir()
+        (foreign / "sentinel").write_text("must remain", encoding="utf-8")
+        payload["binding"]["staging_name"] = foreign.name
+    else:
+        staging_name = payload["binding"]["staging_name"]
+        shutil.rmtree(tmp_path / staging_name)
+        payload["binding"]["staging_name"] = f".{output_base.name}.v3-escape"
+    journal.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+    with pytest.raises(ValueError):
+        resume_v3_archive_from_directory(directory, archive)
+    assert not archive.exists()
+    if mutation == "foreign":
+        assert (
+            tmp_path / f".{output_base.name}.v3-foreign-transaction/sentinel"
+        ).read_text(encoding="utf-8") == "must remain"
+
+
+def test_directory_only_transaction_relationship_is_independently_derived(
+    tmp_path: Path,
+) -> None:
+    directory, archive = _crashed_archive_publication(tmp_path, "transaction-shape")
+    root = _archive_journal_root(directory)
+    journal = root / "directory-journal.json"
+    payload = json.loads(journal.read_text(encoding="utf-8"))
+    payload["transaction_id"] = "forged-dir"
+    payload["binding"]["transaction_id"] = "forged-dir"
+    payload["binding"]["archive_transaction_id"] = "forged-archive"
+    journal.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+    with pytest.raises(ValueError):
+        resume_v3_archive_from_directory(directory, archive)
+    assert not archive.exists()
+
+
+def test_stripped_canonical_state_cannot_be_relabelled_archive_only(
+    tmp_path: Path,
+) -> None:
+    output_base = tmp_path / "stripped-canonical"
+
+    def interrupt(event: str) -> None:
+        if event == "ARCHIVE_after_promotion_intent":
+            raise V3PublicationCrash(event)
+
+    with pytest.raises(V3PublicationCrash):
+        publish_v3_from_handoff(
+            _publication_handoff(), output_base, publication_hook=interrupt
+        )
+    directory = output_base.with_name(output_base.name + ".v3")
+    archive = output_base.with_name(output_base.name + ".v3.tgz")
+    root = _archive_journal_root(directory)
+    (root / "directory-journal.json").unlink()
+    journal = root / "archive-journal.json"
+    payload = json.loads(journal.read_text(encoding="utf-8"))
+    payload["binding"]["topology"] = "archive_only"
+    journal.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+    with pytest.raises(ValueError):
+        resume_v3_archive_from_directory(directory, archive)
+    assert not archive.exists()
+
+
 def test_new_v3_run_refuses_stale_private_transaction(tmp_path: Path) -> None:
     output_base = tmp_path / "stale"
     stale = tmp_path / ".stale.v3-journal-leftover"

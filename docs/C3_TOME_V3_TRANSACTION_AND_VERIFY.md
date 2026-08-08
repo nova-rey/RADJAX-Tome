@@ -30,6 +30,32 @@ resume candidate. Contract validates both journal state machines, receipt
 shape/ranges, and transition legality; Tome owns filesystem discovery,
 cross-object comparison, refusal/quarantine, and execution.
 
+The private identity chain is deterministic and does not take its authority
+from a journal field being compared with itself. The directory transaction ID
+is `directory-v3-` plus the SHA-256 of a framed Tome-private identity object
+covering the Contract/profile, output names, configuration identity, authority
+identity, behavioral-policy identity, record count, and shard capacity. The
+canonical archive transaction ID is derived from that directory ID by the
+`canonical_archive` identity object. A fresh archive-only transaction instead
+uses `archive-only-v3-` plus an identity object that additionally covers the
+validated public semantic root and the `fresh_archive_only` kind. Journal-root
+names and staging names are deterministic functions of these transaction IDs
+and their role (`directory` or `archive`). Recovery recomputes these values
+from the validated public directory and intended output before accepting any
+journal claim. A journal-supplied transaction ID, topology, or staging basename
+must equal the independently derived value.
+
+Contract 0.9.0 remains authoritative for journal schema, receipt shape,
+transition legality, restart disposition, and declared capabilities. It treats
+transaction IDs as opaque; the deterministic derivation and filesystem-object
+ownership policy are Tome rules and are documented as such. Tome validates the
+exact derived private paths with no-follow operations, rejects foreign sibling
+staging, and authorizes cleanup only for those exact paths. Missing directory
+staging is required to fail for directory-only recovery; missing archive
+staging is legal only before archive staging begins or after a public archive
+has made it consumable. A matching archive with residual private state may
+therefore complete cleanup without rewriting bytes.
+
 Shard bytes are fsynced before receipt state is written; receipt state is
 fsynced before committed range and completion states. Journal files and all
 bound private staging are removed only after both independent transactions
@@ -60,9 +86,12 @@ The reachable private/public topologies are deliberately finite:
   independently `PROMOTED`.
 * An independently validated promoted directory with no private state may be
   explicitly repacked. This creates an `archive_only` root containing only
-  `archive-journal.json`, with an archive transaction ID equal to its bound
-  archive ID. It is a new, explicitly bound transaction, not a stripped
-  canonical run. Every archive fault boundary and interrupted cleanup resumes
+  `archive-journal.json`, with the independently derived `archive-only-v3-`
+  transaction ID and matching derived root/staging names. It is a new,
+  explicitly bound transaction, not a stripped canonical run. A canonical root
+  with its directory journal removed cannot be relabeled `archive_only` because
+  its root, transaction, and staging identities do not match the fresh
+  derivation. Every archive fault boundary and interrupted cleanup resumes
   through this topology; a malformed or ambiguous root is refused.
 * After both independent transactions are durably `PROMOTED` and validated,
   cleanup removes the bound staging and journals. A repeated call with valid
@@ -134,6 +163,14 @@ and the caller may invoke archive resume; no report may call the pair atomic.
 Filesystem transports that cannot provide the required local staging, fsync,
 and no-replace assumptions are not represented as successfully promoted by this
 adapter.
+
+The private-path checks establish ownership against the cooperative publisher
+model: deterministic names, no-follow type checks, and exclusive output-base
+ownership prevent accidental or cooperating-run substitution. They do not claim
+to authenticate against an arbitrary same-privilege process that can replace
+private directory entries between checks, rewrite every journal and receipt, or
+alter the running process. Such a process is outside this unsigned local
+transaction integrity claim.
 
 Archive tar and `.rtome` transport metadata is normalized (member order,
 mtime, uid/gid, names, and mode; gzip mtime and filename) so repeated builds
