@@ -1,0 +1,1 @@
+Ordinary corpus record 036 preserves teacher-derived behavior for deterministic portable evaluation across independent consumers.

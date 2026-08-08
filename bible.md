@@ -3008,3 +3008,40 @@ The explicit v6 Student package path applies the same projection before
 materializing Contract v6 resources and manifests, so the native M7 sibling
 and v6 directory/archive package forms reproduce from the same declared
 inputs. No committed P6.U1 worktree fixture was modified.
+
+## 2026-08-08 — Tome-Owned P6.U1 Reduced-Burn Authority Checkpoint
+
+The bounded P6.U1 authority checkpoint publishes a maintained ordinary CPU
+smoke-tokenizer producer command, a complete normalized declared-input record,
+and committed input bytes. It uses Tome's current Contract `0.9.0` pin at
+`1fa43e1aea2e198511db86dafb0aeefa525d48c7`; the stale `0.8.3`/`a33a0a0d`
+worktree material remains non-authoritative. The producer derives its build
+configuration from the declared record, reuses the exact path-bound corpus
+manifest, and records strict v6 admission, source/passport linkage, resource
+identities, and pair-reproducibility evidence. No Student or Contract files,
+v2 defaults, public identity semantics, Golden evidence, M8, or M9 are changed.
+
+## 2026-08-08 — P6.U1 Authority Fixture Generated
+
+The committed reduced-burn fixture and receipt were generated after producer
+checkpoint `340998ee62e9608ae69c10cb9fd21f6ab72d2584` through the published
+command, using Contract `radjax-contract` `0.9.0` at
+`1fa43e1aea2e198511db86dafb0aeefa525d48c7`. Two fresh builds first matched
+canonical declared-input bytes
+(`sha256:0cf34d02a192790f8c010446e5e7daa900a10bf867b4863b580e769dfcb6822c`)
+and then matched native M7 bytes, Student directory bytes, and Student archive
+bytes. The generated evidence qualifies 64 stable examples, 4096 valid tokens,
+and 60 selected IDs; no output was hand-edited or postprocessed. Student and
+Contract remain unchanged and P6.U1 is not a Student-side acceptance claim.
+
+## 2026-08-08 — P6.U1 Declared-Input Closure
+
+The authority preflight now closes the Contract package, input-root, tokenizer
+identifier, and teacher model-name bindings against their committed sources;
+mutating those identity-bearing inputs is rejected before production. Hydra
+classifies the normalized input record and input directory as fixture surfaces,
+and no public artifact bytes or Contract/Student files changed.
+
+The authority tests also exercise closed-shape mutations for the Contract
+package, input root, and tokenizer identifier, in addition to the teacher model
+provenance mutation; each is rejected before output production.
