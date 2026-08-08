@@ -3008,3 +3008,15 @@ The explicit v6 Student package path applies the same projection before
 materializing Contract v6 resources and manifests, so the native M7 sibling
 and v6 directory/archive package forms reproduce from the same declared
 inputs. No committed P6.U1 worktree fixture was modified.
+
+## 2026-08-08 — Tome-Owned P6.U1 Reduced-Burn Authority Checkpoint
+
+The bounded P6.U1 authority checkpoint publishes a maintained ordinary CPU
+smoke-tokenizer producer command, a complete normalized declared-input record,
+and committed input bytes. It uses Tome's current Contract `0.9.0` pin at
+`1fa43e1aea2e198511db86dafb0aeefa525d48c7`; the stale `0.8.3`/`a33a0a0d`
+worktree material remains non-authoritative. The producer derives its build
+configuration from the declared record, reuses the exact path-bound corpus
+manifest, and records strict v6 admission, source/passport linkage, resource
+identities, and pair-reproducibility evidence. No Student or Contract files,
+v2 defaults, public identity semantics, Golden evidence, M8, or M9 are changed.

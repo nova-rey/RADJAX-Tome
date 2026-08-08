@@ -2542,6 +2542,62 @@
       "rationale": "Deterministic ordinary-CPU Contract v3 canonical-production artifact and externally supplied proof inputs.",
       "replacement_or_target_boundary": "Program C v3 adoption fixture identities and compatibility evidence.",
       "status": "canonical"
+    },
+    "docs/P6_U1_REDUCED_BURN_AUTHORITY.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "P6.U1",
+      "rationale": "Publishes the Tome-owned reduced-burn authority, explicit Contract compatibility decision, command, input binding, and nonclaims.",
+      "replacement_or_target_boundary": "Student P6.U1 authority handoff.",
+      "status": "canonical"
+    },
+    "scripts/build_v6_reduced_burn_fixture.py": {
+      "archive_or_removal_condition": null,
+      "kind": "script",
+      "owning_milestone": "P6.U1",
+      "rationale": "Maintained ordinary-production command for the Contract-v6 reduced-burn artifact and reproducibility pair.",
+      "replacement_or_target_boundary": "Student P6.U1 authority handoff.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tome/v6_reduced_burn_fixture.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "P6.U1",
+      "rationale": "Binds normalized declared inputs, current Contract authority, canonical production, strict v6 admission, and machine-readable receipt evidence.",
+      "replacement_or_target_boundary": "Student P6.U1 authority handoff.",
+      "status": "canonical"
+    },
+    "tests/test_p6_u1_reduced_burn_authority.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "P6.U1",
+      "rationale": "Adversarially checks declared-input binding, fresh-build byte reproducibility, qualification counts, source/passport linkage, and leakage exclusion.",
+      "replacement_or_target_boundary": "Student P6.U1 authority acceptance tests.",
+      "status": "canonical"
+    },
+    "tests/fixtures/p6_u1_reduced_burn_inputs.json": {
+      "archive_or_removal_condition": null,
+      "kind": "fixture-input-spec",
+      "owning_milestone": "P6.U1",
+      "rationale": "Complete normalized declared-input record for the path-bound reduced-burn corpus and deterministic CPU smoke procedure.",
+      "replacement_or_target_boundary": "Student P6.U1 authority handoff.",
+      "status": "canonical"
+    },
+    "tests/fixtures/p6_u1_reduced_burn_inputs": {
+      "archive_or_removal_condition": null,
+      "kind": "fixture-input",
+      "owning_milestone": "P6.U1",
+      "rationale": "Committed corpus, model metadata, tokenizer, weights, and provenance inputs consumed by the maintained producer command.",
+      "replacement_or_target_boundary": "Student P6.U1 authority handoff.",
+      "status": "canonical"
+    },
+    "tests/fixtures/native_v3_student_v6_reduced_burn": {
+      "archive_or_removal_condition": null,
+      "kind": "fixture",
+      "owning_milestone": "P6.U1",
+      "rationale": "Generated Contract-v6 reduced-burn directory, archive, native M7 sibling, pair evidence, and receipt produced by normal Tome writers.",
+      "replacement_or_target_boundary": "Student P6.U1 authority handoff.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

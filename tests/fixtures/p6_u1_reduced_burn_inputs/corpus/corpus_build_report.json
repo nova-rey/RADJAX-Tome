@@ -1,0 +1,22 @@
+{
+  "blockers": [],
+  "corpus_hash": "sha256:fc19f85428f907dd52d301157ca000a495a6b3f8f2236720b024bb7cb22451a9",
+  "corpus_jsonl_path": "tests/fixtures/p6_u1_reduced_burn_inputs/corpus/corpus.jsonl",
+  "corpus_manifest_path": "tests/fixtures/p6_u1_reduced_burn_inputs/corpus/corpus_manifest.json",
+  "created_at": "2026-08-08T14:30:30.166486+00:00",
+  "excluded_sources": [],
+  "manifest_hash": "sha256:d53d70b4c88e5a4148beb6def9d7042f669deb05167e792c7c09ddce53263c37",
+  "manifest_hash_policy": "exclude_self_hash_and_created_at_v1",
+  "num_chars": 8256,
+  "num_duplicates_removed": 0,
+  "num_empty_removed": 0,
+  "num_examples": 64,
+  "num_sources_excluded": 0,
+  "num_sources_included": 64,
+  "num_sources_seen": 64,
+  "num_unsupported_removed": 0,
+  "output_dir": "tests/fixtures/p6_u1_reduced_burn_inputs/corpus",
+  "schema_version": "corpus_build_report_v1",
+  "status": "pass",
+  "warnings": []
+}
