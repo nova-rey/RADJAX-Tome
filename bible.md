@@ -2987,3 +2987,24 @@ ownership model. Contract 0.9.0 remains authoritative for journal structure,
 receipts, transitions, and restart disposition; public v3 bytes and identities,
 the v2 default, historical paths, Student, Golden evidence, M8, and M9 remain
 unchanged.
+
+## 2026-08-08 — Path-B M7 Byte-Reproducibility Correction
+
+Fresh ordinary Path-B builds from one shared input set reproduced identical
+selected records and shard bytes, but the native v4 M7 archive diverged first
+in copied runtime/debug members: wall-clock timestamps, machine-local source
+paths, staging paths, and selected-rerun timing/host measurements. The
+behavior-bearing selected payload was already equal; the archive inventory was
+binding incidental producer diagnostics. The terminal v4 writer now gives the
+Student profile a deterministic semantic/core projection: private C6,
+reports, run/progress, timing, production-report, linkage-audit, and
+side-board diagnostics remain in the legacy/full-debug surfaces but are not
+M7 Student members; required core timestamps use a fixed nonsemantic epoch and
+retained absolute paths become source-relative or stable external-basename
+references. The normal writer then seals the same deterministic v4 directory
+and archive under Contract v0.8.3/a33a0a0d; legacy production, v2 default,
+Student, Contract, Golden evidence, M8, and M9 remain untouched.
+The explicit v6 Student package path applies the same projection before
+materializing Contract v6 resources and manifests, so the native M7 sibling
+and v6 directory/archive package forms reproduce from the same declared
+inputs. No committed P6.U1 worktree fixture was modified.

@@ -69,6 +69,37 @@ _SEMANTIC_FIELDS = frozenset(
     }
 )
 
+# The legacy Path-B tree deliberately retains runtime and diagnostic evidence
+# for resume/debugging.  A ``student`` v4 payload is the ordinary distributable
+# M7 surface, however, and must not bind that machine-local evidence into its
+# governed bytes.  Keep the full evidence for the explicit debug profile while
+# projecting only the stable semantic/core profile here.
+_V4_CANONICAL_RUNTIME_TIMESTAMP = "1970-01-01T00:00:00+00:00"
+_V4_STUDENT_NONSEMANTIC_MEMBERS = (
+    "c6/",
+    "reports/",
+    "delivery_report.json",
+    "progress_log.jsonl",
+    "run_manifest.json",
+    "run_plan.json",
+    "production_build_report.json",
+    "selected_linkage_audit.json",
+    "leaderboards/leaderboard_report.json",
+    "leaderboards/long_tail_uncertainty.json",
+    "leaderboards/perverse_tail_diagnostic.json",
+)
+_V4_RUNTIME_KEYS = frozenset(
+    {
+        "created_at",
+        "generated_at",
+        "completed_at",
+        "updated_at",
+        "started_at",
+        "finished_at",
+    }
+)
+_V4_REQUIRED_TIMESTAMP_MEMBERS = frozenset({"metadata.json", "teacher_manifest.json"})
+
 
 @dataclass(frozen=True)
 class ShardedTomeV4Result:
@@ -114,7 +145,11 @@ def package_legacy_artifact_as_sharded_tome_v4(
 
     Legacy selected wrappers and manifests are intentionally not copied: v4
     emits their replacement payload grammar and its own acyclic manifest graph.
-    All copied source members remain raw-integrity inventory members only.
+    The full-debug profile retains the remaining source evidence as raw
+    inventory members.  The student profile retains only stable semantic/core
+    members and deterministically projects runtime/path-only metadata; private
+    diagnostics remain in the legacy producer tree rather than changing M7
+    bytes.
     """
     if output.exists() and not overwrite:
         raise ValueError(f"output already exists: {output}")
@@ -566,9 +601,90 @@ def _copy_legacy_profile_members(
             continue
         if profile == "student" and relative.startswith("shards/"):
             continue
+        if profile == "student" and _is_v4_student_nonsemantic_member(relative):
+            continue
         target = destination / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(path, target)
+        if profile == "student":
+            target.write_bytes(
+                _v4_profile_member_bytes(
+                    path,
+                    relative=relative,
+                    source=source,
+                )
+            )
+        else:
+            shutil.copyfile(path, target)
+
+
+def _is_v4_student_nonsemantic_member(relative: str) -> bool:
+    """Return whether a legacy member is private runtime/diagnostic evidence.
+
+    These files remain available in the legacy producer artifact and in the
+    explicit ``full_debug_provenance`` profile.  They are not part of the
+    selected Student M7 surface: their paths, wall-clock fields, and host
+    measurements are not governed behavior and would make the raw v4 payload
+    depend on the output directory or process schedule.
+    """
+
+    return any(
+        relative == prefix or relative.startswith(prefix)
+        for prefix in _V4_STUDENT_NONSEMANTIC_MEMBERS
+    )
+
+
+def _v4_profile_member_bytes(path: Path, *, relative: str, source: Path) -> bytes:
+    """Write one v4 profile member with deterministic nonsemantic metadata.
+
+    The transformation is part of the normal v4 writer, not a post-production
+    fixture repair.  JSON key order and separators use the same canonical
+    encoder as the generated v4 graph.  Runtime timestamps are removed from
+    nested diagnostic objects; the two historical core manifests that require
+    a timestamp retain a fixed epoch marker.  Absolute machine-local paths are
+    reduced to source-relative paths (or a stable external basename) so they
+    cannot enter a governed package identity.
+    """
+
+    if path.suffix not in {".json", ".jsonl"}:
+        return path.read_bytes()
+    if path.suffix == ".json":
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        normalized = _v4_profile_value(payload, source=source)
+        if relative in _V4_REQUIRED_TIMESTAMP_MEMBERS:
+            if not isinstance(normalized, dict):
+                raise ValueError(f"v4 profile member is not an object: {relative}")
+            normalized["created_at"] = _V4_CANONICAL_RUNTIME_TIMESTAMP
+        return _canonical_bytes(normalized)
+
+    lines: list[bytes] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line:
+            continue
+        value = json.loads(line)
+        lines.append(_canonical_bytes(_v4_profile_value(value, source=source)))
+    return b"\n".join(lines) + (b"\n" if lines else b"")
+
+
+def _v4_profile_value(value: Any, *, source: Path) -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key): _v4_profile_value(item, source=source)
+            for key, item in value.items()
+            if str(key) not in _V4_RUNTIME_KEYS
+        }
+    if isinstance(value, list):
+        return [_v4_profile_value(item, source=source) for item in value]
+    if isinstance(value, str) and value.startswith("/"):
+        path = Path(value)
+        try:
+            return (
+                path.resolve(strict=False)
+                .relative_to(source.resolve(strict=False))
+                .as_posix()
+            )
+        except ValueError:
+            return f"external/{path.name}"
+    return value
 
 
 def _rewrite_index_shard_hashes(path: Path, shard_index_path: Path) -> None:

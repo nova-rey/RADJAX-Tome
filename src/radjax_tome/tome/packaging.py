@@ -33,6 +33,10 @@ from radjax_tome.tome.contracts import (
     CANONICAL_TOME_STUDENT_CONSUMPTION_V6_COVER_SCHEMA,
     HISTORICAL_PACKAGE_COVER_SCHEMA,
 )
+from radjax_tome.tome.payload_sharding_v4 import (
+    _is_v4_student_nonsemantic_member,
+    _v4_profile_member_bytes,
+)
 from radjax_tome.tome.producer_validation import (
     audit_selected_package,
     summarize_long_tail,
@@ -256,7 +260,14 @@ def package_tome_artifact(
         dir=output.parent,
     ) as tmp:
         temporary_root = Path(tmp) / _package_root_name(output, archive)
-        _materialize_package(source, temporary_root, profile=profile)
+        _materialize_package(
+            source,
+            temporary_root,
+            profile=profile,
+            deterministic_v6_profile=(
+                profile == STUDENT and student_contract_profile == "v6"
+            ),
+        )
         language_tokenizer_binding: LanguageTokenizerBindingV5Materialization | None = (
             None
         )
@@ -293,6 +304,8 @@ def package_tome_artifact(
                     ],
                 )
         _write_package_audit(temporary_root, profile=profile)
+        if profile == STUDENT and student_contract_profile == "v6":
+            _project_deterministic_v6_profile(source, temporary_root)
         _write_package_manifests(temporary_root, profile=profile)
         if language_tokenizer_binding is not None:
             # The ordinary content manifest binds the generic binding and its
@@ -307,6 +320,8 @@ def package_tome_artifact(
             _write_package_manifests(temporary_root, profile=profile)
         if student_consumption_v6 is not None:
             _write_package_manifests(temporary_root, profile=profile)
+        if profile == STUDENT and student_contract_profile == "v6":
+            _normalize_v6_generated_manifest(temporary_root)
         _write_canonical_package_cover_page(
             temporary_root,
             profile=profile,
@@ -510,7 +525,13 @@ def open_student_tome(artifact_dir: Path) -> StudentTomeReader:
     )
 
 
-def _materialize_package(source: Path, destination: Path, *, profile: str) -> None:
+def _materialize_package(
+    source: Path,
+    destination: Path,
+    *,
+    profile: str,
+    deterministic_v6_profile: bool = False,
+) -> None:
     destination.mkdir(parents=True, exist_ok=False)
     if profile == FULL_DEBUG_PROVENANCE:
         for child in sorted(source.iterdir(), key=lambda item: item.name):
@@ -546,7 +567,64 @@ def _materialize_package(source: Path, destination: Path, *, profile: str) -> No
         _copy_optional(source, destination, optional)
     _filter_student_selected_boards(destination, include_perverse=include_perverse)
     _export_student_inputs(source, destination)
-    _sanitize_student_portability(destination)
+    if not deterministic_v6_profile:
+        _sanitize_student_portability(destination)
+
+
+def _project_deterministic_v6_profile(source: Path, destination: Path) -> None:
+    """Project the ordinary v6 package onto stable producer-owned bytes.
+
+    The v6 Student package is a public distribution of the Path-B M7
+    resources.  Runtime reports, C6 diagnostics, absolute source paths, and
+    wall-clock metadata are useful in the producer artifact but are not part
+    of that distribution's governed surface.  Apply the same explicit
+    nonsemantic boundary as the v4 M7 writer before v6 resources and manifests
+    are materialized; this is normal package construction, not fixture repair.
+    """
+
+    for path in sorted(
+        destination.rglob("*"), key=lambda item: len(item.parts), reverse=True
+    ):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(destination).as_posix()
+        if _is_v4_student_nonsemantic_member(relative):
+            path.unlink()
+    for path in sorted(
+        destination.rglob("*"), key=lambda item: len(item.parts), reverse=True
+    ):
+        if not path.is_dir():
+            continue
+        relative = path.relative_to(destination).as_posix() + "/"
+        if _is_v4_student_nonsemantic_member(relative):
+            path.rmdir()
+
+    for path in sorted(destination.rglob("*")):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(destination).as_posix()
+        if relative.startswith("student_consumption/"):
+            continue
+        if path.suffix not in {".json", ".jsonl"}:
+            continue
+        path.write_bytes(
+            _v4_profile_member_bytes(
+                path,
+                relative=relative,
+                source=source,
+            )
+        )
+
+
+def _normalize_v6_generated_manifest(root: Path) -> None:
+    """Remove the final package-manifest wall clock from the v6 projection."""
+
+    path = root / _MANIFEST_FILES["content_manifest"]
+    if not path.is_file():
+        return
+    manifest = read_json_object(path)
+    manifest["created_at"] = "1970-01-01T00:00:00+00:00"
+    write_json(path, manifest)
 
 
 def _copy_required(

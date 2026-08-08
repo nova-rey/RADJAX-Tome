@@ -46,3 +46,32 @@ digest, not an input. Opaque values within a recognized profile are retained
 and hashed through their declared `{schema_id, value, semantic_digest}`
 envelope. Unknown profiles, execution capabilities, digest methods, and closed
 core fields fail closed.
+
+## Student-profile byte boundary
+
+The ordinary `student` v4 writer is the governed M7 byte boundary. It retains
+the closed semantic/core members needed by the v4 identity and selected
+consumer, then writes its own deterministic inventory and cover. Legacy
+runtime/debug evidence is intentionally not copied into this profile:
+`c6/`, `reports/`, run/progress manifests, delivery timing reports, production
+reports, linkage audits, and side-board-only diagnostics remain available in
+the legacy producer tree and in `full_debug_provenance`, but are not Student
+M7 members. The core `metadata.json` and `teacher_manifest.json` timestamps are
+required legacy fields, so the v4 writer emits the fixed epoch marker for
+those nonsemantic fields. Absolute machine-local path strings in retained JSON
+are reduced to source-relative (or stable external-basename) references.
+
+This projection occurs during the normal terminal v4 writer before the
+directory and archive are sealed; it is not a fixture rewrite or a post-build
+normalization step. It does not alter selected record order, semantic framing,
+shard assignment, Contract validation, the v2 default, or the legacy artifact
+used for resume and historical verification. The explicit debug profile keeps
+the complete legacy evidence surface for diagnostics.
+
+The explicit v6 Student package writer applies the same boundary to its copied
+Path-B source members before it materializes the Contract-owned v6 resources
+and manifests. This keeps the native M7 sibling and the v6 directory and
+archive forms byte-reproducible from identical declared inputs while leaving
+the producer/debug tree available for diagnostics and resume. Historical v5
+and v6 fixture bytes are not rewritten in place; the projection is selected
+only by the explicit v6 package path.

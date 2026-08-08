@@ -1867,8 +1867,8 @@
       "archive_or_removal_condition": null,
       "kind": "source-module",
       "owning_milestone": "M6",
-      "rationale": "Native Path B product spine.",
-      "replacement_or_target_boundary": "M6 pipeline stage boundary.",
+      "rationale": "Native Path B product spine; explicit v6 Student packaging applies the governed deterministic M7 byte projection before v6 resource materialization.",
+      "replacement_or_target_boundary": "M6 pipeline stage boundary and P6.U1 byte-reproducibility boundary.",
       "status": "canonical"
     },
     "src/radjax_tome/backends/compatibility_exports.py": {
@@ -2219,8 +2219,16 @@
       "archive_or_removal_condition": null,
       "kind": "source-module",
       "owning_milestone": "M7",
-      "rationale": "Additive v4 streaming payload writer, profile adapter, and deterministic transport owner.",
-      "replacement_or_target_boundary": "Published M7 producer-side sharding boundary.",
+      "rationale": "Additive v4 streaming payload writer, deterministic Student-profile projection, and deterministic transport owner.",
+      "replacement_or_target_boundary": "Published M7 producer-side sharding and byte-reproducibility boundary.",
+      "status": "canonical"
+    },
+    "tests/test_m7_path_b_determinism.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M7",
+      "rationale": "Ordinary Path-B production regression proving identical governed v4 M7 bytes from identical declared inputs.",
+      "replacement_or_target_boundary": "P6.U1 producer byte-reproducibility evidence.",
       "status": "canonical"
     },
     "docs/M7_PAYLOAD_SHARDING_CHARACTERIZATION.md": {
@@ -2235,8 +2243,8 @@
       "archive_or_removal_condition": null,
       "kind": "top-level-doc",
       "owning_milestone": "M7",
-      "rationale": "Portable v4 streaming payload and identity contract summary.",
-      "replacement_or_target_boundary": "RADJAX-Contract v0.3.0 streaming assets.",
+      "rationale": "Portable v4 streaming payload, identity, and deterministic Student-profile byte-boundary summary.",
+      "replacement_or_target_boundary": "RADJAX-Contract v0.3.0 streaming assets and P6.U1 reproducibility boundary.",
       "status": "canonical"
     },
     "docs/M7_CONTRACT_PUBLICATION_PIN.md": {
