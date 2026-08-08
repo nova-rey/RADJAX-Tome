@@ -1,0 +1,57 @@
+{
+  "byte_equal": {
+    "native_m7": true,
+    "receipts_before_pair_annotation": true,
+    "student_archive": true,
+    "student_directory": true
+  },
+  "comparison": {
+    "authority_identity": "sha256:14e534c7dafab428078eb2b4811111108a2be85840be2b52c5fa3be63457cb76",
+    "behavioral_source_identity": "sha256:bd2850b76fab3bb9aebbc0e04886596e7c5cb9f35e5c1c08c981e2d61da6e7ae",
+    "native_m7_sha256": "sha256:1e7556d550256a01e0381970f81565fdcad1ab234b63fce0f442d1c99b5aaf5f",
+    "native_m7_size_bytes": 44369,
+    "package_semantic_identity": "sha256:c7d78e25d6ba8a9e4a351eda87312cb1af63b50c8d54d6916f45567d2885f4bc",
+    "qualification": {
+      "selected_example_ids": 60,
+      "stable_examples": 64,
+      "valid_tokens": 4096
+    },
+    "resource_identity": "sha256:ee0ff9e6768d70bf2c7ed500874f27bb3bf0a7747da627e9ce190b1dda035676",
+    "student_archive_sha256": "sha256:5545b1ad337be66fce5be6f20378804710bc2bd6cd9835871628241dbd2ae13c",
+    "student_archive_size_bytes": 120643,
+    "student_directory_identity": "sha256:7fcc36e8bc46eaab8192e5fe0389a9c52b4f7f470b62eb779816504830670d66"
+  },
+  "contract": {
+    "commit": "1fa43e1aea2e198511db86dafb0aeefa525d48c7",
+    "package": "radjax-contract",
+    "release": "0.9.0"
+  },
+  "declared_inputs": {
+    "byte_identical": true,
+    "canonical_sha256": "sha256:0cf34d02a192790f8c010446e5e7daa900a10bf867b4863b580e769dfcb6822c",
+    "comparison_record_bytes": 4089,
+    "comparison_record_sha256": "sha256:0cf34d02a192790f8c010446e5e7daa900a10bf867b4863b580e769dfcb6822c",
+    "path": "tests/fixtures/p6_u1_reduced_burn_inputs.json",
+    "primary_record_bytes": 4089,
+    "primary_record_sha256": "sha256:0cf34d02a192790f8c010446e5e7daa900a10bf867b4863b580e769dfcb6822c"
+  },
+  "fixture_id": "native_v3_student_v6_reduced_burn_v1",
+  "primary": {
+    "authority_identity": "sha256:14e534c7dafab428078eb2b4811111108a2be85840be2b52c5fa3be63457cb76",
+    "behavioral_source_identity": "sha256:bd2850b76fab3bb9aebbc0e04886596e7c5cb9f35e5c1c08c981e2d61da6e7ae",
+    "native_m7_sha256": "sha256:1e7556d550256a01e0381970f81565fdcad1ab234b63fce0f442d1c99b5aaf5f",
+    "native_m7_size_bytes": 44369,
+    "package_semantic_identity": "sha256:c7d78e25d6ba8a9e4a351eda87312cb1af63b50c8d54d6916f45567d2885f4bc",
+    "qualification": {
+      "selected_example_ids": 60,
+      "stable_examples": 64,
+      "valid_tokens": 4096
+    },
+    "resource_identity": "sha256:ee0ff9e6768d70bf2c7ed500874f27bb3bf0a7747da627e9ce190b1dda035676",
+    "student_archive_sha256": "sha256:5545b1ad337be66fce5be6f20378804710bc2bd6cd9835871628241dbd2ae13c",
+    "student_archive_size_bytes": 120643,
+    "student_directory_identity": "sha256:7fcc36e8bc46eaab8192e5fe0389a9c52b4f7f470b62eb779816504830670d66"
+  },
+  "schema_version": "radjax_tome_p6_u1_reproducibility_pair_v1",
+  "tome_source_commit": "340998ee62e9608ae69c10cb9fd21f6ab72d2584"
+}

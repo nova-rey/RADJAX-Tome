@@ -3020,3 +3020,16 @@ configuration from the declared record, reuses the exact path-bound corpus
 manifest, and records strict v6 admission, source/passport linkage, resource
 identities, and pair-reproducibility evidence. No Student or Contract files,
 v2 defaults, public identity semantics, Golden evidence, M8, or M9 are changed.
+
+## 2026-08-08 — P6.U1 Authority Fixture Generated
+
+The committed reduced-burn fixture and receipt were generated after producer
+checkpoint `340998ee62e9608ae69c10cb9fd21f6ab72d2584` through the published
+command, using Contract `radjax-contract` `0.9.0` at
+`1fa43e1aea2e198511db86dafb0aeefa525d48c7`. Two fresh builds first matched
+canonical declared-input bytes
+(`sha256:0cf34d02a192790f8c010446e5e7daa900a10bf867b4863b580e769dfcb6822c`)
+and then matched native M7 bytes, Student directory bytes, and Student archive
+bytes. The generated evidence qualifies 64 stable examples, 4096 valid tokens,
+and 60 selected IDs; no output was hand-edited or postprocessed. Student and
+Contract remain unchanged and P6.U1 is not a Student-side acceptance claim.
