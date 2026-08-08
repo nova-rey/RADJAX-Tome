@@ -1,0 +1,22 @@
+{
+  "$id": "radjax_tome_package_v3",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "profile_id": {
+      "const": "selected_exemplar_semantic_profile_v3"
+    },
+    "transport": {
+      "enum": [
+        "directory",
+        "rtome",
+        "tgz"
+      ]
+    }
+  },
+  "required": [
+    "profile_id",
+    "transport"
+  ],
+  "type": "object"
+}

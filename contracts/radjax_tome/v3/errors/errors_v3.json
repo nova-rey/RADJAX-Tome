@@ -1,0 +1,40 @@
+{
+  "schema_version": "radjax_tome_artifact_errors_v3",
+  "phases": {
+    "1": "container_discovery",
+    "2": "dispatch_and_schema",
+    "3": "raw_proof_graph",
+    "4": "raw_shard_receipt",
+    "5": "index_and_range_coherence",
+    "6": "semantic_record_reconstruction",
+    "7": "identity_recomputation",
+    "8": "governed_comparison",
+    "9": "external_attestation"
+  },
+  "codes": [
+    "unsupported_version",
+    "malformed_schema",
+    "malformed_jsonl",
+    "malformed_reference",
+    "undeclared_member",
+    "missing_member",
+    "corrupt_member",
+    "corrupt_shard",
+    "incoherent_package_graph",
+    "index_incoherent",
+    "semantic_profile_unknown_field",
+    "semantic_profile_required_field_missing",
+    "semantic_sequence_mismatch",
+    "semantic_root_mismatch",
+    "authority_mismatch",
+    "policy_mismatch",
+    "governed_expected_root_mismatch",
+    "attestation_envelope_invalid",
+    "attestation_binding_mismatch",
+    "attestation_algorithm_unsupported",
+    "attestation_not_external",
+    "attestation_unavailable_required",
+    "attestation_expired",
+    "producer_invalid_private_state"
+  ]
+}

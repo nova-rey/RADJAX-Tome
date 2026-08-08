@@ -1,0 +1,32 @@
+{
+  "$id": "radjax_tome_semantic_authority_entry_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "identity": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "teacher",
+        "tokenizer_vocabulary",
+        "corpus",
+        "score_pass",
+        "selection",
+        "delivery"
+      ]
+    },
+    "schema_id": {
+      "minLength": 1,
+      "pattern": "^[^\\x00\\r\\n]+$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "role",
+    "schema_id",
+    "identity"
+  ],
+  "type": "object"
+}

@@ -31,6 +31,7 @@ def _selected_payloads_from_backend(
     completed_record_indices: set[int] | None = None,
     existing_payload_summaries: Mapping[int, dict[str, Any]] | None = None,
     _measurement_control: SelectedPassMeasurementControl | None = None,
+    full_payloads: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     if not selected_records:
         return []
@@ -302,6 +303,13 @@ def _selected_payloads_from_backend(
                         )
                         payload_summary["payload_hash"] = payload_hash
                         payload_summaries.append(payload_summary)
+                        if full_payloads is not None:
+                            full_payloads.append(
+                                {
+                                    **selected_payload,
+                                    "_record_index": record_index,
+                                }
+                            )
                         coordinates_committed += 1
                         if diagnostics is not None:
                             write_seconds = _elapsed(write_started)

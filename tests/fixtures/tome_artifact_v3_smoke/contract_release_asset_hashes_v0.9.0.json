@@ -1,0 +1,15 @@
+{
+  "schema_version": "radjax_tome_contract_v3_release_asset_hashes_v1",
+  "release_tag": "v0.9.0",
+  "release_commit": "1fa43e1aea2e198511db86dafb0aeefa525d48c7",
+  "release_sha256s_asset_sha256": "sha256:29c8ef2eac9cada4393dcaaf0fe553a8700cb55db12b7ae1c63b8e174293d071",
+  "release_receipt_asset_sha256": "sha256:3698d64bf4212b6290d69ca181a09fc454d176cf657a7bd73905ceefb5a96014",
+  "wheel_sha256": "sha256:da26003c739dd0a033cc5fa85364c3465e3ce98b6e66ea7d1e9141339b23a54d",
+  "wheel_size_bytes": 278342,
+  "sdist_sha256": "sha256:a826233f394c749926bd71944b199bf3e6de013efa0577148b2dd39d124f275c",
+  "sdist_size_bytes": 226505,
+  "source_v3_asset_manifest_sha256": "sha256:4f81cd901ad074cc24e279e37b7fbfbe25c22fb6b7fd77cbcc747b202995acf8",
+  "wheel_v3_asset_manifest_sha256": "sha256:4f81cd901ad074cc24e279e37b7fbfbe25c22fb6b7fd77cbcc747b202995acf8",
+  "sdist_v3_asset_manifest_sha256": "sha256:4f81cd901ad074cc24e279e37b7fbfbe25c22fb6b7fd77cbcc747b202995acf8",
+  "offline_mirror_manifest_sha256": "sha256:4f81cd901ad074cc24e279e37b7fbfbe25c22fb6b7fd77cbcc747b202995acf8"
+}

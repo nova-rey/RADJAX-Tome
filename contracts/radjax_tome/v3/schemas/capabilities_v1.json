@@ -1,0 +1,44 @@
+{
+  "$id": "radjax_tome_capabilities_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "optional": {
+      "items": {
+        "minLength": 1,
+        "pattern": "^[^\\x00\\r\\n]+$",
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "required": {
+      "allOf": [
+        {
+          "contains": {
+            "const": "streaming_shard_receipts_v3"
+          }
+        }
+      ],
+      "contains": {
+        "const": "standard_integrity_v3"
+      },
+      "items": {
+        "minLength": 1,
+        "pattern": "^[^\\x00\\r\\n]+$",
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schema_version": {
+      "const": "radjax_tome_capabilities_v1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "required",
+    "optional"
+  ],
+  "type": "object"
+}

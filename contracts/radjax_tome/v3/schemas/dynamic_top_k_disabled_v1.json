@@ -1,0 +1,14 @@
+{
+  "$id": "radjax_tome_dynamic_top_k_disabled_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "disabled_v1"
+    }
+  },
+  "required": [
+    "kind"
+  ],
+  "type": "object"
+}

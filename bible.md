@@ -2822,3 +2822,168 @@ The negative candidate report and baseline report are committed as exact raw
 evidence digests only. The T4 studio was stopped after collection. M8B now
 stops for independent review with the restored pre-optimization production
 staging path; no M9 or further engineering starts here.
+
+## 2026-08-06 — Program C Contract v3 Adoption Pin
+
+The isolated `adopt/tome-artifact-contract-v3` branch pins the explicit v3
+Tome artifact path to RADJAX-Contract release `0.9.0`, peeled commit
+`1fa43e1aea2e198511db86dafb0aeefa525d48c7`, and mirrors the byte-verified v3
+asset tree under `contracts/radjax_tome/v3`. The default artifact Contract v2,
+Student v5/v6 contracts, M7/v4 transport, Golden evidence, M8, and M9 remain
+unchanged. This commit only establishes the release identity and offline
+verification surface; no production v3 emission or default migration is
+claimed yet.
+
+## 2026-08-06 — Program C Explicit v3 Production Projection
+
+The canonical Path-B terminal handoff now supports an opt-in
+`--artifact-contract-version v3` projection. It snapshots the finalized
+selected records and payloads after late corridor linkage, projects only the
+released Contract v3 closed record fields, and publishes independently
+validated directory and `.v3.tgz` artifacts. The existing v2/default and M7/v4
+publication paths remain unchanged; this commit makes no performance or
+default-migration claim.
+
+## 2026-08-06 — Program C v3 Verification and Transactional Publication
+
+The opt-in v3 path now exposes a thin `verify-artifact` adapter for standard,
+governed, and externally attested Contract validation, with external evidence
+required outside the artifact under test. Directory and archive publication
+are separate private journaled transactions using the released Contract state
+machine; each validates before promotion and records no journal state in public
+artifacts. The v2 default, historical v4/v5/v6 paths, Student, Golden data,
+M8, and M9 remain unchanged.
+
+## 2026-08-06 — Program C v3 Finalized Payload Handoff
+
+Canonical opt-in v3 publication now receives the complete already-materialized
+selected payload values through a typed extension of the existing finalized
+handoff. It does not reread staged or v4 files, repeat score/selection logic, or
+alter the v2 summary-only default path. The handoff also carries the existing
+selection-authority identity explicitly; all Contract v3 validation remains
+owned by the released Contract.
+
+## 2026-08-06 — Program C v3 Fixture and Compatibility Proof
+
+The opt-in Contract v3 canonical path produced the committed ordinary-CPU
+four-record, two-shard fixture and separately validated directory/archive
+transports. Standard integrity, governed comparison, external attestation,
+archive receipt, raw/graph corruption, pre-yield streaming, resharding, and
+coherent-replacement behavior are covered by focused tests. The v2 default,
+historical v4/v5/v6 paths, Student, Golden data, M8, and M9 remain unchanged;
+this is adoption evidence only and makes no default-migration or performance
+claim.
+
+## 2026-08-06 — Program C Historical Regression Inventory Reconciliation
+
+The full-suite inventory expectations now include the authorized opt-in
+`verify-artifact` command and the `artifact_contract_version` configuration
+field. Historical Student v4/v5 tests continue to validate their frozen
+mirrors while recognizing the released Contract v3 commit as the active
+dependency pin. No historical package behavior, v2 default, Student path, or
+Golden evidence was changed.
+
+## 2026-08-06 — Program C Ledger Regression Surface
+
+Hydra validation now recognizes the repository's existing append-only record
+kinds and historical `docs:` aliases while including the new v3 verification
+command and fixture surfaces. This is ledger/test reconciliation only; no
+production behavior or released artifact was changed.
+
+## 2026-08-06 — Program C Hydra Verification Surface
+
+Hydra now records the opt-in `cli:verify-artifact` command as a canonical
+Program-C surface. The append-only inventory continues to distinguish
+historical compatibility entries and special `docs:` aliases; no default CLI,
+released behavior, or prior artifact contract was altered.
+
+## 2026-08-06 — Program C Formatting Gate
+
+The source-bound Ruff format gate was applied to the v3 configuration adapter,
+Contract pin test, and Hydra inventory test. The changes are formatting-only;
+the v3 handoff, default v2 behavior, historical compatibility, and all artifact
+identities remain unchanged.
+
+## 2026-08-06 — Program C v3 `.rtome` Transport Proof
+
+The adopted v3 path now provides a transport-only wrapper for an already
+promoted v3 directory and proves Contract acceptance of `.rtome`. It does not
+emit an additional canonical sibling or construct a second semantic package;
+directory and `.tgz` remain the canonical publication outputs.
+
+## 2026-08-06 — Program C Transactional Publication Hardening
+
+The opt-in v3 publisher now separates directory and archive journal receipts,
+seals bytes before receipt commits, validates archive candidates before public
+visibility, uses deterministic transport metadata, refuses stale private
+transactions, and exposes bounded PC39–PC47 fault-injection boundaries. A
+promoted directory can be resumed into an independently validated archive;
+the pair is never reported as atomically visible. The v2 default and all
+historical paths remain unchanged.
+
+## 2026-08-06 — Program C Fixture Mutation and Rebuild Proofs
+
+The ordinary-CPU v3 fixture now records its expanded build and public-member
+receipt projection, deterministic archive identity, root-change metamorphic
+checks, corruption/index mutation rejection, assurance-mode outcomes,
+streaming guards, and archive-only resume behavior. These are opt-in adoption
+proofs only; no Golden artifact, v2 default, Student path, M8 state, or M9
+work was changed.
+
+## 2026-08-06 — Program C Released Contract Parity Evidence
+
+The v3 adoption branch now records sanitized release receipt and asset-hash
+metadata for the immutable RADJAX Contract v0.9.0 release. Source, release
+asset, and offline mirror identities are checked without introducing network
+or mutable dependency assumptions; no Contract, Student, Golden, M8, or M9
+behavior changed.
+
+## 2026-08-06 — Program C Archive-Resume Journal Closure
+
+Archive-only resume now records its own private Contract journal transitions,
+reuses a matching interrupted journal, validates the promoted directory before
+creating archive bytes, and removes private state only after the archive is
+durably promoted. This closes the transactional recovery correction without
+changing any released format, default v2 behavior, Student, Golden, M8, or M9.
+
+## 2026-08-07 — Program C Archive Journal Validation and Idempotent Cleanup
+
+Archive recovery now validates every discovered private journal object through
+the released Contract journal APIs and compares its Tome-owned binding with the
+promoted directory, intended archive, authority, policy, configuration,
+semantic root, transaction relationship, and sealed receipts before any
+overwrite or resume work. Matching pre-existing archives are validated and
+completed without rewriting; conflicting, stale, malformed, mixed-run,
+cross-authority, cross-configuration, or unreceipted state fails closed.
+Bound private staging is fsynced and removed before the journal root only after
+both independently promoted outputs are valid, so completion-marker and
+interrupted-cleanup recovery are idempotent. This bounded correction leaves
+the v3 public identity, Contract release, v2 default, historical paths,
+Student, Golden evidence, M8, and M9 unchanged.
+
+## 2026-08-07 — Program C Recovery Topology and Private Ownership Correction
+
+The v3 recovery dispatcher now recognizes only explicitly bound private
+topologies: canonical directory-only state after PC45--PC47, canonical
+directory-plus-archive state, and fresh archive-only repack state. Directory
+promotion is validated and completed through the released Contract restart
+disposition before archive publication begins; archive-only state never
+fabricates a directory journal. All private roots, journals, staging paths,
+receipts, markers, and nested components are inspected without following
+symlinks before mutation or cleanup. Directory and archive remain independent
+transactions, public v3 bytes and identities are unchanged, and the v2 default,
+historical paths, Student, Golden evidence, M8, and M9 remain untouched.
+
+## 2026-08-07 — Program C Deterministic Private Identity Correction
+
+The v3 publication path now derives directory and canonical archive transaction
+identities from validated non-journal facts, derives fresh archive-only identity
+from the validated public semantic root and explicit topology, and derives
+journal-root and role-specific staging names from those identities. Recovery
+rejects coherently rewritten transaction or staging claims, foreign sibling
+staging, and stripped canonical journals relabeled as archive-only. Cleanup is
+authorized only for exact derived private paths under Tome's documented local
+ownership model. Contract 0.9.0 remains authoritative for journal structure,
+receipts, transitions, and restart disposition; public v3 bytes and identities,
+the v2 default, historical paths, Student, Golden evidence, M8, and M9 remain
+unchanged.

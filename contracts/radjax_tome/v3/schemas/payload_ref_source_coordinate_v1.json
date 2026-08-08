@@ -1,0 +1,32 @@
+{
+  "$id": "radjax_tome_payload_ref_source_coordinate_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "source_coordinate"
+    },
+    "source_position": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "source_row": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "source_shard_id": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "kind",
+    "source_shard_id",
+    "source_row",
+    "source_position"
+  ],
+  "type": "object"
+}

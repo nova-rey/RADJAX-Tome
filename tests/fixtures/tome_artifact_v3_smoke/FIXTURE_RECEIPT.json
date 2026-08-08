@@ -1,0 +1,43 @@
+{
+  "archive_receipt_sha256": "sha256:50c101de423cc54833ba6a8f7764b7a81d446ebba9e357121b17e10eb353d60e",
+  "archive_sha256": "sha256:c2d070d0a6f7997901dbdcb2e7d90615c31eb080271e85ae9bd04c9c21c673e6",
+  "archive_size_bytes": 6182,
+  "artifact_contract": "radjax_tome_artifact_contract@3.0.0",
+  "build": {
+    "base_commit": "b78821c6aec17335125df2e7f5823dce285735cf",
+    "command": "canonical production build --artifact-contract-version v3 --device cpu --payload-records-per-shard 2",
+    "config_identity": "fixture:tome_artifact_v3_smoke_v1",
+    "selection_indexes": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "claims_not_made": [
+    "Student training",
+    "accelerator execution",
+    "M8 performance",
+    "default v2 migration"
+  ],
+  "contract_pin": "1fa43e1aea2e198511db86dafb0aeefa525d48c7",
+  "directory_semantic_root": "sha256:f4b765aa0ca3dcd2e551d431e239e7504c5c34ef22c50d9766544a73de934ce2",
+  "fixture_id": "tome_artifact_v3_smoke_v1",
+  "profile_id": "selected_exemplar_semantic_profile_v3",
+  "public_member_digests": {
+    "behavioral_policy": "sha256:1e7819ec190eb614f58b20495b92fd8f83d58327119b71361b8246064ed9261a",
+    "payload_index": "sha256:5541a4a55f4dbe4ef67e9e472516f972f77c8ee1451c18c75a400ff25a22d87d",
+    "payload_shard_index": "sha256:a54b2f5f14c7cb8b58d323424251a8631251ef21413880ee600eea00f6da1b9d",
+    "semantic_authority": "sha256:c3a4a202a9f194af6b85e360b75812d8ea91cb296b2781ba13b05d74108e8902",
+    "semantic_identity": "sha256:813a6aeb11ea6dd7cda59f52c0a70a8e340527c55f73e6bc3cd18989fffb5c3b"
+  },
+  "record_count": 4,
+  "schema_version": "radjax_tome_v3_fixture_receipt_v1",
+  "shard_count": 2,
+  "transport_pair_atomicity": false,
+  "validation_modes": [
+    "standard",
+    "governed",
+    "external-attestation"
+  ]
+}

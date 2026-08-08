@@ -1,0 +1,48 @@
+{
+  "$id": "radjax_tome_semantic_identity_v3",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "behavioral_policy_identity": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "contract_version": {
+      "const": "radjax_tome_artifact_contract@3.0.0"
+    },
+    "ordered_record_sequence_digest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "record_count": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "radjax_tome_semantic_identity_v3"
+    },
+    "semantic_authority_identity": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "semantic_profile_id": {
+      "const": "selected_exemplar_semantic_profile_v3"
+    },
+    "semantic_root": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "contract_version",
+    "semantic_profile_id",
+    "semantic_authority_identity",
+    "behavioral_policy_identity",
+    "record_count",
+    "ordered_record_sequence_digest",
+    "semantic_root"
+  ],
+  "type": "object"
+}

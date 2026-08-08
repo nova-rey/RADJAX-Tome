@@ -1,0 +1,10 @@
+{
+  "schema_version": "radjax_tome_historical_compatibility_v3",
+  "dispatch": {
+    "radjax_tome_artifact_contract@1.0.0": "historical_v1_validator_only",
+    "radjax_tome_artifact_contract@2.0.0": "historical_v2_validator_only",
+    "radjax_tome_artifact_contract@3.0.0-draft.1": "unsupported_version",
+    "radjax_tome_artifact_contract@3.0.0": "native_v3_validator"
+  },
+  "mapping_policy": "native_validation_no_cross_version_normalization_or_inference"
+}

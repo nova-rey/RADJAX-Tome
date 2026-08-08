@@ -17,7 +17,7 @@ from radjax_tome.corpora import (
 ROOT = Path(__file__).resolve().parents[1]
 MIRROR = ROOT / "contracts/radjax_tome/student_consumption/v5"
 PINNED_COMMIT = "cac3dd21e0d56df5a9e6fd50b20267e0b8960995"
-ACTIVE_CONTRACT_COMMIT = "b3275b8769c36b6261f4f241c47f0066c651e869"
+ACTIVE_CONTRACT_COMMIT = "1fa43e1aea2e198511db86dafb0aeefa525d48c7"
 
 
 def _entries(root: Path) -> dict[str, str]:

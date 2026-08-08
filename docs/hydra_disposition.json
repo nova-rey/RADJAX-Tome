@@ -36,6 +36,78 @@
     }
   ],
   "records": {
+    "src/radjax_tome/tome/artifact_v3.py": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "production-module",
+      "owning_milestone": "Program-C",
+      "rationale": "Tome-side v3 publication adapter consuming the finalized typed handoff, deriving deterministic directory/archive and archive-only transaction identities and staging paths, classifying recovery topologies, enforcing no-follow private ownership, validating bound journal state before archive recovery, and completing idempotent cleanup.",
+      "replacement_or_target_boundary": "Released Contract v3 publication path",
+      "status": "canonical"
+    },
+    "tests/test_tome_artifact_v3_publication.py": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "test",
+      "owning_milestone": "Program-C",
+      "rationale": "Validates v3 directory/archive publication and semantic resharding invariance.",
+      "replacement_or_target_boundary": "Program-C v3 publication conformance",
+      "status": "canonical"
+    },
+    "contract-mirror:radjax_tome_v3": {
+      "archive_or_removal_condition": "Remove only when the explicit v3 adoption branch is abandoned.",
+      "kind": "offline-contract-mirror",
+      "owning_milestone": "Program-C",
+      "rationale": "Byte-verified mirror of released RADJAX Contract v3 assets for offline Tome verification.",
+      "replacement_or_target_boundary": "RADJAX-Contract v0.9.0 release assets",
+      "status": "canonical"
+    },
+      "docs:C1_TOME_ARTIFACT_CONTRACT_V3_PIN": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "release-pin",
+      "owning_milestone": "Program-C",
+      "rationale": "Records the immutable Contract v3 release and mirror identity.",
+      "replacement_or_target_boundary": "RADJAX-Contract v0.9.0",
+        "status": "canonical"
+      },
+      "docs:C3_TOME_V3_TRANSACTION_AND_VERIFY": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "top-level-doc",
+        "owning_milestone": "Program-C",
+        "rationale": "Documents the v3 verification-mode boundary and private transactional publication semantics.",
+        "replacement_or_target_boundary": "Released RADJAX Contract v3 adoption evidence.",
+        "status": "canonical"
+      },
+      "src/radjax_tome/cli/main.py:verify-artifact": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "public-cli-command",
+        "owning_milestone": "Program-C",
+        "rationale": "Thin standard, governed, and external-attestation adapter over Contract v3 validation APIs.",
+        "replacement_or_target_boundary": "Released RADJAX Contract v3 verification path.",
+        "status": "canonical"
+      },
+      "tests/test_tome_v3_verification_cli.py": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "test",
+        "owning_milestone": "Program-C",
+        "rationale": "Verifies v3 CLI mode selection, caller-input failures, and private journal visibility boundary.",
+        "replacement_or_target_boundary": "Program-C v3 verification conformance.",
+        "status": "canonical"
+      },
+      "tests/test_tome_v3_journal_transitions.py": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "test",
+        "owning_milestone": "Program-C",
+        "rationale": "Exercises each private Contract journal restart boundary, deterministic transaction and staging mutation refusal, directory-only and archive-only recovery topologies, symlink ownership refusal, matching/conflicting archive recovery, and idempotent cleanup.",
+        "replacement_or_target_boundary": "Program-C v3 transaction recovery conformance.",
+        "status": "canonical"
+      },
+      "tests/test_tome_v3_canonical_production.py": {
+        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+        "kind": "test",
+        "owning_milestone": "Program-C",
+        "rationale": "Proves opt-in v3 emission through the canonical production state machine and both transports.",
+        "replacement_or_target_boundary": "Program-C canonical v3 production conformance.",
+        "status": "canonical"
+      },
     "cli:allocate-fingerprint-corridor-coverage": {
       "archive_or_removal_condition": "M2 parity and M3 archive pointer.",
       "kind": "public-cli-command",
@@ -291,6 +363,14 @@
       "rationale": "Package validation action.",
       "replacement_or_target_boundary": "M9 supported command surface or research namespace.",
       "status": "supporting"
+    },
+    "cli:verify-artifact": {
+      "archive_or_removal_condition": null,
+      "kind": "public-cli-command",
+      "owning_milestone": "Program-C",
+      "rationale": "Opt-in Contract v3 standard, governed, and external-attestation verification adapter.",
+      "replacement_or_target_boundary": "Program C v3 adoption verification surface.",
+      "status": "canonical"
     },
     "docs/ARCHITECTURE.md": {
       "archive_or_removal_condition": null,
@@ -2429,6 +2509,30 @@
       "owning_milestone": "B4",
       "rationale": "Verifies committed ordinary v6 fixture identities and Contract admission.",
       "replacement_or_target_boundary": "B4 fixture closure acceptance tests.",
+      "status": "canonical"
+    },
+    "docs/C5_TOME_V3_FIXTURE.md": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "C5",
+      "rationale": "Records the opt-in Contract v3 canonical-production fixture, external evidence, and bounded compatibility proofs.",
+      "replacement_or_target_boundary": "Program C v3 adoption fixture and independent-review evidence.",
+      "status": "canonical"
+    },
+    "tests/test_tome_v3_fixture_receipt.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "C5",
+      "rationale": "Verifies Contract v3 directory/archive fixture integrity, governed comparison, external attestation, streaming, resharding, and coherent-replacement behavior.",
+      "replacement_or_target_boundary": "Program C v3 adoption fixture acceptance tests.",
+      "status": "canonical"
+    },
+    "tests/fixtures/tome_artifact_v3_smoke": {
+      "archive_or_removal_condition": null,
+      "kind": "fixture",
+      "owning_milestone": "C5",
+      "rationale": "Deterministic ordinary-CPU Contract v3 canonical-production artifact and externally supplied proof inputs.",
+      "replacement_or_target_boundary": "Program C v3 adoption fixture identities and compatibility evidence.",
       "status": "canonical"
     }
   },

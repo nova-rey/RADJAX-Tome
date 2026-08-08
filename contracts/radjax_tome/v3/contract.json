@@ -1,0 +1,31 @@
+{
+  "contract_id": "radjax_tome_artifact_contract",
+  "publication_version": "3.0.0",
+  "schema_draft": "https://json-schema.org/draft/2020-12/schema",
+  "profile_id": "selected_exemplar_semantic_profile_v3",
+  "supported_wire_schemas": {
+    "cover": "radjax_tome_cover_v5",
+    "capabilities": "radjax_tome_capabilities_v1",
+    "content_manifest_header": "tome_content_manifest_header_v4",
+    "content_manifest_inventory": "tome_content_manifest_inventory_v4",
+    "semantic_identity": "radjax_tome_semantic_identity_v3",
+    "semantic_authority": "radjax_tome_semantic_authority_v1",
+    "behavioral_policy": "radjax_tome_behavioral_policy_v1",
+    "payload_layout": "radjax_tome_payload_layout_v2",
+    "payload_index": "radjax_tome_payload_index_v3",
+    "payload_shard_index": "radjax_tome_payload_shard_index_v2",
+    "semantic_record": "selected_exemplar_semantic_record_v3",
+    "archive_receipt": "radjax_tome_archive_receipt_v1",
+    "governed_comparison": "radjax_tome_governed_comparison_v1",
+    "external_attestation": "radjax_tome_external_attestation_v1",
+    "construction_journal": "radjax_tome_construction_journal_v1"
+  },
+  "required_capabilities": [
+    "standard_integrity_v3",
+    "streaming_shard_receipts_v3"
+  ],
+  "extension_policy": "closed_core_new_version_required",
+  "profile_negotiation": "cover_selected_exact_profile_id_no_fallback",
+  "manifest_graph": "cover_to_header_to_inventory_acyclic",
+  "status": "candidate"
+}

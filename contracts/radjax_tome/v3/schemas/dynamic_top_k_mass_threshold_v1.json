@@ -1,0 +1,26 @@
+{
+  "$id": "radjax_tome_dynamic_top_k_mass_threshold_v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "mass_threshold"
+    },
+    "max_k": {
+      "maximum": 9223372036854775807,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "threshold": {
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    }
+  },
+  "required": [
+    "kind",
+    "threshold",
+    "max_k"
+  ],
+  "type": "object"
+}

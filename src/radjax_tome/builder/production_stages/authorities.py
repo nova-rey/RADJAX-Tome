@@ -175,6 +175,7 @@ def export_c6_global_authority(
         "source_passports_path": selected_passports_path,
         "authority_manifest_path": authority_manifest_path,
         "score_pass_authority_hash": score_pass_authority_hash,
+        "selection_integration_config_hash": selection_integration_hash(config),
         "external_authority_override_used": external_override_used,
     }
 

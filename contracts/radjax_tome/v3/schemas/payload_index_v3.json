@@ -1,0 +1,33 @@
+{
+  "$id": "radjax_tome_payload_index_row_v3",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "logical_record_id": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "row": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "selection_index": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "shard_id": {
+      "maximum": 9223372036854775807,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "logical_record_id",
+    "selection_index",
+    "shard_id",
+    "row"
+  ],
+  "type": "object"
+}

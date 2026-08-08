@@ -1,0 +1,8 @@
+{
+  "algorithm_id": "sha256",
+  "archive_sha256": "sha256:c2d070d0a6f7997901dbdcb2e7d90615c31eb080271e85ae9bd04c9c21c673e6",
+  "archive_size_bytes": 6182,
+  "artifact_reference": "tome-artifact-v3-smoke.tgz",
+  "schema_version": "radjax_tome_archive_receipt_v1",
+  "transport": "tgz"
+}

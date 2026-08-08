@@ -34,6 +34,7 @@ def _materialize_selected_payloads(
     completed_record_indices: set[int] | None = None,
     existing_payload_summaries: Mapping[int, dict[str, Any]] | None = None,
     _measurement_control: SelectedPassMeasurementControl | None = None,
+    full_payloads: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Choose the Path-A or Path-B payload mechanism from the owner layer."""
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
@@ -45,6 +46,7 @@ def _materialize_selected_payloads(
             completed_record_indices=completed_record_indices,
             existing_payload_summaries=existing_payload_summaries,
             _measurement_control=_measurement_control,
+            full_payloads=full_payloads,
         )
     return _selected_payloads_from_one_pass_capture(
         selected_records,
@@ -160,6 +162,7 @@ def run_selected_delivery_rerun(
             selected_records=selected_records,
         )
     curriculum_dir.mkdir(parents=True, exist_ok=True)
+    full_payloads = [] if config.retain_full_payloads_for_publication else None
     selected_payloads = _materialize_selected_payloads(
         selected_records,
         store=store,
@@ -168,6 +171,7 @@ def run_selected_delivery_rerun(
         completed_record_indices=set(staged_payload_summaries),
         existing_payload_summaries=staged_payload_summaries,
         _measurement_control=_measurement_control,
+        full_payloads=full_payloads,
     )
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
         _notify_delivery_progress(
@@ -191,6 +195,30 @@ def run_selected_delivery_rerun(
         selected_payloads,
         config=config,
     )
+    publication_payloads = None
+    if config.retain_full_payloads_for_publication:
+        full_by_index = {
+            int(item["_record_index"]): item for item in (full_payloads or [])
+        }
+        missing_publication = sorted(
+            {
+                int(summary["_record_index"])
+                for summary in selected_payloads
+                if int(summary["_record_index"]) not in full_by_index
+            }
+        )
+        if missing_publication:
+            # A resumed native staging prefix contains only compact summaries;
+            # it is not an authoritative v3 handoff.  Refuse publication rather
+            # than rereading emitted files or silently reconstructing payloads.
+            raise ValueError(
+                "v3_publication_handoff_incomplete_after_resume:"
+                + ",".join(str(index) for index in missing_publication)
+            )
+        publication_payloads = tuple(
+            dict(full_by_index[int(summary["_record_index"])])
+            for summary in selected_payloads
+        )
     selected_example_count = len(
         {record["selected_example_id"] for record in selected_records}
     )
@@ -222,6 +250,7 @@ def run_selected_delivery_rerun(
         leaderboards_dir=leaderboards_dir,
         selected_dir=selected_dir,
         curriculum_dir=curriculum_dir,
+        publication_payloads=publication_payloads,
     )
 
 
