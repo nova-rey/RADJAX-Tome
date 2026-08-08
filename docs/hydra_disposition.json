@@ -2577,7 +2577,7 @@
     },
     "tests/fixtures/p6_u1_reduced_burn_inputs.json": {
       "archive_or_removal_condition": null,
-      "kind": "fixture-input-spec",
+      "kind": "fixture",
       "owning_milestone": "P6.U1",
       "rationale": "Complete normalized declared-input record for the path-bound reduced-burn corpus and deterministic CPU smoke procedure.",
       "replacement_or_target_boundary": "Student P6.U1 authority handoff.",
@@ -2585,7 +2585,7 @@
     },
     "tests/fixtures/p6_u1_reduced_burn_inputs": {
       "archive_or_removal_condition": null,
-      "kind": "fixture-input",
+      "kind": "fixture",
       "owning_milestone": "P6.U1",
       "rationale": "Committed corpus, model metadata, tokenizer, weights, and provenance inputs consumed by the maintained producer command.",
       "replacement_or_target_boundary": "Student P6.U1 authority handoff.",

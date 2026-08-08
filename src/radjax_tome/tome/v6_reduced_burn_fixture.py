@@ -320,6 +320,12 @@ def _validate_declared_inputs(spec: dict[str, Any]) -> None:
             f"declared-input fields differ: {sorted(set(spec) ^ required)}"
         )
     if (
+        spec["contract"]["package"] != "radjax-contract"
+        or spec["input_root"] != "p6_u1_reduced_burn_inputs"
+        or spec["teacher"]["tokenizer_id"] != "radjax/p6-reduced-burn-fixture"
+    ):
+        raise ValueError("declared-input authority or input-root mismatch")
+    if (
         spec["fixture_id"] != FIXTURE_ID
         or spec["contract"]["commit"] != CONTRACT_COMMIT
     ):
@@ -478,6 +484,8 @@ def _validate_input_files(
     if sha256_file(provenance) != spec["teacher"]["provenance_sha256"]:
         raise ValueError("declared teacher provenance bytes changed")
     provenance_payload = json.loads(provenance.read_text(encoding="utf-8"))
+    if provenance_payload.get("model_name") != spec["teacher"]["model_name"]:
+        raise ValueError("declared teacher model identity changed")
     for key, relative in (
         ("config_sha256", "config.json"),
         ("tokenizer_file_sha256", "tokenizer.json"),
@@ -579,6 +587,8 @@ def _validate_vocabulary_identity(directory: Path, spec: dict[str, Any]) -> None
     if teacher_manifest.is_file():
         manifest = json.loads(teacher_manifest.read_text(encoding="utf-8"))
         provenance = manifest.get("teacher_model_provenance", {})
+        if manifest.get("tokenizer_id") != spec["teacher"]["tokenizer_id"]:
+            raise ValueError("declared tokenizer identifier changed")
         if provenance.get("tokenizer_hash") != spec["teacher"]["tokenizer_identity"]:
             raise ValueError("declared tokenizer identity changed")
 

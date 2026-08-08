@@ -3033,3 +3033,11 @@ and then matched native M7 bytes, Student directory bytes, and Student archive
 bytes. The generated evidence qualifies 64 stable examples, 4096 valid tokens,
 and 60 selected IDs; no output was hand-edited or postprocessed. Student and
 Contract remain unchanged and P6.U1 is not a Student-side acceptance claim.
+
+## 2026-08-08 — P6.U1 Declared-Input Closure
+
+The authority preflight now closes the Contract package, input-root, tokenizer
+identifier, and teacher model-name bindings against their committed sources;
+mutating those identity-bearing inputs is rejected before production. Hydra
+classifies the normalized input record and input directory as fixture surfaces,
+and no public artifact bytes or Contract/Student files changed.

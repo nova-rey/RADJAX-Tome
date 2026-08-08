@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from radjax_contract.tome import (
     open_verified_student_jsonl_records_v6,
     open_verified_student_m7_payload_v6,
@@ -21,6 +22,7 @@ from radjax_tome.tome.v6_reduced_burn_fixture import (
     PROFILE_ID,
     SELECTED_ID_COUNT,
     VALID_TOKEN_COUNT,
+    _validate_input_files,
     build_v6_reduced_burn_pair,
     canonical_declared_input_bytes,
     declared_input_digest,
@@ -185,6 +187,22 @@ def test_p6_u1_behavior_input_mutation_is_identity_bearing() -> None:
     mutated = json.loads(json.dumps(spec))
     mutated["behavior"]["sequence_length"] += 1
     assert declared_input_digest(mutated) != declared_input_digest(spec)
+
+
+def test_p6_u1_declared_teacher_mutation_is_rejected_before_production() -> None:
+    spec_path, spec = load_declared_inputs(SPEC)
+    mutated = json.loads(json.dumps(spec))
+    mutated["teacher"]["model_name"] = "radjax/forged-model"
+    inputs = spec_path.parent / spec["input_root"]
+    with pytest.raises(ValueError, match="teacher model identity"):
+        _validate_input_files(
+            mutated,
+            inputs,
+            inputs / spec["corpus"]["dataset_path"],
+            inputs / spec["corpus"]["manifest_path"],
+            inputs / spec["teacher"]["provenance_path"],
+            inputs / spec["teacher"]["model_path"],
+        )
 
 
 def _resolve(artifact: Path):
