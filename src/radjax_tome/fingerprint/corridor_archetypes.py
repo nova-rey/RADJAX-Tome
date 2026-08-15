@@ -105,6 +105,8 @@ class CorridorCandidateFeatures:
     quality_score: float | None = None
     corridor_fingerprint_id: str | None = None
     position_valid: bool = True
+    effective_top_k: int | None = None
+    vocab_size: int | None = None
 
     def __post_init__(self) -> None:
         if not self.candidate_id:
@@ -184,6 +186,16 @@ class CorridorCandidateFeatures:
                 payload.get("position_valid", True),
                 "position_valid",
             ),
+            effective_top_k=(
+                None
+                if payload.get("effective_top_k") is None
+                else _strict_int(payload["effective_top_k"], "effective_top_k")
+            ),
+            vocab_size=(
+                None
+                if payload.get("vocab_size") is None
+                else _strict_int(payload["vocab_size"], "vocab_size")
+            ),
         )
 
 
@@ -203,6 +215,7 @@ class CorridorArchetypeScore:
     quality_score: float
     corridor_training_utility: float | None
     policy_id: str
+    full_width: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -219,6 +232,7 @@ class CorridorArchetypeScore:
             "quality_score": self.quality_score,
             "corridor_training_utility": self.corridor_training_utility,
             "policy_id": self.policy_id,
+            "full_width": self.full_width,
         }
 
 
@@ -308,6 +322,11 @@ def score_corridor_archetype_candidate(
         quality_score=quality_score,
         corridor_training_utility=utility,
         policy_id=policy.policy_id,
+        full_width=(
+            features.effective_top_k is not None
+            and features.vocab_size is not None
+            and features.effective_top_k >= features.vocab_size
+        ),
     )
 
 

@@ -2734,6 +2734,14 @@
       "rationale": "Documents coordinate-keyed within-board duplicate collapse and the explicit boundary around complete C2-C6 reserves.",
       "replacement_or_target_boundary": "M8 deterministic deduplication and backfill implementation.",
       "status": "canonical"
+    },
+    "docs/M8F_SUBCHECKPOINT2_C2_COMPLETE_RESERVE.md": {
+      "archive_or_removal_condition": "Archive when a governed external reserve implementation supersedes the canonical complete-pool mode.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8F",
+      "rationale": "Records complete-pool C2 wiring, exact-rational authority propagation, and coordinate-preserving canonical claim behavior.",
+      "replacement_or_target_boundary": "M8 deterministic reserve, deduplication, and backfill implementation.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

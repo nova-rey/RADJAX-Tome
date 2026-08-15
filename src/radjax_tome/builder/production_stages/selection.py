@@ -55,7 +55,10 @@ def prepare_c6_selection(config: Any, authorities: Mapping[str, Any]) -> dict[st
     leaderboards = build_corridor_candidate_leaderboards(
         feature_records,
         CorridorLeaderboardPolicy(
-            candidate_pool_cap=config.fingerprint_corridor_candidate_pool_cap
+            candidate_pool_cap=config.fingerprint_corridor_candidate_pool_cap,
+            full_width_cap_numerator=config.full_width_cap_numerator,
+            full_width_cap_denominator=config.full_width_cap_denominator,
+            retain_complete_candidate_pool=True,
         ),
     )
     c2_path = write_corridor_candidate_leaderboards(
@@ -103,6 +106,8 @@ def prepare_c6_selection(config: Any, authorities: Mapping[str, Any]) -> dict[st
         CorridorGlobalClaimPolicy(
             total_selected_exemplar_budget=config.total_selected_exemplar_budget,
             require_full_budget=False,
+            full_width_cap_numerator=config.full_width_cap_numerator,
+            full_width_cap_denominator=config.full_width_cap_denominator,
         ),
     )
     write_corridor_global_claim_result(claims, c6_root / "claims", overwrite=True)

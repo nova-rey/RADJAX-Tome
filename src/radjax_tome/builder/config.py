@@ -162,6 +162,8 @@ class SelectionIntent:
     fingerprint_corridor_mode_cap: int
     fingerprint_corridor_candidate_pool_cap: int
     require_full_selected_budget: bool
+    full_width_cap_numerator: int = 1
+    full_width_cap_denominator: int = 3
 
 
 @dataclass(frozen=True)
@@ -319,6 +321,8 @@ def adapt_legacy_production_build_config(
                 config.fingerprint_corridor_candidate_pool_cap
             ),
             require_full_selected_budget=config.require_full_selected_budget,
+            full_width_cap_numerator=config.full_width_cap_numerator,
+            full_width_cap_denominator=config.full_width_cap_denominator,
         ),
         execution=ExecutionIntent(
             gpu_batch_size_mode=config.gpu_batch_size_mode,
@@ -822,6 +826,8 @@ def production_build_config_from_resolved(
             intent.selection.fingerprint_corridor_candidate_pool_cap
         ),
         require_full_selected_budget=intent.selection.require_full_selected_budget,
+        full_width_cap_numerator=intent.selection.full_width_cap_numerator,
+        full_width_cap_denominator=intent.selection.full_width_cap_denominator,
         corridor_feature_jsonl_path=intent.compatibility.corridor_feature_jsonl_path,
         global_board_supply_path=intent.compatibility.global_board_supply_path,
         c4_claims_path=intent.compatibility.c4_claims_path,
@@ -1035,6 +1041,21 @@ def validate_tome_build_intent(
     if intent.selection.fingerprint_corridor_candidate_pool_cap <= 0:
         errors.append(
             "selection.fingerprint_corridor_candidate_pool_cap must be positive"
+        )
+    numerator = intent.selection.full_width_cap_numerator
+    denominator = intent.selection.full_width_cap_denominator
+    if (
+        isinstance(numerator, bool)
+        or isinstance(denominator, bool)
+        or not isinstance(numerator, int)
+        or not isinstance(denominator, int)
+        or numerator < 1
+        or denominator < 1
+        or numerator > denominator
+    ):
+        errors.append(
+            "selection.full_width_cap_numerator/denominator must be positive "
+            "integers with numerator <= denominator"
         )
     if (
         intent.selection.fingerprint_corridor_budget_max is not None
@@ -1420,6 +1441,8 @@ def selection_authority_payload_v1(
             selection.fingerprint_corridor_candidate_pool_cap
         ),
         "require_full_selected_budget": selection.require_full_selected_budget,
+        "full_width_cap_numerator": selection.full_width_cap_numerator,
+        "full_width_cap_denominator": selection.full_width_cap_denominator,
         "c2_schema": _C2_SCHEMA,
         "c3_schema": _C3_SCHEMA,
         "c4_schema": _C4_SCHEMA,

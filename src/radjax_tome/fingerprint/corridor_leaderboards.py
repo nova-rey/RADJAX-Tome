@@ -104,6 +104,9 @@ class CorridorLeaderboardPolicy:
     allow_compatibility_proxies: bool = False
     proxy_override_reason: str | None = None
     policy_id: str = "corridor_candidate_micro_leaderboard_v1"
+    full_width_cap_numerator: int = 1
+    full_width_cap_denominator: int = 3
+    retain_complete_candidate_pool: bool = False
 
     def __post_init__(self) -> None:
         if isinstance(self.candidate_pool_cap, bool) or not isinstance(
@@ -123,6 +126,12 @@ class CorridorLeaderboardPolicy:
             )
         if not self.policy_id:
             raise ValueError("policy_id must be nonempty")
+        if (
+            self.full_width_cap_numerator < 1
+            or self.full_width_cap_denominator < 1
+            or self.full_width_cap_numerator > self.full_width_cap_denominator
+        ):
+            raise ValueError("invalid full-width composition ratio")
 
     @property
     def compatibility_proxy_override_enabled(self) -> bool:
@@ -132,6 +141,11 @@ class CorridorLeaderboardPolicy:
         return {
             "schema_version": CORRIDOR_LEADERBOARD_SCHEMA,
             "policy_id": self.policy_id,
+            "full_width_cap": {
+                "numerator": self.full_width_cap_numerator,
+                "denominator": self.full_width_cap_denominator,
+            },
+            "retain_complete_candidate_pool": self.retain_complete_candidate_pool,
             "candidate_pool_cap": self.candidate_pool_cap,
             "archetype_policy": self.archetype_policy.to_dict(),
             "allow_compatibility_proxies": self.allow_compatibility_proxies,
@@ -358,7 +372,8 @@ def build_corridor_candidate_leaderboards(
             state.candidates_eligible += 1
             state.pool.append(score)
             state.pool.sort(key=_score_sort_key)
-            del state.pool[policy.candidate_pool_cap :]
+            if not policy.retain_complete_candidate_pool:
+                del state.pool[policy.candidate_pool_cap :]
         connection.commit()
 
     for mode_id, state in states.items():
@@ -405,6 +420,20 @@ def build_corridor_candidate_leaderboards(
         summary=summary,
         warnings=warnings,
     )
+
+
+def _apply_full_width_cap(
+    candidates: Iterable[CorridorArchetypeScore],
+    *,
+    capacity: int,
+    numerator: int,
+    denominator: int,
+) -> list[CorridorArchetypeScore]:
+    ranked = list(candidates)
+    allowance = max(1, capacity * numerator // denominator)
+    full = [candidate for candidate in ranked if candidate.full_width]
+    narrow = [candidate for candidate in ranked if not candidate.full_width]
+    return (full[:allowance] + narrow[: capacity - allowance])[:capacity]
 
 
 def write_corridor_candidate_leaderboards(
@@ -526,6 +555,15 @@ def load_corridor_candidate_leaderboards(
             ),
             proxy_override_reason=policy_payload.get("proxy_override_reason"),
             policy_id=str(policy_payload["policy_id"]),
+            full_width_cap_numerator=int(
+                (policy_payload.get("full_width_cap") or {}).get("numerator", 1)
+            ),
+            full_width_cap_denominator=int(
+                (policy_payload.get("full_width_cap") or {}).get("denominator", 3)
+            ),
+            retain_complete_candidate_pool=bool(
+                policy_payload.get("retain_complete_candidate_pool", False)
+            ),
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise CorridorLeaderboardError(

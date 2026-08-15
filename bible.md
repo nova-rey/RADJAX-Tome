@@ -3208,6 +3208,12 @@ by retaining only the best governed rank for a repeated selected coordinate.
 The complete ranked-reserve/backfill redesign remains explicitly unclaimed for
 the next checkpoint.
 
+The canonical C6 C2 path now opts into complete ranked candidate retention,
+while compatibility callers retain their bounded micro-pool behavior. Exact
+full-width ratio authority propagates through SelectionIntent, resolved
+configuration, C2, and C4. Compact payload and immutable-body Contract work
+remain design-only.
+
 2026-08-15 — M8F sub-checkpoint 1 exact full-width policy
 
 Added a Tome-owned exact-rational `{numerator: 1, denominator: 3}` composition

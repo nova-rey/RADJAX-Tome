@@ -53,6 +53,14 @@ class CorridorClaimError(ValueError):
     """Actionable C4 input, claim, or artifact error."""
 
 
+def _cap_candidates(candidates, capacity: int, numerator: int, denominator: int):
+    allowance = max(1, capacity * numerator // denominator)
+    ranked = list(candidates)
+    full = [candidate for candidate in ranked if candidate.full_width]
+    narrow = [candidate for candidate in ranked if not candidate.full_width]
+    return (full[:allowance] + narrow[: capacity - allowance])[:capacity]
+
+
 @dataclass(frozen=True)
 class CorridorGlobalClaimPolicy:
     total_selected_exemplar_budget: int
@@ -60,6 +68,8 @@ class CorridorGlobalClaimPolicy:
     claim_policy_id: str = CLAIM_POLICY_ID
     allow_nonproduction_sources: bool = False
     nonproduction_override_reason: str | None = None
+    full_width_cap_numerator: int = 1
+    full_width_cap_denominator: int = 3
 
     def __post_init__(self) -> None:
         if isinstance(self.total_selected_exemplar_budget, bool) or not isinstance(
@@ -80,6 +90,8 @@ class CorridorGlobalClaimPolicy:
             raise ValueError(
                 "nonproduction_override_reason is required for non-production sources"
             )
+        if not (1 <= self.full_width_cap_numerator <= self.full_width_cap_denominator):
+            raise ValueError("invalid full-width composition ratio")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -88,6 +100,10 @@ class CorridorGlobalClaimPolicy:
             "total_selected_exemplar_budget": self.total_selected_exemplar_budget,
             "require_full_budget": self.require_full_budget,
             "allow_nonproduction_sources": self.allow_nonproduction_sources,
+            "full_width_cap": {
+                "numerator": self.full_width_cap_numerator,
+                "denominator": self.full_width_cap_denominator,
+            },
             "nonproduction_override_reason": self.nonproduction_override_reason,
         }
 
