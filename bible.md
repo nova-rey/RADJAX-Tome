@@ -3240,3 +3240,12 @@ storage and immutable exemplar body/linkage manifests. It defines closed field
 registries, FV3-framed identity preimages, raw-versus-semantic digest domains,
 package inventory binding, and a crash-resumable body/manifest journal matrix.
 No RADJAX-Contract or Tome production implementation was made for this design.
+
+2026-08-15 — M8F/M8G completion corrections
+
+Completed the canonical C4 full-width composition wiring: the exact rational
+allowance is now applied to corridor claims with unused full-width allowance
+filled by ranked narrow candidates, and global-board full-width metadata
+survives export/load round trips. Tightened the design-only Contract amendment
+with a closed, non-recursive selection-obligation tuple registry. Compact
+dynamic-top-K storage and immutable exemplar-body production remain unstarted.

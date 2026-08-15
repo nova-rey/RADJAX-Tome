@@ -59,7 +59,14 @@ def _cap_candidates(candidates, capacity: int, numerator: int, denominator: int)
     ranked = list(candidates)
     full = [candidate for candidate in ranked if candidate.full_width]
     narrow = [candidate for candidate in ranked if not candidate.full_width]
-    return (full[:allowance] + narrow[: capacity - allowance])[:capacity]
+    # The allowance is a ceiling, not a reservation.  If fewer than the
+    # allowance of full-width candidates exist, the unused slots are filled by
+    # the next ranked narrow candidates.  Re-sort the chosen candidates by the
+    # original governed rank so arrival order cannot affect composition.
+    chosen_full = full[:allowance]
+    chosen_narrow = narrow[: capacity - len(chosen_full)]
+    chosen = set(id(candidate) for candidate in (*chosen_full, *chosen_narrow))
+    return [candidate for candidate in ranked if id(candidate) in chosen][:capacity]
 
 
 @dataclass(frozen=True)
@@ -488,7 +495,13 @@ def claim_corridor_then_backfill_global(
                 f"C3 mode {allocation.corridor_mode_id} exceeds C2 retained pool"
             )
         for rank, candidate in enumerate(
-            mode.candidates[: allocation.allocated_slots], 1
+            _cap_candidates(
+                mode.candidates,
+                allocation.allocated_slots,
+                policy.full_width_cap_numerator,
+                policy.full_width_cap_denominator,
+            ),
+            1,
         ):
             coordinate = (candidate.candidate_id, candidate.position)
             obligation = SelectionObligation(
@@ -1079,7 +1092,15 @@ def _global_candidate_from_dict(
         rank=int(payload.get("rank", index)),
         score=float(payload["score"]),
         eligible=bool(payload.get("eligible", True)),
-        metadata=dict(payload.get("metadata") or {}),
+        metadata={
+            **dict(payload.get("metadata") or {}),
+            "full_width": bool(
+                payload.get(
+                    "full_width",
+                    (payload.get("metadata") or {}).get("full_width", False),
+                )
+            ),
+        },
     )
 
 
