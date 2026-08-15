@@ -3154,3 +3154,9 @@ observed to dominate progress: encoding every field independently multiplied
 the existing JSON work. The hook was narrowed to three bounded exact field
 samples plus reused operation-ledger byte totals and cheap all-record K/mass
 facts before another lifecycle run.
+
+The first bounded full-lifecycle replay completed its selected staging and
+publication work but could not emit its diagnostic receipt because the frozen
+M8B three-run summary helper rejected the intentionally single-run lifecycle
+mode. The receipt writer now records explicit single-run observations without
+pretending to provide an M8B median.

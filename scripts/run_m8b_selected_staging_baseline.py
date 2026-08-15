@@ -86,7 +86,7 @@ def _receipt(
     fractions = [
         value / wall for value, wall in zip(staging, selected_wall, strict=True)
     ]
-    return {
+    receipt: dict[str, object] = {
         "schema_version": "m8b_selected_staging_baseline_v1",
         "tome_commit": expected_tome_commit,
         "statistics": statistics.receipt_projection(),
@@ -96,13 +96,28 @@ def _receipt(
             "manifest_sha256": _sha256(checkpoint.manifest_path),
         },
         "runs": runs,
-        "initial_staging_seconds": statistics.summarize(staging),
-        "selected_pass_wall_seconds": statistics.summarize(selected_wall),
-        "initial_staging_fraction_of_selected_pass": statistics.summarize(fractions),
-        "initial_staging_gate_passes": all(
-            value >= statistics.staging_gate_fraction for value in fractions
+        "initial_staging_seconds": (
+            statistics.summarize(staging)
+            if len(runs) == statistics.measured_run_count
+            else {"observations": staging}
+        ),
+        "selected_pass_wall_seconds": (
+            statistics.summarize(selected_wall)
+            if len(runs) == statistics.measured_run_count
+            else {"observations": selected_wall}
+        ),
+        "initial_staging_fraction_of_selected_pass": (
+            statistics.summarize(fractions)
+            if len(runs) == statistics.measured_run_count
+            else {"observations": fractions}
+        ),
+        "initial_staging_gate_passes": (
+            all(value >= statistics.staging_gate_fraction for value in fractions)
+            if len(runs) == statistics.measured_run_count
+            else None
         ),
     }
+    return receipt
 
 
 def _candidate_receipt(
