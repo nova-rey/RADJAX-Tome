@@ -2742,6 +2742,14 @@
       "rationale": "Records complete-pool C2 wiring, exact-rational authority propagation, and coordinate-preserving canonical claim behavior.",
       "replacement_or_target_boundary": "M8 deterministic reserve, deduplication, and backfill implementation.",
       "status": "canonical"
+    },
+    "docs/M8G_CONTRACT_AMENDMENT_DESIGN.md": {
+      "archive_or_removal_condition": "Archive when a reviewed Contract amendment supersedes this design or the amendment is rejected.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8G",
+      "rationale": "Design-only Contract amendment for compact dynamic-top-K resources and immutable body/linkage transactions; no Contract implementation is included.",
+      "replacement_or_target_boundary": "RADJAX-Contract amendment review and later opt-in Tome implementation.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

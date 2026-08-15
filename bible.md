@@ -3232,3 +3232,11 @@ The audit simulator was corrected to keep the full-width allowance hard even
 when the narrow candidate pool is exhausted. It now reports category shortfall
 separately from total eligible-pool exhaustion, with derived controlled
 fixtures covering duplicate coordinates and exhaustion.
+
+2026-08-15 — M8G Contract amendment design
+
+Published a design-only, Contract-pinned amendment for compact dynamic-top-K
+storage and immutable exemplar body/linkage manifests. It defines closed field
+registries, FV3-framed identity preimages, raw-versus-semantic digest domains,
+package inventory binding, and a crash-resumable body/manifest journal matrix.
+No RADJAX-Contract or Tome production implementation was made for this design.
