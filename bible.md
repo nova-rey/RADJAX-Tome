@@ -3138,3 +3138,13 @@ archive, Contract-validation, and packaging boundaries remain explicitly
 unmeasured and are recorded as next-checkpoint gaps. Lightning Studio remains
 stopped, Modal resources were torn down, and Contract/Student behavior is
 unchanged.
+
+2026-08-15 — M8D payload anatomy diagnostics
+
+M8D adds disabled-by-default diagnostics at the existing selected-exemplar
+staging and corridor-synchronization seams. The observer records dynamic-K and
+retained-mass distributions, bounded field-size samples, cumulative canonical
+and pretty-byte totals, reread/rehash/rewrite counts, and post-linkage timing.
+It does not alter payload construction, dynamic top-K/CSL behavior, selection,
+corridor semantics, checkpointing, or publication defaults. A bounded
+full-lifecycle replay is required before any optimization candidate is chosen.

@@ -20,6 +20,10 @@ from pathlib import Path
 from typing import Any
 
 from radjax_tome.builder.c6_integration import c5_records_for_delivery
+from radjax_tome.builder.delivery.assembly import (
+    assemble_selected_delivery_artifacts,
+    finalize_selected_delivery_corridor,
+)
 from radjax_tome.builder.delivery.measurement import deterministic_source_sample
 from radjax_tome.builder.delivery.replay import (
     ImmutablePostC5Checkpoint,
@@ -211,6 +215,9 @@ def _run_once(
         prepared = run_selected_delivery_replay(
             delivery, checkpoint=checkpoint, control=control
         )
+        if os.environ.get("M8D_FULL_LIFECYCLE") == "1":
+            prepared = finalize_selected_delivery_corridor(prepared)
+            assemble_selected_delivery_artifacts(prepared)
         metrics = dict(delivery.rerun_metrics or {})
         diagnostics = dict(metrics["selected_pass_execution_v1"])
         if diagnostics.get("score_pass_invocation_count") != 0:
@@ -232,6 +239,11 @@ def _run_once(
             "payload_hashes": [
                 payload["payload_hash"] for payload in prepared.selected_payloads
             ],
+            "lifecycle_output_bytes": (
+                sum(path.stat().st_size for path in output.rglob("*") if path.is_file())
+                if os.environ.get("M8D_FULL_LIFECYCLE") == "1"
+                else None
+            ),
             "metrics": metrics,
         }
     finally:

@@ -169,6 +169,9 @@ def main() -> None:
             cap=8,
             records=m8a._records(checkpoint),
         )
+    run_count = int(os.environ.get("M8D_RUN_COUNT", "3"))
+    if run_count < 1 or run_count > 3:
+        raise ValueError("M8D_RUN_COUNT must be between one and three")
     runs = [
         m8a._run_once(
             args,
@@ -177,7 +180,7 @@ def main() -> None:
             cap=8,
             records=m8a._records(checkpoint),
         )
-        for iteration in range(1, 4)
+        for iteration in range(1, run_count + 1)
     ]
     for run in runs[1:]:
         m8a._assert_equivalent(runs[0], run)

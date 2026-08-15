@@ -65,6 +65,11 @@ def assemble_selected_delivery_artifacts(
         native_payload_hashes = _synchronize_native_payload_shards(
             _native_payload_stage_dir(config),
             selected_records=selected_records,
+            _measurement_metrics=(
+                config.rerun_metrics.get("selected_pass_execution_v1")
+                if config.rerun_metrics is not None
+                else None
+            ),
         )
         _promote_native_payload_shards(config)
         for summary in selected_payloads:

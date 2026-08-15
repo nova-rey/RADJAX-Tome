@@ -94,3 +94,39 @@ def test_private_staging_diagnostics_split_initial_write_without_relabeling_m8a(
     assert counts["staging_json_encoding"]["bytes_written"] > 0
     assert counts["temporary_file_write"]["bytes_written"] > 0
     assert counts["atomic_replacement"]["files_replaced"] == 1
+
+
+def test_payload_anatomy_is_bounded_and_accounts_for_k_and_mass(tmp_path) -> None:
+    control = SelectedPassMeasurementControl(
+        benchmark_only=True,
+        effective_execution_cap=8,
+        immutable_checkpoint_digest="sha256:" + "b" * 64,
+        checkpoint_root=tmp_path / "checkpoint",
+        temporary_output_root=tmp_path / "output",
+    )
+    diagnostics = SelectedPassExecutionDiagnostics(
+        control=control,
+        requested_batch_size=8,
+    )
+    payload = {
+        "effective_top_k": 3,
+        "vocab_size": 16,
+        "top_mass": 0.75,
+        "tail_mass": 0.25,
+        "top_token_ids": [1, 2, 3],
+        "top_probs": [0.4, 0.2, 0.15],
+    }
+    for index in range(10):
+        diagnostics.record_payload_anatomy(
+            {**payload, "effective_top_k": index + 1},
+            stage="initial_staging",
+            record_index=index,
+        )
+    report = diagnostics.finish()
+    anatomy = report["payload_anatomy"]
+    assert anatomy["schema_version"] == "m8d_selected_payload_anatomy_v1"
+    assert len(anatomy["observations"]) == 8
+    assert len(anatomy["effective_top_k"]) == 10
+    assert anatomy["stage_totals"]["initial_staging"]["count"] == 10
+    assert anatomy["stage_totals"]["initial_staging"]["canonical_bytes"] > 0
+    assert anatomy["observations"][0]["fields"]["top_probs"]["elements"] == 3

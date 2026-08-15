@@ -65,6 +65,11 @@ if all(
 
 @app.function(image=image, gpu="T4", timeout=3600)
 def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
+    # M8D uses the same production replay with a bounded full-lifecycle
+    # diagnostic mode.  These environment flags are private measurement
+    # controls and are ignored by normal production commands.
+    os.environ["M8D_FULL_LIFECYCLE"] = "1"
+    os.environ["M8D_RUN_COUNT"] = "1"
     evidence = Path("/tmp/m8c-evidence")
     evidence.mkdir(parents=True, exist_ok=True)
     marker = evidence / "m8c_runner_marker.json"

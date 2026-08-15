@@ -7,6 +7,7 @@ underscore-prefixed measurement plumbing in ``rerun`` and ``staging``.
 
 from __future__ import annotations
 
+import json
 import resource
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
@@ -315,6 +316,7 @@ class SelectedPassExecutionDiagnostics:
     # never participate in authority, package, or semantic identities.
     operation_counts: dict[str, dict[str, int]] = field(default_factory=dict)
     _seen_shapes: set[tuple[object, ...]] = field(default_factory=set)
+    payload_anatomy: dict[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.peak_rss_bytes = self.entry_rss_bytes
@@ -342,6 +344,97 @@ class SelectedPassExecutionDiagnostics:
             "corridor_synchronization_rewrite",
         ):
             self.phase_status[phase] = "not_measured"
+        self.payload_anatomy = {
+            "schema_version": "m8d_selected_payload_anatomy_v1",
+            "observations": [],
+            "stage_totals": {},
+            "effective_top_k": [],
+            "retained_mass": [],
+        }
+
+    @staticmethod
+    def _json_size(value: object, *, pretty: bool) -> int:
+        kwargs: dict[str, object] = {
+            "sort_keys": True,
+            "ensure_ascii": False,
+        }
+        if pretty:
+            kwargs["indent"] = 2
+        else:
+            kwargs["separators"] = (",", ":")
+        return len(json.dumps(value, **kwargs).encode("utf-8"))
+
+    def record_payload_anatomy(
+        self,
+        payload: Mapping[str, object],
+        *,
+        stage: str,
+        record_index: int | None = None,
+    ) -> None:
+        """Record bounded payload facts without changing the payload itself."""
+
+        effective_top_k = payload.get("effective_top_k")
+        vocab_size = payload.get("vocab_size")
+        top_mass = payload.get("top_mass")
+        tail_mass = payload.get("tail_mass")
+        if isinstance(effective_top_k, (int, float)):
+            self.payload_anatomy["effective_top_k"].append(int(effective_top_k))
+        if isinstance(top_mass, (int, float)) and isinstance(tail_mass, (int, float)):
+            self.payload_anatomy["retained_mass"].append(
+                {"top_mass": float(top_mass), "tail_mass": float(tail_mass)}
+            )
+        observations = self.payload_anatomy["observations"]
+        if not isinstance(observations, list):
+            raise ValueError("payload anatomy observations must be a list")
+        # Keep exact field contributions for a small, deterministic sample.  The
+        # full run still records every payload's total bytes and K distribution;
+        # this bounded sample avoids making the diagnostic itself another large
+        # serialization workload.
+        sample_limit = 8
+        if len(observations) < sample_limit:
+            fields: dict[str, object] = {}
+            for name, value in sorted(payload.items()):
+                fields[name] = {
+                    "canonical_bytes": self._json_size(value, pretty=False),
+                    "pretty_bytes": self._json_size(value, pretty=True),
+                    "kind": (
+                        "array"
+                        if isinstance(value, list)
+                        else "mapping"
+                        if isinstance(value, Mapping)
+                        else "scalar"
+                    ),
+                    "elements": len(value)
+                    if isinstance(value, (list, tuple, Mapping))
+                    else 1,
+                }
+            observations.append(
+                {
+                    "stage": stage,
+                    "record_index": record_index,
+                    "effective_top_k": effective_top_k,
+                    "vocab_size": vocab_size,
+                    "top_mass": top_mass,
+                    "tail_mass": tail_mass,
+                    "canonical_bytes": self._json_size(payload, pretty=False),
+                    "pretty_bytes": self._json_size(payload, pretty=True),
+                    "fields": fields,
+                }
+            )
+        totals = self.payload_anatomy["stage_totals"]
+        if not isinstance(totals, dict):
+            raise ValueError("payload anatomy stage totals must be a mapping")
+        stage_total = totals.setdefault(
+            stage,
+            {
+                "count": 0,
+                "canonical_bytes": 0,
+                "pretty_bytes": 0,
+            },
+        )
+        stage_total["count"] += 1
+        stage_total["canonical_bytes"] += self._json_size(payload, pretty=False)
+        stage_total["pretty_bytes"] += self._json_size(payload, pretty=True)
 
     def count_operations(
         self,
@@ -545,6 +638,7 @@ class SelectedPassExecutionDiagnostics:
                 phase: dict(self.operation_counts[phase])
                 for phase in sorted(self.operation_counts)
             },
+            "payload_anatomy": self.payload_anatomy,
             "batches": self.batches,
             "resources": {
                 "process_rss_at_selected_pass_entry_bytes": self.entry_rss_bytes,

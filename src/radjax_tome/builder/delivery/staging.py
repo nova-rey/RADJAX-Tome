@@ -425,6 +425,12 @@ def _write_native_payload_shard(
     _measurement_diagnostics: SelectedPassExecutionDiagnostics | None = None,
 ) -> str:
     selected_dir.mkdir(parents=True, exist_ok=True)
+    if _measurement_diagnostics is not None:
+        _measurement_diagnostics.record_payload_anatomy(
+            payload,
+            stage="initial_staging",
+            record_index=record_index,
+        )
     shard = {
         "schema_version": "selected_exemplar_payload_shard_v1",
         "delivery_path": delivery_path,
@@ -543,6 +549,7 @@ def _synchronize_native_payload_shards(
     selected_dir: Path,
     *,
     selected_records: list[dict[str, Any]],
+    _measurement_metrics: dict[str, Any] | None = None,
 ) -> dict[int, str]:
     linkage = {
         (str(record["selected_example_id"]), int(record["selected_position"])): record
@@ -550,6 +557,8 @@ def _synchronize_native_payload_shards(
     }
     hashes: dict[int, str] = {}
     for path in sorted(selected_dir.glob("selected-exemplars-*.json")):
+        synchronization_started = perf_counter()
+        input_bytes = path.stat().st_size
         payload = read_json_object(path)
         records = payload.get("selected_exemplars")
         if not isinstance(records, list) or len(records) != 1:
@@ -570,8 +579,75 @@ def _synchronize_native_payload_shards(
             "semantic_tail_tag",
         ):
             item[key] = record.get(key)
+        if _measurement_metrics is not None:
+            anatomy = _measurement_metrics.get("payload_anatomy")
+            if isinstance(anatomy, dict):
+                # The post-linkage body is measured after the linkage fields
+                # are present and before the atomic rewrite.
+                effective = anatomy.setdefault("effective_top_k", [])
+                if isinstance(effective, list) and isinstance(
+                    item.get("effective_top_k"), (int, float)
+                ):
+                    effective.append(int(item["effective_top_k"]))
+                totals = anatomy.setdefault("stage_totals", {})
+                if isinstance(totals, dict):
+                    stage_total = totals.setdefault(
+                        "post_linkage",
+                        {
+                            "count": 0,
+                            "canonical_bytes": 0,
+                            "pretty_bytes": 0,
+                            "bytes_read": 0,
+                            "bytes_rewritten": 0,
+                        },
+                    )
+                    canonical = _native_payload_hash(payload)
+                    stage_total["count"] += 1
+                    stage_total["canonical_bytes"] += len(
+                        json.dumps(
+                            {k: v for k, v in payload.items() if k != "payload_hash"},
+                            sort_keys=True,
+                            separators=(",", ":"),
+                        ).encode("utf-8")
+                    )
+                    stage_total["bytes_read"] += input_bytes
+                    stage_total["canonical_payload_hashes"] = (
+                        stage_total.get("canonical_payload_hashes", 0) + 1
+                    )
+                    del canonical
         payload["payload_hash"] = _native_payload_hash(payload)
         _write_json_atomic(path, payload)
+        output_bytes = path.stat().st_size
+        if _measurement_metrics is not None:
+            phases = _measurement_metrics.setdefault("phases", {})
+            phase = phases.setdefault(
+                "corridor_synchronization_rewrite",
+                {"seconds": 0.0, "status": "measured_host_wall"},
+            )
+            phase["seconds"] += _elapsed(synchronization_started)
+            phase["status"] = "measured_host_wall"
+            counts = _measurement_metrics.setdefault("operation_counts", {})
+            count = counts.setdefault(
+                "corridor_synchronization_rewrite",
+                {
+                    "bytes_read": 0,
+                    "bytes_written": 0,
+                    "records": 0,
+                    "files_opened": 0,
+                    "files_created": 0,
+                    "files_replaced": 0,
+                    "files_removed": 0,
+                    "hashes": 0,
+                    "validations": 0,
+                },
+            )
+            count["bytes_read"] += input_bytes
+            count["bytes_written"] += output_bytes
+            count["records"] += 1
+            count["files_opened"] += 1
+            count["files_replaced"] += 1
+            count["hashes"] += 1
+            count["validations"] += 1
         hashes[int(payload["record_index"])] = str(payload["payload_hash"])
     return hashes
 
