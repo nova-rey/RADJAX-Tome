@@ -3089,3 +3089,7 @@ ambient provider environment dependency.
 
 Hydra classifies the committed sanitized M8C raw report as a fixture evidence
 surface, matching the repository's closed disposition vocabulary.
+
+The maintained runner writes the fresh report to the established
+`m8b_selected_staging_baseline_current.json` volume path, replacing only the
+prior diagnostic copy after a successful complete run.

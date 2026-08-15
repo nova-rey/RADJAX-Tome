@@ -109,7 +109,10 @@ def run_baseline(expected_commit: str) -> str:
     if result.returncode:
         raise RuntimeError(result.stderr or result.stdout)
     report = evidence / "m8b_selected_staging_baseline.json"
-    destination = "/mnt/evidence/m8c_selected_staging_baseline.json"
+    # Use the established M8B evidence filename so the volume's existing
+    # retrieval path remains authoritative and no second mutable report name
+    # can be mistaken for a separate baseline.
+    destination = "/mnt/evidence/m8b_selected_staging_baseline_current.json"
     shutil.copy2(report, destination)
     evidence_volume.commit()
     payload = json.loads(report.read_text(encoding="utf-8"))
