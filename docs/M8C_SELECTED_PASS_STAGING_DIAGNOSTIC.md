@@ -116,3 +116,21 @@ untrusted boundary and checkpoint invalidation on any governed-byte mutation.
 The rejected streaming-staging candidate remains untouched and negative
 evidence. No optimization, trust receipt, batching change, Contract change,
 default change, or public semantic change was made in this checkpoint.
+
+## Fresh instrumented-series transfer status
+
+Two fresh Modal T4 series were attempted after the private operation-counter
+hooks and maintained runner were added. One completed and returned a summary
+(median initial staging 278.416 s; median selected-pass wall 310.464 s), but
+its raw report was not present in the durable volume after the app stopped and
+could not be retrieved from the completed container. A second run at commit
+`6044287` encountered a Modal gRPC heartbeat failure before its compressed
+report result returned. The durable volume therefore still contains only the
+historical raw report (`sha256:7dfb0ff...`), which predates the counter hooks.
+
+This is an evidence-transfer blocker: the committed report does not contain
+the required read/write/hash/file-operation counters, and the fresh summaries
+cannot be promoted to raw governed evidence without the corresponding report
+bytes. No fresh instrumented baseline is claimed, and no optimization is
+authorized or selected until a provider run can transfer and verify its raw
+report.

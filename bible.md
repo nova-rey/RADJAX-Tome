@@ -3101,3 +3101,8 @@ observable without changing the selected-pass producer.
 It also returns a compressed report through the authenticated Modal result and
 materializes it locally, providing an independent transfer path when a remote
 volume snapshot races the final commit.
+
+The fresh counter-bearing Modal series could not be promoted: one completed
+summary without a retrievable raw report, and a second lost its gRPC heartbeat
+before result transfer. The checkpoint therefore remains measurement-blocked;
+the historical raw report was not rewritten or relabeled.
