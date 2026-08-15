@@ -774,7 +774,9 @@ def _validate_directory(
             if not isinstance(candidates, list):
                 blockers.append(f"mode {mode_id} candidates must be a list")
                 continue
-            if len(candidates) > cap:
+            if len(candidates) > cap and not bool(
+                policy.get("retain_complete_candidate_pool", False)
+            ):
                 blockers.append(f"mode {mode_id} exceeds candidate pool cap")
             seen_coordinates: set[tuple[str, int]] = set()
             previous_key: tuple[Any, ...] | None = None
@@ -894,7 +896,10 @@ def _validate_artifact(
         if mode.corridor_mode_id <= previous_mode:
             blockers.append("mode leaderboards must be strictly ordered")
         previous_mode = mode.corridor_mode_id
-        if len(mode.candidates) > artifact.policy.candidate_pool_cap:
+        if (
+            len(mode.candidates) > artifact.policy.candidate_pool_cap
+            and not artifact.policy.retain_complete_candidate_pool
+        ):
             blockers.append(f"mode {mode.corridor_mode_id} exceeds candidate pool cap")
         previous_score: tuple[Any, ...] | None = None
         identities: set[tuple[str, int]] = set()

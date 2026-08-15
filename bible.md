@@ -3256,3 +3256,10 @@ Closed the design-only manifest obligation representation as a fixed tuple with
 explicit role and collision enums and a count field; arbitrary recursive
 objects are not part of the proposed Contract amendment. No Contract or
 production payload code changed.
+
+2026-08-15 — M8F complete-reserve validator correction
+
+When canonical C2 retains a complete ranked candidate reserve, artifact
+validation now permits that reserve to exceed the compatibility micro-pool cap;
+bounded compatibility callers retain the original cap validation. Final C4
+composition remains responsible for the exact full-width allowance.
