@@ -3082,3 +3082,7 @@ it does not mount or trust mutable provider history.
 The runner passes the expected source commit as an explicit remote function
 argument as well, because provider containers do not inherit the local shell
 environment used to construct the mounts.
+
+The remote module import now defers the required-commit check to the local
+entrypoint; the remote function receives that value explicitly, avoiding an
+ambient provider environment dependency.

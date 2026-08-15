@@ -36,8 +36,6 @@ CONTRACT_ROOT = _local_input("M8C_CONTRACT_ROOT")
 CHECKPOINT_ROOT = _local_input("M8C_CHECKPOINT_ROOT")
 MODEL_ROOT = _local_input("M8C_MODEL_ROOT")
 EXPECTED_TOME_COMMIT = os.environ.get("M8C_EXPECTED_TOME_COMMIT", "")
-if not EXPECTED_TOME_COMMIT:
-    raise RuntimeError("M8C_EXPECTED_TOME_COMMIT is required")
 
 app = modal.App("radjax-m8c-selected-staging-baseline")
 evidence_volume = modal.Volume.from_name("radjax-m8c-evidence", create_if_missing=True)
@@ -128,4 +126,6 @@ def run_baseline(expected_commit: str) -> str:
 
 @app.local_entrypoint()
 def main() -> None:
+    if not EXPECTED_TOME_COMMIT:
+        raise RuntimeError("M8C_EXPECTED_TOME_COMMIT is required")
     print(run_baseline.remote(EXPECTED_TOME_COMMIT))
