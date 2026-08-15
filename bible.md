@@ -3110,3 +3110,7 @@ the historical raw report was not rewritten or relabeled.
 The runner now refuses to publish a completed report unless every run carries
 the selected-pass operation-count ledger, and it supports a bounded post-run
 hold for direct container transfer when the client result stream is impaired.
+
+The runner also mounts the terminal production anchor separately from the
+43-file immutable checkpoint, matching the M8 authority layout where the
+production report is intentionally outside the checkpoint manifest.

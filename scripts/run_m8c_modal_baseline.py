@@ -37,6 +37,7 @@ def _local_input(name: str) -> Path | None:
 TOME_ROOT = _local_input("M8C_TOME_ROOT")
 CONTRACT_ROOT = _local_input("M8C_CONTRACT_ROOT")
 CHECKPOINT_ROOT = _local_input("M8C_CHECKPOINT_ROOT")
+ANCHOR_ROOT = _local_input("M8C_ANCHOR_ROOT")
 MODEL_ROOT = _local_input("M8C_MODEL_ROOT")
 EXPECTED_TOME_COMMIT = os.environ.get("M8C_EXPECTED_TOME_COMMIT", "")
 
@@ -51,13 +52,15 @@ image = modal.Image.debian_slim(python_version="3.12").pip_install(
     "jsonschema",
 )
 if all(
-    root is not None for root in (TOME_ROOT, CONTRACT_ROOT, CHECKPOINT_ROOT, MODEL_ROOT)
+    root is not None
+    for root in (TOME_ROOT, CONTRACT_ROOT, CHECKPOINT_ROOT, ANCHOR_ROOT, MODEL_ROOT)
 ):
     image = (
         image.add_local_dir(TOME_ROOT / "src", "/workspace/tome/src")
         .add_local_dir(TOME_ROOT / "scripts", "/workspace/tome/scripts")
         .add_local_dir(CONTRACT_ROOT / "src", "/workspace/contract/src")
         .add_local_dir(CHECKPOINT_ROOT, "/inputs/checkpoint")
+        .add_local_dir(ANCHOR_ROOT, "/inputs/anchor")
         .add_local_dir(MODEL_ROOT, "/inputs/model")
     )
 
@@ -80,11 +83,12 @@ def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
     evidence = Path("/tmp/m8c-evidence")
     evidence.mkdir(parents=True, exist_ok=True)
     checkpoint = Path("/inputs/checkpoint")
+    anchor = Path("/inputs/anchor")
     command = [
         "python",
         "/workspace/tome/scripts/run_m8b_selected_staging_baseline.py",
         "--anchor",
-        str(checkpoint),
+        str(anchor),
         "--checkpoint-root",
         "/tmp/m8c-checkpoint",
         "--evidence-dir",
