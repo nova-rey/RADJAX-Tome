@@ -13,7 +13,6 @@ import json
 import gzip
 import base64
 import os
-import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -69,19 +68,13 @@ if all(
     image=image, gpu="T4", timeout=3600, volumes={"/mnt/evidence": evidence_volume}
 )
 def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
-    marker = Path("/mnt/evidence/m8c_runner_started.json")
+    evidence = Path("/tmp/m8c-evidence")
+    evidence.mkdir(parents=True, exist_ok=True)
+    marker = evidence / "m8c_runner_marker.json"
     marker.write_text(
         json.dumps({"expected_commit": expected_commit, "phase": "started"}),
         encoding="utf-8",
     )
-    evidence_volume.commit()
-    if hold_seconds > 0:
-        # Keep the completed container alive long enough for an independent
-        # `modal container exec` transfer when the client result stream is
-        # unavailable.  This is diagnostic plumbing only.
-        time.sleep(hold_seconds)
-    evidence = Path("/tmp/m8c-evidence")
-    evidence.mkdir(parents=True, exist_ok=True)
     checkpoint = Path("/inputs/checkpoint")
     anchor = Path("/inputs/anchor")
     command = [
@@ -136,15 +129,8 @@ def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
             ),
             encoding="utf-8",
         )
-        evidence_volume.commit()
         raise RuntimeError(result.stderr or result.stdout)
     report = evidence / "m8b_selected_staging_baseline.json"
-    # Use the established M8B evidence filename so the volume's existing
-    # retrieval path remains authoritative and no second mutable report name
-    # can be mistaken for a separate baseline.
-    destination = "/mnt/evidence/m8b_selected_staging_baseline_current.json"
-    shutil.copy2(report, destination)
-    shutil.copy2(report, "/mnt/evidence/m8c_selected_staging_baseline_current.json")
     marker.write_text(
         json.dumps(
             {
@@ -158,7 +144,6 @@ def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
         ),
         encoding="utf-8",
     )
-    evidence_volume.commit()
     payload = json.loads(report.read_text(encoding="utf-8"))
     for run in payload.get("runs", []):
         diagnostics = run.get("metrics", {}).get("selected_pass_execution_v1", {})
@@ -183,6 +168,11 @@ def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
     encoded_report = base64.b64encode(gzip.compress(report.read_bytes())).decode(
         "ascii"
     )
+    if hold_seconds > 0:
+        # Keep the completed container alive long enough for an independent
+        # `modal container exec` transfer when the client result stream is
+        # unavailable.  This is diagnostic plumbing only.
+        time.sleep(hold_seconds)
     return json.dumps({"summary": json.loads(summary), "report_gzip_b64": encoded_report})
 
 

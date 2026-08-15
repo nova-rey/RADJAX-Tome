@@ -3114,3 +3114,8 @@ hold for direct container transfer when the client result stream is impaired.
 The runner also mounts the terminal production anchor separately from the
 43-file immutable checkpoint, matching the M8 authority layout where the
 production report is intentionally outside the checkpoint manifest.
+
+Modal volume commit was observed to return `Operation not supported by device`
+on the diagnostic mount. The runner therefore treats the private `/tmp`
+report plus authenticated result/direct-container transfer as authoritative
+for this measurement and no longer blocks completion on that volume.
