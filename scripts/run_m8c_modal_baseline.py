@@ -10,6 +10,8 @@ not change Tome production behavior.
 from __future__ import annotations
 
 import json
+import gzip
+import base64
 import os
 import shutil
 import subprocess
@@ -148,7 +150,7 @@ def run_baseline(expected_commit: str) -> str:
     )
     evidence_volume.commit()
     payload = json.loads(report.read_text(encoding="utf-8"))
-    return json.dumps(
+    summary = json.dumps(
         {
             "schema_version": payload.get("schema_version"),
             "checkpoint": payload.get("checkpoint"),
@@ -157,10 +159,22 @@ def run_baseline(expected_commit: str) -> str:
         },
         sort_keys=True,
     )
+    # Return a compressed copy through the authenticated Modal result as a
+    # second transfer path.  The volume remains the durable remote evidence
+    # path; this avoids losing a completed report if a concurrent volume
+    # snapshot races the final commit.
+    encoded_report = base64.b64encode(gzip.compress(report.read_bytes())).decode(
+        "ascii"
+    )
+    return json.dumps({"summary": json.loads(summary), "report_gzip_b64": encoded_report})
 
 
 @app.local_entrypoint()
 def main() -> None:
     if not EXPECTED_TOME_COMMIT:
         raise RuntimeError("M8C_EXPECTED_TOME_COMMIT is required")
-    print(run_baseline.remote(EXPECTED_TOME_COMMIT))
+    result = json.loads(run_baseline.remote(EXPECTED_TOME_COMMIT))
+    out = Path(os.environ.get("M8C_LOCAL_REPORT", "/tmp/m8c_modal_report.json"))
+    out.write_bytes(gzip.decompress(base64.b64decode(result["report_gzip_b64"])))
+    print(json.dumps(result["summary"], sort_keys=True))
+    print(f"wrote_report={out}")

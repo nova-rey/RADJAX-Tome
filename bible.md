@@ -3097,3 +3097,7 @@ prior diagnostic copy after a successful complete run.
 The maintained Modal runner now commits start, failure, and completion markers
 and also writes a uniquely named diagnostic copy, making remote persistence
 observable without changing the selected-pass producer.
+
+It also returns a compressed report through the authenticated Modal result and
+materializes it locally, providing an independent transfer path when a remote
+volume snapshot races the final commit.
