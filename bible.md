@@ -3263,3 +3263,9 @@ When canonical C2 retains a complete ranked candidate reserve, artifact
 validation now permits that reserve to exceed the compatibility micro-pool cap;
 bounded compatibility callers retain the original cap validation. Final C4
 composition remains responsible for the exact full-width allowance.
+
+2026-08-15 — M8F selection-authority parity correction
+
+Bound the exact full-width composition pair into the production facade’s
+selection hash as well as the shared stage hash, eliminating an authority
+disagreement during packaging and resume validation.

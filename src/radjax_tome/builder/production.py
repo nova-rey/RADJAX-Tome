@@ -3122,6 +3122,10 @@ def _selection_integration_hash(config: ProductionBuildConfig) -> str:
         "c4_schema": "radjax.c4_corridor_global_claims.v1",
         "c5_schema": "radjax.multi_role_selected_exemplar.v1",
         "delivery_path": config.exemplar_delivery_path,
+        "full_width_composition_cap": {
+            "numerator": config.full_width_cap_numerator,
+            "denominator": config.full_width_cap_denominator,
+        },
     }
     return _hash_payload(payload)
 
