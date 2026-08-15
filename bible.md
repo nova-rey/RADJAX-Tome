@@ -3106,3 +3106,7 @@ The fresh counter-bearing Modal series could not be promoted: one completed
 summary without a retrievable raw report, and a second lost its gRPC heartbeat
 before result transfer. The checkpoint therefore remains measurement-blocked;
 the historical raw report was not rewritten or relabeled.
+
+The runner now refuses to publish a completed report unless every run carries
+the selected-pass operation-count ledger, and it supports a bounded post-run
+hold for direct container transfer when the client result stream is impaired.

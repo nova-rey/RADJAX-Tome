@@ -15,6 +15,7 @@ import base64
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 import modal
@@ -64,13 +65,18 @@ if all(
 @app.function(
     image=image, gpu="T4", timeout=3600, volumes={"/mnt/evidence": evidence_volume}
 )
-def run_baseline(expected_commit: str) -> str:
+def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
     marker = Path("/mnt/evidence/m8c_runner_started.json")
     marker.write_text(
         json.dumps({"expected_commit": expected_commit, "phase": "started"}),
         encoding="utf-8",
     )
     evidence_volume.commit()
+    if hold_seconds > 0:
+        # Keep the completed container alive long enough for an independent
+        # `modal container exec` transfer when the client result stream is
+        # unavailable.  This is diagnostic plumbing only.
+        time.sleep(hold_seconds)
     evidence = Path("/tmp/m8c-evidence")
     evidence.mkdir(parents=True, exist_ok=True)
     checkpoint = Path("/inputs/checkpoint")
@@ -150,6 +156,13 @@ def run_baseline(expected_commit: str) -> str:
     )
     evidence_volume.commit()
     payload = json.loads(report.read_text(encoding="utf-8"))
+    for run in payload.get("runs", []):
+        diagnostics = run.get("metrics", {}).get("selected_pass_execution_v1", {})
+        if "operation_counts" not in diagnostics:
+            raise RuntimeError(
+                "completed report lacks selected-pass operation counts; "
+                "refusing to publish pre-instrumentation evidence"
+            )
     summary = json.dumps(
         {
             "schema_version": payload.get("schema_version"),
@@ -173,7 +186,8 @@ def run_baseline(expected_commit: str) -> str:
 def main() -> None:
     if not EXPECTED_TOME_COMMIT:
         raise RuntimeError("M8C_EXPECTED_TOME_COMMIT is required")
-    result = json.loads(run_baseline.remote(EXPECTED_TOME_COMMIT))
+    hold_seconds = int(os.environ.get("M8C_HOLD_SECONDS", "0"))
+    result = json.loads(run_baseline.remote(EXPECTED_TOME_COMMIT, hold_seconds))
     out = Path(os.environ.get("M8C_LOCAL_REPORT", "/tmp/m8c_modal_report.json"))
     out.write_bytes(gzip.decompress(base64.b64decode(result["report_gzip_b64"])))
     print(json.dumps(result["summary"], sort_keys=True))
