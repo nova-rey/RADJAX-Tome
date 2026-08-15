@@ -433,7 +433,9 @@ def _write_native_payload_shard(
         "selected_exemplars": [payload],
     }
     hash_started = perf_counter() if _measurement_diagnostics is not None else None
-    shard["payload_hash"] = _native_payload_hash(shard)
+    shard["payload_hash"] = _native_payload_hash(
+        shard, _measurement_diagnostics=_measurement_diagnostics
+    )
     if _measurement_diagnostics is not None and hash_started is not None:
         _measurement_diagnostics.add_staging_phase(
             "canonical_body_encoding_hash", _elapsed(hash_started)
@@ -446,11 +448,21 @@ def _write_native_payload_shard(
     return str(shard["payload_hash"])
 
 
-def _native_payload_hash(payload: dict[str, Any]) -> str:
+def _native_payload_hash(
+    payload: dict[str, Any],
+    *,
+    _measurement_diagnostics: SelectedPassExecutionDiagnostics | None = None,
+) -> str:
     body = {key: value for key, value in payload.items() if key != "payload_hash"}
-    return hashlib.sha256(
-        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    ).hexdigest()
+    encoded = json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if _measurement_diagnostics is not None:
+        _measurement_diagnostics.count_operations(
+            "canonical_body_encoding_hash",
+            bytes_read=len(encoded),
+            records=1,
+            hashes=1,
+        )
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def _write_json_atomic(
@@ -467,6 +479,11 @@ def _write_json_atomic(
         _measurement_diagnostics.add_staging_phase(
             "staging_json_encoding", _elapsed(encode_started)
         )
+        _measurement_diagnostics.count_operations(
+            "staging_json_encoding",
+            bytes_written=len(encoded.encode("utf-8")),
+            records=1,
+        )
     handle = temporary.open("w", encoding="utf-8")
     try:
         write_started = perf_counter() if _measurement_diagnostics is not None else None
@@ -474,6 +491,11 @@ def _write_json_atomic(
         if _measurement_diagnostics is not None and write_started is not None:
             _measurement_diagnostics.add_staging_phase(
                 "temporary_file_write", _elapsed(write_started)
+            )
+            _measurement_diagnostics.count_operations(
+                "temporary_file_write",
+                bytes_written=len(encoded.encode("utf-8")),
+                files_opened=1,
             )
     finally:
         close_started = perf_counter() if _measurement_diagnostics is not None else None
@@ -487,6 +509,9 @@ def _write_json_atomic(
     if _measurement_diagnostics is not None and replace_started is not None:
         _measurement_diagnostics.add_staging_phase(
             "atomic_replacement", _elapsed(replace_started)
+        )
+        _measurement_diagnostics.count_operations(
+            "atomic_replacement", files_replaced=1, files_created=1
         )
 
 

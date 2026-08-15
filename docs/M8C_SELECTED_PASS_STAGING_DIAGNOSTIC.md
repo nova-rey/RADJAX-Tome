@@ -28,13 +28,24 @@ The unsanitized remote report digest was
 `sha256:7dfb0fffdc9418656df639294f0a7617dfbab645b1847a90bcbd457ac09325a`;
 only private staging path spelling was removed from the committed copy.
 
-The exact remote command was:
+The maintained remote wrapper is `scripts/run_m8c_modal_baseline.py`. It takes
+all authority-bearing roots through explicit environment variables. A fresh
+run is launched with:
 
 ```text
-PYTHONUNBUFFERED=1 uvx --python 3.12 --with cbor2==5.6.5 --from modal modal run /tmp/modal_m8b_run.py::main
+M8C_TOME_ROOT=/absolute/Tome \\
+M8C_CONTRACT_ROOT=/absolute/RADJAX-Contract \\
+M8C_CHECKPOINT_ROOT=/absolute/checkpoint \\
+M8C_MODEL_ROOT=/absolute/model \\
+M8C_EXPECTED_TOME_COMMIT=6a6c65378cfd86a190e44e861ed9323927c2acc8 \\
+PYTHONUNBUFFERED=1 uvx --python 3.12 --with cbor2==5.6.5 --from modal \\
+  modal run scripts/run_m8c_modal_baseline.py::main
 ```
 
-The mounted diagnostic invoked `scripts/run_m8b_selected_staging_baseline.py`
+The original run used an equivalent disposable wrapper before this maintained
+wrapper was committed; the exact driver invocation and all input values were
+the same. The mounted diagnostic invoked
+`scripts/run_m8b_selected_staging_baseline.py`
 with the checkpoint anchor, its corpus and manifest, the transferred Gemma
 3 270M model/tokenizer, and `--expected-tome-commit
 6a6c65378cfd86a190e44e861ed9323927c2acc8`. The source tree and Contract tree

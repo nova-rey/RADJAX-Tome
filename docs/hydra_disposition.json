@@ -2598,6 +2598,54 @@
       "rationale": "Generated Contract-v6 reduced-burn directory, archive, native M7 sibling, pair evidence, and receipt produced by normal Tome writers.",
       "replacement_or_target_boundary": "Student P6.U1 authority handoff.",
       "status": "canonical"
+    },
+    "docs/M8C_SELECTED_PASS_STAGING_DIAGNOSTIC.md": {
+      "archive_or_removal_condition": "Archive when a governed successor measurement supersedes this current-main baseline.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8C",
+      "rationale": "Records the fresh controlled selected-pass staging baseline, phase interpretation, provider procedure, and explicit unmeasured boundaries without selecting an optimization.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
+    },
+    "docs/evidence/M8C_CURRENT_BASELINE_RAW.json": {
+      "archive_or_removal_condition": "Archive with the M8C diagnostic record after independent review or replace only with a governed successor receipt.",
+      "kind": "evidence",
+      "owning_milestone": "M8C",
+      "rationale": "Sanitized raw report for three fresh Modal T4 replays at the exact diagnostic branch commit; private staging paths are redacted and no authority fields are changed.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
+    },
+    "scripts/run_m8c_modal_baseline.py": {
+      "archive_or_removal_condition": null,
+      "kind": "script",
+      "owning_milestone": "M8C",
+      "rationale": "Maintained provider wrapper for the existing private M8B measurement driver with explicit source, Contract, checkpoint, model, and commit inputs.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/measurement.py": {
+      "archive_or_removal_condition": "Archive the private counter schema only when its measurement contract is superseded by a governed M8 successor.",
+      "kind": "source-module",
+      "owning_milestone": "M8C",
+      "rationale": "Adds disabled-by-default operation and byte counters to the existing selected-pass diagnostic observer; counters are nonsemantic and benchmark-only.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/staging.py": {
+      "archive_or_removal_condition": "Archive the private counter hooks only when the M8 measurement seam is superseded.",
+      "kind": "source-module",
+      "owning_milestone": "M8C",
+      "rationale": "Counts canonical hash input bytes, JSON bytes, temporary writes, and atomic replacements only when the existing benchmark-only observer is attached; production behavior is unchanged.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
+    },
+    "tests/test_m8b_selected_staging_measurement.py": {
+      "archive_or_removal_condition": null,
+      "kind": "source-module",
+      "owning_milestone": "M8C",
+      "rationale": "Verifies the private operation-count schema and byte/file counters on a controlled staging fixture.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

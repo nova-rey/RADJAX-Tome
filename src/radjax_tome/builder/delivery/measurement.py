@@ -311,6 +311,9 @@ class SelectedPassExecutionDiagnostics:
     peak_rss_bytes: int = 0
     peak_cuda: dict[str, object] = field(default_factory=dict)
     staging_subphases_observed: bool = False
+    # Private M8C operation ledger.  These counters are diagnostic only and
+    # never participate in authority, package, or semantic identities.
+    operation_counts: dict[str, dict[str, int]] = field(default_factory=dict)
     _seen_shapes: set[tuple[object, ...]] = field(default_factory=set)
 
     def __post_init__(self) -> None:
@@ -339,6 +342,53 @@ class SelectedPassExecutionDiagnostics:
             "corridor_synchronization_rewrite",
         ):
             self.phase_status[phase] = "not_measured"
+
+    def count_operations(
+        self,
+        phase: str,
+        *,
+        bytes_read: int = 0,
+        bytes_written: int = 0,
+        records: int = 0,
+        files_opened: int = 0,
+        files_created: int = 0,
+        files_replaced: int = 0,
+        files_removed: int = 0,
+        hashes: int = 0,
+        validations: int = 0,
+    ) -> None:
+        """Accumulate private byte and operation counts for one phase."""
+
+        if phase not in self.phase_seconds:
+            raise ValueError(f"unknown M8C measurement phase: {phase}")
+        current = self.operation_counts.setdefault(
+            phase,
+            {
+                "bytes_read": 0,
+                "bytes_written": 0,
+                "records": 0,
+                "files_opened": 0,
+                "files_created": 0,
+                "files_replaced": 0,
+                "files_removed": 0,
+                "hashes": 0,
+                "validations": 0,
+            },
+        )
+        for name, value in (
+            ("bytes_read", bytes_read),
+            ("bytes_written", bytes_written),
+            ("records", records),
+            ("files_opened", files_opened),
+            ("files_created", files_created),
+            ("files_replaced", files_replaced),
+            ("files_removed", files_removed),
+            ("hashes", hashes),
+            ("validations", validations),
+        ):
+            if int(value) < 0:
+                raise ValueError(f"M8C operation count {name} must be nonnegative")
+            current[name] += int(value)
 
     def add(self, phase: str, seconds: float) -> None:
         self.phase_seconds[phase] += max(0.0, seconds)
@@ -489,6 +539,11 @@ class SelectedPassExecutionDiagnostics:
                     "status": self.phase_status[phase],
                 }
                 for phase in _PHASES
+            },
+            "operation_counts_schema_version": "selected_pass_operation_counts_v1",
+            "operation_counts": {
+                phase: dict(self.operation_counts[phase])
+                for phase in sorted(self.operation_counts)
             },
             "batches": self.batches,
             "resources": {

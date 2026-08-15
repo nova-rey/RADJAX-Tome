@@ -3065,3 +3065,12 @@ report and analysis are retained under `docs/evidence/` and
 Student change, default change, or M9 work was performed; a later checkpoint
 must establish byte/read/hash counters and crash-safe staging invalidation
 before selecting receipt propagation.
+
+The follow-up evidence-completeness correction publishes a maintained Modal
+wrapper with explicit source, Contract, checkpoint, model, and expected-commit
+inputs, and extends the disabled-by-default observer with operation-count and
+byte-count fields for canonical hashing, JSON encoding, temporary writes, and
+atomic replacement. Focused M8 tests cover the new schema. Corridor rereads,
+post-linkage evidence, archive creation, Contract validation, and packaging
+remain explicitly unmeasured and are not treated as zero-cost; this checkpoint
+still selects no optimization.

@@ -73,7 +73,8 @@ def test_private_staging_diagnostics_split_initial_write_without_relabeling_m8a(
         delivery_path="two_pass_rerun_selected",
         _measurement_diagnostics=diagnostics,
     )
-    phases = diagnostics.finish()["phases"]
+    report = diagnostics.finish()
+    phases = report["phases"]
     assert phases["hashing_json_atomic_write_fsync"]["seconds"] == 0.0
     for phase in (
         "canonical_body_encoding_hash",
@@ -84,3 +85,12 @@ def test_private_staging_diagnostics_split_initial_write_without_relabeling_m8a(
     ):
         assert phases[phase]["status"] == "measured_host_wall"
         assert phases[phase]["seconds"] >= 0.0
+    counts = report["operation_counts"]
+    assert report["operation_counts_schema_version"] == (
+        "selected_pass_operation_counts_v1"
+    )
+    assert counts["canonical_body_encoding_hash"]["hashes"] == 1
+    assert counts["canonical_body_encoding_hash"]["bytes_read"] > 0
+    assert counts["staging_json_encoding"]["bytes_written"] > 0
+    assert counts["temporary_file_write"]["bytes_written"] > 0
+    assert counts["atomic_replacement"]["files_replaced"] == 1
