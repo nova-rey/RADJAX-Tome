@@ -3078,3 +3078,7 @@ still selects no optimization.
 The maintained Modal wrapper binds the exact expected source commit through a
 narrow remote `git rev-parse HEAD` shim because the source mount omits `.git`;
 it does not mount or trust mutable provider history.
+
+The runner passes the expected source commit as an explicit remote function
+argument as well, because provider containers do not inherit the local shell
+environment used to construct the mounts.

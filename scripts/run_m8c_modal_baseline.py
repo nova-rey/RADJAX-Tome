@@ -18,48 +18,53 @@ from pathlib import Path
 import modal
 
 
-def _required(name: str) -> Path:
+def _local_input(name: str) -> Path | None:
     value = os.environ.get(name)
     if not value:
-        raise RuntimeError(f"{name} must identify an explicit local input root")
+        # The module is imported again inside the remote container. Local
+        # mount roots are intentionally unavailable there; Modal has already
+        # serialized the image mounts from the local entrypoint.
+        return None
     path = Path(value).expanduser().resolve()
     if not path.exists():
         raise FileNotFoundError(path)
     return path
 
 
-TOME_ROOT = _required("M8C_TOME_ROOT")
-CONTRACT_ROOT = _required("M8C_CONTRACT_ROOT")
-CHECKPOINT_ROOT = _required("M8C_CHECKPOINT_ROOT")
-MODEL_ROOT = _required("M8C_MODEL_ROOT")
+TOME_ROOT = _local_input("M8C_TOME_ROOT")
+CONTRACT_ROOT = _local_input("M8C_CONTRACT_ROOT")
+CHECKPOINT_ROOT = _local_input("M8C_CHECKPOINT_ROOT")
+MODEL_ROOT = _local_input("M8C_MODEL_ROOT")
 EXPECTED_TOME_COMMIT = os.environ.get("M8C_EXPECTED_TOME_COMMIT", "")
 if not EXPECTED_TOME_COMMIT:
     raise RuntimeError("M8C_EXPECTED_TOME_COMMIT is required")
 
 app = modal.App("radjax-m8c-selected-staging-baseline")
 evidence_volume = modal.Volume.from_name("radjax-m8c-evidence", create_if_missing=True)
-image = (
-    modal.Image.debian_slim(python_version="3.12")
-    .pip_install(
-        "numpy>=1.26",
-        "PyYAML>=6.0",
-        "torch",
-        "transformers",
-        "safetensors",
-        "jsonschema",
-    )
-    .add_local_dir(TOME_ROOT / "src", "/workspace/tome/src")
-    .add_local_dir(TOME_ROOT / "scripts", "/workspace/tome/scripts")
-    .add_local_dir(CONTRACT_ROOT / "src", "/workspace/contract/src")
-    .add_local_dir(CHECKPOINT_ROOT, "/inputs/checkpoint")
-    .add_local_dir(MODEL_ROOT, "/inputs/model")
+image = modal.Image.debian_slim(python_version="3.12").pip_install(
+    "numpy>=1.26",
+    "PyYAML>=6.0",
+    "torch",
+    "transformers",
+    "safetensors",
+    "jsonschema",
 )
+if all(
+    root is not None for root in (TOME_ROOT, CONTRACT_ROOT, CHECKPOINT_ROOT, MODEL_ROOT)
+):
+    image = (
+        image.add_local_dir(TOME_ROOT / "src", "/workspace/tome/src")
+        .add_local_dir(TOME_ROOT / "scripts", "/workspace/tome/scripts")
+        .add_local_dir(CONTRACT_ROOT / "src", "/workspace/contract/src")
+        .add_local_dir(CHECKPOINT_ROOT, "/inputs/checkpoint")
+        .add_local_dir(MODEL_ROOT, "/inputs/model")
+    )
 
 
 @app.function(
     image=image, gpu="T4", timeout=3600, volumes={"/mnt/evidence": evidence_volume}
 )
-def run_baseline() -> str:
+def run_baseline(expected_commit: str) -> str:
     evidence = Path("/tmp/m8c-evidence")
     evidence.mkdir(parents=True, exist_ok=True)
     checkpoint = Path("/inputs/checkpoint")
@@ -83,7 +88,7 @@ def run_baseline() -> str:
         "--teacher-model-provenance",
         str(checkpoint / "input/teacher_model_provenance.json"),
         "--expected-tome-commit",
-        EXPECTED_TOME_COMMIT,
+        expected_commit,
     ]
     env = dict(os.environ)
     env["PYTHONPATH"] = (
@@ -95,7 +100,7 @@ def run_baseline() -> str:
     git_shim.write_text(
         "#!/bin/sh\n"
         'if [ "$1" = rev-parse ] && [ "$2" = HEAD ]; then '
-        f"echo {EXPECTED_TOME_COMMIT}; exit 0; fi\n"
+        f"echo {expected_commit}; exit 0; fi\n"
         "exit 127\n"
     )
     git_shim.chmod(0o755)
@@ -123,4 +128,4 @@ def run_baseline() -> str:
 
 @app.local_entrypoint()
 def main() -> None:
-    print(run_baseline.remote())
+    print(run_baseline.remote(EXPECTED_TOME_COMMIT))
