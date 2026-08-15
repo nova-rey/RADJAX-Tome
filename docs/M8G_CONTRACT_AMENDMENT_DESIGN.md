@@ -142,16 +142,23 @@ The compact closed field registry is exactly:
 `position_count:u32`, `top_offsets:u64[]`, `top_lengths:u32[]`,
 `top_token_ids:i32[]`, `top_probs:f32[]`, `top_log_probs:f32[]`,
 `effective_top_k:u32[]`, `top_mass:f32[]`, `tail_mass:f32[]`,
-`bucket_masses:f32[]`, `body_semantic_id:string`, `body_raw_digest:string`.
+`bucket_masses:f32[]`.
 Offsets and flattened arrays are ordered by selected-coordinate manifest order;
 arrays are little-endian and finite checks are mandatory. The compact manifest
 registry is exactly: `schema_version:string`, `profile:string`,
 `selected_example_id:string`, `selected_position:u32`,
 `source_passport_id:string`, `corridor_mode_id:i32|null`,
-`corridor_fingerprint_id:string|null`, `selection_obligations:object[]`,
-`body_semantic_id:string`, `body_raw_digest:string`, `authority_id:string`,
-`selection_authority_id:string`, `package_role:string`, and
-`manifest_semantic_id:string`. Unknown fields are rejected.
+`corridor_fingerprint_id:string|null`, `selection_obligation_count:u32`,
+`selection_obligations:selection_obligation[]`, `body_semantic_id:string`,
+`body_raw_digest:string`, `authority_id:string`, `selection_authority_id:string`,
+`package_role:string`, and `manifest_semantic_id:string`. Unknown fields are
+rejected.
+
+`selection_obligation` is a closed, non-recursive tuple in manifest order:
+`role:u8` (`1=corridor`, `2=global`), `source_id:string`, `rank:u32`,
+`score:f32|null`, and `collision_kind:u8` (`0=none`, `1=corridor`,
+`2=global`). `selection_obligation_count` must equal the number of tuples;
+no arbitrary metadata map or nested object is admitted.
 
 Identity preimages are domain separated and length-delimited:
 
@@ -159,8 +166,11 @@ Identity preimages are domain separated and length-delimited:
 * `body_raw_digest = sha256("RDX-BODY-RAW-1" || exact body bytes)`;
 * `manifest_semantic_id = sha256("RDX-MANIFEST-SEM-1" || FV3(manifest registry excluding manifest_semantic_id))`;
 * `exemplar_id = sha256("RDX-EXEMPLAR-1" || FV3(coordinate, manifest_semantic_id, body_semantic_id))`;
-* package root = ordered Merkle-style SHA-256 over `(role, path, exemplar_id,
-  raw_digest)` entries using `RDX-INVENTORY-1` framing.
+* package root = ordered binary-tree SHA-256 over leaf frames
+  `RDX-INVENTORY-LEAF-1 || u32(role_len) || role || u32(path_len) || path ||
+  exemplar_id || raw_digest`; parent frames are
+  `RDX-INVENTORY-NODE-1 || left || right`, duplicating the final leaf at odd
+  levels. Paths are UTF-8 NFC, slash-separated, relative, and reject `..`.
 
 Padded and compact records may share a semantic identity only after both are
 projected to the compact active-entry registry and all equivalence invariants
@@ -168,7 +178,7 @@ pass; their raw digests necessarily remain distinct.
 
 ### Journal receipt matrix
 
-Each transition receipt has closed fields `transaction_id`, `state`,
+Each transition receipt has closed fields `transaction_id:string`, `state:u16`,
 `parent_transaction_id`, `body_path`, `manifest_path`, `body_raw_digest`,
 `body_size_bytes`, `manifest_raw_digest`, `committed_next_state`,
 `configuration_identity`, `semantic_authority_identity`, and `receipt_digest`.
@@ -179,7 +189,12 @@ state. Recovery maps missing/partial receipts to refusal or quarantine; only
 `BODY_PROMOTED` with a validated body digest may be reused. `MANIFEST_PROMOTED`
 requires a validated body reference. `INVENTORY_COMMITTED` requires a complete
 inventory; `PACKAGE_VALIDATED` is the only state eligible for `COMMITTED`.
-Duplicate writers must fail closed on transaction-id mismatch.
+Duplicate writers must fail closed on transaction-id mismatch. `profile` is a
+u16 registry code (`1=student`, `2=full_debug`, `3=producer_evidence`) with a
+normative presentation mapping. Strings use `u32_le byte_length || UTF-8 NFC
+bytes`; arrays use `u64_le element_count` and the declared scalar encoding.
+Header CRC32 is CRC-32/ISO-HDLC over all header bytes preceding the CRC field.
+Body and receipt digest preimages exclude their own digest fields.
 
 The next Contract branch must add compact resource framing, compact semantic
 projection, body/manifest resource roles, closed manifest fields, digest-domain

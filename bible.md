@@ -3249,3 +3249,10 @@ filled by ranked narrow candidates, and global-board full-width metadata
 survives export/load round trips. Tightened the design-only Contract amendment
 with a closed, non-recursive selection-obligation tuple registry. Compact
 dynamic-top-K storage and immutable exemplar-body production remain unstarted.
+
+2026-08-15 — M8G design registry tightening
+
+Closed the design-only manifest obligation representation as a fixed tuple with
+explicit role and collision enums and a count field; arbitrary recursive
+objects are not part of the proposed Contract amendment. No Contract or
+production payload code changed.
