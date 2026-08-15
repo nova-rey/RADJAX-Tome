@@ -1,6 +1,6 @@
 {
   "schema_version": "m8d_selected_payload_lifecycle_environment_v1",
-  "tome_commit": "9b046aedb7ce7d22eda2884f9e7703ad55b4dfb2",
+  "tome_commit": "7f5ff7f8251c6cb51cd6b976a299090e51cc297c",
   "contract": {
     "package": "radjax-contract",
     "release": "0.9.0",

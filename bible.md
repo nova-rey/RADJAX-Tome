@@ -3182,3 +3182,9 @@ operation ledger without adding another payload serialization. A fresh normal
 Modal writer run at 7f5ff7f produced the corrected report (one reported run,
 three allocated output roots); its sanitized raw digest is
 f870dc490e84f20a8a6acab0a184c5c90eebc3c84217621ba2b688d025cc9349.
+
+The regenerated report and environment record identify the exact source
+commit 7f5ff7f8251c6cb51cd6b976a299090e51cc297c; the diagnostic prose uses
+the same identity and the corrected 5,083,039,446-byte lifecycle total. The
+candidate matrix was refreshed to the regenerated 327.002139828-second run
+and its 591.313904348-second post-linkage rewrite.

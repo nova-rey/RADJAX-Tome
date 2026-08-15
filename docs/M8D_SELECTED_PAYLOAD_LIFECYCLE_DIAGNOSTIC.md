@@ -1,6 +1,6 @@
 # M8D Selected-Exemplar Payload Lifecycle Diagnostic
 
-This measurement-only checkpoint starts at Tome `9b046aedb7ce7d22eda2884f9e7703ad55b4dfb2`, on the M8 diagnostic branch descended from `de31224915b0144a2d8b733ef13dc0724c60e51c`. It does not implement an optimization and does not change payload meaning, dynamic top-K, CSL, selection, batching, defaults, or validation.
+This measurement-only checkpoint starts at Tome `7f5ff7f8251c6cb51cd6b976a299090e51cc297c`, on the M8 diagnostic branch descended from `de31224915b0144a2d8b733ef13dc0724c60e51c`. It does not implement an optimization and does not change payload meaning, dynamic top-K, CSL, selection, batching, defaults, or validation.
 
 The supplied official TOME Generation Glossary is used as terminology authority: the score pass is the corpus-wide compact-measurement pass; a selected source contains one or more selected coordinates; the selected-source pass reruns only selected sources; a corridor is a numbered lane in the behavioral fingerprint; and an exemplar is the high-resolution teacher output at one frozen selected coordinate. “Corridor generation” is not used for selected-exemplar staging.
 
@@ -15,7 +15,7 @@ Command (with authority-bearing roots supplied explicitly) was:
 ```text
 M8C_TOME_ROOT=/absolute/Tome M8C_CONTRACT_ROOT=/absolute/RADJAX-Contract \
 M8C_CHECKPOINT_ROOT=/absolute/checkpoint M8C_ANCHOR_ROOT=/absolute/checkpoint-anchor \
-M8C_MODEL_ROOT=/absolute/model M8C_EXPECTED_TOME_COMMIT=9b046aedb7ce7d22eda2884f9e7703ad55b4dfb2 \
+M8C_MODEL_ROOT=/absolute/model M8C_EXPECTED_TOME_COMMIT=7f5ff7f8251c6cb51cd6b976a299090e51cc297c \
 M8D_FULL_LIFECYCLE=1 M8D_RUN_COUNT=1 PYTHONUNBUFFERED=1 \
 uvx --python 3.12 --with cbor2==5.6.5 --from modal \
   modal run scripts/run_m8c_modal_baseline.py::main
@@ -37,7 +37,7 @@ The selected payload does not retain dense score-pass logits. The score pass ret
 
 Initial staging processed 2,036,613,610 canonical bytes and encoded 4,452,718,421 pretty-JSON bytes. Post-linkage synchronization reread 4,452,718,421 bytes, produced 2,036,638,668 canonical bytes, and rewrote 4,452,749,623 pretty-JSON bytes. Thus initial plus post-linkage cumulative canonical work is 4,073,252,278 bytes and cumulative pretty encoding is 8,905,468,044 bytes; cumulative whitespace/format expansion is 4,832,215,766 bytes. The pretty counter is larger because indentation, separators, and decimal formatting expand the canonical representation, and because the payload is encoded again after linkage injection.
 
-The direct operation ledger reports, per 256-coordinate pass: 256 canonical hashes, 256 initial pretty encodings, 256 temporary files, 256 atomic replacements, then 256 post-linkage rereads, validations, hashes, rewrites, and replacements. The first pass therefore writes 4,452,718,421 bytes and the post-linkage pass writes 4,452,749,623 bytes. Lifecycle output is 5,083,039,434 bytes. The generated `stage_totals.post_linkage.bytes_rewritten` field is populated from the final atomic output size and agrees with the operation ledger’s rewritten-byte count. Full Python-object traversal counts are inferred from the normal construction and post-linkage parse/rebuild path; archive and Contract validation traversals were not separately instrumented and are explicitly not claimed as zero.
+The direct operation ledger reports, per 256-coordinate pass: 256 canonical hashes, 256 initial pretty encodings, 256 temporary files, 256 atomic replacements, then 256 post-linkage rereads, validations, hashes, rewrites, and replacements. The first pass therefore writes 4,452,718,421 bytes and the post-linkage pass writes 4,452,749,623 bytes. Lifecycle output is 5,083,039,446 bytes. The generated `stage_totals.post_linkage.bytes_rewritten` field is populated from the final atomic output size and agrees with the operation ledger’s rewritten-byte count. Full Python-object traversal counts are inferred from the normal construction and post-linkage parse/rebuild path; archive and Contract validation traversals were not separately instrumented and are explicitly not claimed as zero.
 
 The non-overlapping selected-pass timing view is: initial staging 275.807099 s; teacher forward 7.167939 s; tokenization 0.176423 s; selected-row gather 0.123644 s; compact reduction 0.263728 s; compact device-to-host 0.587055 s; payload/linkage validation 18.761024 s; temporary writes/close/replacement about 2.52 s. Initial staging is approximately 84.3% of this run’s 327.002-second selected-pass wall. The post-selected corridor synchronization reread/rehash/rewrite was 591.313904 s and is measured separately, not added to selected-pass wall. Its ledger is 256 reads, validations, hashes, and replacements. Typed post-linkage evidence hashing, archive validation, Contract validation, and package materialization were not separately timed by this checkpoint.
 
@@ -47,10 +47,10 @@ CPU evidence identifies staging JSON encoding (193.791941 s) and canonical body 
 
 | candidate class | measured surface | conservative view |
 | --- | --- | --- |
-| Serialize finalized payload once | 192.1 s initial pretty encoding plus later rewrite | Plausibly above the 51.406 s net threshold, but requires crash-consistent publication and linkage semantics. |
-| Separate immutable exemplar body from small linkage metadata | 578.1 s post-linkage reread/rehash/rewrite and 4.45 GB reread | Best-supported single class; potentially gate-crossing, but requires a transaction/schema design and exact identity rules. |
-| Reuse governed canonical representation | 78.7 s canonical encoding/hash | Plausible in isolation, but must still handle linkage mutation and raw integrity. |
-| Alternate deterministic JSON encoder | 192.1 s encoding | Requires byte/identity proof; replacement overhead and determinism risk are unknown. |
+| Serialize finalized payload once | 193.8 s initial pretty encoding plus later rewrite | Plausibly above the 51.406 s net threshold, but requires crash-consistent publication and linkage semantics. |
+| Separate immutable exemplar body from small linkage metadata | 591.3 s post-linkage reread/rehash/rewrite and 4.45 GB reread | Best-supported single class; potentially gate-crossing, but requires a transaction/schema design and exact identity rules. |
+| Reuse governed canonical representation | 79.5 s canonical encoding/hash | Plausible in isolation, but must still handle linkage mutation and raw integrity. |
+| Alternate deterministic JSON encoder | 193.8 s encoding | Requires byte/identity proof; replacement overhead and determinism risk are unknown. |
 | Concurrent independent exemplar serialization | staging CPU time | May reduce wall time, but 4.33 GB incremental RSS and filesystem contention make the benefit unproven. |
 | Reduce coexistence of representations | 4.33 GB incremental RSS | Memory benefit is clear; throughput benefit is not established. |
 | One traversal for hash and storage | canonical/hash and write path | Could save a traversal, but needs a safe immutable representation and recovery proof. |
