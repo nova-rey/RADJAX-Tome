@@ -3093,3 +3093,7 @@ surface, matching the repository's closed disposition vocabulary.
 The maintained runner writes the fresh report to the established
 `m8b_selected_staging_baseline_current.json` volume path, replacing only the
 prior diagnostic copy after a successful complete run.
+
+The maintained Modal runner now commits start, failure, and completion markers
+and also writes a uniquely named diagnostic copy, making remote persistence
+observable without changing the selected-pass producer.

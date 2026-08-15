@@ -63,6 +63,12 @@ if all(
     image=image, gpu="T4", timeout=3600, volumes={"/mnt/evidence": evidence_volume}
 )
 def run_baseline(expected_commit: str) -> str:
+    marker = Path("/mnt/evidence/m8c_runner_started.json")
+    marker.write_text(
+        json.dumps({"expected_commit": expected_commit, "phase": "started"}),
+        encoding="utf-8",
+    )
+    evidence_volume.commit()
     evidence = Path("/tmp/m8c-evidence")
     evidence.mkdir(parents=True, exist_ok=True)
     checkpoint = Path("/inputs/checkpoint")
@@ -107,6 +113,18 @@ def run_baseline(expected_commit: str) -> str:
         command, env=env, text=True, capture_output=True, timeout=3500
     )
     if result.returncode:
+        marker.write_text(
+            json.dumps(
+                {
+                    "expected_commit": expected_commit,
+                    "phase": "driver_failed",
+                    "returncode": result.returncode,
+                    "stderr_tail": result.stderr[-2000:],
+                }
+            ),
+            encoding="utf-8",
+        )
+        evidence_volume.commit()
         raise RuntimeError(result.stderr or result.stdout)
     report = evidence / "m8b_selected_staging_baseline.json"
     # Use the established M8B evidence filename so the volume's existing
@@ -114,6 +132,20 @@ def run_baseline(expected_commit: str) -> str:
     # can be mistaken for a separate baseline.
     destination = "/mnt/evidence/m8b_selected_staging_baseline_current.json"
     shutil.copy2(report, destination)
+    shutil.copy2(report, "/mnt/evidence/m8c_selected_staging_baseline_current.json")
+    marker.write_text(
+        json.dumps(
+            {
+                "expected_commit": expected_commit,
+                "phase": "completed",
+                "report_bytes": report.stat().st_size,
+                "operation_counts": "operation_counts" in json.loads(
+                    report.read_text(encoding="utf-8")
+                ),
+            }
+        ),
+        encoding="utf-8",
+    )
     evidence_volume.commit()
     payload = json.loads(report.read_text(encoding="utf-8"))
     return json.dumps(
