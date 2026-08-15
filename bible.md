@@ -3203,6 +3203,11 @@ sensitivity. No production policy, Contract, Student, Golden evidence, or
 default changed; future implementation requires selection-authority and
 backfill decisions.
 
+The follow-up evidence correction derives the duplicate-reason and
+same-source controlled scenarios from deterministic in-memory records and
+regenerates the machine-readable report; the audit document intentionally
+does not pin a stale report digest.
+
 The audit simulator was corrected to keep the full-width allowance hard even
 when the narrow candidate pool is exhausted. It now reports category shortfall
 separately from total eligible-pool exhaustion, with derived controlled

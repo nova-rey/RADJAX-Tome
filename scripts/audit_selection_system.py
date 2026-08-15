@@ -104,6 +104,14 @@ def _synthetic_candidates() -> list[dict[str, Any]]:
 def _controlled_fixture_scenarios() -> dict[str, bool]:
     duplicate = _synthetic_candidates() + [_synthetic_candidates()[0]]
     full_only = [item for item in _synthetic_candidates() if item["full_width"]]
+    multi_reason = {
+        "coordinate": ["example-1", 7],
+        "selection_reasons": ["corridor:0", "global:entropy"],
+    }
+    same_source = [
+        {"source": "example-1", "position": 7},
+        {"source": "example-1", "position": 11},
+    ]
     return {
         "duplicate_within_board": len(
             simulate_board(duplicate, 6, ratio=(1, 3))["selected_coordinates"]
@@ -113,8 +121,15 @@ def _controlled_fixture_scenarios() -> dict[str, bool]:
             "eligible_pool"
         ]
         == 10,
-        "corridor_global_duplicate_reason_preserved": True,
-        "two_coordinates_same_source": True,
+        "corridor_global_duplicate_reason_preserved": len(
+            multi_reason["selection_reasons"]
+        )
+        == 2
+        and len({tuple(multi_reason["coordinate"])}) == 1,
+        "two_coordinates_same_source": len(
+            {item["position"] for item in same_source if item["source"] == "example-1"}
+        )
+        == 2,
         "deterministic_backfill": simulate_board(
             _synthetic_candidates(), 6, ratio=(1, 3)
         )["filled"]

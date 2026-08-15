@@ -6,7 +6,7 @@ This is a read-only audit branch from Tome `8bafe2ec123d7462ff43a44a54b5420d8c21
 
 Contract authority remains `radjax-contract 0.9.0` at commit `1fa43e1aea2e198511db86dafb0aeefa525d48c7`. The retained M8D report is the source for the 256-coordinate dynamic-K anatomy. The retained v6 smoke fixture at `tests/fixtures/native_v3_student_v6_smoke/producer_artifact.v4` is the available committed C2-C6 selection artifact. No committed production score-pass artifact for the 256-coordinate M8 workload contains a governed full-width flag, so a real-workload 1/3 composition was not asserted or fabricated.
 
-The deterministic audit analyzer is `scripts/audit_selection_system.py`; its generated report is `docs/evidence/M8E_SELECTION_AUDIT.json` (SHA-256 `sha256:e4b8688da858b15dae55b8c94294b4e0ef7d62be8f1ccfba85b0296992c18d54`). It reads retained artifacts and creates only in-memory synthetic policy fixtures. It never invokes a producer or writes an artifact.
+The deterministic audit analyzer is `scripts/audit_selection_system.py`; its generated report is `docs/evidence/M8E_SELECTION_AUDIT.json` (SHA-256 `sha256:4c95936cd359bd91cd18abc35480c5b77cf1aa435a5009bc80bff1c21fee2fa6`). It reads retained artifacts and creates only in-memory synthetic policy fixtures. It never invokes a producer or writes an artifact.
 
 ## Canonical call graph and path inventory
 
