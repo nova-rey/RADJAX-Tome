@@ -1,8 +1,34 @@
+from radjax_tome.builder.full_width_policy import (
+    FullWidthCompositionPolicy,
+    select_final_composition,
+)
 from scripts.audit_selection_system import (
     _controlled_fixture_scenarios,
     _synthetic_candidates,
     simulate_board,
 )
+
+
+def test_authoritative_full_width_ratio_is_exact_and_final():
+    policy = FullWidthCompositionPolicy()
+    assert policy.to_dict() == {"numerator": 1, "denominator": 3}
+    candidates = [
+        {"example_id": f"f{i}", "position": 0, "score": 100 - i, "full_width": True}
+        for i in range(5)
+    ] + [
+        {"example_id": f"n{i}", "position": 0, "score": 95 - i, "full_width": False}
+        for i in range(5)
+    ]
+    selected = select_final_composition(list(reversed(candidates)), 6, policy=policy)
+    assert sum(item["full_width"] for item in selected) == 2
+    assert {item["example_id"] for item in selected} == {
+        "f0",
+        "f1",
+        "n0",
+        "n1",
+        "n2",
+        "n3",
+    }
 
 
 def test_exact_one_third_cap_is_final_composition_and_order_independent():

@@ -3203,6 +3203,15 @@ sensitivity. No production policy, Contract, Student, Golden evidence, or
 default changed; future implementation requires selection-authority and
 backfill decisions.
 
+2026-08-15 — M8F sub-checkpoint 1 exact full-width policy
+
+Added a Tome-owned exact-rational `{numerator: 1, denominator: 3}` composition
+primitive and bound the pair into the production selection integration hash.
+Full-width exemplars remain diagnostically observable but are ordinary eligible
+exemplars and are no longer excluded by default through the Tome long-tail
+classification defaults. This checkpoint does not yet wire composition into
+the C2-C6 flow; ranked reserves and backfill remain the next bounded commit.
+
 The follow-up evidence correction derives the duplicate-reason and
 same-source controlled scenarios from deterministic in-memory records and
 regenerates the machine-readable report; the audit document intentionally

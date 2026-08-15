@@ -105,8 +105,10 @@ class ProductionBuildConfig:
     long_tail_side_board_cap: int = 128
     perverse_tail_side_board_cap: int = 32
     include_long_tail_in_primary: bool = False
-    include_perverse_tail_in_primary: bool = False
-    include_perverse_tail_in_student: bool = False
+    include_perverse_tail_in_primary: bool = True
+    include_perverse_tail_in_student: bool = True
+    full_width_cap_numerator: int = 1
+    full_width_cap_denominator: int = 3
     gpu_batch_size_mode: str = "auto"
     gpu_batch_size_preset: int = 8
     gpu_batch_size_custom: int | None = None

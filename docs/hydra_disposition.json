@@ -2710,6 +2710,22 @@
       "rationale": "Machine-readable offline audit output derived from retained fixture/report evidence and synthetic exact-rational cap simulations; no production artifact is modified.",
       "replacement_or_target_boundary": "M8 selection-policy implementation and selected-pass engineering evidence.",
       "status": "canonical"
+    },
+    "src/radjax_tome/builder/full_width_policy.py": {
+      "archive_or_removal_condition": "Archive when the exact-rational policy is superseded by a governed selection-policy implementation.",
+      "kind": "source-module",
+      "owning_milestone": "M8F",
+      "rationale": "Tome-owned exact-rational full-width composition primitive with deterministic final-pool selection.",
+      "replacement_or_target_boundary": "M8 full-width selection and authority integration.",
+      "status": "canonical"
+    },
+    "docs/M8F_SUBCHECKPOINT1_FULL_WIDTH_POLICY.md": {
+      "archive_or_removal_condition": "Archive with the M8F sub-checkpoint when the complete C2-C6 policy supersedes this bounded primitive.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8F",
+      "rationale": "Documents the exact-rational full-width policy primitive, authority binding, and explicit remaining integration boundary.",
+      "replacement_or_target_boundary": "M8 full-width selection and authority integration.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

@@ -110,7 +110,7 @@ def selected_board_for_long_tail(
     long_tail_class: str,
     *,
     include_long_tail_in_primary: bool = False,
-    include_perverse_tail_in_primary: bool = False,
+    include_perverse_tail_in_primary: bool = True,
 ) -> str:
     if long_tail_class == NORMAL:
         return PRIMARY_SELECTED_BOARD
