@@ -3202,3 +3202,8 @@ order-independent full-width displacement, and 1/4, 1/3, 1/2, and uncapped
 sensitivity. No production policy, Contract, Student, Golden evidence, or
 default changed; future implementation requires selection-authority and
 backfill decisions.
+
+The audit simulator was corrected to keep the full-width allowance hard even
+when the narrow candidate pool is exhausted. It now reports category shortfall
+separately from total eligible-pool exhaustion, with derived controlled
+fixtures covering duplicate coordinates and exhaustion.

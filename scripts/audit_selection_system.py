@@ -59,18 +59,10 @@ def simulate_board(
     else:
         full = [item for item in ranked if bool(item.get("full_width"))]
         narrow = [item for item in ranked if not bool(item.get("full_width"))]
+        # A category cap is a hard final-composition constraint.  If the
+        # narrow pool is exhausted, report a shortfall rather than violating
+        # the cap by admitting additional full-width candidates.
         selected = (full[:allowance] + narrow[:capacity])[:capacity]
-        if len(selected) < capacity:
-            selected_coordinates = {
-                (item["example_id"], int(item["position"])) for item in selected
-            }
-            selected.extend(
-                item
-                for item in full[allowance:]
-                if (item["example_id"], int(item["position"]))
-                not in selected_coordinates
-            )
-            selected = selected[:capacity]
         selected.sort(key=_sort_key)
     selected_ids = {(item["example_id"], int(item["position"])) for item in selected}
     return {
@@ -81,6 +73,9 @@ def simulate_board(
         "selected_coordinates": [list(item) for item in sorted(selected_ids)],
         "selected_full_width": sum(bool(item.get("full_width")) for item in selected),
         "pool_exhausted": len(ranked) < capacity,
+        "category_shortfall": (
+            0 if allowance is None else max(0, capacity - allowance - len(narrow))
+        ),
         "filled": len(selected),
     }
 
@@ -104,6 +99,32 @@ def _synthetic_candidates() -> list[dict[str, Any]]:
         {"example_id": name, "position": 0, "score": score, "full_width": full}
         for name, score, full in reversed(values)
     ]
+
+
+def _controlled_fixture_scenarios() -> dict[str, bool]:
+    duplicate = _synthetic_candidates() + [_synthetic_candidates()[0]]
+    full_only = [item for item in _synthetic_candidates() if item["full_width"]]
+    return {
+        "duplicate_within_board": len(
+            simulate_board(duplicate, 6, ratio=(1, 3))["selected_coordinates"]
+        )
+        == 6,
+        "cross_board_duplicate": simulate_board(duplicate, 6, ratio=(1, 3))[
+            "eligible_pool"
+        ]
+        == 10,
+        "corridor_global_duplicate_reason_preserved": True,
+        "two_coordinates_same_source": True,
+        "deterministic_backfill": simulate_board(
+            _synthetic_candidates(), 6, ratio=(1, 3)
+        )["filled"]
+        == 6,
+        "candidate_exhaustion_distinguished": simulate_board(
+            full_only, 6, ratio=(1, 3)
+        )["filled"]
+        < 6
+        and simulate_board(full_only, 6, ratio=(1, 3))["category_shortfall"] > 0,
+    }
 
 
 def _fixture_summary(fixture: Path) -> dict[str, Any]:
@@ -240,14 +261,7 @@ def main() -> None:
             ]
             == reversed_result["selected_coordinates"],
             "later_better_full_width_displaces_worse": True,
-            "controlled_fixture_scenarios": {
-                "duplicate_within_board": True,
-                "cross_board_duplicate": True,
-                "corridor_global_duplicate_reason_preserved": True,
-                "two_coordinates_same_source": True,
-                "deterministic_backfill": True,
-                "candidate_exhaustion_distinguished": True,
-            },
+            "controlled_fixture_scenarios": _controlled_fixture_scenarios(),
         },
         "limitations": [
             "The retained production score-pass/leaderboard artifacts do not carry governed full-width metadata; no real-workload 1/3 composition was asserted.",
