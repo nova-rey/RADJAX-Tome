@@ -2678,6 +2678,38 @@
       "rationale": "Sanitized provider, GPU, workload, authority, report digest, and teardown record for the one-run full-lifecycle anatomy measurement.",
       "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
       "status": "canonical"
+    },
+    "scripts/audit_selection_system.py": {
+      "archive_or_removal_condition": "Archive with the M8E selection audit after an authorized policy implementation supersedes the offline characterization.",
+      "kind": "script",
+      "owning_milestone": "M8E",
+      "rationale": "Deterministically audits retained selection artifacts, dynamic-K anatomy, and exact-rational full-width cap simulations without invoking production.",
+      "replacement_or_target_boundary": "M8 selection-policy implementation and selected-pass engineering evidence.",
+      "status": "canonical"
+    },
+    "tests/test_selection_system_audit.py": {
+      "archive_or_removal_condition": "Archive with the M8E selection audit after an authorized policy implementation supersedes these characterization tests.",
+      "kind": "source-module",
+      "owning_milestone": "M8E",
+      "rationale": "Constrains exact one-third simulation, order independence, and sensitivity behavior without changing production selection.",
+      "replacement_or_target_boundary": "M8 selection-policy implementation tests.",
+      "status": "canonical"
+    },
+    "docs/M8E_SELECTION_SYSTEM_AUDIT.md": {
+      "archive_or_removal_condition": "Archive when an authorized selection-policy implementation supersedes this audit.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8E",
+      "rationale": "Records canonical selection paths, current full-width routing, deduplication/backfill behavior, dynamic-K physical representation, and exact-rational cap simulation.",
+      "replacement_or_target_boundary": "M8 selection-policy implementation and selected-pass engineering evidence.",
+      "status": "canonical"
+    },
+    "docs/evidence/M8E_SELECTION_AUDIT.json": {
+      "archive_or_removal_condition": "Archive with the M8E audit after an authorized policy implementation supersedes this deterministic characterization report.",
+      "kind": "fixture",
+      "owning_milestone": "M8E",
+      "rationale": "Machine-readable offline audit output derived from retained fixture/report evidence and synthetic exact-rational cap simulations; no production artifact is modified.",
+      "replacement_or_target_boundary": "M8 selection-policy implementation and selected-pass engineering evidence.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

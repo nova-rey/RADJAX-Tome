@@ -3188,3 +3188,17 @@ commit 7f5ff7f8251c6cb51cd6b976a299090e51cc297c; the diagnostic prose uses
 the same identity and the corrected 5,083,039,446-byte lifecycle total. The
 candidate matrix was refreshed to the regenerated 327.002139828-second run
 and its 591.313904348-second post-linkage rewrite.
+
+2026-08-15 — M8E selection-system audit
+
+An offline, measurement-only audit records the canonical C1-C6 selection call
+graph, current leaderboard ranking and bounded-pool behavior, coordinate-keyed
+deduplication and reason preservation, and the de facto perverse-tail routing
+of full-width exemplars. The retained M8D report confirms 145/256 full-width
+selected exemplars and vocabulary-width physical arrays even for a small-K
+sample; no dynamic-top-K or score-pass behavior was changed. A deterministic
+analyzer simulates exact rational C_full(N)=max(1,floor(N/3)) composition,
+order-independent full-width displacement, and 1/4, 1/3, 1/2, and uncapped
+sensitivity. No production policy, Contract, Student, Golden evidence, or
+default changed; future implementation requires selection-authority and
+backfill decisions.
