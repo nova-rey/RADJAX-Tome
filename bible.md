@@ -3173,3 +3173,12 @@ is 273.075659 seconds and the post-selected corridor synchronization rewrite is
 docs/evidence/M8D_*.json. No optimization was implemented. Archive, Contract
 validation, typed post-linkage evidence, and packaging remain explicitly
 unmeasured boundaries for the next authorized design checkpoint.
+
+2026-08-15 — M8D rewrite-byte counter correction
+
+The lifecycle diagnostic now binds the post-linkage anatomy
+`bytes_rewritten` field to the final atomic output size, matching the existing
+operation ledger without adding another payload serialization. The report must
+be regenerated through the normal Modal diagnostic writer before review; the
+three allocated output roots and one reported lifecycle run are documented
+separately.

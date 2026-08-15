@@ -625,6 +625,15 @@ def _synchronize_native_payload_shards(
         _write_json_atomic(path, payload)
         output_bytes = path.stat().st_size
         if _measurement_metrics is not None:
+            anatomy = _measurement_metrics.get("payload_anatomy")
+            if isinstance(anatomy, dict):
+                totals = anatomy.get("stage_totals")
+                if isinstance(totals, dict):
+                    stage_total = totals.get("post_linkage")
+                    if isinstance(stage_total, dict):
+                        stage_total["bytes_rewritten"] = (
+                            stage_total.get("bytes_rewritten", 0) + output_bytes
+                        )
             phases = _measurement_metrics.setdefault("phases", {})
             phase = phases.setdefault(
                 "corridor_synchronization_rewrite",
