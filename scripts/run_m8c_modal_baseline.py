@@ -89,6 +89,17 @@ def run_baseline() -> str:
     env["PYTHONPATH"] = (
         "/workspace/tome/src:/workspace/tome/scripts:/workspace/contract/src"
     )
+    # The source mount intentionally omits .git. The driver only asks for
+    # HEAD, so bind that one expected identity rather than mounting history.
+    git_shim = Path("/tmp/git")
+    git_shim.write_text(
+        "#!/bin/sh\n"
+        'if [ "$1" = rev-parse ] && [ "$2" = HEAD ]; then '
+        f"echo {EXPECTED_TOME_COMMIT}; exit 0; fi\n"
+        "exit 127\n"
+    )
+    git_shim.chmod(0o755)
+    env["PATH"] = "/tmp:" + env.get("PATH", "")
     result = subprocess.run(
         command, env=env, text=True, capture_output=True, timeout=3500
     )

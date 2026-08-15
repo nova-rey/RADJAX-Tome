@@ -3074,3 +3074,7 @@ atomic replacement. Focused M8 tests cover the new schema. Corridor rereads,
 post-linkage evidence, archive creation, Contract validation, and packaging
 remain explicitly unmeasured and are not treated as zero-cost; this checkpoint
 still selects no optimization.
+
+The maintained Modal wrapper binds the exact expected source commit through a
+narrow remote `git rev-parse HEAD` shim because the source mount omits `.git`;
+it does not mount or trust mutable provider history.
