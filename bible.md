@@ -3122,3 +3122,19 @@ for this measurement and no longer blocks completion on that volume.
 
 The volume mount itself was also removed after container inspection reproduced
 the same provider filesystem error even without a commit operation.
+
+2026-08-15 — M8C fresh controlled baseline evidence
+
+The measurement-only M8C checkpoint now retains the counter-bearing three-run
+Modal T4 report and sanitized environment record for Tome `5e6f9a7`, using the
+restored M8B checkpoint and separately mounted production anchor. The raw
+report was transferred from the held container after the diagnostic volume
+proved unsupported; no production optimization or trust shortcut was added.
+The measured median selected pass is 308.435139861 seconds, with 274.397374801
+seconds initial staging. Operation counts establish 768 canonical hashes,
+6,109,840,830 canonical bytes read, 13,358,155,263 JSON bytes written, and
+768 atomic replacements across the three runs. Corridor, typed-evidence,
+archive, Contract-validation, and packaging boundaries remain explicitly
+unmeasured and are recorded as next-checkpoint gaps. Lightning Studio remains
+stopped, Modal resources were torn down, and Contract/Student behavior is
+unchanged.

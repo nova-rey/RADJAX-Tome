@@ -2646,6 +2646,14 @@
       "rationale": "Verifies the private operation-count schema and byte/file counters on a controlled staging fixture.",
       "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
       "status": "canonical"
+    },
+    "docs/evidence/M8C_CURRENT_BASELINE_ENVIRONMENT.json": {
+      "archive_or_removal_condition": "Archive with the M8C diagnostic record after independent review or replace only with a governed successor receipt.",
+      "kind": "fixture",
+      "owning_milestone": "M8C",
+      "rationale": "Records the sanitized Modal T4 environment, exact source and Contract commits, run labels, checkpoint identity, and raw/sanitized report digests for the fresh controlled baseline.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

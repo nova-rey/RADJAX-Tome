@@ -9,9 +9,9 @@ not change Tome production behavior.
 
 from __future__ import annotations
 
-import json
-import gzip
 import base64
+import gzip
+import json
 import os
 import subprocess
 import time
@@ -63,9 +63,7 @@ if all(
     )
 
 
-@app.function(
-    image=image, gpu="T4", timeout=3600
-)
+@app.function(image=image, gpu="T4", timeout=3600)
 def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
     evidence = Path("/tmp/m8c-evidence")
     evidence.mkdir(parents=True, exist_ok=True)
@@ -136,9 +134,8 @@ def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
                 "expected_commit": expected_commit,
                 "phase": "completed",
                 "report_bytes": report.stat().st_size,
-                "operation_counts": "operation_counts" in json.loads(
-                    report.read_text(encoding="utf-8")
-                ),
+                "operation_counts": "operation_counts"
+                in json.loads(report.read_text(encoding="utf-8")),
             }
         ),
         encoding="utf-8",
@@ -172,7 +169,9 @@ def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
         # `modal container exec` transfer when the client result stream is
         # unavailable.  This is diagnostic plumbing only.
         time.sleep(hold_seconds)
-    return json.dumps({"summary": json.loads(summary), "report_gzip_b64": encoded_report})
+    return json.dumps(
+        {"summary": json.loads(summary), "report_gzip_b64": encoded_report}
+    )
 
 
 @app.local_entrypoint()

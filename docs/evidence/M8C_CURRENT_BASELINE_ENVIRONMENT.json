@@ -1,0 +1,25 @@
+{
+  "app_id": "ap-oLTCbPgXz3E36YNXZ5Z6bx",
+  "checkpoint_digest": "sha256:a850ad85f3a0ca95a000dda239ff7f46296de7b411fe5db20b844bfa78ad6e12",
+  "checkpoint_manifest_sha256": "sha256:0ea34090bf7b2e6331644d2eaa57b738c771ca48e62dc76527878a6b9b915a39",
+  "container_id": "ta-01M037F9VV8CZK1X84VQFA8C5R",
+  "contract_commit": "1fa43e1aea2e198511db86dafb0aeefa525d48c7",
+  "contract_release": "radjax-contract 0.9.0",
+  "cuda_runtime": "13.0",
+  "gpu": "Tesla T4",
+  "instrumentation": "selected_pass_operation_counts_v1",
+  "os": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+  "provider": "modal",
+  "python": "3.12.10 (main, May 21 2025, 23:34:56) [GCC 12.2.0]",
+  "raw_report_sha256": "sha256:abf74c5555f3d4bd92fb38fb1811a80ffee4a7bf326ec9ecdf4d644dd9244239",
+  "resource_teardown": "container held for extraction then stop required",
+  "run_labels": [
+    "m8b-current-base-cap-eight-1",
+    "m8b-current-base-cap-eight-2",
+    "m8b-current-base-cap-eight-3"
+  ],
+  "sanitized_report_sha256": "sha256:64f56cc1614567797b5dcd819650b6a11bb1a80c675f34af35e31088e49273f6",
+  "schema_version": "m8c_current_baseline_environment_v1",
+  "tome_commit": "5e6f9a74f465b501e310054efb323471f33e69e4",
+  "torch": "2.13.0+cu130"
+}
