@@ -3119,3 +3119,6 @@ Modal volume commit was observed to return `Operation not supported by device`
 on the diagnostic mount. The runner therefore treats the private `/tmp`
 report plus authenticated result/direct-container transfer as authoritative
 for this measurement and no longer blocks completion on that volume.
+
+The volume mount itself was also removed after container inspection reproduced
+the same provider filesystem error even without a commit operation.

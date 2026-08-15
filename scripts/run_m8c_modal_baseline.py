@@ -41,7 +41,6 @@ MODEL_ROOT = _local_input("M8C_MODEL_ROOT")
 EXPECTED_TOME_COMMIT = os.environ.get("M8C_EXPECTED_TOME_COMMIT", "")
 
 app = modal.App("radjax-m8c-selected-staging-baseline")
-evidence_volume = modal.Volume.from_name("radjax-m8c-evidence", create_if_missing=True)
 image = modal.Image.debian_slim(python_version="3.12").pip_install(
     "numpy>=1.26",
     "PyYAML>=6.0",
@@ -65,7 +64,7 @@ if all(
 
 
 @app.function(
-    image=image, gpu="T4", timeout=3600, volumes={"/mnt/evidence": evidence_volume}
+    image=image, gpu="T4", timeout=3600
 )
 def run_baseline(expected_commit: str, hold_seconds: int = 0) -> str:
     evidence = Path("/tmp/m8c-evidence")
