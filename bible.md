@@ -3045,3 +3045,23 @@ and no public artifact bytes or Contract/Student files changed.
 The authority tests also exercise closed-shape mutations for the Contract
 package, input root, and tokenizer identifier, in addition to the teacher model
 provenance mutation; each is rejected before output production.
+
+## 2026-08-15 — M8C Selected-Pass Staging Diagnostic
+
+The measurement-only M8C checkpoint recovered the exact retained post-C5
+checkpoint from the dedicated Tome Lightning Studio, transferred it to a
+Modal Tesla T4, and ran three fresh cap-eight replays on Tome
+`6a6c65378cfd86a190e44e861ed9323927c2acc8`. The existing private
+`selected_pass_execution_v1` observer remained disabled by default and no
+production behavior changed. The fresh median selected-pass wall was
+305.824600515 seconds and initial staging was 275.400979866 seconds (90.05%).
+Staging JSON encoding (193.809392 seconds median) and canonical body
+encoding/hash (79.466049 seconds) dominated; the T4 was idle during the CPU
+serialization path. Corridor reread/rehash, post-linkage evidence hashing,
+archive creation, Contract validation, and packaging were explicitly outside
+or unmeasured in this boundary and are not claimed to be zero-cost. The raw
+report and analysis are retained under `docs/evidence/` and
+`docs/M8C_SELECTED_PASS_STAGING_DIAGNOSTIC.md`. No optimization, Contract or
+Student change, default change, or M9 work was performed; a later checkpoint
+must establish byte/read/hash counters and crash-safe staging invalidation
+before selecting receipt propagation.
