@@ -3086,3 +3086,6 @@ environment used to construct the mounts.
 The remote module import now defers the required-commit check to the local
 entrypoint; the remote function receives that value explicitly, avoiding an
 ambient provider environment dependency.
+
+Hydra classifies the committed sanitized M8C raw report as a fixture evidence
+surface, matching the repository's closed disposition vocabulary.

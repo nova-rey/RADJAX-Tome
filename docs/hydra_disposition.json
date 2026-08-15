@@ -2609,7 +2609,7 @@
     },
     "docs/evidence/M8C_CURRENT_BASELINE_RAW.json": {
       "archive_or_removal_condition": "Archive with the M8C diagnostic record after independent review or replace only with a governed successor receipt.",
-      "kind": "evidence",
+      "kind": "fixture",
       "owning_milestone": "M8C",
       "rationale": "Sanitized raw report for three fresh Modal T4 replays at the exact diagnostic branch commit; private staging paths are redacted and no authority fields are changed.",
       "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
