@@ -3148,3 +3148,9 @@ and pretty-byte totals, reread/rehash/rewrite counts, and post-linkage timing.
 It does not alter payload construction, dynamic top-K/CSL behavior, selection,
 corridor semantics, checkpointing, or publication defaults. A bounded
 full-lifecycle replay is required before any optimization candidate is chosen.
+
+The first M8D remote attempt was stopped after instrumentation overhead was
+observed to dominate progress: encoding every field independently multiplied
+the existing JSON work. The hook was narrowed to three bounded exact field
+samples plus reused operation-ledger byte totals and cheap all-record K/mass
+facts before another lifecycle run.

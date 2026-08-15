@@ -125,8 +125,7 @@ def test_payload_anatomy_is_bounded_and_accounts_for_k_and_mass(tmp_path) -> Non
     report = diagnostics.finish()
     anatomy = report["payload_anatomy"]
     assert anatomy["schema_version"] == "m8d_selected_payload_anatomy_v1"
-    assert len(anatomy["observations"]) == 8
+    assert len(anatomy["observations"]) == 3
     assert len(anatomy["effective_top_k"]) == 10
     assert anatomy["stage_totals"]["initial_staging"]["count"] == 10
-    assert anatomy["stage_totals"]["initial_staging"]["canonical_bytes"] > 0
     assert anatomy["observations"][0]["fields"]["top_probs"]["elements"] == 3

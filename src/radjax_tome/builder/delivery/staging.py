@@ -601,20 +601,26 @@ def _synchronize_native_payload_shards(
                             "bytes_rewritten": 0,
                         },
                     )
-                    canonical = _native_payload_hash(payload)
                     stage_total["count"] += 1
+                    canonical_payload = {
+                        k: v for k, v in payload.items() if k != "payload_hash"
+                    }
                     stage_total["canonical_bytes"] += len(
                         json.dumps(
-                            {k: v for k, v in payload.items() if k != "payload_hash"},
+                            canonical_payload,
                             sort_keys=True,
                             separators=(",", ":"),
                         ).encode("utf-8")
+                    )
+                    stage_total["pretty_bytes"] += len(
+                        (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode(
+                            "utf-8"
+                        )
                     )
                     stage_total["bytes_read"] += input_bytes
                     stage_total["canonical_payload_hashes"] = (
                         stage_total.get("canonical_payload_hashes", 0) + 1
                     )
-                    del canonical
         payload["payload_hash"] = _native_payload_hash(payload)
         _write_json_atomic(path, payload)
         output_bytes = path.stat().st_size

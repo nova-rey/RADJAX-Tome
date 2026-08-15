@@ -390,7 +390,7 @@ class SelectedPassExecutionDiagnostics:
         # full run still records every payload's total bytes and K distribution;
         # this bounded sample avoids making the diagnostic itself another large
         # serialization workload.
-        sample_limit = 8
+        sample_limit = 3
         if len(observations) < sample_limit:
             fields: dict[str, object] = {}
             for name, value in sorted(payload.items()):
@@ -433,8 +433,6 @@ class SelectedPassExecutionDiagnostics:
             },
         )
         stage_total["count"] += 1
-        stage_total["canonical_bytes"] += self._json_size(payload, pretty=False)
-        stage_total["pretty_bytes"] += self._json_size(payload, pretty=True)
 
     def count_operations(
         self,
@@ -606,6 +604,14 @@ class SelectedPassExecutionDiagnostics:
         unattributed = max(0.0, wall - included)
         accounted = included + unattributed
         reconciliation = abs(accounted - wall) / wall if wall else 0.0
+        initial_totals = self.payload_anatomy.setdefault("stage_totals", {}).setdefault(
+            "initial_staging",
+            {"count": 0, "canonical_bytes": 0, "pretty_bytes": 0},
+        )
+        canonical_counts = self.operation_counts.get("canonical_body_encoding_hash", {})
+        pretty_counts = self.operation_counts.get("staging_json_encoding", {})
+        initial_totals["canonical_bytes"] = int(canonical_counts.get("bytes_read", 0))
+        initial_totals["pretty_bytes"] = int(pretty_counts.get("bytes_written", 0))
         return {
             "schema_version": "selected_pass_execution_v1",
             "benchmark_only": True,
