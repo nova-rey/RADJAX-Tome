@@ -51,6 +51,14 @@ class ExemplarCandidate:
     def position_key(self) -> tuple[str, int]:
         return (self.example_id, self.selected_position)
 
+    @property
+    def full_width(self) -> bool:
+        effective = self.score_fields.get(
+            "effective_top_k", self.score_fields.get("diagnostic_effective_top_k")
+        )
+        vocab = self.score_fields.get("vocab_size")
+        return effective is not None and vocab is not None and effective >= vocab
+
 
 @dataclass(frozen=True)
 class _BoardEntry:
@@ -137,6 +145,7 @@ class _Board:
                     "selected_position": entry.candidate.selected_position,
                     "score": entry.score,
                     "eligible": True,
+                    "full_width": entry.candidate.full_width,
                 }
                 for entry in self._pool
             ]
@@ -201,6 +210,7 @@ def extract_one_pass_candidates(
                     effective_top_k[row, selected_position]
                 ),
                 "diagnostic_top_mass": 0.0,
+                "vocab_size": float(exemplar_source_top_token_ids.shape[-1]),
             }
             if not canonical_score_fields_only:
                 score_fields.update(

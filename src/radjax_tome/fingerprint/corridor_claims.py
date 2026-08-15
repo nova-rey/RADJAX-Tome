@@ -11,6 +11,7 @@ import tempfile
 from collections import deque
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
+from math import gcd
 from pathlib import Path
 from typing import Any, Literal
 
@@ -92,6 +93,8 @@ class CorridorGlobalClaimPolicy:
             )
         if not (1 <= self.full_width_cap_numerator <= self.full_width_cap_denominator):
             raise ValueError("invalid full-width composition ratio")
+        if gcd(self.full_width_cap_numerator, self.full_width_cap_denominator) != 1:
+            raise ValueError("full-width composition ratio must be reduced")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -152,6 +155,10 @@ class GlobalBoardCandidate:
     score: float
     eligible: bool = True
     metadata: Mapping[str, Any] = field(default_factory=dict)
+
+    @property
+    def full_width(self) -> bool:
+        return bool(self.metadata.get("full_width", False))
 
     @property
     def coordinate(self) -> tuple[str, int]:
@@ -530,6 +537,13 @@ def claim_corridor_then_backfill_global(
         remaining_global = global_budget - len(global_claims)
         target = min(board.requested_slots, max(0, remaining_global))
         fulfilled = 0
+        full_width_count = 0
+        full_width_allowance = max(
+            1,
+            target
+            * policy.full_width_cap_numerator
+            // policy.full_width_cap_denominator,
+        )
         pending: deque[tuple[GlobalBoardCandidate, str]] = deque()
         collision_count = 0
         skipped_ineligible = 0
@@ -538,6 +552,10 @@ def claim_corridor_then_backfill_global(
                 break
             coordinate = candidate.coordinate
             if not candidate.eligible:
+                skipped_ineligible += 1
+                pending.append((candidate, "ineligible"))
+                continue
+            if candidate.full_width and full_width_count >= full_width_allowance:
                 skipped_ineligible += 1
                 pending.append((candidate, "ineligible"))
                 continue
@@ -597,6 +615,8 @@ def claim_corridor_then_backfill_global(
                 )
             )
             fulfilled += 1
+            if candidate.full_width:
+                full_width_count += 1
             if pending:
                 skipped, reason = pending.popleft()
                 lineage.append(

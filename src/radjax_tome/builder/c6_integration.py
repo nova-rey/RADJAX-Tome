@@ -104,6 +104,12 @@ def export_corridor_candidate_features(
             if cached_shard is None:  # pragma: no cover - guarded above
                 raise C6IntegrationError("corridor source shard is unavailable")
             shard = cached_shard
+            effective_top_k_array = shard.get("exemplar_source_effective_top_k")
+            effective_top_k = (
+                None
+                if effective_top_k_array is None
+                else int(np.asarray(effective_top_k_array)[row, position])
+            )
             entropy = float(np.asarray(shard["corridor_entropy"])[row, position])
             membership = _entropy_membership(entropy, mode)
             record = {
@@ -119,6 +125,8 @@ def export_corridor_candidate_features(
                         entropy,
                         vocab_size=store.metadata.vocab_size,
                     ),
+                    "effective_top_k": effective_top_k,
+                    "vocab_size": int(store.metadata.vocab_size),
                 },
                 "fidelity": "derived",
                 "source_artifact_schema": "radjax.corridor_artifact.v3",
@@ -674,6 +682,7 @@ def export_production_global_board_supply(
                     "rank": rank,
                     "score": score,
                     "eligible": bool(candidate.get("eligible", True)),
+                    "full_width": bool(candidate.get("full_width", False)),
                 }
             )
         boards.append(

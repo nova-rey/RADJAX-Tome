@@ -20,6 +20,8 @@ class FullWidthCompositionPolicy:
             raise ValueError("full-width denominator must be an integer")
         if self.numerator < 1 or self.denominator < 1:
             raise ValueError("full-width ratio must be positive")
+        if self.numerator > self.denominator:
+            raise ValueError("full-width numerator cannot exceed denominator")
         divisor = gcd(self.numerator, self.denominator)
         if divisor != 1:
             raise ValueError("full-width ratio must be reduced")

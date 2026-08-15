@@ -13,6 +13,7 @@ from collections import Counter
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from math import gcd
 from pathlib import Path
 from typing import Any, Literal
 
@@ -132,6 +133,8 @@ class CorridorLeaderboardPolicy:
             or self.full_width_cap_numerator > self.full_width_cap_denominator
         ):
             raise ValueError("invalid full-width composition ratio")
+        if gcd(self.full_width_cap_numerator, self.full_width_cap_denominator) != 1:
+            raise ValueError("full-width composition ratio must be reduced")
 
     @property
     def compatibility_proxy_override_enabled(self) -> bool:
