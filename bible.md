@@ -3178,7 +3178,7 @@ unmeasured boundaries for the next authorized design checkpoint.
 
 The lifecycle diagnostic now binds the post-linkage anatomy
 `bytes_rewritten` field to the final atomic output size, matching the existing
-operation ledger without adding another payload serialization. The report must
-be regenerated through the normal Modal diagnostic writer before review; the
-three allocated output roots and one reported lifecycle run are documented
-separately.
+operation ledger without adding another payload serialization. A fresh normal
+Modal writer run at 7f5ff7f produced the corrected report (one reported run,
+three allocated output roots); its sanitized raw digest is
+f870dc490e84f20a8a6acab0a184c5c90eebc3c84217621ba2b688d025cc9349.

@@ -8,8 +8,7 @@
   },
   "provider": "modal",
   "gpu": "Tesla T4",
-  "modal_app": "ap-7aORm7YXOg8kGQcwhwb3GF",
-  "modal_container": "ta-01M03F0YA066GWYC17TF18DAZR",
+  "modal_app": "ap-8AbEQftOfm5zM2i8SfX4C0",
   "workload": {
     "selected_sources": 213,
     "selected_coordinates": 256,
@@ -22,7 +21,7 @@
   },
   "report": {
     "path": "docs/evidence/M8D_SELECTED_PAYLOAD_LIFECYCLE_RAW.json",
-    "sha256": "sha256:617920f965e17e23b382a343a77c8f2dd6e00494919392cc7abfc55c257f843e",
+    "sha256": "sha256:f870dc490e84f20a8a6acab0a184c5c90eebc3c84217621ba2b688d025cc9349",
     "runs": 1,
     "instrumentation": "M8D_FULL_LIFECYCLE=1",
     "lightning_ai_used": false

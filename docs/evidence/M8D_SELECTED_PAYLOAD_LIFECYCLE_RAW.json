@@ -6,13 +6,13 @@
   },
   "initial_staging_fraction_of_selected_pass": {
     "observations": [
-      0.8411674594985371
+      0.8434412668677718
     ]
   },
   "initial_staging_gate_passes": null,
   "initial_staging_seconds": {
     "observations": [
-      273.07565896799997
+      275.8070990850006
     ]
   },
   "runs": [
@@ -20,7 +20,7 @@
       "authority_hash": "sha256:e000f5b79c7c8d8f7b59de5f33964bef04a4340f21f216aef0933895b69482bf",
       "cap": 8,
       "label": "m8b-current-base-cap-eight-1",
-      "lifecycle_output_bytes": 5083039434,
+      "lifecycle_output_bytes": 5083039446,
       "metrics": {
         "coordinate_compression_batch_count": 27,
         "coordinates_committed_before_each_retry": [],
@@ -3547,15 +3547,15 @@
           "benchmark_only": true,
           "benchmark_only_effective_execution_cap": 8,
           "checkpoint_validation": {
-            "after_seconds": 1.8583600730000285,
-            "before_seconds": 1.8996760259999999,
+            "after_seconds": 1.8689018000000033,
+            "before_seconds": 1.8706462980000005,
             "included_in_selected_pass_wall_time": false
           },
           "compilation": {
             "status": "not_authorized"
           },
           "immutable_checkpoint_digest": "sha256:a850ad85f3a0ca95a000dda239ff7f46296de7b411fe5db20b844bfa78ad6e12",
-          "included_phase_seconds": 307.9187676500001,
+          "included_phase_seconds": 310.5653296620007,
           "oom_or_fallback_events": [],
           "operation_counts": {
             "atomic_replacement": {
@@ -5941,7 +5941,7 @@
               },
               "post_linkage": {
                 "bytes_read": 4452718421,
-                "bytes_rewritten": 0,
+                "bytes_rewritten": 4452749623,
                 "canonical_bytes": 2036638668,
                 "canonical_payload_hashes": 256,
                 "count": 256,
@@ -5951,35 +5951,35 @@
           },
           "phases": {
             "atomic_replacement": {
-              "seconds": 0.0378500909998678,
+              "seconds": 0.035086561999960963,
               "status": "measured_host_wall"
             },
             "backend_close_cleanup": {
-              "seconds": 0.10505681699999059,
+              "seconds": 0.11056629999995948,
               "status": "measured"
             },
             "backend_construction": {
-              "seconds": 4.13820000009224e-05,
+              "seconds": 3.856100000021456e-05,
               "status": "measured"
             },
             "canonical_body_encoding_hash": {
-              "seconds": 78.65022538100008,
+              "seconds": 79.49257547000015,
               "status": "measured_host_wall"
             },
             "compact_d2h_transfer": {
-              "seconds": 0.6004349199999588,
+              "seconds": 0.5870549920000698,
               "status": "measured_host_wall"
             },
             "compact_reduction": {
-              "seconds": 0.21121215199984888,
+              "seconds": 0.26372837500002433,
               "status": "measured_host_wall"
             },
             "corridor_synchronization_rewrite": {
-              "seconds": 578.1484727800007,
+              "seconds": 591.3139043480006,
               "status": "measured_host_wall"
             },
             "h2d_input_transfer": {
-              "seconds": 0.004187659000205457,
+              "seconds": 0.0042643459999531785,
               "status": "measured_host_wall"
             },
             "hashing_json_atomic_write_fsync": {
@@ -5987,11 +5987,11 @@
               "status": "measured"
             },
             "model_tokenizer_load": {
-              "seconds": 8.040121499999993,
+              "seconds": 7.561722610000039,
               "status": "measured_host_wall"
             },
             "payload_conversion_linkage_validation": {
-              "seconds": 18.339745839999985,
+              "seconds": 18.761023652000105,
               "status": "measured"
             },
             "resume_validation": {
@@ -6003,31 +6003,31 @@
               "status": "measured"
             },
             "selected_position_index_preparation": {
-              "seconds": 0.001878393000016132,
+              "seconds": 0.001825418999951367,
               "status": "measured_host_wall"
             },
             "selected_row_gather": {
-              "seconds": 0.1351994870000297,
+              "seconds": 0.12364393899998305,
               "status": "measured_host_wall"
             },
             "staging_json_encoding": {
-              "seconds": 192.0666969889999,
+              "seconds": 193.79194110999998,
               "status": "measured_host_wall"
             },
             "teacher_forward": {
-              "seconds": 7.228341106000091,
+              "seconds": 7.167938957000015,
               "status": "measured_host_wall"
             },
             "temporary_file_close": {
-              "seconds": 0.02411895900003458,
+              "seconds": 0.02287889100014695,
               "status": "measured_host_wall"
             },
             "temporary_file_write": {
-              "seconds": 2.296767548000112,
+              "seconds": 2.4646170520004205,
               "status": "measured_host_wall"
             },
             "tokenization_input_preparation": {
-              "seconds": 0.17688942600000956,
+              "seconds": 0.1764234259999533,
               "status": "measured_host_wall"
             }
           },
@@ -6068,22 +6068,22 @@
               "status": "available",
               "total_bytes": 15637086208
             },
-            "process_rss_at_selected_pass_entry_bytes": 515313664,
-            "process_rss_incremental_peak_bytes": 4331061248,
-            "process_rss_peak_bytes": 4846374912
+            "process_rss_at_selected_pass_entry_bytes": 515289088,
+            "process_rss_incremental_peak_bytes": 4333289472,
+            "process_rss_peak_bytes": 4848578560
           },
           "schema_version": "selected_pass_execution_v1",
           "score_pass_invocation_count": 0,
-          "selected_coordinates_per_second": 0.7885685250945772,
-          "selected_pass_wall_seconds": 324.638876462,
-          "selected_source_examples_per_second": 0.6561136556450975,
+          "selected_coordinates_per_second": 0.782869494782675,
+          "selected_pass_wall_seconds": 327.002139828,
+          "selected_source_examples_per_second": 0.6513718843308975,
           "selection_writer_invocation_count": 0,
-          "unattributed_control_seconds": 16.720108811999864
+          "unattributed_control_seconds": 16.436810165999304
         },
         "selected_payload_shard_count": 256,
         "selected_rerun_batch_count": 27,
         "selected_rerun_batch_size": 8,
-        "selected_rerun_compression_seconds": 300.20125129,
+        "selected_rerun_compression_seconds": 303.39119273999984,
         "selected_rerun_effective_batch_sizes": [
           8,
           8,
@@ -6114,12 +6114,12 @@
           8
         ],
         "selected_rerun_examples": 213,
-        "selected_rerun_examples_per_second": 10.347110785502217,
+        "selected_rerun_examples_per_second": 10.60443165379257,
         "selected_rerun_io_seconds": 0.0,
         "selected_rerun_peak_device_memory_bytes": 1423718400,
-        "selected_rerun_peak_host_memory_bytes": 4846374912,
+        "selected_rerun_peak_host_memory_bytes": 4848578560,
         "selected_rerun_requested_batch_size": 8,
-        "selected_rerun_teacher_seconds": 20.585456598999933,
+        "selected_rerun_teacher_seconds": 20.085942080999942,
         "selected_row_gather_seconds": null,
         "selected_source_example_count": 213,
         "source_batch_count": 27,
@@ -6393,7 +6393,7 @@
   "schema_version": "m8b_selected_staging_baseline_v1",
   "selected_pass_wall_seconds": {
     "observations": [
-      324.638876462
+      327.002139828
     ]
   },
   "statistics": {
@@ -6413,5 +6413,5 @@
     "spread": "max_minus_min_v1",
     "staging_gate_fraction": 0.5
   },
-  "tome_commit": "9b046aedb7ce7d22eda2884f9e7703ad55b4dfb2"
+  "tome_commit": "7f5ff7f8251c6cb51cd6b976a299090e51cc297c"
 }
