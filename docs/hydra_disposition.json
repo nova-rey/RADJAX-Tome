@@ -2654,6 +2654,30 @@
       "rationale": "Records the sanitized Modal T4 environment, exact source and Contract commits, run labels, checkpoint identity, and raw/sanitized report digests for the fresh controlled baseline.",
       "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
       "status": "canonical"
+    },
+    "docs/M8D_SELECTED_PAYLOAD_LIFECYCLE_DIAGNOSTIC.md": {
+      "archive_or_removal_condition": "Archive when a governed M8 staging redesign supersedes this anatomy and lifecycle diagnostic.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8D",
+      "rationale": "Records the controlled selected-exemplar payload anatomy, lifecycle traversal ledger, memory attribution, candidate matrix, and explicit measurement gaps without implementing an optimization.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
+    },
+    "docs/evidence/M8D_SELECTED_PAYLOAD_LIFECYCLE_RAW.json": {
+      "archive_or_removal_condition": "Archive with the M8D diagnostic after independent review or replace only with a governed successor report.",
+      "kind": "fixture",
+      "owning_milestone": "M8D",
+      "rationale": "Sanitized raw one-run full-lifecycle report containing dynamic-K observations, field-size samples, operation counts, post-linkage timing, and memory measurements; only private runtime path spelling is removed.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
+    },
+    "docs/evidence/M8D_SELECTED_PAYLOAD_LIFECYCLE_ENVIRONMENT.json": {
+      "archive_or_removal_condition": "Archive with the M8D diagnostic after independent review or replace only with a governed successor environment record.",
+      "kind": "fixture",
+      "owning_milestone": "M8D",
+      "rationale": "Sanitized provider, GPU, workload, authority, report digest, and teardown record for the one-run full-lifecycle anatomy measurement.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

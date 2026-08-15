@@ -1,0 +1,31 @@
+{
+  "schema_version": "m8d_selected_payload_lifecycle_environment_v1",
+  "tome_commit": "9b046aedb7ce7d22eda2884f9e7703ad55b4dfb2",
+  "contract": {
+    "package": "radjax-contract",
+    "release": "0.9.0",
+    "commit": "1fa43e1aea2e198511db86dafb0aeefa525d48c7"
+  },
+  "provider": "modal",
+  "gpu": "Tesla T4",
+  "modal_app": "ap-7aORm7YXOg8kGQcwhwb3GF",
+  "modal_container": "ta-01M03F0YA066GWYC17TF18DAZR",
+  "workload": {
+    "selected_sources": 213,
+    "selected_coordinates": 256,
+    "requested_source_batch_size": 8,
+    "batching": "fixed source-count; OOM halving only",
+    "checkpoint_digest": "sha256:a850ad85f3a0ca95a000dda239ff7f46296de7b411fe5db20b844bfa78ad6e12",
+    "checkpoint_manifest_sha256": "sha256:0ea34090bf7b2e6331644d2eaa57b738c771ca48e62dc76527878a6b9b915a39",
+    "authority_hash": "sha256:e000f5b79c7c8d8f7b59de5f33964bef04a4340f21f216aef0933895b69482bf",
+    "record_digest": "sha256:e471535e04db268c3fd852bc5b8dc746bfc4ef26a29baca75f17652262fca3a0"
+  },
+  "report": {
+    "path": "docs/evidence/M8D_SELECTED_PAYLOAD_LIFECYCLE_RAW.json",
+    "sha256": "sha256:617920f965e17e23b382a343a77c8f2dd6e00494919392cc7abfc55c257f843e",
+    "runs": 1,
+    "instrumentation": "M8D_FULL_LIFECYCLE=1",
+    "lightning_ai_used": false
+  },
+  "teardown": "Modal container stopped after report transfer and checksum inspection; no remote resource remains active."
+}

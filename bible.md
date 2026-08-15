@@ -3160,3 +3160,16 @@ publication work but could not emit its diagnostic receipt because the frozen
 M8B three-run summary helper rejected the intentionally single-run lifecycle
 mode. The receipt writer now records explicit single-run observations without
 pretending to provide an M8B median.
+
+2026-08-15 — M8D complete selected-exemplar lifecycle evidence
+
+The corrected one-run Modal T4 lifecycle replay at Tome
+9b046aedb7ce7d22eda2884f9e7703ad55b4dfb2 records payload anatomy, dynamic-K
+and retained-mass distributions, bounded field-size samples, cumulative
+canonical and pretty-JSON work, and the post-linkage corridor reread/rehash/
+rewrite cycle. 145 of 256 exemplars are full vocabulary width; initial staging
+is 273.075659 seconds and the post-selected corridor synchronization rewrite is
+578.148473 seconds. The report and environment record are retained under
+docs/evidence/M8D_*.json. No optimization was implemented. Archive, Contract
+validation, typed post-linkage evidence, and packaging remain explicitly
+unmeasured boundaries for the next authorized design checkpoint.
