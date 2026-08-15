@@ -82,6 +82,14 @@ class _Board:
             return
         self.candidate_count_seen += 1
         entry = _BoardEntry(score=score, candidate=candidate)
+        # A selected coordinate is unique within a leaderboard.  Canonical
+        # extraction normally emits one row, but replayed or malformed streams
+        # can repeat it; retain only the best governed rank.
+        self._pool = [
+            existing
+            for existing in self._pool
+            if existing.candidate.position_key != candidate.position_key
+        ]
         self._pool.append(entry)
         self._pool.sort(key=self._sort_key)
         del self._pool[self.pool_capacity :]

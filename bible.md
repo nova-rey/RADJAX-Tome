@@ -3203,6 +3203,11 @@ sensitivity. No production policy, Contract, Student, Golden evidence, or
 default changed; future implementation requires selection-authority and
 backfill decisions.
 
+M8F sub-checkpoint 2 closes the legacy within-board duplicate-coordinate gap
+by retaining only the best governed rank for a repeated selected coordinate.
+The complete ranked-reserve/backfill redesign remains explicitly unclaimed for
+the next checkpoint.
+
 2026-08-15 — M8F sub-checkpoint 1 exact full-width policy
 
 Added a Tome-owned exact-rational `{numerator: 1, denominator: 3}` composition

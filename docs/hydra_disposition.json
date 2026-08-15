@@ -2726,6 +2726,14 @@
       "rationale": "Documents the exact-rational full-width policy primitive, authority binding, and explicit remaining integration boundary.",
       "replacement_or_target_boundary": "M8 full-width selection and authority integration.",
       "status": "canonical"
+    },
+    "docs/M8F_SUBCHECKPOINT2_DEDUP_BACKFILL.md": {
+      "archive_or_removal_condition": "Archive when the complete ranked-reserve/backfill implementation supersedes this bounded duplicate correction.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8F",
+      "rationale": "Documents coordinate-keyed within-board duplicate collapse and the explicit boundary around complete C2-C6 reserves.",
+      "replacement_or_target_boundary": "M8 deterministic deduplication and backfill implementation.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

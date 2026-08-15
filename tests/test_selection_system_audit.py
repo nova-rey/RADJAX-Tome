@@ -1,3 +1,4 @@
+from radjax_tome.builder.exemplar_selection import ExemplarCandidate, select_exemplars
 from radjax_tome.builder.full_width_policy import (
     FullWidthCompositionPolicy,
     select_final_composition,
@@ -65,3 +66,28 @@ def test_full_width_cap_is_not_violated_when_narrow_pool_is_exhausted():
 
 def test_controlled_audit_scenarios_are_derived():
     assert all(_controlled_fixture_scenarios().values())
+
+
+def test_legacy_board_collapses_duplicate_coordinate_before_winner_assignment():
+    candidate = ExemplarCandidate(
+        example_id="same",
+        source_shard_id=0,
+        source_row=0,
+        selected_position=2,
+        candidate_positions=(2,),
+        sequence_length=4,
+        capture_mode="one_pass_candidate",
+        source_policy="0",
+        score_fields={"max_entropy": 1.0},
+        payload_ref={},
+    )
+    result = select_exemplars(
+        [candidate, candidate],
+        capture_mode="one_pass_candidate",
+        fulfillment_policy="select_from_existing_capture",
+        board_capacity=2,
+    )
+    board = next(
+        item for item in result["boards"] if item["board_id"] == "global_max_entropy"
+    )
+    assert board["winner_count"] == 1
