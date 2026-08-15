@@ -356,14 +356,14 @@ def test_student_package_filters_perverse_tail_board_by_producer_opt_in(
     assert selected["selected_board_summary"]["total_selected_count"] == retained_count
     assert audit["selected_count"] == retained_count
     assert audit["status"] == "pass"
-    # Canonical Path B retains its selected-linked diagnostic receipt even
-    # when the optional legacy side-board flag is false.
+    # The diagnostic receipt may remain for compatibility, but full-width or
+    # suspicious candidates are not routed into a separate selected surface.
     if include_perverse or artifact.joinpath("c6").is_dir():
         assert (package / "leaderboards" / "perverse_tail_diagnostic.json").is_file()
-        assert boards["perverse_tail_diagnostic"]
+        assert not boards["perverse_tail_diagnostic"]
         assert (
             payload_manifest["selected_board_summary"]["perverse_tail_diagnostic_count"]
-            > 0
+            == 0
         )
     else:
         assert not (package / "leaderboards" / "perverse_tail_diagnostic.json").exists()
@@ -375,7 +375,9 @@ def test_student_package_filters_perverse_tail_board_by_producer_opt_in(
     assert validate_tome_package(package, profile=STUDENT).ok
 
 
-def test_full_debug_package_retains_perverse_tail_board(tmp_path: Path) -> None:
+def test_full_debug_package_retains_perverse_tail_diagnostic_receipt_only(
+    tmp_path: Path,
+) -> None:
     artifact = _artifact(
         tmp_path / "full-debug",
         long_tail_warning_k=1,
@@ -394,12 +396,12 @@ def test_full_debug_package_retains_perverse_tail_board(tmp_path: Path) -> None:
     cover = _json(package / "cover_page.json")
     selected = _json(package / "leaderboards" / "selected_exemplars.json")
     assert (package / "leaderboards" / "perverse_tail_diagnostic.json").is_file()
-    assert selected["selected_exemplar_boards"]["perverse_tail_diagnostic"]
+    assert not selected["selected_exemplar_boards"]["perverse_tail_diagnostic"]
     assert (
         cover["provenance"]["historical_package_cover_v1"]["diagnostics"][
             "selected_board_summary"
         ]["perverse_tail_diagnostic_count"]
-        > 0
+        == 0
     )
     assert validate_tome_package(package, profile=FULL_DEBUG_PROVENANCE).ok
 

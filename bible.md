@@ -3269,3 +3269,9 @@ composition remains responsible for the exact full-width allowance.
 Bound the exact full-width composition pair into the production facade’s
 selection hash as well as the shared stage hash, eliminating an authority
 disagreement during packaging and resume validation.
+
+2026-08-15 — M8F diagnostic-board characterization
+
+Updated Tome packaging characterization to assert that the retained
+`perverse_tail_diagnostic` artifact is diagnostic-only: selected exemplars are
+not placed in a separate semantic board or excluded from ordinary profiles.
