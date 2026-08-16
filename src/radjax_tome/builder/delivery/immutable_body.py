@@ -67,10 +67,14 @@ class ImmutableBodyTransaction:
         *,
         profile: str = "producer_evidence",
         fault_boundary: str | None = None,
+        configuration_identity: bytes | None = None,
     ) -> None:
         self.root = Path(root)
         self.profile = profile
         self.fault_boundary = fault_boundary
+        self.configuration_identity = configuration_identity or _digest(
+            b"RDX-M8G-CONFIG-1", profile.encode("utf-8")
+        )
         self._reject_symlink_chain(self.root)
         self.root.mkdir(parents=True, exist_ok=True)
         for name in ("bodies", "manifests", ".transactions"):
@@ -283,6 +287,11 @@ class ImmutableBodyTransaction:
             for member in sorted(members, key=lambda p: p.name):
                 info = archive.gettarinfo(str(member), arcname=member.name)
                 info.mtime = 0
+                info.uid = 0
+                info.gid = 0
+                info.uname = ""
+                info.gname = ""
+                info.mode = 0o644
                 with member.open("rb") as handle:
                     archive.addfile(info, handle)
         package_bytes = temp.read_bytes()
@@ -854,7 +863,7 @@ class ImmutableBodyTransaction:
             "committed_next_state": None
             if state == JournalState.COMMITTED
             else int(state) + 1,
-            "configuration_identity": manifest["authority_id"],
+            "configuration_identity": self.configuration_identity,
             "semantic_authority_identity": manifest["selection_authority_id"],
             "receipt_digest": b"",
         }
@@ -902,6 +911,8 @@ class ImmutableBodyTransaction:
         current = Path(absolute.anchor)
         for component in absolute.parts[1:]:
             current /= component
+            if str(current) in {"/tmp", "/var", "/private", "/private/var"}:
+                continue
             if current.exists() and stat.S_ISLNK(os.lstat(current).st_mode):
                 raise ValueError(f"symlink parent rejected: {current}")
 

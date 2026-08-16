@@ -3397,3 +3397,11 @@ Transaction archive publication now uses exclusive no-replace promotion and
 validates archived body and manifest bytes against the canonical inventory
 digests. A conflicting pre-existing archive is preserved and causes recovery
 quarantine rather than overwrite.
+
+2026-08-16 — M8G configuration and archive portability correction
+
+Receipt configuration identity is now an explicit transaction input with a
+deterministic profile-derived default, independent of manifest authority.
+Archive metadata is normalized for deterministic cross-environment bytes, and
+system /tmp and /var aliases on macOS are not mistaken for caller-controlled
+transaction symlinks.
