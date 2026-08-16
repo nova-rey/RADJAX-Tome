@@ -83,7 +83,8 @@
         "sha256": "sha256:94b03056ec5831e9021c3e3fe9db682778c4f2d081c4188f1fcb8b90541cf1cf",
         "size_bytes": 1155375
       }
-    ]
+    ],
+    "config_hash": "sha256:7fe7acd83287d352cd13a7477460025cea0eb3b7271b55812da55bd733c4fcc5"
   },
   "selected_sources": {
     "count": 213,

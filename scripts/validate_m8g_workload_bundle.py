@@ -102,6 +102,13 @@ def validate(path: Path) -> dict[str, object]:
             document["normalized_inputs"]["checkpoint_file_count"]
         ):
             raise ValueError("checkpoint file count mismatch")
+        actual_checkpoint_files = {
+            path.relative_to(replay_root).as_posix()
+            for path in replay_root.rglob("*")
+            if path.is_file()
+        }
+        if actual_checkpoint_files != set(checkpoint_doc["file_digests"]):
+            raise ValueError("checkpoint tree has missing or extra files")
         for relative, expected_digest in checkpoint_doc["file_digests"].items():
             candidate = replay_root / relative
             if (
@@ -278,6 +285,10 @@ def validate(path: Path) -> dict[str, object]:
             raise ValueError("teacher model directory identity mismatch")
         if provenance_doc.get("tokenizer_hash") != normalized["tokenizer_hash"]:
             raise ValueError("tokenizer identity mismatch")
+        if provenance_doc.get("weights_hash") != normalized["weights_hash"]:
+            raise ValueError("weights identity mismatch")
+        if provenance_doc.get("config_hash") != normalized["config_hash"]:
+            raise ValueError("config identity mismatch")
         expected_files = {
             "model/config.json": "config_sha256",
             "model/model.safetensors": "weights_file_sha256",
@@ -291,7 +302,17 @@ def validate(path: Path) -> dict[str, object]:
             digest = _sha256(artifact_root / relative)
             if digest != normalized[field]:
                 raise ValueError(f"teacher authority digest mismatch: {relative}")
-        for record in normalized["model_file_manifest"]:
+        model_records = normalized["model_file_manifest"]
+        if len({record["relative_path"] for record in model_records}) != len(
+            model_records
+        ):
+            raise ValueError("duplicate model-file manifest entry")
+        actual_model_files = {
+            path.name for path in model_root.iterdir() if path.is_file()
+        }
+        if actual_model_files != {record["relative_path"] for record in model_records}:
+            raise ValueError("model tree has missing or extra files")
+        for record in model_records:
             if _sha256(model_root / record["relative_path"]) != record["sha256"]:
                 raise ValueError(
                     f"complete model-file manifest mismatch: {record['relative_path']}"

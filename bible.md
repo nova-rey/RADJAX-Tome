@@ -3455,3 +3455,10 @@ hashes, verifies the complete retained model-file manifest, binds the corpus
 manifest digest, rejects layout escape paths, and checks selected coordinates
 against source passports and corpus rows. The durable artifact validates with
 213 sources and 256 coordinates.
+
+2026-08-16 — M8G workload tree closure
+
+The validator now rejects extra or missing checkpoint/model files, duplicate
+model manifest entries, and normalized weight/config identity drift. The
+bundle remains an external-byte artifact with a path-independent committed
+manifest.
