@@ -1458,7 +1458,6 @@ def selection_authority_payload_v1(
         "c4_schema": _C4_SCHEMA,
         "c5_schema": _C5_SCHEMA,
         "delivery_path": selection.exemplar_delivery_path,
-        "representation_mode": selection.representation_mode,
     }
 
 

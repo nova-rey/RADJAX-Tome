@@ -3496,3 +3496,9 @@ score-pass paths retain their governed legacy materialization behavior.
 
 The canonical mode regression test is formatted and remains part of the
 focused validation gate for explicit legacy and compact backend modes.
+
+2026-08-16 — M8G authority separation
+
+Representation mode remains in normalized execution and resume authority while
+the historical selection authority projection stays byte-compatible, so mode
+changes do not alter governed selection semantics.
