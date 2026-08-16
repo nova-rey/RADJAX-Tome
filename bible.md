@@ -3438,3 +3438,12 @@ the 43-file verify-checkpoint root with 213 selected sources, 256 coordinates,
 matching checkpoint/authority/corpus/model/tokenizer digests, and complete
 source-passport coverage. A path-independent bundle manifest and byte-level
 validator were added; raw provider metadata and binaries remain outside Git.
+
+2026-08-16 — M8G workload validator closure
+
+The workload validator now verifies the complete 43-file checkpoint tree,
+canonical selected-record identity, duplicate-free coordinate rows and bounds,
+source-count/passport coverage, corpus authority, and retained model,
+tokenizer, configuration, weights-file, and provenance digests. Validation
+requires the separately governed artifact root and remains independent of
+provider-local paths.

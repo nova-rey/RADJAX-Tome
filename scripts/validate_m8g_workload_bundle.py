@@ -8,6 +8,14 @@ import hashlib
 import json
 from pathlib import Path
 
+
+def _load_json(path: Path) -> dict:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"expected JSON object: {path}")
+    return value
+
+
 SCHEMA = "m8g_benchmark_workload_bundle_v1"
 REQUIRED = {
     "schema_version",
@@ -63,6 +71,29 @@ def validate(path: Path) -> dict[str, object]:
         if not isinstance(layout, dict):
             raise ValueError("artifact layout is missing")
         replay_root = artifact_root / str(layout["replay_root"])
+        checkpoint_manifest = artifact_root / "checkpoint-manifest.json"
+        if (
+            _sha256(checkpoint_manifest)
+            != document["normalized_inputs"]["checkpoint_manifest_sha256"]
+        ):
+            raise ValueError("checkpoint manifest digest mismatch")
+        checkpoint_doc = json.loads(checkpoint_manifest.read_text())
+        if (
+            checkpoint_doc.get("checkpoint_digest")
+            != document["normalized_inputs"]["checkpoint_digest"]
+        ):
+            raise ValueError("checkpoint digest mismatch")
+        if len(checkpoint_doc.get("file_digests", {})) != int(
+            document["normalized_inputs"]["checkpoint_file_count"]
+        ):
+            raise ValueError("checkpoint file count mismatch")
+        for relative, expected_digest in checkpoint_doc["file_digests"].items():
+            candidate = replay_root / relative
+            if (
+                not candidate.is_file()
+                or _sha256(candidate) != "sha256:" + expected_digest
+            ):
+                raise ValueError(f"checkpoint member mismatch: {relative}")
         required = {
             "c6/claims/selected_coordinates.jsonl": "sha256:d29e9f5642a808e5a439ec21beadbfc3793c2c2c6f14467fe3c1a8447784c5cb",  # noqa: E501
             "c6/multi-role-selection/selected_exemplars.jsonl": "sha256:255d5507668f8c6eed6f220563cc8bd3641fa134d721f3d9d9047161d899b35c",  # noqa: E501
@@ -102,6 +133,109 @@ def validate(path: Path) -> dict[str, object]:
             raise ValueError("selected coordinate identity mismatch")
         if not coordinate_keys <= passport_keys:
             raise ValueError("selected coordinate lacks source passport")
+        if len({key[0] for key in coordinate_keys}) != source_count:
+            raise ValueError("selected source count mismatch")
+        for row in coordinate_rows:
+            if int(row.get("position", row.get("selected_position", -1))) < 0:
+                raise ValueError("selected coordinate position is invalid")
+        authority = json.loads((replay_root / "c6/authority_manifest.json").read_text())
+        if (
+            authority.get("score_pass_authority_hash")
+            != document["normalized_inputs"]["authority_hash"]
+        ):
+            raise ValueError("selection authority mismatch")
+        corpus_manifest = json.loads(
+            (replay_root / "input/corpus_manifest.json").read_text()
+        )
+        if (
+            corpus_manifest.get("corpus_hash")
+            != document["normalized_inputs"]["corpus_hash"]
+        ):
+            raise ValueError("corpus authority mismatch")
+        normalized = document["normalized_inputs"]
+        if (
+            int(normalized["sequence_length"]) != 128
+            or int(normalized["vocab_size"]) != 262144
+        ):
+            raise ValueError("normalized sequence/vocabulary authority mismatch")
+        if int(corpus_manifest["num_examples"]) != 99989:
+            raise ValueError("corpus example-count authority mismatch")
+        # Reject duplicate raw rows rather than relying on set cardinality.
+        coordinate_list = [
+            (str(row.get("example_id")), int(row.get("position")))
+            for row in coordinate_rows
+        ]
+        selected_list = [
+            (str(row.get("example_id")), int(row.get("position")))
+            for row in selected_rows
+        ]
+        if len(coordinate_list) != len(set(coordinate_list)):
+            raise ValueError("duplicate selected coordinate rows")
+        if len(selected_list) != len(set(selected_list)):
+            raise ValueError("duplicate selected exemplar rows")
+        if any(
+            position < 0 or position >= int(normalized["sequence_length"])
+            for _, position in coordinate_list
+        ):
+            raise ValueError("selected coordinate position exceeds sequence length")
+        if any(
+            position < 0 or position >= int(normalized["sequence_length"])
+            for _, position in selected_list
+        ):
+            raise ValueError("selected exemplar position exceeds sequence length")
+        # Bind the canonical delivery-record identity, not merely the raw JSONL
+        # file digest.  This is the digest used by the frozen M8 authority.
+        try:
+            from radjax_tome.builder.c6_integration import c5_records_for_delivery
+            from radjax_tome.fingerprint.multi_role_selection import (
+                load_multi_role_selection_artifact,
+            )
+
+            artifact = load_multi_role_selection_artifact(
+                replay_root / "c6/multi-role-selection"
+            )
+            records = c5_records_for_delivery(
+                artifact, delivery_path="two_pass_rerun_selected"
+            )
+            canonical_digest = (
+                "sha256:"
+                + hashlib.sha256(
+                    json.dumps(records, sort_keys=True, separators=(",", ":")).encode()
+                ).hexdigest()
+            )
+        except Exception as exc:  # pragma: no cover - authority failure is reported
+            raise ValueError(
+                f"cannot compute canonical selected-record digest: {exc}"
+            ) from exc
+        if canonical_digest != normalized["selected_record_digest"]:
+            raise ValueError("canonical selected-record digest mismatch")
+        # Verify the model/tokenizer identity files against the retained teacher
+        # provenance, and bind the declared architecture dimensions.
+        model_root = artifact_root / str(layout["model_root"])
+        provenance_doc = _load_json(replay_root / "input/teacher_model_provenance.json")
+        if (
+            provenance_doc.get("model_directory_hash")
+            != normalized["model_directory_hash"]
+        ):
+            raise ValueError("teacher model directory identity mismatch")
+        if provenance_doc.get("tokenizer_hash") != normalized["tokenizer_hash"]:
+            raise ValueError("tokenizer identity mismatch")
+        expected_files = {
+            "model/config.json": "config_sha256",
+            "model/model.safetensors": "weights_file_sha256",
+            "model/tokenizer.json": "tokenizer_json_sha256",
+            "model/tokenizer.model": "tokenizer_model_sha256",
+            "verify-checkpoint/input/teacher_model_provenance.json": (
+                "teacher_provenance_sha256"
+            ),
+        }
+        for relative, field in expected_files.items():
+            digest = _sha256(artifact_root / relative)
+            if digest != normalized[field]:
+                raise ValueError(f"teacher authority digest mismatch: {relative}")
+        config_doc = _load_json(model_root / "config.json")
+        if int(config_doc.get("vocab_size", -1)) != int(normalized["vocab_size"]):
+            raise ValueError("model vocabulary authority mismatch")
     canonical = json.dumps(document, sort_keys=True, separators=(",", ":")).encode()
     return {
         "schema_version": SCHEMA,

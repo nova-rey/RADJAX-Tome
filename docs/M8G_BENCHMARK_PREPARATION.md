@@ -14,7 +14,8 @@ The durable machine-readable disposition is
 
 ```text
 PYTHONPATH=src uv run --no-sync python scripts/validate_m8g_workload_bundle.py \
-  docs/evidence/M8G_BENCHMARK_PREPARATION_DISPOSITION.json
+  docs/evidence/M8G_BENCHMARK_WORKLOAD_BUNDLE.json \
+  --bundle-root /path/to/m8b-authority-recovered
 ```
 
 The validator reports `HISTORICAL_M8_WORKLOAD_RECOVERED`, 213 selected sources,

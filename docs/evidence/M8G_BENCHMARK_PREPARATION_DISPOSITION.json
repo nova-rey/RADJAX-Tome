@@ -31,5 +31,12 @@
     "Contract defines compact body resources but no canonical monolithic compact package profile"
   ],
   "benchmark_run": "not_started",
-  "modal_gpu": "not_provisioned"
+  "modal_gpu": "not_provisioned",
+  "validator_scope": {
+    "artifact_root_required": true,
+    "full_checkpoint_tree": true,
+    "canonical_selected_record_digest": true,
+    "teacher_file_identities": true,
+    "source_coordinate_bounds": true
+  }
 }
