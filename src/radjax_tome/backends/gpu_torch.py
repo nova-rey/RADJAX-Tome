@@ -321,6 +321,8 @@ class GPUTorchTeacherEmissionBackend:
                         dynamic_mass_threshold=self.config.dynamic_mass_threshold,
                         num_buckets=self.config.num_buckets,
                         vocab_chunk_size=chunking_plan.effective_size,
+                        compact=self.config.representation_mode
+                        in {"compact_k_monolithic", "compact_k_immutable_body"},
                     ),
                 )
             except Exception as exc:
@@ -329,7 +331,12 @@ class GPUTorchTeacherEmissionBackend:
                 payload = _measure_backend_phase(
                     phase_seconds,
                     "compact_d2h_transfer",
-                    lambda: _compact_payload_to_numpy(compact_payload),
+                    lambda: (
+                        compact_payload
+                        if self.config.representation_mode
+                        in {"compact_k_monolithic", "compact_k_immutable_body"}
+                        else _compact_payload_to_numpy(compact_payload)
+                    ),
                 )
             except Exception as exc:
                 raise _wrap_device_error(
@@ -1449,6 +1456,7 @@ def _gpu_dynamic_cascaded_reduce(
     dynamic_mass_threshold: float,
     num_buckets: int,
     vocab_chunk_size: int | None = None,
+    compact: bool = False,
 ) -> dict[str, Any]:
     workspace = _gpu_probability_workspace(
         torch,
@@ -1466,6 +1474,7 @@ def _gpu_dynamic_cascaded_reduce(
         dynamic_top_k_min=effective_min_k,
         dynamic_top_k_max=effective_max_k,
         dynamic_mass_threshold=dynamic_mass_threshold,
+        compact=compact,
     )
     bucket_masses = _dynamic_bucket_masses_from_sorted_tail(
         torch,
@@ -1822,6 +1831,8 @@ def _gpu_corridor_source_payload(
         dynamic_mass_threshold=config.dynamic_mass_threshold,
         num_buckets=config.num_buckets,
         vocab_chunk_size=vocab_chunk_size,
+        compact=config.representation_mode
+        in {"compact_k_monolithic", "compact_k_immutable_body"},
     )
 
 
@@ -2074,6 +2085,7 @@ def _dynamic_cascaded_head_from_probs(
     dynamic_top_k_min: int,
     dynamic_top_k_max: int,
     dynamic_mass_threshold: float,
+    compact: bool = False,
 ) -> dict[str, Any]:
     sorted_probs, sorted_ids = torch.sort(probs, dim=-1, descending=True)
     cumulative = torch.cumsum(sorted_probs, dim=-1)
@@ -2095,6 +2107,34 @@ def _dynamic_cascaded_head_from_probs(
     head_log_probs = torch.gather(log_probs, -1, head_ids)
     slots = torch.arange(dynamic_top_k_max, device=probs.device)
     top_selection_mask = slots < effective_top_k[..., None]
+    if compact:
+        compact_ids: list[list[Any]] = []
+        compact_probs: list[list[Any]] = []
+        compact_logs: list[list[Any]] = []
+        for row in range(int(head_ids.shape[0])):
+            ids_row: list[Any] = []
+            probs_row: list[Any] = []
+            logs_row: list[Any] = []
+            for position in range(int(head_ids.shape[1])):
+                count = int(effective_top_k[row, position].item())
+                ids_row.append(head_ids[row, position, :count].detach().cpu().numpy())
+                probs_row.append(
+                    head_probs[row, position, :count].detach().cpu().numpy()
+                )
+                logs_row.append(
+                    head_log_probs[row, position, :count].detach().cpu().numpy()
+                )
+            compact_ids.append(ids_row)
+            compact_probs.append(probs_row)
+            compact_logs.append(logs_row)
+        return {
+            "sorted_probs": sorted_probs,
+            "top_token_ids": compact_ids,
+            "top_log_probs": compact_logs,
+            "top_probs": compact_probs,
+            "effective_top_k": effective_top_k,
+            "top_mass": torch.sum(head_probs * top_selection_mask, dim=-1),
+        }
     top_token_ids = torch.where(
         top_selection_mask, head_ids, torch.zeros_like(head_ids)
     )

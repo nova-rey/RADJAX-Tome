@@ -5,6 +5,12 @@ from __future__ import annotations
 
 # Shared constants and low-level, dependency-free helpers.
 from ._shared import *  # noqa: F403
+from .modes import (
+    COMPACT_K_IMMUTABLE_BODY,
+    COMPACT_K_MONOLITHIC,
+    compact_body_from_logical_payload,
+    compact_payload_for_storage,
+)
 from .payloads import _primary_budget
 from .reporting import (
     _delivery_timing_fields,
@@ -20,6 +26,58 @@ from .staging import (
     _synchronize_native_payload_shards,
     _write_json_atomic,
 )
+
+
+def _publish_immutable_bodies(prepared: PreparedSelectedDelivery) -> None:
+    """Publish compact bodies through the accepted transaction for mode 3."""
+
+    from radjax_contract.tome.m8g import (
+        _m8g_fv3,
+        body_raw_digest,
+        encode_compact_body,
+        manifest_semantic_id,
+    )
+
+    from .immutable_body import ImmutableBodyTransaction
+
+    config = prepared.config
+    transaction = ImmutableBodyTransaction(
+        config.artifact_dir / "m8g_immutable",
+        profile="producer_evidence",
+    )
+    authority = bytes.fromhex(
+        (config.delivery_authority_hash or "sha256:" + "00" * 32).split(":", 1)[-1]
+    )
+    for payload in prepared.selected_payloads:
+        compact = compact_payload_for_storage(payload)
+        body = compact_body_from_logical_payload(compact, profile="producer_evidence")
+        body_bytes = encode_compact_body(body)
+        manifest = {
+            "schema_version": "selected_exemplar_manifest_v1",
+            "profile": "producer_evidence",
+            "selected_example_id": str(payload["selected_example_id"]),
+            "selected_position": int(payload["selected_position"]),
+            "source_passport_id": (
+                f"{payload['selected_example_id']}:{payload['selected_position']}"
+            ),
+            "corridor_mode_id": str(payload.get("mode_key"))
+            if payload.get("mode_key") is not None
+            else None,
+            "corridor_fingerprint_id": None,
+            "selection_obligation_count": 0,
+            "selection_obligations": [],
+            "body_semantic_id": body.semantic_id,
+            "body_raw_digest": body_raw_digest(body_bytes),
+            "authority_id": authority,
+            "selection_authority_id": authority,
+            "package_role": "producer_evidence",
+        }
+        manifest["manifest_semantic_id"] = manifest_semantic_id(manifest)
+        transaction.commit(
+            body,
+            manifest,
+            canonical_manifest_bytes=_m8g_fv3(manifest),
+        )
 
 
 def finalize_selected_delivery_corridor(
@@ -142,16 +200,28 @@ def assemble_selected_delivery_artifacts(
             },
         )
     if not _native_streamed_payloads(config):
+        serialized_payloads = (
+            [compact_payload_for_storage(item) for item in selected_payloads]
+            if config.representation_mode
+            in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY}
+            else selected_payloads
+        )
         write_json(
             selected_dir / "selected-exemplars-00000.json",
             {
-                "schema_version": "selected_exemplar_payload_shard_v1",
+                "schema_version": (
+                    "selected_exemplar_compact_monolithic_v1"
+                    if config.representation_mode == COMPACT_K_MONOLITHIC
+                    else "selected_exemplar_payload_shard_v1"
+                ),
                 "delivery_path": config.delivery_path,
                 "long_tail_summary": prepared.tail_summary,
                 "selected_board_summary": prepared.selected_board_summary,
-                "selected_exemplars": selected_payloads,
+                "selected_exemplars": serialized_payloads,
             },
         )
+    if config.representation_mode == COMPACT_K_IMMUTABLE_BODY:
+        _publish_immutable_bodies(prepared)
 
     retained_bytes = _tree_bytes(corridors_dir) + _tree_bytes(leaderboards_dir)
     retained_bytes += _tree_bytes(selected_dir)
@@ -167,6 +237,8 @@ def assemble_selected_delivery_artifacts(
         "selection_enabled": config.selection_enabled,
         "delivery_path": config.delivery_path,
         "execution_mode": config.execution_mode,
+        "representation_mode_requested": config.representation_mode,
+        "representation_mode_executed": config.representation_mode,
         "delivery_authority_hash": config.delivery_authority_hash,
         "dataset_path": str(config.dataset_path),
         "score_policy": config.score_policy,
@@ -213,6 +285,9 @@ def assemble_selected_delivery_artifacts(
         ),
         "selected_rerun_batch_count": rerun_metrics.get(
             "selected_rerun_batch_count", 0
+        ),
+        "materialization_counters": rerun_metrics.get(
+            "materialization_counters", {}
         ),
         "selected_rerun_examples": rerun_metrics.get(
             "selected_rerun_examples", prepared.rerun_selected_example_count

@@ -91,6 +91,7 @@ class ExemplarDeliveryConfig:
     rerun_metrics: dict[str, Any] | None = None
     delivery_authority_hash: str | None = None
     retain_full_payloads_for_publication: bool = False
+    representation_mode: str = "legacy_padded_monolithic"
 
 
 @dataclass(frozen=True)

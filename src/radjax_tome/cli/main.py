@@ -578,6 +578,16 @@ def _build_parser() -> argparse.ArgumentParser:
         "--exemplar-delivery-path",
         choices=("one_pass_pruned_candidate", "two_pass_rerun_selected"),
     )
+    production.add_argument(
+        "--representation-mode",
+        choices=(
+            "legacy_padded_monolithic",
+            "compact_k_monolithic",
+            "compact_k_immutable_body",
+        ),
+        default="legacy_padded_monolithic",
+        help="Explicit selected-source physical materialization mode.",
+    )
     production.add_argument("--exemplar-selection-enabled", action="store_true")
     production.add_argument(
         "--selection-integration-policy",

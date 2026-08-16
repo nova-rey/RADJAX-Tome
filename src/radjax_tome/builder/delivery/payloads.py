@@ -303,9 +303,14 @@ def _selected_payload_from_emission(
 ) -> dict[str, Any]:
     position = int(record["source_position"])
     payload_position = position if position_index is None else position_index
-    top_selection_mask = _payload_slice(
-        payload, "top_selection_mask", row, payload_position
-    )
+    if "top_selection_mask" in payload:
+        top_selection_mask = _payload_slice(
+            payload, "top_selection_mask", row, payload_position
+        )
+    else:
+        top_selection_mask = [True] * len(
+            _payload_slice(payload, "top_token_ids", row, payload_position)
+        )
     effective_top_k = int(
         _payload_scalar(payload, "effective_top_k", row, payload_position)
     )
@@ -617,7 +622,13 @@ def _attach_long_tail_diagnostics(
 def _payload_slice(payload: Any, key: str, row: int, position: int) -> list[Any]:
     if key not in payload:
         raise ValueError(f"selected backend payload missing {key}")
-    value = np.asarray(payload[key])[row, position]
+    raw = payload[key]
+    if isinstance(raw, np.ndarray) and raw.dtype == object:
+        value = raw[row, position]
+    elif isinstance(raw, list) and raw and isinstance(raw[0], list):
+        value = raw[row][position]
+    else:
+        value = np.asarray(raw)[row, position]
     if value.dtype == np.bool_:
         return [bool(item) for item in value.tolist()]
     if np.issubdtype(value.dtype, np.integer):

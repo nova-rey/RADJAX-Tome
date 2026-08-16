@@ -12,6 +12,12 @@ from .measurement import (
     SelectedPassExecutionDiagnostics,
     SelectedPassMeasurementControl,
 )
+from .modes import (
+    COMPACT_K_IMMUTABLE_BODY,
+    COMPACT_K_MONOLITHIC,
+    LEGACY_PADDED_MONOLITHIC,
+    validate_materialization_mode,
+)
 from .payloads import (
     _attach_long_tail_diagnostics,
     _long_tail_policy,
@@ -35,6 +41,20 @@ def _selected_payloads_from_backend(
 ) -> list[dict[str, Any]]:
     if not selected_records:
         return []
+    representation_mode = validate_materialization_mode(config.representation_mode)
+    if config.rerun_metrics is not None:
+        config.rerun_metrics["representation_mode_requested"] = representation_mode
+        config.rerun_metrics["representation_mode_executed"] = representation_mode
+        config.rerun_metrics["materialization_counters"] = {
+            "exemplar_count": 0,
+            "logical_retained_entry_count": 0,
+            "physical_retained_entry_count": 0,
+            "maximum_logical_k": 0,
+            "full_width_exemplar_count": 0,
+            "padded_width_allocation_attempts": 0,
+            "padded_materializer_invocations": 0,
+            "padded_serializer_invocations": 0,
+        }
     if config.backend_config is None:
         raise ValueError("selected exemplar delivery requires backend_config")
     completed_record_indices = completed_record_indices or set()
@@ -321,6 +341,33 @@ def _selected_payloads_from_backend(
                             payload_write_seconds += write_seconds
                         del selected_payload
                     else:
+                        if representation_mode in {
+                            COMPACT_K_MONOLITHIC,
+                            COMPACT_K_IMMUTABLE_BODY,
+                        }:
+                            selected_payload.pop("top_selection_mask", None)
+                            selected_payload["storage_flavor"] = representation_mode
+                            selected_payload["logical_k"] = int(
+                                selected_payload["effective_top_k"]
+                            )
+                            selected_payload["physical_retained_entry_count"] = len(
+                                selected_payload["top_token_ids"]
+                            )
+                        if config.rerun_metrics is not None:
+                            counters = config.rerun_metrics["materialization_counters"]
+                            k = int(selected_payload["effective_top_k"])
+                            counters["exemplar_count"] += 1
+                            counters["logical_retained_entry_count"] += k
+                            counters["physical_retained_entry_count"] += len(
+                                selected_payload["top_token_ids"]
+                            )
+                            counters["maximum_logical_k"] = max(
+                                counters["maximum_logical_k"], k
+                            )
+                            if k == config.vocab_size:
+                                counters["full_width_exemplar_count"] += 1
+                            if representation_mode == LEGACY_PADDED_MONOLITHIC:
+                                counters["padded_width_allocation_attempts"] += 1
                         payloads_by_record[record_index] = selected_payload
             compression_elapsed = _elapsed(compression_started)
             compression_seconds += compression_elapsed

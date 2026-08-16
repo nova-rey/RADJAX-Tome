@@ -257,6 +257,7 @@ class CPUReferenceTeacherEmissionBackend:
                 else actual_batch_size
             ),
             "vocab_size": self.config.vocab_size,
+            "representation_mode": self.config.representation_mode,
         }
         metadata.update(resolve_gpu_batch_size_policy(self.config, payload=payload))
         if self.config.target_policy in {
@@ -361,6 +362,8 @@ class CPUReferenceTeacherEmissionBackend:
                 dynamic_top_k_max=self.config.dynamic_top_k_max,
                 dynamic_mass_threshold=self.config.dynamic_mass_threshold,
                 num_buckets=self.config.num_buckets,
+                compact=self.config.representation_mode
+                in {"compact_k_monolithic", "compact_k_immutable_body"},
             )
         if self.config.target_policy == "corridor_exemplar_v1":
             if (
@@ -509,6 +512,7 @@ def _dense_logits_to_dynamic_cascaded(
     dynamic_top_k_max: int,
     dynamic_mass_threshold: float,
     num_buckets: int,
+    compact: bool = False,
 ) -> dict[str, np.ndarray]:
     values = np.asarray(logits, dtype=np.float32)
     probs = _softmax(values)
@@ -516,10 +520,23 @@ def _dense_logits_to_dynamic_cascaded(
     effective_max_k = min(dynamic_top_k_max, values.shape[-1])
     effective_min_k = min(dynamic_top_k_min, effective_max_k)
 
-    top_token_ids = np.zeros((*values.shape[:2], effective_max_k), dtype=np.int32)
-    top_log_probs = np.zeros((*values.shape[:2], effective_max_k), dtype=np.float32)
-    top_probs = np.zeros((*values.shape[:2], effective_max_k), dtype=np.float32)
-    top_selection_mask = np.zeros((*values.shape[:2], effective_max_k), dtype=bool)
+    top_token_ids = (
+        np.empty(values.shape[:2], dtype=object)
+        if compact
+        else np.zeros((*values.shape[:2], effective_max_k), dtype=np.int32)
+    )
+    top_log_probs = (
+        np.empty(values.shape[:2], dtype=object)
+        if compact
+        else np.zeros((*values.shape[:2], effective_max_k), dtype=np.float32)
+    )
+    top_probs = (
+        np.empty(values.shape[:2], dtype=object)
+        if compact
+        else np.zeros((*values.shape[:2], effective_max_k), dtype=np.float32)
+    )
+    if not compact:
+        top_selection_mask = np.zeros((*values.shape[:2], effective_max_k), dtype=bool)
     effective_top_k = np.zeros(values.shape[:2], dtype=np.int32)
     top_mass = np.zeros(values.shape[:2], dtype=np.float32)
     bucket_masses = np.zeros((*values.shape[:2], num_buckets), dtype=np.float32)
@@ -543,10 +560,17 @@ def _dense_logits_to_dynamic_cascaded(
             selected_probs = probs[row, position, selected_ids]
             selected_log_probs = log_probs[row, position, selected_ids]
 
-            top_token_ids[row, position, :selected_count] = selected_ids
-            top_probs[row, position, :selected_count] = selected_probs
-            top_log_probs[row, position, :selected_count] = selected_log_probs
-            top_selection_mask[row, position, :selected_count] = True
+            if compact:
+                top_token_ids[row, position] = selected_ids.astype(np.int32, copy=True)
+                top_probs[row, position] = selected_probs.astype(np.float32, copy=True)
+                top_log_probs[row, position] = selected_log_probs.astype(
+                    np.float32, copy=True
+                )
+            else:
+                top_token_ids[row, position, :selected_count] = selected_ids
+                top_probs[row, position, :selected_count] = selected_probs
+                top_log_probs[row, position, :selected_count] = selected_log_probs
+                top_selection_mask[row, position, :selected_count] = True
             effective_top_k[row, position] = selected_count
             top_mass[row, position] = np.sum(selected_probs, dtype=np.float32)
 
@@ -564,17 +588,19 @@ def _dense_logits_to_dynamic_cascaded(
                 )
 
     tail_mass = np.clip(1.0 - top_mass, 0.0, 1.0).astype(np.float32)
-    return {
+    result = {
         "top_token_ids": top_token_ids,
         "top_log_probs": top_log_probs,
         "top_probs": top_probs,
-        "top_selection_mask": top_selection_mask,
         "effective_top_k": effective_top_k,
         "top_mass": top_mass.astype(np.float32),
         "tail_mass": tail_mass,
         "bucket_masses": bucket_masses,
         "teacher_entropy": teacher_entropy,
     }
+    if not compact:
+        result["top_selection_mask"] = top_selection_mask
+    return result
 
 
 def _dynamic_cascaded_metadata(
@@ -959,6 +985,8 @@ def _corridor_source_payload(
         dynamic_top_k_max=config.dynamic_top_k_max,
         dynamic_mass_threshold=config.dynamic_mass_threshold,
         num_buckets=config.num_buckets,
+        compact=config.representation_mode
+        in {"compact_k_monolithic", "compact_k_immutable_body"},
     )
 
 

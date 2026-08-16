@@ -3439,6 +3439,14 @@ matching checkpoint/authority/corpus/model/tokenizer digests, and complete
 source-passport coverage. A path-independent bundle manifest and byte-level
 validator were added; raw provider metadata and binaries remain outside Git.
 
+2026-08-16 — M8G canonical materialization modes
+
+Added explicit legacy-padded, compact-K monolithic, and compact-K immutable
+body mode authority to canonical configuration and replay. CPU/GPU selected
+evidence reducers can emit direct variable-length retained arrays for compact
+modes; legacy retains its rectangular mask path. Reports carry requested and
+executed mode plus physical/logical allocation counters.
+
 2026-08-16 — M8G workload validator closure
 
 The workload validator now verifies the complete 43-file checkpoint tree,

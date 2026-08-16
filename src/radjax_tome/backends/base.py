@@ -74,6 +74,7 @@ class TeacherBackendConfig:
     allow_downloads: bool = False
     fallback_policy: FallbackPolicy = "error"
     metadata: Mapping[str, object] = field(default_factory=dict)
+    representation_mode: str = "legacy_padded_monolithic"
 
 
 @dataclass(frozen=True)

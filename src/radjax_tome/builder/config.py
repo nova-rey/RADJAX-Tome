@@ -164,6 +164,7 @@ class SelectionIntent:
     require_full_selected_budget: bool
     full_width_cap_numerator: int = 1
     full_width_cap_denominator: int = 3
+    representation_mode: str = "legacy_padded_monolithic"
 
 
 @dataclass(frozen=True)
@@ -323,6 +324,7 @@ def adapt_legacy_production_build_config(
             require_full_selected_budget=config.require_full_selected_budget,
             full_width_cap_numerator=config.full_width_cap_numerator,
             full_width_cap_denominator=config.full_width_cap_denominator,
+            representation_mode=config.representation_mode,
         ),
         execution=ExecutionIntent(
             gpu_batch_size_mode=config.gpu_batch_size_mode,
@@ -609,6 +611,7 @@ _PRODUCTION_OVERRIDE_SECTIONS = {
     "run_manifest_path": ("outputs", "run_manifest_path"),
     "progress_log_path": ("outputs", "progress_log_path"),
     "exemplar_delivery_path": ("selection", "exemplar_delivery_path"),
+    "representation_mode": ("selection", "representation_mode"),
     "exemplar_selection_enabled": ("selection", "exemplar_selection_enabled"),
     "exemplar_leaderboard_capacity": ("selection", "exemplar_leaderboard_capacity"),
     "selected_exemplar_budget": ("selection", "selected_exemplar_budget"),
@@ -833,6 +836,7 @@ def production_build_config_from_resolved(
         c4_claims_path=intent.compatibility.c4_claims_path,
         c5_selection_path=intent.compatibility.c5_selection_path,
         source_passports_path=intent.compatibility.source_passports_path,
+        representation_mode=intent.selection.representation_mode,
     )
 
 
@@ -1309,6 +1313,12 @@ def _validate_selection_dependencies(
     errors: list[str], intent: TomeBuildIntent, legacy: bool
 ) -> None:
     selection = intent.selection
+    if selection.representation_mode not in {
+        "legacy_padded_monolithic",
+        "compact_k_monolithic",
+        "compact_k_immutable_body",
+    }:
+        errors.append("selection.representation_mode is unsupported")
     c6 = selection.selection_integration_policy == "corridor_first_global_backfill_v1"
     if selection.selection_integration_policy not in {
         "global_only_v1",
@@ -1448,6 +1458,7 @@ def selection_authority_payload_v1(
         "c4_schema": _C4_SCHEMA,
         "c5_schema": _C5_SCHEMA,
         "delivery_path": selection.exemplar_delivery_path,
+        "representation_mode": selection.representation_mode,
     }
 
 

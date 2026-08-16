@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from radjax_tome.backends import TeacherBackendConfig
+from radjax_tome.builder.delivery.modes import validate_materialization_mode
 from radjax_tome.builder.exemplar_delivery import (
     ExemplarDeliveryConfig,
     run_selected_delivery_rerun,
@@ -17,6 +18,9 @@ from radjax_tome.builder.production_stages.shared import (
 
 
 def backend_config(config: Any) -> TeacherBackendConfig:
+    representation_mode = validate_materialization_mode(
+        getattr(config, "representation_mode", None)
+    )
     return TeacherBackendConfig(
         backend_id=config.teacher_backend,
         runtime_mode=config.runtime_mode,
@@ -40,6 +44,7 @@ def backend_config(config: Any) -> TeacherBackendConfig:
         allow_downloads=False,
         fallback_policy="error",
         exemplar_capture_mode=exemplar_capture_mode(config),
+        representation_mode=representation_mode,
     )
 
 
@@ -51,6 +56,9 @@ def exemplar_delivery_config(
     authoritative_records: tuple[dict[str, Any], ...] | None = None,
     delivery_authority_hash: str | None = None,
 ) -> ExemplarDeliveryConfig:
+    representation_mode = validate_materialization_mode(
+        getattr(config, "representation_mode", None)
+    )
     return ExemplarDeliveryConfig(
         artifact_dir=config.output_dir,
         dataset_path=config.dataset_path,
@@ -96,6 +104,7 @@ def exemplar_delivery_config(
         rerun_metrics={},
         delivery_authority_hash=delivery_authority_hash,
         retain_full_payloads_for_publication=(config.artifact_contract_version == "v3"),
+        representation_mode=representation_mode,
     )
 
 

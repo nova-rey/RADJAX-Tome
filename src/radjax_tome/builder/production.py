@@ -151,6 +151,7 @@ class ProductionBuildConfig:
     c4_claims_path: Path | None = None
     c5_selection_path: Path | None = None
     source_passports_path: Path | None = None
+    representation_mode: str = "legacy_padded_monolithic"
 
 
 @dataclass(frozen=True)
