@@ -3406,6 +3406,11 @@ Archive metadata is normalized for deterministic cross-environment bytes, and
 system /tmp and /var aliases on macOS are not mistaken for caller-controlled
 transaction symlinks.
 
+2026-08-16 — M8G final validation fixture correction
+
+The configuration-swap recovery fixture is formatted and included in the
+focused validation set; Ruff, format, compile, and diff checks remain clean.
+
 2026-08-16 — M8G configuration-binding correction
 
 Transaction IDs now include the independent configuration identity, and

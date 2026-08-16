@@ -120,5 +120,7 @@ def test_configuration_identity_swap_is_rejected(tmp_path):
     body, manifest = _fixture()
     tx = ImmutableBodyTransaction(tmp_path, configuration_identity=b"c" * 32)
     tx.commit(body, manifest, canonical_manifest_bytes=_m8g_fv3(manifest))
-    result = ImmutableBodyTransaction(tmp_path, configuration_identity=b"d" * 32).recover()
+    result = ImmutableBodyTransaction(
+        tmp_path, configuration_identity=b"d" * 32
+    ).recover()
     assert result == [] or result[0]["status"] == "quarantined"
