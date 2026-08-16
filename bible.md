@@ -3390,3 +3390,10 @@ binary receipts remain authoritative and missing JSON mirrors are regenerated.
 The opt-in transaction archive contains only validated committed resources;
 fault boundaries and structured recovery assessment/plan surfaces are exposed
 for controlled interruption tests.
+
+2026-08-16 — M8G archive conflict-integrity correction
+
+Transaction archive publication now uses exclusive no-replace promotion and
+validates archived body and manifest bytes against the canonical inventory
+digests. A conflicting pre-existing archive is preserved and causes recovery
+quarantine rather than overwrite.

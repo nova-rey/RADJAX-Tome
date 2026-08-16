@@ -78,7 +78,6 @@ def test_fault_boundary_is_recoverable_or_safely_restartable(tmp_path, boundary)
         "restart_ready",
         "resumed",
         "committed",
-        "quarantined",
     }
 
 
@@ -103,3 +102,15 @@ def test_recovery_classification_cases_are_deterministic(tmp_path, recovery_clas
     result = ImmutableBodyTransaction(tmp_path).recover()
     assert result == []
     assert recovery_class.isupper()
+
+
+def test_conflicting_archive_is_not_overwritten(tmp_path):
+    body, manifest = _fixture()
+    tx = ImmutableBodyTransaction(tmp_path, fault_boundary="after_archive_construction")
+    with pytest.raises(RuntimeError):
+        tx.commit(body, manifest, canonical_manifest_bytes=_m8g_fv3(manifest))
+    package = next((tmp_path / "packages").glob("*.tgz"))
+    package.write_bytes(b"foreign archive")
+    result = ImmutableBodyTransaction(tmp_path).recover()
+    assert result[0]["status"] == "quarantined"
+    assert package.read_bytes() == b"foreign archive"

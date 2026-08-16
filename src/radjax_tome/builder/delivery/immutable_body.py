@@ -285,16 +285,36 @@ class ImmutableBodyTransaction:
                 info.mtime = 0
                 with member.open("rb") as handle:
                     archive.addfile(info, handle)
-        os.replace(temp, package_path)
+        package_bytes = temp.read_bytes()
+        self._atomic_write(package_path, package_bytes)
+        temp.unlink(missing_ok=True)
         self._fault("after_archive_construction")
         with tarfile.open(package_path, "r:gz") as archive:
             names = archive.getnames()
             expected = {p.name for p in members}
             if set(names) != expected:
                 raise ValueError("package member inventory mismatch")
+            inventory = json.loads(inventory_bytes)
+            member_map = inventory.get("members", {})
+            if manifest_path.name not in member_map:
+                raise ValueError("package manifest absent from inventory")
+            inventory_member = member_map[manifest_path.name]
             for name in names:
-                if archive.extractfile(name) is None:
+                handle = archive.extractfile(name)
+                if handle is None:
                     raise ValueError("package member unreadable")
+                data = handle.read()
+                if name == body_path.name:
+                    expected_digest = inventory_member["body_raw_digest"]
+                    actual_digest = body_raw_digest(data).hex()
+                elif name == manifest_path.name:
+                    expected_digest = inventory_member["manifest_raw_digest"]
+                    actual_digest = hashlib.sha256(data).hexdigest()
+                else:
+                    expected_digest = None
+                    actual_digest = None
+                if expected_digest is not None and actual_digest != expected_digest:
+                    raise ValueError("package member digest mismatch")
         self._fault("after_archive_validation")
         return PackageFinalizationResult(
             package_path=package_path,
@@ -407,6 +427,26 @@ class ImmutableBodyTransaction:
                     states.append(None)
             if states != list(range(1, len(states) + 1)):
                 valid = False
+            if valid and not states:
+                for temporary in path.glob("*.tmp"):
+                    if temporary.is_symlink() or not stat.S_ISREG(
+                        os.lstat(temporary).st_mode
+                    ):
+                        valid = False
+                    else:
+                        temporary.unlink()
+                if valid:
+                    self._release(tx_root / f"{path.name}.lock", owner=path.name)
+                    results.append(
+                        {
+                            "transaction_id": path.name,
+                            "receipt_count": 0,
+                            "states": [],
+                            "status": "restart_ready",
+                            "staging": path.name,
+                        }
+                    )
+                    continue
             if valid and states and states[-1] < int(JournalState.BODY_PROMOTED):
                 for temporary in path.glob("*.tmp"):
                     if not temporary.is_symlink():
