@@ -3411,3 +3411,10 @@ transaction symlinks.
 Transaction IDs now include the independent configuration identity, and
 recovery rejects receipt chains authored under another configuration. A
 configuration-swap regression fixture preserves the fail-closed behavior.
+
+2026-08-16 — M8G recovery blocker traceability
+
+Added the blocker-resolution table mapping partial-state recovery, receipt
+authority, archive conflict handling, configuration binding, and fault tests
+to their implementation and evidence. The opt-in M8G resource archive is
+explicitly distinguished from the full canonical Tome producer package.
