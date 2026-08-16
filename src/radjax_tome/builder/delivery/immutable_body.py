@@ -168,6 +168,7 @@ class ImmutableBodyTransaction:
                 closed_manifest,
                 len(body_bytes),
             )
+            self._bind_inventory(body_path, manifest_path, body_digest, manifest_digest)
             self._receipt(
                 journal_dir,
                 txid,
@@ -201,6 +202,32 @@ class ImmutableBodyTransaction:
         finally:
             self._release(lock_path)
 
+    def _bind_inventory(
+        self,
+        body_path: Path,
+        manifest_path: Path,
+        body_digest: bytes,
+        manifest_digest: bytes,
+    ) -> None:
+        inventory_path = self.root / "inventory.json"
+        if inventory_path.exists() and (
+            stat.S_ISLNK(os.lstat(inventory_path).st_mode)
+            or not stat.S_ISREG(os.lstat(inventory_path).st_mode)
+        ):
+            raise ValueError("inventory path type invalid")
+        inventory: dict[str, Any] = {"schema": "m8g_inventory_v1", "members": {}}
+        if inventory_path.exists():
+            inventory = json.loads(inventory_path.read_text())
+        inventory.setdefault("members", {})[manifest_path.name] = {
+            "body": body_path.name,
+            "body_raw_digest": body_digest.hex(),
+            "manifest_raw_digest": manifest_digest.hex(),
+        }
+        encoded = json.dumps(inventory, sort_keys=True).encode("utf-8")
+        self._atomic_replace(inventory_path, encoded)
+        if json.loads(inventory_path.read_text()) != inventory:
+            raise ValueError("inventory binding validation failed")
+
     def recover(self) -> list[dict[str, Any]]:
         """Validate journal chains and quarantine incomplete transactions."""
         results = []
@@ -216,6 +243,9 @@ class ImmutableBodyTransaction:
             valid = True
             for receipt in receipts:
                 try:
+                    mode = os.lstat(receipt).st_mode
+                    if stat.S_ISLNK(mode) or not stat.S_ISREG(mode):
+                        raise ValueError("receipt file type invalid")
                     decoded = json.loads(receipt.read_text())
                     for key in (
                         "body_raw_digest",
@@ -227,12 +257,48 @@ class ImmutableBodyTransaction:
                         if isinstance(decoded.get(key), str) and decoded[key]:
                             decoded[key] = bytes.fromhex(decoded[key])
                     validate_receipt(decoded)
+                    if decoded["transaction_id"] != path.name:
+                        raise ValueError("receipt transaction binding invalid")
+                    binary = receipt.with_suffix(".bin")
+                    if binary.is_symlink() or binary.read_bytes() != _m8g_fv3(decoded):
+                        raise ValueError("receipt binary/json mismatch")
+                    if decoded["state"] >= int(JournalState.BODY_PROMOTED):
+                        body_file = self.root / str(decoded["body_path"])
+                        if (
+                            body_file.is_symlink()
+                            or body_raw_digest(body_file.read_bytes())
+                            != decoded["body_raw_digest"]
+                        ):
+                            raise ValueError("receipt body binding invalid")
+                    if decoded["state"] >= int(JournalState.MANIFEST_PROMOTED):
+                        manifest_file = self.root / str(decoded["manifest_path"])
+                        if (
+                            manifest_file.is_symlink()
+                            or hashlib.sha256(manifest_file.read_bytes()).digest()
+                            != decoded["manifest_raw_digest"]
+                        ):
+                            raise ValueError("receipt manifest binding invalid")
                     states.append(int(decoded["state"]))
                 except (OSError, ValueError, KeyError, TypeError):
                     valid = False
                     states.append(None)
             if states != list(range(1, len(states) + 1)):
                 valid = False
+            if valid and states == list(range(1, 13)):
+                try:
+                    inventory = json.loads((self.root / "inventory.json").read_text())
+                    manifest_names = {
+                        Path(json.loads(item.read_text()).get("manifest_path", "")).name
+                        for item in receipts
+                    }
+                    if not all(
+                        name in inventory.get("members", {})
+                        for name in manifest_names
+                        if name
+                    ):
+                        valid = False
+                except (OSError, ValueError, TypeError):
+                    valid = False
             if valid and states == list(range(1, 13)):
                 status = "committed"
             else:
@@ -366,6 +432,25 @@ class ImmutableBodyTransaction:
                 ImmutableBodyTransaction._preflight_target(path, data)
             else:
                 os.unlink(temporary)
+            directory_fd = os.open(path.parent, os.O_RDONLY)
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
+        finally:
+            if os.path.lexists(temporary):
+                os.unlink(temporary)
+
+    @staticmethod
+    def _atomic_replace(path: Path, data: bytes) -> None:
+        ImmutableBodyTransaction._reject_symlink_chain(path.parent)
+        fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+        try:
+            with os.fdopen(fd, "wb") as handle:
+                handle.write(data)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, path)
             directory_fd = os.open(path.parent, os.O_RDONLY)
             try:
                 os.fsync(directory_fd)

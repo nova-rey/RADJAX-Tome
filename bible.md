@@ -3355,3 +3355,9 @@ Recovery now reconstructs receipt fields, validates each receipt through the
 Contract validator, enforces contiguous state numbering, rejects symlinked
 transaction entries, and quarantines malformed or incomplete journals.
 Atomic publication uses exclusive hard-link promotion to avoid overwrite races.
+
+2026-08-16 — M8G receipt/object and inventory binding correction
+
+Recovery now checks JSON receipts against their binary canonical counterparts,
+binds transaction IDs and promoted body/manifest digests to actual resources,
+and requires committed manifests to appear in the validated inventory.
