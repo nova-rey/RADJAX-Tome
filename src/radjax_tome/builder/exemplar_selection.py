@@ -273,6 +273,7 @@ def extract_score_pass_candidates(
     example_ids: tuple[str, ...],
     source_shard_id: int,
     capture_mode: str = "two_pass_sparse_exemplar",
+    vocab_size: int | None = None,
 ) -> tuple[ExemplarCandidate, ...]:
     selected_positions = np.asarray(arrays["score_selected_position"])
     sequence_lengths = np.asarray(arrays["score_lengths"])
@@ -314,6 +315,8 @@ def extract_score_pass_candidates(
                 )
             ),
         }
+        if vocab_size is not None:
+            score_fields["vocab_size"] = float(vocab_size)
         candidates.append(
             ExemplarCandidate(
                 example_id=example_id,
@@ -506,6 +509,7 @@ def build_exemplar_selection_manifest(
                         example_ids=example_ids,
                         source_shard_id=shard_id,
                         capture_mode=capture_mode,
+                        vocab_size=store.metadata.vocab_size,
                     )
                 )
             else:
@@ -525,6 +529,7 @@ def build_exemplar_selection_manifest(
                     example_ids=example_ids,
                     source_shard_id=shard_id,
                     capture_mode=capture_mode,
+                    vocab_size=store.metadata.vocab_size,
                 )
             )
         else:

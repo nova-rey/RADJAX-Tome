@@ -206,6 +206,7 @@ def test_selector_extracts_path_b_score_pass_candidates(tmp_path: Path) -> None:
         shard,
         example_ids=("example-a", "example-b"),
         source_shard_id=0,
+        vocab_size=store.metadata.vocab_size,
     )
 
     assert len(candidates) == 2
@@ -222,6 +223,7 @@ def test_selector_extracts_path_b_score_pass_candidates(tmp_path: Path) -> None:
     )
     assert "selected_position_entropy" in candidates[0].score_fields
     assert "confidence" in candidates[0].score_fields
+    assert candidates[0].score_fields["vocab_size"] == store.metadata.vocab_size
 
 
 def test_global_max_entropy_board_keeps_bounded_top_winners() -> None:

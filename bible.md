@@ -3264,6 +3264,12 @@ projection, profile-code mapping, exact domain-label and inventory framing,
 closed receipt field types/state codes, and restart-state matrix. No Contract,
 Student, or Tome payload implementation was started.
 
+2026-08-15 — M8F score-pass width binding
+
+Bound target-store vocabulary size into canonical score-pass candidate records
+so the production global selector can classify full-width candidates before
+export, reload, and C4 cap enforcement. Added focused extraction coverage.
+
 2026-08-15 — M8F complete-reserve validator correction
 
 When canonical C2 retains a complete ranked candidate reserve, artifact
