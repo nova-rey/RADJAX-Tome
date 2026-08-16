@@ -3522,3 +3522,9 @@ cross-authority private adoption roots fail closed before teacher execution.
 Replay authority inputs reject symlink substitution before resolution, and the
 existing external C4/C5 checkpoint rejection is covered alongside replay
 configuration tests.
+
+2026-08-16 — M8G replay authority precedes preflight
+
+Verified frozen-selection adoption now occurs before ordinary input and teacher
+preflight. Preflight therefore validates only the private closure-checked
+replay inputs, while ordinary production retains its existing order and guards.

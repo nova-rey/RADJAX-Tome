@@ -3,9 +3,11 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+import radjax_tome.builder.production as production_module
 from radjax_tome.builder.config import normalize_production_build_request
 from radjax_tome.builder.delivery.replay_authority import (
     adopt_verified_selection_replay,
@@ -99,3 +101,42 @@ def test_replay_preserves_external_c4_c5_rejection(tmp_path: Path) -> None:
     assert any(
         "external C4/C5 checkpoints are not accepted" in item for item in blockers
     )
+
+
+def test_replay_adoption_precedes_input_preflight(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _config(tmp_path)
+    adopted = tmp_path / "adopted"
+    replay = SimpleNamespace(
+        adopted_root=adopted,
+        replay_identity="sha256:replay",
+        records=(),
+        checkpoint_digest="sha256:checkpoint",
+    )
+    from radjax_tome.builder.delivery import replay_authority
+
+    monkeypatch.setattr(
+        replay_authority, "adopt_verified_selection_replay", lambda **_: replay
+    )
+    observed: dict[str, Path] = {}
+
+    def preflight(state: object) -> SimpleNamespace:
+        observed["dataset"] = state.config.dataset_path
+        observed["manifest"] = state.config.corpus_manifest_path
+        observed["provenance"] = state.config.teacher_model_provenance_path
+        return SimpleNamespace(status="fail", failure="test stop")
+
+    monkeypatch.setattr(production_module, "_run_existing_preflight", preflight)
+    monkeypatch.setattr(
+        production_module,
+        "_stage_adapter_failure_report",
+        lambda *_args, **_kwargs: {"status": "stopped"},
+    )
+    result = production_module._build_production_gpu_tome_compatibility(config)
+    assert result == {"status": "stopped"}
+    assert observed == {
+        "dataset": adopted / "input/corpus.jsonl",
+        "manifest": adopted / "input/corpus_manifest.json",
+        "provenance": adopted / "input/teacher_model_provenance.json",
+    }

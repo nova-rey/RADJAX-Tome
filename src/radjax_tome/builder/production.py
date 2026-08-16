@@ -266,8 +266,7 @@ def _build_production_gpu_tome_compatibility(
     state = _new_production_run_state(config)
     replay_authority = None
     if canonical_config is None:
-        preflight_result = _run_existing_preflight(state)
-        if preflight_result.status == "pass" and config.verified_selection_replay_path:
+        if config.verified_selection_replay_path:
             try:
                 from radjax_tome.builder.delivery.replay_authority import (
                     adopt_verified_selection_replay,
@@ -312,6 +311,10 @@ def _build_production_gpu_tome_compatibility(
                 replay_authority_identity=replay_authority.replay_identity,
             )
             state.config = config
+            # Replay adoption is the authority gate.  Only its private,
+            # closure-validated inputs may enter ordinary preflight; stale or
+            # unrelated caller paths must never be consulted first.
+            preflight_result = _run_existing_preflight(state)
             score_result = _existing_stage_success(
                 state,
                 "frozen_selection_replay",
@@ -320,6 +323,7 @@ def _build_production_gpu_tome_compatibility(
                 prior_paths=(state.run_plan_path,),
             )
         else:
+            preflight_result = _run_existing_preflight(state)
             score_result = (
                 _run_existing_score_pass(state)
                 if preflight_result.status == "pass"
