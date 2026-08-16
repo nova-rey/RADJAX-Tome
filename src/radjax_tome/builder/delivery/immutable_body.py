@@ -34,7 +34,7 @@ class ImmutableBodyTransaction:
     def __init__(self, root: Path, *, profile: str = "producer_evidence") -> None:
         self.root = Path(root)
         self.profile = profile
-        self._reject_symlink(self.root)
+        self._reject_symlink_chain(self.root)
         self.root.mkdir(parents=True, exist_ok=True)
         for name in ("bodies", "manifests", ".transactions"):
             path = self.root / name
@@ -203,7 +203,17 @@ class ImmutableBodyTransaction:
             raise ValueError(f"symlink path rejected: {path}")
 
     @staticmethod
+    def _reject_symlink_chain(path: Path) -> None:
+        absolute = path.absolute()
+        current = Path(absolute.anchor)
+        for component in absolute.parts[1:]:
+            current /= component
+            if current.exists() and stat.S_ISLNK(os.lstat(current).st_mode):
+                raise ValueError(f"symlink parent rejected: {current}")
+
+    @staticmethod
     def _preflight_target(path: Path, expected: bytes) -> None:
+        ImmutableBodyTransaction._reject_symlink_chain(path.parent)
         if not path.exists():
             return
         mode = os.lstat(path).st_mode

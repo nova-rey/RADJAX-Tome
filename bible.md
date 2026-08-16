@@ -3336,3 +3336,8 @@ Added transaction-private reservations, Contract receipt emission at durable
 body/manifest states, content-addressed body reuse, private staging, no-follow
 symlink rejection, deterministic orphan diagnostics, and preflight conflict
 checks. The manifest remains the semantic commit point.
+
+2026-08-16 — M8G parent-chain path hardening
+
+Transaction roots and target parents now walk existing components with lstat
+and reject symlink substitution before staging or promotion.
