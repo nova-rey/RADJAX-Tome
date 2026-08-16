@@ -23,6 +23,38 @@ The default production route is intentionally strict:
 - `local_files_only=true`
 - `allow_downloads=false`
 - fallback policy `error`
+
+## Verified frozen-selection replay
+
+An already-verified historical selection can enter the canonical selected-source
+rerun without rebuilding C1--C5. Both the artifact root and its committed bundle
+manifest are required; ordinary `--c4-claims`/`--c5-selection` overrides remain
+rejected.
+
+```bash
+radjax-tome production-build \
+  --verified-selection-replay /path/to/m8b-authority-recovered \
+  --verified-selection-bundle-manifest docs/evidence/M8G_BENCHMARK_WORKLOAD_BUNDLE.json \
+  --representation-mode compact_k_monolithic \
+  --output ./m8g-replay-output \
+  --teacher-model /models/MODEL \
+  --tokenizer-id /models/MODEL \
+  --dataset /path/to/m8b-authority-recovered/verify-checkpoint/input/corpus.jsonl \
+  --corpus-manifest /path/to/m8b-authority-recovered/verify-checkpoint/input/corpus_manifest.json \
+  --teacher-model-provenance /path/to/m8b-authority-recovered/verify-checkpoint/input/teacher_model_provenance.json \
+  --target-policy corridor_exemplar_v1 \
+  --exemplar-selection-enabled \
+  --exemplar-delivery-path two_pass_rerun_selected \
+  --selection-integration-policy corridor_first_global_backfill_v1 \
+  --total-selected-exemplar-budget 256 \
+  --selected-exemplar-budget 256 \
+  --selected-rerun-batch-size 8
+```
+
+Replay adoption validates the complete governed bundle, copies required
+authority records into a private invocation-owned root, and uses the existing
+selected-source delivery/materialization path. It does not execute the normal
+C1--C5 selection stages or accept arbitrary external C4/C5 checkpoint paths.
 - GPU batch policy `auto`, bounded by `--gpu-batch-size-auto-min 1` and
   `--gpu-batch-size-auto-max 64`
 

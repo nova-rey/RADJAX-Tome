@@ -165,6 +165,8 @@ class SelectionIntent:
     full_width_cap_numerator: int = 1
     full_width_cap_denominator: int = 3
     representation_mode: str = "legacy_padded_monolithic"
+    verified_selection_replay_path: Path | None = None
+    verified_selection_bundle_manifest_path: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -325,6 +327,10 @@ def adapt_legacy_production_build_config(
             full_width_cap_numerator=config.full_width_cap_numerator,
             full_width_cap_denominator=config.full_width_cap_denominator,
             representation_mode=config.representation_mode,
+            verified_selection_replay_path=config.verified_selection_replay_path,
+            verified_selection_bundle_manifest_path=(
+                config.verified_selection_bundle_manifest_path
+            ),
         ),
         execution=ExecutionIntent(
             gpu_batch_size_mode=config.gpu_batch_size_mode,
@@ -612,6 +618,11 @@ _PRODUCTION_OVERRIDE_SECTIONS = {
     "progress_log_path": ("outputs", "progress_log_path"),
     "exemplar_delivery_path": ("selection", "exemplar_delivery_path"),
     "representation_mode": ("selection", "representation_mode"),
+    "verified_selection_replay_path": ("selection", "verified_selection_replay_path"),
+    "verified_selection_bundle_manifest_path": (
+        "selection",
+        "verified_selection_bundle_manifest_path",
+    ),
     "exemplar_selection_enabled": ("selection", "exemplar_selection_enabled"),
     "exemplar_leaderboard_capacity": ("selection", "exemplar_leaderboard_capacity"),
     "selected_exemplar_budget": ("selection", "selected_exemplar_budget"),
@@ -837,6 +848,10 @@ def production_build_config_from_resolved(
         c5_selection_path=intent.compatibility.c5_selection_path,
         source_passports_path=intent.compatibility.source_passports_path,
         representation_mode=intent.selection.representation_mode,
+        verified_selection_replay_path=intent.selection.verified_selection_replay_path,
+        verified_selection_bundle_manifest_path=(
+            intent.selection.verified_selection_bundle_manifest_path
+        ),
     )
 
 

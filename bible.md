@@ -3502,3 +3502,23 @@ focused validation gate for explicit legacy and compact backend modes.
 Representation mode remains in normalized execution and resume authority while
 the historical selection authority projection stays byte-compatible, so mode
 changes do not alter governed selection semantics.
+
+2026-08-16 — M8G frozen-selection replay entrance
+
+Production now accepts an explicitly paired verified replay root and workload
+bundle manifest. Adoption validates the complete historical authority, creates
+a private invocation-owned copy of required replay records, and routes frozen
+selected records into the existing C6 selected-source materialization path
+without rebuilding C1--C5 or changing ordinary external-checkpoint rejection.
+
+2026-08-16 — M8G replay adoption resume binding
+
+Replay adoption is idempotent only for the same bundle, checkpoint, selected
+record identity, and intact private member digests; incomplete, substituted, or
+cross-authority private adoption roots fail closed before teacher execution.
+
+2026-08-16 — M8G replay fail-closed guard coverage
+
+Replay authority inputs reject symlink substitution before resolution, and the
+existing external C4/C5 checkpoint rejection is covered alongside replay
+configuration tests.

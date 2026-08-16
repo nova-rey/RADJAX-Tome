@@ -27,6 +27,22 @@ from radjax_tome.reports import (
 
 
 def validate_required_inputs(config: Any, blockers: list[str]) -> None:
+    replay_path = getattr(config, "verified_selection_replay_path", None)
+    replay_manifest = getattr(config, "verified_selection_bundle_manifest_path", None)
+    if (replay_path is None) != (replay_manifest is None):
+        blockers.append(
+            "verified selection replay requires both replay root and bundle manifest"
+        )
+    if replay_path is not None and replay_manifest is not None:
+        if not replay_path.is_dir() or replay_path.is_symlink():
+            blockers.append("verified selection replay root is not a safe directory")
+        if not replay_manifest.is_file() or replay_manifest.is_symlink():
+            blockers.append("verified selection bundle manifest is not a safe file")
+        if config.c4_claims_path is not None or config.c5_selection_path is not None:
+            blockers.append(
+                "verified selection replay cannot be combined with external "
+                "C4/C5 overrides"
+            )
     if config.selection_integration_policy not in {
         GLOBAL_ONLY_SELECTION_POLICY,
         C6_SELECTION_INTEGRATION_POLICY,

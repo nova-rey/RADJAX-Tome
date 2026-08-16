@@ -6,7 +6,7 @@ import os
 import platform
 import resource
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
@@ -152,6 +152,9 @@ class ProductionBuildConfig:
     c5_selection_path: Path | None = None
     source_passports_path: Path | None = None
     representation_mode: str = "legacy_padded_monolithic"
+    verified_selection_replay_path: Path | None = None
+    verified_selection_bundle_manifest_path: Path | None = None
+    replay_authority_identity: str | None = None
 
 
 @dataclass(frozen=True)
@@ -236,6 +239,10 @@ def build_production_gpu_tome(
     canonical_config = native_path_b_api.resolve_canonical_path_b_config(
         execution_config
     )
+    if execution_config.verified_selection_replay_path is not None:
+        # Frozen-selection replay enters the existing selected-delivery owner
+        # with adopted authority; it must not execute the ordinary C1-C5 slice.
+        canonical_config = None
     if canonical_config is None:
         return _build_production_gpu_tome_compatibility(execution_config)
 
@@ -257,13 +264,67 @@ def _build_production_gpu_tome_compatibility(
     canonical_config: Any | None = None,
 ) -> dict[str, Any]:
     state = _new_production_run_state(config)
+    replay_authority = None
     if canonical_config is None:
         preflight_result = _run_existing_preflight(state)
-        score_result = (
-            _run_existing_score_pass(state)
-            if preflight_result.status == "pass"
-            else None
-        )
+        if preflight_result.status == "pass" and config.verified_selection_replay_path:
+            try:
+                from radjax_tome.builder.delivery.replay_authority import (
+                    adopt_verified_selection_replay,
+                )
+
+                replay_authority = adopt_verified_selection_replay(
+                    bundle_manifest=config.verified_selection_bundle_manifest_path,
+                    artifact_root=config.verified_selection_replay_path,
+                    adopted_root=config.output_dir / ".replay-authority",
+                )
+            except (OSError, TypeError, ValueError, KeyError) as exc:
+                state.blockers.append(f"frozen selection replay adoption failed: {exc}")
+                report = _production_report(
+                    config,
+                    created_at=state.created_at,
+                    completed_at=_now(),
+                    status="fail",
+                    blockers=state.blockers,
+                    warnings=state.warnings,
+                    doctor_report=state.doctor_report or {},
+                    run_plan_path=state.run_plan_path,
+                    run_plan=state.plan or {},
+                    effective_batch_size=state.effective_batch_size,
+                    already_complete=state.already_complete,
+                    parity_report_path=state.parity_report_path,
+                    parity_status="not_run",
+                    build_status="frozen_selection_replay_adoption_failed",
+                )
+                return _finalize_production_report(
+                    report, state.report_path, state.progress
+                )
+            config = replace(
+                config,
+                dataset_path=replay_authority.adopted_root / "input/corpus.jsonl",
+                corpus_manifest_path=(
+                    replay_authority.adopted_root / "input/corpus_manifest.json"
+                ),
+                teacher_model_provenance_path=(
+                    replay_authority.adopted_root
+                    / "input/teacher_model_provenance.json"
+                ),
+                replay_authority_identity=replay_authority.replay_identity,
+            )
+            state.config = config
+            score_result = _existing_stage_success(
+                state,
+                "frozen_selection_replay",
+                paths=(replay_authority.adopted_root / "replay_authority.json",),
+                prior_stage="preflight",
+                prior_paths=(state.run_plan_path,),
+            )
+        else:
+            score_result = (
+                _run_existing_score_pass(state)
+                if preflight_result.status == "pass"
+                else None
+            )
     else:
         from radjax_tome.builder.native_path_b.orchestrator import (
             SliceOneOperations,
@@ -316,7 +377,10 @@ def _build_production_gpu_tome_compatibility(
     main_pass_wall_seconds = state.main_pass_wall_seconds
     c6_context: dict[str, Any] | None = None
 
-    if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY:
+    if (
+        config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
+        and replay_authority is None
+    ):
         try:
             progress.stage("fingerprint_corridor_export")
             store = TeacherTargetStore.open(config.output_dir)
@@ -390,12 +454,16 @@ def _build_production_gpu_tome_compatibility(
                     effective_batch_size,
                     progress_callback=progress.handle_delivery_event,
                     authoritative_records=(
-                        None
+                        tuple(replay_authority.records)
+                        if replay_authority is not None
+                        else None
                         if c6_context is None
                         else tuple(c6_context["delivery_records"])
                     ),
                     delivery_authority_hash=(
-                        None
+                        replay_authority.checkpoint_digest
+                        if replay_authority is not None
+                        else None
                         if c6_context is None
                         else str(
                             (c6_context.get("authorities") or {}).get(
@@ -2573,6 +2641,17 @@ def _inputs(config: ProductionBuildConfig) -> dict[str, Any]:
         "source_passports_path": (
             str(config.source_passports_path) if config.source_passports_path else None
         ),
+        "verified_selection_replay_path": (
+            str(config.verified_selection_replay_path)
+            if config.verified_selection_replay_path
+            else None
+        ),
+        "verified_selection_bundle_manifest_path": (
+            str(config.verified_selection_bundle_manifest_path)
+            if config.verified_selection_bundle_manifest_path
+            else None
+        ),
+        "replay_authority_identity": config.replay_authority_identity,
         "selection_integration_config_hash": _selection_integration_hash(config),
     }
 
@@ -2632,9 +2711,14 @@ def _c6_report_fields(
             "external_authority_override_used"
         ),
         "full_teacher_pass_count": (
-            1
+            0
+            if config.verified_selection_replay_path is not None
+            else 1
             if config.selection_integration_policy == C6_SELECTION_INTEGRATION_POLICY
             else None
+        ),
+        "selected_source_pass_count": (
+            1 if config.verified_selection_replay_path is not None else None
         ),
         "selection_budget_diagnostics_path": str(budget_path) if budget else None,
         "selection_budget_diagnostics": budget or None,

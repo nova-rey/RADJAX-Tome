@@ -588,6 +588,22 @@ def _build_parser() -> argparse.ArgumentParser:
         default="legacy_padded_monolithic",
         help="Explicit selected-source physical materialization mode.",
     )
+    production.add_argument(
+        "--verified-selection-replay",
+        type=Path,
+        help=(
+            "Verified historical replay artifact root; bypasses C1-C5 only "
+            "after closure validation."
+        ),
+    )
+    production.add_argument(
+        "--verified-selection-bundle-manifest",
+        type=Path,
+        help=(
+            "Committed workload bundle manifest paired with "
+            "--verified-selection-replay."
+        ),
+    )
     production.add_argument("--exemplar-selection-enabled", action="store_true")
     production.add_argument(
         "--selection-integration-policy",
@@ -1652,6 +1668,8 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
         "c4_claims": "c4_claims_path",
         "c5_selection": "c5_selection_path",
         "source_passports": "source_passports_path",
+        "verified_selection_replay": "verified_selection_replay_path",
+        "verified_selection_bundle_manifest": "verified_selection_bundle_manifest_path",
     }
     excluded = {
         "command",
