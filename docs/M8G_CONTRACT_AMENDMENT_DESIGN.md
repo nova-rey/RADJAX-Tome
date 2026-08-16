@@ -135,22 +135,24 @@ arrays. The exact resource header is:
 
 `magic="RDXC" | version=u16(1) | profile=u16(1) | record_count=u32 |
 position_count=u32 | vocab_size=u32 | num_buckets=u32 | body_bytes=u64 |
-manifest_bytes=u64 | payload_crc32=u32`.
+manifest_bytes=u64 | header_crc32=u32 | payload_crc32=u32`.
 
 The compact closed field registry is exactly:
 `schema_version:string`, `profile:string`, `record_count:u32`,
-`position_count:u32`, `top_offsets:u64[]`, `top_lengths:u32[]`,
+`position_count:u32`, `vocab_size:u32`, `num_buckets:u32`,
+`top_offsets:u64[]`, `top_lengths:u32[]`,
 `top_token_ids:i32[]`, `top_probs:f32[]`, `top_log_probs:f32[]`,
 `effective_top_k:u32[]`, `top_mass:f32[]`, `tail_mass:f32[]`,
-`bucket_masses:f32[]`.
+`bucket_masses:f32[position_count,num_buckets]`.
 Offsets and flattened arrays are ordered by selected-coordinate manifest order;
 arrays are little-endian and finite checks are mandatory. The compact manifest
 registry is exactly: `schema_version:string`, `profile:string`,
 `selected_example_id:string`, `selected_position:u32`,
 `source_passport_id:string`, `corridor_mode_id:i32|null`,
 `corridor_fingerprint_id:string|null`, `selection_obligation_count:u32`,
-`selection_obligations:selection_obligation[]`, `body_semantic_id:string`,
-`body_raw_digest:string`, `authority_id:string`, `selection_authority_id:string`,
+`selection_obligations:selection_obligation[]`, `body_semantic_id:bytes32`,
+`body_raw_digest:bytes32`, `authority_id:bytes32`,
+`selection_authority_id:bytes32`,
 `package_role:string`, and `manifest_semantic_id:string`. Unknown fields are
 rejected.
 
@@ -165,12 +167,14 @@ label is encoded as `u16_le(label_byte_count) || ASCII(label_bytes)`; the
 following bytes are the canonical FV3 sequence for the named fields, never
 JSON or a platform-native struct:
 
-* `body_semantic_id = sha256("RDX-BODY-SEM-1" || FV3(body registry))`;
+* `body_semantic_id = sha256("RDX-BODY-SEM-1" || FV3(body registry including
+  vocab_size, num_buckets, and the two-dimensional bucket shape))`;
 * `body_raw_digest = sha256("RDX-BODY-RAW-1" || exact body bytes)`;
 * `manifest_semantic_id = sha256("RDX-MANIFEST-SEM-1" || FV3(manifest registry excluding manifest_semantic_id))`;
 * `exemplar_id = sha256("RDX-EXEMPLAR-1" || FV3(coordinate, manifest_semantic_id, body_semantic_id))`;
 * package root = ordered binary-tree SHA-256 over leaf frames
-  `RDX-INVENTORY-LEAF-1 || u32(role_len) || role || u32(path_len) || path ||
+  `RDX-INVENTORY-LEAF-1 || u16(label_len) || ASCII(label) ||
+  u32(role_len) || role || u32(path_len) || path ||
   exemplar_id || raw_digest`; parent frames are
   `RDX-INVENTORY-NODE-1 || left || right`, duplicating the final leaf at odd
   levels. Paths are UTF-8 NFC, slash-separated, relative, and reject `..`.
@@ -178,8 +182,12 @@ JSON or a platform-native struct:
 The package inventory has one leaf for every promoted body and manifest, plus
 one authority leaf and one profile leaf. Role bytes are respectively `body`,
 `manifest`, `authority`, and `profile`; each leaf is
-`label || u32_le(role_len) || role || u32_le(path_len) || path ||
-u32_le(id_len) || identity || u32_le(raw_digest_len) || raw_digest`. Leaves
+`u16_le(label_len) || ASCII(label) || u32_le(role_len) || role ||
+u32_le(path_len) || path ||
+  u32_le(id_len) || identity || u32_le(raw_digest_len) || raw_digest`. All
+identity and digest fields typed `bytes32` are exactly 32 raw digest bytes
+(never lowercase hexadecimal text); textual IDs retain the string framing.
+Leaves
 are sorted by `(role, path)` UTF-8 bytes. The authority leaf binds
 `selection_authority_id` and the profile leaf binds the header profile code,
 so either change updates the package root without changing body semantics.
@@ -209,7 +217,8 @@ vocabulary, bucket, record, and position counts must agree with the registry.
 ### Journal receipt matrix
 
 Each transition receipt has this closed ordered tuple: `transaction_id:string`
-(required), `state:u16`, `parent_transaction_id:string|null`,
+(required), `schema_version:string`, `profile_code:u16`, `state:u16`,
+`parent_transaction_id:string|null`,
 `body_path:string|null`, `manifest_path:string|null`,
 `body_raw_digest:bytes32|null`, `body_size_bytes:u64|null`,
 `manifest_raw_digest:bytes32|null`, `committed_next_state:u16|null`,
@@ -231,7 +240,9 @@ Duplicate writers must fail closed on transaction-id mismatch. `profile` is a
 u16 registry code (`1=student`, `2=full_debug`, `3=producer_evidence`) with a
 normative presentation mapping. Strings use `u32_le byte_length || UTF-8 NFC
 bytes`; arrays use `u64_le element_count` and the declared scalar encoding.
-Header CRC32 is CRC-32/ISO-HDLC over all header bytes preceding the CRC field.
+The header carries `header_crc32`, CRC-32/ISO-HDLC over header bytes preceding
+that field, and `payload_crc32`, CRC-32/ISO-HDLC over the complete body and
+manifest payload bytes. The payload CRC is not a header-prefix checksum.
 Body and receipt digest preimages exclude their own digest fields.
 
 The restart matrix is normative: interruption before a receipt leaves the
@@ -242,6 +253,27 @@ requires a validated body reference; `INVENTORY_COMMITTED` requires a complete
 inventory; and only `PACKAGE_VALIDATED` may advance to `COMMITTED`. Missing,
 malformed, or non-contiguous receipts quarantine newer temporary resources and
 resume from the last contiguous receipt.
+
+The only legal next-state edges are
+`1->2->3->4->5->6->7->8->9->10->11->12`; a receipt may repeat its current
+state idempotently, but may not skip, regress, or change profile/schema.
+
+The required receipt/restart cases are explicit for each state:
+
+| State | Required durable evidence | Restart disposition |
+|---|---|---|
+| BODY_GENERATING | transaction and configuration identities | discard temp body |
+| BODY_WRITTEN | temp path and byte count | revalidate or quarantine temp |
+| BODY_VALIDATED | validated schema/profile/shape | recompute digest |
+| BODY_DIGESTED | body digest and length | atomically promote body |
+| BODY_PROMOTED | promoted path plus receipt digest | reuse only after full revalidation |
+| MANIFEST_PROVISIONAL | body reference and provisional digest | never publish; resume linkage |
+| LINKAGE_FINALIZED | finalized authority/linkage fields | validate manifest |
+| MANIFEST_VALIDATED | manifest digest and body binding | atomically promote manifest |
+| MANIFEST_PROMOTED | manifest/body pair | rebuild inventory |
+| INVENTORY_COMMITTED | complete role/path inventory | validate archive/package |
+| PACKAGE_VALIDATED | package root and Contract result | commit transaction |
+| COMMITTED | final receipt | idempotent no-op |
 
 The next Contract branch must add compact resource framing, compact semantic
 projection, body/manifest resource roles, closed manifest fields, digest-domain

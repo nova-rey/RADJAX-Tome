@@ -3299,3 +3299,9 @@ allowance before ranked narrow backfill.
 
 Applied repository Ruff formatting to the new global-supply cap regression;
 behavior and authority surfaces are unchanged.
+
+2026-08-15 — M8G identity and receipt wire closure
+
+Made proposed digest fields uniformly raw 32-byte values, bound schema/profile
+to receipts, enumerated legal state edges, and separated header CRC from the
+payload CRC in the design-only amendment. No Contract implementation began.
