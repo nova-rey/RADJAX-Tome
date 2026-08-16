@@ -3411,6 +3411,12 @@ transaction symlinks.
 The configuration-swap recovery fixture is formatted and included in the
 focused validation set; Ruff, format, compile, and diff checks remain clean.
 
+2026-08-16 — M8G deterministic archive container correction
+
+The opt-in transaction archive now writes gzip with an explicit zero mtime in
+addition to normalized tar member metadata, making repeated recovery archive
+finalization byte-stable and preventing false immutable-resource conflicts.
+
 2026-08-16 — M8G configuration-binding correction
 
 Transaction IDs now include the independent configuration identity, and

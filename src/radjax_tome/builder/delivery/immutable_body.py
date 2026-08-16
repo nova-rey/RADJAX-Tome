@@ -7,6 +7,7 @@ inventory members.
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import os
@@ -286,17 +287,21 @@ class ImmutableBodyTransaction:
         temp = package_path.with_name(f".{package_path.name}.tmp")
         self._reject_symlink(temp)
         members = [body_path, manifest_path, inventory_path]
-        with tarfile.open(temp, "w:gz", dereference=False) as archive:
-            for member in sorted(members, key=lambda p: p.name):
-                info = archive.gettarinfo(str(member), arcname=member.name)
-                info.mtime = 0
-                info.uid = 0
-                info.gid = 0
-                info.uname = ""
-                info.gname = ""
-                info.mode = 0o644
-                with member.open("rb") as handle:
-                    archive.addfile(info, handle)
+        with temp.open("wb") as output:
+            with gzip.GzipFile(fileobj=output, mode="wb", mtime=0) as compressed:
+                with tarfile.open(
+                    fileobj=compressed, mode="w", dereference=False
+                ) as archive:
+                    for member in sorted(members, key=lambda p: p.name):
+                        info = archive.gettarinfo(str(member), arcname=member.name)
+                        info.mtime = 0
+                        info.uid = 0
+                        info.gid = 0
+                        info.uname = ""
+                        info.gname = ""
+                        info.mode = 0o644
+                        with member.open("rb") as handle:
+                            archive.addfile(info, handle)
         package_bytes = temp.read_bytes()
         self._atomic_write(package_path, package_bytes)
         temp.unlink(missing_ok=True)
