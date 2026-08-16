@@ -3324,3 +3324,8 @@ was modified.
 The immutable transaction now derives the canonical closed manifest encoding
 and rejects caller-supplied bytes that do not exactly match the validated
 manifest identity.
+
+2026-08-16 — M8G transaction preflight correction
+
+Manifest canonical-byte and body-binding checks now complete before any body
+promotion, preventing failed transactions from publishing orphan bodies.

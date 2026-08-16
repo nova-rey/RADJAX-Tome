@@ -43,20 +43,24 @@ class ImmutableBodyTransaction:
         validate_manifest(dict(manifest), body)
         if manifest["body_raw_digest"] != body_raw_digest(body_bytes):
             raise ValueError("manifest body digest does not match body")
+        expected_manifest_bytes = _m8g_fv3(dict(manifest))
+        if canonical_manifest_bytes != expected_manifest_bytes:
+            raise ValueError("manifest bytes do not match validated manifest")
         body_name = f"{body_raw_digest(body_bytes).hex()}.body"
         body_path = self.root / body_name
         manifest_path = self.root / (body_name + ".manifest")
         self._atomic_write(body_path, body_bytes)
         # Manifest bytes are canonical JSON only after the Contract validates
         # the closed record; callers provide the canonical serialized envelope.
-        expected_manifest_bytes = _m8g_fv3(dict(manifest))
-        if canonical_manifest_bytes != expected_manifest_bytes:
-            raise ValueError("manifest bytes do not match validated manifest")
         self._atomic_write(manifest_path, expected_manifest_bytes)
         return body_path, manifest_path
 
     @staticmethod
     def _atomic_write(path: Path, data: bytes) -> None:
+        if path.exists():
+            if path.read_bytes() != data:
+                raise ValueError(f"immutable resource conflict: {path.name}")
+            return
         fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
         try:
             with os.fdopen(fd, "wb") as handle:
