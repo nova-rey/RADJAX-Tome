@@ -182,9 +182,7 @@ def test_global_round_trip_preserves_full_width_for_cap(tmp_path: Path) -> None:
         leaderboards, plan, loaded, replace(policy, require_full_budget=False)
     )
     selected = [
-        item
-        for item in result.global_claims
-        if item.board_id == "global_max_entropy"
+        item for item in result.global_claims if item.board_id == "global_max_entropy"
     ]
     assert len(selected) == 2
     assert {item.example_id for item in selected} == {"full-1", "narrow-1"}

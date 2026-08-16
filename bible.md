@@ -3281,3 +3281,8 @@ not placed in a separate semantic board or excluded from ordinary profiles.
 Added an integration regression proving top-level full-width metadata survives
 global-board export/load and the canonical C4 cap admits only the exact
 allowance before ranked narrow backfill.
+
+2026-08-15 — M8F validation formatting
+
+Applied repository Ruff formatting to the new global-supply cap regression;
+behavior and authority surfaces are unchanged.
