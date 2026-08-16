@@ -22,6 +22,7 @@ from radjax_tome.fingerprint.corridor_claims import (
     SelectionObligation,
     claim_corridor_then_backfill_global,
     inspect_corridor_global_claim_artifact,
+    load_global_board_input,
     validate_corridor_global_claim_artifact,
     validate_corridor_global_claim_result,
     write_corridor_global_claim_result,
@@ -128,6 +129,65 @@ def test_no_collision_claims_corridors_then_global_remainder() -> None:
     assert len(result.global_claims) == 3
     assert len(result.selected_coordinates) == 5
     assert result.collision_obligations == ()
+
+
+def test_global_round_trip_preserves_full_width_for_cap(tmp_path: Path) -> None:
+    leaderboards, plan, _, policy = _inputs()
+    path = tmp_path / "global.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": "radjax.c4_global_board_supply.v1",
+                "source_provenance": {
+                    "source_artifact_id": "round-trip",
+                    "source_artifact_hash": "a" * 64,
+                    "production_grade": True,
+                },
+                "boards": [
+                    {
+                        "board_id": "global_max_entropy",
+                        "priority": 0,
+                        "requested_slots": 3,
+                        "candidates": [
+                            {
+                                "example_id": "full-1",
+                                "position": 0,
+                                "rank": 1,
+                                "score": 10.0,
+                                "full_width": True,
+                            },
+                            {
+                                "example_id": "full-2",
+                                "position": 0,
+                                "rank": 2,
+                                "score": 9.0,
+                                "full_width": True,
+                            },
+                            {
+                                "example_id": "narrow-1",
+                                "position": 0,
+                                "rank": 3,
+                                "score": 8.0,
+                                "full_width": False,
+                            },
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    loaded = load_global_board_input(path)
+    result = claim_corridor_then_backfill_global(
+        leaderboards, plan, loaded, replace(policy, require_full_budget=False)
+    )
+    selected = [
+        item
+        for item in result.global_claims
+        if item.board_id == "global_max_entropy"
+    ]
+    assert len(selected) == 2
+    assert {item.example_id for item in selected} == {"full-1", "narrow-1"}
     assert [claim.corridor_mode_id for claim in result.corridor_claims] == [0, 1]
     assert result.selected_coordinates[0].primary_claim == (
         "fingerprint_corridor_representative"

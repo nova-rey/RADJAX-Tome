@@ -3275,3 +3275,9 @@ disagreement during packaging and resume validation.
 Updated Tome packaging characterization to assert that the retained
 `perverse_tail_diagnostic` artifact is diagnostic-only: selected exemplars are
 not placed in a separate semantic board or excluded from ordinary profiles.
+
+2026-08-15 — M8F global-supply cap round-trip regression
+
+Added an integration regression proving top-level full-width metadata survives
+global-board export/load and the canonical C4 cap admits only the exact
+allowance before ranked narrow backfill.
