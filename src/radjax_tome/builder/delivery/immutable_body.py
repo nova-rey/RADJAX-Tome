@@ -103,7 +103,10 @@ class ImmutableBodyTransaction:
             raise ValueError("manifest bytes do not match validated manifest")
 
         txid = _digest(
-            b"RDX-M8G-TX-1", body_digest + closed_manifest["manifest_semantic_id"]
+            b"RDX-M8G-TX-1",
+            self.configuration_identity
+            + body_digest
+            + closed_manifest["manifest_semantic_id"],
         ).hex()
         body_path = self.root / "bodies" / f"{body_digest.hex()}.body"
         manifest_path = (
@@ -409,6 +412,8 @@ class ImmutableBodyTransaction:
                         if isinstance(decoded.get(key), str) and decoded[key]:
                             decoded[key] = bytes.fromhex(decoded[key])
                     validate_receipt(decoded)
+                    if decoded["configuration_identity"] != self.configuration_identity:
+                        raise ValueError("receipt configuration binding invalid")
                     if decoded["transaction_id"] != path.name:
                         raise ValueError("receipt transaction binding invalid")
                     binary = receipt.with_suffix(".bin")

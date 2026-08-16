@@ -3405,3 +3405,9 @@ deterministic profile-derived default, independent of manifest authority.
 Archive metadata is normalized for deterministic cross-environment bytes, and
 system /tmp and /var aliases on macOS are not mistaken for caller-controlled
 transaction symlinks.
+
+2026-08-16 — M8G configuration-binding correction
+
+Transaction IDs now include the independent configuration identity, and
+recovery rejects receipt chains authored under another configuration. A
+configuration-swap regression fixture preserves the fail-closed behavior.
