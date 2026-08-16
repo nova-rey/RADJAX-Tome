@@ -31,7 +31,59 @@
     "weights_file_sha256": "sha256:abb58eb73aece5163624090d5383c59cbcdb9e9539ec84cb864f74386c4b21d5",
     "tokenizer_json_sha256": "sha256:7d4046bf0505a327dd5a0abbb427ecd4fc82f99c2ceaa170bc61ecde12809b0c",
     "tokenizer_model_sha256": "sha256:1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c",
-    "teacher_provenance_sha256": "sha256:269f0a53a758cd482b2a5ad221836e0530708c32a5a66bdaed6f86cdfcb19286"
+    "teacher_provenance_sha256": "sha256:269f0a53a758cd482b2a5ad221836e0530708c32a5a66bdaed6f86cdfcb19286",
+    "model_file_manifest": [
+      {
+        "relative_path": ".gitattributes",
+        "sha256": "sha256:34448b82c17d60fec9b65b1f093c115ddbaadc04beb1b0140b6bfed2e012a930",
+        "size_bytes": 1570
+      },
+      {
+        "relative_path": "README.md",
+        "sha256": "sha256:d35dc4974f6dacb6b7844f373c9045fe65c21b391505ab8004a50e3e92e35c93",
+        "size_bytes": 28276
+      },
+      {
+        "relative_path": "added_tokens.json",
+        "sha256": "sha256:50b2f405ba56a26d4913fd772089992252d7f942123cc0a034d96424221ba946",
+        "size_bytes": 35
+      },
+      {
+        "relative_path": "config.json",
+        "sha256": "sha256:8983343e5bfbf8e336d222a522a1d781443491e9de2d081b8856f8fd26ab6046",
+        "size_bytes": 1352
+      },
+      {
+        "relative_path": "generation_config.json",
+        "sha256": "sha256:5f5e01a065c3a4efb169a97bc13dbe5d62031f40a3e7004323daaaff348ec420",
+        "size_bytes": 133
+      },
+      {
+        "relative_path": "model.safetensors",
+        "sha256": "sha256:abb58eb73aece5163624090d5383c59cbcdb9e9539ec84cb864f74386c4b21d5",
+        "size_bytes": 536223056
+      },
+      {
+        "relative_path": "special_tokens_map.json",
+        "sha256": "sha256:2f7b0adf4fb469770bb1490e3e35df87b1dc578246c5e7e6fc76ecf33213a397",
+        "size_bytes": 662
+      },
+      {
+        "relative_path": "tokenizer.json",
+        "sha256": "sha256:7d4046bf0505a327dd5a0abbb427ecd4fc82f99c2ceaa170bc61ecde12809b0c",
+        "size_bytes": 33384570
+      },
+      {
+        "relative_path": "tokenizer.model",
+        "sha256": "sha256:1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c",
+        "size_bytes": 4689074
+      },
+      {
+        "relative_path": "tokenizer_config.json",
+        "sha256": "sha256:94b03056ec5831e9021c3e3fe9db682778c4f2d081c4188f1fcb8b90541cf1cf",
+        "size_bytes": 1155375
+      }
+    ]
   },
   "selected_sources": {
     "count": 213,
@@ -48,7 +100,7 @@
     "contract_commit": "f01b6bc50189058983c0e835b2181f3874bfbe09",
     "tome_commit": "18d6cba94eef7fba669cc1384bf4e628a774aaf1",
     "selection_authority": "sha256:e000f5b79c7c8d8f7b59de5f33964bef04a4340f21f216aef0933895b69482bf",
-    "corpus_manifest_sha256": "sha256:958c9383946e24a8b2fbb2ff849b6221ceb6ce76dc76527878a6b9b915a39"
+    "corpus_manifest_sha256": "sha256:958c9383946e24a8b2fbb2ff849b6221ceb6ce76dece0f3a759197b42fb03e4e"
   },
   "expected_counts": {
     "selected_sources": 213,

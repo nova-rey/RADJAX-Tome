@@ -3447,3 +3447,11 @@ source-count/passport coverage, corpus authority, and retained model,
 tokenizer, configuration, weights-file, and provenance digests. Validation
 requires the separately governed artifact root and remains independent of
 provider-local paths.
+
+2026-08-16 — M8G workload identity hardening
+
+Bundle validation now recomputes the checkpoint identity and model category
+hashes, verifies the complete retained model-file manifest, binds the corpus
+manifest digest, rejects layout escape paths, and checks selected coordinates
+against source passports and corpus rows. The durable artifact validates with
+213 sources and 256 coordinates.

@@ -70,7 +70,16 @@ def validate(path: Path) -> dict[str, object]:
         layout = provenance.get("artifact_layout")
         if not isinstance(layout, dict):
             raise ValueError("artifact layout is missing")
-        replay_root = artifact_root / str(layout["replay_root"])
+
+        def contained(relative: object) -> Path:
+            candidate = (artifact_root / str(relative)).resolve()
+            try:
+                candidate.relative_to(artifact_root.resolve())
+            except ValueError as exc:
+                raise ValueError("artifact layout escapes bundle root") from exc
+            return candidate
+
+        replay_root = contained(layout["replay_root"])
         checkpoint_manifest = artifact_root / "checkpoint-manifest.json"
         if (
             _sha256(checkpoint_manifest)
@@ -78,6 +87,12 @@ def validate(path: Path) -> dict[str, object]:
         ):
             raise ValueError("checkpoint manifest digest mismatch")
         checkpoint_doc = json.loads(checkpoint_manifest.read_text())
+        from radjax_tome.builder.delivery.replay import _checkpoint_digest
+
+        checkpoint_identity = dict(checkpoint_doc)
+        declared_checkpoint_digest = checkpoint_identity.pop("checkpoint_digest", None)
+        if _checkpoint_digest(checkpoint_identity) != declared_checkpoint_digest:
+            raise ValueError("checkpoint digest does not recompute")
         if (
             checkpoint_doc.get("checkpoint_digest")
             != document["normalized_inputs"]["checkpoint_digest"]
@@ -153,6 +168,8 @@ def validate(path: Path) -> dict[str, object]:
         ):
             raise ValueError("corpus authority mismatch")
         normalized = document["normalized_inputs"]
+        if not isinstance(normalized.get("model_file_manifest"), list):
+            raise ValueError("complete model-file manifest is missing")
         if (
             int(normalized["sequence_length"]) != 128
             or int(normalized["vocab_size"]) != 262144
@@ -209,9 +226,50 @@ def validate(path: Path) -> dict[str, object]:
             ) from exc
         if canonical_digest != normalized["selected_record_digest"]:
             raise ValueError("canonical selected-record digest mismatch")
+        if (
+            _sha256(replay_root / "input/corpus_manifest.json")
+            != document["authorities"]["corpus_manifest_sha256"]
+        ):
+            raise ValueError("corpus manifest identity mismatch")
+        passport_by_key = {
+            (str(row["example_id"]), int(row["position"])): row
+            for row in (json.loads(line) for line in passports.read_text().splitlines())
+        }
+        selected_keys_raw = set()
+        for row in coordinate_rows:
+            raw_key = (str(row["example_id"]), int(row["position"]))
+            selected_key = (
+                str(row.get("selected_example_id", row["example_id"])),
+                int(row.get("selected_position", row["position"])),
+            )
+            if raw_key != selected_key:
+                raise ValueError("selected coordinate aliases its source identity")
+            selected_keys_raw.add(raw_key)
+            passport = passport_by_key.get(raw_key)
+            if passport is None or int(passport["source_row"]) < 0:
+                raise ValueError("selected coordinate source mapping is invalid")
+        corpus_path = replay_root / "input/corpus.jsonl"
+        needed = {example_id for example_id, _ in selected_keys_raw}
+        found: dict[str, int] = {}
+        with corpus_path.open(encoding="utf-8") as handle:
+            for index, line in enumerate(handle):
+                if not needed:
+                    break
+                row = json.loads(line)
+                if row.get("example_id") in needed:
+                    found[str(row["example_id"])] = index
+                    needed.remove(str(row["example_id"]))
+        if needed:
+            raise ValueError("selected source is absent from corpus")
+        for example_id, _ in selected_keys_raw:
+            passport = next(
+                value for key, value in passport_by_key.items() if key[0] == example_id
+            )
+            if int(passport["source_row"]) != found[example_id]:
+                raise ValueError("selected source row does not bind to corpus")
         # Verify the model/tokenizer identity files against the retained teacher
         # provenance, and bind the declared architecture dimensions.
-        model_root = artifact_root / str(layout["model_root"])
+        model_root = contained(layout["model_root"])
         provenance_doc = _load_json(replay_root / "input/teacher_model_provenance.json")
         if (
             provenance_doc.get("model_directory_hash")
@@ -233,6 +291,64 @@ def validate(path: Path) -> dict[str, object]:
             digest = _sha256(artifact_root / relative)
             if digest != normalized[field]:
                 raise ValueError(f"teacher authority digest mismatch: {relative}")
+        for record in normalized["model_file_manifest"]:
+            if _sha256(model_root / record["relative_path"]) != record["sha256"]:
+                raise ValueError(
+                    f"complete model-file manifest mismatch: {record['relative_path']}"
+                )
+        model_manifest = {
+            "config_files": [
+                {
+                    "relative_path": x["relative_path"],
+                    "sha256": x["sha256"],
+                    "size_bytes": x["size_bytes"],
+                }
+                for x in normalized["model_file_manifest"]
+                if x["relative_path"] in {"config.json", "generation_config.json"}
+            ],
+            "tokenizer_files": [
+                {
+                    "relative_path": x["relative_path"],
+                    "sha256": x["sha256"],
+                    "size_bytes": x["size_bytes"],
+                }
+                for x in normalized["model_file_manifest"]
+                if x["relative_path"]
+                in {
+                    "tokenizer.json",
+                    "tokenizer_config.json",
+                    "special_tokens_map.json",
+                    "tokenizer.model",
+                }
+            ],
+            "weight_files": [
+                {
+                    "relative_path": x["relative_path"],
+                    "sha256": x["sha256"],
+                    "size_bytes": x["size_bytes"],
+                }
+                for x in normalized["model_file_manifest"]
+                if x["relative_path"].endswith(".safetensors")
+            ],
+        }
+        from radjax_tome.provenance.teacher_model import _category_hash, _directory_hash
+
+        if _category_hash(model_manifest["config_files"]) != provenance_doc.get(
+            "config_hash"
+        ):
+            raise ValueError("model config identity does not recompute")
+        if _category_hash(model_manifest["tokenizer_files"]) != provenance_doc.get(
+            "tokenizer_hash"
+        ):
+            raise ValueError("tokenizer identity does not recompute")
+        if _category_hash(model_manifest["weight_files"]) != provenance_doc.get(
+            "weights_hash"
+        ):
+            raise ValueError("weights identity does not recompute")
+        if _directory_hash(**model_manifest) != provenance_doc.get(
+            "model_directory_hash"
+        ):
+            raise ValueError("model directory identity does not recompute")
         config_doc = _load_json(model_root / "config.json")
         if int(config_doc.get("vocab_size", -1)) != int(normalized["vocab_size"]):
             raise ValueError("model vocabulary authority mismatch")
