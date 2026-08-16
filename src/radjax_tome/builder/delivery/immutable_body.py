@@ -8,6 +8,7 @@ inventory members.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import stat
 import tempfile
@@ -16,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from radjax_contract.tome.m8g import (
+    PROFILE_NAMES,
     CompactBody,
     JournalState,
     _digest,
@@ -88,11 +90,29 @@ class ImmutableBodyTransaction:
             )
             staged_body = journal_dir / "body.tmp"
             self._atomic_write(staged_body, body_bytes)
+            self._receipt(
+                journal_dir,
+                txid,
+                JournalState.BODY_WRITTEN,
+                body_digest,
+                None,
+                closed_manifest,
+                len(body_bytes),
+            )
             validate_body_bytes(staged_body.read_bytes(), profile=self.profile)
             self._receipt(
                 journal_dir,
                 txid,
                 JournalState.BODY_VALIDATED,
+                body_digest,
+                None,
+                closed_manifest,
+                len(body_bytes),
+            )
+            self._receipt(
+                journal_dir,
+                txid,
+                JournalState.BODY_DIGESTED,
                 body_digest,
                 None,
                 closed_manifest,
@@ -110,6 +130,33 @@ class ImmutableBodyTransaction:
             )
             staged_manifest = journal_dir / "manifest.tmp"
             self._atomic_write(staged_manifest, expected_manifest_bytes)
+            self._receipt(
+                journal_dir,
+                txid,
+                JournalState.MANIFEST_PROVISIONAL,
+                body_digest,
+                None,
+                closed_manifest,
+                len(body_bytes),
+            )
+            self._receipt(
+                journal_dir,
+                txid,
+                JournalState.LINKAGE_FINALIZED,
+                body_digest,
+                None,
+                closed_manifest,
+                len(body_bytes),
+            )
+            self._receipt(
+                journal_dir,
+                txid,
+                JournalState.MANIFEST_VALIDATED,
+                body_digest,
+                None,
+                closed_manifest,
+                len(body_bytes),
+            )
             self._atomic_write(manifest_path, expected_manifest_bytes)
             manifest_digest = hashlib.sha256(expected_manifest_bytes).digest()
             self._receipt(
@@ -124,12 +171,32 @@ class ImmutableBodyTransaction:
             self._receipt(
                 journal_dir,
                 txid,
+                JournalState.INVENTORY_COMMITTED,
+                body_digest,
+                manifest_digest,
+                closed_manifest,
+                len(body_bytes),
+            )
+            self._receipt(
+                journal_dir,
+                txid,
+                JournalState.PACKAGE_VALIDATED,
+                body_digest,
+                manifest_digest,
+                closed_manifest,
+                len(body_bytes),
+            )
+            self._receipt(
+                journal_dir,
+                txid,
                 JournalState.COMMITTED,
                 body_digest,
                 manifest_digest,
                 closed_manifest,
                 len(body_bytes),
             )
+            staged_body.unlink(missing_ok=True)
+            staged_manifest.unlink(missing_ok=True)
             return body_path, manifest_path
         finally:
             self._release(lock_path)
@@ -141,11 +208,18 @@ class ImmutableBodyTransaction:
         for path in sorted(tx_root.iterdir()):
             if path.name.endswith(".lock") or not path.is_dir():
                 continue
-            receipts = sorted(path.glob("receipt-*.bin"))
+            receipts = sorted(path.glob("receipt-*.json"))
+            states = []
+            for receipt in receipts:
+                try:
+                    states.append(int(json.loads(receipt.read_text())["state"]))
+                except (OSError, ValueError, KeyError):
+                    states.append(None)
             results.append(
                 {
                     "transaction_id": path.name,
                     "receipt_count": len(receipts),
+                    "states": states,
                     "staging": path.name,
                 }
             )
@@ -165,7 +239,7 @@ class ImmutableBodyTransaction:
         receipt: dict[str, Any] = {
             "transaction_id": txid,
             "schema_version": "radjax_contract_m8g_v1",
-            "profile_code": 3,
+            "profile_code": PROFILE_NAMES[manifest["profile"]],
             "state": int(state),
             "parent_transaction_id": None,
             "body_path": f"bodies/{body_digest.hex()}.body"
@@ -195,6 +269,14 @@ class ImmutableBodyTransaction:
         validate_receipt(receipt)
         self._atomic_write(
             directory / f"receipt-{int(state):02d}.bin", _m8g_fv3(receipt)
+        )
+        serializable = {
+            key: value.hex() if isinstance(value, bytes) else value
+            for key, value in receipt.items()
+        }
+        self._atomic_write(
+            directory / f"receipt-{int(state):02d}.json",
+            json.dumps(serializable, sort_keys=True).encode("utf-8"),
         )
 
     @staticmethod

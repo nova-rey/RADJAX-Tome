@@ -3341,3 +3341,10 @@ checks. The manifest remains the semantic commit point.
 
 Transaction roots and target parents now walk existing components with lstat
 and reject symlink substitution before staging or promotion.
+
+2026-08-16 — M8G contiguous journal-state correction
+
+Receipts now record every Contract journal state from generation through
+commit, including manifest validation, inventory binding, and package
+validation. Recovery reports persisted state sequences and committed runs
+remove private temporary body and manifest files.

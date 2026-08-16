@@ -55,6 +55,9 @@ def test_body_then_manifest_are_atomic(tmp_path: Path) -> None:
     )
     assert body_path.is_file()
     assert manifest_path.read_bytes() == _m8g_fv3(manifest)
+    recovery = ImmutableBodyTransaction(tmp_path).recover()
+    assert recovery and recovery[0]["states"] == list(range(1, 13))
+    assert not list((tmp_path / ".transactions").rglob("*.tmp"))
     try:
         ImmutableBodyTransaction(tmp_path).commit(
             body, manifest, canonical_manifest_bytes=b"wrong"
