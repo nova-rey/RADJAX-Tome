@@ -3455,6 +3455,13 @@ mode publishes each logical-K body through the accepted transaction with a
 closed manifest. GPU and CPU reducers share the direct compact evidence shape;
 legacy selected payloads remain unchanged.
 
+2026-08-16 — M8G workload resource hardening
+
+The authoritative bundle no longer declares an unused recovery-anchor root;
+checkpoint and model trees reject symlinked resources during verification, and
+the preparation record identifies the 43-file replay root as the sole
+checkpoint authority.
+
 2026-08-16 — M8G workload validator closure
 
 The workload validator now verifies the complete 43-file checkpoint tree,

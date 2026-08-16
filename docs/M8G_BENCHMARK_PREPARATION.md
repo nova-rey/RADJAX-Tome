@@ -3,8 +3,9 @@
 The exact historical M8 workload has now been recovered from the documented
 retained external artifact and copied to the durable local artifact store
 `/Users/Cooper/Documents/radjax-tome-artifacts/m8b-authority-recovered/`.
-The replay root is the 43-file `verify-checkpoint` tree; the larger anchor and
-model trees are retained beside it for teacher/tokenizer replay. Raw provider
+The replay root is the 43-file `verify-checkpoint` tree; the model tree is
+retained beside it for teacher/tokenizer replay. The larger recovery anchor is
+not part of benchmark bundle authority. Raw provider
 metadata remains outside Git because it contains private path-bearing fields.
 The committed bundle manifest records only stable artifact identifiers,
 relative member paths, and digests.

@@ -107,6 +107,8 @@ def validate(path: Path) -> dict[str, object]:
             for path in replay_root.rglob("*")
             if path.is_file()
         }
+        if any(path.is_symlink() for path in replay_root.rglob("*")):
+            raise ValueError("checkpoint tree contains symlinked resources")
         if actual_checkpoint_files != set(checkpoint_doc["file_digests"]):
             raise ValueError("checkpoint tree has missing or extra files")
         for relative, expected_digest in checkpoint_doc["file_digests"].items():
@@ -310,6 +312,8 @@ def validate(path: Path) -> dict[str, object]:
         actual_model_files = {
             path.name for path in model_root.iterdir() if path.is_file()
         }
+        if any(path.is_symlink() for path in model_root.iterdir()):
+            raise ValueError("model tree contains symlinked resources")
         if actual_model_files != {record["relative_path"] for record in model_records}:
             raise ValueError("model tree has missing or extra files")
         for record in model_records:

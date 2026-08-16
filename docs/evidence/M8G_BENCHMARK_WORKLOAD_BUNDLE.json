@@ -9,8 +9,7 @@
     "retrieval": "Restore the governed external artifact into the local artifact root; do not use mutable latest paths.",
     "artifact_layout": {
       "replay_root": "verify-checkpoint",
-      "model_root": "model",
-      "anchor_root": "checkpoint-anchor"
+      "model_root": "model"
     }
   },
   "normalized_inputs": {
