@@ -3361,3 +3361,9 @@ Atomic publication uses exclusive hard-link promotion to avoid overwrite races.
 Recovery now checks JSON receipts against their binary canonical counterparts,
 binds transaction IDs and promoted body/manifest digests to actual resources,
 and requires committed manifests to appear in the validated inventory.
+
+2026-08-16 — M8G inventory and path-binding correction
+
+Recovery now rejects absolute or escaping receipt paths, validates inventory
+schema and member digests against promoted resources, and preflights existing
+inventory before publication.

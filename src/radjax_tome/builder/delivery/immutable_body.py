@@ -76,6 +76,7 @@ class ImmutableBodyTransaction:
         journal_dir = self.root / ".transactions" / txid
         self._preflight_target(body_path, body_bytes)
         self._preflight_target(manifest_path, expected_manifest_bytes)
+        self._validate_inventory_file()
         self._reserve(lock_path, txid)
         try:
             journal_dir.mkdir(exist_ok=True)
@@ -218,6 +219,10 @@ class ImmutableBodyTransaction:
         inventory: dict[str, Any] = {"schema": "m8g_inventory_v1", "members": {}}
         if inventory_path.exists():
             inventory = json.loads(inventory_path.read_text())
+            if inventory.get("schema") != "m8g_inventory_v1" or not isinstance(
+                inventory.get("members"), dict
+            ):
+                raise ValueError("inventory schema invalid")
         inventory.setdefault("members", {})[manifest_path.name] = {
             "body": body_path.name,
             "body_raw_digest": body_digest.hex(),
@@ -227,6 +232,19 @@ class ImmutableBodyTransaction:
         self._atomic_replace(inventory_path, encoded)
         if json.loads(inventory_path.read_text()) != inventory:
             raise ValueError("inventory binding validation failed")
+
+    def _validate_inventory_file(self) -> None:
+        path = self.root / "inventory.json"
+        if not path.exists():
+            return
+        mode = os.lstat(path).st_mode
+        if stat.S_ISLNK(mode) or not stat.S_ISREG(mode):
+            raise ValueError("inventory path type invalid")
+        inventory = json.loads(path.read_text())
+        if inventory.get("schema") != "m8g_inventory_v1" or not isinstance(
+            inventory.get("members"), dict
+        ):
+            raise ValueError("inventory schema invalid")
 
     def recover(self) -> list[dict[str, Any]]:
         """Validate journal chains and quarantine incomplete transactions."""
@@ -263,7 +281,7 @@ class ImmutableBodyTransaction:
                     if binary.is_symlink() or binary.read_bytes() != _m8g_fv3(decoded):
                         raise ValueError("receipt binary/json mismatch")
                     if decoded["state"] >= int(JournalState.BODY_PROMOTED):
-                        body_file = self.root / str(decoded["body_path"])
+                        body_file = self._owned_relative(decoded["body_path"])
                         if (
                             body_file.is_symlink()
                             or body_raw_digest(body_file.read_bytes())
@@ -271,7 +289,7 @@ class ImmutableBodyTransaction:
                         ):
                             raise ValueError("receipt body binding invalid")
                     if decoded["state"] >= int(JournalState.MANIFEST_PROMOTED):
-                        manifest_file = self.root / str(decoded["manifest_path"])
+                        manifest_file = self._owned_relative(decoded["manifest_path"])
                         if (
                             manifest_file.is_symlink()
                             or hashlib.sha256(manifest_file.read_bytes()).digest()
@@ -287,6 +305,8 @@ class ImmutableBodyTransaction:
             if valid and states == list(range(1, 13)):
                 try:
                     inventory = json.loads((self.root / "inventory.json").read_text())
+                    if inventory.get("schema") != "m8g_inventory_v1":
+                        valid = False
                     manifest_names = {
                         Path(json.loads(item.read_text()).get("manifest_path", "")).name
                         for item in receipts
@@ -297,6 +317,19 @@ class ImmutableBodyTransaction:
                         if name
                     ):
                         valid = False
+                    for item in receipts:
+                        receipt = json.loads(item.read_text())
+                        name = Path(receipt.get("manifest_path", "")).name
+                        member = inventory.get("members", {}).get(name, {})
+                        if (
+                            member.get("body")
+                            != Path(receipt.get("body_path", "")).name
+                            or member.get("body_raw_digest")
+                            != receipt.get("body_raw_digest")
+                            or member.get("manifest_raw_digest")
+                            != receipt.get("manifest_raw_digest")
+                        ):
+                            valid = False
                 except (OSError, ValueError, TypeError):
                     valid = False
             if valid and states == list(range(1, 13)):
@@ -370,6 +403,20 @@ class ImmutableBodyTransaction:
             directory / f"receipt-{int(state):02d}.json",
             json.dumps(serializable, sort_keys=True).encode("utf-8"),
         )
+
+    def _owned_relative(self, value: Any) -> Path:
+        if (
+            not isinstance(value, str)
+            or not value
+            or Path(value).is_absolute()
+            or ".." in Path(value).parts
+        ):
+            raise ValueError("receipt path escapes transaction root")
+        candidate = self.root / value
+        self._reject_symlink_chain(candidate.parent)
+        if candidate.is_symlink():
+            raise ValueError("receipt resource symlink rejected")
+        return candidate
 
     @staticmethod
     def _reject_symlink(path: Path) -> None:
