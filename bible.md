@@ -3485,3 +3485,9 @@ The validator now rejects extra or missing checkpoint/model files, duplicate
 model manifest entries, and normalized weight/config identity drift. The
 bundle remains an external-byte artifact with a path-independent committed
 manifest.
+
+2026-08-16 — M8G direct compact mode authority
+
+Explicit compact representation modes now control the CPU dynamic materializer
+without requiring an incidental selected-source metadata flag; corridor and
+score-pass paths retain their governed legacy materialization behavior.
