@@ -3348,3 +3348,10 @@ Receipts now record every Contract journal state from generation through
 commit, including manifest validation, inventory binding, and package
 validation. Recovery reports persisted state sequences and committed runs
 remove private temporary body and manifest files.
+
+2026-08-16 — M8G receipt-chain recovery correction
+
+Recovery now reconstructs receipt fields, validates each receipt through the
+Contract validator, enforces contiguous state numbering, rejects symlinked
+transaction entries, and quarantines malformed or incomplete journals.
+Atomic publication uses exclusive hard-link promotion to avoid overwrite races.

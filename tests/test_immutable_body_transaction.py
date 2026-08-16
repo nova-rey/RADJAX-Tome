@@ -58,6 +58,11 @@ def test_body_then_manifest_are_atomic(tmp_path: Path) -> None:
     recovery = ImmutableBodyTransaction(tmp_path).recover()
     assert recovery and recovery[0]["states"] == list(range(1, 13))
     assert not list((tmp_path / ".transactions").rglob("*.tmp"))
+    orphan = tmp_path / ".transactions" / "orphan"
+    orphan.mkdir()
+    (orphan / "receipt-01.json").write_text('{"state": 1}')
+    orphan_result = ImmutableBodyTransaction(tmp_path).recover()
+    assert any(item["status"] == "quarantined" for item in orphan_result)
     try:
         ImmutableBodyTransaction(tmp_path).commit(
             body, manifest, canonical_manifest_bytes=b"wrong"

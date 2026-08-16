@@ -202,24 +202,50 @@ class ImmutableBodyTransaction:
             self._release(lock_path)
 
     def recover(self) -> list[dict[str, Any]]:
-        """Return deterministic orphan diagnostics without deleting evidence."""
+        """Validate journal chains and quarantine incomplete transactions."""
         results = []
         tx_root = self.root / ".transactions"
         for path in sorted(tx_root.iterdir()):
-            if path.name.endswith(".lock") or not path.is_dir():
+            if path.name.endswith(".lock") or path.name.startswith(".quarantine-"):
                 continue
+            mode = os.lstat(path).st_mode
+            if stat.S_ISLNK(mode) or not stat.S_ISDIR(mode):
+                raise ValueError("symlink or non-directory transaction entry")
             receipts = sorted(path.glob("receipt-*.json"))
             states = []
+            valid = True
             for receipt in receipts:
                 try:
-                    states.append(int(json.loads(receipt.read_text())["state"]))
-                except (OSError, ValueError, KeyError):
+                    decoded = json.loads(receipt.read_text())
+                    for key in (
+                        "body_raw_digest",
+                        "manifest_raw_digest",
+                        "configuration_identity",
+                        "semantic_authority_identity",
+                        "receipt_digest",
+                    ):
+                        if isinstance(decoded.get(key), str) and decoded[key]:
+                            decoded[key] = bytes.fromhex(decoded[key])
+                    validate_receipt(decoded)
+                    states.append(int(decoded["state"]))
+                except (OSError, ValueError, KeyError, TypeError):
+                    valid = False
                     states.append(None)
+            if states != list(range(1, len(states) + 1)):
+                valid = False
+            if valid and states == list(range(1, 13)):
+                status = "committed"
+            else:
+                quarantine = tx_root / f".quarantine-{path.name}"
+                if not quarantine.exists():
+                    os.replace(path, quarantine)
+                status = "quarantined"
             results.append(
                 {
                     "transaction_id": path.name,
                     "receipt_count": len(receipts),
                     "states": states,
+                    "status": status,
                     "staging": path.name,
                 }
             )
@@ -334,7 +360,12 @@ class ImmutableBodyTransaction:
                 handle.write(data)
                 handle.flush()
                 os.fsync(handle.fileno())
-            os.replace(temporary, path)
+            try:
+                os.link(temporary, path)
+            except FileExistsError:
+                ImmutableBodyTransaction._preflight_target(path, data)
+            else:
+                os.unlink(temporary)
             directory_fd = os.open(path.parent, os.O_RDONLY)
             try:
                 os.fsync(directory_fd)
