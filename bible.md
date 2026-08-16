@@ -3318,3 +3318,9 @@ Added an opt-in transaction writer that validates and atomically promotes a
 compact immutable body before committing a separate manifest. Legacy staging
 and payload defaults remain unchanged; no Contract or Student runtime code
 was modified.
+
+2026-08-16 — M8G manifest-byte binding correction
+
+The immutable transaction now derives the canonical closed manifest encoding
+and rejects caller-supplied bytes that do not exactly match the validated
+manifest identity.

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from radjax_contract.tome.m8g import (
+    _m8g_fv3,
     body_raw_digest,
     encode_compact_body,
     manifest_semantic_id,
@@ -50,7 +51,15 @@ def test_body_then_manifest_are_atomic(tmp_path: Path) -> None:
     }
     manifest["manifest_semantic_id"] = manifest_semantic_id(manifest)
     body_path, manifest_path = ImmutableBodyTransaction(tmp_path).commit(
-        body, manifest, canonical_manifest_bytes=b"manifest-v1"
+        body, manifest, canonical_manifest_bytes=_m8g_fv3(manifest)
     )
     assert body_path.is_file()
-    assert manifest_path.read_bytes() == b"manifest-v1"
+    assert manifest_path.read_bytes() == _m8g_fv3(manifest)
+    try:
+        ImmutableBodyTransaction(tmp_path).commit(
+            body, manifest, canonical_manifest_bytes=b"wrong"
+        )
+    except ValueError as exc:
+        assert "manifest bytes" in str(exc)
+    else:
+        raise AssertionError("mismatched manifest bytes were accepted")

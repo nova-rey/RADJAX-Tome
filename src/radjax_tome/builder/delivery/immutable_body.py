@@ -15,6 +15,7 @@ from typing import Any
 
 from radjax_contract.tome.m8g import (
     CompactBody,
+    _m8g_fv3,
     body_raw_digest,
     encode_compact_body,
     validate_body_bytes,
@@ -48,7 +49,10 @@ class ImmutableBodyTransaction:
         self._atomic_write(body_path, body_bytes)
         # Manifest bytes are canonical JSON only after the Contract validates
         # the closed record; callers provide the canonical serialized envelope.
-        self._atomic_write(manifest_path, canonical_manifest_bytes)
+        expected_manifest_bytes = _m8g_fv3(dict(manifest))
+        if canonical_manifest_bytes != expected_manifest_bytes:
+            raise ValueError("manifest bytes do not match validated manifest")
+        self._atomic_write(manifest_path, expected_manifest_bytes)
         return body_path, manifest_path
 
     @staticmethod
