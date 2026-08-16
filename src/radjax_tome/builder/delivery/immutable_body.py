@@ -310,6 +310,7 @@ class ImmutableBodyTransaction:
                     manifest_names = {
                         Path(json.loads(item.read_text()).get("manifest_path", "")).name
                         for item in receipts
+                        if json.loads(item.read_text()).get("manifest_path")
                     }
                     if not all(
                         name in inventory.get("members", {})
@@ -319,15 +320,25 @@ class ImmutableBodyTransaction:
                         valid = False
                     for item in receipts:
                         receipt = json.loads(item.read_text())
+                        if receipt.get("state", 0) < int(
+                            JournalState.MANIFEST_PROMOTED
+                        ):
+                            continue
                         name = Path(receipt.get("manifest_path", "")).name
                         member = inventory.get("members", {}).get(name, {})
+                        body_digest_text = receipt.get("body_raw_digest")
+                        manifest_digest_text = receipt.get("manifest_raw_digest")
+                        if isinstance(body_digest_text, bytes):
+                            body_digest_text = body_digest_text.hex()
+                        if isinstance(manifest_digest_text, bytes):
+                            manifest_digest_text = manifest_digest_text.hex()
                         if (
-                            member.get("body")
+                            set(member)
+                            != {"body", "body_raw_digest", "manifest_raw_digest"}
+                            or member.get("body")
                             != Path(receipt.get("body_path", "")).name
-                            or member.get("body_raw_digest")
-                            != receipt.get("body_raw_digest")
-                            or member.get("manifest_raw_digest")
-                            != receipt.get("manifest_raw_digest")
+                            or member.get("body_raw_digest") != body_digest_text
+                            or member.get("manifest_raw_digest") != manifest_digest_text
                         ):
                             valid = False
                 except (OSError, ValueError, TypeError):

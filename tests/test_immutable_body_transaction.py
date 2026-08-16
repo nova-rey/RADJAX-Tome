@@ -57,6 +57,7 @@ def test_body_then_manifest_are_atomic(tmp_path: Path) -> None:
     assert manifest_path.read_bytes() == _m8g_fv3(manifest)
     recovery = ImmutableBodyTransaction(tmp_path).recover()
     assert recovery and recovery[0]["states"] == list(range(1, 13))
+    assert recovery[0]["status"] == "committed"
     assert not list((tmp_path / ".transactions").rglob("*.tmp"))
     orphan = tmp_path / ".transactions" / "orphan"
     orphan.mkdir()

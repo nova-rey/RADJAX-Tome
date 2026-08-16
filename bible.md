@@ -3367,3 +3367,9 @@ and requires committed manifests to appear in the validated inventory.
 Recovery now rejects absolute or escaping receipt paths, validates inventory
 schema and member digests against promoted resources, and preflights existing
 inventory before publication.
+
+2026-08-16 — M8G committed-recovery state filtering correction
+
+Inventory reconciliation now applies only to receipt states that have a
+manifest path, avoiding false quarantine from earlier body-only states while
+retaining strict digest and member checks for committed resources.
