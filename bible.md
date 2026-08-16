@@ -3329,3 +3329,10 @@ manifest identity.
 
 Manifest canonical-byte and body-binding checks now complete before any body
 promotion, preventing failed transactions from publishing orphan bodies.
+
+2026-08-16 — M8G journaled reservation and recovery correction
+
+Added transaction-private reservations, Contract receipt emission at durable
+body/manifest states, content-addressed body reuse, private staging, no-follow
+symlink rejection, deterministic orphan diagnostics, and preflight conflict
+checks. The manifest remains the semantic commit point.

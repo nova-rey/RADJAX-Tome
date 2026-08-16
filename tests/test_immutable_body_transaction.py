@@ -65,11 +65,8 @@ def test_body_then_manifest_are_atomic(tmp_path: Path) -> None:
         raise AssertionError("mismatched manifest bytes were accepted")
     manifest["selected_position"] = 1
     manifest["manifest_semantic_id"] = manifest_semantic_id(manifest)
-    try:
-        ImmutableBodyTransaction(tmp_path).commit(
-            body, manifest, canonical_manifest_bytes=_m8g_fv3(manifest)
-        )
-    except ValueError as exc:
-        assert "immutable resource conflict" in str(exc)
-    else:
-        raise AssertionError("immutable body was overwritten")
+    body_path_2, manifest_path_2 = ImmutableBodyTransaction(tmp_path).commit(
+        body, manifest, canonical_manifest_bytes=_m8g_fv3(manifest)
+    )
+    assert body_path_2 == body_path
+    assert manifest_path_2 != manifest_path
