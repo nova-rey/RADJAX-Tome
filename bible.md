@@ -3368,6 +3368,13 @@ Recovery now rejects absolute or escaping receipt paths, validates inventory
 schema and member digests against promoted resources, and preflights existing
 inventory before publication.
 
+2026-08-16 — M8G partial-state resume correction
+
+Valid journals before manifest promotion now reconstruct and validate the
+staged manifest, reuse the promoted body, complete manifest promotion,
+inventory binding, and remaining Contract receipts. Pre-body partial journals
+return to a clean restart state instead of being quarantined.
+
 2026-08-16 — M8G committed-recovery state filtering correction
 
 Inventory reconciliation now applies only to receipt states that have a

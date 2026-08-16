@@ -20,6 +20,7 @@ from radjax_contract.tome.m8g import (
     PROFILE_NAMES,
     CompactBody,
     JournalState,
+    _decode_fv3,
     _digest,
     _m8g_fv3,
     body_raw_digest,
@@ -302,6 +303,36 @@ class ImmutableBodyTransaction:
                     states.append(None)
             if states != list(range(1, len(states) + 1)):
                 valid = False
+            if valid and states and states[-1] < int(JournalState.BODY_PROMOTED):
+                for temporary in path.glob("*.tmp"):
+                    if not temporary.is_symlink():
+                        temporary.unlink()
+                self._release(tx_root / f"{path.name}.lock")
+                results.append(
+                    {
+                        "transaction_id": path.name,
+                        "receipt_count": len(receipts),
+                        "states": states,
+                        "status": "restart_ready",
+                        "staging": path.name,
+                    }
+                )
+                continue
+            if valid and states and states[-1] < int(JournalState.MANIFEST_PROMOTED):
+                try:
+                    self._resume_manifest(path, receipts, states[-1])
+                    results.append(
+                        {
+                            "transaction_id": path.name,
+                            "receipt_count": 12,
+                            "states": list(range(1, 13)),
+                            "status": "resumed",
+                            "staging": path.name,
+                        }
+                    )
+                    continue
+                except (OSError, ValueError, KeyError, TypeError):
+                    valid = False
             if valid and states == list(range(1, 13)):
                 try:
                     inventory = json.loads((self.root / "inventory.json").read_text())
@@ -360,6 +391,82 @@ class ImmutableBodyTransaction:
                 }
             )
         return results
+
+    def _resume_manifest(
+        self, journal_dir: Path, receipts: list[Path], highest: int
+    ) -> None:
+        latest = json.loads(receipts[-1].read_text())
+        body_path = self._owned_relative(latest["body_path"])
+        body = validate_body_bytes(body_path.read_bytes(), profile=self.profile)
+        staged = journal_dir / "manifest.tmp"
+        self._reject_symlink(staged)
+        manifest_bytes = staged.read_bytes()
+        decoded, end = _decode_fv3(manifest_bytes, 0)
+        if end != len(manifest_bytes) or not isinstance(decoded, Mapping):
+            raise ValueError("staged manifest decode invalid")
+        manifest = dict(decoded)
+        validate_manifest(manifest, body)
+        target = (
+            self.root
+            / "manifests"
+            / f"{manifest['manifest_semantic_id'].hex()}.manifest"
+        )
+        self._preflight_target(target, manifest_bytes)
+        self._atomic_write(target, manifest_bytes)
+        body_digest = body_raw_digest(body_path.read_bytes())
+        manifest_digest = hashlib.sha256(manifest_bytes).digest()
+        txid = latest["transaction_id"]
+        for state in JournalState:
+            if (
+                state <= JournalState.MANIFEST_PROMOTED
+                or state <= JournalState.COMMITTED
+            ):
+                if int(state) <= highest:
+                    continue
+                if state == JournalState.MANIFEST_PROMOTED:
+                    self._receipt(
+                        journal_dir,
+                        txid,
+                        state,
+                        body_digest,
+                        manifest_digest,
+                        manifest,
+                        len(body_path.read_bytes()),
+                    )
+                    self._bind_inventory(
+                        body_path, target, body_digest, manifest_digest
+                    )
+                elif state == JournalState.INVENTORY_COMMITTED:
+                    self._receipt(
+                        journal_dir,
+                        txid,
+                        state,
+                        body_digest,
+                        manifest_digest,
+                        manifest,
+                        len(body_path.read_bytes()),
+                    )
+                elif state == JournalState.PACKAGE_VALIDATED:
+                    self._receipt(
+                        journal_dir,
+                        txid,
+                        state,
+                        body_digest,
+                        manifest_digest,
+                        manifest,
+                        len(body_path.read_bytes()),
+                    )
+                elif state == JournalState.COMMITTED:
+                    self._receipt(
+                        journal_dir,
+                        txid,
+                        state,
+                        body_digest,
+                        manifest_digest,
+                        manifest,
+                        len(body_path.read_bytes()),
+                    )
+        staged.unlink(missing_ok=True)
 
     def _receipt(
         self,
