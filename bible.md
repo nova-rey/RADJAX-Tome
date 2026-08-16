@@ -3311,3 +3311,10 @@ Added the opt-in Tome adapter that projects one legacy padded selected
 exemplar payload into the coordinated Contract compact body resource. The
 legacy padded path remains the default; logical K, ordering, mass, and CSL are
 unchanged.
+
+2026-08-16 — M8G immutable body transaction adapter
+
+Added an opt-in transaction writer that validates and atomically promotes a
+compact immutable body before committing a separate manifest. Legacy staging
+and payload defaults remain unchanged; no Contract or Student runtime code
+was modified.
