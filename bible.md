@@ -3429,3 +3429,12 @@ Added the blocker-resolution table mapping partial-state recovery, receipt
 authority, archive conflict handling, configuration binding, and fault tests
 to their implementation and evidence. The opt-in M8G resource archive is
 explicitly distinguished from the full canonical Tome producer package.
+
+2026-08-16 — M8G workload authority recovery
+
+The historical M8 replay authority was recovered from the documented retained
+external artifact, copied to the durable local artifact store, and verified as
+the 43-file verify-checkpoint root with 213 selected sources, 256 coordinates,
+matching checkpoint/authority/corpus/model/tokenizer digests, and complete
+source-passport coverage. A path-independent bundle manifest and byte-level
+validator were added; raw provider metadata and binaries remain outside Git.

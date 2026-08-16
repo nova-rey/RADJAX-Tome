@@ -1,0 +1,26 @@
+{
+  "schema_version": "m8g_mode_integration_blocker_v1",
+  "tome_commit": "18d6cba94eef7fba669cc1384bf4e628a774aaf1",
+  "contract_commit": "f01b6bc50189058983c0e835b2181f3874bfbe09",
+  "canonical_call_graph": [
+    "run_selected_delivery_rerun",
+    "_selected_payloads_from_backend",
+    "TeacherEmissionBackend.emit_batch",
+    "_selected_payload_from_emission",
+    "finalize_selected_delivery_corridor",
+    "assemble_selected_delivery_artifacts"
+  ],
+  "observed_current_behavior": {
+    "backend_selected_evidence": "rectangular padded arrays and vocabulary-width selection mask",
+    "compact_adapter": "standalone migration/fixture adapter only",
+    "immutable_transaction": "standalone helper not invoked by canonical rerun/assembly",
+    "canonical_package": "requires complete producer artifact and cover; no compact monolithic M8G profile"
+  },
+  "required_boundary_changes": [
+    "mode-bound logical selected-exemplar evidence emission before physical allocation",
+    "variable-length compact backend output for selected-source rerun",
+    "typed materialization strategy/sink and resume authority",
+    "Contract/package profile decision for compact monolithic resources"
+  ],
+  "benchmark": "not_run"
+}

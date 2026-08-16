@@ -1,0 +1,56 @@
+{
+  "schema_version": "m8g_benchmark_workload_bundle_v1",
+  "provenance": {
+    "status": "HISTORICAL_M8_WORKLOAD_RECOVERED",
+    "source_kind": "retained_external_provider_artifact",
+    "provider": "Lightning Studio historical artifact recovery only",
+    "benchmark_provider": "Modal Tesla T4",
+    "source_artifact_id": "radjax-tome-1/radjax_m8b_checkpoint_31b94ad",
+    "retrieval": "Restore the governed external artifact into the local artifact root; do not use mutable latest paths.",
+    "artifact_layout": {
+      "replay_root": "verify-checkpoint",
+      "model_root": "model",
+      "anchor_root": "checkpoint-anchor"
+    }
+  },
+  "normalized_inputs": {
+    "checkpoint_digest": "sha256:a850ad85f3a0ca95a000dda239ff7f46296de7b411fe5db20b844bfa78ad6e12",
+    "checkpoint_manifest_sha256": "sha256:0ea34090bf7b2e6331644d2eaa57b738c771ca48e62dc76527878a6b9b915a39",
+    "authority_hash": "sha256:e000f5b79c7c8d8f7b59de5f33964bef04a4340f21f216aef0933895b69482bf",
+    "selected_record_digest": "sha256:e471535e04db268c3fd852bc5b8dc746bfc4ef26a29baca75f17652262fca3a0",
+    "corpus_hash": "sha256:518a5213981de49f52fd3e18a880d73aee31eec86eb6dedaf8b39a3c6f7ab878",
+    "sequence_length": 128,
+    "vocab_size": 262144,
+    "teacher": "Gemma 3 270M",
+    "model_directory_hash": "sha256:77c344d305f916b3201311543888f5a95705c3e34de72f62610b9e47afb833d6",
+    "weights_hash": "sha256:e68ec3300bde8aec6fb868b42a6b8ddfdef677a7c38dd279a639278a8b94a46b",
+    "tokenizer_hash": "sha256:29aa73c8a911e1f39dddb0200fe8f4817fd369b8c0ce4f25aec6f1157e22690b"
+  },
+  "selected_sources": {
+    "count": 213,
+    "ordered_manifest": "verify-checkpoint/c6/multi-role-selection/selected_exemplars.jsonl",
+    "source_passports": "verify-checkpoint/c6/source-passports.jsonl",
+    "source_passports_sha256": "sha256:b23bc3d9dbfb9845a77efab3819e99c7d410b8243153d1ba81120adf3987226b"
+  },
+  "selected_coordinates": {
+    "count": 256,
+    "ordered_manifest": "verify-checkpoint/c6/claims/selected_coordinates.jsonl",
+    "manifest_sha256": "sha256:d29e9f5642a808e5a439ec21beadbfc3793c2c2c6f14467fe3c1a8447784c5cb"
+  },
+  "authorities": {
+    "contract_commit": "f01b6bc50189058983c0e835b2181f3874bfbe09",
+    "tome_commit": "18d6cba94eef7fba669cc1384bf4e628a774aaf1",
+    "selection_authority": "sha256:e000f5b79c7c8d8f7b59de5f33964bef04a4340f21f216aef0933895b69482bf",
+    "corpus_manifest_sha256": "sha256:958c9383946e24a8b2fbb2ff849b6221ceb6ce76dc76527878a6b9b915a39"
+  },
+  "expected_counts": {
+    "selected_sources": 213,
+    "selected_coordinates": 256
+  },
+  "replay_policy": {
+    "requested_batch_size": 8,
+    "batching": "fixed_source_count",
+    "oom_fallback": "halving_only",
+    "length_bucketing": false
+  }
+}

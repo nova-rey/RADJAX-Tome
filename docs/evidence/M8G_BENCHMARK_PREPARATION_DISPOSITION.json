@@ -1,0 +1,35 @@
+{
+  "schema_version": "m8g_benchmark_preparation_disposition_v1",
+  "provenance_status": "HISTORICAL_M8_WORKLOAD_RECOVERED",
+  "tome_commit": "18d6cba94eef7fba669cc1384bf4e628a774aaf1",
+  "contract_commit": "f01b6bc50189058983c0e835b2181f3874bfbe09",
+  "historical_authority": {
+    "selected_sources": 213,
+    "selected_coordinates": 256,
+    "checkpoint_digest": "sha256:a850ad85f3a0ca95a000dda239ff7f46296de7b411fe5db20b844bfa78ad6e12",
+    "checkpoint_manifest_sha256": "sha256:0ea34090bf7b2e6331644d2eaa57b738c771ca48e62dc76527878a6b9b915a39",
+    "authority_hash": "sha256:e000f5b79c7c8d8f7b59de5f33964bef04a4340f21f216aef0933895b69482bf",
+    "selected_record_digest": "sha256:e471535e04db268c3fd852bc5b8dc746bfc4ef26a29baca75f17652262fca3a0"
+  },
+  "checked_sources": [
+    "committed M8A/M8B/M8C/M8D reports and environment records",
+    "git history, branches, and tags",
+    "local RADJAX checkouts, fixtures, and governed caches",
+    "Modal volumes radjax-m8b-evidence and radjax-m8c-evidence",
+    "source-passport and selected-coordinate fixtures"
+  ],
+  "missing_authority": [],
+  "recovered_authority": [
+    "ordered historical selected-source identities and source payloads",
+    "43-file verify-checkpoint replay root",
+    "teacher model and tokenizer files",
+    "corpus revision/content and model provenance bundle"
+  ],
+  "mode_integration_blockers": [
+    "canonical backend emits padded rectangular selected evidence before delivery extraction",
+    "compact adapter and immutable transaction are standalone and not invoked by canonical rerun",
+    "Contract defines compact body resources but no canonical monolithic compact package profile"
+  ],
+  "benchmark_run": "not_started",
+  "modal_gpu": "not_provisioned"
+}
