@@ -3380,3 +3380,13 @@ return to a clean restart state instead of being quarantined.
 Inventory reconciliation now applies only to receipt states that have a
 manifest path, avoiding false quarantine from earlier body-only states while
 retaining strict digest and member checks for committed resources.
+
+2026-08-16 — M8G recovery and package-boundary correction
+
+Manifest preflight is now persisted before body publication so a valid
+BODY_PROMOTED crash can resume. Recovery repairs valid post-manifest states
+through inventory and deterministic transaction-archive validation, while
+binary receipts remain authoritative and missing JSON mirrors are regenerated.
+The opt-in transaction archive contains only validated committed resources;
+fault boundaries and structured recovery assessment/plan surfaces are exposed
+for controlled interruption tests.

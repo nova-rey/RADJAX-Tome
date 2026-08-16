@@ -11,8 +11,10 @@ import hashlib
 import json
 import os
 import stat
+import tarfile
 import tempfile
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -31,12 +33,44 @@ from radjax_contract.tome.m8g import (
 )
 
 
+@dataclass(frozen=True)
+class RecoveryAssessment:
+    transaction_id: str
+    states: tuple[int, ...]
+    classification: str
+    proposed_action: str
+    findings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class RecoveryPlan:
+    transaction_id: str
+    classification: str
+    actions: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class PackageFinalizationResult:
+    package_path: Path
+    package_digest: bytes
+    inventory_digest: bytes
+    member_count: int
+    valid: bool
+
+
 class ImmutableBodyTransaction:
     """Crash-recoverable, race-resistant writer for one selected exemplar."""
 
-    def __init__(self, root: Path, *, profile: str = "producer_evidence") -> None:
+    def __init__(
+        self,
+        root: Path,
+        *,
+        profile: str = "producer_evidence",
+        fault_boundary: str | None = None,
+    ) -> None:
         self.root = Path(root)
         self.profile = profile
+        self.fault_boundary = fault_boundary
         self._reject_symlink_chain(self.root)
         self.root.mkdir(parents=True, exist_ok=True)
         for name in ("bodies", "manifests", ".transactions"):
@@ -80,7 +114,9 @@ class ImmutableBodyTransaction:
         self._validate_inventory_file()
         self._reserve(lock_path, txid)
         try:
+            self._fault("after_reservation")
             journal_dir.mkdir(exist_ok=True)
+            self._fault("after_journal_creation")
             self._receipt(
                 journal_dir,
                 txid,
@@ -91,7 +127,13 @@ class ImmutableBodyTransaction:
                 len(body_bytes),
             )
             staged_body = journal_dir / "body.tmp"
+            # Persist the validated manifest before body publication.  This is
+            # private preflight state, not consumer-visible authority, and makes
+            # BODY_PROMOTED restartable after a crash.
+            staged_manifest = journal_dir / "manifest.tmp"
+            self._atomic_write(staged_manifest, expected_manifest_bytes)
             self._atomic_write(staged_body, body_bytes)
+            self._fault("after_body_write")
             self._receipt(
                 journal_dir,
                 txid,
@@ -102,6 +144,7 @@ class ImmutableBodyTransaction:
                 len(body_bytes),
             )
             validate_body_bytes(staged_body.read_bytes(), profile=self.profile)
+            self._fault("after_body_validation")
             self._receipt(
                 journal_dir,
                 txid,
@@ -121,6 +164,7 @@ class ImmutableBodyTransaction:
                 len(body_bytes),
             )
             self._atomic_write(body_path, body_bytes)
+            self._fault("after_body_publication")
             self._receipt(
                 journal_dir,
                 txid,
@@ -130,8 +174,6 @@ class ImmutableBodyTransaction:
                 closed_manifest,
                 len(body_bytes),
             )
-            staged_manifest = journal_dir / "manifest.tmp"
-            self._atomic_write(staged_manifest, expected_manifest_bytes)
             self._receipt(
                 journal_dir,
                 txid,
@@ -160,6 +202,7 @@ class ImmutableBodyTransaction:
                 len(body_bytes),
             )
             self._atomic_write(manifest_path, expected_manifest_bytes)
+            self._fault("after_manifest_publication")
             manifest_digest = hashlib.sha256(expected_manifest_bytes).digest()
             self._receipt(
                 journal_dir,
@@ -171,6 +214,10 @@ class ImmutableBodyTransaction:
                 len(body_bytes),
             )
             self._bind_inventory(body_path, manifest_path, body_digest, manifest_digest)
+            self._fault("after_inventory_mutation")
+            package = self._finalize_package(body_path, manifest_path)
+            if not package.valid:
+                raise ValueError("package finalization failed")
             self._receipt(
                 journal_dir,
                 txid,
@@ -180,6 +227,7 @@ class ImmutableBodyTransaction:
                 closed_manifest,
                 len(body_bytes),
             )
+            self._fault("after_package_validation")
             self._receipt(
                 journal_dir,
                 txid,
@@ -200,9 +248,61 @@ class ImmutableBodyTransaction:
             )
             staged_body.unlink(missing_ok=True)
             staged_manifest.unlink(missing_ok=True)
+            self._fault("during_cleanup")
             return body_path, manifest_path
         finally:
-            self._release(lock_path)
+            self._release(lock_path, owner=txid)
+
+    def _fault(self, boundary: str) -> None:
+        """Deterministic test-only crash boundary; disabled by default."""
+        if self.fault_boundary == boundary:
+            raise RuntimeError(f"fault injected at {boundary}")
+
+    def _finalize_package(
+        self, body_path: Path, manifest_path: Path
+    ) -> PackageFinalizationResult:
+        """Build and validate the opt-in transaction package boundary.
+
+        This deliberately does not pretend the transaction root is a complete
+        public Tome artifact.  It is a typed, deterministic package of the
+        committed body/manifest pair plus the canonical inventory, suitable for
+        recovery and archive integrity checks before the enclosing Tome package
+        builder consumes it.
+        """
+        inventory_path = self.root / "inventory.json"
+        inventory_bytes = inventory_path.read_bytes()
+        inventory_digest = hashlib.sha256(inventory_bytes).digest()
+        package_dir = self.root / "packages"
+        self._reject_symlink_chain(package_dir)
+        package_dir.mkdir(exist_ok=True)
+        package_path = package_dir / f"{manifest_path.stem}.tgz"
+        temp = package_path.with_name(f".{package_path.name}.tmp")
+        self._reject_symlink(temp)
+        members = [body_path, manifest_path, inventory_path]
+        with tarfile.open(temp, "w:gz", dereference=False) as archive:
+            for member in sorted(members, key=lambda p: p.name):
+                info = archive.gettarinfo(str(member), arcname=member.name)
+                info.mtime = 0
+                with member.open("rb") as handle:
+                    archive.addfile(info, handle)
+        os.replace(temp, package_path)
+        self._fault("after_archive_construction")
+        with tarfile.open(package_path, "r:gz") as archive:
+            names = archive.getnames()
+            expected = {p.name for p in members}
+            if set(names) != expected:
+                raise ValueError("package member inventory mismatch")
+            for name in names:
+                if archive.extractfile(name) is None:
+                    raise ValueError("package member unreadable")
+        self._fault("after_archive_validation")
+        return PackageFinalizationResult(
+            package_path=package_path,
+            package_digest=hashlib.sha256(package_path.read_bytes()).digest(),
+            inventory_digest=inventory_digest,
+            member_count=len(members),
+            valid=True,
+        )
 
     def _bind_inventory(
         self,
@@ -257,9 +357,13 @@ class ImmutableBodyTransaction:
             mode = os.lstat(path).st_mode
             if stat.S_ISLNK(mode) or not stat.S_ISDIR(mode):
                 raise ValueError("symlink or non-directory transaction entry")
-            receipts = sorted(path.glob("receipt-*.json"))
-            states = []
             valid = True
+            try:
+                receipts = self._receipt_json_paths(path)
+            except (OSError, ValueError, TypeError):
+                receipts = sorted(path.glob("receipt-*.json"))
+                valid = False
+            states = []
             for receipt in receipts:
                 try:
                     mode = os.lstat(receipt).st_mode
@@ -318,9 +422,67 @@ class ImmutableBodyTransaction:
                     }
                 )
                 continue
+            if (
+                valid
+                and states
+                and states[-1] == int(JournalState.BODY_PROMOTED)
+                and not (path / "manifest.tmp").exists()
+            ):
+                body_receipt = json.loads(receipts[-1].read_text())
+                body_file = self._owned_relative(body_receipt["body_path"])
+                if self._inventory_references_body(body_file.name):
+                    valid = False
+                elif not body_file.is_symlink():
+                    body_file.unlink(missing_ok=True)
+                if not valid:
+                    quarantine = tx_root / f".quarantine-{path.name}"
+                    if not quarantine.exists():
+                        os.replace(path, quarantine)
+                    results.append(
+                        {
+                            "transaction_id": path.name,
+                            "receipt_count": len(receipts),
+                            "states": states,
+                            "status": "quarantined",
+                            "staging": path.name,
+                        }
+                    )
+                    continue
+                self._release(tx_root / f"{path.name}.lock")
+                results.append(
+                    {
+                        "transaction_id": path.name,
+                        "receipt_count": len(receipts),
+                        "states": states,
+                        "status": "restart_ready",
+                        "staging": path.name,
+                    }
+                )
+                continue
             if valid and states and states[-1] < int(JournalState.MANIFEST_PROMOTED):
                 try:
                     self._resume_manifest(path, receipts, states[-1])
+                    results.append(
+                        {
+                            "transaction_id": path.name,
+                            "receipt_count": 12,
+                            "states": list(range(1, 13)),
+                            "status": "resumed",
+                            "staging": path.name,
+                        }
+                    )
+                    continue
+                except (OSError, ValueError, KeyError, TypeError):
+                    valid = False
+            if (
+                valid
+                and states
+                and int(JournalState.MANIFEST_PROMOTED)
+                <= states[-1]
+                < int(JournalState.COMMITTED)
+            ):
+                try:
+                    self._resume_inventory(path, receipts)
                     results.append(
                         {
                             "transaction_id": path.name,
@@ -372,6 +534,15 @@ class ImmutableBodyTransaction:
                             or member.get("manifest_raw_digest") != manifest_digest_text
                         ):
                             valid = False
+                    if valid:
+                        for temporary in path.glob("*.tmp"):
+                            if temporary.is_symlink() or not stat.S_ISREG(
+                                os.lstat(temporary).st_mode
+                            ):
+                                valid = False
+                            else:
+                                temporary.unlink()
+                        self._release(tx_root / f"{path.name}.lock", owner=path.name)
                 except (OSError, ValueError, TypeError):
                     valid = False
             if valid and states == list(range(1, 13)):
@@ -387,10 +558,152 @@ class ImmutableBodyTransaction:
                     "receipt_count": len(receipts),
                     "states": states,
                     "status": status,
+                    "cleanup": "complete" if status == "committed" else "not_performed",
                     "staging": path.name,
                 }
             )
         return results
+
+    def inspect(self) -> tuple[RecoveryAssessment, ...]:
+        """Read-only assessment of every private transaction journal."""
+        assessments: list[RecoveryAssessment] = []
+        for path in sorted((self.root / ".transactions").iterdir()):
+            if path.name.endswith(".lock") or path.name.startswith(".quarantine-"):
+                continue
+            try:
+                receipts = self._receipt_json_paths(path)
+                states = tuple(
+                    int(json.loads(p.read_text())["state"]) for p in receipts
+                )
+                if states == tuple(range(1, 13)):
+                    classification, action = (
+                        "COMPLETE_NEEDS_CLEANUP",
+                        "validate_and_cleanup",
+                    )
+                elif states and states[-1] >= int(JournalState.MANIFEST_PROMOTED):
+                    classification, action = (
+                        "RECOVERABLE_RESUME",
+                        "bind_inventory_and_package",
+                    )
+                elif states:
+                    classification, action = (
+                        "RECOVERABLE_RESTART",
+                        "clean_private_stage_and_restart",
+                    )
+                else:
+                    classification, action = "ACTIVE_PARTIAL", "restart"
+                assessments.append(
+                    RecoveryAssessment(path.name, states, classification, action)
+                )
+            except (OSError, ValueError, TypeError):
+                assessments.append(
+                    RecoveryAssessment(path.name, (), "CORRUPT", "quarantine")
+                )
+        return tuple(assessments)
+
+    def plan(self, assessment: RecoveryAssessment) -> RecoveryPlan:
+        actions = {
+            "RECOVERABLE_RESTART": (
+                "validate_ownership",
+                "remove_private_partials",
+                "restart_transaction",
+            ),
+            "RECOVERABLE_RESUME": (
+                "validate_body_manifest",
+                "bind_inventory",
+                "finalize_package",
+                "append_receipts",
+            ),
+            "COMPLETE_NEEDS_CLEANUP": (
+                "validate_complete_chain",
+                "remove_private_partials",
+                "release_reservation",
+            ),
+            "CORRUPT": ("quarantine_forensic_copy",),
+        }.get(assessment.classification, ("validate",))
+        return RecoveryPlan(
+            assessment.transaction_id, assessment.classification, actions
+        )
+
+    def _receipt_json_paths(self, journal_dir: Path) -> list[Path]:
+        """Return mirrors after validating binary receipts as authority.
+
+        A missing JSON mirror is regenerated from its binary receipt.  A
+        missing binary receipt is unverifiable and is deliberately left for
+        the caller to quarantine.
+        """
+        paths: list[Path] = []
+        for binary in sorted(journal_dir.glob("receipt-*.bin")):
+            self._reject_symlink(binary)
+            payload = binary.read_bytes()
+            decoded, end = _decode_fv3(payload, 0)
+            if end != len(payload) or not isinstance(decoded, Mapping):
+                raise ValueError("receipt binary decode invalid")
+            mirror = binary.with_suffix(".json")
+            if not mirror.exists():
+                serializable = {
+                    key: value.hex() if isinstance(value, bytes) else value
+                    for key, value in decoded.items()
+                }
+                self._atomic_write(
+                    mirror, json.dumps(serializable, sort_keys=True).encode("utf-8")
+                )
+            paths.append(mirror)
+        json_only = [
+            p
+            for p in journal_dir.glob("receipt-*.json")
+            if not p.with_suffix(".bin").exists()
+        ]
+        if json_only:
+            raise ValueError("receipt binary missing")
+        return paths
+
+    def _resume_inventory(self, journal_dir: Path, receipts: list[Path]) -> None:
+        latest = json.loads(receipts[-1].read_text())
+        body_path = self._owned_relative(latest["body_path"])
+        manifest_path = self._owned_relative(latest["manifest_path"])
+        body = validate_body_bytes(body_path.read_bytes(), profile=self.profile)
+        manifest_bytes = manifest_path.read_bytes()
+        decoded, end = _decode_fv3(manifest_bytes, 0)
+        if end != len(manifest_bytes) or not isinstance(decoded, Mapping):
+            raise ValueError("committed manifest decode invalid")
+        manifest = dict(decoded)
+        validate_manifest(manifest, body)
+        body_digest = body_raw_digest(body_path.read_bytes())
+        manifest_digest = hashlib.sha256(manifest_bytes).digest()
+        self._bind_inventory(body_path, manifest_path, body_digest, manifest_digest)
+        package = self._finalize_package(body_path, manifest_path)
+        if not package.valid:
+            raise ValueError("package finalization failed")
+        txid = latest["transaction_id"]
+        for state in (
+            JournalState.INVENTORY_COMMITTED,
+            JournalState.PACKAGE_VALIDATED,
+            JournalState.COMMITTED,
+        ):
+            if int(state) > int(latest["state"]):
+                self._receipt(
+                    journal_dir,
+                    txid,
+                    state,
+                    body_digest,
+                    manifest_digest,
+                    manifest,
+                    len(body_path.read_bytes()),
+                )
+
+    def _inventory_references_body(self, body_name: str) -> bool:
+        path = self.root / "inventory.json"
+        if not path.exists():
+            return False
+        try:
+            value = json.loads(path.read_text())
+            return any(
+                member.get("body") == body_name
+                for member in value.get("members", {}).values()
+            )
+        except (OSError, ValueError, TypeError, AttributeError):
+            return True
 
     def _resume_manifest(
         self, journal_dir: Path, receipts: list[Path], highest: int
@@ -513,6 +826,7 @@ class ImmutableBodyTransaction:
         self._atomic_write(
             directory / f"receipt-{int(state):02d}.bin", _m8g_fv3(receipt)
         )
+        self._fault(f"after_receipt_{int(state):02d}_binary")
         serializable = {
             key: value.hex() if isinstance(value, bytes) else value
             for key, value in receipt.items()
@@ -521,6 +835,7 @@ class ImmutableBodyTransaction:
             directory / f"receipt-{int(state):02d}.json",
             json.dumps(serializable, sort_keys=True).encode("utf-8"),
         )
+        self._fault(f"after_receipt_{int(state):02d}_json")
 
     def _owned_relative(self, value: Any) -> Path:
         if (
@@ -573,10 +888,14 @@ class ImmutableBodyTransaction:
             os.fsync(handle.fileno())
 
     @staticmethod
-    def _release(path: Path) -> None:
+    def _release(path: Path, *, owner: str | None = None) -> None:
         try:
-            if not stat.S_ISLNK(os.lstat(path).st_mode):
-                path.unlink()
+            mode = os.lstat(path).st_mode
+            if stat.S_ISLNK(mode) or not stat.S_ISREG(mode):
+                return
+            if owner is not None and path.read_text(encoding="utf-8") != owner:
+                return
+            path.unlink()
         except FileNotFoundError:
             return
 
