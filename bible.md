@@ -3491,3 +3491,8 @@ manifest.
 Explicit compact representation modes now control the CPU dynamic materializer
 without requiring an incidental selected-source metadata flag; corridor and
 score-pass paths retain their governed legacy materialization behavior.
+
+2026-08-16 — M8G canonical mode formatting
+
+The canonical mode regression test is formatted and remains part of the
+focused validation gate for explicit legacy and compact backend modes.

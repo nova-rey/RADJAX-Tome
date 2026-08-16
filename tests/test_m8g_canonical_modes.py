@@ -36,13 +36,19 @@ def test_legacy_and_compact_modes_are_explicit() -> None:
     assert "top_selection_mask" not in compact.payload
     assert len(immutable.payload["top_token_ids"][0, 0]) == 38
     assert "top_selection_mask" not in immutable.payload
-    assert compact.payload["top_token_ids"][0, 0].tolist() == immutable.payload[
-        "top_token_ids"
-    ][0, 0].tolist()
+    assert (
+        compact.payload["top_token_ids"][0, 0].tolist()
+        == immutable.payload["top_token_ids"][0, 0].tolist()
+    )
 
 
 def test_invalid_mode_fails_closed() -> None:
-    for mode in (None, LEGACY_PADDED_MONOLITHIC, COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY):
+    for mode in (
+        None,
+        LEGACY_PADDED_MONOLITHIC,
+        COMPACT_K_MONOLITHIC,
+        COMPACT_K_IMMUTABLE_BODY,
+    ):
         assert validate_materialization_mode(mode) in {
             LEGACY_PADDED_MONOLITHIC,
             COMPACT_K_MONOLITHIC,
