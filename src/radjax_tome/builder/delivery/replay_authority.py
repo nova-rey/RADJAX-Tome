@@ -38,6 +38,25 @@ def _sha256(path: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
+def _owned_member_path(root: Path, relative: object) -> Path:
+    if not isinstance(relative, str):
+        raise ValueError("private replay member path must be text")
+    candidate = Path(relative)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        raise ValueError("private replay member path escapes adoption root")
+    path = root / candidate
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError as exc:
+        raise ValueError("private replay member path escapes adoption root") from exc
+    current = root
+    for part in candidate.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError("private replay member path contains a symlink")
+    return path
+
+
 def _replay_identity(
     *, bundle_manifest_sha256: str, checkpoint_digest: str, selected_record_digest: str
 ) -> str:
@@ -153,7 +172,7 @@ def adopt_verified_selection_replay(
         ):
             raise ValueError("private replay adoption conflicts with frozen authority")
         for relative, expected_digest in (prior.get("member_digests") or {}).items():
-            member = adopted_root / relative
+            member = _owned_member_path(adopted_root, relative)
             if (
                 member.is_symlink()
                 or not member.is_file()

@@ -3528,3 +3528,9 @@ configuration tests.
 Verified frozen-selection adoption now occurs before ordinary input and teacher
 preflight. Preflight therefore validates only the private closure-checked
 replay inputs, while ordinary production retains its existing order and guards.
+
+2026-08-16 — M8G adopted-member containment
+
+Idempotent replay adoption validates every metadata-declared member as an
+owned relative regular path before hashing, rejecting traversal and symlink
+substitution without reading outside the private adoption root.

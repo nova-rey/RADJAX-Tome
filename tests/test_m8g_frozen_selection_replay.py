@@ -10,6 +10,7 @@ import pytest
 import radjax_tome.builder.production as production_module
 from radjax_tome.builder.config import normalize_production_build_request
 from radjax_tome.builder.delivery.replay_authority import (
+    _owned_member_path,
     adopt_verified_selection_replay,
 )
 from radjax_tome.builder.production import ProductionBuildConfig
@@ -140,3 +141,11 @@ def test_replay_adoption_precedes_input_preflight(
         "manifest": adopted / "input/corpus_manifest.json",
         "provenance": adopted / "input/teacher_model_provenance.json",
     }
+
+
+@pytest.mark.parametrize("relative", ["../outside", "/outside", "input/../outside"])
+def test_replay_member_path_cannot_escape_adoption_root(
+    tmp_path: Path, relative: str
+) -> None:
+    with pytest.raises(ValueError, match="escapes adoption root"):
+        _owned_member_path(tmp_path, relative)
