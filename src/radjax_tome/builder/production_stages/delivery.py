@@ -45,6 +45,10 @@ def backend_config(config: Any) -> TeacherBackendConfig:
         fallback_policy="error",
         exemplar_capture_mode=exemplar_capture_mode(config),
         representation_mode=representation_mode,
+        metadata={
+            "representation_mode": representation_mode,
+            "selected_source_replay": True,
+        },
     )
 
 

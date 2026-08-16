@@ -362,8 +362,11 @@ class CPUReferenceTeacherEmissionBackend:
                 dynamic_top_k_max=self.config.dynamic_top_k_max,
                 dynamic_mass_threshold=self.config.dynamic_mass_threshold,
                 num_buckets=self.config.num_buckets,
-                compact=self.config.representation_mode
-                in {"compact_k_monolithic", "compact_k_immutable_body"},
+                compact=(
+                    self.config.representation_mode
+                    in {"compact_k_monolithic", "compact_k_immutable_body"}
+                    and bool(self.config.metadata.get("selected_source_replay"))
+                ),
             )
         if self.config.target_policy == "corridor_exemplar_v1":
             if (
@@ -985,8 +988,11 @@ def _corridor_source_payload(
         dynamic_top_k_max=config.dynamic_top_k_max,
         dynamic_mass_threshold=config.dynamic_mass_threshold,
         num_buckets=config.num_buckets,
-        compact=config.representation_mode
-        in {"compact_k_monolithic", "compact_k_immutable_body"},
+        compact=(
+            config.representation_mode
+            in {"compact_k_monolithic", "compact_k_immutable_body"}
+            and bool(config.metadata.get("selected_source_replay"))
+        ),
     )
 
 

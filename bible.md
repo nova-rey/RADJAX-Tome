@@ -3447,6 +3447,14 @@ evidence reducers can emit direct variable-length retained arrays for compact
 modes; legacy retains its rectangular mask path. Reports carry requested and
 executed mode plus physical/logical allocation counters.
 
+2026-08-16 — M8G canonical physical publication
+
+Compact selected payloads now omit the legacy vocabulary-width mask at the
+publication boundary, use the explicit compact shard schema, and immutable
+mode publishes each logical-K body through the accepted transaction with a
+closed manifest. GPU and CPU reducers share the direct compact evidence shape;
+legacy selected payloads remain unchanged.
+
 2026-08-16 — M8G workload validator closure
 
 The workload validator now verifies the complete 43-file checkpoint tree,

@@ -286,9 +286,7 @@ def assemble_selected_delivery_artifacts(
         "selected_rerun_batch_count": rerun_metrics.get(
             "selected_rerun_batch_count", 0
         ),
-        "materialization_counters": rerun_metrics.get(
-            "materialization_counters", {}
-        ),
+        "materialization_counters": rerun_metrics.get("materialization_counters", {}),
         "selected_rerun_examples": rerun_metrics.get(
             "selected_rerun_examples", prepared.rerun_selected_example_count
         ),
