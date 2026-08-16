@@ -160,7 +160,10 @@ rejected.
 `2=global`). `selection_obligation_count` must equal the number of tuples;
 no arbitrary metadata map or nested object is admitted.
 
-Identity preimages are domain separated and length-delimited:
+Identity preimages are domain separated and length-delimited. Every domain
+label is encoded as `u16_le(label_byte_count) || ASCII(label_bytes)`; the
+following bytes are the canonical FV3 sequence for the named fields, never
+JSON or a platform-native struct:
 
 * `body_semantic_id = sha256("RDX-BODY-SEM-1" || FV3(body registry))`;
 * `body_raw_digest = sha256("RDX-BODY-RAW-1" || exact body bytes)`;
@@ -172,16 +175,51 @@ Identity preimages are domain separated and length-delimited:
   `RDX-INVENTORY-NODE-1 || left || right`, duplicating the final leaf at odd
   levels. Paths are UTF-8 NFC, slash-separated, relative, and reject `..`.
 
+The package inventory has one leaf for every promoted body and manifest, plus
+one authority leaf and one profile leaf. Role bytes are respectively `body`,
+`manifest`, `authority`, and `profile`; each leaf is
+`label || u32_le(role_len) || role || u32_le(path_len) || path ||
+u32_le(id_len) || identity || u32_le(raw_digest_len) || raw_digest`. Leaves
+are sorted by `(role, path)` UTF-8 bytes. The authority leaf binds
+`selection_authority_id` and the profile leaf binds the header profile code,
+so either change updates the package root without changing body semantics.
+
 Padded and compact records may share a semantic identity only after both are
 projected to the compact active-entry registry and all equivalence invariants
 pass; their raw digests necessarily remain distinct.
 
+The projection is normative: for each position `i`, read the padded mask from
+left to right and copy exactly the entries whose mask bit is `true` into the
+flattened arrays, preserving index order. Require
+`active_count == effective_top_k[i]`, `top_lengths[i] == active_count`, and
+`top_offsets[position_count] == len(top_token_ids) == len(top_probs) ==
+len(top_log_probs)`. The compact record has no mask field: every flattened
+entry is active. `top_mass`, `tail_mass`, and bucket values are copied
+bit-for-bit and retain the padded validator's mass and bucket checks. A mask
+with interspersed inactive entries is compacted in mask order, never by
+slicing a prefix.
+
+Header profile codes are normative: `1` is
+`selected_exemplar_payload_compact_v1/student`, `2` is
+`selected_exemplar_payload_compact_v1/full_debug`, and `3` is
+`selected_exemplar_payload_compact_v1/producer_evidence`. The registry
+`profile` string must equal that mapping; header version, profile code,
+vocabulary, bucket, record, and position counts must agree with the registry.
+
 ### Journal receipt matrix
 
-Each transition receipt has closed fields `transaction_id:string`, `state:u16`,
-`parent_transaction_id`, `body_path`, `manifest_path`, `body_raw_digest`,
-`body_size_bytes`, `manifest_raw_digest`, `committed_next_state`,
-`configuration_identity`, `semantic_authority_identity`, and `receipt_digest`.
+Each transition receipt has this closed ordered tuple: `transaction_id:string`
+(required), `state:u16`, `parent_transaction_id:string|null`,
+`body_path:string|null`, `manifest_path:string|null`,
+`body_raw_digest:bytes32|null`, `body_size_bytes:u64|null`,
+`manifest_raw_digest:bytes32|null`, `committed_next_state:u16|null`,
+`configuration_identity:bytes32`, `semantic_authority_identity:bytes32`, and
+`receipt_digest:bytes32`. Null is encoded as `0x00`; a present value is
+encoded as `0x01` followed by its framed value. State codes are
+`1=BODY_GENERATING`, `2=BODY_WRITTEN`, `3=BODY_VALIDATED`,
+`4=BODY_DIGESTED`, `5=BODY_PROMOTED`, `6=MANIFEST_PROVISIONAL`,
+`7=LINKAGE_FINALIZED`, `8=MANIFEST_VALIDATED`, `9=MANIFEST_PROMOTED`,
+`10=INVENTORY_COMMITTED`, `11=PACKAGE_VALIDATED`, and `12=COMMITTED`.
 Receipt digest is `sha256("RDX-RECEIPT-1" || FV3(all fields except receipt_digest))`.
 The writer fsyncs file contents before atomic rename, fsyncs the containing
 directory after rename, and writes the next receipt before exposing the next
@@ -195,6 +233,15 @@ normative presentation mapping. Strings use `u32_le byte_length || UTF-8 NFC
 bytes`; arrays use `u64_le element_count` and the declared scalar encoding.
 Header CRC32 is CRC-32/ISO-HDLC over all header bytes preceding the CRC field.
 Body and receipt digest preimages exclude their own digest fields.
+
+The restart matrix is normative: interruption before a receipt leaves the
+prior state reusable; `BODY_WRITTEN` temporary files are never reusable;
+`BODY_PROMOTED` is reusable only after digest, schema, authority, and length
+validation; `MANIFEST_PROVISIONAL` is never public; `MANIFEST_PROMOTED`
+requires a validated body reference; `INVENTORY_COMMITTED` requires a complete
+inventory; and only `PACKAGE_VALIDATED` may advance to `COMMITTED`. Missing,
+malformed, or non-contiguous receipts quarantine newer temporary resources and
+resume from the last contiguous receipt.
 
 The next Contract branch must add compact resource framing, compact semantic
 projection, body/manifest resource roles, closed manifest fields, digest-domain

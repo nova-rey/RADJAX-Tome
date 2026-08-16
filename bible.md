@@ -3257,6 +3257,13 @@ explicit role and collision enums and a count field; arbitrary recursive
 objects are not part of the proposed Contract amendment. No Contract or
 production payload code changed.
 
+2026-08-15 — M8G amendment byte-level closure
+
+Expanded the design-only Contract amendment with a normative padded-to-compact
+projection, profile-code mapping, exact domain-label and inventory framing,
+closed receipt field types/state codes, and restart-state matrix. No Contract,
+Student, or Tome payload implementation was started.
+
 2026-08-15 — M8F complete-reserve validator correction
 
 When canonical C2 retains a complete ranked candidate reserve, artifact
