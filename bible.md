@@ -3305,3 +3305,9 @@ behavior and authority surfaces are unchanged.
 Made proposed digest fields uniformly raw 32-byte values, bound schema/profile
 to receipts, enumerated legal state edges, and separated header CRC from the
 payload CRC in the design-only amendment. No Contract implementation began.
+2026-08-16 — M8G compact physical payload adapter
+
+Added the opt-in Tome adapter that projects one legacy padded selected
+exemplar payload into the coordinated Contract compact body resource. The
+legacy padded path remains the default; logical K, ordering, mass, and CSL are
+unchanged.
