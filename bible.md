@@ -3534,3 +3534,12 @@ replay inputs, while ordinary production retains its existing order and guards.
 Idempotent replay adoption validates every metadata-declared member as an
 owned relative regular path before hashing, rejecting traversal and symlink
 substitution without reading outside the private adoption root.
+
+2026-08-20 — M8G portable workload finalization
+
+Added the canonical finalization entry point for completed 1K M8G generation
+evidence, including portable path projection, source-row closure derivation,
+checkpoint and workload authority records, finalization receipts, and the
+Contract pin for the public workload authority API.
+
+Pinned the finalizer to the reviewed Contract workload-authority commit.

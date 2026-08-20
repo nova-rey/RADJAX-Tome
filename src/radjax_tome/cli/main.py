@@ -25,6 +25,7 @@ Recommended commands:
   package-artifact
   validate-package
   corpus
+  finalize-replay-workload
   pack
   unpack
   prove-capabilities
@@ -960,6 +961,18 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     doctor.add_argument("--write-report", type=Path)
     doctor.set_defaults(func=_cmd_doctor)
+
+    finalize = subparsers.add_parser(
+        "finalize-replay-workload",
+        help=(
+            "Finalize a completed M8G generation artifact into a portable "
+            "replay bundle."
+        ),
+    )
+    finalize.add_argument("--generation-root", type=Path, required=True)
+    finalize.add_argument("--generation-input-root", type=Path, required=True)
+    finalize.add_argument("--output", type=Path, required=True)
+    finalize.set_defaults(func=_cmd_finalize_replay_workload)
 
     return parser
 
@@ -2120,6 +2133,20 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         print(line)
     if args.write_report is not None:
         write_runtime_doctor_report(report, args.write_report)
+    return 0
+
+
+def _cmd_finalize_replay_workload(args: argparse.Namespace) -> int:
+    from radjax_tome.workload_finalization import finalize_workload
+
+    try:
+        report = finalize_workload(
+            args.generation_root, args.generation_input_root, args.output
+        )
+    except (OSError, ValueError, TypeError) as exc:
+        print(json.dumps({"status": "fail", "error": str(exc)}, sort_keys=True))
+        return 1
+    print(json.dumps(report, sort_keys=True))
     return 0
 
 
