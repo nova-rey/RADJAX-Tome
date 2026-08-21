@@ -3629,3 +3629,5 @@ closed-record and checkpoint authority validation.
 - M8G v19 replay: publish run-root metadata after preflight output cleanup and before selected delivery.
 
 - M8G v19 replay: regression-test metadata projection idempotence and conflict rejection.
+
+- M8G replay: project the complete score-pass shard closure and canonical C5 delivery records before materialization.

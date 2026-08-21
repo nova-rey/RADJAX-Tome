@@ -271,6 +271,7 @@ def _build_production_gpu_tome_compatibility(
             try:
                 from radjax_tome.builder.delivery.replay_authority import (
                     _publish_replay_metadata,
+                    _publish_replay_shards,
                     adopt_verified_selection_replay,
                 )
 
@@ -322,6 +323,28 @@ def _build_production_gpu_tome_compatibility(
                     source=replay_authority.adopted_root / "input/metadata.json",
                     run_root=config.output_dir,
                     expected_digest=replay_authority.metadata_digest or "",
+                )
+                layout_digest = _publish_replay_shards(
+                    source=replay_authority.adopted_root / "input/shards",
+                    run_root=config.output_dir,
+                )
+                write_json(
+                    config.output_dir / "adoption_report.json",
+                    {
+                        "schema_version": "frozen_selection_replay_adoption_v2",
+                        "status": "pass",
+                        "workload_identity": json.loads(
+                            (config.verified_selection_replay_path / "workload_authority.json").read_text()
+                        ).get("workload_identity"),
+                        "replay_identity": replay_authority.replay_identity,
+                        "adopted_root": str(replay_authority.adopted_root),
+                        "metadata_digest": replay_authority.metadata_digest,
+                        "layout_digest": layout_digest,
+                        "run_root_metadata_path": str(config.output_dir / "metadata.json"),
+                        "run_root_shards_path": str(config.output_dir / "shards"),
+                        "selected_sources": replay_authority.selected_sources,
+                        "selected_coordinates": replay_authority.selected_coordinates,
+                    },
                 )
             if config.preflight_only:
                 report = _production_report(

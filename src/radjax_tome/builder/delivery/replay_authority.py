@@ -81,6 +81,40 @@ def _publish_replay_metadata(*, source: Path, run_root: Path, expected_digest: s
         Path(temporary).unlink(missing_ok=True)
 
 
+def _publish_replay_shards(*, source: Path, run_root: Path) -> str:
+    """Atomically expose the adopted score-pass shard closure at RUN_ROOT."""
+    if not source.is_dir() or source.is_symlink():
+        raise ValueError("frozen replay shard closure is not a regular directory")
+    for path in source.rglob("*"):
+        if path.is_symlink() or (not path.is_file() and not path.is_dir()):
+            raise ValueError("frozen replay shard closure contains unsafe member")
+    destination = run_root / "shards"
+    if destination.exists() or destination.is_symlink():
+        if destination.is_symlink() or not destination.is_dir():
+            raise ValueError("run-root shard destination has the wrong type")
+        source_files = sorted(source.rglob("*.npz"))
+        dest_files = sorted(destination.rglob("*.npz"))
+        if [p.name for p in source_files] != [p.name for p in dest_files]:
+            raise ValueError("run-root shard destination conflicts with authority")
+        for left, right in zip(source_files, dest_files):
+            if _sha256(left) != _sha256(right):
+                raise ValueError("run-root shard destination digest conflict")
+    else:
+        temporary = run_root / ".shards.staging"
+        if temporary.exists():
+            shutil.rmtree(temporary)
+        shutil.copytree(source, temporary, symlinks=False)
+        os.replace(temporary, destination)
+    return "sha256:" + hashlib.sha256(
+        json.dumps(
+            [
+                {"path": p.relative_to(run_root).as_posix(), "sha256": _sha256(p)}
+                for p in sorted(destination.rglob("*")) if p.is_file()
+            ], sort_keys=True, separators=(",", ":")
+        ).encode()
+    ).hexdigest()
+
+
 def _owned_member_path(root: Path, relative: object) -> Path:
     if not isinstance(relative, str):
         raise ValueError("private replay member path must be text")
@@ -226,17 +260,28 @@ def adopt_verified_selection_replay(
         coords = [
             json.loads(x) for x in coord_file.read_text().splitlines() if x.strip()
         ]
-        records = [
+        raw_records = [
             json.loads(x) for x in record_file.read_text().splitlines() if x.strip()
         ]
-        if len(coords) != selected_coordinates or len(records) != selected_sources:
+        if len(coords) != selected_coordinates or len(raw_records) != selected_sources:
             raise ValueError("current replay selection counts mismatch")
         selected_record_digest = (
             "sha256:"
             + hashlib.sha256(
-                json.dumps(records, sort_keys=True, separators=(",", ":")).encode()
+                json.dumps(raw_records, sort_keys=True, separators=(",", ":")).encode()
             ).hexdigest()
         )
+        # Reuse the canonical C5-to-delivery translation used by ordinary
+        # production.  The raw multi-role records keep selection authority;
+        # delivery records bind source_shard_id/source_row to the passport.
+        selected_artifact = load_multi_role_selection_artifact(
+            replay_root / "selection-checkpoint/c6/multi-role-selection"
+        )
+        records = c5_records_for_delivery(
+            selected_artifact, delivery_path="two_pass_rerun_selected"
+        )
+        if len(records) != selected_sources:
+            raise ValueError("current replay delivery record count mismatch")
         checkpoint_digest = str(authority["checkpoint_manifest_digest"])
         bundle_manifest_sha256 = _sha256(bundle_manifest)
         replay_identity = _replay_identity(
@@ -293,6 +338,12 @@ def adopt_verified_selection_replay(
                         f"current replay closure contains symlink: {relative}"
                     )
                 shutil.copytree(source_tree, input_root / relative, symlinks=False)
+            shard_tree = replay_root / "selection-checkpoint/shards"
+            if not shard_tree.is_dir() or shard_tree.is_symlink():
+                raise ValueError("current replay score-pass shard closure is missing")
+            if any(path.is_symlink() for path in shard_tree.rglob("*")):
+                raise ValueError("current replay score-pass shard closure contains symlink")
+            shutil.copytree(shard_tree, input_root / "shards", symlinks=False)
             for relative in (
                 "runtime_teacher_model_provenance_authority.json",
                 "teacher_identity.json",
