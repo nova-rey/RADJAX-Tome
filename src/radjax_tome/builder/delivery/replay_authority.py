@@ -201,7 +201,12 @@ def adopt_verified_selection_replay(
             # marker, and record every copied member digest.
             input_root = adopted_root / "input"
             for relative in ("corpus", "model", "source-rows"):
-                shutil.copytree(replay_root / relative, input_root / relative)
+                source_tree = replay_root / relative
+                if any(path.is_symlink() for path in source_tree.rglob("*")):
+                    raise ValueError(
+                        f"current replay closure contains symlink: {relative}"
+                    )
+                shutil.copytree(source_tree, input_root / relative, symlinks=False)
             for relative in (
                 "runtime_teacher_model_provenance_authority.json",
                 "teacher_identity.json",
@@ -221,6 +226,17 @@ def adopt_verified_selection_replay(
                 ),
             ):
                 shutil.copy2(input_root / source_name, input_root / target_name)
+            input_closure = {}
+            for member in sorted(input_root.rglob("*")):
+                if member.is_symlink() or not member.is_file():
+                    if member.is_symlink():
+                        raise ValueError(
+                            "current replay adopted input contains symlink"
+                        )
+                    continue
+                input_closure[member.relative_to(adopted_root).as_posix()] = _sha256(
+                    member
+                )
             metadata = {
                 "schema_version": "radjax_tome_frozen_selection_replay_v2",
                 "provenance": authority["provenance"],
@@ -232,20 +248,7 @@ def adopt_verified_selection_replay(
                 "selected_sources": selected_sources,
                 "selected_coordinates": selected_coordinates,
                 "input_root": "input",
-                "input_closure": {
-                    f"input/{relative}": _sha256(adopted_root / "input" / relative)
-                    for relative in (
-                        "corpus/corpus.jsonl",
-                        "corpus/corpus_manifest.json",
-                        "corpus/corpus_build_report.json",
-                        "corpus.jsonl",
-                        "corpus_manifest.json",
-                        "corpus_build_report.json",
-                        "teacher_model_provenance.json",
-                        "teacher_identity.json",
-                        "runtime_teacher_model_provenance_authority.json",
-                    )
-                },
+                "input_closure": input_closure,
             }
             (adopted_root / "replay_authority.json").write_text(
                 json.dumps(metadata, sort_keys=True, separators=(",", ":")),
