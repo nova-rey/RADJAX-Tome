@@ -3637,3 +3637,4 @@ closed-record and checkpoint authority validation.
 - M8G replay: HF Torch CPU corridor emission now uses the existing top-k/entropy contract for production-equivalent selected delivery smoke.
 
 - M8G replay: normalize HF Torch target-policy dispatch through the canonical string value before corridor CPU materialization.
+- 2026-08-21: enabled HF Torch dynamic selected-rerun emission for CPU production materialization smoke; no selection or representation semantics changed.

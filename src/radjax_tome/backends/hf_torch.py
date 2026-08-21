@@ -19,13 +19,14 @@ _SUPPORTED_EMISSION_POLICIES = {
     "dense_logits",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
+    "dynamic_cascaded_soft_labels_v1",
     "corridor_exemplar_v1",
 }
 _CAPABILITY_STATUS: dict[TargetPolicy, str] = {
     "dense_logits": "supported_debug",
     "topk_with_tail_v0": "supported",
     "cascaded_soft_labels_v1": "supported",
-    "dynamic_cascaded_soft_labels_v1": "planned",
+    "dynamic_cascaded_soft_labels_v1": "supported_debug",
     "corridor_exemplar_v1": "supported_debug",
 }
 _DEFAULT_FAKE_TOKENIZER_ID = "fake-deterministic-tokenizer"
@@ -47,7 +48,7 @@ class HFTorchTeacherEmissionBackend:
         if str(config.target_policy) not in _SUPPORTED_EMISSION_POLICIES:
             raise ValueError(
                 "hf_torch supports dense_logits, topk_with_tail_v0, "
-                "and cascaded_soft_labels_v1, corridor_exemplar_v1"
+                "and cascaded_soft_labels_v1, dynamic_cascaded_soft_labels_v1, corridor_exemplar_v1"
             )
         if config.sequence_length <= 0:
             raise ValueError("sequence_length must be > 0")
@@ -232,6 +233,7 @@ class HFTorchTeacherEmissionBackend:
         if str(self.config.target_policy) in {
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
             "corridor_exemplar_v1",
         }:
             metadata.update(
@@ -240,7 +242,7 @@ class HFTorchTeacherEmissionBackend:
                     "effective_top_k": min(self.config.top_k, effective_vocab),
                 }
             )
-        if str(self.config.target_policy) == "cascaded_soft_labels_v1":
+        if str(self.config.target_policy) in {"cascaded_soft_labels_v1", "dynamic_cascaded_soft_labels_v1"}:
             metadata.update(
                 {
                     "num_buckets": self.config.num_buckets,
@@ -312,9 +314,9 @@ class HFTorchTeacherEmissionBackend:
         if str(self.config.target_policy) == "dense_logits":
             return {"logits": logits}
         topk = _dense_logits_to_topk_tail(logits, top_k=self.config.top_k)
-        if str(self.config.target_policy) in {"topk_with_tail_v0", "corridor_exemplar_v1"}:
+        if str(self.config.target_policy) in {"topk_with_tail_v0", "dynamic_cascaded_soft_labels_v1", "corridor_exemplar_v1"}:
             return topk
-        if str(self.config.target_policy) == "cascaded_soft_labels_v1":
+        if str(self.config.target_policy) in {"cascaded_soft_labels_v1", "dynamic_cascaded_soft_labels_v1"}:
             return {
                 **topk,
                 "bucket_masses": _tail_bucket_masses(
