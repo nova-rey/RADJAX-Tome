@@ -268,7 +268,7 @@ def finalize_workload(
     selected_record_ids = [r["example_id"] for r in selected_records]
     if len(set(selected_record_ids)) > 253:
         raise ValueError("selected-source record identity is invalid")
-        stage = Path(tempfile.mkdtemp(prefix=output.name + ".staging-", dir=output.parent))
+    stage = Path(tempfile.mkdtemp(prefix=output.name + ".staging-", dir=output.parent))
     try:
         shutil.rmtree(stage)
         _project_regular_tree(generation_root, stage)
