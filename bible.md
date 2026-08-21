@@ -3619,3 +3619,5 @@ member, while model loading resolves through the bundle-relative model root.
 
 Pinned the Tome branch to the pushed Contract commit carrying the approved
 closed-record and checkpoint authority validation.
+
+- M8G v19 replay: project teacher_model_provenance_v1 only after complete adopted model closure.

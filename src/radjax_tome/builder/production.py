@@ -155,6 +155,7 @@ class ProductionBuildConfig:
     verified_selection_replay_path: Path | None = None
     verified_selection_bundle_manifest_path: Path | None = None
     replay_authority_identity: str | None = None
+    preflight_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -315,6 +316,44 @@ def _build_production_gpu_tome_compatibility(
             # closure-validated inputs may enter ordinary preflight; stale or
             # unrelated caller paths must never be consulted first.
             preflight_result = _run_existing_preflight(state)
+            if config.preflight_only:
+                report = _production_report(
+                    config,
+                    created_at=state.created_at,
+                    completed_at=_now(),
+                    status="fail" if state.blockers else "pass",
+                    blockers=state.blockers,
+                    warnings=state.warnings,
+                    doctor_report=state.doctor_report or {},
+                    run_plan_path=state.run_plan_path,
+                    run_plan=state.plan or {},
+                    effective_batch_size=state.effective_batch_size,
+                    already_complete=state.already_complete,
+                    parity_report_path=state.parity_report_path,
+                    parity_status="not_run",
+                    build_status="preflight_only",
+                )
+                report.update({
+                    "preflight_only": True,
+                    "full_teacher_pass_count": 0,
+                    "selected_source_pass_count": 0,
+                    "c1_through_c5_execution": False,
+                    "materialization_performed": False,
+                    "publication_performed": False,
+                    "adoption_report": {
+                        "status": "pass",
+                        "workload_identity": json.loads((config.verified_selection_replay_path / "workload_authority.json").read_text()).get("workload_identity"),
+                        "replay_identity": replay_authority.replay_identity,
+                        "adopted_root": str(replay_authority.adopted_root),
+                        "selected_sources": replay_authority.selected_sources,
+                        "selected_coordinates": replay_authority.selected_coordinates,
+                    },
+                    "teacher_provenance_schema": "teacher_model_provenance_v1",
+                    "resolved_model_path": str(replay_authority.adopted_root / "input/model/model"),
+                    "representation_mode": config.representation_mode,
+                    "resume_identity": replay_authority.replay_identity + ":" + config.representation_mode,
+                })
+                return _finalize_production_report(report, state.report_path, state.progress)
             score_result = _existing_stage_success(
                 state,
                 "frozen_selection_replay",

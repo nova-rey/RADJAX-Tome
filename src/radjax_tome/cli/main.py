@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import importlib.util
 import json
 import platform
@@ -676,6 +677,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--print-resolved-config",
         action="store_true",
         help="Print the fully resolved canonical configuration and exit.",
+    )
+    production.add_argument(
+        "--preflight-only",
+        action="store_true",
+        help="Run canonical replay adoption and production preflight without inference or materialization.",
     )
     # The canonical normalizer owns defaults.  Suppressing parser defaults is
     # what lets it distinguish an explicit advanced override from an omitted
@@ -1665,6 +1671,7 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
     from radjax_tome.builder import (
         build_production_gpu_tome,
         normalize_cli_production_build_request,
+        production_build_config_from_resolved,
         render_production_build_summary,
         resolved_tome_build_config_payload,
     )
@@ -1695,6 +1702,7 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
         "output",
         "preset",
         "print_resolved_config",
+        "preflight_only",
     }
     overrides = {
         aliases.get(name, name): (
@@ -1722,7 +1730,10 @@ def _cmd_production_build(args: argparse.Namespace) -> int:
         )
         return 0
 
-    report = build_production_gpu_tome(normalized.resolved)
+    execution_config = production_build_config_from_resolved(normalized.resolved)
+    if provided.get("preflight_only"):
+        execution_config = replace(execution_config, preflight_only=True)
+    report = build_production_gpu_tome(execution_config)
     for line in render_production_build_summary(report):
         print(line)
     return 0 if report["status"] in {"pass", "warn"} else 1
