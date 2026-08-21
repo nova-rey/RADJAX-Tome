@@ -233,7 +233,7 @@ def adopt_verified_selection_replay(
                 "selected_coordinates": selected_coordinates,
                 "input_root": "input",
                 "input_closure": {
-                    relative: _sha256(adopted_root / "input" / relative)
+                    f"input/{relative}": _sha256(adopted_root / "input" / relative)
                     for relative in (
                         "corpus/corpus.jsonl",
                         "corpus/corpus_manifest.json",
