@@ -3638,3 +3638,4 @@ closed-record and checkpoint authority validation.
 
 - M8G replay: normalize HF Torch target-policy dispatch through the canonical string value before corridor CPU materialization.
 - 2026-08-21: enabled HF Torch dynamic selected-rerun emission for CPU production materialization smoke; no selection or representation semantics changed.
+- 2026-08-21: replay adoption now relocates teacher_model and tokenizer_id to the invocation-owned model tree before canonical preflight; no selection or representation semantics changed.
