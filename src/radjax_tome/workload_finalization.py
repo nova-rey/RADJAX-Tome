@@ -590,6 +590,13 @@ def finalize_workload(
                 "budget": 256,
                 "underfill_reason": "global_ranked_supply_exhaustion",
             },
+            "source_metadata_policy": {
+                "absolute_fields": ["source_id", "source_path", "source_root"],
+                "classification": "historical_provenance_only",
+                "runtime_resolution_field": "source_relative_path",
+                "runtime_resolution_root": "source-rows",
+                "absolute_fields_must_not_be_resolved": True,
+            },
         }
         validate_workload_authority(authority)
         (stage / "workload_authority.json").write_bytes(
