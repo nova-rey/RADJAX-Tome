@@ -130,6 +130,14 @@ def adopt_verified_selection_replay(
         authority = json.loads(authority_path.read_text(encoding="utf-8"))
         if authority.get("provenance") != "NEW_DETERMINISTIC_M8G_1K_WORKLOAD":
             raise ValueError("current replay workload provenance invalid")
+        runtime_locator = artifact_root / "runtime_teacher_model_provenance.json"
+        if not runtime_locator.is_file() or runtime_locator.is_symlink():
+            raise ValueError("current replay runtime teacher provenance is missing")
+        runtime_record = json.loads(runtime_locator.read_text(encoding="utf-8"))
+        if runtime_record.get("schema_version") != "teacher_model_provenance_v1":
+            if authority.get("replay_compatibility_version") != "current-production-replay-v1":
+                raise ValueError("teacher_model_provenance.json schema_version is unsupported")
+            raise ValueError("current replay runtime teacher provenance must use teacher_model_provenance_v1")
         selected_sources = int(authority["counts"]["selected_sources"])
         selected_coordinates = int(authority["counts"]["selected_coordinates"])
         replay_root = artifact_root
