@@ -3543,3 +3543,10 @@ checkpoint and workload authority records, finalization receipts, and the
 Contract pin for the public workload authority API.
 
 Pinned the finalizer to the reviewed Contract workload-authority commit.
+
+2026-08-20 — M8G closed authority records
+
+Updated finalization evidence to emit explicit public workload record types,
+checkpoint cross-bindings, truthful finalization receipt evidence, and CPU-only
+replay preflight records for each approved representation mode. No generation,
+materialization, GPU, or benchmark work was performed.

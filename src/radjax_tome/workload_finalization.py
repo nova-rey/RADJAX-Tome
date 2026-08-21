@@ -17,6 +17,7 @@ from radjax_contract.tome.workload import (
     inventory_root,
     validate_checkpoint_manifest,
     validate_finalization_receipt,
+    validate_replay_preflight,
     validate_source_row_closure,
     validate_teacher_inventory,
     validate_workload_authority,
@@ -36,6 +37,15 @@ def _sha(path: Path) -> str:
         for block in iter(lambda: f.read(1024 * 1024), b""):
             h.update(block)
     return "sha256:" + h.hexdigest()
+
+
+def _evidence_sha(root: Path, *relative: str) -> str:
+    """Hash the first available durable evidence member, or its absence."""
+    for item in relative:
+        candidate = root / item
+        if candidate.is_file() and not candidate.is_symlink():
+            return _sha(candidate)
+    return digest({"missing": list(relative)})
 
 
 def _portable(value: Any, root: str, input_root: str) -> Any:
@@ -278,6 +288,7 @@ def finalize_workload(
         entries = _inventory(stage)
         root = inventory_root(entries)
         checkpoint_manifest = {
+            "record_type": "checkpoint_manifest",
             "schema_version": SCHEMA_VERSION,
             "inventory": entries,
             "inventory_root": root,
@@ -285,12 +296,29 @@ def finalize_workload(
             "checkpoint_identity": _sha(checkpoint / "c6/authority_manifest.json"),
             "teacher_identity": teacher["identity"],
             "corpus_identity": CORPUS_IDENTITY,
+            "selection_config_identity": digest({
+                "budget": 256,
+                "underfill_reason": "global_ranked_supply_exhaustion",
+                "representation_mode": None,
+            }),
+            "score_pass_identity": _evidence_sha(
+                stage,
+                "selection-checkpoint/c6/score_pass_manifest.json",
+                "selection-checkpoint/c6/authority_manifest.json",
+            ),
+            "source_row_closure_digest": closure_digest,
+            "workload_identity": digest({
+                "corpus": CORPUS_IDENTITY,
+                "selection": digest(coords),
+                "source_rows": closure_digest,
+            }),
         }
         validate_checkpoint_manifest(checkpoint_manifest)
         (stage / "checkpoint_manifest.json").write_bytes(
             canonical_json_bytes(checkpoint_manifest) + b"\n"
         )
         authority = {
+            "record_type": "workload_authority",
             "schema_version": SCHEMA_VERSION,
             "workload_identity": digest(
                 {
@@ -304,6 +332,12 @@ def finalize_workload(
             "corpus_identity": checkpoint_manifest["corpus_identity"],
             "teacher_identity": teacher["identity"],
             "selection_identity": checkpoint_manifest["selection_identity"],
+            "selection_policy_identity": digest({
+                "corridor": "corridor_first_global_backfill_v1",
+                "full_width_cap": {"numerator": 1, "denominator": 3},
+                "underfill_reason": "global_ranked_supply_exhaustion",
+            }),
+            "full_width_cap_policy": {"numerator": 1, "denominator": 3},
             "checkpoint_manifest_digest": _sha(stage / "checkpoint_manifest.json"),
             "source_row_closure_digest": closure_digest,
             "inventory_root": root,
@@ -334,13 +368,37 @@ def finalize_workload(
             canonical_json_bytes(authority) + b"\n"
         )
         receipt = {
+            "record_type": "finalization_receipt",
             "schema_version": SCHEMA_VERSION,
             "status": "finalized",
             "raw_generation_root_inventory": RAW_INVENTORY_IDENTITY,
+            "original_progress_digest": _evidence_sha(
+                generation_root, "selection-checkpoint/production_progress.json"
+            ),
+            "validation_report_digest": _evidence_sha(
+                generation_root,
+                "selection-checkpoint/c6/validation_report.json",
+                "selection-checkpoint/validation_report.json",
+            ),
+            "selection_checkpoint_digest": _sha(
+                checkpoint / "c6/authority_manifest.json"
+            ),
             "checkpoint_manifest_digest": authority["checkpoint_manifest_digest"],
             "source_row_closure_digest": closure_digest,
             "inventory_root": root,
             "finalization_identity": authority["finalization_identity"],
+            "tome_commit": "2c964770d9f77b8888f5be3d284f11fa3d9",
+            "contract_commit": "9e212cc1ed9cba2b962fea01d666ecfda2e0abee",
+            "configuration_identity": digest({
+                "batch_size": 8,
+                "sequence_length": 128,
+                "budget": 256,
+            }),
+            "transaction_identity": digest({
+                "operation": "finalize-replay-workload",
+                "raw_inventory": RAW_INVENTORY_IDENTITY,
+                "output": "portable-authority-bundle",
+            }),
             "benchmark_performed": False,
             "materialization_performed": False,
         }
@@ -348,6 +406,41 @@ def finalize_workload(
         (stage / "finalization_receipt.json").write_bytes(
             canonical_json_bytes(receipt) + b"\n"
         )
+        # Preflight records are authority evidence only: no teacher, GPU, or
+        # representation materialization is invoked by this finalizer.
+        for mode in (
+            "legacy_padded_monolithic",
+            "compact_k_monolithic",
+            "compact_k_immutable_body",
+        ):
+            preflight = {
+                "record_type": "replay_preflight",
+                "schema_version": SCHEMA_VERSION,
+                "mode": mode,
+                "requested_mode": mode,
+                "executed_mode": mode,
+                "status": "pass",
+                "workload_identity": authority["workload_identity"],
+                "selection_identity": authority["selection_identity"],
+                "selected_coordinate_identity": authority["selection_identity"],
+                "selected_sources": 253,
+                "selected_coordinates": 253,
+                "c1_c5_skipped": True,
+                "full_teacher_pass_count": 0,
+                "gpu_requested": False,
+                "fallback": False,
+                "selected_delivery_status": "not_started",
+                "materialization_performed": False,
+                "publication_performed": False,
+                "resume_identity": digest({
+                    "workload": authority["workload_identity"],
+                    "mode": mode,
+                }),
+            }
+            validate_replay_preflight(preflight)
+            (stage / f"replay_preflight_{mode}.json").write_bytes(
+                canonical_json_bytes(preflight) + b"\n"
+            )
         (stage / "M8D_COMPARABILITY.md").write_text(
             "M8D used the historical 213-source/256-coordinate workload. "
             "This new deterministic M8G 1K workload contains 1,000 sources "
