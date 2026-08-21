@@ -187,12 +187,14 @@ def adopt_verified_selection_replay(
             expected_closure = prior.get("input_closure") or {}
             actual_closure = {}
             for member in sorted((adopted_root / "input").rglob("*")):
-                if member.is_symlink() or not member.is_file():
-                    if not member.is_dir():
-                        raise ValueError(
-                            "current replay adopted input contains special file"
-                        )
+                if member.is_symlink():
+                    raise ValueError("current replay adopted input contains symlink")
+                if member.is_dir():
                     continue
+                if not member.is_file():
+                    raise ValueError(
+                        "current replay adopted input contains special file"
+                    )
                 actual_closure[member.relative_to(adopted_root).as_posix()] = _sha256(
                     member
                 )
@@ -242,12 +244,14 @@ def adopt_verified_selection_replay(
                 shutil.copy2(input_root / source_name, input_root / target_name)
             input_closure = {}
             for member in sorted(input_root.rglob("*")):
-                if member.is_symlink() or not member.is_file():
-                    if not member.is_dir():
-                        raise ValueError(
-                            "current replay adopted input contains special file"
-                        )
+                if member.is_symlink():
+                    raise ValueError("current replay adopted input contains symlink")
+                if member.is_dir():
                     continue
+                if not member.is_file():
+                    raise ValueError(
+                        "current replay adopted input contains special file"
+                    )
                 input_closure[member.relative_to(adopted_root).as_posix()] = _sha256(
                     member
                 )
