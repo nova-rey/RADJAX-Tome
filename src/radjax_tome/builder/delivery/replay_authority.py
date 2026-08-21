@@ -58,15 +58,16 @@ def _owned_member_path(root: Path, relative: object) -> Path:
 
 
 def _replay_identity(
-    *, bundle_manifest_sha256: str, checkpoint_digest: str, selected_record_digest: str
+    *, bundle_manifest_sha256: str, checkpoint_digest: str, selected_record_digest: str,
+    selected_sources: int = 213, selected_coordinates: int = 256
 ) -> str:
     payload = {
         "operation": "frozen_selection_replay_v1",
         "bundle_manifest_sha256": bundle_manifest_sha256,
         "checkpoint_digest": checkpoint_digest,
         "selected_record_digest": selected_record_digest,
-        "selected_sources": 213,
-        "selected_coordinates": 256,
+        "selected_sources": selected_sources,
+        "selected_coordinates": selected_coordinates,
     }
     return (
         "sha256:"
@@ -113,6 +114,70 @@ def adopt_verified_selection_replay(
     artifact_root = artifact_root.resolve()
     adopted_root = adopted_root.resolve()
     document = json.loads(bundle_manifest.read_text(encoding="utf-8"))
+    # Current finalized M8G bundles are self-describing authority roots.  They
+    # do not use the historical validator's 213/256 contract or layout.
+    authority_path = artifact_root / "workload_authority.json"
+    if authority_path.is_file() and not authority_path.is_symlink():
+        authority = json.loads(authority_path.read_text(encoding="utf-8"))
+        if authority.get("provenance") != "NEW_DETERMINISTIC_M8G_1K_WORKLOAD":
+            raise ValueError("current replay workload provenance invalid")
+        selected_sources = int(authority["counts"]["selected_sources"])
+        selected_coordinates = int(authority["counts"]["selected_coordinates"])
+        replay_root = artifact_root
+        coord_file = replay_root / "selection-checkpoint/c6/claims/selected_coordinates.jsonl"
+        record_file = replay_root / "selection-checkpoint/c6/multi-role-selection/selected_exemplars.jsonl"
+        if not coord_file.is_file() or not record_file.is_file():
+            raise ValueError("current replay selection records are missing")
+        coords = [json.loads(x) for x in coord_file.read_text().splitlines() if x.strip()]
+        records = [json.loads(x) for x in record_file.read_text().splitlines() if x.strip()]
+        if len(coords) != selected_coordinates or len(records) != selected_sources:
+            raise ValueError("current replay selection counts mismatch")
+        selected_record_digest = "sha256:" + hashlib.sha256(
+            json.dumps(records, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        checkpoint_digest = str(authority["checkpoint_manifest_digest"])
+        bundle_manifest_sha256 = _sha256(bundle_manifest)
+        replay_identity = _replay_identity(
+            bundle_manifest_sha256=bundle_manifest_sha256,
+            checkpoint_digest=checkpoint_digest,
+            selected_record_digest=selected_record_digest,
+            selected_sources=selected_sources,
+            selected_coordinates=selected_coordinates,
+        )
+        if adopted_root.exists():
+            if not (adopted_root / "replay_authority.json").is_file():
+                raise ValueError("private replay adoption is incomplete")
+            prior = json.loads((adopted_root / "replay_authority.json").read_text())
+            if prior.get("replay_identity") != replay_identity:
+                raise ValueError("private replay adoption conflicts with current authority")
+        else:
+            adopted_root.mkdir(parents=True, exist_ok=False)
+            metadata = {
+                "schema_version": "radjax_tome_frozen_selection_replay_v2",
+                "provenance": authority["provenance"],
+                "workload_identity": authority["workload_identity"],
+                "bundle_manifest_sha256": bundle_manifest_sha256,
+                "checkpoint_digest": checkpoint_digest,
+                "selected_record_digest": selected_record_digest,
+                "replay_identity": replay_identity,
+                "selected_sources": selected_sources,
+                "selected_coordinates": selected_coordinates,
+            }
+            (adopted_root / "replay_authority.json").write_text(
+                json.dumps(metadata, sort_keys=True, separators=(",", ":")), encoding="utf-8"
+            )
+        return FrozenSelectionReplay(
+            replay_root=replay_root,
+            bundle_manifest=bundle_manifest,
+            adopted_root=adopted_root,
+            bundle_manifest_sha256=bundle_manifest_sha256,
+            checkpoint_digest=checkpoint_digest,
+            selected_record_digest=selected_record_digest,
+            replay_identity=replay_identity,
+            records=tuple(records),
+            selected_sources=selected_sources,
+            selected_coordinates=selected_coordinates,
+        )
     layout = document.get("provenance", {}).get("artifact_layout", {})
     replay_relative = layout.get("replay_root")
     if not isinstance(replay_relative, str) or Path(replay_relative).is_absolute():
