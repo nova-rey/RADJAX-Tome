@@ -3646,3 +3646,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: normalized relocated replay teacher and tokenizer values before selection-integration hashing to keep production reports serializable.
 - 2026-08-21: selection integration authority hashing serializes relocated runtime metadata paths deterministically without changing selection inputs.
 - 2026-08-21: HF local-load failures now preserve model/tokenizer paths, types, containment facts, and chained Transformers exceptions.
+
+- 2026-08-21: M8G derived valid exemplar component benchmark V1 measured all nine CPU representation samples from 169 surviving payloads; v19 remains incomplete provenance.

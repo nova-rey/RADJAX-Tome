@@ -1,0 +1,677 @@
+{
+  "excluded_count": 84,
+  "records": [
+    {
+      "expected_payload_hash": "2a2c7b4ac5f546de68a4215645ea2e6deb99a4d888925c7369a416291dccdfe4",
+      "index": 2,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00002.json",
+      "selected_example_id": "corpus_000000437",
+      "selected_position": 125
+    },
+    {
+      "expected_payload_hash": "46e6d221d372b48daeb7f6caba1150bdc70b44eecc39680de1201d2adccb96b2",
+      "index": 4,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00004.json",
+      "selected_example_id": "corpus_000000833",
+      "selected_position": 90
+    },
+    {
+      "expected_payload_hash": "e06f6c6a716449b1debcfab040eca89b17c174c8191a1a3f5acd41deea63d2e0",
+      "index": 5,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00005.json",
+      "selected_example_id": "corpus_000000307",
+      "selected_position": 53
+    },
+    {
+      "expected_payload_hash": "ed601fb5e262f0daec6b82d554a4a0759c182d55da5f9b7c8ae734f543ca830f",
+      "index": 8,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00008.json",
+      "selected_example_id": "corpus_000000206",
+      "selected_position": 35
+    },
+    {
+      "expected_payload_hash": "cdd37cbe90a8e0aa6dfa62762a9e6d6e6411ae5e43ef7dc7ef9c1115b5190248",
+      "index": 9,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00009.json",
+      "selected_example_id": "corpus_000000480",
+      "selected_position": 92
+    },
+    {
+      "expected_payload_hash": "12c044e4314649bf7b74d14fa4ec74c236c22dc7b8cc9425f125a0a1f98f479d",
+      "index": 12,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00012.json",
+      "selected_example_id": "corpus_000000391",
+      "selected_position": 114
+    },
+    {
+      "expected_payload_hash": "0440da599d66d5662cd20be032d3843e049fa7319a66ed11c53a8b17812f1329",
+      "index": 13,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00013.json",
+      "selected_example_id": "corpus_000000411",
+      "selected_position": 29
+    },
+    {
+      "expected_payload_hash": "a1cbd5cedf4944822150eb5652701fa85baa753a63fc181aa497be8bebb44a91",
+      "index": 17,
+      "reason": "Expecting ',' delimiter: line 1 column 1305601 (char 1305600)",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00017.json",
+      "selected_example_id": "corpus_000000729",
+      "selected_position": 14
+    },
+    {
+      "expected_payload_hash": "6735474abce64d2bf4cfb834efd586976fc5b5aef2b494705ada781b59d9df54",
+      "index": 24,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00024.json",
+      "selected_example_id": "corpus_000000175",
+      "selected_position": 81
+    },
+    {
+      "expected_payload_hash": "b8e7514ffbe956f110289a9b21051ca32b4cf81bab6c6f89cc80e2ed2f5592ce",
+      "index": 25,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00025.json",
+      "selected_example_id": "corpus_000000455",
+      "selected_position": 64
+    },
+    {
+      "expected_payload_hash": "4b0c848f057f158a5f2d1b38be83e223b5251136301d45ee5c4902872275a375",
+      "index": 28,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00028.json",
+      "selected_example_id": "corpus_000000886",
+      "selected_position": 15
+    },
+    {
+      "expected_payload_hash": "4915df4d9f5d4ab6017f7fa9e3a9d38f39bb56153e9f4de3b73d463d25c5228f",
+      "index": 29,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00029.json",
+      "selected_example_id": "corpus_000000136",
+      "selected_position": 81
+    },
+    {
+      "expected_payload_hash": "c7126c39c059247f3c36a3a43bf5b3ddd6fd8a54459b8a133aa4ad487c7a2113",
+      "index": 32,
+      "reason": "[Errno 2] No such file or directory: '/home/nyx/m8g/published/m8g-current-1k-workload-authoritative-v19/selection-checkpoint/selected_exemplars/selected-exemplars-00032.json'",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00032.json",
+      "selected_example_id": "corpus_000000151",
+      "selected_position": 127
+    },
+    {
+      "expected_payload_hash": "ce37916cd37ece357e0e2d1e9d7fb38c87e65510927198d3525fe8427c153822",
+      "index": 33,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00033.json",
+      "selected_example_id": "corpus_000000037",
+      "selected_position": 111
+    },
+    {
+      "expected_payload_hash": "7f69a11c5a4366fc892a44e748ffb38b40856899f795559b5ddee4591a243507",
+      "index": 38,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00038.json",
+      "selected_example_id": "corpus_000000352",
+      "selected_position": 55
+    },
+    {
+      "expected_payload_hash": "ab3ad549d9850d5fd4244b34e2b89ac5dd60f5f04be72c020bda22b48c76f116",
+      "index": 44,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00044.json",
+      "selected_example_id": "corpus_000000337",
+      "selected_position": 108
+    },
+    {
+      "expected_payload_hash": "2892c268234dbe05cf1f0c5cff9cc5993bb343aa7e985bf97c710032d2f47b09",
+      "index": 45,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00045.json",
+      "selected_example_id": "corpus_000000087",
+      "selected_position": 42
+    },
+    {
+      "expected_payload_hash": "fc64554d065b33a1a9a7ebf32d6ab121d6a2cbbab298b1df9e2583b820290905",
+      "index": 48,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00048.json",
+      "selected_example_id": "corpus_000000001",
+      "selected_position": 26
+    },
+    {
+      "expected_payload_hash": "a538fa37b51dfbf5d5b8515ba09d51f65a86f99a515eef86ff2fd12121a8f812",
+      "index": 49,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00049.json",
+      "selected_example_id": "corpus_000000011",
+      "selected_position": 67
+    },
+    {
+      "expected_payload_hash": "ca6f7215a521267600feb0dca39760562dcd36ff34c4f6bdb77a864ecb34bf8e",
+      "index": 52,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00052.json",
+      "selected_example_id": "corpus_000000171",
+      "selected_position": 115
+    },
+    {
+      "expected_payload_hash": "da4e06d2cf24f11ca2fe29db7d2f679bc54ab5463966a519b9e7bd49079b26be",
+      "index": 53,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00053.json",
+      "selected_example_id": "corpus_000000981",
+      "selected_position": 125
+    },
+    {
+      "expected_payload_hash": "1c67c4cb15c5011a5094d2f710335da4dbb05e5f68d2a8c747aac34ffc44d999",
+      "index": 55,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00055.json",
+      "selected_example_id": "corpus_000000198",
+      "selected_position": 116
+    },
+    {
+      "expected_payload_hash": "b46c994fe35ac91b4b6f2991fe38ead2facb1879f495d3b5025a3567677d494c",
+      "index": 64,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00064.json",
+      "selected_example_id": "corpus_000000860",
+      "selected_position": 62
+    },
+    {
+      "expected_payload_hash": "c032a14823982222301421650ccbb4e29680c17b68f4725eada4e46d7c81e946",
+      "index": 65,
+      "reason": "[Errno 2] No such file or directory: '/home/nyx/m8g/published/m8g-current-1k-workload-authoritative-v19/selection-checkpoint/selected_exemplars/selected-exemplars-00065.json'",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00065.json",
+      "selected_example_id": "corpus_000000260",
+      "selected_position": 104
+    },
+    {
+      "expected_payload_hash": "ecac9dba998f24db696d5fcc140521ccce8d4dfd66d982fc7d138c1ab007bd03",
+      "index": 68,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00068.json",
+      "selected_example_id": "corpus_000000022",
+      "selected_position": 4
+    },
+    {
+      "expected_payload_hash": "a146693fe94b3017a479af8a1fd1f48d05c92ec84b1eee2a066d9bd4082ee344",
+      "index": 69,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00069.json",
+      "selected_example_id": "corpus_000000005",
+      "selected_position": 120
+    },
+    {
+      "expected_payload_hash": "a1b05b0b88d4e33c866a596c64bbc74a36d48581556ea40e369c94be89e07c43",
+      "index": 72,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00072.json",
+      "selected_example_id": "corpus_000000152",
+      "selected_position": 94
+    },
+    {
+      "expected_payload_hash": "57c29feb19cd792ac9c9601498a82d1144a273c8b3f457c204b248c394b3f521",
+      "index": 73,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00073.json",
+      "selected_example_id": "corpus_000000860",
+      "selected_position": 88
+    },
+    {
+      "expected_payload_hash": "a3658c0b92810f8d56e480e991f2fef0145597d46b8b03c27a5f72a9400ba39e",
+      "index": 79,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00079.json",
+      "selected_example_id": "corpus_000000006",
+      "selected_position": 35
+    },
+    {
+      "expected_payload_hash": "1393e48afb9992270933284d44d9698563e5c682cd30c2e207e6d39d3a35312d",
+      "index": 80,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00080.json",
+      "selected_example_id": "corpus_000000012",
+      "selected_position": 78
+    },
+    {
+      "expected_payload_hash": "e9d0f25d3a3a14ee889e3e0525f57e09cd9555e492b2660550439038489b8d75",
+      "index": 86,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00086.json",
+      "selected_example_id": "corpus_000000178",
+      "selected_position": 23
+    },
+    {
+      "expected_payload_hash": "0a012e436481ededa1db20779c6ea8102cec1d161659caa90991301903f2e729",
+      "index": 87,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00087.json",
+      "selected_example_id": "corpus_000000008",
+      "selected_position": 86
+    },
+    {
+      "expected_payload_hash": "a75b6e3d0750f60f69a89e90c37678d67572e04e9ed6152e6984366f0399323e",
+      "index": 90,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00090.json",
+      "selected_example_id": "corpus_000000002",
+      "selected_position": 113
+    },
+    {
+      "expected_payload_hash": "02272b6347939a90da358f09ad5cdfce3c26c46d04a167594d28a59bc8b2d3d5",
+      "index": 91,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00091.json",
+      "selected_example_id": "corpus_000000009",
+      "selected_position": 103
+    },
+    {
+      "expected_payload_hash": "458d1f1f9549d37bff9c8d5ba8063e7705316f58c62fe13ccf08cae9cee95b0b",
+      "index": 96,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00096.json",
+      "selected_example_id": "corpus_000000019",
+      "selected_position": 119
+    },
+    {
+      "expected_payload_hash": "ef2db15246973bcbda6cdb893463057e45f657e5d6da920aa409e52a0f9cf5da",
+      "index": 100,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00100.json",
+      "selected_example_id": "corpus_000000021",
+      "selected_position": 43
+    },
+    {
+      "expected_payload_hash": "3e5f2c9e9f123c490e71ffb0f08017d4bfef15b7d885f1f8d75636fd8a9927ff",
+      "index": 101,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00101.json",
+      "selected_example_id": "corpus_000000031",
+      "selected_position": 127
+    },
+    {
+      "expected_payload_hash": "907995742be4591669af0aa6216859af2b2238c3298d853ecf7ec8ea2a7af6e0",
+      "index": 110,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00110.json",
+      "selected_example_id": "corpus_000000007",
+      "selected_position": 61
+    },
+    {
+      "expected_payload_hash": "a088a94d4cf6bf70a4956235e44c6b7fd6904ee4fcf591d4b458044e73c43837",
+      "index": 116,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00116.json",
+      "selected_example_id": "corpus_000000005",
+      "selected_position": 96
+    },
+    {
+      "expected_payload_hash": "e5cecb321e6f3164aa2e12c9a86335c8eb20ae5a44a7cd5e9607c340ef1445b5",
+      "index": 117,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00117.json",
+      "selected_example_id": "corpus_000000004",
+      "selected_position": 121
+    },
+    {
+      "expected_payload_hash": "1d52dc2cac70910dc68e237794cc2792897534960ceeab45c79872aca70d10c3",
+      "index": 120,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00120.json",
+      "selected_example_id": "corpus_000000281",
+      "selected_position": 38
+    },
+    {
+      "expected_payload_hash": "413ab06d0da04340895e02ad12f99e3d7a90559a54f16c55e4418bd6c1a9bdae",
+      "index": 121,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00121.json",
+      "selected_example_id": "corpus_000000002",
+      "selected_position": 87
+    },
+    {
+      "expected_payload_hash": "6cfa5a41bf65cfa380e96251352a4d1e83199bfee4466cd028a1c07773ec22ab",
+      "index": 128,
+      "reason": "Expecting ',' delimiter: line 384555 column 18 (char 8094720)",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00128.json",
+      "selected_example_id": "corpus_000000829",
+      "selected_position": 94
+    },
+    {
+      "expected_payload_hash": "b8cfa0c0ea51b78d3995f92b1c77ad028e8e17735cb9f3c5752d232a9dea7369",
+      "index": 136,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00136.json",
+      "selected_example_id": "corpus_000000740",
+      "selected_position": 77
+    },
+    {
+      "expected_payload_hash": "67aa5e7e2c5bf974d695a2a6c64ab6015327a1385d8fa3086542bf3412de8449",
+      "index": 137,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00137.json",
+      "selected_example_id": "corpus_000000432",
+      "selected_position": 53
+    },
+    {
+      "expected_payload_hash": "903c06561ed08d4dd9a0e89c67403be38d372cbd728497a3dd2ecb24656b0648",
+      "index": 140,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00140.json",
+      "selected_example_id": "corpus_000000516",
+      "selected_position": 61
+    },
+    {
+      "expected_payload_hash": "11cdf79eccb51f55590524f8f64ebbfbadbe878af3a09e23d1e4f02e5ee9fa70",
+      "index": 141,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00141.json",
+      "selected_example_id": "corpus_000000540",
+      "selected_position": 63
+    },
+    {
+      "expected_payload_hash": "9c01d3292331c73ec8754a657e306d4e061f23630d8073e3d87c28794871c23f",
+      "index": 147,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00147.json",
+      "selected_example_id": "corpus_000000112",
+      "selected_position": 98
+    },
+    {
+      "expected_payload_hash": "48d0b6b17d62736b0920a09aca4982c9f90dc57c167c0df27c947d8f106684be",
+      "index": 151,
+      "reason": "Expecting ',' delimiter: line 257110 column 14 (char 4194304)",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00151.json",
+      "selected_example_id": "corpus_000000282",
+      "selected_position": 92
+    },
+    {
+      "expected_payload_hash": "670652621fdbc70a566a0960c204ff77540657e3d51130c965d965cb12a77083",
+      "index": 156,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00156.json",
+      "selected_example_id": "corpus_000000168",
+      "selected_position": 75
+    },
+    {
+      "expected_payload_hash": "93bfcb66d314af2a613bca29bdacb1ec71c0cc162c63f5f07d654c0c9b13de82",
+      "index": 157,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00157.json",
+      "selected_example_id": "corpus_000000230",
+      "selected_position": 22
+    },
+    {
+      "expected_payload_hash": "6159ec92fb886aba83828fbcc35a42e5b7727a56e9b5a9ae9b6a4e73e6461a25",
+      "index": 160,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00160.json",
+      "selected_example_id": "corpus_000000007",
+      "selected_position": 126
+    },
+    {
+      "expected_payload_hash": "db6997f4bc4fa13d7c9d59b0b93d91d59b3e047173784af2586da3e80b537044",
+      "index": 161,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00161.json",
+      "selected_example_id": "corpus_000000118",
+      "selected_position": 2
+    },
+    {
+      "expected_payload_hash": "ca4a44798da9b01471d92417492e0f20a0c3ca024d5218ef892138b696e671a8",
+      "index": 176,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00176.json",
+      "selected_example_id": "corpus_000000297",
+      "selected_position": 66
+    },
+    {
+      "expected_payload_hash": "f6a20319f4682fb50866b7acc0f47cec98934fb898b6b04405323d6ab4c8a2a1",
+      "index": 177,
+      "reason": "[Errno 2] No such file or directory: '/home/nyx/m8g/published/m8g-current-1k-workload-authoritative-v19/selection-checkpoint/selected_exemplars/selected-exemplars-00177.json'",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00177.json",
+      "selected_example_id": "corpus_000000619",
+      "selected_position": 1
+    },
+    {
+      "expected_payload_hash": "fbe6518f3090f199ebcf86e7b60e14ce301db6611c3bcc69207adc930a7c083c",
+      "index": 182,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00182.json",
+      "selected_example_id": "corpus_000000581",
+      "selected_position": 42
+    },
+    {
+      "expected_payload_hash": "360b17ecde3bbcf49e35da3fd2340d2d892d9df776d825248814ce84829e645a",
+      "index": 183,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00183.json",
+      "selected_example_id": "corpus_000000449",
+      "selected_position": 5
+    },
+    {
+      "expected_payload_hash": "57b4c170b071a66cfc24819fcc83bfecb4dbd49ac05c1cbd37f37bb39b782d87",
+      "index": 184,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00184.json",
+      "selected_example_id": "corpus_000000487",
+      "selected_position": 17
+    },
+    {
+      "expected_payload_hash": "1ada13212bd6bbc144fde6041eb6205f53e618832e52ab89b056cd8e24351fbb",
+      "index": 192,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00192.json",
+      "selected_example_id": "corpus_000000151",
+      "selected_position": 1
+    },
+    {
+      "expected_payload_hash": "db3013c2ce2dfd2937b5ff34f4c21ab398e93acacdaa918d349fe5b117034ab2",
+      "index": 194,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00194.json",
+      "selected_example_id": "corpus_000000589",
+      "selected_position": 41
+    },
+    {
+      "expected_payload_hash": "974a9bd03fc4965e34195240f64972f294c852963472d73af9554db69646e25a",
+      "index": 195,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00195.json",
+      "selected_example_id": "corpus_000000656",
+      "selected_position": 62
+    },
+    {
+      "expected_payload_hash": "be9272c312b4bac71c823e314c4c7f45d1b7aa8b9fdf7777b4d315b930d6682f",
+      "index": 198,
+      "reason": "[Errno 2] No such file or directory: '/home/nyx/m8g/published/m8g-current-1k-workload-authoritative-v19/selection-checkpoint/selected_exemplars/selected-exemplars-00198.json'",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00198.json",
+      "selected_example_id": "corpus_000000953",
+      "selected_position": 70
+    },
+    {
+      "expected_payload_hash": "a7149b7444288ea3c4fe1f42e47eb48e77efad7caa0deda3450fe85abc0731df",
+      "index": 199,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00199.json",
+      "selected_example_id": "corpus_000000904",
+      "selected_position": 35
+    },
+    {
+      "expected_payload_hash": "c59f0be279bbf45090dfd5c5a16afa1d01a375b6229007a4c134a30517436a3e",
+      "index": 203,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00203.json",
+      "selected_example_id": "corpus_000000838",
+      "selected_position": 91
+    },
+    {
+      "expected_payload_hash": "f1877ea58d9eb017c998384bc3768ab8e4ca822441360909aca3cc984390373b",
+      "index": 204,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00204.json",
+      "selected_example_id": "corpus_000000430",
+      "selected_position": 1
+    },
+    {
+      "expected_payload_hash": "17df32304ac4aaeeca4bdcddc72cacad1b1d75e56d2e77333e6f7b98304e04ec",
+      "index": 205,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00205.json",
+      "selected_example_id": "corpus_000000598",
+      "selected_position": 61
+    },
+    {
+      "expected_payload_hash": "626a220c0d31057257772d4beb157a3ea43b9d0b865205dfbfa13860278d5965",
+      "index": 208,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00208.json",
+      "selected_example_id": "corpus_000000395",
+      "selected_position": 32
+    },
+    {
+      "expected_payload_hash": "78e1992ff215919d87649ef2199baa2ddae85fa627a9b382cf3937ed2e4c9cf1",
+      "index": 209,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00209.json",
+      "selected_example_id": "corpus_000000323",
+      "selected_position": 43
+    },
+    {
+      "expected_payload_hash": "8e49f2358c0cbbd55e204fc77440590679533a31bc001a7750bccc299c82ab43",
+      "index": 212,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00212.json",
+      "selected_example_id": "corpus_000000996",
+      "selected_position": 65
+    },
+    {
+      "expected_payload_hash": "41d9117c336598098c2f4881ab95f2a2988a93af2883ed17a94e177335265153",
+      "index": 213,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00213.json",
+      "selected_example_id": "corpus_000000426",
+      "selected_position": 7
+    },
+    {
+      "expected_payload_hash": "20a32d266c8b9231ac4f9d85b9ec9984ee093b38e1802c6287017490efd2eeb5",
+      "index": 215,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00215.json",
+      "selected_example_id": "corpus_000000063",
+      "selected_position": 25
+    },
+    {
+      "expected_payload_hash": "783d9b08b99ad103e650b6639689f2fa8730f325080c350460f13b5159a66f5e",
+      "index": 224,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00224.json",
+      "selected_example_id": "corpus_000000660",
+      "selected_position": 29
+    },
+    {
+      "expected_payload_hash": "0b8d01b83cbef8040abe1249ac74dd827c0fa0c7d644ce53cee67640dd2fcfd3",
+      "index": 225,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00225.json",
+      "selected_example_id": "corpus_000000387",
+      "selected_position": 121
+    },
+    {
+      "expected_payload_hash": "caa7762601fa5c25a91c60ee247dddf6590c6e1964f482ef8509599cb9c1f31d",
+      "index": 228,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00228.json",
+      "selected_example_id": "corpus_000000503",
+      "selected_position": 114
+    },
+    {
+      "expected_payload_hash": "82bc9f56b5c259fda4b1b571469f8b55eaff7f0535a46aec3d7907d4e895f092",
+      "index": 229,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00229.json",
+      "selected_example_id": "corpus_000000566",
+      "selected_position": 82
+    },
+    {
+      "expected_payload_hash": "d39582d7f5ad5ded41967605b4b8aee0a521b351b25090809c8b649ac6c1e543",
+      "index": 232,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00232.json",
+      "selected_example_id": "corpus_000000898",
+      "selected_position": 114
+    },
+    {
+      "expected_payload_hash": "58e21a719b4379ab1afa50793ea8bbf2fa54fa4c718e848ed25202f8fc4276b0",
+      "index": 233,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00233.json",
+      "selected_example_id": "corpus_000000109",
+      "selected_position": 79
+    },
+    {
+      "expected_payload_hash": "63920efc26dfd8d03cf9d2ab86026e043893f7a35d888419be70a3799f48ee63",
+      "index": 239,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00239.json",
+      "selected_example_id": "corpus_000000005",
+      "selected_position": 45
+    },
+    {
+      "expected_payload_hash": "b5bb727071f8243ec7caf703d95d9506db8f120bb15c5d2f5f448835dfe32c13",
+      "index": 242,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00242.json",
+      "selected_example_id": "corpus_000000779",
+      "selected_position": 14
+    },
+    {
+      "expected_payload_hash": "ba92ac3171010ce2e6ccd222147df8dde20631add03687a8e6618469cc53bcb8",
+      "index": 244,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00244.json",
+      "selected_example_id": "corpus_000000793",
+      "selected_position": 23
+    },
+    {
+      "expected_payload_hash": "2096ac32aa946b12aae2e7e87933a58f76c9f2b0db7f773e2898093c12ceb18b",
+      "index": 245,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00245.json",
+      "selected_example_id": "corpus_000000038",
+      "selected_position": 3
+    },
+    {
+      "expected_payload_hash": "650db0f275c1bd686a540287c379fa9f2753a79cf681bc49154d95ff18bfb711",
+      "index": 248,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00248.json",
+      "selected_example_id": "corpus_000000688",
+      "selected_position": 40
+    },
+    {
+      "expected_payload_hash": "a247981446d96d52ac7a8b9d7973cc2dd1946e53569acc6ea6c8f0754ef0c511",
+      "index": 249,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00249.json",
+      "selected_example_id": "corpus_000000226",
+      "selected_position": 69
+    },
+    {
+      "expected_payload_hash": "4f878fd63485d4fff6525c6ec6ff24999252a293c656c97042264dea69ffbe75",
+      "index": 252,
+      "reason": "zero_byte",
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00252.json",
+      "selected_example_id": "corpus_000000279",
+      "selected_position": 13
+    }
+  ]
+}

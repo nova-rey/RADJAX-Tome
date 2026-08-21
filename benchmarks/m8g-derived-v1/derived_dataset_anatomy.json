@@ -1,0 +1,15 @@
+{
+  "dynamic_k": {
+    "max": 262144,
+    "median": 2779,
+    "min": 32
+  },
+  "excluded_count": 84,
+  "full_width_count": 75,
+  "full_width_fraction": 0.4437869822485207,
+  "included_count": 169,
+  "input_bytes": 1208148840,
+  "logical_root": "sha256:51eba04fbb2a6a2ee6d20a8c7d65b0027c3c559e38cd91f952c2176656ed933c",
+  "padded_physical_entries": 44302336,
+  "retained_entries": 19771962
+}

@@ -1,0 +1,2542 @@
+{
+  "dataset": "M8G_DERIVED_VALID_EXEMPLAR_COMPONENT_BENCHMARK_V1",
+  "included_count": 169,
+  "records": [
+    {
+      "actual_sha256": "sha256:ca03e175ba0b3484d560500b0227d100af702e01bd8899dfb5c41130ecad479d",
+      "actual_size": 4197110,
+      "coordinate": {
+        "example_id": "corpus_000000662",
+        "position": 6
+      },
+      "full_width": false,
+      "index": 0,
+      "logical_digest": "sha256:dfd53edf2be6139255bf30c0d181e662a71e2eb7cf2df1b5b7469ae34eca1e2d",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00000.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:fb0dfe9bcd32007ceb7f02b4f5d4720a5a63cfe572b19d0dcec2d911bcf6a34a",
+      "actual_size": 4197104,
+      "coordinate": {
+        "example_id": "corpus_000000827",
+        "position": 16
+      },
+      "full_width": false,
+      "index": 1,
+      "logical_digest": "sha256:82de626d09d26ecc18615746fe68867cd7bed002ddbfce1199f6bddb68dd1d18",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00001.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:fc7eca798d8748c4c823c33490a0a39a8d011d3b11be06ac94fe0e91dbfa9dd0",
+      "actual_size": 4197116,
+      "coordinate": {
+        "example_id": "corpus_000000346",
+        "position": 76
+      },
+      "full_width": false,
+      "index": 3,
+      "logical_digest": "sha256:b2ed5689bcc3b02bff0125919505ac44168723de0c8bc2cc1159d5469616f9ac",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00003.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:e94d2945c16d56232247649f34b2582c1412dbb8b0792551cf6f370c05f21145",
+      "actual_size": 4197057,
+      "coordinate": {
+        "example_id": "corpus_000000971",
+        "position": 35
+      },
+      "full_width": false,
+      "index": 6,
+      "logical_digest": "sha256:a9f51769915d0f692da5318622973af922aa698f8af4e39895dac21e184747ba",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00006.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:7efde3d93bb8bfa5eb16c71c4e65dd7e1b6cd38191ffd7eacded59320a980a2e",
+      "actual_size": 4197111,
+      "coordinate": {
+        "example_id": "corpus_000000978",
+        "position": 118
+      },
+      "full_width": false,
+      "index": 7,
+      "logical_digest": "sha256:e02db65d2ba77aa5f7b4a5d1ccc1dac4493990d6f7aa2a47e335eac9c763abb5",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00007.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ca8504bce06a4bc08aa1425f996ab49ed9e4749cf170f93376a8c1e7d6ee96cf",
+      "actual_size": 4197104,
+      "coordinate": {
+        "example_id": "corpus_000000716",
+        "position": 79
+      },
+      "full_width": false,
+      "index": 10,
+      "logical_digest": "sha256:d6c2b9e1c2eca876c48df2e53d3b0d4beb0d7fc2b1399ab6f5ca2120562cb9dd",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00010.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:63ecacd21e0a3f285f7d97ab8950b03032f0eafbfd4562f92f6bbe8c8ac970e8",
+      "actual_size": 4197106,
+      "coordinate": {
+        "example_id": "corpus_000000079",
+        "position": 11
+      },
+      "full_width": false,
+      "index": 11,
+      "logical_digest": "sha256:0b4dc7674deb11a40d9e154a6ee60e027560577e75b07797a95e1f3113b7c248",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00011.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:0bc8e051f684ac0954cde749144e55eb6155f9e8f71bff1906bb978bc7c39279",
+      "actual_size": 4197057,
+      "coordinate": {
+        "example_id": "corpus_000000481",
+        "position": 85
+      },
+      "full_width": false,
+      "index": 14,
+      "logical_digest": "sha256:b64b51b0355ab583a0a01cdd2bd08cb4b82d4cd7419688bba7073dd164943f8e",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00014.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:f9743fe3b8314c6480aa7dd4c061923d03c269cfdf3a865d8d130e3174ce231a",
+      "actual_size": 4197069,
+      "coordinate": {
+        "example_id": "corpus_000000399",
+        "position": 24
+      },
+      "full_width": false,
+      "index": 15,
+      "logical_digest": "sha256:38809d0a239fa2d4d58d7edffbeadd854a5fcdd407181a95cd470541b79a82f9",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00015.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:20e1b5e72393fc90716eba5ba8ec01e6af1e8cb85d855f6a65e22a4007d7d863",
+      "actual_size": 4197172,
+      "coordinate": {
+        "example_id": "corpus_000000547",
+        "position": 19
+      },
+      "full_width": false,
+      "index": 16,
+      "logical_digest": "sha256:5e5074d857186bc294e21cd5f32b5002cef518cefec58bd560c5ed7d5cbbcd16",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00016.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ef91dda4a5f67b682970a10575d10655f9385f9e3e4877a5e8c61f73dcb0bdc0",
+      "actual_size": 4197092,
+      "coordinate": {
+        "example_id": "corpus_000000030",
+        "position": 85
+      },
+      "full_width": false,
+      "index": 18,
+      "logical_digest": "sha256:67f94d0bbc52ee0bbcddec3b36a58a53164f3b2f7827c6f0a8ba0dd2a08acd78",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00018.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:23e8dca8a28232ac608f35f2aba74ce1efe4401448af47b93922700a40457356",
+      "actual_size": 4197093,
+      "coordinate": {
+        "example_id": "corpus_000000048",
+        "position": 106
+      },
+      "full_width": false,
+      "index": 19,
+      "logical_digest": "sha256:e120ac57d8c3edd6a8f09dbafee33c10e06e08903603108b26aa3e74edcbef89",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00019.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:17daf25de5ed66e7d57449f9fca5343ff73c0bdd022ded652c24f3cf71a3d17c",
+      "actual_size": 4197151,
+      "coordinate": {
+        "example_id": "corpus_000000076",
+        "position": 126
+      },
+      "full_width": false,
+      "index": 20,
+      "logical_digest": "sha256:e615873625e2cb6e5eecbb0966830c16530f22614313c1d073e0a7ae33fb32a8",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00020.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:2b209798ef360f4bf02a0aa3807ba675ee14038aaf57198f9d3b759380d55f6d",
+      "actual_size": 4197190,
+      "coordinate": {
+        "example_id": "corpus_000000107",
+        "position": 121
+      },
+      "full_width": false,
+      "index": 21,
+      "logical_digest": "sha256:ba2ba317afbe9db5c366c6bf3bab0a33663567bcb75799e70a0cf4720b91a413",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00021.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:88b8e157c022634f6b5c8dc2b6c7a496b03bd18daa0d4d7d2b8035b7c3faf859",
+      "actual_size": 4197157,
+      "coordinate": {
+        "example_id": "corpus_000000277",
+        "position": 58
+      },
+      "full_width": false,
+      "index": 22,
+      "logical_digest": "sha256:caf3cebc6cfd392a5a9a604eee11783c774366b5608d3e54595c5e31eb568e05",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00022.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:5cd4b099cdd931bfa2454d971f5552ba4d288a4f688b79a0a28731987b9f3cf5",
+      "actual_size": 4197122,
+      "coordinate": {
+        "example_id": "corpus_000000287",
+        "position": 15
+      },
+      "full_width": false,
+      "index": 23,
+      "logical_digest": "sha256:a7a9c9ed1cbdb0103638acd20b5cb934fc26e05f7f2160d6a88b7db132349a58",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00023.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:b9b0236d63af18b3181eff547a0213e87416ae8ca65b21341cfff373fb2f5a8d",
+      "actual_size": 4197202,
+      "coordinate": {
+        "example_id": "corpus_000000505",
+        "position": 94
+      },
+      "full_width": false,
+      "index": 26,
+      "logical_digest": "sha256:e7b98284bf39ff1992924d0de81fa4ac98690d3dc960d6496f0f1e31b108ebfa",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00026.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:6192bee7cc677736609954f03a55a8b745e1f7ea0b854a6250c2d42377eac81d",
+      "actual_size": 4204494,
+      "coordinate": {
+        "example_id": "corpus_000000472",
+        "position": 88
+      },
+      "full_width": false,
+      "index": 27,
+      "logical_digest": "sha256:ba00f8e8dea4ba4bfc9b3f1270ecc29e03b0774bab1c5a8955ad4b8a317baf33",
+      "logical_k": 353,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00027.json",
+      "retained_entries": 353,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ad8dea11587e54f2ef02731d992881048ad4d02662cd5d0a1d1254253febf2d0",
+      "actual_size": 4197142,
+      "coordinate": {
+        "example_id": "corpus_000000046",
+        "position": 87
+      },
+      "full_width": false,
+      "index": 30,
+      "logical_digest": "sha256:f9db3f2963aa2b8ffa3323b05216c6558c25bb0b6c2a90fc605cecd7265e88a2",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00030.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:0028e4b2473454debd0b4c5d2e3d690f3dd1450da25de68332b32de5ad235fe6",
+      "actual_size": 4199645,
+      "coordinate": {
+        "example_id": "corpus_000000121",
+        "position": 115
+      },
+      "full_width": false,
+      "index": 31,
+      "logical_digest": "sha256:2a5d3e0d2e1c3622d95318dc499d0458a27c56e15fb27e10ed7319af5aeefeb1",
+      "logical_k": 147,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00031.json",
+      "retained_entries": 147,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:70c732387bb9bd643483c8bb345c8a5a60c355e0eb1039eb2d59df4d3907ea03",
+      "actual_size": 4197095,
+      "coordinate": {
+        "example_id": "corpus_000000257",
+        "position": 4
+      },
+      "full_width": false,
+      "index": 34,
+      "logical_digest": "sha256:53381898af3ef341f9c4bc84117664fe871c916ad37cb2725024151cd9ada6df",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00034.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:456a57cfc584f582c0b8fea516fe0befb885d2e03af690430facb08ba66d203b",
+      "actual_size": 4196976,
+      "coordinate": {
+        "example_id": "corpus_000000765",
+        "position": 110
+      },
+      "full_width": false,
+      "index": 35,
+      "logical_digest": "sha256:eb7f0e5c8a70ea25a5439af4cb0249dd476112d3bae685a382d186d77cfb6a10",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00035.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:a3bac6a2da5bdfb54befc48b42c55196b018636c1818c1f5917f24a30d5ec986",
+      "actual_size": 4241297,
+      "coordinate": {
+        "example_id": "corpus_000000352",
+        "position": 109
+      },
+      "full_width": false,
+      "index": 36,
+      "logical_digest": "sha256:0979058b00432c40e19bc288525152cd616c49962582a4a710a3982d566d1fd4",
+      "logical_k": 1807,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00036.json",
+      "retained_entries": 1807,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:c3a22b87096a442924b77cd9de2b75436f16b6f0975078a2614075e97aab9241",
+      "actual_size": 4242172,
+      "coordinate": {
+        "example_id": "corpus_000000356",
+        "position": 55
+      },
+      "full_width": false,
+      "index": 37,
+      "logical_digest": "sha256:2aa25c5ef6cccc7787cd3e2f98f49c5c6609ac550936a8d87d10b1e92f51234c",
+      "logical_k": 1856,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00037.json",
+      "retained_entries": 1856,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:301620861fc34c20545671c9cc924a4f6d93171d225ee7d6e41e2d7750acf2d6",
+      "actual_size": 4197084,
+      "coordinate": {
+        "example_id": "corpus_000000023",
+        "position": 3
+      },
+      "full_width": false,
+      "index": 39,
+      "logical_digest": "sha256:db96116c3a365006b3d16348364c1cf392d20134985b16e7a9d78f9f4c624382",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00039.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:d15189df676b86af4d9e933a8792156f7276537b4458765c95040a267760f2a7",
+      "actual_size": 4198769,
+      "coordinate": {
+        "example_id": "corpus_000000030",
+        "position": 15
+      },
+      "full_width": false,
+      "index": 40,
+      "logical_digest": "sha256:c9cc18555c3311c78379ddb5b1919f3052b97cb05da980e22c5e3600fa822a2b",
+      "logical_k": 112,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00040.json",
+      "retained_entries": 112,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ccff65b7d13e1691f52c02b4e4cf0f2573164fe09bbadc7be0e0937886cf6b4e",
+      "actual_size": 4198711,
+      "coordinate": {
+        "example_id": "corpus_000000078",
+        "position": 54
+      },
+      "full_width": false,
+      "index": 41,
+      "logical_digest": "sha256:c747204a154adf54d87c1bc519a9d6435806ae6a2ade2f03ed9158553e09cbe7",
+      "logical_k": 108,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00041.json",
+      "retained_entries": 108,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:1161607a046eddb8fbb6c40467cf744e9d4caf98245eac623201542276aee5e7",
+      "actual_size": 4197098,
+      "coordinate": {
+        "example_id": "corpus_000000508",
+        "position": 43
+      },
+      "full_width": false,
+      "index": 42,
+      "logical_digest": "sha256:0188d24af6a7cd55b843bb36844f662b3179f95fe086400829970d404c122b45",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00042.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:134014dc34aa55eeb0e02c9b564d65399046324b362559f7c2a027b64baaf940",
+      "actual_size": 4197062,
+      "coordinate": {
+        "example_id": "corpus_000000954",
+        "position": 96
+      },
+      "full_width": false,
+      "index": 43,
+      "logical_digest": "sha256:0b13b34c154954c250acd91d0abb0b937f5a4a8822ff62e8a3e05d02983303c2",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00043.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:99351f2f28711780190508b95d6334a5b1caab4a537e3d16b114e24288cbf531",
+      "actual_size": 10806323,
+      "coordinate": {
+        "example_id": "corpus_000000135",
+        "position": 52
+      },
+      "full_width": true,
+      "index": 46,
+      "logical_digest": "sha256:7b1f07cc444a3de2b49153a20c1bee098e173a9ab1ad51a3156887abab4fb256",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00046.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:05daf254cc768379b697e5f4805a57e2a06d76e134344a5c48c05c34719dde36",
+      "actual_size": 4207343,
+      "coordinate": {
+        "example_id": "corpus_000000298",
+        "position": 105
+      },
+      "full_width": false,
+      "index": 47,
+      "logical_digest": "sha256:80fd0461b6fb2f6a268d09e64f1c9df70fcbd0c7abbfad6bbc2c05fd297fd51e",
+      "logical_k": 449,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00047.json",
+      "retained_entries": 449,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:e11b67b40742e657ff411581a28c647c775e088d6802e82022116ae8b10ea7e0",
+      "actual_size": 4198006,
+      "coordinate": {
+        "example_id": "corpus_000000026",
+        "position": 93
+      },
+      "full_width": false,
+      "index": 50,
+      "logical_digest": "sha256:57ea328db0bb4f5caf4380d3a6b8e728d0e9edd5b5fd843ce83c9b582625e1c7",
+      "logical_k": 74,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00050.json",
+      "retained_entries": 74,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:fa41ca98e007bc8925342013804c9c0dae173cc521c165af0dde0cefa3f464d2",
+      "actual_size": 4197072,
+      "coordinate": {
+        "example_id": "corpus_000000030",
+        "position": 72
+      },
+      "full_width": false,
+      "index": 51,
+      "logical_digest": "sha256:947cace93cf355a1f2ebd952b275809f08de14fbc7eb8ac7abadaa31143f03d5",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00051.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:e3c67fd87a220ea397584ca5b4ac4b80596a03bda563506ce94027bb945ff6f6",
+      "actual_size": 4205045,
+      "coordinate": {
+        "example_id": "corpus_000000033",
+        "position": 72
+      },
+      "full_width": false,
+      "index": 54,
+      "logical_digest": "sha256:b1decac2c54a87f42491010b8b2d82185a7498fa0788243d0884fe9cd3d5cdf2",
+      "logical_k": 372,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00054.json",
+      "retained_entries": 372,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:4116c8cd926cf9c42b67c1ec81cbd6d9e018f6cde8e049479161f345321e6308",
+      "actual_size": 4219328,
+      "coordinate": {
+        "example_id": "corpus_000000313",
+        "position": 116
+      },
+      "full_width": false,
+      "index": 56,
+      "logical_digest": "sha256:55c950a796e57281035cde7166440f5107b79061980f077cc36b1550eb8422ba",
+      "logical_k": 943,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00056.json",
+      "retained_entries": 943,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ecfb8ed482d7c82ff4b1219169634b14777bfb50bce2926eaf633302007e0387",
+      "actual_size": 4198136,
+      "coordinate": {
+        "example_id": "corpus_000000005",
+        "position": 50
+      },
+      "full_width": false,
+      "index": 57,
+      "logical_digest": "sha256:0fc8c8052d3126d4314ada2a4e4a7edabc079161ade7444276e4f293bf6849fe",
+      "logical_k": 77,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00057.json",
+      "retained_entries": 77,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:186e164a211fba1eca6c87f58ca7f4d858d47ea031dff114bfef670fe4d4b520",
+      "actual_size": 4204211,
+      "coordinate": {
+        "example_id": "corpus_000000011",
+        "position": 24
+      },
+      "full_width": false,
+      "index": 58,
+      "logical_digest": "sha256:b42680d75a5c6e97c9e53be7550736827e09d07a037bdfbcdcbd4ed0eedceafb",
+      "logical_k": 329,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00058.json",
+      "retained_entries": 329,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:77a1723c4ec197d7cfc93533888ab22068ddd15c34088dc96a77dc29d6699f80",
+      "actual_size": 4197323,
+      "coordinate": {
+        "example_id": "corpus_000000019",
+        "position": 47
+      },
+      "full_width": false,
+      "index": 59,
+      "logical_digest": "sha256:5e887fd0cd52ca88cabb18f16a28dfb3b7ab2e01b83ce97d26a8dca9c60e2e03",
+      "logical_k": 49,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00059.json",
+      "retained_entries": 49,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:2e37a745fe49122a8e0b145beefe263a7eac9640af6bf80aa3ea0db270baa96c",
+      "actual_size": 4197145,
+      "coordinate": {
+        "example_id": "corpus_000000061",
+        "position": 70
+      },
+      "full_width": false,
+      "index": 60,
+      "logical_digest": "sha256:160441825e42ed55445e5d410ed0e34b43bbfcb3149b4a78921a096dbfea9088",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00060.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:7e8d322967c932b8c6b94544b511757e40b89f6b38e101c4109b6d5bca56520e",
+      "actual_size": 4197069,
+      "coordinate": {
+        "example_id": "corpus_000000592",
+        "position": 16
+      },
+      "full_width": false,
+      "index": 61,
+      "logical_digest": "sha256:3e5e0cf4473d9696fc056cf6b378a1b477939ea36d09363131dee240e2f84cfc",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00061.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:f6cf7f2d8a351d1c1009e3ca74507fd125ffd7950d698b972a758956bc7b9d97",
+      "actual_size": 4197116,
+      "coordinate": {
+        "example_id": "corpus_000000052",
+        "position": 20
+      },
+      "full_width": false,
+      "index": 62,
+      "logical_digest": "sha256:dc24631ba79cd366844b4ede74e0e75a6eeb2104ba8dc92bb63f69b87a1bef99",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00062.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ff0439d9905db9778ff2721dbe011a4bed12a2b25ce81440c077f71b489798a7",
+      "actual_size": 4238476,
+      "coordinate": {
+        "example_id": "corpus_000000625",
+        "position": 105
+      },
+      "full_width": false,
+      "index": 63,
+      "logical_digest": "sha256:8cac1e7c697fe4c5898f55a5410a490e3667e7f28a104fa3e89ac2f87f680deb",
+      "logical_k": 1708,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00063.json",
+      "retained_entries": 1708,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:797d55a18b835e97d3469712dc5229b3748c0bcfde922ddc45129060a87df5e1",
+      "actual_size": 4199655,
+      "coordinate": {
+        "example_id": "corpus_000000006",
+        "position": 89
+      },
+      "full_width": false,
+      "index": 66,
+      "logical_digest": "sha256:494085aee9a0651bf74a4ed621befbdf6a5f6e25af818221ec4168bb0bd57288",
+      "logical_k": 166,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00066.json",
+      "retained_entries": 166,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:3abecd8f9d5a82b452e96183d037dcea58f17217285326500db1956be238675a",
+      "actual_size": 10802708,
+      "coordinate": {
+        "example_id": "corpus_000000011",
+        "position": 93
+      },
+      "full_width": true,
+      "index": 67,
+      "logical_digest": "sha256:b286e01677948d1843d9da0f612c07a0e2eff711654f7aaa5da18f579d10b7cc",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00067.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:962689d7d9aa79250ee888a03acbf941488880ec9e35c6bf1f3917d9b49e5a49",
+      "actual_size": 4198663,
+      "coordinate": {
+        "example_id": "corpus_000000006",
+        "position": 54
+      },
+      "full_width": false,
+      "index": 70,
+      "logical_digest": "sha256:01745b0efac7f1121d5b5112864f83fdaf9823a1e15a2c73f4ce952290070a55",
+      "logical_k": 105,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00070.json",
+      "retained_entries": 105,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:18ba46f90f7c87ca44f9cf9ef881b3ddff0571e105610090b6c4f84f72e0335a",
+      "actual_size": 4211621,
+      "coordinate": {
+        "example_id": "corpus_000000058",
+        "position": 107
+      },
+      "full_width": false,
+      "index": 71,
+      "logical_digest": "sha256:ce1e2142275301fae8653c63d2daa5097c71c8ff88a88ac36b4c55ab8a3c0477",
+      "logical_k": 612,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00071.json",
+      "retained_entries": 612,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:9fc1667be780d720aa6d0537124c60579e7157968b6127fc7b44fe0b19e7887b",
+      "actual_size": 4196957,
+      "coordinate": {
+        "example_id": "corpus_000000876",
+        "position": 45
+      },
+      "full_width": false,
+      "index": 74,
+      "logical_digest": "sha256:2c5604d351318ce551f9b3fa76aadded44b0c82014019fa8ce51bc7cd7f74108",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00074.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:72c9dae26b0b98df39b83195b2b3ad7792b61160e4db4fad6d56a9b1ca120633",
+      "actual_size": 4238310,
+      "coordinate": {
+        "example_id": "corpus_000000594",
+        "position": 8
+      },
+      "full_width": false,
+      "index": 75,
+      "logical_digest": "sha256:4011eadd41ce656675916f49217cd85dd452b0b70930f8786fdcb591e3d0acfb",
+      "logical_k": 1710,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00075.json",
+      "retained_entries": 1710,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:aa3acb48088f22626971d43059390c31329ceb8711f7845e4e65c991247b5a64",
+      "actual_size": 10816266,
+      "coordinate": {
+        "example_id": "corpus_000000218",
+        "position": 83
+      },
+      "full_width": true,
+      "index": 76,
+      "logical_digest": "sha256:465a1c2e5622faf75168a4877e92645c63708bde4f44778a2ed7f22d25998371",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00076.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ba7b84b37fd188b733788815c0e7a9bc25bcb7fefb9ea3ef32549f4054310b14",
+      "actual_size": 10809476,
+      "coordinate": {
+        "example_id": "corpus_000000218",
+        "position": 101
+      },
+      "full_width": true,
+      "index": 77,
+      "logical_digest": "sha256:31ede3dd3988f1173ef66f88c6997b5068c5c3a7059578bf59bcf221d55d682e",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00077.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:14a6fd34ca67cfc855e009212b74cc49afd2fa48295ee4dc770bb8ea3c3f3e07",
+      "actual_size": 4211121,
+      "coordinate": {
+        "example_id": "corpus_000000004",
+        "position": 26
+      },
+      "full_width": false,
+      "index": 78,
+      "logical_digest": "sha256:ab1a911338a405ce50b70e1a058f04bff2626cd4d7bcefbcbd7b629b83f5405f",
+      "logical_k": 613,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00078.json",
+      "retained_entries": 613,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:31f31e90e43f32dc281e2cfd32bd3cf583eaf2786a362699c68ddbeb3ec04a67",
+      "actual_size": 4199102,
+      "coordinate": {
+        "example_id": "corpus_000000008",
+        "position": 57
+      },
+      "full_width": false,
+      "index": 81,
+      "logical_digest": "sha256:3fe7a14ddec4d27a65cc689fb53302985d1046a6441fb02d1cf29f1ff4419252",
+      "logical_k": 122,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00081.json",
+      "retained_entries": 122,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:430f3f493718717256e05b01ec721b5677c069f80ef8fae537c9c24539ceeb54",
+      "actual_size": 4197941,
+      "coordinate": {
+        "example_id": "corpus_000000012",
+        "position": 117
+      },
+      "full_width": false,
+      "index": 82,
+      "logical_digest": "sha256:04c3cadcdfb896b24d3ab20e54d2f8fbaa965fa23378a6ad8015312444d60a70",
+      "logical_k": 72,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00082.json",
+      "retained_entries": 72,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:f63703c2e4ec2383e34d42ebbe827b91c13656a891beb11622cbc05b94ed4e48",
+      "actual_size": 4198834,
+      "coordinate": {
+        "example_id": "corpus_000000028",
+        "position": 124
+      },
+      "full_width": false,
+      "index": 83,
+      "logical_digest": "sha256:bbd41f4ce7f169c1e127523a9925f22fe204de6111c7166e557849dc92033821",
+      "logical_k": 111,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00083.json",
+      "retained_entries": 111,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:2fea97e3555f3b19e04cefed76145787b0650e91198400010d2c3a6764b321d4",
+      "actual_size": 4196957,
+      "coordinate": {
+        "example_id": "corpus_000000030",
+        "position": 106
+      },
+      "full_width": false,
+      "index": 84,
+      "logical_digest": "sha256:7085e318b580ef3e65dd5f718fc9a2a3775309f43300b2984794e946ff8054a6",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00084.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:d61a8001a798d7f756b5785ec5c5d2d0414c962bab5d57aed713b6fc0be6e7cb",
+      "actual_size": 4197042,
+      "coordinate": {
+        "example_id": "corpus_000000252",
+        "position": 83
+      },
+      "full_width": false,
+      "index": 85,
+      "logical_digest": "sha256:6bf539ec16d20db8f1e8efc2c302792ffddd62bbb7747e14e94a42d205eed73f",
+      "logical_k": 32,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00085.json",
+      "retained_entries": 32,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:096db5bf54d204789781ad71758ccf57830b33592bd9939d199ef9f349b6cb33",
+      "actual_size": 10806752,
+      "coordinate": {
+        "example_id": "corpus_000000081",
+        "position": 14
+      },
+      "full_width": true,
+      "index": 88,
+      "logical_digest": "sha256:de38f87502bcc0772c628bfaf3da5595883130eee64b97236b69c8facf57d544",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00088.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:aa685f8f4c4a151f9df7266983dc2c0f8ff334772cfc185c924d18f5359d21d1",
+      "actual_size": 4240520,
+      "coordinate": {
+        "example_id": "corpus_000000123",
+        "position": 104
+      },
+      "full_width": false,
+      "index": 89,
+      "logical_digest": "sha256:510bcf2c36a2fdd273c1a7c54e4edcbbcc0131c1f434c0243eda2af93ff282b6",
+      "logical_k": 1796,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00089.json",
+      "retained_entries": 1796,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:4cf9e2789dd1ca6d9fd20cf617cdac9e21f9c129214e15328694e992bd6377dd",
+      "actual_size": 4207858,
+      "coordinate": {
+        "example_id": "corpus_000000014",
+        "position": 101
+      },
+      "full_width": false,
+      "index": 92,
+      "logical_digest": "sha256:cb5d7fdd7868d79aede7c884d440dafcc2d8b72e179871551bf7b211841d6958",
+      "logical_k": 497,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00092.json",
+      "retained_entries": 497,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:b293c4d54c1eca720eeaf6a48c52bc499909957918e1c392511c24999392c102",
+      "actual_size": 4204398,
+      "coordinate": {
+        "example_id": "corpus_000000006",
+        "position": 119
+      },
+      "full_width": false,
+      "index": 93,
+      "logical_digest": "sha256:eb4b83ad98ca096b7e13a8e3deb54fbff74b299b5050e40154b1312b71971549",
+      "logical_k": 331,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00093.json",
+      "retained_entries": 331,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:538e6b6972e7d613022450a966ff972879de91d6c4c91d5e1eeb3460d111c011",
+      "actual_size": 4200305,
+      "coordinate": {
+        "example_id": "corpus_000000007",
+        "position": 101
+      },
+      "full_width": false,
+      "index": 94,
+      "logical_digest": "sha256:b79b8693167db41ba232e857a6ebfe0c5be76146f78d47100975e4bcf3b39813",
+      "logical_k": 171,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00094.json",
+      "retained_entries": 171,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:167044efe3e5bc54e6e9ea8f6bf6aeaad9ea8a69bc4ab37a46598d84c1041c02",
+      "actual_size": 4205146,
+      "coordinate": {
+        "example_id": "corpus_000000011",
+        "position": 41
+      },
+      "full_width": false,
+      "index": 95,
+      "logical_digest": "sha256:80afa5c134e4016a25f1e303546cb34da4a2cc00637ade062ec60ce22c1b15d3",
+      "logical_k": 373,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00095.json",
+      "retained_entries": 373,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:922e53e5e6c1c98233fc946a21c63b532c0292bce3163f7ce6d97b7cf58fc9ae",
+      "actual_size": 10816818,
+      "coordinate": {
+        "example_id": "corpus_000000020",
+        "position": 79
+      },
+      "full_width": true,
+      "index": 97,
+      "logical_digest": "sha256:688bd6b62e99e8bcf9f6f2738263060464bec68f12b0a0ab9ac4588e2a914b93",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00097.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:b8c649876cd53ebe0fa97956113215adc37e02cd3a4d9272a04a301531460ad4",
+      "actual_size": 10806281,
+      "coordinate": {
+        "example_id": "corpus_000000224",
+        "position": 19
+      },
+      "full_width": true,
+      "index": 98,
+      "logical_digest": "sha256:9f53972b21561f5100373e920b8f4509f88ea6764c7ccea7e6136b53d5d33480",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00098.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:d106dd732d88b7b054047a10d08d2fc7ab73291a52acfcb54fa47997a4affbb3",
+      "actual_size": 4213859,
+      "coordinate": {
+        "example_id": "corpus_000000006",
+        "position": 49
+      },
+      "full_width": false,
+      "index": 99,
+      "logical_digest": "sha256:0538348920a87b18b0cdba45c2c9cadb80b93a26c8ab271ee3bea12025bd971d",
+      "logical_k": 707,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00099.json",
+      "retained_entries": 707,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:5dccf9a740afb08f6af5d11936c6c0d422f4931763609ac036e536af98c02041",
+      "actual_size": 4207940,
+      "coordinate": {
+        "example_id": "corpus_000000010",
+        "position": 115
+      },
+      "full_width": false,
+      "index": 102,
+      "logical_digest": "sha256:73666c08ac7c3846804280a499ff240ebef627f6dff24a7335a46f94bf29db27",
+      "logical_k": 471,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00102.json",
+      "retained_entries": 471,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:413d412b3cef1034c146fd47fc3b8d6fe05c4eee08a4b61b31698ef9db9271a8",
+      "actual_size": 4205864,
+      "coordinate": {
+        "example_id": "corpus_000000034",
+        "position": 53
+      },
+      "full_width": false,
+      "index": 103,
+      "logical_digest": "sha256:b9e4a4322aa6b2953baefc93dbc0ac73c1a28bed14c2582bd081f3f585a7a4e5",
+      "logical_k": 400,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00103.json",
+      "retained_entries": 400,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:235f7b55793366dc64cc5f17afc56ef13f769a234649fe45e41d888145bb79b3",
+      "actual_size": 4216668,
+      "coordinate": {
+        "example_id": "corpus_000000053",
+        "position": 112
+      },
+      "full_width": false,
+      "index": 104,
+      "logical_digest": "sha256:eccb1d3516736a65fe3646fb8345ba2c365355e16a9d0a5bc1a620490328abbb",
+      "logical_k": 848,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00104.json",
+      "retained_entries": 848,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:f47b91f6f0a1b2826412a5d0775b9489b4d90c055fc88a70ccf865ceda4c2ad4",
+      "actual_size": 4322555,
+      "coordinate": {
+        "example_id": "corpus_000000014",
+        "position": 18
+      },
+      "full_width": false,
+      "index": 105,
+      "logical_digest": "sha256:e87e25468ce53374d40dd6ab6fa3fa86d31782763240bc663ccfb9c78e84d09e",
+      "logical_k": 5082,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00105.json",
+      "retained_entries": 5082,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:be774118d397b12d6dff7a1498bf0dadf72a24718c3c8a86d3118f1ff928fcaf",
+      "actual_size": 4291365,
+      "coordinate": {
+        "example_id": "corpus_000000031",
+        "position": 11
+      },
+      "full_width": false,
+      "index": 106,
+      "logical_digest": "sha256:43cda13fa4007598f1e1572535c33f7da8955143b98761762c2b42667715a8bc",
+      "logical_k": 3848,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00106.json",
+      "retained_entries": 3848,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:dd429826ea2097e2e896adbbda0d648637bcf6797309503d2922d3f7c4cf54a2",
+      "actual_size": 10816920,
+      "coordinate": {
+        "example_id": "corpus_000000059",
+        "position": 123
+      },
+      "full_width": true,
+      "index": 107,
+      "logical_digest": "sha256:67fc8198bad332107e17d9ee33d22605a39f7019e5d207bf6a9e64afe1f51f49",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00107.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:0dd26894c44d9becdca4d31aa36fda92e836b457fc71ab992fa679b021213624",
+      "actual_size": 10815564,
+      "coordinate": {
+        "example_id": "corpus_000000006",
+        "position": 5
+      },
+      "full_width": true,
+      "index": 108,
+      "logical_digest": "sha256:422bfdf66cf62f4df83b518f2d804d8e18a749c41792ff00d7a81a1df7b84aa8",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00108.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:3a9430416369e7e45d418c922f973dcaa0f9d93aae1409d967e139b22eea33d2",
+      "actual_size": 10811839,
+      "coordinate": {
+        "example_id": "corpus_000000007",
+        "position": 2
+      },
+      "full_width": true,
+      "index": 109,
+      "logical_digest": "sha256:bbf3e1636742c7617c42ac2243aab01533099f511233a2464f13ecec4179327f",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00109.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:a0d65f8222877378c83e8f2fcca2495f4403b377b12eff2ff1652d8533ae2c7a",
+      "actual_size": 10801010,
+      "coordinate": {
+        "example_id": "corpus_000000001",
+        "position": 29
+      },
+      "full_width": true,
+      "index": 111,
+      "logical_digest": "sha256:e1e6fe4bb9b461a8a3e1c350ad1ec4f695c2806d1deaea5a283f9a5e020aebd0",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00111.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:a00fffd072380ea369d561ddac45670f5cc6df8e541cffe5f133867d77862254",
+      "actual_size": 10795744,
+      "coordinate": {
+        "example_id": "corpus_000000001",
+        "position": 33
+      },
+      "full_width": true,
+      "index": 112,
+      "logical_digest": "sha256:b00c6d21654983dcf8dd01527d03e8c9165aa71975a5d64331fe004c363ea6d9",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00112.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ce9fad8c31501072289ae6670be1fedf983b99b6bf5b3a4e2f0074abce59154d",
+      "actual_size": 10821694,
+      "coordinate": {
+        "example_id": "corpus_000000063",
+        "position": 61
+      },
+      "full_width": true,
+      "index": 113,
+      "logical_digest": "sha256:e7b8e8a4ac970a79a238203233b94b38f4797ee67dbb007c7ea3b1f4d844db93",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00113.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:6969e727129657da24398871910c151c2ef09ddeaef03d40c73c679236c369d0",
+      "actual_size": 10814622,
+      "coordinate": {
+        "example_id": "corpus_000000208",
+        "position": 33
+      },
+      "full_width": true,
+      "index": 114,
+      "logical_digest": "sha256:54dd6f08b0a5420228685b5cdddb6917868dd2c2b41c7c8deeedad03e9f972b6",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00114.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:aa526629e0297fd5a6978273f28a5545305773aee2723862644f74460bd65f4c",
+      "actual_size": 10809338,
+      "coordinate": {
+        "example_id": "corpus_000000001",
+        "position": 118
+      },
+      "full_width": true,
+      "index": 115,
+      "logical_digest": "sha256:df4b53d3c26e67015ebd8697d71d66e9cd64e861fca10ad651e4e52ca8700688",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00115.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:0a84d111adfc28397efd19056d3deab1dcc7b01d2ee633052027aa64d7e95929",
+      "actual_size": 4220335,
+      "coordinate": {
+        "example_id": "corpus_000000006",
+        "position": 73
+      },
+      "full_width": false,
+      "index": 118,
+      "logical_digest": "sha256:204c446d144a4d00e42fd803d024005de878afed1b1bb39b0e3d05a29bc8add2",
+      "logical_k": 1003,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00118.json",
+      "retained_entries": 1003,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:afda6206d3dba1e306a7a2e3c57cd4929ae8912b4c267c6789ad74857479c360",
+      "actual_size": 10818385,
+      "coordinate": {
+        "example_id": "corpus_000000190",
+        "position": 84
+      },
+      "full_width": true,
+      "index": 119,
+      "logical_digest": "sha256:9864841d3cd6d268274efba63f221c91dde03c9324e9046e9918d51aac633ad1",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00119.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:3a0617ded19907853a53ad8d2609af64d2d0dbb312944e4cf529198e7622b782",
+      "actual_size": 10818376,
+      "coordinate": {
+        "example_id": "corpus_000000005",
+        "position": 123
+      },
+      "full_width": true,
+      "index": 122,
+      "logical_digest": "sha256:b59ebdcea38fcbdf02ea74bc34c264981258a28ad1bdf6f31a60fcc95fb749f2",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00122.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:121aae79076e11773da44b29deebd066830833add2b9d65469a0d0c2daca53bd",
+      "actual_size": 10808777,
+      "coordinate": {
+        "example_id": "corpus_000000045",
+        "position": 6
+      },
+      "full_width": true,
+      "index": 123,
+      "logical_digest": "sha256:c7fa23512ecc317476169c5c32f544423a691c5c20f66ce8f66c79f15d989e85",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00123.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ce286ac655ea26d7fcb772dde886f62a6a19407140330880ac433a4125ed1e57",
+      "actual_size": 4271964,
+      "coordinate": {
+        "example_id": "corpus_000000059",
+        "position": 64
+      },
+      "full_width": false,
+      "index": 124,
+      "logical_digest": "sha256:6275f3049165e7c779438c695d12f45f6e72ffec82f534e84d3c491edb20c5b3",
+      "logical_k": 3027,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00124.json",
+      "retained_entries": 3027,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:5d055bb27300681120e1427cb31b62379e640ba6b7ff8c178dcfb18daa49d2d8",
+      "actual_size": 10819854,
+      "coordinate": {
+        "example_id": "corpus_000000463",
+        "position": 23
+      },
+      "full_width": true,
+      "index": 125,
+      "logical_digest": "sha256:9af1cae16bf0bd1fe65d3e34953dba30cac5799123ade32db38114632b4ecce4",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00125.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:4c25888a3ff1fdd90f8e51f0223db21f9e629ada6222e3024e375985291cc2da",
+      "actual_size": 10812394,
+      "coordinate": {
+        "example_id": "corpus_000000737",
+        "position": 12
+      },
+      "full_width": true,
+      "index": 126,
+      "logical_digest": "sha256:e32522e43240474dc8f36a7be72760b5fa875d4d1bac7cb6f8a7736534784b1d",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00126.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:af0a1591c8242115e85e94a5490c1144fe867b3b2f31a086c76fc68ce36da738",
+      "actual_size": 10815805,
+      "coordinate": {
+        "example_id": "corpus_000000528",
+        "position": 91
+      },
+      "full_width": true,
+      "index": 127,
+      "logical_digest": "sha256:0a68bc4ffb61363f011db1b7077e91ef8ebf4c56709de0a7ecfcf9d55389de5e",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00127.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:56f3d9a7ce915c5c566df1859b9f55cfd50cd80848fd761aacbca68286ff00ab",
+      "actual_size": 4428952,
+      "coordinate": {
+        "example_id": "corpus_000000962",
+        "position": 46
+      },
+      "full_width": false,
+      "index": 129,
+      "logical_digest": "sha256:dd68f29490f3779eea4bfa8e86bfbde9993f8e16544ef3f48d48a6ce26a43e4f",
+      "logical_k": 9213,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00129.json",
+      "retained_entries": 9213,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:d088a5f0dc7c5544ff964b554dad9205f1def22e0f733888edf283015d8c311c",
+      "actual_size": 10806196,
+      "coordinate": {
+        "example_id": "corpus_000000495",
+        "position": 44
+      },
+      "full_width": true,
+      "index": 130,
+      "logical_digest": "sha256:d11664b33910aaa343d8b112fbb00eab7af6eeefb1a959737a1a5e37402c87a7",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00130.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:91f7c9de992ada81bff83874c56d064c55b771f1a2b4c5508722e494b0e201e2",
+      "actual_size": 10818861,
+      "coordinate": {
+        "example_id": "corpus_000000424",
+        "position": 64
+      },
+      "full_width": true,
+      "index": 131,
+      "logical_digest": "sha256:f59a2614fe331fd02214fced10abc63d26a73cee0baa3126bce8dac9486de799",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00131.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:f992308ceed08593a1b4c8468b42c69e9110151413548c2e5bf5dc56aa9aabe7",
+      "actual_size": 10815888,
+      "coordinate": {
+        "example_id": "corpus_000000179",
+        "position": 123
+      },
+      "full_width": true,
+      "index": 132,
+      "logical_digest": "sha256:44afa0094499027d59406f1bb62013947ac8e39ab8a0b9bcd760a233a6bd4fe8",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00132.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:6944253652c28f6ab7f744776bf8446f9c0ed60513c5cf6c3d98d256ba402e37",
+      "actual_size": 10814952,
+      "coordinate": {
+        "example_id": "corpus_000000224",
+        "position": 25
+      },
+      "full_width": true,
+      "index": 133,
+      "logical_digest": "sha256:801fbf257e86f98d4eb1832ba17f16fbfb824dbf4b6b22d926f4bdea9c738516",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00133.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:6d7bf91f4e1aa160ab6565c927a2a01248c38e41952158e37a7bec6b0942270d",
+      "actual_size": 10810858,
+      "coordinate": {
+        "example_id": "corpus_000000278",
+        "position": 83
+      },
+      "full_width": true,
+      "index": 134,
+      "logical_digest": "sha256:320d59256deb452e398f414347eebdf50880f7671e3708ea6874e3d237fa53dd",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00134.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:c80371ccaa3c850ab6ed38f6a961ba13519f202df0ac94311f2288f1cfe716f3",
+      "actual_size": 10810303,
+      "coordinate": {
+        "example_id": "corpus_000000563",
+        "position": 25
+      },
+      "full_width": true,
+      "index": 135,
+      "logical_digest": "sha256:af0f0d8caf34581661f46cf28e939e3f15d038afb8c29f831e6dd03928fde2c4",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00135.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ae3188cfba46f9c7a68b39021f83400b1f210981be819c133efc0267381a4693",
+      "actual_size": 10829748,
+      "coordinate": {
+        "example_id": "corpus_000000474",
+        "position": 76
+      },
+      "full_width": true,
+      "index": 138,
+      "logical_digest": "sha256:8f2541f54f4a95852c0d0fee69721f7ff23611b5efb280494b8f6da6b62aefaa",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00138.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:0b1027cbc5731577824ed56661367b30bff159c58584fc807a9b0da3ee1bdff9",
+      "actual_size": 10806043,
+      "coordinate": {
+        "example_id": "corpus_000000246",
+        "position": 35
+      },
+      "full_width": true,
+      "index": 139,
+      "logical_digest": "sha256:2249bcab94db20a2d444c2591fa8ae981a753acac1519202359be7bfb032d4a2",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00139.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:6a10cc1226749e9ac0a2a294a5f8b91d73b3ef4dc2089649fbbeff2945f59fa7",
+      "actual_size": 10807675,
+      "coordinate": {
+        "example_id": "corpus_000000988",
+        "position": 45
+      },
+      "full_width": true,
+      "index": 142,
+      "logical_digest": "sha256:1b25e6f21abc6ff02a7bb5c93c9604cb1d0033b0e535a707dcd0873a98259e71",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00142.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ce0ecf22fadaed3eb9ae783c54b69076fa31a608b353f181766aed5d92215140",
+      "actual_size": 10832075,
+      "coordinate": {
+        "example_id": "corpus_000000094",
+        "position": 31
+      },
+      "full_width": true,
+      "index": 143,
+      "logical_digest": "sha256:8d5b7c501d31c075cf21a319514a640031efd1699ab87b3bec8310fd16daf32e",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00143.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:6dd6e7efc3a77c0a1128a1f1440561d4a2c97cb2455d1f866bbd36e163e80577",
+      "actual_size": 10803092,
+      "coordinate": {
+        "example_id": "corpus_000000313",
+        "position": 102
+      },
+      "full_width": true,
+      "index": 144,
+      "logical_digest": "sha256:8d87cae7e327aa2ecd1719249bc401d5bb66e2d831d4f13e8057c3c899014eb8",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00144.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:e9ae00c0adc6737cacb6f0d2605bd0856bb14ba1fe679476c1ad455148137f5b",
+      "actual_size": 10836632,
+      "coordinate": {
+        "example_id": "corpus_000000425",
+        "position": 67
+      },
+      "full_width": true,
+      "index": 145,
+      "logical_digest": "sha256:30f467fb159801c2e631a117f046ea1b881e1b8e29c882394399f0d5181fe2de",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00145.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:e2a653f784414490a04360c64e49e586cdd8aacc39bb83ce32b698efe32d3db4",
+      "actual_size": 10805082,
+      "coordinate": {
+        "example_id": "corpus_000000643",
+        "position": 83
+      },
+      "full_width": true,
+      "index": 146,
+      "logical_digest": "sha256:c4fd4d5614981ddc8070b4eafc237b4e9d4c509d4674193154bfd4b4a6d7fa6a",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00146.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:579020c29918b1595c7890381f4950fd8f31787dedc53d76fad6c0d54da1a901",
+      "actual_size": 10804970,
+      "coordinate": {
+        "example_id": "corpus_000000152",
+        "position": 24
+      },
+      "full_width": true,
+      "index": 148,
+      "logical_digest": "sha256:e4b2daa361cb97566324e524c0ac00b7a73aaa1670af858281029e16de8eebb9",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00148.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:18352ab735bddd0b5bed3a948e5d0df36aaec8dc975b4b3ef38dd744fdf29dcc",
+      "actual_size": 10805425,
+      "coordinate": {
+        "example_id": "corpus_000000228",
+        "position": 108
+      },
+      "full_width": true,
+      "index": 149,
+      "logical_digest": "sha256:c61c02e494f47221985ed6d750a962a6c7f8cfa8ee852e975cbde10b52e5c20e",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00149.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:1d2f87ec3541d27668b56319d08a6aaa74bf312fb3fa66813282118fe77dee8d",
+      "actual_size": 10802361,
+      "coordinate": {
+        "example_id": "corpus_000000280",
+        "position": 2
+      },
+      "full_width": true,
+      "index": 150,
+      "logical_digest": "sha256:a1d65badd734ebe2e27449f393bf11a2c9113ec246602023c05059431b65b82b",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00150.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:7c7364884888ac85caf4e3b88cbd33fe7f98982632d71b7534e4b6f15540737d",
+      "actual_size": 10814107,
+      "coordinate": {
+        "example_id": "corpus_000000550",
+        "position": 110
+      },
+      "full_width": true,
+      "index": 152,
+      "logical_digest": "sha256:729b2fae5530879b735aaace4bc5e159a487045d6c083b371f20567c4d30701e",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00152.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:c696c658b433993a598eeea4a4574faa32ca181a5460e5757863a671e7f3c342",
+      "actual_size": 10802521,
+      "coordinate": {
+        "example_id": "corpus_000000556",
+        "position": 122
+      },
+      "full_width": true,
+      "index": 153,
+      "logical_digest": "sha256:9029ee3d71d0bdf78a38d2a00ea4e9077dbc664e47a02378e78a56a229ad35ba",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00153.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:a2d66b843ec4af81c220599ebff8d3260d15b2f20f1dc687fc8667bda390a7cf",
+      "actual_size": 10806896,
+      "coordinate": {
+        "example_id": "corpus_000000906",
+        "position": 48
+      },
+      "full_width": true,
+      "index": 154,
+      "logical_digest": "sha256:cf99e2477c4c112601a56c20593cd33948e12906661fffec44476fa3363a1bb2",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00154.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:b482eb40a36237fa9a9a4f0eb29b44a8640ca941f619c085c5555ee2aaa0713c",
+      "actual_size": 10810405,
+      "coordinate": {
+        "example_id": "corpus_000000133",
+        "position": 74
+      },
+      "full_width": true,
+      "index": 155,
+      "logical_digest": "sha256:8e936c76648ba09ba3a384c2b289fb52da2390422a5685617d96530ca1dace65",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00155.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:dca15a0b2ca1fc6ef074abf5cff06d02c38a50eaee13fb5a4ec4439632bbe5b4",
+      "actual_size": 10810395,
+      "coordinate": {
+        "example_id": "corpus_000000288",
+        "position": 43
+      },
+      "full_width": true,
+      "index": 158,
+      "logical_digest": "sha256:7ce1bb9b633641789177110e4da1cabcc1807b329a87cab46978093ffb010e34",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00158.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:cfb0d7d798681744ca63bd212f55ad8edddaf21a9a2c452d09ae0a9fc2c25baa",
+      "actual_size": 10817895,
+      "coordinate": {
+        "example_id": "corpus_000000639",
+        "position": 49
+      },
+      "full_width": true,
+      "index": 159,
+      "logical_digest": "sha256:2fb7c96fcb19423fd325fcea07997d186721d235013eef92d3e21520b7919c24",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00159.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:52a85f42fb11531d33d5e251c3c5bcb45f2934877377e7b725f2b2e719c205c5",
+      "actual_size": 10840909,
+      "coordinate": {
+        "example_id": "corpus_000000185",
+        "position": 29
+      },
+      "full_width": true,
+      "index": 162,
+      "logical_digest": "sha256:3bd8fe6846f2fd4fb95b4f6ef589a1392701bd2603c27d725ee8e6bdc5846171",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00162.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:0ca70e5476d777ec94cb5a74440df7ee4e78fa58cfdf56cb1ff40e23395ac121",
+      "actual_size": 10807692,
+      "coordinate": {
+        "example_id": "corpus_000000187",
+        "position": 49
+      },
+      "full_width": true,
+      "index": 163,
+      "logical_digest": "sha256:e4aea4d46ad1dfe54407dcd0be35219021fec1b750cab5905d128b58f60a6707",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00163.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:a76f31b876e2c4986119c33f0ed2289f5332cae0d345b0ad3bbf6766b56bfa0e",
+      "actual_size": 10806841,
+      "coordinate": {
+        "example_id": "corpus_000000238",
+        "position": 41
+      },
+      "full_width": true,
+      "index": 164,
+      "logical_digest": "sha256:5b9b3fb908624ad0030c5912a73cff913f5fc9eb85ce99f60164c55eecb588dc",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00164.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:32ae700b9bb94b066627b6ac9ec40011e9e4609d053fa51116963ce35e7d79d7",
+      "actual_size": 4373110,
+      "coordinate": {
+        "example_id": "corpus_000000322",
+        "position": 66
+      },
+      "full_width": false,
+      "index": 165,
+      "logical_digest": "sha256:7054793334ae1ad4acc2868293a101e0ba21387762b883f067c936487ab6b3c6",
+      "logical_k": 7046,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00165.json",
+      "retained_entries": 7046,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:9f54a8c4e708b7f55cb69af5a3c7d83bff2f45f2e472aec378e12bc200c2816a",
+      "actual_size": 10807199,
+      "coordinate": {
+        "example_id": "corpus_000000568",
+        "position": 79
+      },
+      "full_width": true,
+      "index": 166,
+      "logical_digest": "sha256:0418ba62e0d76a5e72b4b36e2f4ad09c2c2a24d3b023f1c82a69e564d9fd965d",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00166.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:5b82eb4fbecb48dd9a2ce535207329acf0002f48b9a3ad55b2ac20c1784eadc8",
+      "actual_size": 10802379,
+      "coordinate": {
+        "example_id": "corpus_000000653",
+        "position": 73
+      },
+      "full_width": true,
+      "index": 167,
+      "logical_digest": "sha256:cfc925439818673eb7223b684783a55e1f035c2646c3122cebadfb6da85e509b",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00167.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:0f74c28e20743f117df9add470a8e9c734f66971d2631af7f049c0c63e0ad0b4",
+      "actual_size": 4398124,
+      "coordinate": {
+        "example_id": "corpus_000000975",
+        "position": 124
+      },
+      "full_width": false,
+      "index": 168,
+      "logical_digest": "sha256:e5fa11c69a10dc0e031f1036f8bb1b74cc434e2392e3ae04b6b8716d24e6a89b",
+      "logical_k": 7967,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00168.json",
+      "retained_entries": 7967,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:11ce55089f2032bb289b9e37fdfe40e6b8ea15bd97828737fa85b41ff12d4f9e",
+      "actual_size": 10840328,
+      "coordinate": {
+        "example_id": "corpus_000000070",
+        "position": 59
+      },
+      "full_width": true,
+      "index": 169,
+      "logical_digest": "sha256:b0271de34dc438713ca1fd128c8447ea68473e02515317f9ec995f7929651354",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00169.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:5823cfaf6bbe4f2f3f8fcd1524aee86db4583331a341ae2fdd44b6e2d82aab3d",
+      "actual_size": 4320296,
+      "coordinate": {
+        "example_id": "corpus_000000263",
+        "position": 5
+      },
+      "full_width": false,
+      "index": 170,
+      "logical_digest": "sha256:9d2dc3d1a35ea85f3085e2cbd79c7a041ca8c34184b3550dcc22ea14a10ddf73",
+      "logical_k": 4975,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00170.json",
+      "retained_entries": 4975,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:a9ae9a6ab4d83238fbea82786efbf7dc83a4d2a73ee33d723d774e74a59d2197",
+      "actual_size": 4237799,
+      "coordinate": {
+        "example_id": "corpus_000000759",
+        "position": 21
+      },
+      "full_width": false,
+      "index": 171,
+      "logical_digest": "sha256:20451c27e2b352cd36829c163b040bafba2b9d3e1227f120071c83d963e20e49",
+      "logical_k": 1756,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00171.json",
+      "retained_entries": 1756,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:54c53c6d9463b5d1282dc22580b78cf84df05c9d88491d7e50e6621b47b9d279",
+      "actual_size": 4291587,
+      "coordinate": {
+        "example_id": "corpus_000000985",
+        "position": 107
+      },
+      "full_width": false,
+      "index": 172,
+      "logical_digest": "sha256:7bd03f3c45cfca3ba1e2d902edad893ee44db3112a0ecb70a729962fe5fa96d2",
+      "logical_k": 3790,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00172.json",
+      "retained_entries": 3790,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:7a3c7130c243d6c52081c136cd23fbcfddbcd8613923e2c66f6102283bb609ac",
+      "actual_size": 4254334,
+      "coordinate": {
+        "example_id": "corpus_000000025",
+        "position": 103
+      },
+      "full_width": false,
+      "index": 173,
+      "logical_digest": "sha256:e750726f5801499f7935d0e3e6f41b6b1d9ebeb04e41bdac6fce8905b3d93dcc",
+      "logical_k": 2441,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00173.json",
+      "retained_entries": 2441,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:c7c8bb14aaa01bf05b21bfe31095f0aaaf75826146f20b9f022b94ea71a6b7a5",
+      "actual_size": 4246783,
+      "coordinate": {
+        "example_id": "corpus_000000330",
+        "position": 93
+      },
+      "full_width": false,
+      "index": 174,
+      "logical_digest": "sha256:cd755346361ce771ca4f2f95acc91813d5860c217d35443960314111b82cf28e",
+      "logical_k": 2043,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00174.json",
+      "retained_entries": 2043,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:01fbd11200f5a6a140981e56ec2b78ba944e42dadbd242c255f3c53a6c30b3d0",
+      "actual_size": 4263346,
+      "coordinate": {
+        "example_id": "corpus_000000266",
+        "position": 125
+      },
+      "full_width": false,
+      "index": 175,
+      "logical_digest": "sha256:1b757e7e4304a92a9d6efbf846205735735bc3dbd7c864f03cad3f6864833b3b",
+      "logical_k": 2706,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00175.json",
+      "retained_entries": 2706,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:fab9637f99a15d8f0faa0fca7980290a698592a07702c6f96ac73343e03f96be",
+      "actual_size": 4256732,
+      "coordinate": {
+        "example_id": "corpus_000000558",
+        "position": 9
+      },
+      "full_width": false,
+      "index": 178,
+      "logical_digest": "sha256:552d090e0281e4452cd2aa793918027449cbef3688dff9507b3ab7d140f9e01f",
+      "logical_k": 2423,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00178.json",
+      "retained_entries": 2423,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:62573a229720267166f251a1f197af4d9c371e0f8af6edb00b5b2fd4a3f9f8f3",
+      "actual_size": 4237093,
+      "coordinate": {
+        "example_id": "corpus_000000935",
+        "position": 93
+      },
+      "full_width": false,
+      "index": 179,
+      "logical_digest": "sha256:a17bca459dc440448cc65493fef3edf594c98b4b0d2cfac64f13fa9119df92e1",
+      "logical_k": 1687,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00179.json",
+      "retained_entries": 1687,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:92ebe7b57c3abcd1204f62bf9103fb0af963fcaa00dc4573425da81dd3d75350",
+      "actual_size": 4262294,
+      "coordinate": {
+        "example_id": "corpus_000000029",
+        "position": 9
+      },
+      "full_width": false,
+      "index": 180,
+      "logical_digest": "sha256:9975653277382384c03a6a449b3240705daa461f49f8e4da29b6bb88248ec10f",
+      "logical_k": 2704,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00180.json",
+      "retained_entries": 2704,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:c9f14d865cf044d05307f2a4e4896b41bdf9077ba8f1e48d86a187f2a3442950",
+      "actual_size": 4225956,
+      "coordinate": {
+        "example_id": "corpus_000000065",
+        "position": 1
+      },
+      "full_width": false,
+      "index": 181,
+      "logical_digest": "sha256:a638c487d932b6dcf51b204d1a19b3474bc334585722f096bfdd1d9a355547bf",
+      "logical_k": 1241,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00181.json",
+      "retained_entries": 1241,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:9a503ac8d3388d53b565df58c17d17586dda89b4697e2c57d9c01edf7a802d9e",
+      "actual_size": 4259708,
+      "coordinate": {
+        "example_id": "corpus_000000648",
+        "position": 1
+      },
+      "full_width": false,
+      "index": 185,
+      "logical_digest": "sha256:cbe5f2942ad0e7bc9e1762d13c3e0b976b64e3290a660ad8b791025bd989145b",
+      "logical_k": 2549,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00185.json",
+      "retained_entries": 2549,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:8a747eaa45dcce4085883e7bb6c1bf7ba0fb4a39e65970b1d497468a1eff04e5",
+      "actual_size": 4259035,
+      "coordinate": {
+        "example_id": "corpus_000000684",
+        "position": 34
+      },
+      "full_width": false,
+      "index": 186,
+      "logical_digest": "sha256:d8eacda3ce29097d829862228961426ae674bda502cf821dc3d5114c3b83bcb1",
+      "logical_k": 2542,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00186.json",
+      "retained_entries": 2542,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:b88908ed69b8dd6d55d923939d8ddef9fd4803f3fcc347234f0b7795d772d3b4",
+      "actual_size": 4228748,
+      "coordinate": {
+        "example_id": "corpus_000000058",
+        "position": 37
+      },
+      "full_width": false,
+      "index": 187,
+      "logical_digest": "sha256:1ae8474581188426bcd5522df08adbda654ff0342dfc18702a9367143730e8ae",
+      "logical_k": 1354,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00187.json",
+      "retained_entries": 1354,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:80e4d655a3b0f2db71369e60efb47c91b6f8e39195e147c52df45fd0df1df00f",
+      "actual_size": 4257368,
+      "coordinate": {
+        "example_id": "corpus_000000633",
+        "position": 116
+      },
+      "full_width": false,
+      "index": 188,
+      "logical_digest": "sha256:a7d77d72f37d6412292ecae63cad18f9ca19a604296f817e91a10d4d88da8a99",
+      "logical_k": 2512,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00188.json",
+      "retained_entries": 2512,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:3a7ea9e69496eda48eebf1a65e6fe03ca0d7bbbe15763948fea566db22bf14f6",
+      "actual_size": 4257683,
+      "coordinate": {
+        "example_id": "corpus_000000345",
+        "position": 108
+      },
+      "full_width": false,
+      "index": 189,
+      "logical_digest": "sha256:9c356702dafd9bdb17aa2822d03f55cd0e75f23163c1d7fbd4db725f02859b11",
+      "logical_k": 2553,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00189.json",
+      "retained_entries": 2553,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:ec415936568923c4d788fdf6342a816479c3e0d13e0ab9a0c87a38cb4aed4b81",
+      "actual_size": 4242530,
+      "coordinate": {
+        "example_id": "corpus_000000650",
+        "position": 83
+      },
+      "full_width": false,
+      "index": 190,
+      "logical_digest": "sha256:8057959ed529a52da04c388a3ef88ce0259479fd047ed3148135201fa48e34da",
+      "logical_k": 1900,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00190.json",
+      "retained_entries": 1900,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:aadebe95b289eca064c036b53d2c8cb2c181a2211874c3754e640429c24bda3e",
+      "actual_size": 4264458,
+      "coordinate": {
+        "example_id": "corpus_000000970",
+        "position": 7
+      },
+      "full_width": false,
+      "index": 191,
+      "logical_digest": "sha256:d8dc21821dc548cfc7e1227ae82a586a1e648d4ac5ee551e748c744e6b3400d9",
+      "logical_k": 2779,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00191.json",
+      "retained_entries": 2779,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:7094fe15f1e6b870a09ee66984a073b8c5b26d115b46ca7792ecc7619ab62ebc",
+      "actual_size": 4226540,
+      "coordinate": {
+        "example_id": "corpus_000000410",
+        "position": 1
+      },
+      "full_width": false,
+      "index": 193,
+      "logical_digest": "sha256:b3e2fd13644806eb9c95d83175a2e26cf00fabec6c53c3a0d6a598d8f86a7c28",
+      "logical_k": 1246,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00193.json",
+      "retained_entries": 1246,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:3f5b9440bfd3ca364eef8786a2dc7f38ac6aa7bfaa5e927a094c188b0ce13203",
+      "actual_size": 4245168,
+      "coordinate": {
+        "example_id": "corpus_000000722",
+        "position": 79
+      },
+      "full_width": false,
+      "index": 196,
+      "logical_digest": "sha256:88ba6556cd178025d2e9982c0e7885f9807e79ce6a6bca05be052f1cf5888c49",
+      "logical_k": 2011,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00196.json",
+      "retained_entries": 2011,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:6b95db7b17e7be7962e84fd3979e34ec5fa9be9bcbdb95f01b6976e8f72d8469",
+      "actual_size": 4236423,
+      "coordinate": {
+        "example_id": "corpus_000000494",
+        "position": 43
+      },
+      "full_width": false,
+      "index": 197,
+      "logical_digest": "sha256:6e39b962c9a37774984b21342dec793b4ff79eb8a674fe3c59ee2e3fd96dd87b",
+      "logical_k": 1659,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00197.json",
+      "retained_entries": 1659,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:29b133b90b55c176c11fb59d7af8337a77dd597998fe43d2427243601f646495",
+      "actual_size": 4235382,
+      "coordinate": {
+        "example_id": "corpus_000000703",
+        "position": 4
+      },
+      "full_width": false,
+      "index": 200,
+      "logical_digest": "sha256:eebe68d8f362b0042c69a63b466b5582de3fe2281246dd07225e834626045079",
+      "logical_k": 1632,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00200.json",
+      "retained_entries": 1632,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:66ff6f016cf0594bf07e315f43662bad4c2ecd776d6577d6da2bf400ea175a5f",
+      "actual_size": 4267215,
+      "coordinate": {
+        "example_id": "corpus_000000902",
+        "position": 7
+      },
+      "full_width": false,
+      "index": 201,
+      "logical_digest": "sha256:9daad42101173ddcc566aac67227be564b39726ce3cd6b41e229b8bb3444bfbc",
+      "logical_k": 2825,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00201.json",
+      "retained_entries": 2825,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:733ffac030892913c0b25ce351b9c020e734df1a4a77ea5ec20139f2a182d3e0",
+      "actual_size": 4226701,
+      "coordinate": {
+        "example_id": "corpus_000000427",
+        "position": 16
+      },
+      "full_width": false,
+      "index": 202,
+      "logical_digest": "sha256:e55adf0a2adcab88cdbc75d5624c72d4ed71859a61642de9dff9c3c0a2b9eb13",
+      "logical_k": 1251,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00202.json",
+      "retained_entries": 1251,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:8a3e2b9bb4f096870a3e84a60e527771be8315cb4c31102907f3e05741477267",
+      "actual_size": 4220286,
+      "coordinate": {
+        "example_id": "corpus_000000021",
+        "position": 11
+      },
+      "full_width": false,
+      "index": 206,
+      "logical_digest": "sha256:edb1789bee4a6bf6ebdc97e80a7d7f43dbf251c5d537ae73bcd17d6cfe5d8f70",
+      "logical_k": 1015,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00206.json",
+      "retained_entries": 1015,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:cc72382bb2bd99a59ca995bf7b8d58a290571b4ea39a043867d4447a4bccb86c",
+      "actual_size": 4229961,
+      "coordinate": {
+        "example_id": "corpus_000000464",
+        "position": 1
+      },
+      "full_width": false,
+      "index": 207,
+      "logical_digest": "sha256:fe01c0b29c3a2cedbaf798d382a58be2e267a1e2a2306a6a5821dc35e9a36c27",
+      "logical_k": 1374,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00207.json",
+      "retained_entries": 1374,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:1f560a936043ed2de2f9f54268e5cc71f5cb401b6f6848f64217e88224b9687a",
+      "actual_size": 4209168,
+      "coordinate": {
+        "example_id": "corpus_000000823",
+        "position": 109
+      },
+      "full_width": false,
+      "index": 210,
+      "logical_digest": "sha256:7c7416ccf1bf11926d6121bdb4f29ac28e670fbb8226181e62d76f463ccc1cb4",
+      "logical_k": 559,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00210.json",
+      "retained_entries": 559,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:20cacf803dc492a977cfd5cca7d6aec94ef78fd46d532b999a0a4f24e3e3a084",
+      "actual_size": 10838527,
+      "coordinate": {
+        "example_id": "corpus_000000019",
+        "position": 32
+      },
+      "full_width": true,
+      "index": 211,
+      "logical_digest": "sha256:0b1201d0bf1ea8f45ae4b362479bee0b8597968a6a9931efc430bdeefff86069",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00211.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:3ed0937aa6f958c21e30f47c494897a181c2d71af45a6a540f8d681cdc08fc21",
+      "actual_size": 10826628,
+      "coordinate": {
+        "example_id": "corpus_000000209",
+        "position": 54
+      },
+      "full_width": true,
+      "index": 214,
+      "logical_digest": "sha256:8abaf76f47919ef7fa3d773dfa4c874a1705092893d2186af37381ae0087afc0",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00214.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:9fdb00340365e062be1dd6bc0846156dcb9f424e5328d8dcb5a3d9cd78aef822",
+      "actual_size": 10827282,
+      "coordinate": {
+        "example_id": "corpus_000000253",
+        "position": 4
+      },
+      "full_width": true,
+      "index": 216,
+      "logical_digest": "sha256:23db700a3659e771848b0857f14c88a3d4b9281473e09a913ef19b4523320101",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00216.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:49fec7ac8eeaf909216c3ec7007f832dab10773a7eaf1e85790985629a636ef0",
+      "actual_size": 10805131,
+      "coordinate": {
+        "example_id": "corpus_000000343",
+        "position": 4
+      },
+      "full_width": true,
+      "index": 217,
+      "logical_digest": "sha256:eaecdce891a92e43fb67b34388fc6dddf4861c92016570a107eeeb36f6f7c289",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00217.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:7a986ab1072549679fdbeb4bea8c33505077c8e028e3ccbe37cc5c16b2beefc8",
+      "actual_size": 10811660,
+      "coordinate": {
+        "example_id": "corpus_000000020",
+        "position": 6
+      },
+      "full_width": true,
+      "index": 218,
+      "logical_digest": "sha256:c0920bc1950b13c95e70c23d3d69b0f775e157d09927e086324426baeaaa8705",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00218.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:b65fa5275b5593f7013db46dd859b1c6440c3aa74f065db04237575820791e48",
+      "actual_size": 10816290,
+      "coordinate": {
+        "example_id": "corpus_000000513",
+        "position": 109
+      },
+      "full_width": true,
+      "index": 219,
+      "logical_digest": "sha256:d2841927f8d03840f82624dc2d51074e4859bf755156a321ef9dc08e0842bb72",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00219.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:be84a640e2f4bf191378ae4188b08c0ba7d8d0a4843309220bd31506be1d0d3b",
+      "actual_size": 10808650,
+      "coordinate": {
+        "example_id": "corpus_000000527",
+        "position": 14
+      },
+      "full_width": true,
+      "index": 220,
+      "logical_digest": "sha256:81e928c5ea89e42ba9e483cb06adf72530d7fa59a9bbc72242de06cddcfadf64",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00220.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:3040a22240a4a01c7719ff2bf0c30f9e1187ce39af4fc97ead5537f71433e6fb",
+      "actual_size": 10808872,
+      "coordinate": {
+        "example_id": "corpus_000000378",
+        "position": 34
+      },
+      "full_width": true,
+      "index": 221,
+      "logical_digest": "sha256:1ec23bc40490f411b6625349b708a8598ecf385239b9c08f16387ac01b636bff",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00221.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:f8e4f52d1074b060320a93bf5d5b2de85832855991e0b32fdb2d5b481508c872",
+      "actual_size": 10813340,
+      "coordinate": {
+        "example_id": "corpus_000000751",
+        "position": 13
+      },
+      "full_width": true,
+      "index": 222,
+      "logical_digest": "sha256:9316c2a1e2ca15b75735e92eaf4373e3071496632332c526122440e9bff8c98f",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00222.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:be847bd38290efc66354ede2406afdbac28964066c1ef2c9ff4b1c43c9b7ac11",
+      "actual_size": 10825632,
+      "coordinate": {
+        "example_id": "corpus_000000858",
+        "position": 22
+      },
+      "full_width": true,
+      "index": 223,
+      "logical_digest": "sha256:d866f30727229cc4078b0e7e95799028f75eaed70831ffab82b9be84182d8828",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00223.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:40d8029907cb3d8489cc64a05484563cc2e592eec4b892f8602ed68e5e2eeb1f",
+      "actual_size": 10803000,
+      "coordinate": {
+        "example_id": "corpus_000000329",
+        "position": 120
+      },
+      "full_width": true,
+      "index": 226,
+      "logical_digest": "sha256:76c465e96bbca29188a64ba7c33ef36984214a7329458a29452750cc11ef21f8",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00226.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:58a222590c8e2b4c7c419ecdaf3925c4aeae6982131922ce6193db41c0c1b85a",
+      "actual_size": 10806507,
+      "coordinate": {
+        "example_id": "corpus_000000390",
+        "position": 118
+      },
+      "full_width": true,
+      "index": 227,
+      "logical_digest": "sha256:ea92ae7fb145dd40c2c3aa461073d9f2734e9d3dc3195cb766adb50c83f873c8",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00227.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:52322f887f6d9c97b6ac95f0643a2338691f64f9d768bd1898d8dc0ea8bc01ef",
+      "actual_size": 10814136,
+      "coordinate": {
+        "example_id": "corpus_000000611",
+        "position": 4
+      },
+      "full_width": true,
+      "index": 230,
+      "logical_digest": "sha256:e0ce00f1186543abd575b2ede0681f44478863d59c612a42a43a7dc0ee5a0c7c",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00230.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:c57505c4104611f11c25644bdccfba34698f3dc6cb1a1e3248d08ccb23dc76a8",
+      "actual_size": 10805471,
+      "coordinate": {
+        "example_id": "corpus_000000746",
+        "position": 108
+      },
+      "full_width": true,
+      "index": 231,
+      "logical_digest": "sha256:ce219095726dde680cb4839add13cddd4c7d52be18e5853035e0b499d97d63a0",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00231.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:8ef0128bcdb870d215d2309340b0ff1915134e49e3a5a0d85b020c42ee2e1349",
+      "actual_size": 10812625,
+      "coordinate": {
+        "example_id": "corpus_000000207",
+        "position": 63
+      },
+      "full_width": true,
+      "index": 234,
+      "logical_digest": "sha256:d1d6335d5ec7fbf3069a856e4a782f9f00889f02056d1c27263e6a8f5135d7b2",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00234.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:514536ec64a233eba8427d09f005a873ea499dc2986c71e3d299bcf60d5ad5c1",
+      "actual_size": 10802832,
+      "coordinate": {
+        "example_id": "corpus_000000261",
+        "position": 84
+      },
+      "full_width": true,
+      "index": 235,
+      "logical_digest": "sha256:b18b1bfe7286e50235239b3cafce96e9e138b02397d50cbe735420829b4107da",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00235.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:079fcb4f368d43281076ca1fcb829c7323e6f4838651155952b4c2beee1f6097",
+      "actual_size": 10808967,
+      "coordinate": {
+        "example_id": "corpus_000000613",
+        "position": 107
+      },
+      "full_width": true,
+      "index": 236,
+      "logical_digest": "sha256:06f189adc71379d10ca36428f4edf6f86a7cfb418ce4287cf355dea437b17324",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00236.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:b1e27482b7a1351259a570281761c0d0d29e7e744e7b182c9acc72584a282c59",
+      "actual_size": 10808903,
+      "coordinate": {
+        "example_id": "corpus_000000375",
+        "position": 54
+      },
+      "full_width": true,
+      "index": 237,
+      "logical_digest": "sha256:0458f99bb2519bc7676221592cce17f3bbab55a6338a3cda5945a3361832765e",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00237.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:795194b884397fbfd9f61c21fee45cfdf0cda70e303192249cf35466e66ffd07",
+      "actual_size": 10804315,
+      "coordinate": {
+        "example_id": "corpus_000000627",
+        "position": 109
+      },
+      "full_width": true,
+      "index": 238,
+      "logical_digest": "sha256:9151d93b4e3bf3be0fb261f454b863f6cb4be529166d54d605d1de71aa13cc7e",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00238.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:68fc8f31efc273846af9456fd2f0118b8644404709aa852b5e0105f283ff6ce7",
+      "actual_size": 10810327,
+      "coordinate": {
+        "example_id": "corpus_000000174",
+        "position": 83
+      },
+      "full_width": true,
+      "index": 240,
+      "logical_digest": "sha256:f4df8540d64cd3435027c94d7941da35e18f01ae93988ac2b87cc182b85780ae",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00240.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:9dd48449d549e882a934569c573fded12f5cc544f79c3d9bc12957624753e32c",
+      "actual_size": 10810102,
+      "coordinate": {
+        "example_id": "corpus_000000227",
+        "position": 68
+      },
+      "full_width": true,
+      "index": 241,
+      "logical_digest": "sha256:8845f5749a2427caca38fee9a4c9a4838652b710c89f2dbadeb4ff806c31eed1",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00241.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:096f578e3eabf2e2fca4fc6f2e523c4239f1a7e70379f71774147fff8755aab8",
+      "actual_size": 10807973,
+      "coordinate": {
+        "example_id": "corpus_000000511",
+        "position": 23
+      },
+      "full_width": true,
+      "index": 243,
+      "logical_digest": "sha256:bff79df6252fcfd6fbdf5e9209a8806e23c774fbdea613daf02e1e3ca0cf277e",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00243.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:6003b802f1c37a61d64f87b20fa6fd8490b9c8c8d642bed6d1bba9c02cba3165",
+      "actual_size": 10808762,
+      "coordinate": {
+        "example_id": "corpus_000000773",
+        "position": 39
+      },
+      "full_width": true,
+      "index": 246,
+      "logical_digest": "sha256:710085c1d78c5b915438585d29a24c94718e9fd19cb1a1dc75a6c611c719e481",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00246.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:a11637aaead8deeb00e13a4936797fc7b642eec79c3ee2b45cd364fe8d04c6d4",
+      "actual_size": 10812600,
+      "coordinate": {
+        "example_id": "corpus_000000595",
+        "position": 37
+      },
+      "full_width": true,
+      "index": 247,
+      "logical_digest": "sha256:0be8a7398bc95eff363c54dbe345391c0a74e35003247d96a975f66d1c05a344",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00247.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:7515ae1fde786e7f37bfe1c2cc69265b051a15bdf52206f6aeeb51457b8253fe",
+      "actual_size": 10803532,
+      "coordinate": {
+        "example_id": "corpus_000000741",
+        "position": 72
+      },
+      "full_width": true,
+      "index": 250,
+      "logical_digest": "sha256:e0ff2266c658bce840ee70966a634ba2f28af076071b07ce48a945a9a36cb64f",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00250.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    },
+    {
+      "actual_sha256": "sha256:35f0fe3fcf5faebc3229b9ae7d548698a538a6e29e2fda3c8e000f5a11ed2082",
+      "actual_size": 10831514,
+      "coordinate": {
+        "example_id": "corpus_000000377",
+        "position": 109
+      },
+      "full_width": true,
+      "index": 251,
+      "logical_digest": "sha256:716ef3cd4fc2c8701bee5ade187ffa8677aad9824cc46a3b43cee82c03659a88",
+      "logical_k": 262144,
+      "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00251.json",
+      "retained_entries": 262144,
+      "vocab_size": 262144
+    }
+  ],
+  "source_workload_identity": "sha256:75c5cf584b1e11b272029dd9e85eb3fe173b6efda2608db7b09b997431140acd"
+}

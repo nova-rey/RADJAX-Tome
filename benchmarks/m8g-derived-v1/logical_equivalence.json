@@ -1,0 +1,17 @@
+{
+  "compact_k_immutable_body": {
+    "body_count": 169,
+    "exact_body_identity": true,
+    "records": 169
+  },
+  "compact_k_monolithic": {
+    "exact": true,
+    "records": 169,
+    "root": "sha256:b04604faeb2a6d36b731c8666ee3cbfb522359b521638d50f5e4f865c5d72a0c"
+  },
+  "legacy_padded_monolithic": {
+    "exact": true,
+    "records": 169,
+    "root": "sha256:b04604faeb2a6d36b731c8666ee3cbfb522359b521638d50f5e4f865c5d72a0c"
+  }
+}
