@@ -463,10 +463,26 @@ def finalize_workload(
                     "model_path": teacher["model_root"],
                     "model_tree_identity": teacher["identity"],
                     "original_provenance": "raw-provenance/teacher_model_provenance.json",
+                    "authority_provenance": "runtime_teacher_model_provenance_authority.json",
                     "relocation": "bundle-relative-authority-v1",
                 }
             )
             + b"\n"
+        )
+        projected_provenance = {
+            "record_type": "runtime_teacher_provenance",
+            "schema_version": SCHEMA_VERSION,
+            "model_path": teacher["model_root"],
+            "model_tree_identity": teacher["identity"],
+            "model_files": teacher["model_files"],
+            "original_provenance_digest": _sha(
+                stage / "raw-provenance/teacher_model_provenance.json"
+            ),
+            "relocation": "bundle-relative-authority-v1",
+            "runtime_path_authority": "bundle-relative",
+        }
+        (stage / "runtime_teacher_model_provenance_authority.json").write_bytes(
+            canonical_json_bytes(projected_provenance) + b"\n"
         )
         (stage / "teacher_identity.json").write_bytes(
             canonical_json_bytes(teacher) + b"\n"
