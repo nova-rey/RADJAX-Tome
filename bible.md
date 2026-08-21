@@ -3567,3 +3567,8 @@ closure schema, preserving deterministic replay encoding across hosts.
 
 Finalization receipts and workload authority now bind the exact current Tome
 and public Contract implementation commits used for replay validation.
+
+2026-08-20 — M8G Contract diagnostic pin
+
+Pinned the finalizer to the exact public Contract commit that reports receipt
+field failures without weakening validation.
