@@ -3641,3 +3641,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: replay adoption now relocates teacher_model and tokenizer_id to the invocation-owned model tree before canonical preflight; no selection or representation semantics changed.
 - 2026-08-21: replay adoption now relocates teacher_model and tokenizer_id to the invocation-owned model tree before canonical preflight; no selection or representation semantics changed.
 - 2026-08-21: bound replay teacher_model and tokenizer_id to adopted model tree before canonical preflight.
+- 2026-08-21: serialized relocated replay teacher_model as text in production run plans; runtime path remains invocation-owned and nonsemantic.
