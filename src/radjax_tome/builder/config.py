@@ -944,7 +944,7 @@ def validate_tome_build_intent(
     ):
         if value is not None:
             _require_path(errors, value, name)
-    if intent.teacher.backend not in {"gpu_torch", "cpu_reference", "smoke_tokenizer"}:
+    if intent.teacher.backend not in {"gpu_torch", "hf_torch", "cpu_reference", "smoke_tokenizer"}:
         errors.append("teacher.backend is unsupported")
     if intent.teacher.runtime_mode not in {"cpu", "cpu_gpu"}:
         errors.append("teacher.runtime_mode is unsupported")

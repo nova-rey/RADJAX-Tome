@@ -593,7 +593,7 @@ def teacher_backend_config_from_build_config(
 def _validate_backend_build_config(config: BackendTeacherTextbookBuildConfig) -> None:
     if config.teacher_backend == "gpu_torch" and config.runtime_mode != "cpu_gpu":
         raise ValueError("gpu_torch builder routing requires runtime_mode='cpu_gpu'")
-    if config.teacher_backend != "gpu_torch" and config.runtime_mode == "cpu_gpu":
+    if config.teacher_backend not in {"gpu_torch"} and config.runtime_mode == "cpu_gpu":
         raise ValueError("runtime_mode='cpu_gpu' requires teacher_backend='gpu_torch'")
     if (
         config.exemplar_selector_policy != MULTI_LEADERBOARD_SELECTOR_POLICY

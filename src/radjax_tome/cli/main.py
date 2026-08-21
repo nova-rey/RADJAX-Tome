@@ -488,7 +488,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     production.add_argument(
         "--teacher-backend",
-        choices=("gpu_torch", "cpu_reference"),
+        choices=("gpu_torch", "hf_torch", "cpu_reference"),
         default="gpu_torch",
     )
     production.add_argument(

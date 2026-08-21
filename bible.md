@@ -3631,3 +3631,7 @@ closed-record and checkpoint authority validation.
 - M8G v19 replay: regression-test metadata projection idempotence and conflict rejection.
 
 - M8G replay: project the complete score-pass shard closure and canonical C5 delivery records before materialization.
+
+- M8G replay: validate corridor selected records against corridor score-pass tuples and expose the reviewed hf_torch CPU path for production-equivalent smoke.
+
+- M8G replay: HF Torch CPU corridor emission now uses the existing top-k/entropy contract for production-equivalent selected delivery smoke.

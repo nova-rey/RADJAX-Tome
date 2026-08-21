@@ -19,7 +19,7 @@ from radjax_tome.provenance.teacher_model import (
     validate_teacher_model_provenance,
 )
 from radjax_tome.fingerprint.multi_role_selection import (
-    load_multi_role_selection_artifact,
+    load_multi_role_selection_artifact_for_replay,
 )
 
 
@@ -274,7 +274,7 @@ def adopt_verified_selection_replay(
         # Reuse the canonical C5-to-delivery translation used by ordinary
         # production.  The raw multi-role records keep selection authority;
         # delivery records bind source_shard_id/source_row to the passport.
-        selected_artifact = load_multi_role_selection_artifact(
+        selected_artifact = load_multi_role_selection_artifact_for_replay(
             replay_root / "selection-checkpoint/c6/multi-role-selection"
         )
         records = c5_records_for_delivery(

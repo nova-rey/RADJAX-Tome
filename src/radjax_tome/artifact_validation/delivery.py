@@ -468,10 +468,24 @@ def _path_b_score_pass_record_matches(
     payload_ref = record.get("payload_ref", {})
     if not isinstance(payload_ref, dict):
         return False
+    corridor_record = "fingerprint_corridor_representative" in (
+        record.get("selection_roles") or []
+    )
     try:
-        shard_position = int(np.asarray(shard["score_selected_position"])[row])
-        shard_score = float(np.asarray(shard["score_selected_position_entropy"])[row])
-        shard_top_token_id = int(np.asarray(shard["score_top_token_id"])[row])
+        if corridor_record:
+            shard_position = int(record.get("source_position", -1))
+            shard_score = float(
+                np.asarray(
+                    shard.get("corridor_entropy", shard["corridor_teacher_entropy"])
+                )[row, shard_position]
+            )
+            shard_top_token_id = int(
+                np.asarray(shard["corridor_top_token_ids"])[row, shard_position]
+            )
+        else:
+            shard_position = int(np.asarray(shard["score_selected_position"])[row])
+            shard_score = float(np.asarray(shard["score_selected_position_entropy"])[row])
+            shard_top_token_id = int(np.asarray(shard["score_top_token_id"])[row])
     except (IndexError, KeyError, TypeError, ValueError):
         return False
     return (

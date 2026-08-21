@@ -305,6 +305,52 @@ def validate_multi_role_selection_artifact(
     )
 
 
+def load_multi_role_selection_artifact_for_replay(
+    path: str | Path,
+) -> MultiRoleSelectionArtifact:
+    """Load rich C5 records for frozen replay delivery."""
+    root = Path(path)
+    manifest = read_json_object(root / MANIFEST_FILENAME)
+    if manifest.get("schema_version") != MULTI_ROLE_SELECTION_SCHEMA:
+        raise MultiRoleSelectionError("unsupported C5 artifact schema")
+    rich_path = root / RICH_RECORDS_FILENAME
+    if not rich_path.is_file() or rich_path.is_symlink():
+        raise MultiRoleSelectionError("selected_exemplars.jsonl is missing")
+    files = manifest.get("files")
+    if not isinstance(files, Mapping):
+        raise MultiRoleSelectionError("C5 files manifest is missing")
+    rich_info = files.get(RICH_RECORDS_FILENAME)
+    if not isinstance(rich_info, Mapping) or rich_info.get("sha256") != _sha256(rich_path):
+        raise MultiRoleSelectionError("C5 rich record hash mismatch")
+    records = []
+    for line_number, line in enumerate(rich_path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            records.append(_record_from_dict(json.loads(line)))
+        except (TypeError, ValueError, KeyError, json.JSONDecodeError) as exc:
+            raise MultiRoleSelectionError(f"invalid C5 record line {line_number}: {exc}") from exc
+    artifact = MultiRoleSelectionArtifact(
+        records=tuple(records),
+        legacy_records=tuple(project_legacy_selected_exemplars_from_records(records)),
+        source_provenance=dict(manifest.get("source_provenance") or {}),
+        summary=dict(manifest.get("summary") or {}),
+        c4_claims_sha256=str(manifest.get("c4_claims_sha256") or ""),
+        production_grade=bool(manifest.get("production_grade")),
+        warnings=tuple(str(item) for item in manifest.get("warnings", [])) + (
+            "legacy projection rebuilt from authority-bearing rich records for replay",
+        ),
+    )
+    validation = _validate_artifact_object(artifact, claims=None, production_grade=True)
+    if validation.status == "fail":
+        raise MultiRoleSelectionError(
+            "cannot load invalid replay C5 records: " + "; ".join(validation.blockers)
+        )
+    if dict(manifest.get("summary") or {}) != dict(validation.summary):
+        raise MultiRoleSelectionError("C5 summary does not match rich records")
+    return artifact
+
+
 def load_multi_role_selection_artifact(
     path: str | Path,
     *,

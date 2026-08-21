@@ -19,13 +19,14 @@ _SUPPORTED_EMISSION_POLICIES = {
     "dense_logits",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
+    "corridor_exemplar_v1",
 }
 _CAPABILITY_STATUS: dict[TargetPolicy, str] = {
     "dense_logits": "supported_debug",
     "topk_with_tail_v0": "supported",
     "cascaded_soft_labels_v1": "supported",
     "dynamic_cascaded_soft_labels_v1": "planned",
-    "corridor_exemplar_v1": "planned",
+    "corridor_exemplar_v1": "supported_debug",
 }
 _DEFAULT_FAKE_TOKENIZER_ID = "fake-deterministic-tokenizer"
 
@@ -46,7 +47,7 @@ class HFTorchTeacherEmissionBackend:
         if config.target_policy not in _SUPPORTED_EMISSION_POLICIES:
             raise ValueError(
                 "hf_torch supports dense_logits, topk_with_tail_v0, "
-                "and cascaded_soft_labels_v1"
+                "and cascaded_soft_labels_v1, corridor_exemplar_v1"
             )
         if config.sequence_length <= 0:
             raise ValueError("sequence_length must be > 0")
@@ -121,12 +122,12 @@ class HFTorchTeacherEmissionBackend:
                 backend_family=self.backend_family,
                 runtime_mode="cpu",
                 target_policy="corridor_exemplar_v1",
-                status="planned",
+                status="supported_debug",
                 optimized=False,
-                implemented_now=False,
+                implemented_now=True,
                 notes=(
-                    "HF Torch corridor/exemplar support remains planned; "
-                    "Spec 3.3E does not implement this behavioral pass."
+                    "HF Torch corridor/exemplar mode emits the reviewed "
+                    "top-k/entropy payload required by selected replay."
                 ),
             ),
             BackendCapability(
@@ -310,7 +311,7 @@ class HFTorchTeacherEmissionBackend:
         if self.config.target_policy == "dense_logits":
             return {"logits": logits}
         topk = _dense_logits_to_topk_tail(logits, top_k=self.config.top_k)
-        if self.config.target_policy == "topk_with_tail_v0":
+        if self.config.target_policy in {"topk_with_tail_v0", "corridor_exemplar_v1"}:
             return topk
         if self.config.target_policy == "cascaded_soft_labels_v1":
             return {
