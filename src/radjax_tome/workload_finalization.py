@@ -364,7 +364,7 @@ def finalize_workload(
                     "schema_version": SCHEMA_VERSION,
                     "model_path": teacher["model_root"],
                     "model_tree_identity": teacher["identity"],
-                    "original_provenance": "raw-provenance/teacher_model_provenance.json",
+                    "original_provenance": "raw-provenance/runtime_teacher_model_provenance.json",
                     "relocation": "bundle-relative-authority-v1",
                 }
             )

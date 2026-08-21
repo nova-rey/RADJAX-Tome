@@ -3604,3 +3604,8 @@ public Contract API.
 
 The Linux finalizer validates raw manifest and corpus identities with its own
 strict digest grammar before staging any output.
+
+2026-08-20 — M8G provenance relocation binding
+
+Portable runtime provenance now points to the preserved raw runtime provenance
+member, while model loading resolves through the bundle-relative model root.
