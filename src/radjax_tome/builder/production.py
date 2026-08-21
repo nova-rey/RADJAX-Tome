@@ -300,11 +300,6 @@ def _build_production_gpu_tome_compatibility(
                 return _finalize_production_report(
                     report, state.report_path, state.progress
                 )
-            _publish_replay_metadata(
-                source=replay_authority.adopted_root / "input/metadata.json",
-                run_root=config.output_dir,
-                expected_digest=replay_authority.metadata_digest or "",
-            )
             config = replace(
                 config,
                 dataset_path=replay_authority.adopted_root / "input/corpus.jsonl",
@@ -322,6 +317,12 @@ def _build_production_gpu_tome_compatibility(
             # closure-validated inputs may enter ordinary preflight; stale or
             # unrelated caller paths must never be consulted first.
             preflight_result = _run_existing_preflight(state)
+            if preflight_result.status == "pass":
+                _publish_replay_metadata(
+                    source=replay_authority.adopted_root / "input/metadata.json",
+                    run_root=config.output_dir,
+                    expected_digest=replay_authority.metadata_digest or "",
+                )
             if config.preflight_only:
                 report = _production_report(
                     config,

@@ -3625,3 +3625,5 @@ closed-record and checkpoint authority validation.
 - M8G v19 review correction: canonical replay invokes public Contract role binding before adoption.
 
 - M8G v19 replay: adopt authority-bound metadata atomically at RUN_ROOT before selected delivery.
+
+- M8G v19 replay: publish run-root metadata after preflight output cleanup and before selected delivery.
