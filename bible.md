@@ -3645,3 +3645,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: JSON evidence serialization stringifies path-valued runtime metadata, preserving canonical plan emission for relocated replay roots.
 - 2026-08-21: normalized relocated replay teacher and tokenizer values before selection-integration hashing to keep production reports serializable.
 - 2026-08-21: selection integration authority hashing serializes relocated runtime metadata paths deterministically without changing selection inputs.
+- 2026-08-21: HF local-load failures now preserve model/tokenizer paths, types, containment facts, and chained Transformers exceptions.

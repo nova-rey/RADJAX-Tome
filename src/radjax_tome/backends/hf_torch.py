@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from importlib import import_module
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -291,11 +292,17 @@ class HFTorchTeacherEmissionBackend:
                 local_files_only=local_files_only,
             )
         except Exception as exc:
+            model_path = str(self.config.model_id)
+            tokenizer_path = str(tokenizer_id)
+            model_dir = Path(model_path)
+            tokenizer_dir = Path(tokenizer_path)
             raise RuntimeError(
-                "hf_torch backend could not load local torch/transformers model "
-                f"or tokenizer for model_id={self.config.model_id!r}. "
-                "Install the teacher-hf extra and provide local model files, or "
-                "set allow_downloads only in an explicitly network-enabled run."
+                "hf_torch local model/tokenizer load failed: "
+                f"model_path={model_path!r} type={type(self.config.model_id).__name__} "
+                f"exists={model_dir.exists()} dir={model_dir.is_dir()}; "
+                f"tokenizer_path={tokenizer_path!r} type={type(tokenizer_id).__name__} "
+                f"exists={tokenizer_dir.exists()} dir={tokenizer_dir.is_dir()}; "
+                f"local_files_only={local_files_only}; cause={type(exc).__name__}: {exc}"
             ) from exc
         if getattr(tokenizer, "pad_token_id", None) is None:
             eos_token = getattr(tokenizer, "eos_token", None)
