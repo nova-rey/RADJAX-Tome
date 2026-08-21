@@ -184,6 +184,16 @@ def adopt_verified_selection_replay(
                 raise ValueError(
                     "private replay adoption conflicts with current authority"
                 )
+            for relative, expected_digest in (prior.get("input_closure") or {}).items():
+                member = _owned_member_path(adopted_root, relative)
+                if (
+                    member.is_symlink()
+                    or not member.is_file()
+                    or _sha256(member) != expected_digest
+                ):
+                    raise ValueError(
+                        f"current replay input closure mismatch: {relative}"
+                    )
         else:
             adopted_root.mkdir(parents=True, exist_ok=False)
             # Canonical production preflight consumes an invocation-owned
@@ -201,6 +211,16 @@ def adopt_verified_selection_replay(
                 target = input_root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(replay_root / relative, target)
+            for source_name, target_name in (
+                ("corpus/corpus.jsonl", "corpus.jsonl"),
+                ("corpus/corpus_manifest.json", "corpus_manifest.json"),
+                ("corpus/corpus_build_report.json", "corpus_build_report.json"),
+                (
+                    "runtime_teacher_model_provenance.json",
+                    "teacher_model_provenance.json",
+                ),
+            ):
+                shutil.copy2(input_root / source_name, input_root / target_name)
             metadata = {
                 "schema_version": "radjax_tome_frozen_selection_replay_v2",
                 "provenance": authority["provenance"],
@@ -218,6 +238,10 @@ def adopt_verified_selection_replay(
                         "corpus/corpus.jsonl",
                         "corpus/corpus_manifest.json",
                         "corpus/corpus_build_report.json",
+                        "corpus.jsonl",
+                        "corpus_manifest.json",
+                        "corpus_build_report.json",
+                        "teacher_model_provenance.json",
                         "teacher_identity.json",
                         "runtime_teacher_model_provenance_authority.json",
                     )
