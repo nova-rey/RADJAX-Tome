@@ -27,7 +27,7 @@ CORPUS_IDENTITY = (
     "sha256:7719ed62c5bb8feedd7f7e955e52d0b373d8b09e3ec9f6b8256f99a8b5a7e9d1"
 )
 RAW_INVENTORY_IDENTITY = (
-    "sha256:ead1671fcd308f017ce402eafbebea729845d886fe2bef8732aadbf94d9761c"
+    "sha256:ead1671fcd308f017ce402feafbebea729845d886fe2bef8732aadbf94d9761c"
 )
 
 
