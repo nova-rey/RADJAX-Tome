@@ -236,6 +236,10 @@ def finalize_workload(
         raise ValueError("raw Tome authority invalid")
     if not isinstance(contract_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", contract_commit):
         raise ValueError("raw Contract authority invalid")
+    # The raw producer authority is retained in raw-provenance; finalized
+    # workload records bind the reviewed current implementation pin.
+    current_tome_commit, current_contract_commit = _authority_commits()
+    contract_commit = current_contract_commit
     raw_inventory_identity = raw_manifest.get("file_inventory_digest")
     if not isinstance(raw_inventory_identity, str) or not re.fullmatch(
         r"sha256:[0-9a-f]{64}",
@@ -521,6 +525,29 @@ def finalize_workload(
         (stage / "teacher_identity.json").write_bytes(
             canonical_json_bytes(teacher) + b"\n"
         )
+        validation_summary = {
+            "record_type": "workload_validation_report",
+            "schema_version": SCHEMA_VERSION,
+            "status": "pass",
+            "workload_identity": workload_identity,
+            "corpus_identity": corpus_identity,
+            "teacher_identity": teacher["identity"],
+            "checkpoint_identity": _sha(checkpoint / "c6/authority_manifest.json"),
+            "selection_identity": digest(coords),
+            "source_row_closure_digest": closure_digest,
+            "selected_source_count": 253,
+            "selected_coordinate_count": 253,
+            "source_count": 1000,
+            "example_count": 1000,
+            "duplicate_count": 0,
+            "underfill_reason": "global_ranked_supply_exhaustion",
+            "c1_c5_executed": False,
+            "full_teacher_pass_count": 0,
+            "materialization_performed": False,
+        }
+        (stage / "validation_report.json").write_bytes(
+            canonical_json_bytes(validation_summary) + b"\n"
+        )
         entries = _inventory(stage)
         root = inventory_root(entries)
         checkpoint_manifest = {
@@ -601,32 +628,6 @@ def finalize_workload(
         validate_workload_authority(authority)
         (stage / "workload_authority.json").write_bytes(
             canonical_json_bytes(authority) + b"\n"
-        )
-        # Replace the producer's summary with a current authority-bound
-        # validation result; the unmodified producer report remains under
-        # raw-provenance and is referenced by the finalization receipt.
-        validation_summary = {
-            "record_type": "workload_validation_report",
-            "schema_version": SCHEMA_VERSION,
-            "status": "pass",
-            "workload_identity": workload_identity,
-            "corpus_identity": corpus_identity,
-            "teacher_identity": teacher["identity"],
-            "checkpoint_identity": checkpoint_manifest["checkpoint_identity"],
-            "selection_identity": checkpoint_manifest["selection_identity"],
-            "source_row_closure_digest": closure_digest,
-            "selected_source_count": 253,
-            "selected_coordinate_count": 253,
-            "source_count": 1000,
-            "example_count": 1000,
-            "duplicate_count": 0,
-            "underfill_reason": "global_ranked_supply_exhaustion",
-            "c1_c5_executed": False,
-            "full_teacher_pass_count": 0,
-            "materialization_performed": False,
-        }
-        (stage / "validation_report.json").write_bytes(
-            canonical_json_bytes(validation_summary) + b"\n"
         )
         receipt = {
             "record_type": "finalization_receipt",

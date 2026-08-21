@@ -14,6 +14,7 @@ from radjax_tome.builder.c6_integration import c5_records_for_delivery
 from radjax_tome.fingerprint.multi_role_selection import (
     load_multi_role_selection_artifact,
 )
+from radjax_tome.corpora import validate_corpus_artifact
 
 
 @dataclass(frozen=True)
@@ -128,6 +129,17 @@ def adopt_verified_selection_replay(
         record_file = replay_root / "selection-checkpoint/c6/multi-role-selection/selected_exemplars.jsonl"
         if not coord_file.is_file() or not record_file.is_file():
             raise ValueError("current replay selection records are missing")
+        policy = json.loads((replay_root / "portable_path_policy.json").read_text())
+        if policy.get("active_reference_rule") != "bundle-relative-only" or not policy.get(
+            "historical_paths_must_not_be_resolved"
+        ):
+            raise ValueError("current replay path policy is not closed")
+        if validate_corpus_artifact(replay_root / "corpus").status != "pass":
+            raise ValueError("current replay corpus closure is invalid")
+        authority_provenance = replay_root / "runtime_teacher_model_provenance_authority.json"
+        teacher_identity = replay_root / "teacher_identity.json"
+        if not authority_provenance.is_file() or not teacher_identity.is_file():
+            raise ValueError("current replay teacher closure is incomplete")
         coords = [json.loads(x) for x in coord_file.read_text().splitlines() if x.strip()]
         records = [json.loads(x) for x in record_file.read_text().splitlines() if x.strip()]
         if len(coords) != selected_coordinates or len(records) != selected_sources:
@@ -152,6 +164,21 @@ def adopt_verified_selection_replay(
                 raise ValueError("private replay adoption conflicts with current authority")
         else:
             adopted_root.mkdir(parents=True, exist_ok=False)
+            # Canonical production preflight consumes an invocation-owned
+            # input layout.  Adopt the complete verified closure, not just a
+            # marker, and record every copied member digest.
+            input_root = adopted_root / "input"
+            for relative in ("corpus", "model", "source-rows"):
+                shutil.copytree(replay_root / relative, input_root / relative)
+            for relative in (
+                "runtime_teacher_model_provenance_authority.json",
+                "teacher_identity.json",
+                "runtime_teacher_model_provenance.json",
+                "portable_path_policy.json",
+            ):
+                target = input_root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(replay_root / relative, target)
             metadata = {
                 "schema_version": "radjax_tome_frozen_selection_replay_v2",
                 "provenance": authority["provenance"],
@@ -162,6 +189,11 @@ def adopt_verified_selection_replay(
                 "replay_identity": replay_identity,
                 "selected_sources": selected_sources,
                 "selected_coordinates": selected_coordinates,
+                "input_root": "input",
+                "input_closure": {
+                    relative: _sha256(adopted_root / "input" / relative)
+                    for relative in ("corpus/corpus.jsonl", "corpus/corpus_manifest.json", "corpus/corpus_build_report.json", "teacher_identity.json", "runtime_teacher_model_provenance_authority.json")
+                },
             }
             (adopted_root / "replay_authority.json").write_text(
                 json.dumps(metadata, sort_keys=True, separators=(",", ":")), encoding="utf-8"
