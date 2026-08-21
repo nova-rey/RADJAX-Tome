@@ -3577,3 +3577,9 @@ field failures without weakening validation.
 
 Bound the finalizer to the complete 64-hex raw workload inventory identity
 copied from the verified generation manifest.
+
+2026-08-20 — M8G local-path projection
+
+Normalized `local:/Users/...` source identifiers as well as ordinary absolute
+paths during staged projection, so authority-bearing corpus records remain
+portable without rewriting the raw generation evidence.

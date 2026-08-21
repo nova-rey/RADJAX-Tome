@@ -53,7 +53,11 @@ def _portable(value: Any, root: str, input_root: str) -> Any:
         return {k: _portable(v, root, input_root) for k, v in value.items()}
     if isinstance(value, list):
         return [_portable(v, root, input_root) for v in value]
-    if isinstance(value, str) and os.path.isabs(value):
+    if isinstance(value, str) and (
+        os.path.isabs(value) or value.startswith("local:/")
+    ):
+        if value.startswith("local:/"):
+            value = value[len("local:") :]
         for prefix, replacement in (
             (root, "selection-checkpoint"),
             (input_root, "."),
