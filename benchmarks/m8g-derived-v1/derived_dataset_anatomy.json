@@ -2,7 +2,10 @@
   "dynamic_k": {
     "max": 262144,
     "median": 2779,
-    "min": 32
+    "min": 32,
+    "p90": 262144.0,
+    "p95": 262144.0,
+    "p99": 262144.0
   },
   "excluded_count": 84,
   "full_width_count": 75,

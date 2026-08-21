@@ -3650,3 +3650,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: M8G derived valid exemplar component benchmark V1 measured all nine CPU representation samples from 169 surviving payloads; v19 remains incomplete provenance.
 
 - 2026-08-21: Added Linux CPU/filesystem environment evidence for the derived component benchmark.
+
+- 2026-08-21: Completed derived-dataset dynamic-K percentile anatomy.
