@@ -44,7 +44,7 @@ class HFTorchTeacherEmissionBackend:
             )
         if config.runtime_mode != "cpu":
             raise ValueError("hf_torch supports only runtime_mode='cpu'")
-        if config.target_policy not in _SUPPORTED_EMISSION_POLICIES:
+        if str(config.target_policy) not in _SUPPORTED_EMISSION_POLICIES:
             raise ValueError(
                 "hf_torch supports dense_logits, topk_with_tail_v0, "
                 "and cascaded_soft_labels_v1, corridor_exemplar_v1"
@@ -229,7 +229,7 @@ class HFTorchTeacherEmissionBackend:
             "vocab_size_mismatch": self.config.vocab_size != effective_vocab,
         }
         metadata.update(resolve_gpu_batch_size_policy(self.config, payload=payload))
-        if self.config.target_policy in {
+        if str(self.config.target_policy) in {
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
             "corridor_exemplar_v1",
@@ -240,7 +240,7 @@ class HFTorchTeacherEmissionBackend:
                     "effective_top_k": min(self.config.top_k, effective_vocab),
                 }
             )
-        if self.config.target_policy == "cascaded_soft_labels_v1":
+        if str(self.config.target_policy) == "cascaded_soft_labels_v1":
             metadata.update(
                 {
                     "num_buckets": self.config.num_buckets,
@@ -309,12 +309,12 @@ class HFTorchTeacherEmissionBackend:
         return torch, tokenizer, model
 
     def _payload_for_policy(self, logits: np.ndarray) -> dict[str, np.ndarray]:
-        if self.config.target_policy == "dense_logits":
+        if str(self.config.target_policy) == "dense_logits":
             return {"logits": logits}
         topk = _dense_logits_to_topk_tail(logits, top_k=self.config.top_k)
-        if self.config.target_policy in {"topk_with_tail_v0", "corridor_exemplar_v1"}:
+        if str(self.config.target_policy) in {"topk_with_tail_v0", "corridor_exemplar_v1"}:
             return topk
-        if self.config.target_policy == "cascaded_soft_labels_v1":
+        if str(self.config.target_policy) == "cascaded_soft_labels_v1":
             return {
                 **topk,
                 "bucket_masses": _tail_bucket_masses(
