@@ -3588,3 +3588,8 @@ portable without rewriting the raw generation evidence.
 
 Updated the finalizer pin and emitted replay evidence against the Contract
 mode-bound resume identity validator.
+
+2026-08-20 — M8G public inventory contract pin
+
+Pinned the finalizer to the pushed Contract lineage containing closed inventory
+record codecs used by the finalized bundle.
