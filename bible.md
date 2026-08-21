@@ -3600,6 +3600,11 @@ Finalization now derives workload producer commits from the verified raw
 generation manifest while pinning the execution environment to the reviewed
 public Contract API.
 
+2026-08-20 — M8G Contract review formatting correction
+
+Pinned the reviewed Contract commit after its closed checkpoint validator was
+formatted and revalidated without changing workload semantics.
+
 2026-08-20 — M8G digest guard portability
 
 The Linux finalizer validates raw manifest and corpus identities with its own
