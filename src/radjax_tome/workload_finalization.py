@@ -287,7 +287,13 @@ def finalize_workload(
         input_provenance = input_root / "teacher_model_provenance.json"
         if not input_provenance.is_file():
             raise ValueError("complete teacher provenance is missing")
+        original_teacher_provenance = input_provenance.read_bytes()
         shutil.copy2(input_provenance, raw_provenance / "teacher_model_provenance.json")
+        raw_producer_bytes = {
+            name: (raw_provenance / name).read_bytes()
+            for name in ("runtime_teacher_model_provenance.json", "workload_manifest.json")
+            if (raw_provenance / name).is_file()
+        }
         # Keep immutable producer records only under raw-provenance. Consumer
         # authority uses the portable records emitted below.
         for name in ("workload_manifest.json", "teacher_model_provenance.json"):
@@ -348,6 +354,14 @@ def finalize_workload(
         )
         validate_source_row_closure(corpus_rows)
         _normalize_json_tree(stage, str(generation_root), str(input_root))
+        # Raw provenance is immutable evidence, not consumer input.  Restore
+        # its exact bytes after portable projection has normalized the staged
+        # consumer records.
+        (raw_provenance / "teacher_model_provenance.json").write_bytes(
+            original_teacher_provenance
+        )
+        for name, raw_bytes in raw_producer_bytes.items():
+            (raw_provenance / name).write_bytes(raw_bytes)
         entries = _inventory(stage)
         root = inventory_root(entries)
         (stage / "source_row_closure.jsonl").write_text(closure.read_text())
