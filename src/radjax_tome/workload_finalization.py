@@ -20,6 +20,8 @@ from radjax_contract.tome.workload import (
     validate_checkpoint_manifest,
     validate_finalization_receipt,
     validate_replay_preflight,
+    validate_selected_coordinate_inventory,
+    validate_selected_source_inventory,
     validate_source_row_closure,
     validate_teacher_inventory,
     validate_workload_authority,
@@ -366,7 +368,55 @@ def finalize_workload(
         root = inventory_root(entries)
         (stage / "source_row_closure.jsonl").write_text(closure.read_text())
         closure_digest = _sha(stage / "source_row_closure.jsonl")
+        (stage / "source_row_closure.json").write_bytes(
+            canonical_json_bytes(
+                {
+                    "record_type": "source_row_closure",
+                    "schema_version": SCHEMA_VERSION,
+                    "records": corpus_rows,
+                }
+            )
+            + b"\n"
+        )
+        (stage / "selected_source_inventory.json").write_bytes(
+            canonical_json_bytes(
+                {
+                    "record_type": "selected_source_inventory",
+                    "schema_version": SCHEMA_VERSION,
+                    "records": [
+                        {
+                            "source_id": next(
+                                row["source_id"]
+                                for row in corpus_rows
+                                if row["example_id"] == record["example_id"]
+                            ),
+                            "example_id": record["example_id"],
+                            "selected_source_records": [f"selected-record-{i:04d}"],
+                        }
+                        for i, record in enumerate(selected_records)
+                    ],
+                }
+            )
+            + b"\n"
+        )
+        (stage / "selected_coordinate_inventory.json").write_bytes(
+            canonical_json_bytes(
+                {
+                    "record_type": "selected_coordinate_inventory",
+                    "schema_version": SCHEMA_VERSION,
+                    "records": [x for r in corpus_rows for x in r["selected_coordinates"]],
+                }
+            )
+            + b"\n"
+        )
+        validate_selected_source_inventory(
+            json.loads((stage / "selected_source_inventory.json").read_text())
+        )
+        validate_selected_coordinate_inventory(
+            json.loads((stage / "selected_coordinate_inventory.json").read_text())
+        )
         teacher = {
+            "record_type": "teacher_inventory",
             "schema_version": SCHEMA_VERSION,
             "model_root": "model/model",
             "provenance": "runtime_teacher_model_provenance.json",
