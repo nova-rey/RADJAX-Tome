@@ -184,7 +184,21 @@ def adopt_verified_selection_replay(
                 raise ValueError(
                     "private replay adoption conflicts with current authority"
                 )
-            for relative, expected_digest in (prior.get("input_closure") or {}).items():
+            expected_closure = prior.get("input_closure") or {}
+            actual_closure = {}
+            for member in sorted((adopted_root / "input").rglob("*")):
+                if member.is_symlink() or not member.is_file():
+                    if not member.is_dir():
+                        raise ValueError(
+                            "current replay adopted input contains special file"
+                        )
+                    continue
+                actual_closure[member.relative_to(adopted_root).as_posix()] = _sha256(
+                    member
+                )
+            if set(actual_closure) != set(expected_closure):
+                raise ValueError("current replay input closure member set changed")
+            for relative, expected_digest in expected_closure.items():
                 member = _owned_member_path(adopted_root, relative)
                 if (
                     member.is_symlink()
@@ -229,9 +243,9 @@ def adopt_verified_selection_replay(
             input_closure = {}
             for member in sorted(input_root.rglob("*")):
                 if member.is_symlink() or not member.is_file():
-                    if member.is_symlink():
+                    if not member.is_dir():
                         raise ValueError(
-                            "current replay adopted input contains symlink"
+                            "current replay adopted input contains special file"
                         )
                     continue
                 input_closure[member.relative_to(adopted_root).as_posix()] = _sha256(
