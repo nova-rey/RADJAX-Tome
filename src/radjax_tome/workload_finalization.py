@@ -216,6 +216,19 @@ def finalize_workload(
         or len({(x["example_id"], x["position"]) for x in coords}) != 253
     ):
         raise ValueError("frozen coordinate authority is not 253 unique records")
+    selected_record_path = (
+        checkpoint / "c6/multi-role-selection/selected_exemplars.jsonl"
+    )
+    selected_records = [
+        json.loads(x)
+        for x in selected_record_path.read_text().splitlines()
+        if x.strip()
+    ]
+    if len(selected_records) != 253:
+        raise ValueError("frozen selected-source record authority is not 253 records")
+    selected_record_ids = [r["example_id"] for r in selected_records]
+    if len(set(selected_record_ids)) > 253:
+        raise ValueError("selected-source record identity is invalid")
     stage = Path(tempfile.mkdtemp(prefix=output.name + ".staging-", dir=output.parent))
     try:
         shutil.rmtree(stage)
@@ -232,6 +245,10 @@ def finalize_workload(
             row = json.loads(line)
             source_rel = f"source-{index + 1:04d}.jsonl"
             selected = [x for x in coords if x["example_id"] == row.get("example_id")]
+            selected_records_for_row = [
+                i for i, example_id in enumerate(selected_record_ids)
+                if example_id == row.get("example_id")
+            ]
             corpus_rows.append(
                 {
                     "row_index": index,
@@ -242,6 +259,7 @@ def finalize_workload(
                     "row_digest": digest(row),
                     "corpus_identity": CORPUS_IDENTITY,
                     "selected": bool(selected),
+                    "selected_source_records": selected_records_for_row,
                     "selected_coordinates": [
                         {"example_id": x["example_id"], "position": x["position"]}
                         for x in selected

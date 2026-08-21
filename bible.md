@@ -3550,3 +3550,10 @@ Updated finalization evidence to emit explicit public workload record types,
 checkpoint cross-bindings, truthful finalization receipt evidence, and CPU-only
 replay preflight records for each approved representation mode. No generation,
 materialization, GPU, or benchmark work was performed.
+
+2026-08-20 — M8G selected occurrence binding
+
+Bound the finalized source closure to the authoritative 253 selected-source
+record occurrences while retaining the distinct 1,000-row corpus mapping.
+This preserves the frozen coordinate evidence, including repeated corpus rows,
+without reranking or changing selection semantics.
