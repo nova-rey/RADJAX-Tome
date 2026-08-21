@@ -326,12 +326,22 @@ def finalize_workload(
         rows_dir = stage / "source-rows"
         rows_dir.mkdir()
         corpus_rows = []
+        source_identity_map = []
         corpus_path = input_root / "corpus/corpus.jsonl"
         for index, line in enumerate(
             corpus_path.read_text(encoding="utf-8").splitlines()
         ):
             row = json.loads(line)
             source_rel = f"source-{index + 1:04d}.jsonl"
+            portable_source_id = f"bundle-source:{row['example_id']}"
+            source_identity_map.append(
+                {
+                    "example_id": row["example_id"],
+                    "portable_source_id": portable_source_id,
+                    "historical_source_id": row.get("source_id"),
+                    "historical_source_path": row.get("source_path"),
+                }
+            )
             selected = [x for x in coords if x["example_id"] == row.get("example_id")]
             selected_records_for_row = [
                 f"selected-record-{i:04d}"
@@ -342,7 +352,7 @@ def finalize_workload(
                 {
                     "row_index": index,
                     "example_id": row["example_id"],
-                    "source_id": row["source_id"],
+                    "source_id": portable_source_id,
                     "source_relative_path": f"source-rows/{source_rel}",
                     "source_file_digest": row.get("source_hash"),
                     "row_digest": digest(row),
@@ -376,6 +386,30 @@ def finalize_workload(
             + "\n"
         )
         validate_source_row_closure(corpus_rows)
+        (stage / "raw-provenance/source_identity_provenance.json").write_bytes(
+            canonical_json_bytes(
+                {
+                    "record_type": "source_identity_provenance",
+                    "schema_version": SCHEMA_VERSION,
+                    "active_source_identity": "bundle-relative-content-bound",
+                    "historical_paths_non_authoritative": True,
+                    "records": source_identity_map,
+                }
+            )
+            + b"\n"
+        )
+        (stage / "portable_path_policy.json").write_bytes(
+            canonical_json_bytes(
+                {
+                    "schema_version": SCHEMA_VERSION,
+                    "active_reference_root": ".",
+                    "active_reference_rule": "bundle-relative-only",
+                    "historical_provenance_paths_non_authoritative": True,
+                    "historical_paths_must_not_be_resolved": True,
+                }
+            )
+            + b"\n"
+        )
         _normalize_json_tree(stage, str(generation_root), str(input_root))
         # Raw provenance is immutable evidence, not consumer input.  Restore
         # its exact bytes after portable projection has normalized the staged
