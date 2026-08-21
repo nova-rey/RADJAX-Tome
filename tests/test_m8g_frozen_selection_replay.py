@@ -11,6 +11,7 @@ import radjax_tome.builder.production as production_module
 from radjax_tome.builder.config import normalize_production_build_request
 from radjax_tome.builder.delivery.replay_authority import (
     _owned_member_path,
+    _publish_replay_metadata,
     adopt_verified_selection_replay,
 )
 from radjax_tome.builder.production import ProductionBuildConfig
@@ -149,3 +150,32 @@ def test_replay_member_path_cannot_escape_adoption_root(
 ) -> None:
     with pytest.raises(ValueError, match="escapes adoption root"):
         _owned_member_path(tmp_path, relative)
+
+
+def test_replay_metadata_is_atomic_idempotent_and_conflict_safe(tmp_path: Path) -> None:
+    source = tmp_path / "source.json"
+    source.write_text(json.dumps({
+        "schema_version": "qrwkv_xla.teacher_target_store.v1",
+        "num_examples": 1000,
+    }), encoding="utf-8")
+    import hashlib
+    digest = "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
+    run_root = tmp_path / "run"
+    _publish_replay_metadata(source=source, run_root=run_root, expected_digest=digest)
+    assert (run_root / "metadata.json").read_bytes() == source.read_bytes()
+    _publish_replay_metadata(source=source, run_root=run_root, expected_digest=digest)
+    (run_root / "metadata.json").write_bytes(b"conflict")
+    with pytest.raises(ValueError, match="conflicts"):
+        _publish_replay_metadata(source=source, run_root=run_root, expected_digest=digest)
+
+
+def test_replay_metadata_rejects_invalid_schema_and_symlink(tmp_path: Path) -> None:
+    source = tmp_path / "source.json"
+    source.write_text("{}", encoding="utf-8")
+    digest = "sha256:" + __import__("hashlib").sha256(source.read_bytes()).hexdigest()
+    with pytest.raises(ValueError, match="schema"):
+        _publish_replay_metadata(source=source, run_root=tmp_path / "run", expected_digest=digest)
+    link = tmp_path / "link.json"
+    link.symlink_to(source)
+    with pytest.raises(ValueError, match="regular file"):
+        _publish_replay_metadata(source=link, run_root=tmp_path / "run2", expected_digest=digest)
