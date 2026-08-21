@@ -3614,3 +3614,8 @@ strict digest grammar before staging any output.
 
 Portable runtime provenance now points to the preserved raw runtime provenance
 member, while model loading resolves through the bundle-relative model root.
+
+2026-08-20 — M8G reviewed Contract pin finalized
+
+Pinned the Tome branch to the pushed Contract commit carrying the approved
+closed-record and checkpoint authority validation.
