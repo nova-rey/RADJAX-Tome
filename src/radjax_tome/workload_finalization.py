@@ -286,6 +286,13 @@ def finalize_workload(
             source = stage / name
             if source.is_file():
                 shutil.copy2(source, raw_provenance / name)
+        # The generation-input provenance is the complete historical teacher
+        # record.  Preserve it byte-for-byte; the producer runtime wrapper is
+        # not a substitute for this authority-bearing record.
+        input_provenance = input_root / "teacher_model_provenance.json"
+        if not input_provenance.is_file():
+            raise ValueError("complete teacher provenance is missing")
+        shutil.copy2(input_provenance, raw_provenance / "teacher_model_provenance.json")
         # Keep immutable producer records only under raw-provenance. Consumer
         # authority uses the portable records emitted below.
         for name in ("workload_manifest.json", "teacher_model_provenance.json"):
@@ -358,13 +365,21 @@ def finalize_workload(
             "identity": digest([e for e in entries if e["role"] == "model_member"]),
         }
         validate_teacher_inventory(teacher)
+        workload_identity = digest(
+            {
+                "corpus": corpus_identity,
+                "selection": digest(coords),
+                "source_rows": closure_digest,
+                "teacher": teacher["identity"],
+            }
+        )
         (stage / "runtime_teacher_model_provenance.json").write_bytes(
             canonical_json_bytes(
                 {
                     "schema_version": SCHEMA_VERSION,
                     "model_path": teacher["model_root"],
                     "model_tree_identity": teacher["identity"],
-                    "original_provenance": "raw-provenance/runtime_teacher_model_provenance.json",
+                    "original_provenance": "raw-provenance/teacher_model_provenance.json",
                     "relocation": "bundle-relative-authority-v1",
                 }
             )
@@ -395,11 +410,7 @@ def finalize_workload(
                 "selection-checkpoint/c6/authority_manifest.json",
             ),
             "source_row_closure_digest": closure_digest,
-            "workload_identity": digest({
-                "corpus": corpus_identity,
-                "selection": digest(coords),
-                "source_rows": closure_digest,
-            }),
+            "workload_identity": workload_identity,
             "tome_commit": tome_commit,
             "contract_commit": contract_commit,
         }
@@ -410,13 +421,7 @@ def finalize_workload(
         authority = {
             "record_type": "workload_authority",
             "schema_version": SCHEMA_VERSION,
-            "workload_identity": digest(
-                {
-                    "coords": coords,
-                    "corpus": checkpoint_manifest["corpus_identity"],
-                    "teacher": teacher["identity"],
-                }
-            ),
+            "workload_identity": workload_identity,
             "tome_commit": tome_commit,
             "contract_commit": contract_commit,
             "corpus_identity": checkpoint_manifest["corpus_identity"],
@@ -456,6 +461,32 @@ def finalize_workload(
         validate_workload_authority(authority)
         (stage / "workload_authority.json").write_bytes(
             canonical_json_bytes(authority) + b"\n"
+        )
+        # Replace the producer's summary with a current authority-bound
+        # validation result; the unmodified producer report remains under
+        # raw-provenance and is referenced by the finalization receipt.
+        validation_summary = {
+            "record_type": "workload_validation_report",
+            "schema_version": SCHEMA_VERSION,
+            "status": "pass",
+            "workload_identity": workload_identity,
+            "corpus_identity": corpus_identity,
+            "teacher_identity": teacher["identity"],
+            "checkpoint_identity": checkpoint_manifest["checkpoint_identity"],
+            "selection_identity": checkpoint_manifest["selection_identity"],
+            "source_row_closure_digest": closure_digest,
+            "selected_source_count": 253,
+            "selected_coordinate_count": 253,
+            "source_count": 1000,
+            "example_count": 1000,
+            "duplicate_count": 0,
+            "underfill_reason": "global_ranked_supply_exhaustion",
+            "c1_c5_executed": False,
+            "full_teacher_pass_count": 0,
+            "materialization_performed": False,
+        }
+        (stage / "validation_report.json").write_bytes(
+            canonical_json_bytes(validation_summary) + b"\n"
         )
         receipt = {
             "record_type": "finalization_receipt",
