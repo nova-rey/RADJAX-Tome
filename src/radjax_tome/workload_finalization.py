@@ -234,13 +234,16 @@ def finalize_workload(
     if not isinstance(contract_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", contract_commit):
         raise ValueError("raw Contract authority invalid")
     raw_inventory_identity = raw_manifest.get("file_inventory_digest")
-    if not isinstance(raw_inventory_identity, str) or not _DIGEST.fullmatch(
+    if not isinstance(raw_inventory_identity, str) or not re.fullmatch(
+        r"sha256:[0-9a-f]{64}",
         raw_inventory_identity
     ):
         raise ValueError("raw workload inventory identity invalid")
     corpus_manifest = _read_json(input_root / "corpus/corpus_manifest.json")
     corpus_identity = corpus_manifest.get("corpus_hash")
-    if not isinstance(corpus_identity, str) or not _DIGEST.fullmatch(corpus_identity):
+    if not isinstance(corpus_identity, str) or not re.fullmatch(
+        r"sha256:[0-9a-f]{64}", corpus_identity
+    ):
         raise ValueError("corpus identity invalid")
     if output.exists():
         raise FileExistsError(f"conflicting destination exists: {output}")

@@ -3599,3 +3599,8 @@ record codecs used by the finalized bundle.
 Finalization now derives workload producer commits from the verified raw
 generation manifest while pinning the execution environment to the reviewed
 public Contract API.
+
+2026-08-20 — M8G digest guard portability
+
+The Linux finalizer validates raw manifest and corpus identities with its own
+strict digest grammar before staging any output.
