@@ -97,6 +97,11 @@ def _normalize_json_tree(root: Path, raw_root: str, input_root: str) -> None:
             or path.suffix.lower() not in {".json", ".jsonl"}
         ):
             continue
+        # Corpus/model members and raw provenance are byte-authoritative.  Do
+        # not reserialize them while projecting producer-local metadata.
+        rel_parts = path.relative_to(root).parts
+        if rel_parts and rel_parts[0] in {"corpus", "model", "raw-provenance"}:
+            continue
         try:
             if path.suffix == ".json":
                 value = json.loads(path.read_text(encoding="utf-8"))
