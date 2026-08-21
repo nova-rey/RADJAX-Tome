@@ -3593,3 +3593,9 @@ mode-bound resume identity validator.
 
 Pinned the finalizer to the pushed Contract lineage containing closed inventory
 record codecs used by the finalized bundle.
+
+2026-08-20 — M8G producer authority projection
+
+Finalization now derives workload producer commits from the verified raw
+generation manifest while pinning the execution environment to the reviewed
+public Contract API.

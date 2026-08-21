@@ -5,7 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
+import subprocess
 import tempfile
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -46,6 +48,19 @@ def _evidence_sha(root: Path, *relative: str) -> str:
         if candidate.is_file() and not candidate.is_symlink():
             return _sha(candidate)
     return digest({"missing": list(relative)})
+
+
+def _authority_commits() -> tuple[str, str]:
+    """Resolve producer authorities from the checked-out implementation."""
+    repo = Path(__file__).resolve().parents[2]
+    tome = subprocess.check_output(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"], text=True
+    ).strip()
+    pyproject = (repo / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r"RADJAX-Contract\.git@([0-9a-f]{40})", pyproject)
+    if not match:
+        raise ValueError("Contract authority pin missing")
+    return tome, match.group(1)
 
 
 def _portable(value: Any, root: str, input_root: str) -> Any:
@@ -208,6 +223,25 @@ def finalize_workload(
     output = output.resolve()
     if not generation_root.is_dir() or not input_root.is_dir():
         raise ValueError("generation or input root missing")
+    raw_manifest_path = generation_root / "workload_manifest.json"
+    if not raw_manifest_path.is_file():
+        raise ValueError("raw workload manifest missing")
+    raw_manifest = _read_json(raw_manifest_path)
+    tome_commit = raw_manifest.get("tome_commit")
+    contract_commit = raw_manifest.get("contract_commit")
+    if not isinstance(tome_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", tome_commit):
+        raise ValueError("raw Tome authority invalid")
+    if not isinstance(contract_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", contract_commit):
+        raise ValueError("raw Contract authority invalid")
+    raw_inventory_identity = raw_manifest.get("file_inventory_digest")
+    if not isinstance(raw_inventory_identity, str) or not _DIGEST.fullmatch(
+        raw_inventory_identity
+    ):
+        raise ValueError("raw workload inventory identity invalid")
+    corpus_manifest = _read_json(input_root / "corpus/corpus_manifest.json")
+    corpus_identity = corpus_manifest.get("corpus_hash")
+    if not isinstance(corpus_identity, str) or not _DIGEST.fullmatch(corpus_identity):
+        raise ValueError("corpus identity invalid")
     if output.exists():
         raise FileExistsError(f"conflicting destination exists: {output}")
     checkpoint = generation_root / "selection-checkpoint"
@@ -237,6 +271,22 @@ def finalize_workload(
     try:
         shutil.rmtree(stage)
         _project_regular_tree(generation_root, stage)
+        # Preserve immutable producer provenance byte-for-byte before the
+        # portable projection rewrites consumer-facing JSON paths.
+        raw_provenance = stage / "raw-provenance"
+        raw_provenance.mkdir()
+        for name in (
+            "teacher_model_provenance.json",
+            "runtime_teacher_model_provenance.json",
+            "workload_manifest.json",
+        ):
+            source = stage / name
+            if source.is_file():
+                shutil.copy2(source, raw_provenance / name)
+        # Keep immutable producer records only under raw-provenance. Consumer
+        # authority uses the portable records emitted below.
+        for name in ("workload_manifest.json", "teacher_model_provenance.json"):
+            (stage / name).unlink(missing_ok=True)
         # The corpus JSONL is the verified canonical row source; preserve it as a
         # portable row closure rather than relying on producer-local source paths.
         rows_dir = stage / "source-rows"
@@ -262,7 +312,7 @@ def finalize_workload(
                     "source_relative_path": f"source-rows/{source_rel}",
                     "source_file_digest": row.get("source_hash"),
                     "row_digest": digest(row),
-                    "corpus_identity": CORPUS_IDENTITY,
+                    "corpus_identity": corpus_identity,
                     "selected": bool(selected),
                     "selected_source_records": selected_records_for_row,
                     "selected_coordinates": [
@@ -305,6 +355,18 @@ def finalize_workload(
             "identity": digest([e for e in entries if e["role"] == "model_member"]),
         }
         validate_teacher_inventory(teacher)
+        (stage / "runtime_teacher_model_provenance.json").write_bytes(
+            canonical_json_bytes(
+                {
+                    "schema_version": SCHEMA_VERSION,
+                    "model_path": teacher["model_root"],
+                    "model_tree_identity": teacher["identity"],
+                    "original_provenance": "raw-provenance/teacher_model_provenance.json",
+                    "relocation": "bundle-relative-authority-v1",
+                }
+            )
+            + b"\n"
+        )
         (stage / "teacher_identity.json").write_bytes(
             canonical_json_bytes(teacher) + b"\n"
         )
@@ -318,7 +380,7 @@ def finalize_workload(
             "selection_identity": digest(coords),
             "checkpoint_identity": _sha(checkpoint / "c6/authority_manifest.json"),
             "teacher_identity": teacher["identity"],
-            "corpus_identity": CORPUS_IDENTITY,
+            "corpus_identity": corpus_identity,
             "selection_config_identity": digest({
                 "budget": 256,
                 "underfill_reason": "global_ranked_supply_exhaustion",
@@ -331,10 +393,12 @@ def finalize_workload(
             ),
             "source_row_closure_digest": closure_digest,
             "workload_identity": digest({
-                "corpus": CORPUS_IDENTITY,
+                "corpus": corpus_identity,
                 "selection": digest(coords),
                 "source_rows": closure_digest,
             }),
+            "tome_commit": tome_commit,
+            "contract_commit": contract_commit,
         }
         validate_checkpoint_manifest(checkpoint_manifest)
         (stage / "checkpoint_manifest.json").write_bytes(
@@ -350,8 +414,8 @@ def finalize_workload(
                     "teacher": teacher["identity"],
                 }
             ),
-            "tome_commit": "b350b0b89e97766336e9b2e64d9dbe9e1c4a712e",
-            "contract_commit": "3b0716a8fcb5731fbd16b1a0dde0388e9f87daab",
+            "tome_commit": tome_commit,
+            "contract_commit": contract_commit,
             "corpus_identity": checkpoint_manifest["corpus_identity"],
             "teacher_identity": teacher["identity"],
             "selection_identity": checkpoint_manifest["selection_identity"],
@@ -394,7 +458,7 @@ def finalize_workload(
             "record_type": "finalization_receipt",
             "schema_version": SCHEMA_VERSION,
             "status": "finalized",
-            "raw_generation_root_inventory": RAW_INVENTORY_IDENTITY,
+            "raw_generation_root_inventory": raw_inventory_identity,
             "original_progress_digest": _evidence_sha(
                 generation_root, "selection-checkpoint/production_progress.json"
             ),
@@ -410,8 +474,8 @@ def finalize_workload(
             "source_row_closure_digest": closure_digest,
             "inventory_root": root,
             "finalization_identity": authority["finalization_identity"],
-            "tome_commit": "b350b0b89e97766336e9b2e64d9dbe9e1c4a712e",
-            "contract_commit": "3b0716a8fcb5731fbd16b1a0dde0388e9f87daab",
+            "tome_commit": tome_commit,
+            "contract_commit": contract_commit,
             "configuration_identity": digest({
                 "batch_size": 8,
                 "sequence_length": 128,
@@ -419,7 +483,7 @@ def finalize_workload(
             }),
             "transaction_identity": digest({
                 "operation": "finalize-replay-workload",
-                "raw_inventory": RAW_INVENTORY_IDENTITY,
+                "raw_inventory": raw_inventory_identity,
                 "output": "portable-authority-bundle",
             }),
             "benchmark_performed": False,
