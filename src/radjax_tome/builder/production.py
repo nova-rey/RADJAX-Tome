@@ -307,6 +307,8 @@ def _build_production_gpu_tome_compatibility(
                 corpus_manifest_path=(
                     replay_authority.adopted_root / "input/corpus_manifest.json"
                 ),
+                teacher_model=(replay_authority.adopted_root / "input/model/model"),
+                tokenizer_id=str(replay_authority.adopted_root / "input/model/model"),
                 teacher_model_provenance_path=(
                     replay_authority.adopted_root
                     / "input/teacher_model_provenance.json"

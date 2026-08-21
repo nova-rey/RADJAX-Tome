@@ -3640,3 +3640,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: enabled HF Torch dynamic selected-rerun emission for CPU production materialization smoke; no selection or representation semantics changed.
 - 2026-08-21: replay adoption now relocates teacher_model and tokenizer_id to the invocation-owned model tree before canonical preflight; no selection or representation semantics changed.
 - 2026-08-21: replay adoption now relocates teacher_model and tokenizer_id to the invocation-owned model tree before canonical preflight; no selection or representation semantics changed.
+- 2026-08-21: bound replay teacher_model and tokenizer_id to adopted model tree before canonical preflight.
