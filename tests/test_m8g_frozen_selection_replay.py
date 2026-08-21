@@ -179,3 +179,42 @@ def test_replay_metadata_rejects_invalid_schema_and_symlink(tmp_path: Path) -> N
     link.symlink_to(source)
     with pytest.raises(ValueError, match="regular file"):
         _publish_replay_metadata(source=link, run_root=tmp_path / "run2", expected_digest=digest)
+
+
+def test_v19_rich_replay_resolves_all_score_pass_tuples() -> None:
+    """The rich C5 JSONL is the replay authority; stale legacy bytes are not."""
+    root = Path("/home/nyx/m8g/published/m8g-current-1k-workload-authoritative-v19")
+    if not root.is_dir():
+        pytest.skip("durable v19 workload is available only on the benchmark host")
+    from radjax_tome.fingerprint.multi_role_selection import (
+        load_multi_role_selection_artifact_for_replay,
+    )
+    from radjax_tome.builder.c6_integration import c5_records_for_delivery
+    from radjax_tome.artifact_validation.delivery import _path_b_score_pass_record_matches
+    import numpy as np
+
+    artifact = load_multi_role_selection_artifact_for_replay(
+        root / "selection-checkpoint/c6/multi-role-selection"
+    )
+    records = c5_records_for_delivery(
+        artifact, delivery_path="two_pass_rerun_selected"
+    )
+    shard_file = root / "selection-checkpoint/shards/shard-00000.npz"
+    arrays = np.load(shard_file, allow_pickle=False)
+    shard = {name: arrays[name] for name in arrays.files}
+    assert len(records) == 253
+    assert all(
+        _path_b_score_pass_record_matches(record, shard, row=record["source_row"])
+        for record in records
+    )
+    assert any(
+        "fingerprint_corridor_representative" in record["selection_roles"]
+        for record in records
+    )
+    assert any(
+        "fingerprint_corridor_representative" not in record["selection_roles"]
+        for record in records
+    )
+    assert artifact.warnings[-1].startswith(
+        "legacy projection rebuilt from authority-bearing rich records"
+    )

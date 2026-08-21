@@ -93,7 +93,7 @@ def test_hf_torch_registered_and_capabilities_are_import_safe() -> None:
     assert statuses["topk_with_tail_v0"] == "supported"
     assert statuses["cascaded_soft_labels_v1"] == "supported"
     assert statuses["dynamic_cascaded_soft_labels_v1"] == "planned"
-    assert statuses["corridor_exemplar_v1"] == "planned"
+    assert statuses["corridor_exemplar_v1"] == "supported_debug"
     implemented = {
         capability.target_policy: capability.implemented_now
         for capability in capabilities

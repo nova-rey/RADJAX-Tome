@@ -232,6 +232,7 @@ class HFTorchTeacherEmissionBackend:
         if self.config.target_policy in {
             "topk_with_tail_v0",
             "cascaded_soft_labels_v1",
+            "corridor_exemplar_v1",
         }:
             metadata.update(
                 {
