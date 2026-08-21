@@ -128,6 +128,12 @@ def adopt_verified_selection_replay(
     authority_path = artifact_root / "workload_authority.json"
     if authority_path.is_file() and not authority_path.is_symlink():
         authority = json.loads(authority_path.read_text(encoding="utf-8"))
+        try:
+            from radjax_contract.tome import validate_role_binding
+            validate_role_binding("workload_authority", "authority")
+            validate_role_binding("runtime_teacher_provenance", "runtime_teacher_provenance")
+        except ImportError as exc:
+            raise ValueError("replay Contract role-binding API unavailable") from exc
         if authority.get("provenance") != "NEW_DETERMINISTIC_M8G_1K_WORKLOAD":
             raise ValueError("current replay workload provenance invalid")
         runtime_locator = artifact_root / "runtime_teacher_model_provenance.json"
