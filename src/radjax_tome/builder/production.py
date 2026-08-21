@@ -3293,7 +3293,7 @@ def _selection_integration_hash(config: ProductionBuildConfig) -> str:
 
 
 def _hash_payload(payload: Mapping[str, Any]) -> str:
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode()
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
