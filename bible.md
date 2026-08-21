@@ -3557,3 +3557,8 @@ Bound the finalized source closure to the authoritative 253 selected-source
 record occurrences while retaining the distinct 1,000-row corpus mapping.
 This preserves the frozen coordinate evidence, including repeated corpus rows,
 without reranking or changing selection semantics.
+
+2026-08-20 — M8G occurrence identities normalized
+
+Selected-source occurrence bindings use stable string identities in the public
+closure schema, preserving deterministic replay encoding across hosts.

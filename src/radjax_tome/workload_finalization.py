@@ -246,7 +246,8 @@ def finalize_workload(
             source_rel = f"source-{index + 1:04d}.jsonl"
             selected = [x for x in coords if x["example_id"] == row.get("example_id")]
             selected_records_for_row = [
-                i for i, example_id in enumerate(selected_record_ids)
+                f"selected-record-{i:04d}"
+                for i, example_id in enumerate(selected_record_ids)
                 if example_id == row.get("example_id")
             ]
             corpus_rows.append(
