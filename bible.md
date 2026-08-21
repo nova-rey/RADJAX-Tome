@@ -3562,3 +3562,8 @@ without reranking or changing selection semantics.
 
 Selected-source occurrence bindings use stable string identities in the public
 closure schema, preserving deterministic replay encoding across hosts.
+
+2026-08-20 — M8G authority commit binding
+
+Finalization receipts and workload authority now bind the exact current Tome
+and public Contract implementation commits used for replay validation.

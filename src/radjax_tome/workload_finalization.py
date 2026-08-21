@@ -346,8 +346,8 @@ def finalize_workload(
                     "teacher": teacher["identity"],
                 }
             ),
-            "tome_commit": "2c964770d9f77b8888f5be3d284f11fa3d9",
-            "contract_commit": "8f4814da7bec3156b712ffff1196e0ef3f73b4b1",
+            "tome_commit": "b350b0b89e97766336e9b2e64d9dbe9e1c4a712e",
+            "contract_commit": "7c2e394be5a2848ef157c9de02f8edad9fb25b72",
             "corpus_identity": checkpoint_manifest["corpus_identity"],
             "teacher_identity": teacher["identity"],
             "selection_identity": checkpoint_manifest["selection_identity"],
@@ -406,8 +406,8 @@ def finalize_workload(
             "source_row_closure_digest": closure_digest,
             "inventory_root": root,
             "finalization_identity": authority["finalization_identity"],
-            "tome_commit": "2c964770d9f77b8888f5be3d284f11fa3d9",
-            "contract_commit": "9e212cc1ed9cba2b962fea01d666ecfda2e0abee",
+            "tome_commit": "b350b0b89e97766336e9b2e64d9dbe9e1c4a712e",
+            "contract_commit": "7c2e394be5a2848ef157c9de02f8edad9fb25b72",
             "configuration_identity": digest({
                 "batch_size": 8,
                 "sequence_length": 128,
