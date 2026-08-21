@@ -1,6 +1,18 @@
 {
   "contract_commit": "7ae11364b771eb4639dbb10268f9bd71bd3da601",
+  "cpu_count": 4,
+  "filesystem": "Filesystem     Type 1K-blocks      Used Available Use% Mounted on\n/dev/sda1      ext4 264039124 144582604 108380900  58% /\n",
+  "memory_bytes": 4104847360,
   "platform": "Linux-6.1.0-44-amd64-x86_64-with-glibc2.36",
   "python": "3.11.2",
-  "tome_commit": "474a0b6ca051c91cdfe9d076c3a4e275a22eba51"
+  "source_workload": "/home/nyx/m8g/published/m8g-current-1k-workload-authoritative-v19",
+  "tome_commit": "474a0b6ca051c91cdfe9d076c3a4e275a22eba51",
+  "uname": {
+    "machine": "x86_64",
+    "node": "Nyx",
+    "processor": "",
+    "release": "6.1.0-44-amd64",
+    "system": "Linux",
+    "version": "#1 SMP PREEMPT_DYNAMIC Debian 6.1.164-1 (2026-03-09)"
+  }
 }

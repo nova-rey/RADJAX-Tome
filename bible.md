@@ -3648,3 +3648,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: HF local-load failures now preserve model/tokenizer paths, types, containment facts, and chained Transformers exceptions.
 
 - 2026-08-21: M8G derived valid exemplar component benchmark V1 measured all nine CPU representation samples from 169 surviving payloads; v19 remains incomplete provenance.
+
+- 2026-08-21: Added Linux CPU/filesystem environment evidence for the derived component benchmark.
