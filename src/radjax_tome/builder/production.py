@@ -270,6 +270,7 @@ def _build_production_gpu_tome_compatibility(
         if config.verified_selection_replay_path:
             try:
                 from radjax_tome.builder.delivery.replay_authority import (
+                    _publish_replay_metadata,
                     adopt_verified_selection_replay,
                 )
 
@@ -299,6 +300,11 @@ def _build_production_gpu_tome_compatibility(
                 return _finalize_production_report(
                     report, state.report_path, state.progress
                 )
+            _publish_replay_metadata(
+                source=replay_authority.adopted_root / "input/metadata.json",
+                run_root=config.output_dir,
+                expected_digest=replay_authority.metadata_digest or "",
+            )
             config = replace(
                 config,
                 dataset_path=replay_authority.adopted_root / "input/corpus.jsonl",
@@ -347,6 +353,8 @@ def _build_production_gpu_tome_compatibility(
                         "adopted_root": str(replay_authority.adopted_root),
                         "selected_sources": replay_authority.selected_sources,
                         "selected_coordinates": replay_authority.selected_coordinates,
+                        "metadata_digest": replay_authority.metadata_digest,
+                        "run_root_metadata_path": str(config.output_dir / "metadata.json"),
                     },
                     "teacher_provenance_schema": "teacher_model_provenance_v1",
                     "resolved_model_path": str(replay_authority.adopted_root / "input/model/model"),

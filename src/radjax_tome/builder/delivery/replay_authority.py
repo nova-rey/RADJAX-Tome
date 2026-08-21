@@ -5,7 +5,9 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import shutil
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -33,6 +35,7 @@ class FrozenSelectionReplay:
     records: tuple[dict[str, Any], ...]
     selected_sources: int
     selected_coordinates: int
+    metadata_digest: str | None = None
 
 
 def _sha256(path: Path) -> str:
@@ -41,6 +44,41 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return "sha256:" + digest.hexdigest()
+
+
+def _publish_replay_metadata(*, source: Path, run_root: Path, expected_digest: str) -> None:
+    """Atomically expose authority-bound score-pass metadata at RUN_ROOT."""
+    if not source.is_file() or source.is_symlink():
+        raise ValueError("frozen replay metadata is not a regular file")
+    actual = _sha256(source)
+    if actual != expected_digest:
+        raise ValueError("frozen replay metadata digest mismatch")
+    try:
+        payload = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ValueError("frozen replay metadata is not valid JSON") from exc
+    if payload.get("schema_version") != "qrwkv_xla.teacher_target_store.v1":
+        raise ValueError("frozen replay metadata schema is unsupported")
+    run_root.mkdir(parents=True, exist_ok=True)
+    destination = run_root / "metadata.json"
+    if destination.exists() or destination.is_symlink():
+        if destination.is_symlink() or not destination.is_file():
+            raise ValueError("run-root metadata destination has the wrong type")
+        if _sha256(destination) != expected_digest:
+            raise ValueError("run-root metadata destination conflicts with authority")
+        return
+    fd, temporary = tempfile.mkstemp(prefix=".metadata.", dir=run_root)
+    try:
+        with os.fdopen(fd, "wb") as handle, source.open("rb") as source_handle:
+            shutil.copyfileobj(source_handle, handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary_path = Path(temporary)
+        if _sha256(temporary_path) != expected_digest:
+            raise ValueError("staged replay metadata digest mismatch")
+        os.replace(temporary_path, destination)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
 
 
 def _owned_member_path(root: Path, relative: object) -> Path:
@@ -147,6 +185,20 @@ def adopt_verified_selection_replay(
         selected_sources = int(authority["counts"]["selected_sources"])
         selected_coordinates = int(authority["counts"]["selected_coordinates"])
         replay_root = artifact_root
+        metadata_source = replay_root / "selection-checkpoint/metadata.json"
+        if not metadata_source.is_file() or metadata_source.is_symlink():
+            raise ValueError("current replay metadata record is missing")
+        metadata_digest = _sha256(metadata_source)
+        inventory_entries = document.get("entries") or document.get("inventory") or []
+        metadata_entries = [
+            entry for entry in inventory_entries
+            if entry.get("path") == "selection-checkpoint/metadata.json"
+        ]
+        if len(metadata_entries) != 1:
+            raise ValueError("current replay metadata role is not uniquely bound")
+        expected_metadata_digest = metadata_entries[0].get("sha256")
+        if expected_metadata_digest != metadata_digest:
+            raise ValueError("current replay metadata authority digest mismatch")
         coord_file = (
             replay_root / "selection-checkpoint/c6/claims/selected_coordinates.jsonl"
         )
@@ -250,6 +302,10 @@ def adopt_verified_selection_replay(
                 target = input_root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(replay_root / relative, target)
+            # Metadata is a checkpoint-bound production input.  Adopt it
+            # under a stable input role; production publishes it atomically
+            # at RUN_ROOT before selected delivery.
+            shutil.copy2(metadata_source, input_root / "metadata.json")
             for source_name, target_name in (
                 ("corpus/corpus.jsonl", "corpus.jsonl"),
                 ("corpus/corpus_manifest.json", "corpus_manifest.json"),
@@ -309,6 +365,7 @@ def adopt_verified_selection_replay(
                 "replay_identity": replay_identity,
                 "selected_sources": selected_sources,
                 "selected_coordinates": selected_coordinates,
+                "metadata_digest": metadata_digest,
                 "input_root": "input",
                 "input_closure": input_closure,
             }
@@ -327,6 +384,7 @@ def adopt_verified_selection_replay(
             records=tuple(records),
             selected_sources=selected_sources,
             selected_coordinates=selected_coordinates,
+            metadata_digest=metadata_digest,
         )
     layout = document.get("provenance", {}).get("artifact_layout", {})
     replay_relative = layout.get("replay_root")
