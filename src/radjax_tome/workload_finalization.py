@@ -172,11 +172,6 @@ def _project_regular_tree(source: Path, destination: Path) -> None:
             target = destination / rel
             target.parent.mkdir(parents=True, exist_ok=True)
             before = src.stat().st_size
-            try:
-                os.link(src, target)
-                continue
-            except OSError:
-                pass
             attempt = 0
             while True:
                 attempt += 1
