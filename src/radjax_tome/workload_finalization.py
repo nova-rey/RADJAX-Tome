@@ -26,6 +26,7 @@ from radjax_contract.tome.workload import (
     validate_teacher_inventory,
     validate_workload_authority,
 )
+
 from radjax_tome.corpora import validate_corpus_artifact
 
 CORPUS_IDENTITY = (
@@ -71,9 +72,7 @@ def _portable(value: Any, root: str, input_root: str) -> Any:
         return {k: _portable(v, root, input_root) for k, v in value.items()}
     if isinstance(value, list):
         return [_portable(v, root, input_root) for v in value]
-    if isinstance(value, str) and (
-        os.path.isabs(value) or value.startswith("local:/")
-    ):
+    if isinstance(value, str) and (os.path.isabs(value) or value.startswith("local:/")):
         if value.startswith("local:/"):
             value = value[len("local:") :]
         for prefix, replacement in (
@@ -232,9 +231,13 @@ def finalize_workload(
     raw_manifest = _read_json(raw_manifest_path)
     tome_commit = raw_manifest.get("tome_commit")
     contract_commit = raw_manifest.get("contract_commit")
-    if not isinstance(tome_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", tome_commit):
+    if not isinstance(tome_commit, str) or not re.fullmatch(
+        r"[0-9a-f]{40}", tome_commit
+    ):
         raise ValueError("raw Tome authority invalid")
-    if not isinstance(contract_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", contract_commit):
+    if not isinstance(contract_commit, str) or not re.fullmatch(
+        r"[0-9a-f]{40}", contract_commit
+    ):
         raise ValueError("raw Contract authority invalid")
     # The raw producer authority is retained in raw-provenance; finalized
     # workload records bind the reviewed current implementation pin.
@@ -242,8 +245,7 @@ def finalize_workload(
     contract_commit = current_contract_commit
     raw_inventory_identity = raw_manifest.get("file_inventory_digest")
     if not isinstance(raw_inventory_identity, str) or not re.fullmatch(
-        r"sha256:[0-9a-f]{64}",
-        raw_inventory_identity
+        r"sha256:[0-9a-f]{64}", raw_inventory_identity
     ):
         raise ValueError("raw workload inventory identity invalid")
     corpus_manifest = _read_json(input_root / "corpus/corpus_manifest.json")
@@ -466,7 +468,9 @@ def finalize_workload(
                 {
                     "record_type": "selected_coordinate_inventory",
                     "schema_version": SCHEMA_VERSION,
-                    "records": [x for r in corpus_rows for x in r["selected_coordinates"]],
+                    "records": [
+                        x for r in corpus_rows for x in r["selected_coordinates"]
+                    ],
                 }
             )
             + b"\n"
@@ -500,8 +504,12 @@ def finalize_workload(
                     "schema_version": SCHEMA_VERSION,
                     "model_path": teacher["model_root"],
                     "model_tree_identity": teacher["identity"],
-                    "original_provenance": "raw-provenance/teacher_model_provenance.json",
-                    "authority_provenance": "runtime_teacher_model_provenance_authority.json",
+                    "original_provenance": (
+                        "raw-provenance/teacher_model_provenance.json"
+                    ),
+                    "authority_provenance": (
+                        "runtime_teacher_model_provenance_authority.json"
+                    ),
                     "relocation": "bundle-relative-authority-v1",
                 }
             )
@@ -559,11 +567,13 @@ def finalize_workload(
             "checkpoint_identity": _sha(checkpoint / "c6/authority_manifest.json"),
             "teacher_identity": teacher["identity"],
             "corpus_identity": corpus_identity,
-            "selection_config_identity": digest({
-                "budget": 256,
-                "underfill_reason": "global_ranked_supply_exhaustion",
-                "representation_mode": None,
-            }),
+            "selection_config_identity": digest(
+                {
+                    "budget": 256,
+                    "underfill_reason": "global_ranked_supply_exhaustion",
+                    "representation_mode": None,
+                }
+            ),
             "score_pass_identity": _evidence_sha(
                 stage,
                 "selection-checkpoint/c6/score_pass_manifest.json",
@@ -587,11 +597,13 @@ def finalize_workload(
             "corpus_identity": checkpoint_manifest["corpus_identity"],
             "teacher_identity": teacher["identity"],
             "selection_identity": checkpoint_manifest["selection_identity"],
-            "selection_policy_identity": digest({
-                "corridor": "corridor_first_global_backfill_v1",
-                "full_width_cap": {"numerator": 1, "denominator": 3},
-                "underfill_reason": "global_ranked_supply_exhaustion",
-            }),
+            "selection_policy_identity": digest(
+                {
+                    "corridor": "corridor_first_global_backfill_v1",
+                    "full_width_cap": {"numerator": 1, "denominator": 3},
+                    "underfill_reason": "global_ranked_supply_exhaustion",
+                }
+            ),
             "full_width_cap_policy": {"numerator": 1, "denominator": 3},
             "checkpoint_manifest_digest": _sha(stage / "checkpoint_manifest.json"),
             "source_row_closure_digest": closure_digest,
@@ -651,16 +663,20 @@ def finalize_workload(
             "finalization_identity": authority["finalization_identity"],
             "tome_commit": tome_commit,
             "contract_commit": contract_commit,
-            "configuration_identity": digest({
-                "batch_size": 8,
-                "sequence_length": 128,
-                "budget": 256,
-            }),
-            "transaction_identity": digest({
-                "operation": "finalize-replay-workload",
-                "raw_inventory": raw_inventory_identity,
-                "output": "portable-authority-bundle",
-            }),
+            "configuration_identity": digest(
+                {
+                    "batch_size": 8,
+                    "sequence_length": 128,
+                    "budget": 256,
+                }
+            ),
+            "transaction_identity": digest(
+                {
+                    "operation": "finalize-replay-workload",
+                    "raw_inventory": raw_inventory_identity,
+                    "output": "portable-authority-bundle",
+                }
+            ),
             "benchmark_performed": False,
             "materialization_performed": False,
         }
@@ -694,10 +710,12 @@ def finalize_workload(
                 "selected_delivery_status": "not_started",
                 "materialization_performed": False,
                 "publication_performed": False,
-                "resume_identity": digest({
-                    "workload": authority["workload_identity"],
-                    "mode": mode,
-                }),
+                "resume_identity": digest(
+                    {
+                        "workload": authority["workload_identity"],
+                        "mode": mode,
+                    }
+                ),
             }
             validate_replay_preflight(preflight)
             (stage / f"replay_preflight_{mode}.json").write_bytes(

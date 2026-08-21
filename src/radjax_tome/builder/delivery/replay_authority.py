@@ -11,10 +11,10 @@ from pathlib import Path
 from typing import Any
 
 from radjax_tome.builder.c6_integration import c5_records_for_delivery
+from radjax_tome.corpora import validate_corpus_artifact
 from radjax_tome.fingerprint.multi_role_selection import (
     load_multi_role_selection_artifact,
 )
-from radjax_tome.corpora import validate_corpus_artifact
 
 
 @dataclass(frozen=True)
@@ -59,8 +59,12 @@ def _owned_member_path(root: Path, relative: object) -> Path:
 
 
 def _replay_identity(
-    *, bundle_manifest_sha256: str, checkpoint_digest: str, selected_record_digest: str,
-    selected_sources: int = 213, selected_coordinates: int = 256
+    *,
+    bundle_manifest_sha256: str,
+    checkpoint_digest: str,
+    selected_record_digest: str,
+    selected_sources: int = 213,
+    selected_coordinates: int = 256,
 ) -> str:
     payload = {
         "operation": "frozen_selection_replay_v1",
@@ -125,28 +129,44 @@ def adopt_verified_selection_replay(
         selected_sources = int(authority["counts"]["selected_sources"])
         selected_coordinates = int(authority["counts"]["selected_coordinates"])
         replay_root = artifact_root
-        coord_file = replay_root / "selection-checkpoint/c6/claims/selected_coordinates.jsonl"
-        record_file = replay_root / "selection-checkpoint/c6/multi-role-selection/selected_exemplars.jsonl"
+        coord_file = (
+            replay_root / "selection-checkpoint/c6/claims/selected_coordinates.jsonl"
+        )
+        record_file = (
+            replay_root
+            / "selection-checkpoint/c6/multi-role-selection/selected_exemplars.jsonl"
+        )
         if not coord_file.is_file() or not record_file.is_file():
             raise ValueError("current replay selection records are missing")
         policy = json.loads((replay_root / "portable_path_policy.json").read_text())
-        if policy.get("active_reference_rule") != "bundle-relative-only" or not policy.get(
+        if policy.get(
+            "active_reference_rule"
+        ) != "bundle-relative-only" or not policy.get(
             "historical_paths_must_not_be_resolved"
         ):
             raise ValueError("current replay path policy is not closed")
         if validate_corpus_artifact(replay_root / "corpus").status != "pass":
             raise ValueError("current replay corpus closure is invalid")
-        authority_provenance = replay_root / "runtime_teacher_model_provenance_authority.json"
+        authority_provenance = (
+            replay_root / "runtime_teacher_model_provenance_authority.json"
+        )
         teacher_identity = replay_root / "teacher_identity.json"
         if not authority_provenance.is_file() or not teacher_identity.is_file():
             raise ValueError("current replay teacher closure is incomplete")
-        coords = [json.loads(x) for x in coord_file.read_text().splitlines() if x.strip()]
-        records = [json.loads(x) for x in record_file.read_text().splitlines() if x.strip()]
+        coords = [
+            json.loads(x) for x in coord_file.read_text().splitlines() if x.strip()
+        ]
+        records = [
+            json.loads(x) for x in record_file.read_text().splitlines() if x.strip()
+        ]
         if len(coords) != selected_coordinates or len(records) != selected_sources:
             raise ValueError("current replay selection counts mismatch")
-        selected_record_digest = "sha256:" + hashlib.sha256(
-            json.dumps(records, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
+        selected_record_digest = (
+            "sha256:"
+            + hashlib.sha256(
+                json.dumps(records, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+        )
         checkpoint_digest = str(authority["checkpoint_manifest_digest"])
         bundle_manifest_sha256 = _sha256(bundle_manifest)
         replay_identity = _replay_identity(
@@ -161,7 +181,9 @@ def adopt_verified_selection_replay(
                 raise ValueError("private replay adoption is incomplete")
             prior = json.loads((adopted_root / "replay_authority.json").read_text())
             if prior.get("replay_identity") != replay_identity:
-                raise ValueError("private replay adoption conflicts with current authority")
+                raise ValueError(
+                    "private replay adoption conflicts with current authority"
+                )
         else:
             adopted_root.mkdir(parents=True, exist_ok=False)
             # Canonical production preflight consumes an invocation-owned
@@ -192,11 +214,18 @@ def adopt_verified_selection_replay(
                 "input_root": "input",
                 "input_closure": {
                     relative: _sha256(adopted_root / "input" / relative)
-                    for relative in ("corpus/corpus.jsonl", "corpus/corpus_manifest.json", "corpus/corpus_build_report.json", "teacher_identity.json", "runtime_teacher_model_provenance_authority.json")
+                    for relative in (
+                        "corpus/corpus.jsonl",
+                        "corpus/corpus_manifest.json",
+                        "corpus/corpus_build_report.json",
+                        "teacher_identity.json",
+                        "runtime_teacher_model_provenance_authority.json",
+                    )
                 },
             }
             (adopted_root / "replay_authority.json").write_text(
-                json.dumps(metadata, sort_keys=True, separators=(",", ":")), encoding="utf-8"
+                json.dumps(metadata, sort_keys=True, separators=(",", ":")),
+                encoding="utf-8",
             )
         return FrozenSelectionReplay(
             replay_root=replay_root,
