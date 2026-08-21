@@ -3643,3 +3643,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: bound replay teacher_model and tokenizer_id to adopted model tree before canonical preflight.
 - 2026-08-21: serialized relocated replay teacher_model as text in production run plans; runtime path remains invocation-owned and nonsemantic.
 - 2026-08-21: JSON evidence serialization stringifies path-valued runtime metadata, preserving canonical plan emission for relocated replay roots.
+- 2026-08-21: normalized relocated replay teacher and tokenizer values before selection-integration hashing to keep production reports serializable.
