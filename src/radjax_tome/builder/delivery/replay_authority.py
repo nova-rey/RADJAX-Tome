@@ -12,6 +12,10 @@ from typing import Any
 
 from radjax_tome.builder.c6_integration import c5_records_for_delivery
 from radjax_tome.corpora import validate_corpus_artifact
+from radjax_tome.provenance.teacher_model import (
+    inspect_teacher_model,
+    validate_teacher_model_provenance,
+)
 from radjax_tome.fingerprint.multi_role_selection import (
     load_multi_role_selection_artifact,
 )
@@ -236,12 +240,38 @@ def adopt_verified_selection_replay(
                 ("corpus/corpus.jsonl", "corpus.jsonl"),
                 ("corpus/corpus_manifest.json", "corpus_manifest.json"),
                 ("corpus/corpus_build_report.json", "corpus_build_report.json"),
-                (
-                    "runtime_teacher_model_provenance.json",
-                    "teacher_model_provenance.json",
-                ),
             ):
                 shutil.copy2(input_root / source_name, input_root / target_name)
+
+            # The workload-level runtime locator is provenance, not the
+            # teacher_model_provenance_v1 record consumed by production.
+            # Derive a private v1 projection only after the complete adopted
+            # model tree exists, bind it to the immutable model authority, and
+            # validate it through the exact production validator.
+            model_root = input_root / "model" / "model"
+            projection = inspect_teacher_model(model_root, check="metadata_only")
+            projection["portable_source"] = "runtime_teacher_model_provenance_authority.json"
+            projection["portable_source_sha256"] = _sha256(
+                input_root / "runtime_teacher_model_provenance_authority.json"
+            )
+            projection["relocation"] = "bundle-relative-authority-v1"
+            projection["model_path"] = str(model_root)
+            projection["runtime_model_path_is_nonsemantic"] = True
+            projection["workload_identity"] = authority["workload_identity"]
+            projection["replay_identity"] = replay_identity
+            projection["checkpoint_digest"] = checkpoint_digest
+            projection["bundle_manifest_sha256"] = bundle_manifest_sha256
+            projection_path = input_root / "teacher_model_provenance.json"
+            projection_path.write_text(
+                json.dumps(projection, sort_keys=True, separators=(",", ":")),
+                encoding="utf-8",
+            )
+            provenance_report = validate_teacher_model_provenance(projection_path)
+            if not provenance_report.ok:
+                raise ValueError(
+                    "adopted teacher provenance projection invalid: "
+                    + "; ".join(provenance_report.blockers)
+                )
             input_closure = {}
             for member in sorted(input_root.rglob("*")):
                 if member.is_symlink():
