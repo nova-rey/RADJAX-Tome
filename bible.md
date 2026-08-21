@@ -3583,3 +3583,8 @@ copied from the verified generation manifest.
 Normalized `local:/Users/...` source identifiers as well as ordinary absolute
 paths during staged projection, so authority-bearing corpus records remain
 portable without rewriting the raw generation evidence.
+
+2026-08-20 — M8G resume authority integration
+
+Updated the finalizer pin and emitted replay evidence against the Contract
+mode-bound resume identity validator.
