@@ -26,6 +26,7 @@ from radjax_contract.tome.workload import (
     validate_teacher_inventory,
     validate_workload_authority,
 )
+from radjax_tome.corpora import validate_corpus_artifact
 
 CORPUS_IDENTITY = (
     "sha256:7719ed62c5bb8feedd7f7e955e52d0b373d8b09e3ec9f6b8256f99a8b5a7e9d1"
@@ -267,7 +268,7 @@ def finalize_workload(
     selected_record_ids = [r["example_id"] for r in selected_records]
     if len(set(selected_record_ids)) > 253:
         raise ValueError("selected-source record identity is invalid")
-    stage = Path(tempfile.mkdtemp(prefix=output.name + ".staging-", dir=output.parent))
+        stage = Path(tempfile.mkdtemp(prefix=output.name + ".staging-", dir=output.parent))
     try:
         shutil.rmtree(stage)
         _project_regular_tree(generation_root, stage)
@@ -291,15 +292,30 @@ def finalize_workload(
             raise ValueError("complete teacher provenance is missing")
         original_teacher_provenance = input_provenance.read_bytes()
         shutil.copy2(input_provenance, raw_provenance / "teacher_model_provenance.json")
+        input_runtime_provenance = input_root / "runtime_teacher_model_provenance.json"
+        if not input_runtime_provenance.is_file():
+            raise ValueError("complete runtime teacher provenance is missing")
+        original_runtime_provenance = input_runtime_provenance.read_bytes()
+        (raw_provenance / "runtime_teacher_model_provenance.json").write_bytes(
+            original_runtime_provenance
+        )
         raw_producer_bytes = {
             name: (raw_provenance / name).read_bytes()
-            for name in ("runtime_teacher_model_provenance.json", "workload_manifest.json")
+            for name in ("workload_manifest.json",)
             if (raw_provenance / name).is_file()
         }
         # Keep immutable producer records only under raw-provenance. Consumer
         # authority uses the portable records emitted below.
         for name in ("workload_manifest.json", "teacher_model_provenance.json"):
             (stage / name).unlink(missing_ok=True)
+        # The verified generation-input closure is the canonical corpus/model
+        # authority.  Project it independently so a producer hard-link or
+        # stale normalized copy can never contaminate the finalized bundle.
+        _project_regular_tree(input_root / "corpus", stage / "corpus")
+        _project_regular_tree(input_root / "model", stage / "model")
+        corpus_validation = validate_corpus_artifact(stage / "corpus")
+        if corpus_validation.status != "pass":
+            raise ValueError("canonical corpus validation failed")
         # The corpus JSONL is the verified canonical row source; preserve it as a
         # portable row closure rather than relying on producer-local source paths.
         rows_dir = stage / "source-rows"
@@ -361,6 +377,9 @@ def finalize_workload(
         # consumer records.
         (raw_provenance / "teacher_model_provenance.json").write_bytes(
             original_teacher_provenance
+        )
+        (raw_provenance / "runtime_teacher_model_provenance.json").write_bytes(
+            original_runtime_provenance
         )
         for name, raw_bytes in raw_producer_bytes.items():
             (raw_provenance / name).write_bytes(raw_bytes)
