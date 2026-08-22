@@ -94,3 +94,25 @@ def test_pipelined_workers_are_deterministic(tmp_path: Path) -> None:
         assert result["body_rewrite_count"] == 0
         assert result["queue_high_water_bytes"] <= 16 * 1024 * 1024
     assert digests[0] == digests[1] == digests[2]
+
+
+def test_pipelined_failure_does_not_publish_partial_root(
+    tmp_path: Path, monkeypatch
+) -> None:
+    compact = simple_module.compact_payload_for_storage(_payload())
+    original_fsync = simple_module.os.fsync
+
+    def fail_fsync(fd):
+        raise OSError("injected durability failure")
+
+    monkeypatch.setattr(simple_module.os, "fsync", fail_fsync)
+    root = tmp_path / "failed"
+    try:
+        write_compact_body_store_pipelined_from_compact(root, [compact], worker_count=2)
+    except OSError as error:
+        assert "injected" in str(error)
+    else:
+        raise AssertionError("expected injected failure")
+    assert not root.exists()
+    assert not root.with_name(root.name + ".staging").exists()
+    monkeypatch.setattr(simple_module.os, "fsync", original_fsync)

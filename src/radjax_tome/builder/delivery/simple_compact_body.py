@@ -107,6 +107,7 @@ class _ByteBoundedQueue:
         self._condition = threading.Condition()
         self._items: queue.Queue[tuple[dict[str, Any], bytes] | None] = queue.Queue()
         self._bytes = 0
+        self._failure: BaseException | None = None
         self.high_water_items = 0
         self.high_water_bytes = 0
         self.blocked_seconds = 0.0
@@ -116,6 +117,10 @@ class _ByteBoundedQueue:
         started = None
         with self._condition:
             while self._bytes and self._bytes + size > self.limit:
+                if self._failure is not None:
+                    raise RuntimeError(
+                        "compact body pipeline worker failed"
+                    ) from self._failure
                 if started is None:
                     started = time.perf_counter()
                 self._condition.wait()
@@ -128,12 +133,17 @@ class _ByteBoundedQueue:
             self._condition.notify_all()
 
     def get(self) -> tuple[dict[str, Any], bytes] | None:
-        item = self._items.get()
-        if item is not None:
-            with self._condition:
-                self._bytes -= len(item[1])
-                self._condition.notify_all()
-        return item
+        return self._items.get()
+
+    def release(self, size: int) -> None:
+        with self._condition:
+            self._bytes -= size
+            self._condition.notify_all()
+
+    def fail(self, error: BaseException) -> None:
+        with self._condition:
+            self._failure = error
+            self._condition.notify_all()
 
     def stop(self, workers: int) -> None:
         for _ in range(workers):
@@ -153,9 +163,16 @@ def write_compact_body_store_pipelined_from_compact(
     if worker_count < 1 or worker_count > 4:
         raise ValueError("worker_count must be between 1 and 4")
     root = Path(root)
-    bodies = root / "bodies"
+    if root.exists():
+        raise FileExistsError(f"compact body destination already exists: {root}")
+    staging = root.with_name(root.name + ".staging")
+    if staging.exists():
+        import shutil
+
+        shutil.rmtree(staging)
+    bodies = staging / "bodies"
     bodies.mkdir(parents=True, exist_ok=True)
-    metadata_path = root / "metadata.jsonl"
+    metadata_path = staging / "metadata.jsonl"
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     handoff = _ByteBoundedQueue(queue_bytes)
     descriptors: list[dict[str, Any]] = []
@@ -176,28 +193,30 @@ def write_compact_body_store_pipelined_from_compact(
         "final_drain_seconds": 0.0,
     }
     first_error: list[BaseException] = []
+    digest_lock = threading.Lock()
 
     def write_one(item: tuple[dict[str, Any], bytes], metric: dict[str, Any]) -> None:
         compact, encoded = item
         digest = body_raw_digest(encoded).hex()
         body_path = bodies / f"{digest}.body"
         started = time.perf_counter()
-        if body_path.exists():
-            if body_path.read_bytes() != encoded:
-                raise ValueError("compact body digest collision")
-        else:
-            temporary = body_path.with_suffix(".tmp")
-            write_started = time.perf_counter()
-            with temporary.open("wb") as handle:
-                handle.write(encoded)
-                handle.flush()
-                metric["body_write_seconds"] += time.perf_counter() - write_started
-                durability_started = time.perf_counter()
-                os.fsync(handle.fileno())
-            metric["durability_seconds"] += time.perf_counter() - durability_started
-            os.replace(temporary, body_path)
-            metric["written"] += 1
-            metric["bytes"] += len(encoded)
+        with digest_lock:
+            if body_path.exists():
+                if body_path.read_bytes() != encoded:
+                    raise ValueError("compact body digest collision")
+            else:
+                temporary = body_path.with_suffix(f".{threading.get_ident()}.tmp")
+                write_started = time.perf_counter()
+                with temporary.open("wb") as handle:
+                    handle.write(encoded)
+                    handle.flush()
+                    metric["body_write_seconds"] += time.perf_counter() - write_started
+                    durability_started = time.perf_counter()
+                    os.fsync(handle.fileno())
+                metric["durability_seconds"] += time.perf_counter() - durability_started
+                os.replace(temporary, body_path)
+                metric["written"] += 1
+                metric["bytes"] += len(encoded)
         metric["busy_seconds"] += time.perf_counter() - started
 
     def worker(index: int) -> None:
@@ -206,9 +225,13 @@ def write_compact_body_store_pipelined_from_compact(
                 item = handoff.get()
                 if item is None:
                     return
-                write_one(item, worker_metrics[index])
+                try:
+                    write_one(item, worker_metrics[index])
+                finally:
+                    handoff.release(len(item[1]))
         except BaseException as error:
             first_error.append(error)
+            handoff.fail(error)
 
     workers = [
         threading.Thread(target=worker, args=(index,), daemon=True)
@@ -255,17 +278,21 @@ def write_compact_body_store_pipelined_from_compact(
         time.perf_counter() - drain_started if drain_started is not None else 0.0
     )
     if first_error:
+        import shutil
+
         for path in bodies.glob("*.tmp"):
             path.unlink(missing_ok=True)
+        shutil.rmtree(staging, ignore_errors=True)
         raise first_error[0]
     data = b"".join(_json_bytes(item) + b"\n" for item in descriptors)
     temporary = metadata_path.with_suffix(".tmp")
     temporary.write_bytes(data)
     os.replace(temporary, metadata_path)
+    os.replace(staging, root)
     return {
         "schema_version": "compact_body_store_v1",
         "body_count": len(descriptors),
-        "metadata_path": str(metadata_path),
+        "metadata_path": str(root / "metadata.jsonl"),
         "metadata_sha256": hashlib.sha256(data).hexdigest(),
         "body_digests": [item["body_raw_digest"] for item in descriptors],
         "worker_count": worker_count,

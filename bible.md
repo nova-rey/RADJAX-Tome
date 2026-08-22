@@ -3670,3 +3670,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: Added bounded pipelined compact-body production writer with byte-bounded handoff, direct final-body writes, deterministic metadata publication, and worker-count evidence on the 169-record derived benchmark.
 - 2026-08-22: Re-ran pipelined compact representation after correcting final-drain instrumentation; worker sweep selected one worker with zero producer blocking and byte-identical logical evidence.
 - 2026-08-22: Final pipelined benchmark rerun after correcting final-drain instrumentation; all nine outputs retained exact logical equivalence and one worker was selected by the bounded sweep.
+- 2026-08-22: Closed pipelined-writer review findings with in-flight byte accounting, worker-failure propagation, digest publication locking, private staging, and distinct compact-monolithic versus split benchmark paths; reran evidence.

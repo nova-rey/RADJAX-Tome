@@ -12,6 +12,7 @@ from pathlib import Path
 from radjax_tome.builder.delivery.modes import compact_payload_for_storage
 from radjax_tome.builder.delivery.simple_compact_body import (
     update_compact_linkage,
+    write_compact_body_store_from_compact,
     write_compact_body_store_pipelined_from_compact,
 )
 
@@ -159,13 +160,25 @@ def run(mode: str, round_no: int, inputs, *, worker_count: int = 2, label: str =
 
         _, phases["representation_construction"] = phase(write_legacy)
     else:
-        pipeline_result, phases["representation_construction"] = phase(
-            lambda: write_compact_body_store_pipelined_from_compact(
-                sample / "compact_body_store",
-                iter_prepared(inputs["compact"]),
-                worker_count=worker_count,
-            )
+        writer = (
+            write_compact_body_store_from_compact
+            if mode == "compact_k_monolithic"
+            else write_compact_body_store_pipelined_from_compact
         )
+        if mode == "compact_k_monolithic":
+            pipeline_result, phases["representation_construction"] = phase(
+                lambda: writer(
+                    sample / "compact_body_store", iter_prepared(inputs["compact"])
+                )
+            )
+        else:
+            pipeline_result, phases["representation_construction"] = phase(
+                lambda: writer(
+                    sample / "compact_body_store",
+                    iter_prepared(inputs["compact"]),
+                    worker_count=worker_count,
+                )
+            )
     _, phases["initial_staging_publication"] = phase(lambda: None)
     _, phases["validation_hashing"] = phase(
         lambda: sha(b"".join(p.read_bytes() for p in sample.rglob("*") if p.is_file()))
