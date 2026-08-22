@@ -15,6 +15,7 @@ def descriptor_stream_from_cuda(
     vocab_size: int,
     batch_size: int = 8,
     cadence: str = "maximum_pressure",
+    shaped_iterations: int = 3,
     torch_module: Any | None = None,
 ) -> Iterator[RawCompactDescriptor]:
     """Yield raw exact-K CPU buffers while CUDA produces the next batch.
@@ -40,12 +41,16 @@ def descriptor_stream_from_cuda(
     def release_triplet(
         k: int, ids_buffer: Any, probs_buffer: Any, logs_buffer: Any
     ) -> None:
-        release(torch.int64, k, ids_buffer)
+        release(torch.uint32, k, ids_buffer)
         release(torch.float32, k, probs_buffer)
         release(torch.float32, k, logs_buffer)
 
     for batch_start in range(0, len(values), batch_size):
         batch = values[batch_start : batch_start + batch_size]
+        if cadence == "production_shaped":
+            work = torch.ones((256, 256), device="cuda", dtype=torch.float32)
+            for _ in range(int(shaped_iterations)):
+                work = work @ work.t() * 0.0001
         for offset, k in enumerate(batch):
             index = batch_start + offset
             ids = (
@@ -55,10 +60,6 @@ def descriptor_stream_from_cuda(
             )
             probs = torch.full((k,), 0.5 / k, device="cuda", dtype=torch.float32)
             logs = torch.log(probs)
-            if cadence == "production_shaped":
-                work = torch.ones((256, 256), device="cuda", dtype=torch.float32)
-                for _ in range(3):
-                    work = work @ work.t() * 0.0001
             cpu_ids = acquire(torch.uint32, k)
             cpu_probs = acquire(torch.float32, k)
             cpu_logs = acquire(torch.float32, k)

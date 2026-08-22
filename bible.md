@@ -3689,3 +3689,5 @@ closed-record and checkpoint authority validation.
 - M8G overlap harness now distinguishes maximum-pressure cadence and records per-run body/metadata equivalence roots.
 
 - M8G GPU overlap evidence: corrected T4 synthetic 169-record runs completed on Modal app ap-m610TNL56IKFhCP9xDPzjF; body and metadata roots matched across serial/pipeline variants.
+
+- M8G closure: native C6 compact publication now consumes the retained canonical payload handoff through the same buffer-native pipelined writer; calibration corrected to per-batch CUDA work.

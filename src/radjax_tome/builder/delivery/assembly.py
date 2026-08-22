@@ -200,6 +200,13 @@ def assemble_selected_delivery_artifacts(
                 "selected_board_summary": prepared.selected_board_summary,
             },
         )
+    if _native_streamed_payloads(config) and config.representation_mode == COMPACT_K_MONOLITHIC:
+        if prepared.publication_payloads is None:
+            raise ValueError("compact C6 requires the canonical payload handoff")
+        store_dir = selected_dir / "compact_body_store"
+        write_compact_body_store_pipelined_from_compact(
+            store_dir, prepared.publication_payloads, profile="compact_k_monolithic"
+        )
     if not _native_streamed_payloads(config):
         if config.representation_mode == COMPACT_K_MONOLITHIC:
             store_dir = selected_dir / "compact_body_store"
