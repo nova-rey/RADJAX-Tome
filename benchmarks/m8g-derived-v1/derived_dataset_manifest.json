@@ -15,6 +15,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00000.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:52e065e2d79f77bc277421bd6b94c7db958ab20b642ac46a19ca9ce1a973ec7f",
+      "v19_declared_expected_size": 13634929,
       "vocab_size": 262144
     },
     {
@@ -30,6 +32,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00001.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:e05fa1fef5dbec5eb020fdf6d5ce0bc0b45d57262a8cc28e874ad4f0cf7e2fd7",
+      "v19_declared_expected_size": 13634923,
       "vocab_size": 262144
     },
     {
@@ -45,6 +49,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00003.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:7bc1db01891f92e0b187fa0b6eac950e219cf77c83992ddef60c72c53cada7ab",
+      "v19_declared_expected_size": 13634935,
       "vocab_size": 262144
     },
     {
@@ -60,6 +66,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00006.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:1adef9053c4ddc4f0c7b1cef170a7a5dd70c4d32dc08f79ec5427232f2cb5017",
+      "v19_declared_expected_size": 13634876,
       "vocab_size": 262144
     },
     {
@@ -75,6 +83,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00007.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:33e6ed7e5edb2a3f7350fdab06ff7a9e5a8e9e2e8a3256d2f6f32f7511a0b774",
+      "v19_declared_expected_size": 13634930,
       "vocab_size": 262144
     },
     {
@@ -90,6 +100,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00010.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:05e71b063aec7464c269b83f9ec8cd7c2ea8f11881194f0848d5c10ae57c7c44",
+      "v19_declared_expected_size": 13634923,
       "vocab_size": 262144
     },
     {
@@ -105,6 +117,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00011.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:9227ca458042a67555b70cf4d5b301514f75fa2fce0095c3652fe2bb4a371195",
+      "v19_declared_expected_size": 13634925,
       "vocab_size": 262144
     },
     {
@@ -120,6 +134,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00014.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:278b4fb7da34f51888ce7d0f9a9bba14d633285a9dcd66fdbd89d7106261806f",
+      "v19_declared_expected_size": 13634876,
       "vocab_size": 262144
     },
     {
@@ -135,6 +151,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00015.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:df22c88e11fd7320016e14f2f38a150aede7cca6b5105ec17b9a6b9c974bf95b",
+      "v19_declared_expected_size": 13634888,
       "vocab_size": 262144
     },
     {
@@ -150,6 +168,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00016.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:40fc60cafb217aea62ced1659d9a48d1009b637067afad530eb67784fc651985",
+      "v19_declared_expected_size": 13634991,
       "vocab_size": 262144
     },
     {
@@ -165,6 +185,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00018.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:8170a4e6f811b998fe38696e27fcd9545b71ad672848abcc76b6ef3c4e13b8df",
+      "v19_declared_expected_size": 13634911,
       "vocab_size": 262144
     },
     {
@@ -180,6 +202,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00019.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:fe0cdc5e50e165bc4f37c87f9b15a94add720c652176f59650209ae07b448dfb",
+      "v19_declared_expected_size": 13634912,
       "vocab_size": 262144
     },
     {
@@ -195,6 +219,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00020.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:d4d7af578dc27006c5fefda968ab682175c689fab19d4b936f54f9a8e7c97ab3",
+      "v19_declared_expected_size": 13634970,
       "vocab_size": 262144
     },
     {
@@ -210,6 +236,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00021.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:47775ecd04288c54e2143f716d7929422c4e3d7afc848c4bc669a332688e8912",
+      "v19_declared_expected_size": 13635009,
       "vocab_size": 262144
     },
     {
@@ -225,6 +253,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00022.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:7a522501d7cf0545dc09cf80f100819a8c3be354ebc0979f72338dbe841ff65b",
+      "v19_declared_expected_size": 13634976,
       "vocab_size": 262144
     },
     {
@@ -240,6 +270,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00023.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:c3368d5e0fc2aba651de1c71fac7e8c8b57021b2464ea736da6e162be8f8773a",
+      "v19_declared_expected_size": 13634941,
       "vocab_size": 262144
     },
     {
@@ -255,6 +287,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00026.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:dc8067b6b0958e4b18be70bfb296f0cd9b397c8c8025e7273ba796ee9dbb9caf",
+      "v19_declared_expected_size": 13635021,
       "vocab_size": 262144
     },
     {
@@ -270,6 +304,8 @@
       "logical_k": 353,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00027.json",
       "retained_entries": 353,
+      "v19_declared_expected_sha256": "sha256:b57122b0330b9902ebe824ebe09f61e3a46d9e2bebe2275d89ef95d32283151f",
+      "v19_declared_expected_size": 13642313,
       "vocab_size": 262144
     },
     {
@@ -285,6 +321,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00030.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:fdd16c72ad6ea967fc61aaed9788539ac6f63d49b4a57c8ab010c86688f6dc51",
+      "v19_declared_expected_size": 13634961,
       "vocab_size": 262144
     },
     {
@@ -300,6 +338,8 @@
       "logical_k": 147,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00031.json",
       "retained_entries": 147,
+      "v19_declared_expected_sha256": "sha256:992b0eba5d6e4f71c94e98249eb0609eb31b638453895e7bee6b1d144a7ff5d0",
+      "v19_declared_expected_size": 13637464,
       "vocab_size": 262144
     },
     {
@@ -315,6 +355,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00034.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:71237aa3018bc3a9798accb8bde0ff69c4eae6cd6a058b15fc487719811b5d0e",
+      "v19_declared_expected_size": 13634914,
       "vocab_size": 262144
     },
     {
@@ -330,6 +372,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00035.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:834ac2fcc1c1a5f51d8549e7f8f9985499cf458f12b58bc6f6386fd440a8e22d",
+      "v19_declared_expected_size": 13634795,
       "vocab_size": 262144
     },
     {
@@ -345,6 +389,8 @@
       "logical_k": 1807,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00036.json",
       "retained_entries": 1807,
+      "v19_declared_expected_sha256": "sha256:4d07c93cf8d597d9801be1da919c2b129f9f0f4736e754402921b40c1ff032c5",
+      "v19_declared_expected_size": 13679116,
       "vocab_size": 262144
     },
     {
@@ -360,6 +406,8 @@
       "logical_k": 1856,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00037.json",
       "retained_entries": 1856,
+      "v19_declared_expected_sha256": "sha256:3807d314750e4e470b7362d6ec48474c2cb364f6e0ebea2f445d3a720c21f561",
+      "v19_declared_expected_size": 13679991,
       "vocab_size": 262144
     },
     {
@@ -375,6 +423,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00039.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:4bc13cbafc748fb025e430d09a312f38607064864a102b528498d0f51c8fa2e7",
+      "v19_declared_expected_size": 13634903,
       "vocab_size": 262144
     },
     {
@@ -390,6 +440,8 @@
       "logical_k": 112,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00040.json",
       "retained_entries": 112,
+      "v19_declared_expected_sha256": "sha256:c424f0b5eb78c8c74f1b1e7b4577aa618129baddfeede3e2471f607b062f88d1",
+      "v19_declared_expected_size": 13636588,
       "vocab_size": 262144
     },
     {
@@ -405,6 +457,8 @@
       "logical_k": 108,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00041.json",
       "retained_entries": 108,
+      "v19_declared_expected_sha256": "sha256:cd9695d7525caee1933498a6a343728ec28244e76740133a28e1e669eb158c04",
+      "v19_declared_expected_size": 13636530,
       "vocab_size": 262144
     },
     {
@@ -420,6 +474,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00042.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:a79289ec2b8271a828b4b00810e421b2830ff6fa59ae697b6e9c207ed1f18874",
+      "v19_declared_expected_size": 13634917,
       "vocab_size": 262144
     },
     {
@@ -435,6 +491,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00043.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:84fd1b55fdf769a03b3d3abebe3619807e3e04aa64ed425f339be391b223cf28",
+      "v19_declared_expected_size": 13634881,
       "vocab_size": 262144
     },
     {
@@ -450,6 +508,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00046.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:343cb538bd47df3395f31ee547ec80eb0cfb44e03cb56da2d065b973795a753b",
+      "v19_declared_expected_size": 20244167,
       "vocab_size": 262144
     },
     {
@@ -465,6 +525,8 @@
       "logical_k": 449,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00047.json",
       "retained_entries": 449,
+      "v19_declared_expected_sha256": "sha256:197e47cb32fd3688269b62bb9ea94edd8b41864425a73d765455714b75e8f52d",
+      "v19_declared_expected_size": 13645162,
       "vocab_size": 262144
     },
     {
@@ -480,6 +542,8 @@
       "logical_k": 74,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00050.json",
       "retained_entries": 74,
+      "v19_declared_expected_sha256": "sha256:17a49147d99e61490533214e90067c77cbe730eb5b85811d6f826e46dbea6d38",
+      "v19_declared_expected_size": 13635825,
       "vocab_size": 262144
     },
     {
@@ -495,6 +559,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00051.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:77b12c13b14c0eba95563dc4080778b83df980e43174e1708abae9e9a0a1baf3",
+      "v19_declared_expected_size": 13634891,
       "vocab_size": 262144
     },
     {
@@ -510,6 +576,8 @@
       "logical_k": 372,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00054.json",
       "retained_entries": 372,
+      "v19_declared_expected_sha256": "sha256:ca41b867787ab88a350b66b5e2be82d1ae5af556b33f96ca87f0650a65a3a6ae",
+      "v19_declared_expected_size": 13642864,
       "vocab_size": 262144
     },
     {
@@ -525,6 +593,8 @@
       "logical_k": 943,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00056.json",
       "retained_entries": 943,
+      "v19_declared_expected_sha256": "sha256:2f108464c39166386c1f345e8b08c78387fba96e154d9fbfb27664f135bb3cbe",
+      "v19_declared_expected_size": 13657147,
       "vocab_size": 262144
     },
     {
@@ -540,6 +610,8 @@
       "logical_k": 77,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00057.json",
       "retained_entries": 77,
+      "v19_declared_expected_sha256": "sha256:31a2e74564e579ae0a259af097768bf3617d16d77e5020fce549f331ebc07453",
+      "v19_declared_expected_size": 13635955,
       "vocab_size": 262144
     },
     {
@@ -555,6 +627,8 @@
       "logical_k": 329,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00058.json",
       "retained_entries": 329,
+      "v19_declared_expected_sha256": "sha256:a740dea8c41918549b2ab86288fe88611d7eb546c76afb60b07e7d20aafe1098",
+      "v19_declared_expected_size": 13642030,
       "vocab_size": 262144
     },
     {
@@ -570,6 +644,8 @@
       "logical_k": 49,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00059.json",
       "retained_entries": 49,
+      "v19_declared_expected_sha256": "sha256:7a9a845c5bead4b056d42e3bc37994572d80825681800db5118682b416832a3f",
+      "v19_declared_expected_size": 13635142,
       "vocab_size": 262144
     },
     {
@@ -585,6 +661,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00060.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:dcdeb21a4a6628af843667c57bb62f92b5216dca43da117a9c1ee40a9068b39e",
+      "v19_declared_expected_size": 13634964,
       "vocab_size": 262144
     },
     {
@@ -600,6 +678,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00061.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:b7e9084d21b0d37bae2fd3f44d496aa25f8fb77cc323283ee366a9726d16a7cf",
+      "v19_declared_expected_size": 13634888,
       "vocab_size": 262144
     },
     {
@@ -615,6 +695,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00062.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:89228141e513e98d0426fae5e3d03d81b14e5007c2c36591b0443aa17f0caaa0",
+      "v19_declared_expected_size": 13634935,
       "vocab_size": 262144
     },
     {
@@ -630,6 +712,8 @@
       "logical_k": 1708,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00063.json",
       "retained_entries": 1708,
+      "v19_declared_expected_sha256": "sha256:80ec19f673b9a9e509e0475af555413a8195e82a8d926b79b8014c47fa0712d3",
+      "v19_declared_expected_size": 13676295,
       "vocab_size": 262144
     },
     {
@@ -645,6 +729,8 @@
       "logical_k": 166,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00066.json",
       "retained_entries": 166,
+      "v19_declared_expected_sha256": "sha256:cdf96dede08e38bef71feb3353668a5f805e0bfda0ffcd01a10128efa57b685f",
+      "v19_declared_expected_size": 13637474,
       "vocab_size": 262144
     },
     {
@@ -660,6 +746,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00067.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:38ba3d5ddd65ca4e21051af368ded1f8eb95a8e94dead4eece8254ce51feaef8",
+      "v19_declared_expected_size": 20240552,
       "vocab_size": 262144
     },
     {
@@ -675,6 +763,8 @@
       "logical_k": 105,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00070.json",
       "retained_entries": 105,
+      "v19_declared_expected_sha256": "sha256:8c23c85bf39da58e8bb4b1bd18572bacc71b9e1ea518d3caaf29f67b8d55f78f",
+      "v19_declared_expected_size": 13636482,
       "vocab_size": 262144
     },
     {
@@ -690,6 +780,8 @@
       "logical_k": 612,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00071.json",
       "retained_entries": 612,
+      "v19_declared_expected_sha256": "sha256:540ccfcaee837a3678c25c79a41b7ce8d35b56b2be2ffa8233207f81793dd2c9",
+      "v19_declared_expected_size": 13649440,
       "vocab_size": 262144
     },
     {
@@ -705,6 +797,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00074.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:a23c3f1999f6174bcdb3dadec86d29c607e40c68f4a0addee6c71d656ecd8d88",
+      "v19_declared_expected_size": 13634776,
       "vocab_size": 262144
     },
     {
@@ -720,6 +814,8 @@
       "logical_k": 1710,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00075.json",
       "retained_entries": 1710,
+      "v19_declared_expected_sha256": "sha256:6c83120c50ffd93155c58c14b10191c9f1fed63e2b4c1b12e6311b8309545cc3",
+      "v19_declared_expected_size": 13676129,
       "vocab_size": 262144
     },
     {
@@ -735,6 +831,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00076.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:bd234463ed0a9297e0a610c2095a803043d42c73685586a41640599ad3f47214",
+      "v19_declared_expected_size": 20254110,
       "vocab_size": 262144
     },
     {
@@ -750,6 +848,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00077.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:4bd3564d65947a0075307d8247db262494950a9af1b75e6886249f0ddc3d79b3",
+      "v19_declared_expected_size": 20247320,
       "vocab_size": 262144
     },
     {
@@ -765,6 +865,8 @@
       "logical_k": 613,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00078.json",
       "retained_entries": 613,
+      "v19_declared_expected_sha256": "sha256:e383213ca5e8e832ba23932fb08d1103ac89cde89e66eb4bf90af363f84744d5",
+      "v19_declared_expected_size": 13648940,
       "vocab_size": 262144
     },
     {
@@ -780,6 +882,8 @@
       "logical_k": 122,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00081.json",
       "retained_entries": 122,
+      "v19_declared_expected_sha256": "sha256:cdf3becedb4a705d7ae8d7c210a1d27ddb5ce9e29f3a9a5ed61ff68c9d937344",
+      "v19_declared_expected_size": 13636921,
       "vocab_size": 262144
     },
     {
@@ -795,6 +899,8 @@
       "logical_k": 72,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00082.json",
       "retained_entries": 72,
+      "v19_declared_expected_sha256": "sha256:a35edce00de380b2e1692733644cb16b998d2de5c25c87b48b4ad1b67e9ca8af",
+      "v19_declared_expected_size": 13635760,
       "vocab_size": 262144
     },
     {
@@ -810,6 +916,8 @@
       "logical_k": 111,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00083.json",
       "retained_entries": 111,
+      "v19_declared_expected_sha256": "sha256:ecd5babf52562f9bd60095ccec5980794900c4b42835e9c211b0e3707e63f5f1",
+      "v19_declared_expected_size": 13636653,
       "vocab_size": 262144
     },
     {
@@ -825,6 +933,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00084.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:8e597806f725c764d503e5db9e0d41fd98171ccf0af7602715cec695f1cd8909",
+      "v19_declared_expected_size": 13634776,
       "vocab_size": 262144
     },
     {
@@ -840,6 +950,8 @@
       "logical_k": 32,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00085.json",
       "retained_entries": 32,
+      "v19_declared_expected_sha256": "sha256:80e3e7775d2c3030e6a848515ed6c80535059fcab0639362f549eca05435fa9c",
+      "v19_declared_expected_size": 13634861,
       "vocab_size": 262144
     },
     {
@@ -855,6 +967,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00088.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:d0dec561bec3d8aab386f8fcbf2bdbc18609e031bcabceb885a7b48c1515568f",
+      "v19_declared_expected_size": 20244596,
       "vocab_size": 262144
     },
     {
@@ -870,6 +984,8 @@
       "logical_k": 1796,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00089.json",
       "retained_entries": 1796,
+      "v19_declared_expected_sha256": "sha256:b8df3a4a8cabebae4f8d860301b8a2ff71a26300bb19c545d789acfa9ec059a7",
+      "v19_declared_expected_size": 13678339,
       "vocab_size": 262144
     },
     {
@@ -885,6 +1001,8 @@
       "logical_k": 497,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00092.json",
       "retained_entries": 497,
+      "v19_declared_expected_sha256": "sha256:21a3f40aa48258aa6067bf0cd57f8576c58e6a57736fde2355622925b5fd7dde",
+      "v19_declared_expected_size": 13645677,
       "vocab_size": 262144
     },
     {
@@ -900,6 +1018,8 @@
       "logical_k": 331,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00093.json",
       "retained_entries": 331,
+      "v19_declared_expected_sha256": "sha256:1c613b4d9d08078ffb1de7603f2ddb2a7b9b1bc7ac836f004f0c7e84a326eac4",
+      "v19_declared_expected_size": 13642217,
       "vocab_size": 262144
     },
     {
@@ -915,6 +1035,8 @@
       "logical_k": 171,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00094.json",
       "retained_entries": 171,
+      "v19_declared_expected_sha256": "sha256:054240c0b3a80559ef364526faec93924b09c6bd8466698746070667b46c8987",
+      "v19_declared_expected_size": 13638124,
       "vocab_size": 262144
     },
     {
@@ -930,6 +1052,8 @@
       "logical_k": 373,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00095.json",
       "retained_entries": 373,
+      "v19_declared_expected_sha256": "sha256:62f2444ca374ff64abb174de2c4cc3a249b3053ae567a5ea0b505eb7edb6aa54",
+      "v19_declared_expected_size": 13642965,
       "vocab_size": 262144
     },
     {
@@ -945,6 +1069,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00097.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:0f78d607e418b173a5a867454c474b9160ea45dbac8fd8248ae2ce4061f7006b",
+      "v19_declared_expected_size": 20254662,
       "vocab_size": 262144
     },
     {
@@ -960,6 +1086,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00098.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:fc5ee5acac0ed71acab163f8bc185b6db705a5fa7a069da134e05f76f30fbd35",
+      "v19_declared_expected_size": 20244125,
       "vocab_size": 262144
     },
     {
@@ -975,6 +1103,8 @@
       "logical_k": 707,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00099.json",
       "retained_entries": 707,
+      "v19_declared_expected_sha256": "sha256:6a3a413eda85e96ae1f765bb613233ab3a8d8c04b7bfc98079dc2c2b2ee7481c",
+      "v19_declared_expected_size": 13651678,
       "vocab_size": 262144
     },
     {
@@ -990,6 +1120,8 @@
       "logical_k": 471,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00102.json",
       "retained_entries": 471,
+      "v19_declared_expected_sha256": "sha256:4b82fa1dd71a40619a8ea1d487fccd5cc8822f12358ec9e89e6237076fabbb72",
+      "v19_declared_expected_size": 13645759,
       "vocab_size": 262144
     },
     {
@@ -1005,6 +1137,8 @@
       "logical_k": 400,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00103.json",
       "retained_entries": 400,
+      "v19_declared_expected_sha256": "sha256:1f037465a188e92ab77864912ee7923c67d39b75b70b8fcd751224d0d7cc2617",
+      "v19_declared_expected_size": 13643683,
       "vocab_size": 262144
     },
     {
@@ -1020,6 +1154,8 @@
       "logical_k": 848,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00104.json",
       "retained_entries": 848,
+      "v19_declared_expected_sha256": "sha256:1c0c09688f4baefdf7b58857f7befd5f04fd9ecb4281dc9922af4ed2d6bbb8b8",
+      "v19_declared_expected_size": 13654487,
       "vocab_size": 262144
     },
     {
@@ -1035,6 +1171,8 @@
       "logical_k": 5082,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00105.json",
       "retained_entries": 5082,
+      "v19_declared_expected_sha256": "sha256:2bb15bbcb67e0fd233a0ecd224b11a2fe68070c9dbf9ba532e4255fb4acaea45",
+      "v19_declared_expected_size": 13760374,
       "vocab_size": 262144
     },
     {
@@ -1050,6 +1188,8 @@
       "logical_k": 3848,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00106.json",
       "retained_entries": 3848,
+      "v19_declared_expected_sha256": "sha256:26a1060ccf5a1448f5b37cb8b875523494b520129cba09d8a3fd729c4ca6aa8b",
+      "v19_declared_expected_size": 13729184,
       "vocab_size": 262144
     },
     {
@@ -1065,6 +1205,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00107.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:d22600cea96761a2a0c3e6cf9febacf5e651548bee9bda886204ba00bb92c7ee",
+      "v19_declared_expected_size": 20254764,
       "vocab_size": 262144
     },
     {
@@ -1080,6 +1222,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00108.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:28daffab66ea79c4af763e683b002f6edee308ec93e5e91b0f589a5233aa614d",
+      "v19_declared_expected_size": 20253408,
       "vocab_size": 262144
     },
     {
@@ -1095,6 +1239,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00109.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:1e2d31aad84e7756f71e3cabc43b9085b1ca6699a6c45d0af22fbb6d05174c62",
+      "v19_declared_expected_size": 20249683,
       "vocab_size": 262144
     },
     {
@@ -1110,6 +1256,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00111.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:cd026e76e4b0abab1c87e566edce92a1937bab7fe373386ddb3060d6a51aeff3",
+      "v19_declared_expected_size": 20238854,
       "vocab_size": 262144
     },
     {
@@ -1125,6 +1273,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00112.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:c5ee004dbab8e2d4d001dfb62301239f2af97e545661e625c10d814bfba6373c",
+      "v19_declared_expected_size": 20233588,
       "vocab_size": 262144
     },
     {
@@ -1140,6 +1290,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00113.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:24c256544fccab2eab84055f1aef0269d888ca923c676ed50e889634fad36e78",
+      "v19_declared_expected_size": 20259538,
       "vocab_size": 262144
     },
     {
@@ -1155,6 +1307,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00114.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:8b294228dae0f361bf82adc16dba43dd39d1d65e7b18f2e71f29b630830e3a13",
+      "v19_declared_expected_size": 20252466,
       "vocab_size": 262144
     },
     {
@@ -1170,6 +1324,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00115.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:2e17bdbf5c33e34b7b59213d875a0a10c4544f8cf39ff4f081f4ba67bb3732f4",
+      "v19_declared_expected_size": 20247182,
       "vocab_size": 262144
     },
     {
@@ -1185,6 +1341,8 @@
       "logical_k": 1003,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00118.json",
       "retained_entries": 1003,
+      "v19_declared_expected_sha256": "sha256:cd3288f52c091ae4c50b7a4042a414741f5a2d6fab34891875b218c206dcb303",
+      "v19_declared_expected_size": 13658154,
       "vocab_size": 262144
     },
     {
@@ -1200,6 +1358,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00119.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:d0975cfe17e41679abdea6f41aa1fa3048106f5e4f4d9cef5347193a544d8764",
+      "v19_declared_expected_size": 20256229,
       "vocab_size": 262144
     },
     {
@@ -1215,6 +1375,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00122.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:bc188d2ab055743d9e7abb4d1c970e17bd7bb802ddd5b08c34e43e56eabf069b",
+      "v19_declared_expected_size": 20256220,
       "vocab_size": 262144
     },
     {
@@ -1230,6 +1392,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00123.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:fcacc7fa00f6d59f14c07d969a7fc322929508216b4b3c5f090541f5fb2cdf57",
+      "v19_declared_expected_size": 20246621,
       "vocab_size": 262144
     },
     {
@@ -1245,6 +1409,8 @@
       "logical_k": 3027,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00124.json",
       "retained_entries": 3027,
+      "v19_declared_expected_sha256": "sha256:995c728de509aff8bbb3de6dc4dd4791c1c32dd818e4380c199b57ca5577fea2",
+      "v19_declared_expected_size": 13709783,
       "vocab_size": 262144
     },
     {
@@ -1260,6 +1426,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00125.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:a1cb3ea0de27803d3c05f40f69e6356a04f6f0d28bfd42f3a9db057eb9823134",
+      "v19_declared_expected_size": 20257698,
       "vocab_size": 262144
     },
     {
@@ -1275,6 +1443,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00126.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:6014abdb20ae9ea2b404b6020ad461616c5cc66f95433ec6c6525b0dca825111",
+      "v19_declared_expected_size": 20250238,
       "vocab_size": 262144
     },
     {
@@ -1290,6 +1460,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00127.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:1bf0f18ba6de4ebc9697f073f156b83f80e58dd84b1629d50ee9f74ac6cb1cc9",
+      "v19_declared_expected_size": 20253763,
       "vocab_size": 262144
     },
     {
@@ -1305,6 +1477,8 @@
       "logical_k": 9213,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00129.json",
       "retained_entries": 9213,
+      "v19_declared_expected_sha256": "sha256:9b44ad37937ff03e4d7524cd276c49d066667178fec3c1253b31e994de727932",
+      "v19_declared_expected_size": 13866901,
       "vocab_size": 262144
     },
     {
@@ -1320,6 +1494,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00130.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:2ef5ddd478c1577961713e6667b3cb341da4da75bf41f86848b23b0c5768b0e8",
+      "v19_declared_expected_size": 20244154,
       "vocab_size": 262144
     },
     {
@@ -1335,6 +1511,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00131.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:97b3026fcb3dcab8bfa507ff67d974acca39de4900f38a8bb957c8673c24a139",
+      "v19_declared_expected_size": 20256819,
       "vocab_size": 262144
     },
     {
@@ -1350,6 +1528,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00132.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:01b8b72e1d58c3ed22c2b22f2ff73efc44e477766292cd8a89a88ab48efe7f37",
+      "v19_declared_expected_size": 20253846,
       "vocab_size": 262144
     },
     {
@@ -1365,6 +1545,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00133.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:dd900b83041233fd2f4711a99762e7f5e3821231cda9da3233ffcde7a0d7a20f",
+      "v19_declared_expected_size": 20252910,
       "vocab_size": 262144
     },
     {
@@ -1380,6 +1562,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00134.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:da1c14e3ea390e430320362945e161e7f7f33edc71d7b758afb0b73b9db595e8",
+      "v19_declared_expected_size": 20248796,
       "vocab_size": 262144
     },
     {
@@ -1395,6 +1579,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00135.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:b94a5fc408e50b7dc657f0c8a0177913e9330aa053fb7a9e76d530c58b4a7507",
+      "v19_declared_expected_size": 20248261,
       "vocab_size": 262144
     },
     {
@@ -1410,6 +1596,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00138.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:fbae885e623f5611023cf08e5af20034241ff844a7c82d86265eb3b5a7d1862a",
+      "v19_declared_expected_size": 20267706,
       "vocab_size": 262144
     },
     {
@@ -1425,6 +1613,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00139.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:1f595ad5b5475cff6a9201534e48a5ba2b36b42d4ccd5b4d4c7b56bb66b73b12",
+      "v19_declared_expected_size": 20244001,
       "vocab_size": 262144
     },
     {
@@ -1440,6 +1630,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00142.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:5db71f0f08fb09804b4aff009d582efacc2951fdde6bb41d27c45ff8bf7aebbd",
+      "v19_declared_expected_size": 20245633,
       "vocab_size": 262144
     },
     {
@@ -1455,6 +1647,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00143.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:c7d8758bc0ffaac7e786816ef81cb65031f1a91def6c989624c3e05cf69c95e1",
+      "v19_declared_expected_size": 20270033,
       "vocab_size": 262144
     },
     {
@@ -1470,6 +1664,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00144.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:9436d6b3493fc4aca37f7b7effd95a2015f8e2b99fcffc5d91c0f6f1a18776c3",
+      "v19_declared_expected_size": 20241030,
       "vocab_size": 262144
     },
     {
@@ -1485,6 +1681,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00145.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:0a36c56e38448cf4c2a3faba13764306aaea4d883ffcdc21cbdd25aa2a593dca",
+      "v19_declared_expected_size": 20274570,
       "vocab_size": 262144
     },
     {
@@ -1500,6 +1698,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00146.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:30c36e141d3cbcd9ad351430dd3f715643430d389e5bf0f9399fe6a1b838b0a3",
+      "v19_declared_expected_size": 20243020,
       "vocab_size": 262144
     },
     {
@@ -1515,6 +1715,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00148.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:f7df9f6940b2fac9d50d468d8943eb109901641475f5af859868a00aa5de3e6d",
+      "v19_declared_expected_size": 20242928,
       "vocab_size": 262144
     },
     {
@@ -1530,6 +1732,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00149.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:9ffc3155d2a14908a1470ebea8e237efc3fda9b86e5ba3705c99e9fd3a16f98f",
+      "v19_declared_expected_size": 20243383,
       "vocab_size": 262144
     },
     {
@@ -1545,6 +1749,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00150.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:f3f9775df5ad1166280368af8a2ad688c8b8a52009e0e5351b44e4069a5c1ae9",
+      "v19_declared_expected_size": 20240299,
       "vocab_size": 262144
     },
     {
@@ -1560,6 +1766,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00152.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:f3165e063e221dfc7aed8cffbf73628fb50b5c3bff57beac9efef508af045a2d",
+      "v19_declared_expected_size": 20252045,
       "vocab_size": 262144
     },
     {
@@ -1575,6 +1783,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00153.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:8ae7410c349eaac1f4599c1b697184c7dd82b85cce225fab8c08e61f42677fde",
+      "v19_declared_expected_size": 20240459,
       "vocab_size": 262144
     },
     {
@@ -1590,6 +1800,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00154.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:3f945b1529ac1227289bb54006bf804300131f21e54b03d56e61febcded8cc5c",
+      "v19_declared_expected_size": 20244874,
       "vocab_size": 262144
     },
     {
@@ -1605,6 +1817,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00155.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:3a7612bbbf1ba23eef70008c0a0c440f45c279b0dc9220f71f98cec228107a96",
+      "v19_declared_expected_size": 20248343,
       "vocab_size": 262144
     },
     {
@@ -1620,6 +1834,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00158.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:9ba0c42a4f7530c5f2d5220939721f7b982cf8da857708f163c7893008948a08",
+      "v19_declared_expected_size": 20248353,
       "vocab_size": 262144
     },
     {
@@ -1635,6 +1851,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00159.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:b65522468aec90937aaa2d3f9be8fdb36a39e964aad2e42bdea86a79840c8b98",
+      "v19_declared_expected_size": 20255833,
       "vocab_size": 262144
     },
     {
@@ -1650,6 +1868,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00162.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:76a76f2a2d50fb6b8a21fc655090a4626e8b07364fe5fca5b7360881cd6bfba7",
+      "v19_declared_expected_size": 20278847,
       "vocab_size": 262144
     },
     {
@@ -1665,6 +1885,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00163.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:789e8ed7d7a4f12fbcbea5c7ea5047779d5dca2274a0c28ac91c316ede443534",
+      "v19_declared_expected_size": 20245650,
       "vocab_size": 262144
     },
     {
@@ -1680,6 +1902,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00164.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:285c83766143707b8b73c6edb3a96cfd086db2b3b6df46ff0ca689d25b503e53",
+      "v19_declared_expected_size": 20244779,
       "vocab_size": 262144
     },
     {
@@ -1695,6 +1919,8 @@
       "logical_k": 7046,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00165.json",
       "retained_entries": 7046,
+      "v19_declared_expected_sha256": "sha256:07719c256b9ab113f75877a28dbc2dea125821592e88c62341d020c0f55ef887",
+      "v19_declared_expected_size": 13811043,
       "vocab_size": 262144
     },
     {
@@ -1710,6 +1936,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00166.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:a682b3236915c59d3b866980b6f84afca42cd25e949bef6808ccaf629019db22",
+      "v19_declared_expected_size": 20245157,
       "vocab_size": 262144
     },
     {
@@ -1725,6 +1953,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00167.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:ef29f3de46313f9c5da9ecb60be3500cd8bd3109e9702b8c0cc4a25587714d66",
+      "v19_declared_expected_size": 20240337,
       "vocab_size": 262144
     },
     {
@@ -1740,6 +1970,8 @@
       "logical_k": 7967,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00168.json",
       "retained_entries": 7967,
+      "v19_declared_expected_sha256": "sha256:cf53cf01ebd24e6b18125075e61acc82c29f2dacb00299ded191f4513565d54a",
+      "v19_declared_expected_size": 13836037,
       "vocab_size": 262144
     },
     {
@@ -1755,6 +1987,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00169.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:e970f5b993e8550224a169f86cedd7772a92393944ad64bf45a6b0c2451f54f8",
+      "v19_declared_expected_size": 20278266,
       "vocab_size": 262144
     },
     {
@@ -1770,6 +2004,8 @@
       "logical_k": 4975,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00170.json",
       "retained_entries": 4975,
+      "v19_declared_expected_sha256": "sha256:0bc4a4f986b8048adab2e91eda88670cfcc783e298400556fe55de9efa6b9119",
+      "v19_declared_expected_size": 13758249,
       "vocab_size": 262144
     },
     {
@@ -1785,6 +2021,8 @@
       "logical_k": 1756,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00171.json",
       "retained_entries": 1756,
+      "v19_declared_expected_sha256": "sha256:fbbdc4cb8305d34b7afb7e79e1140b0369f7b1a5f1e147c522ee419485efaff4",
+      "v19_declared_expected_size": 13675752,
       "vocab_size": 262144
     },
     {
@@ -1800,6 +2038,8 @@
       "logical_k": 3790,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00172.json",
       "retained_entries": 3790,
+      "v19_declared_expected_sha256": "sha256:ae7f2e6c38f58cb31f5ff5f46d9492af9806abd53cfb6d57487382557ce21295",
+      "v19_declared_expected_size": 13729540,
       "vocab_size": 262144
     },
     {
@@ -1815,6 +2055,8 @@
       "logical_k": 2441,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00173.json",
       "retained_entries": 2441,
+      "v19_declared_expected_sha256": "sha256:fd3652303248be860381a9ca206f16c9a5a86ea37f258d4f9539ec053a79988c",
+      "v19_declared_expected_size": 13692287,
       "vocab_size": 262144
     },
     {
@@ -1830,6 +2072,8 @@
       "logical_k": 2043,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00174.json",
       "retained_entries": 2043,
+      "v19_declared_expected_sha256": "sha256:17cfc41d0c90e4b73e72783b3928c648abe09730114deae1b6a7e356d7402d02",
+      "v19_declared_expected_size": 13684736,
       "vocab_size": 262144
     },
     {
@@ -1845,6 +2089,8 @@
       "logical_k": 2706,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00175.json",
       "retained_entries": 2706,
+      "v19_declared_expected_sha256": "sha256:54ae67b2e7071da2cf473dec77d34ce3709ff78943027c9458207b543d47312f",
+      "v19_declared_expected_size": 13701299,
       "vocab_size": 262144
     },
     {
@@ -1860,6 +2106,8 @@
       "logical_k": 2423,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00178.json",
       "retained_entries": 2423,
+      "v19_declared_expected_sha256": "sha256:9c281151c68c11f0113df75955ba1d805dbdb49b2102d230fe42bc84bbf8b30f",
+      "v19_declared_expected_size": 13694685,
       "vocab_size": 262144
     },
     {
@@ -1875,6 +2123,8 @@
       "logical_k": 1687,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00179.json",
       "retained_entries": 1687,
+      "v19_declared_expected_sha256": "sha256:32ae5406c3e785bb68a9172555e84503c37b9b056539acbac3679f5bc2ad6499",
+      "v19_declared_expected_size": 13675046,
       "vocab_size": 262144
     },
     {
@@ -1890,6 +2140,8 @@
       "logical_k": 2704,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00180.json",
       "retained_entries": 2704,
+      "v19_declared_expected_sha256": "sha256:44800fc8945d88b3ceaee7d8d77bab3b528ab186bee3651685f9ee48dd7100b0",
+      "v19_declared_expected_size": 13700247,
       "vocab_size": 262144
     },
     {
@@ -1905,6 +2157,8 @@
       "logical_k": 1241,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00181.json",
       "retained_entries": 1241,
+      "v19_declared_expected_sha256": "sha256:40156b5d62f61fed4c45a9c6390716321fe1ab25954f79ecf80381513474f324",
+      "v19_declared_expected_size": 13663909,
       "vocab_size": 262144
     },
     {
@@ -1920,6 +2174,8 @@
       "logical_k": 2549,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00185.json",
       "retained_entries": 2549,
+      "v19_declared_expected_sha256": "sha256:2d7489ff0f46d52b73c60ddf529f180838b28d80f7022143eb65c1dfae65b535",
+      "v19_declared_expected_size": 13697661,
       "vocab_size": 262144
     },
     {
@@ -1935,6 +2191,8 @@
       "logical_k": 2542,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00186.json",
       "retained_entries": 2542,
+      "v19_declared_expected_sha256": "sha256:17655b88830a9f63b6277fe8b552dd654c9e12122a3c4cb998788c43f668d8d4",
+      "v19_declared_expected_size": 13696988,
       "vocab_size": 262144
     },
     {
@@ -1950,6 +2208,8 @@
       "logical_k": 1354,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00187.json",
       "retained_entries": 1354,
+      "v19_declared_expected_sha256": "sha256:c7358160adb20646bd245d6ec86395e00782b51d0e22e3c9ed786ef506a31445",
+      "v19_declared_expected_size": 13666701,
       "vocab_size": 262144
     },
     {
@@ -1965,6 +2225,8 @@
       "logical_k": 2512,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00188.json",
       "retained_entries": 2512,
+      "v19_declared_expected_sha256": "sha256:72e678896207762ca20b8d3f349fca56c3559d4d97584ad498c55f12866193d9",
+      "v19_declared_expected_size": 13695321,
       "vocab_size": 262144
     },
     {
@@ -1980,6 +2242,8 @@
       "logical_k": 2553,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00189.json",
       "retained_entries": 2553,
+      "v19_declared_expected_sha256": "sha256:62198e3c985b9ebd065e728f93b281361f8f8e32e0d9a5f8ef10bb1e13b40067",
+      "v19_declared_expected_size": 13695636,
       "vocab_size": 262144
     },
     {
@@ -1995,6 +2259,8 @@
       "logical_k": 1900,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00190.json",
       "retained_entries": 1900,
+      "v19_declared_expected_sha256": "sha256:dd14e95590d829a002e89d279aa7890a2774104adcde9c8fd5956bb1b35cf569",
+      "v19_declared_expected_size": 13680483,
       "vocab_size": 262144
     },
     {
@@ -2010,6 +2276,8 @@
       "logical_k": 2779,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00191.json",
       "retained_entries": 2779,
+      "v19_declared_expected_sha256": "sha256:f64ea097973e6a243e2450de3aebf9da6c252d757b3136860c19b0a2ca4be292",
+      "v19_declared_expected_size": 13702411,
       "vocab_size": 262144
     },
     {
@@ -2025,6 +2293,8 @@
       "logical_k": 1246,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00193.json",
       "retained_entries": 1246,
+      "v19_declared_expected_sha256": "sha256:d28417739776f4ab6d309170104318b523fc9e2c7f97088b91eedc0945f39dcc",
+      "v19_declared_expected_size": 13664493,
       "vocab_size": 262144
     },
     {
@@ -2040,6 +2310,8 @@
       "logical_k": 2011,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00196.json",
       "retained_entries": 2011,
+      "v19_declared_expected_sha256": "sha256:d79ce345002b2b7caf407c6adfa756c624e12a1d50ef5ab316516531effc0109",
+      "v19_declared_expected_size": 13683121,
       "vocab_size": 262144
     },
     {
@@ -2055,6 +2327,8 @@
       "logical_k": 1659,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00197.json",
       "retained_entries": 1659,
+      "v19_declared_expected_sha256": "sha256:a1efd810e1f7741d79a0421d70c80a9d711d2370b912af5f659b23f7cb425e61",
+      "v19_declared_expected_size": 13674376,
       "vocab_size": 262144
     },
     {
@@ -2070,6 +2344,8 @@
       "logical_k": 1632,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00200.json",
       "retained_entries": 1632,
+      "v19_declared_expected_sha256": "sha256:2b811edfcaa2d5aa0a4f94ce3b0e2398e7c8ed3f0c7bac930a8a09ea372164bd",
+      "v19_declared_expected_size": 13673335,
       "vocab_size": 262144
     },
     {
@@ -2085,6 +2361,8 @@
       "logical_k": 2825,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00201.json",
       "retained_entries": 2825,
+      "v19_declared_expected_sha256": "sha256:28c647c0bf8a8dfb5bdaa889f521163f6f6ffd7df4295b95720f8ef8713fe110",
+      "v19_declared_expected_size": 13705168,
       "vocab_size": 262144
     },
     {
@@ -2100,6 +2378,8 @@
       "logical_k": 1251,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00202.json",
       "retained_entries": 1251,
+      "v19_declared_expected_sha256": "sha256:9f920ddef7a1943a930320021ff704715973d9b2913c1302ef4829c41478bc13",
+      "v19_declared_expected_size": 13664654,
       "vocab_size": 262144
     },
     {
@@ -2115,6 +2395,8 @@
       "logical_k": 1015,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00206.json",
       "retained_entries": 1015,
+      "v19_declared_expected_sha256": "sha256:fe5d1e441eead7a25aedb1ff75dc142354bd1deab625e92f6ab5aff19528d060",
+      "v19_declared_expected_size": 13658239,
       "vocab_size": 262144
     },
     {
@@ -2130,6 +2412,8 @@
       "logical_k": 1374,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00207.json",
       "retained_entries": 1374,
+      "v19_declared_expected_sha256": "sha256:d72a3c0979b39e3917dba96b45c4db4e374f4873120ea1e73299725b77ee597b",
+      "v19_declared_expected_size": 13667914,
       "vocab_size": 262144
     },
     {
@@ -2145,6 +2429,8 @@
       "logical_k": 559,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00210.json",
       "retained_entries": 559,
+      "v19_declared_expected_sha256": "sha256:f6ec6f913ad9d575d4d2b5bdefa8f482c10cb7ccccdf6dbe94b4369cefad8bd9",
+      "v19_declared_expected_size": 13647121,
       "vocab_size": 262144
     },
     {
@@ -2160,6 +2446,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00211.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:f602bc30a79dd9d1168efacf21358b01fb291bbf99ba1882094bc2f7c1931baa",
+      "v19_declared_expected_size": 20276405,
       "vocab_size": 262144
     },
     {
@@ -2175,6 +2463,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00214.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:b643bf627b829af0dae5b65c54c785f7bb18abd943ca574c70246aff380b38e8",
+      "v19_declared_expected_size": 20264506,
       "vocab_size": 262144
     },
     {
@@ -2190,6 +2480,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00216.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:78f624e8b44e271d4e949b88eecdcf25aee0ba1110dc1250f1a6147e0ff6e447",
+      "v19_declared_expected_size": 20265160,
       "vocab_size": 262144
     },
     {
@@ -2205,6 +2497,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00217.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:2a35c7ec7ddcf73942606d593c9db36bc46f2a58fc5ea9065aa6942de968f595",
+      "v19_declared_expected_size": 20243009,
       "vocab_size": 262144
     },
     {
@@ -2220,6 +2514,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00218.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:5e1f085c935a02e879f20f532241e0c2ac6f164180f960d1ef53094a076750b1",
+      "v19_declared_expected_size": 20249538,
       "vocab_size": 262144
     },
     {
@@ -2235,6 +2531,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00219.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:cbe922c5768081726c2201636e09bb5c90989f427976139487df9653092d285c",
+      "v19_declared_expected_size": 20254168,
       "vocab_size": 262144
     },
     {
@@ -2250,6 +2548,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00220.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:2823453cd0eab9cae47e37d84f533b4cfe69fa94927f6636eee4cb986fcb3ca0",
+      "v19_declared_expected_size": 20246528,
       "vocab_size": 262144
     },
     {
@@ -2265,6 +2565,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00221.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:6d285790d4c2c77915d2bfb7d1d08d25dba297b38b67d102d793470f41885964",
+      "v19_declared_expected_size": 20246770,
       "vocab_size": 262144
     },
     {
@@ -2280,6 +2582,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00222.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:90b96abf78abb0472ce925bc96d8f91a799182ad8e3b3c3fa89ba44b93fa3acd",
+      "v19_declared_expected_size": 20251218,
       "vocab_size": 262144
     },
     {
@@ -2295,6 +2599,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00223.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:d2c17106231db7dca2f23aece95bf923c22dcf3b97bf9b2f3ef99d44a9c00c4c",
+      "v19_declared_expected_size": 20263510,
       "vocab_size": 262144
     },
     {
@@ -2310,6 +2616,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00226.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:ae7365949d71f16d1258c356f57cec48fd5cb419613be3d8e40a0c8ec2d4551a",
+      "v19_declared_expected_size": 20240918,
       "vocab_size": 262144
     },
     {
@@ -2325,6 +2633,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00227.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:c8af4f250773148c65077e19f98ff3867d9d5474140ef64a3f88763e91a9f4a2",
+      "v19_declared_expected_size": 20244445,
       "vocab_size": 262144
     },
     {
@@ -2340,6 +2650,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00230.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:d356eea3d832f158a306ff675f8ae02f776e0607e453c29009a7b0e42630468a",
+      "v19_declared_expected_size": 20252054,
       "vocab_size": 262144
     },
     {
@@ -2355,6 +2667,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00231.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:c5c8425a253ac048c629f206daa33209d79a549e6bf5f5aed8ac9d670778418c",
+      "v19_declared_expected_size": 20243409,
       "vocab_size": 262144
     },
     {
@@ -2370,6 +2684,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00234.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:4090975d9a2606c58a0e07817b1e54c67c162c7441dda1d470d92c03291efb13",
+      "v19_declared_expected_size": 20250543,
       "vocab_size": 262144
     },
     {
@@ -2385,6 +2701,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00235.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:564f1022874957c911b1a684c5265e26793fe2669fbcf5af23d495ae240a00dd",
+      "v19_declared_expected_size": 20240750,
       "vocab_size": 262144
     },
     {
@@ -2400,6 +2718,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00236.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:3389b97e934416b65c7f558fd3237087e3a057e466f9644b52032d543aec2f99",
+      "v19_declared_expected_size": 20246845,
       "vocab_size": 262144
     },
     {
@@ -2415,6 +2735,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00237.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:79d5edb993d99b959059e17ec6741330ee7af9debdbc3ab88bb90d065d69af39",
+      "v19_declared_expected_size": 20246781,
       "vocab_size": 262144
     },
     {
@@ -2430,6 +2752,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00238.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:221148aa7231be25c84d3dd030d7c4263477be3f45a68ebef16db2673eff9535",
+      "v19_declared_expected_size": 20242233,
       "vocab_size": 262144
     },
     {
@@ -2445,6 +2769,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00240.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:2e7247c613defa597f6052c915917bfab7902962634969dd2f01e977070f75e9",
+      "v19_declared_expected_size": 20248205,
       "vocab_size": 262144
     },
     {
@@ -2460,6 +2786,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00241.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:71b3d30b9b7c10d5ea90dc40d9df15e18286e7a2e89195ed0939214c2a10aa50",
+      "v19_declared_expected_size": 20247980,
       "vocab_size": 262144
     },
     {
@@ -2475,6 +2803,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00243.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:6c99d3ee9fd70202d4041a26f25bcb52781d73924c25619cc92e1c9bb1e93725",
+      "v19_declared_expected_size": 20245871,
       "vocab_size": 262144
     },
     {
@@ -2490,6 +2820,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00246.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:9335f176c91c74349d925d3bee4c05a679c8a88525788b216661f5c1921346e6",
+      "v19_declared_expected_size": 20246660,
       "vocab_size": 262144
     },
     {
@@ -2505,6 +2837,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00247.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:e9a40ac192bbe61b25d58fcf164a4be4933f3cae87f827b56a1ac29d90877b1c",
+      "v19_declared_expected_size": 20250478,
       "vocab_size": 262144
     },
     {
@@ -2520,6 +2854,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00250.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:5fecdfc4522f0a5db80bcdb016bb4b11b852866fc6ee6940224e20cb5919d092",
+      "v19_declared_expected_size": 20241430,
       "vocab_size": 262144
     },
     {
@@ -2535,6 +2871,8 @@
       "logical_k": 262144,
       "relative_path": "selection-checkpoint/selected_exemplars/selected-exemplars-00251.json",
       "retained_entries": 262144,
+      "v19_declared_expected_sha256": "sha256:24cc9d1266c0ba6c698d6ffa99f63ddf86e308d0f160dfa03f5332a452ccc06e",
+      "v19_declared_expected_size": 20269392,
       "vocab_size": 262144
     }
   ],

@@ -3652,3 +3652,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: Added Linux CPU/filesystem environment evidence for the derived component benchmark.
 
 - 2026-08-21: Completed derived-dataset dynamic-K percentile anatomy.
+
+- 2026-08-21: Bound each included record to both observed bytes and any v19-declared expected digest/size.
