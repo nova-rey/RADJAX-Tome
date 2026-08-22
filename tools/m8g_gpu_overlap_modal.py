@@ -35,7 +35,7 @@ def run_suite():
    ids=torch.arange(k,device='cuda',dtype=torch.int64).add_(idx*17).remainder(vocab)
    probs=torch.full((k,),0.5/k,device='cuda',dtype=torch.float32)
    logs=torch.log(probs)
-   if shaped:
+   if shaped == "production_shaped":
     x=torch.ones((256,256),device='cuda',dtype=torch.float32)
     for _ in range(3): x=x@x.t()*0.0001
    payloads.append((idx,k,ids,probs,logs))
@@ -48,12 +48,12 @@ def run_suite():
     torch.cuda.synchronize(); payloads.append(make_payload(k,idx,ids.cpu(),probs.cpu(),logs.cpu()))
   prod=time.perf_counter()-t0
   t=time.perf_counter(); res=write_compact_body_store_from_compact(root,payloads); total=time.perf_counter()-t0
-  return {'variant':'serial_compact','producer_seconds':prod,'representation_seconds':time.perf_counter()-t,'total_seconds':total,'writer':res,'root':str(root)}
+  return {'variant':'serial_compact','producer_seconds':prod,'representation_seconds':time.perf_counter()-t,'total_seconds':total,'writer':res,'root':str(root), 'body_digest_root':hashlib.sha256(json.dumps(res['body_digests'],separators=(',',':')).encode()).hexdigest(), 'metadata_sha256':res['metadata_sha256']}
  def pipeline(cadence, rid):
   root=out/rid
   stream=descriptor_stream_from_cuda(ks,vocab_size=vocab,batch_size=8,cadence=cadence,torch_module=torch)
   t=time.perf_counter(); res=write_compact_body_store_pipelined_from_compact(root,stream,worker_count=2); total=time.perf_counter()-t
-  return {'variant':'pipelined_compact','total_seconds':total,'writer':res,'root':str(root)}
+  return {'variant':'pipelined_compact','total_seconds':total,'writer':res,'root':str(root), 'body_digest_root':hashlib.sha256(json.dumps(res['body_digests'],separators=(',',':')).encode()).hexdigest(), 'metadata_sha256':res['metadata_sha256'], **{k:v for k,v in res.items() if k not in {'body_digests','metadata_path','metadata_sha256'}}}
  def lower(cadence,rid):
   t=time.perf_counter();
   for start in range(0,len(ks),8): gpu_batch(start,cadence)
@@ -68,6 +68,11 @@ def run_suite():
     if rec.get('root'):
      root=pathlib.Path(rec['root']); rec['output_bytes']=sum(p.stat().st_size for p in root.rglob('*') if p.is_file()); shutil.rmtree(root,ignore_errors=True)
     results.append(rec)
+ for cadence in ('maximum_pressure','production_shaped'):
+  for rep in range(3):
+   group=[x for x in results if x['cadence']==cadence and x['rep']==rep and x['variant']!='producer_lower_bound']
+   roots={x.get('body_digest_root') for x in group}; metas={x.get('metadata_sha256') for x in group}
+   for x in group: x['logical_equivalence']=(len(roots)==1 and len(metas)==1 and x.get('body_digest_root') in roots)
  pathlib.Path('/mnt/overlap/results.json').write_text(json.dumps({'environment':env,'k_count':len(ks),'full_width_count':sum(k==vocab for k in ks),'results':results},sort_keys=True,indent=2))
  return json.dumps({'environment':env,'result_count':len(results),'results_path':'/mnt/overlap/results.json'})
 

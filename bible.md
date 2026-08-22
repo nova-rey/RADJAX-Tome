@@ -3685,3 +3685,5 @@ closed-record and checkpoint authority validation.
 - M8G compact C6 payload extraction now preserves contiguous exact-K numpy buffers at the compact boundary.
 
 - M8G CUDA descriptor producer emits governed uint32/float32 pinned buffers and native bucket arrays.
+
+- M8G overlap harness now distinguishes maximum-pressure cadence and records per-run body/metadata equivalence roots.
