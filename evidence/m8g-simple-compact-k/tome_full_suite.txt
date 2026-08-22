@@ -1,0 +1,27 @@
+
+==================================== ERRORS ====================================
+________________ ERROR collecting tests/test_bulk_migration.py _________________
+ImportError while importing test module '/home/nyx/m8g/repos/tome/tests/test_bulk_migration.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_bulk_migration.py:9: in <module>
+    from radjax_tome.backends import resolve_qwen_policy
+src/radjax_tome/backends/__init__.py:146: in __getattr__
+    return resolve_lazy_export(globals(), _LAZY_EXPORTS, name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/radjax_tome/_lazy_exports.py:21: in resolve_lazy_export
+    value = getattr(import_module(module_name), attribute_name)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/radjax_tome/backends/qwen_policy.py:7: in <module>
+    import yaml
+E   ModuleNotFoundError: No module named 'yaml'
+=========================== short test summary info ============================
+ERROR tests/test_bulk_migration.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 1.73s

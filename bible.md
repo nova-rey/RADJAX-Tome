@@ -3656,3 +3656,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: Bound each included record to both observed bytes and any v19-declared expected digest/size.
 
 - 2026-08-22: Implemented canonical compact-K persistence, bounded mixed-K collation, simple body/metadata storage, and deterministic level-1 gzip packaging.
+
+- 2026-08-22: Recorded the three-round simple compact-K storage comparison and Contract/Tome validation outcomes.
