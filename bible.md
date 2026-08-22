@@ -3658,3 +3658,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: Implemented canonical compact-K persistence, bounded mixed-K collation, simple body/metadata storage, and deterministic level-1 gzip packaging.
 
 - 2026-08-22: Recorded the three-round simple compact-K storage comparison and Contract/Tome validation outcomes.
+
+- 2026-08-22: Switched new compact body storage to the versioned packed-array Contract codec and canonical metadata-only projection.
