@@ -11,6 +11,7 @@ from .modes import (
     compact_body_from_logical_payload,
     compact_payload_for_storage,
 )
+from .simple_compact_body import write_compact_body_store
 from .payloads import _primary_budget
 from .reporting import (
     _delivery_timing_fields,
@@ -220,6 +221,12 @@ def assemble_selected_delivery_artifacts(
                 "selected_exemplars": serialized_payloads,
             },
         )
+        if config.representation_mode == COMPACT_K_MONOLITHIC:
+            write_compact_body_store(
+                selected_dir / "compact_body_store",
+                selected_payloads,
+                profile="compact_k_monolithic",
+            )
     if config.representation_mode == COMPACT_K_IMMUTABLE_BODY:
         _publish_immutable_bodies(prepared)
 

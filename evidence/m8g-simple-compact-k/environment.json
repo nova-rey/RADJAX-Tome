@@ -1,0 +1,9 @@
+{
+  "available_bytes": 101659332608,
+  "contract_commit": "7ae11364b771eb4639dbb10268f9bd71bd3da601",
+  "filesystem": "Filesystem     Type 1K-blocks      Used Available Use% Mounted on\n/dev/sda1      ext4 264039124 153686812  99276692  61% /",
+  "host": "Nyx",
+  "kernel": "6.1.0-44-amd64",
+  "python": "3.11.2 (main, May 12 2026, 05:17:27) [GCC 12.2.0]",
+  "tome_commit": "67a81a438d9296e9492593b5eca3f3efd3c14231"
+}

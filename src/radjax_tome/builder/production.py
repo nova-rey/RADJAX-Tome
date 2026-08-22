@@ -151,7 +151,7 @@ class ProductionBuildConfig:
     c4_claims_path: Path | None = None
     c5_selection_path: Path | None = None
     source_passports_path: Path | None = None
-    representation_mode: str = "legacy_padded_monolithic"
+    representation_mode: str = "compact_k_monolithic"
     verified_selection_replay_path: Path | None = None
     verified_selection_bundle_manifest_path: Path | None = None
     replay_authority_identity: str | None = None

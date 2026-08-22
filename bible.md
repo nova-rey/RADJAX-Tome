@@ -3654,3 +3654,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-21: Completed derived-dataset dynamic-K percentile anatomy.
 
 - 2026-08-21: Bound each included record to both observed bytes and any v19-declared expected digest/size.
+
+- 2026-08-22: Implemented canonical compact-K persistence, bounded mixed-K collation, simple body/metadata storage, and deterministic level-1 gzip packaging.

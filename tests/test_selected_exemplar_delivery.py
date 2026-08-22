@@ -111,6 +111,7 @@ def _config(
         exemplar_delivery_path=delivery_path,
         selected_exemplar_budget=2,
         retain_unselected_exemplar_payloads=retain_unselected,
+        representation_mode="legacy_padded_monolithic",
         track_delivery_timing=track_delivery_timing,
         progress=progress,
     )

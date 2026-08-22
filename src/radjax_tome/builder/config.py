@@ -164,7 +164,7 @@ class SelectionIntent:
     require_full_selected_budget: bool
     full_width_cap_numerator: int = 1
     full_width_cap_denominator: int = 3
-    representation_mode: str = "legacy_padded_monolithic"
+    representation_mode: str = "compact_k_monolithic"
     verified_selection_replay_path: Path | None = None
     verified_selection_bundle_manifest_path: Path | None = None
 

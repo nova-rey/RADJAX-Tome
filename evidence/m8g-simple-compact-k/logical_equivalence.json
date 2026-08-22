@@ -1,0 +1,49 @@
+{
+  "all_modes_same_input_root": true,
+  "compact_body_validation": {
+    "compact_k_immutable_body": [
+      {
+        "body_count": 169,
+        "round": 1,
+        "semantic_ids_match": true,
+        "unique_body_count": 169
+      },
+      {
+        "body_count": 169,
+        "round": 2,
+        "semantic_ids_match": true,
+        "unique_body_count": 169
+      },
+      {
+        "body_count": 169,
+        "round": 3,
+        "semantic_ids_match": true,
+        "unique_body_count": 169
+      }
+    ],
+    "compact_k_monolithic": [
+      {
+        "body_count": 169,
+        "round": 1,
+        "semantic_ids_match": true,
+        "unique_body_count": 169
+      },
+      {
+        "body_count": 169,
+        "round": 2,
+        "semantic_ids_match": true,
+        "unique_body_count": 169
+      },
+      {
+        "body_count": 169,
+        "round": 3,
+        "semantic_ids_match": true,
+        "unique_body_count": 169
+      }
+    ]
+  },
+  "dataset": "M8G_DERIVED_VALID_EXEMPLAR_COMPONENT_BENCHMARK_V1",
+  "input_logical_root": "sha256:51eba04fbb2a6a2ee6d20a8c7d65b0027c3c559e38cd91f952c2176656ed933c",
+  "legacy_source_authority_reused": true,
+  "record_count": 169
+}

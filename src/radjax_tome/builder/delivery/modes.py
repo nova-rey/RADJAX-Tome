@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from typing import Any, Final
 
 from radjax_contract.tome.m8g import CompactBody
@@ -52,14 +53,65 @@ def compact_body_from_logical_payload(
 
 
 def compact_payload_for_storage(payload: dict[str, Any]) -> dict[str, Any]:
-    """Return the compact physical payload, without a padded selection mask."""
+    """Return one canonical K-length payload for new persistent storage."""
 
     compact = dict(payload)
-    compact.pop("top_selection_mask", None)
+    ids = list(compact["top_token_ids"])
+    probs = list(compact["top_probs"])
+    logs = list(compact["top_log_probs"])
+    k = int(compact["effective_top_k"])
+    if k < 0 or k > len(ids) or len(ids) != len(probs) or len(ids) != len(logs):
+        raise ValueError("effective_top_k and top arrays are inconsistent")
+    mask = compact.pop("top_selection_mask", None)
+    if mask is not None:
+        active = [index for index, value in enumerate(mask) if bool(value)]
+        if len(active) != k or active != list(range(k)):
+            raise ValueError(
+                "historical selection mask does not describe leading K entries"
+            )
+    elif len(ids) != k:
+        raise ValueError("compact payload contains padding without a selection mask")
+    compact["top_token_ids"] = ids[:k]
+    compact["top_probs"] = probs[:k]
+    compact["top_log_probs"] = logs[:k]
     compact["storage_flavor"] = COMPACT_K_MONOLITHIC
-    compact["physical_retained_entry_count"] = len(compact["top_token_ids"])
-    compact["logical_k"] = int(compact["effective_top_k"])
+    compact["physical_retained_entry_count"] = k
+    compact["logical_k"] = k
     return compact
+
+
+def collate_compact_logical_records(
+    records: Sequence[dict[str, Any]],
+) -> dict[str, Any]:
+    """Temporarily pad a compact batch only to its largest effective K."""
+
+    if not records:
+        return {
+            "width": 0,
+            "top_token_ids": [],
+            "top_probs": [],
+            "top_log_probs": [],
+            "mask": [],
+        }
+    compact = [compact_payload_for_storage(record) for record in records]
+    width = max(int(record["effective_top_k"]) for record in compact)
+    ids: list[list[int]] = []
+    probs: list[list[float]] = []
+    logs: list[list[float]] = []
+    mask: list[list[bool]] = []
+    for record in compact:
+        k = int(record["effective_top_k"])
+        ids.append(list(record["top_token_ids"]) + [0] * (width - k))
+        probs.append(list(record["top_probs"]) + [0.0] * (width - k))
+        logs.append(list(record["top_log_probs"]) + [0.0] * (width - k))
+        mask.append([True] * k + [False] * (width - k))
+    return {
+        "width": width,
+        "top_token_ids": ids,
+        "top_probs": probs,
+        "top_log_probs": logs,
+        "mask": mask,
+    }
 
 
 def mode_configuration_identity(mode: str) -> str:

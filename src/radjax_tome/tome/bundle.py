@@ -477,7 +477,12 @@ def _open_bundle_for_write(
             yield archive
         return
     with output.open("wb") as raw:
-        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as stream:
+        # Level 1 is the canonical production tradeoff: deterministic
+        # metadata with bounded CPU cost. Compression is package metadata,
+        # never part of body semantic identity.
+        with gzip.GzipFile(
+            filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=1
+        ) as stream:
             with tarfile.open(fileobj=stream, mode="w") as archive:
                 yield archive
 
