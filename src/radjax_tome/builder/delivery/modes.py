@@ -65,10 +65,13 @@ def compact_payload_for_storage(payload: dict[str, Any]) -> dict[str, Any]:
     mask = compact.pop("top_selection_mask", None)
     if mask is not None:
         active = [index for index, value in enumerate(mask) if bool(value)]
-        if len(active) != k or active != list(range(k)):
+        if len(active) != k:
             raise ValueError(
-                "historical selection mask does not describe leading K entries"
+                "historical selection mask does not describe effective K entries"
             )
+        ids = [ids[index] for index in active]
+        probs = [probs[index] for index in active]
+        logs = [logs[index] for index in active]
     elif len(ids) != k:
         raise ValueError("compact payload contains padding without a selection mask")
     compact["top_token_ids"] = ids[:k]
