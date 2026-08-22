@@ -281,6 +281,8 @@ class _ModeState:
 def build_corridor_candidate_leaderboards(
     candidates: Iterable[CorridorCandidateRecord],
     policy: CorridorLeaderboardPolicy | None = None,
+    *,
+    diagnostics: dict[str, int] | None = None,
 ) -> CorridorLeaderboardArtifact:
     """Build bounded deterministic per-mode pools from compact candidate records."""
 
@@ -374,11 +376,35 @@ def build_corridor_candidate_leaderboards(
                 continue
             state.candidates_eligible += 1
             state.pool.append(score)
-            state.pool.sort(key=_score_sort_key)
+            if diagnostics is not None:
+                diagnostics["eligible_pool_appends"] = (
+                    diagnostics.get("eligible_pool_appends", 0) + 1
+                )
             if not policy.retain_complete_candidate_pool:
+                state.pool.sort(key=_score_sort_key)
+                if diagnostics is not None:
+                    diagnostics["sort_calls"] = diagnostics.get("sort_calls", 0) + 1
+                    diagnostics["sort_input_items"] = diagnostics.get(
+                        "sort_input_items", 0
+                    ) + len(state.pool)
                 del state.pool[policy.candidate_pool_cap :]
         connection.commit()
 
+    if policy.retain_complete_candidate_pool:
+        for state in states.values():
+            if state.pool:
+                state.pool.sort(key=_score_sort_key)
+                if diagnostics is not None:
+                    diagnostics["sort_calls"] = diagnostics.get("sort_calls", 0) + 1
+                    diagnostics["sort_input_items"] = diagnostics.get(
+                        "sort_input_items", 0
+                    ) + len(state.pool)
+    if diagnostics is not None:
+        diagnostics["candidates_seen"] = candidates_seen
+        diagnostics["eligible_candidates"] = candidates_eligible
+        diagnostics["nonempty_pools"] = sum(
+            1 for state in states.values() if state.pool
+        )
     for mode_id, state in states.items():
         state.duplicate_count = duplicate_modes[mode_id]
     modes = tuple(

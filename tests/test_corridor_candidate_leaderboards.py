@@ -507,3 +507,47 @@ def test_offline_cli_fails_closed_without_real_feature_input(tmp_path: Path) -> 
 
     assert result.returncode == 1
     assert "real compact corridor feature fields are missing" in result.stderr
+
+
+def test_complete_pools_sort_once_with_diagnostics() -> None:
+    records = [
+        _record(f"candidate-{index}", mode=index % 3, difficulty=index / 10)
+        for index in range(18)
+    ]
+    diagnostics: dict[str, int] = {}
+    artifact = build_corridor_candidate_leaderboards(
+        records,
+        CorridorLeaderboardPolicy(retain_complete_candidate_pool=True),
+        diagnostics=diagnostics,
+    )
+    assert diagnostics["candidates_seen"] == 18
+    assert diagnostics["eligible_candidates"] == artifact.summary["candidates_eligible"]
+    assert (
+        diagnostics["eligible_pool_appends"] == artifact.summary["candidates_eligible"]
+    )
+    assert diagnostics["nonempty_pools"] == 3
+    assert diagnostics["sort_calls"] == 3
+    assert (
+        diagnostics["sort_input_items"] == artifact.summary["retained_candidate_count"]
+    )
+    assert (
+        artifact.summary["retained_candidate_count"]
+        == diagnostics["eligible_candidates"]
+    )
+
+
+def test_complete_pool_sort_preserves_full_reserve_and_rank() -> None:
+    records = [
+        _record("late-best", difficulty=1.0),
+        _record("early-worst", difficulty=0.0),
+        _record("middle", difficulty=0.5),
+    ]
+    artifact = build_corridor_candidate_leaderboards(
+        records,
+        CorridorLeaderboardPolicy(retain_complete_candidate_pool=True),
+    )
+    assert [candidate.candidate_id for candidate in artifact.modes[0].candidates] == [
+        "late-best",
+        "middle",
+        "early-worst",
+    ]

@@ -1,0 +1,57 @@
+{
+  "baseline_output_digest": "8327fea02522bd3105b23f55ff76aa167769b7229d8e81c03d8c1b6ff83220f0",
+  "checks": {
+    "all_patched_samples_same_selected": true,
+    "claims/backfill_lineage.jsonl": {
+      "base_count": 5875,
+      "equal": true,
+      "patched_count": 5875
+    },
+    "claims/collision_obligations.jsonl": {
+      "base_count": 397,
+      "equal": true,
+      "patched_count": 397
+    },
+    "claims/corridor_claims.jsonl": {
+      "base_count": 128,
+      "equal": true,
+      "patched_count": 128
+    },
+    "claims/global_claims.jsonl": {
+      "base_count": 125,
+      "equal": true,
+      "patched_count": 125
+    },
+    "claims/selected_coordinates.jsonl": {
+      "base_count": 253,
+      "equal": true,
+      "patched_count": 253
+    },
+    "corridor-leaderboards/mode_leaderboards.jsonl": {
+      "base_count": 46,
+      "equal": true,
+      "patched_count": 46
+    },
+    "coverage-plan/coverage_plan.json": {
+      "semantic_equal": true
+    },
+    "multi-role-selection/selected_exemplars.jsonl": {
+      "base_count": 253,
+      "equal": true,
+      "patched_count": 253
+    },
+    "selected_coordinates_vs_accepted_baseline": {
+      "count": 253,
+      "equal": true
+    },
+    "selection_budget_diagnostics.json": {
+      "semantic_equal": true
+    }
+  },
+  "patched_output_digests": [
+    "48e387ba3e123e27c3905a9634463d957ce4dca922f7774a04536609dedf80cf",
+    "295400e0b3e44688de9fa41fdaedb1d0a8e93452f9ccac8d8417f25fceb8d99f",
+    "d32464d49a1a3b5577f61b2d72ac34df97fe0d399c90cdfe2f57f6c1f9a27593"
+  ],
+  "semantic_equivalence": true
+}
