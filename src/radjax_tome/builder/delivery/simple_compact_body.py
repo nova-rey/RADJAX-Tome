@@ -13,6 +13,8 @@ import os
 import queue
 import threading
 import time
+
+import numpy as np
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,6 +29,15 @@ def _json_bytes(value: Any) -> bytes:
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode()
+
+
+def _buffer_payload(compact: dict[str, Any]) -> dict[str, Any]:
+    result = dict(compact)
+    result["top_token_ids"] = np.asarray(compact["top_token_ids"], dtype="<u4")
+    result["top_probs"] = np.asarray(compact["top_probs"], dtype="<f4")
+    result["top_log_probs"] = np.asarray(compact["top_log_probs"], dtype="<f4")
+    result["bucket_masses"] = np.asarray(compact["bucket_masses"], dtype="<f4")
+    return result
 
 
 def write_compact_body_store_from_compact(
@@ -44,12 +55,13 @@ def write_compact_body_store_from_compact(
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     metadata: list[dict[str, Any]] = []
     for compact in payloads:
+        compact = _buffer_payload(compact)
         body = compact_body_from_buffers(
-            profile=profile, vocab_size=int(compact[vocab_size]),
-            num_buckets=int(compact[num_buckets]), top_token_ids=compact[top_token_ids],
-            top_probs=compact[top_probs], top_log_probs=compact[top_log_probs],
-            effective_top_k=int(compact[effective_top_k]), top_mass=float(compact[top_mass]),
-            tail_mass=float(compact[tail_mass]), bucket_masses=compact[bucket_masses],
+            profile=profile, vocab_size=int(compact["vocab_size"]),
+            num_buckets=int(compact["num_buckets"]), top_token_ids=compact["top_token_ids"],
+            top_probs=compact["top_probs"], top_log_probs=compact["top_log_probs"],
+            effective_top_k=int(compact["effective_top_k"]), top_mass=float(compact["top_mass"]),
+            tail_mass=float(compact["tail_mass"]), bucket_masses=compact["bucket_masses"],
         )
         encoded = encode_compact_body_packed_from_buffers(body)
         digest = body_raw_digest(encoded).hex()
@@ -69,7 +81,7 @@ def write_compact_body_store_from_compact(
                 "schema_version": "compact_exemplar_metadata_v1",
                 "selected_example_id": str(compact["selected_example_id"]),
                 "selected_position": int(compact["selected_position"]),
-                "body_semantic_id": body.semantic_id.hex(),
+                "body_semantic_id": digest,
                 "body_raw_digest": digest,
                 "body_size_bytes": len(encoded),
                 "linkage": compact.get("linkage") or compact.get("mode_key"),
@@ -245,12 +257,17 @@ def write_compact_body_store_pipelined_from_compact(
                 try:
                     descriptor.wait_ready()
                     t = time.perf_counter()
-                    body = compact_body_from_logical_payload(
-                        descriptor.payload, profile=profile
+                    compact = descriptor.payload
+                    body = compact_body_from_buffers(
+                        profile=profile, vocab_size=int(compact["vocab_size"]),
+                        num_buckets=int(compact["num_buckets"]), top_token_ids=compact["top_token_ids"],
+                        top_probs=compact["top_probs"], top_log_probs=compact["top_log_probs"],
+                        effective_top_k=int(compact["effective_top_k"]), top_mass=float(compact["top_mass"]),
+                        tail_mass=float(compact["tail_mass"]), bucket_masses=compact["bucket_masses"],
                     )
                     metric["projection_seconds"] += time.perf_counter() - t
                     t = time.perf_counter()
-                    encoded = encode_compact_body_packed(body)
+                    encoded = encode_compact_body_packed_from_buffers(body)
                     metric["encoding_seconds"] += time.perf_counter() - t
                     t = time.perf_counter()
                     digest = body_raw_digest(encoded).hex()
@@ -283,7 +300,7 @@ def write_compact_body_store_pipelined_from_compact(
                         "selected_position": int(
                             descriptor.payload["selected_position"]
                         ),
-                        "body_semantic_id": body.semantic_id.hex(),
+                        "body_semantic_id": digest,
                         "body_raw_digest": digest,
                         "body_size_bytes": len(encoded),
                         "linkage": descriptor.payload.get("linkage")
@@ -308,7 +325,7 @@ def write_compact_body_store_pipelined_from_compact(
             descriptor = (
                 item
                 if isinstance(item, RawCompactDescriptor)
-                else _raw_descriptor(item, ordinal)
+                else _raw_descriptor(_buffer_payload(item), ordinal)
             )
             descriptor.ordinal = ordinal
             results.append(None)

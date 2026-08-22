@@ -3679,3 +3679,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: Added the self-contained Modal T4 synthetic overlap harness covering producer lower bound, serial compact, and pipelined compact under maximum-pressure and production-shaped cadences.
 
 - M8G buffer-native Contract v2 encoder: contiguous exact-K arrays, vectorized validation, byte-compatible packed output.
+
+- M8G GPU overlap checkpoint: canonical compact workers now use Contract buffer-native v2 encoding; compatibility sequences adapt once at boundary.
