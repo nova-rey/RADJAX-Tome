@@ -3709,3 +3709,4 @@ closed-record and checkpoint authority validation.
 - M8G final review follow-up: corrected the secondary CUDA pinned-ID pool release key to torch.uint32 for actual reuse.
 - 2026-08-22 M8 bounded hashing-cost measurement: three CPU compact-C6 samples found one required body hash per immutable body, zero body reread hashes/rewrites, and no qualifying redundant trusted-lifecycle hashing; evidence at /home/nyx/m8g/evidence/M8_HASH_COST_M8G.
 - 2026-08-22 M8 C2 sort-once correction: complete candidate pools now sort once after the recorded stream (46 sorts over 106,617 eligible candidates) with C3-C5 semantic equivalence and 96.05% full-pipeline wall reduction; evidence at /home/nyx/m8g/evidence/M8_C2_SORT_ONCE.
+- 2026-08-22 M8 C2 10K scaling measurement: deterministic 10,000-source / 1,280,000-candidate C1-C5 fixture completed in 177.47s with 46 final sorts over 1,066,170 eligible records; evidence at /home/nyx/m8g/evidence/M8_C2_10K_SCALE.

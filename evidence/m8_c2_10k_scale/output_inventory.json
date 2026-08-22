@@ -1,0 +1,74 @@
+{
+  "c6/claims/backfill_lineage.jsonl": {
+    "sha256": "479f8bdacf2c43566e15a4c7a01f916891e7de196eef56d003fdffedf1e11ac5",
+    "size": 544758
+  },
+  "c6/claims/claim_manifest.json": {
+    "sha256": "02cc4dac8ac29d176ceeb65a74fffd7c6f561226c8f4c17c6d1d8bde7ee3fb49",
+    "size": 6174
+  },
+  "c6/claims/collision_obligations.jsonl": {
+    "sha256": "cd21806077c0c2632d1e0f9270783b5ffb48730aaf944d09191917993ff439ff",
+    "size": 369
+  },
+  "c6/claims/corridor_claims.jsonl": {
+    "sha256": "231ef9724176e7b616a09a7966ddb468b77653a6ceb242a93e7057ccf831d98a",
+    "size": 73023
+  },
+  "c6/claims/global_claims.jsonl": {
+    "sha256": "a831dca688a21512881e49137cfd9b519726cfc882622d2c04d0cda1b248849f",
+    "size": 35639
+  },
+  "c6/claims/selected_coordinates.jsonl": {
+    "sha256": "9cc2fd3d519de3a026f83a4f937ce62e99e21272ee578ce805f4a0b964c55cdc",
+    "size": 83388
+  },
+  "c6/claims/validation_report.json": {
+    "sha256": "d6bb7e2dda0d815b83905a7bec3b63942a546ec3d9fb85eed358f78bcef033ea",
+    "size": 3878
+  },
+  "c6/corridor-leaderboards/manifest.json": {
+    "sha256": "b1fd5250e0054372206a8b63a56f7a4d2ca678bb63456793e9f968bbf4fd7453",
+    "size": 2563
+  },
+  "c6/corridor-leaderboards/mode_leaderboards.jsonl": {
+    "sha256": "b541b8c2e1c9684eaa23bf07e40d8a4ebdfdcdd9182b6e7aad58d02d48bc41fc",
+    "size": 474219516
+  },
+  "c6/corridor-leaderboards/validation_report.json": {
+    "sha256": "9a962a4cbe41ba0f6e9a22692d97482010839939b63ec273977e3f2f098c5b61",
+    "size": 643
+  },
+  "c6/coverage-plan/coverage_plan.json": {
+    "sha256": "a2b485c41722159a14f1532a9b4ff353bc74fbec7b7fefad9bf2bf4c188f23ee",
+    "size": 25408
+  },
+  "c6/coverage-plan/validation_report.json": {
+    "sha256": "2d1111d9fd4bf30a837f0f24c8cc63f8ca5a1e8aeae799bfe9d8665e9fecd423",
+    "size": 529
+  },
+  "c6/multi-role-selection/legacy_selected_exemplars.json": {
+    "sha256": "74838724159d7f0920a76ca0d261fcddf813170fd2291d19a6aa665aff9cf0fd",
+    "size": 499266
+  },
+  "c6/multi-role-selection/manifest.json": {
+    "sha256": "a7e87584b4222bb7693e61c5bfa49db7a596de586f4d4cd6b39e846f6f8d9121",
+    "size": 4022
+  },
+  "c6/multi-role-selection/selected_exemplars.jsonl": {
+    "sha256": "750f97220c9b73f1e50adf6c6285dba00306c1f4f1552719f9a6c824a8d9abd7",
+    "size": 304205
+  },
+  "c6/multi-role-selection/validation_report.json": {
+    "sha256": "e534b6a0d73c7281948b9dd3a17292d284ce28a946c22b46d981e132ed4f618c",
+    "size": 1511
+  },
+  "c6/selection_budget_diagnostics.json": {
+    "sha256": "1ecfcaa8a315e0d92119f90f4a4f82e86777c96755ed7adf5aebf6fdbcccd3fe",
+    "size": 749
+  },
+  "run_report.json": {
+    "sha256": "77eb908f12fbe41781b107d3ab3df60e06bc4975c089e66e1faac6b3590cab80",
+    "size": 25277
+  }
+}

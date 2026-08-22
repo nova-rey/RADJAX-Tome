@@ -1,0 +1,16 @@
+{
+  "accepted_1k_evidence_preserved": true,
+  "cleanup_time_utc": "2026-08-22T23:42:25Z",
+  "removed": [
+    {
+      "file_bytes": 1732838402,
+      "path": "/home/nyx/m8g/tmp/m8_10k_scaling/fixture",
+      "removed": true
+    },
+    {
+      "file_bytes": 475830918,
+      "path": "/home/nyx/m8g/tmp/m8_10k_scaling/output",
+      "removed": true
+    }
+  ]
+}

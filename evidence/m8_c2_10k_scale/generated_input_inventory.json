@@ -1,0 +1,22 @@
+{
+  "candidate_features.jsonl": {
+    "sha256": "a5c907434185688fda18237360826a07ab62b49fea17cae31006a88fcaad5db4",
+    "size": 1120605400
+  },
+  "derivation_manifest.json": {
+    "sha256": "b6498bcda2bf427730b7999428d3ae8e469583b10611f27799854477b058409e",
+    "size": 1510
+  },
+  "global-board-supply.json": {
+    "sha256": "829d93c31deac7d0607324e3632a50f09cd340ac8615cd57c35636213348bee7",
+    "size": 6606841
+  },
+  "source-passports.json": {
+    "sha256": "1b6f7b814c2abb1c466bb6dfe6bb2d8042dae720f9f6c24eba07de066fa54e8e",
+    "size": 781
+  },
+  "source-passports.jsonl": {
+    "sha256": "e06f84ba129171061c254f2d5249ef7b7df71c024dab34d2adbc2d6efaefac12",
+    "size": 605623870
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "all_stage_validations_pass": true,
+  "c6_executed": false,
+  "input_counts": {
+    "candidate_records": 1280000,
+    "positions_per_source": 128,
+    "sources": 10000,
+    "unique_coordinate_proof": "deterministic replica map over unique 1K template coordinates"
+  },
+  "output_validations": {
+    "claims/validation_report.json": {
+      "blockers": [],
+      "status": "pass",
+      "warnings": []
+    },
+    "corridor-leaderboards/validation_report.json": {
+      "blockers": [],
+      "status": "pass",
+      "warnings": []
+    },
+    "coverage-plan/validation_report.json": {
+      "blockers": [],
+      "status": "pass",
+      "warnings": []
+    },
+    "multi-role-selection/validation_report.json": {
+      "blockers": [],
+      "status": "pass",
+      "warnings": []
+    }
+  },
+  "selection_deterministic_within_run": true,
+  "structural_counters": {
+    "backfill_iterations": 2477,
+    "candidates_seen": 1280000,
+    "cap_allowed": 85,
+    "cap_rejections_observed": 0,
+    "collision_obligations": 1,
+    "corridor_claims": 128,
+    "cross_role_duplicates": 2,
+    "eligible_candidates": 1066170,
+    "final_pool_lengths": {
+      "max": 112350,
+      "median": 5630.0,
+      "min": 10
+    },
+    "full_width_candidates_considered": 9590,
+    "full_width_selected": 44,
+    "global_claims": 128,
+    "nonempty_pools": 46,
+    "retained_reserve_records": 1066170,
+    "selected_coordinates": 256,
+    "shortfall": 0,
+    "shortfall_reason": null,
+    "sort_calls": 46,
+    "sort_input_items": 1066170,
+    "within_role_duplicates": 50000
+  }
+}
