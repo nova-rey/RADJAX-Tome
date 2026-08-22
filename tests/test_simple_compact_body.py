@@ -7,6 +7,7 @@ from radjax_tome.builder.delivery.simple_compact_body import (
     update_compact_linkage,
     write_compact_body_store,
     write_compact_body_store_from_compact,
+    write_compact_body_store_pipelined_from_compact,
 )
 
 
@@ -71,3 +72,25 @@ def test_compact_linkage_has_no_payload_or_body_work(tmp_path: Path) -> None:
     assert counters["body_rewrites"] == 0
     assert counters["metadata_reads"] == 1
     assert counters["metadata_writes"] == 1
+
+
+def test_pipelined_workers_are_deterministic(tmp_path: Path) -> None:
+    compact = simple_module.compact_payload_for_storage(_payload())
+    digests = []
+    for workers in (1, 2, 4):
+        root = tmp_path / f"w{workers}"
+        result = write_compact_body_store_pipelined_from_compact(
+            root, [compact], worker_count=workers
+        )
+        digests.append(
+            (
+                result["metadata_sha256"],
+                sorted(path.read_bytes() for path in (root / "bodies").glob("*.body")),
+                (root / "metadata.jsonl").read_bytes(),
+            )
+        )
+        assert result["projection_count"] == 0
+        assert result["body_reread_count"] == 0
+        assert result["body_rewrite_count"] == 0
+        assert result["queue_high_water_bytes"] <= 16 * 1024 * 1024
+    assert digests[0] == digests[1] == digests[2]

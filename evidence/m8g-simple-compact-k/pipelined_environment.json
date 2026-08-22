@@ -1,0 +1,11 @@
+{
+  "host": "Linux nyx",
+  "filesystem": "local Linux filesystem",
+  "python": "/home/nyx/m8g/venv/bin/python",
+  "tome_commit": "404d9590878fd0f3e1a8820f9392ab636cfcf46a",
+  "contract_commit": "46fbf040aa37ae6aa161473b893c25e5de091e8d",
+  "dataset": "M8G_DERIVED_VALID_EXEMPLAR_COMPONENT_BENCHMARK_V1",
+  "records": 169,
+  "gpu": false,
+  "modal": false
+}

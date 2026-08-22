@@ -12,14 +12,14 @@ from pathlib import Path
 from radjax_tome.builder.delivery.modes import compact_payload_for_storage
 from radjax_tome.builder.delivery.simple_compact_body import (
     update_compact_linkage,
-    write_compact_body_store_from_compact,
+    write_compact_body_store_pipelined_from_compact,
 )
 
 ROOT = Path("/home/nyx/m8g/published/m8g-current-1k-workload-authoritative-v19")
 EVIDENCE = Path(
     "/home/nyx/m8g/evidence/M8G_DERIVED_VALID_EXEMPLAR_COMPONENT_BENCHMARK_V1"
 )
-OUT = Path("/home/nyx/m8g/evidence/M8G_SIMPLE_COMPACT_K_STORAGE")
+OUT = Path("/home/nyx/m8g/evidence/M8G_PIPELINED_COMPACT_REPRESENTATION")
 MANIFEST = EVIDENCE / "derived_dataset_manifest.json"
 
 
@@ -134,12 +134,13 @@ def iter_prepared(paths):
         yield json.loads(path.read_text())
 
 
-def run(mode: str, round_no: int, inputs):
-    sample = OUT / f"r{round_no}-{mode}"
+def run(mode: str, round_no: int, inputs, *, worker_count: int = 2, label: str = "r"):
+    sample = OUT / f"{label}{round_no}-{mode}-w{worker_count}"
     if sample.exists():
         shutil.rmtree(sample)
     sample.mkdir(parents=True)
     phases = {}
+    pipeline_result = {}
     paths = inputs["paths"]
     logical_root = inputs["root"]
     if mode == "legacy_padded_monolithic":
@@ -158,10 +159,11 @@ def run(mode: str, round_no: int, inputs):
 
         _, phases["representation_construction"] = phase(write_legacy)
     else:
-        _, phases["representation_construction"] = phase(
-            lambda: write_compact_body_store_from_compact(
+        pipeline_result, phases["representation_construction"] = phase(
+            lambda: write_compact_body_store_pipelined_from_compact(
                 sample / "compact_body_store",
                 iter_prepared(inputs["compact"]),
+                worker_count=worker_count,
             )
         )
     _, phases["initial_staging_publication"] = phase(lambda: None)
@@ -226,8 +228,11 @@ def run(mode: str, round_no: int, inputs):
             "body_hashes": 1,
             "body_rewrites": 1,
         },
+        "worker_count": worker_count,
     }
-    (OUT / f"r{round_no}-{mode}.json").write_text(
+    if mode != "legacy_padded_monolithic":
+        report["pipeline_metrics"] = pipeline_result
+    (OUT / f"{label}{round_no}-{mode}-w{worker_count}.json").write_text(
         json.dumps(report, indent=2, sort_keys=True)
     )
     return report
@@ -256,7 +261,19 @@ def main():
     reports = []
     for round_no, modes in enumerate(order, 1):
         for mode in modes:
-            reports.append(run(mode, round_no, inputs))
+            reports.append(run(mode, round_no, inputs, worker_count=2))
+    sweep = []
+    for worker_count in (1, 2, 4):
+        for repetition in range(1, 4):
+            sweep.append(
+                run(
+                    "compact_k_immutable_body",
+                    repetition,
+                    inputs,
+                    worker_count=worker_count,
+                    label=f"sweep-w{worker_count}-",
+                )
+            )
     (OUT / "raw_three_round_report.json").write_text(
         json.dumps(
             {
@@ -265,6 +282,7 @@ def main():
                 "setup_projection_count": inputs["projection_count"],
                 "setup_work_excluded": True,
                 "samples": reports,
+                "worker_sweep": sweep,
             },
             indent=2,
             sort_keys=True,

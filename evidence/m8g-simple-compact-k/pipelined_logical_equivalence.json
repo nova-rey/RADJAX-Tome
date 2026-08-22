@@ -1,0 +1,51 @@
+{
+  "all_equivalent": true,
+  "logical_evidence_root": "sha256:64de66c8f56e700f7a30627ad5032afc1e7d09af6908dad0ebb2e8b4e97f81c1",
+  "samples": [
+    {
+      "equivalent": true,
+      "records": 169,
+      "sample": "r1-legacy_padded_monolithic-w2"
+    },
+    {
+      "equivalent": true,
+      "records": 169,
+      "sample": "r2-legacy_padded_monolithic-w2"
+    },
+    {
+      "equivalent": true,
+      "records": 169,
+      "sample": "r3-legacy_padded_monolithic-w2"
+    },
+    {
+      "equivalent": true,
+      "records": 169,
+      "sample": "r1-compact_k_immutable_body-w2"
+    },
+    {
+      "equivalent": true,
+      "records": 169,
+      "sample": "r1-compact_k_monolithic-w2"
+    },
+    {
+      "equivalent": true,
+      "records": 169,
+      "sample": "r2-compact_k_immutable_body-w2"
+    },
+    {
+      "equivalent": true,
+      "records": 169,
+      "sample": "r2-compact_k_monolithic-w2"
+    },
+    {
+      "equivalent": true,
+      "records": 169,
+      "sample": "r3-compact_k_immutable_body-w2"
+    },
+    {
+      "equivalent": true,
+      "records": 169,
+      "sample": "r3-compact_k_monolithic-w2"
+    }
+  ]
+}
