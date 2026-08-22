@@ -3703,3 +3703,5 @@ closed-record and checkpoint authority validation.
 - M8G final cadence target adjusted to 2.3s after 2.0s and 2.6s calibration observations; final report will use measured CUDA batch cadence, not target labels.
 
 - M8G closure evidence: native C6 compact publication dispatch and corrected 1.4-1.8s per-batch CUDA calibration documented.
+
+- M8G closure validation: Ruff, compact integration tests, diff checks, and canonical C6 source proof pass.

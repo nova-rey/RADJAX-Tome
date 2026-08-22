@@ -162,7 +162,15 @@ def run_selected_delivery_rerun(
             selected_records=selected_records,
         )
     curriculum_dir.mkdir(parents=True, exist_ok=True)
-    full_payloads = [] if (config.retain_full_payloads_for_publication or config.representation_mode in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY}) else None
+    full_payloads = (
+        []
+        if (
+            config.retain_full_payloads_for_publication
+            or config.representation_mode
+            in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY}
+        )
+        else None
+    )
     selected_payloads = _materialize_selected_payloads(
         selected_records,
         store=store,
@@ -196,7 +204,10 @@ def run_selected_delivery_rerun(
         config=config,
     )
     publication_payloads = None
-    if (config.retain_full_payloads_for_publication or config.representation_mode in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY}):
+    if config.retain_full_payloads_for_publication or config.representation_mode in {
+        COMPACT_K_MONOLITHIC,
+        COMPACT_K_IMMUTABLE_BODY,
+    }:
         full_by_index = {
             int(item["_record_index"]): item for item in (full_payloads or [])
         }

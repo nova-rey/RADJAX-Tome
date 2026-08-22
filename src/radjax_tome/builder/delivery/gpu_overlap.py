@@ -79,7 +79,9 @@ def descriptor_stream_from_cuda(
                 "top_log_probs": cpu_logs,
                 "top_mass": 0.5,
                 "tail_mass": 0.5,
-                "bucket_masses": __import__("numpy").asarray((0.2, 0.3, 0.5), dtype="<f4"),
+                "bucket_masses": __import__("numpy").asarray(
+                    (0.2, 0.3, 0.5), dtype="<f4"
+                ),
             }
 
             def release_current(

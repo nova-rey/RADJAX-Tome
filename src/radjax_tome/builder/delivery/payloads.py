@@ -335,14 +335,32 @@ def _selected_payload_from_emission(
         "mode_key": record.get("mode_key"),
         "rank_by_board": record.get("rank_by_board", {}),
         "scores_by_board": record.get("scores_by_board", {}),
-        "top_token_ids": _payload_buffer_slice(payload, "top_token_ids", row, payload_position) if config.representation_mode in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY} else top_token_ids,
-        "top_log_probs": _payload_buffer_slice(payload, "top_log_probs", row, payload_position) if config.representation_mode in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY} else _payload_slice(payload, "top_log_probs", row, payload_position),
-        "top_probs": _payload_buffer_slice(payload, "top_probs", row, payload_position) if config.representation_mode in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY} else _payload_slice(payload, "top_probs", row, payload_position),
+        "top_token_ids": _payload_buffer_slice(
+            payload, "top_token_ids", row, payload_position
+        )
+        if config.representation_mode
+        in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY}
+        else top_token_ids,
+        "top_log_probs": _payload_buffer_slice(
+            payload, "top_log_probs", row, payload_position
+        )
+        if config.representation_mode
+        in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY}
+        else _payload_slice(payload, "top_log_probs", row, payload_position),
+        "top_probs": _payload_buffer_slice(payload, "top_probs", row, payload_position)
+        if config.representation_mode
+        in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY}
+        else _payload_slice(payload, "top_probs", row, payload_position),
         "top_selection_mask": top_selection_mask,
         "effective_top_k": effective_top_k,
         "top_mass": _payload_scalar(payload, "top_mass", row, payload_position),
         "tail_mass": _payload_scalar(payload, "tail_mass", row, payload_position),
-        "bucket_masses": _payload_buffer_slice(payload, "bucket_masses", row, payload_position) if config.representation_mode in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY} else _payload_slice(payload, "bucket_masses", row, payload_position),
+        "bucket_masses": _payload_buffer_slice(
+            payload, "bucket_masses", row, payload_position
+        )
+        if config.representation_mode
+        in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY}
+        else _payload_slice(payload, "bucket_masses", row, payload_position),
         "teacher_entropy": _payload_scalar(
             payload, "teacher_entropy", row, payload_position
         ),
@@ -615,12 +633,18 @@ def _attach_long_tail_diagnostics(
         payload["semantic_tail_tag"] = tag
 
 
-def _payload_buffer_slice(payload: Any, key: str, row: int, position: int) -> np.ndarray:
-    if key not in payload: raise ValueError(f"selected backend payload missing {key}")
+def _payload_buffer_slice(
+    payload: Any, key: str, row: int, position: int
+) -> np.ndarray:
+    if key not in payload:
+        raise ValueError(f"selected backend payload missing {key}")
     raw = payload[key]
-    if isinstance(raw, np.ndarray) and raw.dtype == object: value = raw[row, position]
-    elif isinstance(raw, list) and raw and isinstance(raw[0], list): value = raw[row][position]
-    else: value = np.asarray(raw)[row, position]
+    if isinstance(raw, np.ndarray) and raw.dtype == object:
+        value = raw[row, position]
+    elif isinstance(raw, list) and raw and isinstance(raw[0], list):
+        value = raw[row][position]
+    else:
+        value = np.asarray(raw)[row, position]
     dtype = "<u4" if key == "top_token_ids" else "<f4"
     return np.ascontiguousarray(np.asarray(value), dtype=dtype)
 

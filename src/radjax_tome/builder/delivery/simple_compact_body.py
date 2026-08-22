@@ -13,16 +13,19 @@ import os
 import queue
 import threading
 import time
-
-import numpy as np
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from radjax_contract.tome.m8g import (body_raw_digest, compact_body_from_buffers, encode_compact_body_packed, encode_compact_body_packed_from_buffers)
+import numpy as np
+from radjax_contract.tome.m8g import (
+    body_raw_digest,
+    compact_body_from_buffers,
+    encode_compact_body_packed_from_buffers,
+)
 
-from .modes import compact_body_from_logical_payload, compact_payload_for_storage
+from .modes import compact_payload_for_storage
 
 
 def _json_bytes(value: Any) -> bytes:
@@ -57,11 +60,16 @@ def write_compact_body_store_from_compact(
     for compact in payloads:
         compact = _buffer_payload(compact)
         body = compact_body_from_buffers(
-            profile=profile, vocab_size=int(compact["vocab_size"]),
-            num_buckets=int(compact["num_buckets"]), top_token_ids=compact["top_token_ids"],
-            top_probs=compact["top_probs"], top_log_probs=compact["top_log_probs"],
-            effective_top_k=int(compact["effective_top_k"]), top_mass=float(compact["top_mass"]),
-            tail_mass=float(compact["tail_mass"]), bucket_masses=compact["bucket_masses"],
+            profile=profile,
+            vocab_size=int(compact["vocab_size"]),
+            num_buckets=int(compact["num_buckets"]),
+            top_token_ids=compact["top_token_ids"],
+            top_probs=compact["top_probs"],
+            top_log_probs=compact["top_log_probs"],
+            effective_top_k=int(compact["effective_top_k"]),
+            top_mass=float(compact["top_mass"]),
+            tail_mass=float(compact["tail_mass"]),
+            bucket_masses=compact["bucket_masses"],
         )
         encoded = encode_compact_body_packed_from_buffers(body)
         digest = body_raw_digest(encoded).hex()
@@ -259,11 +267,16 @@ def write_compact_body_store_pipelined_from_compact(
                     t = time.perf_counter()
                     compact = descriptor.payload
                     body = compact_body_from_buffers(
-                        profile=profile, vocab_size=int(compact["vocab_size"]),
-                        num_buckets=int(compact["num_buckets"]), top_token_ids=compact["top_token_ids"],
-                        top_probs=compact["top_probs"], top_log_probs=compact["top_log_probs"],
-                        effective_top_k=int(compact["effective_top_k"]), top_mass=float(compact["top_mass"]),
-                        tail_mass=float(compact["tail_mass"]), bucket_masses=compact["bucket_masses"],
+                        profile=profile,
+                        vocab_size=int(compact["vocab_size"]),
+                        num_buckets=int(compact["num_buckets"]),
+                        top_token_ids=compact["top_token_ids"],
+                        top_probs=compact["top_probs"],
+                        top_log_probs=compact["top_log_probs"],
+                        effective_top_k=int(compact["effective_top_k"]),
+                        top_mass=float(compact["top_mass"]),
+                        tail_mass=float(compact["tail_mass"]),
+                        bucket_masses=compact["bucket_masses"],
                     )
                     metric["projection_seconds"] += time.perf_counter() - t
                     t = time.perf_counter()
