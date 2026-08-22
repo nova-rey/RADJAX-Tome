@@ -216,7 +216,7 @@ def write_compact_body_store_pipelined_from_compact(
     ]
     for worker_thread in workers:
         worker_thread.start()
-    drain_started = time.perf_counter()
+    drain_started: float | None = None
     try:
         for compact in payloads:
             projection_started = time.perf_counter()
@@ -242,13 +242,18 @@ def write_compact_body_store_pipelined_from_compact(
                 }
             )
             handoff.put((compact, encoded))
+        drain_started = time.perf_counter()
         handoff.stop(worker_count)
     except BaseException as error:
         first_error.append(error)
+        if drain_started is None:
+            drain_started = time.perf_counter()
         handoff.stop(worker_count)
     for worker_thread in workers:
         worker_thread.join()
-    stage_metrics["final_drain_seconds"] = time.perf_counter() - drain_started
+    stage_metrics["final_drain_seconds"] = (
+        time.perf_counter() - drain_started if drain_started is not None else 0.0
+    )
     if first_error:
         for path in bodies.glob("*.tmp"):
             path.unlink(missing_ok=True)
