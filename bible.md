@@ -3672,3 +3672,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: Final pipelined benchmark rerun after correcting final-drain instrumentation; all nine outputs retained exact logical equivalence and one worker was selected by the bounded sweep.
 - 2026-08-22: Closed pipelined-writer review findings with in-flight byte accounting, worker-failure propagation, digest publication locking, private staging, and distinct compact-monolithic versus split benchmark paths; reran evidence.
 - 2026-08-22: Final pipelined benchmark rerun after closing digest-once, strict queue-limit, and staging-conflict review findings; six focused pipeline tests passed and all nine outputs remained logically equivalent.
+- 2026-08-22: M8G GPU-overlap verification moved canonical compact C6 to raw exact-K descriptor admission before worker encoding, hashing, validation, and private publication; synthetic T4 evidence is in progress.

@@ -118,13 +118,10 @@ def test_pipelined_failure_does_not_publish_partial_root(
     monkeypatch.setattr(simple_module.os, "fsync", original_fsync)
 
 
-def test_pipelined_rejects_body_larger_than_queue_limit(tmp_path: Path) -> None:
+def test_pipelined_allows_one_accounted_oversized_descriptor(tmp_path: Path) -> None:
     compact = simple_module.compact_payload_for_storage(_payload())
-    try:
-        write_compact_body_store_pipelined_from_compact(
-            tmp_path / "oversized", [compact], worker_count=1, queue_bytes=1
-        )
-    except ValueError as error:
-        assert "queue byte limit" in str(error)
-    else:
-        raise AssertionError("expected queue byte-limit rejection")
+    result = write_compact_body_store_pipelined_from_compact(
+        tmp_path / "oversized", [compact], worker_count=1, queue_bytes=1
+    )
+    assert result["oversized_admissions"] == 1
+    assert result["body_count"] == 1

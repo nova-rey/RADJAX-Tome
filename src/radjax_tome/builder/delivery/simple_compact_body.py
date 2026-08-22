@@ -14,6 +14,7 @@ import queue
 import threading
 import time
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -99,28 +100,57 @@ def write_compact_body_store(
     )
 
 
+@dataclass
+class RawCompactDescriptor:
+    payload: dict[str, Any]
+    estimated_bytes: int
+    ordinal: int = 0
+    ready_event: Any | None = None
+    release: Any | None = None
+
+    def wait_ready(self) -> None:
+        if self.ready_event is not None:
+            method = getattr(self.ready_event, "synchronize", None)
+            if method is not None:
+                method()
+
+    def release_owner(self) -> None:
+        if self.release is not None:
+            self.release()
+
+
+def _raw_descriptor(payload: dict[str, Any], ordinal: int = 0) -> RawCompactDescriptor:
+    estimate = 512
+    for key in ("top_token_ids", "top_probs", "top_log_probs"):
+        value = payload.get(key)
+        nbytes = getattr(value, "nbytes", None)
+        estimate += int(nbytes) if nbytes is not None else len(value or ()) * 8
+    return RawCompactDescriptor(payload, estimate, ordinal)
+
+
 class _ByteBoundedQueue:
-    """Small byte-bounded handoff queue for encoded private bodies."""
+    """Bounded queue of raw exact-K descriptors, not encoded bodies."""
 
     def __init__(self, limit: int) -> None:
         self.limit = max(1, int(limit))
         self._condition = threading.Condition()
-        self._items: queue.Queue[tuple[dict[str, Any], bytes, str] | None] = (
-            queue.Queue()
-        )
+        self._items: queue.Queue[RawCompactDescriptor | None] = queue.Queue()
         self._bytes = 0
+        self._oversized = False
         self._failure: BaseException | None = None
         self.high_water_items = 0
         self.high_water_bytes = 0
         self.blocked_seconds = 0.0
+        self.oversized_admissions = 0
 
-    def put(self, item: tuple[dict[str, Any], bytes, str]) -> None:
-        size = len(item[1])
-        if size > self.limit:
-            raise ValueError("encoded compact body exceeds queue byte limit")
+    def put(self, item: RawCompactDescriptor) -> None:
+        size = max(1, int(item.estimated_bytes))
+        oversized = size > self.limit
         started = None
         with self._condition:
-            while self._bytes and self._bytes + size > self.limit:
+            while self._oversized or self._bytes + size > self.limit:
+                if oversized and self._bytes == 0 and not self._oversized:
+                    break
                 if self._failure is not None:
                     raise RuntimeError(
                         "compact body pipeline worker failed"
@@ -129,6 +159,9 @@ class _ByteBoundedQueue:
                     started = time.perf_counter()
                 self._condition.wait()
             self._bytes += size
+            self._oversized = oversized
+            if oversized:
+                self.oversized_admissions += 1
             self._items.put(item)
             self.high_water_items = max(self.high_water_items, self._items.qsize())
             self.high_water_bytes = max(self.high_water_bytes, self._bytes)
@@ -136,12 +169,15 @@ class _ByteBoundedQueue:
                 self.blocked_seconds += time.perf_counter() - started
             self._condition.notify_all()
 
-    def get(self) -> tuple[dict[str, Any], bytes, str] | None:
+    def get(self) -> RawCompactDescriptor | None:
         return self._items.get()
 
     def release(self, size: int) -> None:
         with self._condition:
-            self._bytes -= size
+            self._bytes -= int(size)
+            if self._bytes <= 0:
+                self._bytes = 0
+                self._oversized = False
             self._condition.notify_all()
 
     def fail(self, error: BaseException) -> None:
@@ -162,8 +198,7 @@ def write_compact_body_store_pipelined_from_compact(
     worker_count: int = 2,
     queue_bytes: int = 16 * 1024 * 1024,
 ) -> dict[str, Any]:
-    """Encode once, then write private bodies through a bounded conveyor."""
-
+    """Encode/hash/write raw descriptors only after queue admission."""
     if worker_count < 1 or worker_count > 4:
         raise ValueError("worker_count must be between 1 and 4")
     root = Path(root)
@@ -177,147 +212,146 @@ def write_compact_body_store_pipelined_from_compact(
     bodies = staging / "bodies"
     bodies.mkdir(parents=True, exist_ok=True)
     metadata_path = staging / "metadata.jsonl"
-    metadata_path.parent.mkdir(parents=True, exist_ok=True)
     handoff = _ByteBoundedQueue(queue_bytes)
-    descriptors: list[dict[str, Any]] = []
-    worker_metrics = [
+    results: list[dict[str, Any] | None] = []
+    metrics = [
         {
             "busy_seconds": 0.0,
             "written": 0,
             "bytes": 0,
-            "body_write_seconds": 0.0,
+            "encoding_seconds": 0.0,
+            "hashing_seconds": 0.0,
+            "projection_seconds": 0.0,
             "durability_seconds": 0.0,
         }
         for _ in range(worker_count)
     ]
-    stage_metrics = {
-        "projection_seconds": 0.0,
-        "encoding_seconds": 0.0,
-        "hashing_seconds": 0.0,
-        "final_drain_seconds": 0.0,
-    }
     first_error: list[BaseException] = []
     digest_lock = threading.Lock()
 
-    def write_one(
-        item: tuple[dict[str, Any], bytes, str], metric: dict[str, Any]
-    ) -> None:
-        compact, encoded, digest = item
-        body_path = bodies / f"{digest}.body"
-        started = time.perf_counter()
-        with digest_lock:
-            if body_path.exists():
-                if body_path.read_bytes() != encoded:
-                    raise ValueError("compact body digest collision")
-            else:
-                temporary = body_path.with_suffix(f".{threading.get_ident()}.tmp")
-                write_started = time.perf_counter()
-                with temporary.open("wb") as handle:
-                    handle.write(encoded)
-                    handle.flush()
-                    metric["body_write_seconds"] += time.perf_counter() - write_started
-                    durability_started = time.perf_counter()
-                    os.fsync(handle.fileno())
-                metric["durability_seconds"] += time.perf_counter() - durability_started
-                os.replace(temporary, body_path)
-                metric["written"] += 1
-                metric["bytes"] += len(encoded)
-        metric["busy_seconds"] += time.perf_counter() - started
-
     def worker(index: int) -> None:
+        metric = metrics[index]
         try:
             while True:
-                item = handoff.get()
-                if item is None:
+                descriptor = handoff.get()
+                if descriptor is None:
                     return
                 try:
-                    write_one(item, worker_metrics[index])
+                    descriptor.wait_ready()
+                    t = time.perf_counter()
+                    body = compact_body_from_logical_payload(
+                        descriptor.payload, profile=profile
+                    )
+                    metric["projection_seconds"] += time.perf_counter() - t
+                    t = time.perf_counter()
+                    encoded = encode_compact_body_packed(body)
+                    metric["encoding_seconds"] += time.perf_counter() - t
+                    t = time.perf_counter()
+                    digest = body_raw_digest(encoded).hex()
+                    metric["hashing_seconds"] += time.perf_counter() - t
+                    body_path = bodies / f"{digest}.body"
+                    t = time.perf_counter()
+                    with digest_lock:
+                        if body_path.exists():
+                            if body_path.read_bytes() != encoded:
+                                raise ValueError("compact body digest collision")
+                        else:
+                            temporary = body_path.with_suffix(
+                                f".{threading.get_ident()}.tmp"
+                            )
+                            with temporary.open("wb") as handle:
+                                handle.write(encoded)
+                                handle.flush()
+                                t2 = time.perf_counter()
+                                os.fsync(handle.fileno())
+                                metric["durability_seconds"] += time.perf_counter() - t2
+                            os.replace(temporary, body_path)
+                            metric["written"] += 1
+                            metric["bytes"] += len(encoded)
+                    metric["busy_seconds"] += time.perf_counter() - t
+                    results[descriptor.ordinal] = {
+                        "schema_version": "compact_exemplar_metadata_v1",
+                        "selected_example_id": str(
+                            descriptor.payload["selected_example_id"]
+                        ),
+                        "selected_position": int(
+                            descriptor.payload["selected_position"]
+                        ),
+                        "body_semantic_id": body.semantic_id.hex(),
+                        "body_raw_digest": digest,
+                        "body_size_bytes": len(encoded),
+                        "linkage": descriptor.payload.get("linkage")
+                        or descriptor.payload.get("mode_key"),
+                    }
                 finally:
-                    handoff.release(len(item[1]))
+                    handoff.release(descriptor.estimated_bytes)
+                    descriptor.release_owner()
         except BaseException as error:
             first_error.append(error)
             handoff.fail(error)
 
-    workers = [
-        threading.Thread(target=worker, args=(index,), daemon=True)
-        for index in range(worker_count)
+    threads = [
+        threading.Thread(target=worker, args=(i,), daemon=True)
+        for i in range(worker_count)
     ]
-    for worker_thread in workers:
-        worker_thread.start()
-    drain_started: float | None = None
+    for thread in threads:
+        thread.start()
+    started = time.perf_counter()
     try:
-        for compact in payloads:
-            projection_started = time.perf_counter()
-            body = compact_body_from_logical_payload(compact, profile=profile)
-            stage_metrics["projection_seconds"] += (
-                time.perf_counter() - projection_started
+        for ordinal, item in enumerate(payloads):
+            descriptor = (
+                item
+                if isinstance(item, RawCompactDescriptor)
+                else _raw_descriptor(item, ordinal)
             )
-            encoding_started = time.perf_counter()
-            encoded = encode_compact_body_packed(body)
-            stage_metrics["encoding_seconds"] += time.perf_counter() - encoding_started
-            hashing_started = time.perf_counter()
-            digest = body_raw_digest(encoded).hex()
-            stage_metrics["hashing_seconds"] += time.perf_counter() - hashing_started
-            descriptors.append(
-                {
-                    "schema_version": "compact_exemplar_metadata_v1",
-                    "selected_example_id": str(compact["selected_example_id"]),
-                    "selected_position": int(compact["selected_position"]),
-                    "body_semantic_id": body.semantic_id.hex(),
-                    "body_raw_digest": digest,
-                    "body_size_bytes": len(encoded),
-                    "linkage": compact.get("linkage") or compact.get("mode_key"),
-                }
-            )
-            handoff.put((compact, encoded, digest))
-        drain_started = time.perf_counter()
+            descriptor.ordinal = ordinal
+            results.append(None)
+            handoff.put(descriptor)
         handoff.stop(worker_count)
     except BaseException as error:
         first_error.append(error)
-        if drain_started is None:
-            drain_started = time.perf_counter()
         handoff.stop(worker_count)
-    for worker_thread in workers:
-        worker_thread.join()
-    stage_metrics["final_drain_seconds"] = (
-        time.perf_counter() - drain_started if drain_started is not None else 0.0
-    )
-    if first_error:
+    for thread in threads:
+        thread.join()
+    drain_seconds = time.perf_counter() - started
+    if first_error or any(item is None for item in results):
         import shutil
 
-        for path in bodies.glob("*.tmp"):
-            path.unlink(missing_ok=True)
         shutil.rmtree(staging, ignore_errors=True)
-        raise first_error[0]
-    data = b"".join(_json_bytes(item) + b"\n" for item in descriptors)
+        raise (
+            first_error[0]
+            if first_error
+            else RuntimeError("pipeline worker dropped a descriptor")
+        )
+    metadata = [item for item in results if item is not None]
+    data = b"".join(_json_bytes(item) + bytes([10]) for item in metadata)
     temporary = metadata_path.with_suffix(".tmp")
     temporary.write_bytes(data)
     os.replace(temporary, metadata_path)
     os.replace(staging, root)
     return {
         "schema_version": "compact_body_store_v1",
-        "body_count": len(descriptors),
+        "body_count": len(metadata),
         "metadata_path": str(root / "metadata.jsonl"),
         "metadata_sha256": hashlib.sha256(data).hexdigest(),
-        "body_digests": [item["body_raw_digest"] for item in descriptors],
+        "body_digests": [item["body_raw_digest"] for item in metadata],
         "worker_count": worker_count,
         "queue_high_water_items": handoff.high_water_items,
         "queue_high_water_bytes": handoff.high_water_bytes,
         "producer_blocked_seconds": handoff.blocked_seconds,
-        "persistent_bodies_written": sum(item["written"] for item in worker_metrics),
-        "persistent_body_bytes": sum(item["bytes"] for item in worker_metrics),
+        "oversized_admissions": handoff.oversized_admissions,
+        "persistent_bodies_written": sum(item["written"] for item in metrics),
+        "persistent_body_bytes": sum(item["bytes"] for item in metrics),
         "body_reread_count": 0,
         "body_rewrite_count": 0,
         "projection_count": 0,
         "python_scalar_array_conversion_count": 0,
-        "worker_busy_seconds": sum(item["busy_seconds"] for item in worker_metrics),
-        **stage_metrics,
-        "body_write_seconds": sum(
-            item["body_write_seconds"] for item in worker_metrics
-        ),
-        "durability_seconds": sum(
-            item["durability_seconds"] for item in worker_metrics
-        ),
+        "worker_busy_seconds": sum(item["busy_seconds"] for item in metrics),
+        "final_drain_seconds": drain_seconds,
+        "encoding_seconds": sum(item["encoding_seconds"] for item in metrics),
+        "hashing_seconds": sum(item["hashing_seconds"] for item in metrics),
+        "projection_seconds": sum(item["projection_seconds"] for item in metrics),
+        "durability_seconds": sum(item["durability_seconds"] for item in metrics),
     }
 
 

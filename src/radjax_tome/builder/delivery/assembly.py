@@ -19,7 +19,7 @@ from .reporting import (
     _long_tail_observations,
     _now,
 )
-from .simple_compact_body import write_compact_body_store
+from .simple_compact_body import write_compact_body_store_pipelined_from_compact
 from .staging import (
     _native_payload_stage_dir,
     _native_streamed_payloads,
@@ -203,7 +203,7 @@ def assemble_selected_delivery_artifacts(
     if not _native_streamed_payloads(config):
         if config.representation_mode == COMPACT_K_MONOLITHIC:
             store_dir = selected_dir / "compact_body_store"
-            write_compact_body_store(
+            write_compact_body_store_pipelined_from_compact(
                 store_dir, selected_payloads, profile="compact_k_monolithic"
             )
             metadata = [
