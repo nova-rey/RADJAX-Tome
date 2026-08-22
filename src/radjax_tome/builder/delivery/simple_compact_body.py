@@ -105,15 +105,19 @@ class _ByteBoundedQueue:
     def __init__(self, limit: int) -> None:
         self.limit = max(1, int(limit))
         self._condition = threading.Condition()
-        self._items: queue.Queue[tuple[dict[str, Any], bytes] | None] = queue.Queue()
+        self._items: queue.Queue[tuple[dict[str, Any], bytes, str] | None] = (
+            queue.Queue()
+        )
         self._bytes = 0
         self._failure: BaseException | None = None
         self.high_water_items = 0
         self.high_water_bytes = 0
         self.blocked_seconds = 0.0
 
-    def put(self, item: tuple[dict[str, Any], bytes]) -> None:
+    def put(self, item: tuple[dict[str, Any], bytes, str]) -> None:
         size = len(item[1])
+        if size > self.limit:
+            raise ValueError("encoded compact body exceeds queue byte limit")
         started = None
         with self._condition:
             while self._bytes and self._bytes + size > self.limit:
@@ -132,7 +136,7 @@ class _ByteBoundedQueue:
                 self.blocked_seconds += time.perf_counter() - started
             self._condition.notify_all()
 
-    def get(self) -> tuple[dict[str, Any], bytes] | None:
+    def get(self) -> tuple[dict[str, Any], bytes, str] | None:
         return self._items.get()
 
     def release(self, size: int) -> None:
@@ -167,9 +171,9 @@ def write_compact_body_store_pipelined_from_compact(
         raise FileExistsError(f"compact body destination already exists: {root}")
     staging = root.with_name(root.name + ".staging")
     if staging.exists():
-        import shutil
-
-        shutil.rmtree(staging)
+        raise FileExistsError(
+            f"compact body staging destination already exists: {staging}"
+        )
     bodies = staging / "bodies"
     bodies.mkdir(parents=True, exist_ok=True)
     metadata_path = staging / "metadata.jsonl"
@@ -195,9 +199,10 @@ def write_compact_body_store_pipelined_from_compact(
     first_error: list[BaseException] = []
     digest_lock = threading.Lock()
 
-    def write_one(item: tuple[dict[str, Any], bytes], metric: dict[str, Any]) -> None:
-        compact, encoded = item
-        digest = body_raw_digest(encoded).hex()
+    def write_one(
+        item: tuple[dict[str, Any], bytes, str], metric: dict[str, Any]
+    ) -> None:
+        compact, encoded, digest = item
         body_path = bodies / f"{digest}.body"
         started = time.perf_counter()
         with digest_lock:
@@ -264,7 +269,7 @@ def write_compact_body_store_pipelined_from_compact(
                     "linkage": compact.get("linkage") or compact.get("mode_key"),
                 }
             )
-            handoff.put((compact, encoded))
+            handoff.put((compact, encoded, digest))
         drain_started = time.perf_counter()
         handoff.stop(worker_count)
     except BaseException as error:
