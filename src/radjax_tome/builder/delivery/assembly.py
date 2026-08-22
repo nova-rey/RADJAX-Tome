@@ -11,7 +11,6 @@ from .modes import (
     compact_body_from_logical_payload,
     compact_payload_for_storage,
 )
-from .simple_compact_body import write_compact_body_store
 from .payloads import _primary_budget
 from .reporting import (
     _delivery_timing_fields,
@@ -20,6 +19,7 @@ from .reporting import (
     _long_tail_observations,
     _now,
 )
+from .simple_compact_body import write_compact_body_store
 from .staging import (
     _native_payload_stage_dir,
     _native_streamed_payloads,
@@ -214,8 +214,17 @@ def assemble_selected_delivery_artifacts(
             serialized_payloads = metadata
         elif config.representation_mode == COMPACT_K_IMMUTABLE_BODY:
             serialized_payloads = [
-                {key: value for key, value in item.items()
-                 if key not in {"top_token_ids", "top_probs", "top_log_probs", "top_selection_mask"}}
+                {
+                    key: value
+                    for key, value in item.items()
+                    if key
+                    not in {
+                        "top_token_ids",
+                        "top_probs",
+                        "top_log_probs",
+                        "top_selection_mask",
+                    }
+                }
                 for item in selected_payloads
             ]
         else:
@@ -234,12 +243,6 @@ def assemble_selected_delivery_artifacts(
                 "selected_exemplars": serialized_payloads,
             },
         )
-        if config.representation_mode == COMPACT_K_MONOLITHIC:
-            write_compact_body_store(
-                selected_dir / "compact_body_store",
-                selected_payloads,
-                profile="compact_k_monolithic",
-            )
     if config.representation_mode == COMPACT_K_IMMUTABLE_BODY:
         _publish_immutable_bodies(prepared)
 

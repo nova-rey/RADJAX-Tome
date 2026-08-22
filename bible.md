@@ -3666,3 +3666,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: Preserved arbitrary active positions when adapting historical selection masks to compact K storage.
 
 - 2026-08-22: Pinned Tome packaging to the final reviewed Contract codec commit.
+- 2026-08-22: Corrected M8G benchmark timing by moving linkage-map construction and one-time padded-to-compact projection outside measured phases; added explicit already-compact writer and zero-body-work linkage counters.

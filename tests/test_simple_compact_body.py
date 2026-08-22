@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import radjax_tome.builder.delivery.simple_compact_body as simple_module
 from radjax_tome.builder.delivery.simple_compact_body import (
     update_compact_linkage,
     write_compact_body_store,
+    write_compact_body_store_from_compact,
 )
 
 
@@ -35,3 +37,37 @@ def test_body_store_writes_compact_body_and_metadata_only(tmp_path: Path) -> Non
         == 1
     )
     assert body.read_bytes() == before
+
+
+def test_explicit_compact_boundary_does_not_project_again(
+    tmp_path: Path, monkeypatch
+) -> None:
+    compact = simple_module.compact_payload_for_storage(_payload())
+    original = simple_module.compact_payload_for_storage
+    calls = 0
+
+    def counted(payload):
+        nonlocal calls
+        calls += 1
+        return original(payload)
+
+    monkeypatch.setattr(simple_module, "compact_payload_for_storage", counted)
+    write_compact_body_store_from_compact(tmp_path, [compact])
+    assert calls == 0
+
+
+def test_compact_linkage_has_no_payload_or_body_work(tmp_path: Path) -> None:
+    write_compact_body_store(tmp_path, [_payload()])
+    counters: dict[str, int] = {}
+    assert (
+        update_compact_linkage(
+            tmp_path, {("example-1", 2): {"corridor": "global"}}, counters=counters
+        )
+        == 1
+    )
+    assert counters["source_payload_reads"] == 0
+    assert counters["body_reads"] == 0
+    assert counters["body_hashes"] == 0
+    assert counters["body_rewrites"] == 0
+    assert counters["metadata_reads"] == 1
+    assert counters["metadata_writes"] == 1

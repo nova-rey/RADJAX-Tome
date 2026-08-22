@@ -25,7 +25,7 @@ def _json_bytes(value: Any) -> bytes:
     ).encode()
 
 
-def write_compact_body_store(
+def write_compact_body_store_from_compact(
     root: Path,
     payloads: Iterable[dict[str, Any]],
     *,
@@ -39,8 +39,7 @@ def write_compact_body_store(
     metadata_path = root / "metadata.jsonl"
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     metadata: list[dict[str, Any]] = []
-    for payload in payloads:
-        compact = compact_payload_for_storage(payload)
+    for compact in payloads:
         body = compact_body_from_logical_payload(compact, profile=profile)
         encoded = encode_compact_body_packed(body)
         digest = body_raw_digest(encoded).hex()
@@ -58,12 +57,12 @@ def write_compact_body_store(
         metadata.append(
             {
                 "schema_version": "compact_exemplar_metadata_v1",
-                "selected_example_id": str(payload["selected_example_id"]),
-                "selected_position": int(payload["selected_position"]),
+                "selected_example_id": str(compact["selected_example_id"]),
+                "selected_position": int(compact["selected_position"]),
                 "body_semantic_id": body.semantic_id.hex(),
                 "body_raw_digest": digest,
                 "body_size_bytes": len(encoded),
-                "linkage": payload.get("linkage") or payload.get("mode_key"),
+                "linkage": compact.get("linkage") or compact.get("mode_key"),
             }
         )
     data = b"".join(_json_bytes(item) + b"\n" for item in metadata)
@@ -79,11 +78,44 @@ def write_compact_body_store(
     }
 
 
-def update_compact_linkage(root: Path, updates: dict[tuple[str, int], Any]) -> int:
+def write_compact_body_store(
+    root: Path,
+    payloads: Iterable[dict[str, Any]],
+    *,
+    profile: str = "compact_k_monolithic",
+) -> dict[str, Any]:
+    """Compatibility boundary for padded logical payloads.
+
+    New canonical callers should use ``write_compact_body_store_from_compact``
+    after preparing K-length records exactly once.
+    """
+    return write_compact_body_store_from_compact(
+        root,
+        (compact_payload_for_storage(payload) for payload in payloads),
+        profile=profile,
+    )
+
+
+def update_compact_linkage(
+    root: Path,
+    updates: dict[tuple[str, int], Any],
+    *,
+    counters: dict[str, int] | None = None,
+) -> int:
     """Update metadata only; body files are never opened or rewritten."""
 
     path = Path(root) / "metadata.jsonl"
-    rows = [json.loads(line) for line in path.read_bytes().splitlines() if line]
+    raw = path.read_bytes()
+    if counters is not None:
+        counters.setdefault("source_payload_reads", 0)
+        counters.setdefault("body_reads", 0)
+        counters.setdefault("body_hashes", 0)
+        counters.setdefault("body_rewrites", 0)
+        counters["metadata_reads"] = counters.get("metadata_reads", 0) + 1
+        counters["metadata_bytes_read"] = counters.get("metadata_bytes_read", 0) + len(
+            raw
+        )
+    rows = [json.loads(line) for line in raw.splitlines() if line]
     changed = 0
     for row in rows:
         key = (row["selected_example_id"], int(row["selected_position"]))
@@ -94,4 +126,9 @@ def update_compact_linkage(root: Path, updates: dict[tuple[str, int], Any]) -> i
     temporary = path.with_suffix(".tmp")
     temporary.write_bytes(data)
     os.replace(temporary, path)
+    if counters is not None:
+        counters["metadata_writes"] = counters.get("metadata_writes", 0) + 1
+        counters["metadata_bytes_written"] = counters.get(
+            "metadata_bytes_written", 0
+        ) + len(data)
     return changed
