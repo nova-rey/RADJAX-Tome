@@ -3664,3 +3664,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: Regenerated the 169-record three-round comparison with packed bodies and decoded packed-body equivalence checks.
 
 - 2026-08-22: Preserved arbitrary active positions when adapting historical selection masks to compact K storage.
+
+- 2026-08-22: Pinned Tome packaging to the final reviewed Contract codec commit.
