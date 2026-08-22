@@ -3662,3 +3662,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: Switched new compact body storage to the versioned packed-array Contract codec and canonical metadata-only projection.
 
 - 2026-08-22: Regenerated the 169-record three-round comparison with packed bodies and decoded packed-body equivalence checks.
+
+- 2026-08-22: Preserved arbitrary active positions when adapting historical selection masks to compact K storage.
