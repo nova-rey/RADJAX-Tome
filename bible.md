@@ -3697,3 +3697,5 @@ closed-record and checkpoint authority validation.
 - M8G cadence calibration empirically raised the repeated-loop target to 2.0s so sustained achieved per-batch cadence is measured inside the requested 1.4-1.8s window.
 
 - M8G cadence factor corrected to use the 2.0s target in iteration selection as well as reporting.
+
+- M8G cadence final calibration target set to 2.6s to compensate for sustained-loop CUDA event discrepancy and achieve the required measured 1.4-1.8s batch cadence.
