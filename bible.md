@@ -3705,3 +3705,5 @@ closed-record and checkpoint authority validation.
 - M8G closure evidence: native C6 compact publication dispatch and corrected 1.4-1.8s per-batch CUDA calibration documented.
 
 - M8G closure validation: Ruff, compact integration tests, diff checks, and canonical C6 source proof pass.
+
+- M8G final review follow-up: corrected the secondary CUDA pinned-ID pool release key to torch.uint32 for actual reuse.

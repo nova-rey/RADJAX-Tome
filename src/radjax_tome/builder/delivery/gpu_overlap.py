@@ -132,7 +132,7 @@ def producer_lower_bound(
     def release_triplet(
         k: int, ids_buffer: Any, probs_buffer: Any, logs_buffer: Any
     ) -> None:
-        release(torch.int64, k, ids_buffer)
+        release(torch.uint32, k, ids_buffer)
         release(torch.float32, k, probs_buffer)
         release(torch.float32, k, logs_buffer)
 
