@@ -3674,3 +3674,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: Final pipelined benchmark rerun after closing digest-once, strict queue-limit, and staging-conflict review findings; six focused pipeline tests passed and all nine outputs remained logically equivalent.
 - 2026-08-22: M8G GPU-overlap verification moved canonical compact C6 to raw exact-K descriptor admission before worker encoding, hashing, validation, and private publication; synthetic T4 evidence is in progress.
 - 2026-08-22: Added the canonical CUDA exact-K descriptor producer with nonblocking device-to-host event ownership and CPU-safe import boundary for C6 overlap verification.
+- 2026-08-22: Recorded the before/after GPU overlap phase map and explicit Contract-v2 encoder nonclaim for the bounded synthetic T4 checkpoint.
