@@ -3707,3 +3707,4 @@ closed-record and checkpoint authority validation.
 - M8G closure validation: Ruff, compact integration tests, diff checks, and canonical C6 source proof pass.
 
 - M8G final review follow-up: corrected the secondary CUDA pinned-ID pool release key to torch.uint32 for actual reuse.
+- 2026-08-22 M8 bounded hashing-cost measurement: three CPU compact-C6 samples found one required body hash per immutable body, zero body reread hashes/rewrites, and no qualifying redundant trusted-lifecycle hashing; evidence at /home/nyx/m8g/evidence/M8_HASH_COST_M8G.
