@@ -3683,3 +3683,5 @@ closed-record and checkpoint authority validation.
 - M8G GPU overlap checkpoint: canonical compact workers now use Contract buffer-native v2 encoding; compatibility sequences adapt once at boundary.
 
 - M8G compact C6 payload extraction now preserves contiguous exact-K numpy buffers at the compact boundary.
+
+- M8G CUDA descriptor producer emits governed uint32/float32 pinned buffers and native bucket arrays.

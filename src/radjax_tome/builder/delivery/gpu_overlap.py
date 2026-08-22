@@ -59,7 +59,7 @@ def descriptor_stream_from_cuda(
                 work = torch.ones((256, 256), device="cuda", dtype=torch.float32)
                 for _ in range(3):
                     work = work @ work.t() * 0.0001
-            cpu_ids = acquire(torch.int64, k)
+            cpu_ids = acquire(torch.uint32, k)
             cpu_probs = acquire(torch.float32, k)
             cpu_logs = acquire(torch.float32, k)
             cpu_ids.copy_(ids, non_blocking=True)
@@ -78,7 +78,7 @@ def descriptor_stream_from_cuda(
                 "top_log_probs": cpu_logs,
                 "top_mass": 0.5,
                 "tail_mass": 0.5,
-                "bucket_masses": (0.2, 0.3, 0.5),
+                "bucket_masses": __import__("numpy").asarray((0.2, 0.3, 0.5), dtype="<f4"),
             }
 
             def release_current(
