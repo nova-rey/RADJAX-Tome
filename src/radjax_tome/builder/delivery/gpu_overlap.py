@@ -26,6 +26,24 @@ def descriptor_stream_from_cuda(
     if torch is None:
         import torch as torch
     values = [int(value) for value in ks]
+    pool: dict[tuple[str, int], list[Any]] = {}
+
+    def acquire(dtype: Any, k: int) -> Any:
+        key = (str(dtype), k)
+        if pool.get(key):
+            return pool[key].pop()
+        return torch.empty((k,), dtype=dtype, device="cpu", pin_memory=True)
+
+    def release(dtype: Any, k: int, buffer: Any) -> None:
+        pool.setdefault((str(dtype), k), []).append(buffer)
+
+    def release_triplet(
+        k: int, ids_buffer: Any, probs_buffer: Any, logs_buffer: Any
+    ) -> None:
+        release(torch.int64, k, ids_buffer)
+        release(torch.float32, k, probs_buffer)
+        release(torch.float32, k, logs_buffer)
+
     for batch_start in range(0, len(values), batch_size):
         batch = values[batch_start : batch_start + batch_size]
         for offset, k in enumerate(batch):
@@ -41,9 +59,12 @@ def descriptor_stream_from_cuda(
                 work = torch.ones((256, 256), device="cuda", dtype=torch.float32)
                 for _ in range(3):
                     work = work @ work.t() * 0.0001
-            cpu_ids = ids.to("cpu", non_blocking=True)
-            cpu_probs = probs.to("cpu", non_blocking=True)
-            cpu_logs = logs.to("cpu", non_blocking=True)
+            cpu_ids = acquire(torch.int64, k)
+            cpu_probs = acquire(torch.float32, k)
+            cpu_logs = acquire(torch.float32, k)
+            cpu_ids.copy_(ids, non_blocking=True)
+            cpu_probs.copy_(probs, non_blocking=True)
+            cpu_logs.copy_(logs, non_blocking=True)
             event = torch.cuda.Event()
             event.record(torch.cuda.current_stream())
             payload = {
@@ -59,6 +80,15 @@ def descriptor_stream_from_cuda(
                 "tail_mass": 0.5,
                 "bucket_masses": (0.2, 0.3, 0.5),
             }
+
+            def release_current(
+                k=k,
+                ids_buffer=cpu_ids,
+                probs_buffer=cpu_probs,
+                logs_buffer=cpu_logs,
+            ) -> None:
+                release_triplet(k, ids_buffer, probs_buffer, logs_buffer)
+
             yield RawCompactDescriptor(
                 payload=payload,
                 estimated_bytes=int(
@@ -69,6 +99,7 @@ def descriptor_stream_from_cuda(
                 ),
                 ordinal=index,
                 ready_event=event,
+                release=release_current,
             )
 
 
@@ -84,6 +115,24 @@ def producer_lower_bound(
         import torch as torch
     started = time.perf_counter()
     values = [int(value) for value in ks]
+    pool: dict[tuple[str, int], list[Any]] = {}
+
+    def acquire(dtype: Any, k: int) -> Any:
+        key = (str(dtype), k)
+        if pool.get(key):
+            return pool[key].pop()
+        return torch.empty((k,), dtype=dtype, device="cpu", pin_memory=True)
+
+    def release(dtype: Any, k: int, buffer: Any) -> None:
+        pool.setdefault((str(dtype), k), []).append(buffer)
+
+    def release_triplet(
+        k: int, ids_buffer: Any, probs_buffer: Any, logs_buffer: Any
+    ) -> None:
+        release(torch.int64, k, ids_buffer)
+        release(torch.float32, k, probs_buffer)
+        release(torch.float32, k, logs_buffer)
+
     for batch_start in range(0, len(values), batch_size):
         for offset, k in enumerate(values[batch_start : batch_start + batch_size]):
             index = batch_start + offset

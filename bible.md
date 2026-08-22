@@ -3675,3 +3675,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: M8G GPU-overlap verification moved canonical compact C6 to raw exact-K descriptor admission before worker encoding, hashing, validation, and private publication; synthetic T4 evidence is in progress.
 - 2026-08-22: Added the canonical CUDA exact-K descriptor producer with nonblocking device-to-host event ownership and CPU-safe import boundary for C6 overlap verification.
 - 2026-08-22: Recorded the before/after GPU overlap phase map and explicit Contract-v2 encoder nonclaim for the bounded synthetic T4 checkpoint.
+- 2026-08-22: Hardened CUDA descriptor production with reusable dtype/K-keyed pinned CPU buffers and release callbacks that return buffers only after worker ownership completes.
