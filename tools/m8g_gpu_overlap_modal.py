@@ -32,7 +32,7 @@ def run_suite():
     ev1.record(); ev1.synchronize()
     loop_ms = max(float(ev0.elapsed_time(ev1)), 0.01)
     one_ms = loop_ms / calibration_iters
-    shaped_iters = max(1, int((1600.0 / one_ms) * 0.95))
+    shaped_iters = max(1, int((2000.0 / one_ms) * 0.95))
     calibration = {"target_ms_per_batch": 2000.0, "calibration_iterations": calibration_iters, "calibration_loop_ms": loop_ms, "one_iteration_ms": one_ms, "iterations": shaped_iters}
 
     def make_payload(k, idx, ids, probs, logs):

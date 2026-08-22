@@ -3695,3 +3695,5 @@ closed-record and checkpoint authority validation.
 - M8G production cadence correction: calibration now measures a representative repeated CUDA loop with events, not a single kernel.
 
 - M8G cadence calibration empirically raised the repeated-loop target to 2.0s so sustained achieved per-batch cadence is measured inside the requested 1.4-1.8s window.
+
+- M8G cadence factor corrected to use the 2.0s target in iteration selection as well as reporting.
