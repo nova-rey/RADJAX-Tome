@@ -3676,4 +3676,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-22: Added the canonical CUDA exact-K descriptor producer with nonblocking device-to-host event ownership and CPU-safe import boundary for C6 overlap verification.
 - 2026-08-22: Recorded the before/after GPU overlap phase map and explicit Contract-v2 encoder nonclaim for the bounded synthetic T4 checkpoint.
 - 2026-08-22: Hardened CUDA descriptor production with reusable dtype/K-keyed pinned CPU buffers and release callbacks that return buffers only after worker ownership completes.
-- 2026-08-22: Added the self-contained Modal T4 synthetic overlap harness covering producer lower bound, serial compact, and pipelined compact under maximum-pressure and production-shaped cadences.\n
+- 2026-08-22: Added the self-contained Modal T4 synthetic overlap harness covering producer lower bound, serial compact, and pipelined compact under maximum-pressure and production-shaped cadences.
