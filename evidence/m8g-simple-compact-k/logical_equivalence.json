@@ -4,41 +4,41 @@
     "compact_k_immutable_body": [
       {
         "body_count": 169,
+        "packed_validation": "pass",
         "round": 1,
-        "semantic_ids_match": true,
-        "unique_body_count": 169
+        "semantic_ids_match": true
       },
       {
         "body_count": 169,
+        "packed_validation": "pass",
         "round": 2,
-        "semantic_ids_match": true,
-        "unique_body_count": 169
+        "semantic_ids_match": true
       },
       {
         "body_count": 169,
+        "packed_validation": "pass",
         "round": 3,
-        "semantic_ids_match": true,
-        "unique_body_count": 169
+        "semantic_ids_match": true
       }
     ],
     "compact_k_monolithic": [
       {
         "body_count": 169,
+        "packed_validation": "pass",
         "round": 1,
-        "semantic_ids_match": true,
-        "unique_body_count": 169
+        "semantic_ids_match": true
       },
       {
         "body_count": 169,
+        "packed_validation": "pass",
         "round": 2,
-        "semantic_ids_match": true,
-        "unique_body_count": 169
+        "semantic_ids_match": true
       },
       {
         "body_count": 169,
+        "packed_validation": "pass",
         "round": 3,
-        "semantic_ids_match": true,
-        "unique_body_count": 169
+        "semantic_ids_match": true
       }
     ]
   },

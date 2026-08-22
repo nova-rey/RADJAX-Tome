@@ -3,56 +3,56 @@
   "logical_evidence_root": "sha256:64de66c8f56e700f7a30627ad5032afc1e7d09af6908dad0ebb2e8b4e97f81c1",
   "summary": {
     "compact_k_immutable_body": {
-      "max_total_seconds": 70.51009065390099,
-      "mean_total_seconds": 70.09172711106173,
-      "median_archive_bytes": 62289813,
-      "median_linkage_seconds": 10.871261456981301,
-      "median_output_bytes": 850385896,
-      "median_representation_seconds": 55.018175665987656,
-      "median_total_seconds": 70.50032309116796,
-      "min_total_seconds": 69.26476758811623,
+      "max_total_seconds": 50.723498863051645,
+      "mean_total_seconds": 49.69769129995257,
+      "median_archive_bytes": 40712983,
+      "median_linkage_seconds": 10.578157239011489,
+      "median_output_bytes": 237336636,
+      "median_representation_seconds": 37.133467186940834,
+      "median_total_seconds": 49.28139780880883,
+      "min_total_seconds": 49.08817722799722,
       "samples": [
-        69.26476758811623,
-        70.50032309116796,
-        70.51009065390099
+        49.08817722799722,
+        49.28139780880883,
+        50.723498863051645
       ],
-      "stdev_total_seconds": 0.7161846066225646,
-      "vs_legacy_storage_pct": -29.609324043980678,
-      "vs_legacy_total_pct": 132.86363649742592
+      "stdev_total_seconds": 0.8936131241178965,
+      "vs_legacy_storage_pct": -80.3544645839614,
+      "vs_legacy_total_pct": 62.38518595957687
     },
     "compact_k_monolithic": {
-      "max_total_seconds": 70.41883907082956,
-      "mean_total_seconds": 69.82461580114129,
-      "median_archive_bytes": 62289306,
-      "median_linkage_seconds": 10.805538536049426,
-      "median_output_bytes": 850385896,
-      "median_representation_seconds": 55.05825594300404,
-      "median_total_seconds": 69.94415197183844,
-      "min_total_seconds": 69.11085636075586,
+      "max_total_seconds": 49.9706918830052,
+      "mean_total_seconds": 49.78921611936918,
+      "median_archive_bytes": 40712947,
+      "median_linkage_seconds": 10.572188684018329,
+      "median_output_bytes": 237336636,
+      "median_representation_seconds": 37.44165252801031,
+      "median_total_seconds": 49.736728498130105,
+      "min_total_seconds": 49.66022797697224,
       "samples": [
-        69.11085636075586,
-        69.94415197183844,
-        70.41883907082956
+        49.9706918830052,
+        49.66022797697224,
+        49.736728498130105
       ],
-      "stdev_total_seconds": 0.6621339475828438,
-      "vs_legacy_storage_pct": -29.609324043980678,
-      "vs_legacy_total_pct": 131.02659485444738
+      "stdev_total_seconds": 0.16175033856166698,
+      "vs_legacy_storage_pct": -80.3544645839614,
+      "vs_legacy_total_pct": 63.88552811597001
     },
     "legacy_padded_monolithic": {
-      "max_total_seconds": 30.445610048016533,
-      "mean_total_seconds": 30.18879253048605,
-      "median_archive_bytes": 65411723,
-      "median_linkage_seconds": 1.0576647820416838,
+      "max_total_seconds": 30.96330408786889,
+      "mean_total_seconds": 30.435239277818862,
+      "median_archive_bytes": 65411719,
+      "median_linkage_seconds": 1.134981661918573,
       "median_output_bytes": 1208094516,
-      "median_representation_seconds": 25.33452527807094,
-      "median_total_seconds": 30.27536808734294,
-      "min_total_seconds": 29.845399456098676,
+      "median_representation_seconds": 25.217852663015947,
+      "median_total_seconds": 30.34845667576883,
+      "min_total_seconds": 29.993957069818862,
       "samples": [
-        30.445610048016533,
-        30.27536808734294,
-        29.845399456098676
+        30.96330408786889,
+        30.34845667576883,
+        29.993957069818862
       ],
-      "stdev_total_seconds": 0.3093294100896433,
+      "stdev_total_seconds": 0.49046592681301704,
       "vs_legacy_storage_pct": 0,
       "vs_legacy_total_pct": 0
     }

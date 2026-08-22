@@ -8,16 +8,16 @@ No teacher, tokenizer, selection, replay, GPU, or Modal work was performed.
 
 | mode | total median (s) | representation median (s) | linkage median (s) | output bytes | archive bytes |
 |---|---:|---:|---:|---:|---:|
-| legacy padded | 30.275 | 25.335 | 1.058 | 1,208,094,516 | 65,411,723 |
-| compact K | 69.944 | 55.058 | 10.806 | 850,385,896 | 62,289,306 |
-| compact K + simple body store | 70.500 | 55.018 | 10.871 | 850,385,896 | 62,289,813 |
+| legacy padded | 30.348 | 25.218 | 1.135 | 1,208,094,516 | 65,411,719 |
+| compact K | 49.737 | 37.442 | 10.572 | 237,336,636 | 40,712,947 |
+| compact K + simple body store | 49.281 | 37.133 | 10.578 | 237,336,636 | 40,712,983 |
 
 Raw values for all nine ordered samples are in `raw_three_round_report.json`.
-Compact K reduced persistent output by 29.6% and level-1 archive bytes by 4.8%,
-but increased representation time and the JSON metadata linkage rewrite in this
-focused implementation. The body store kept body bytes unchanged across linkage;
-only `metadata.jsonl` was rewritten. All 169 Contract bodies in every compact
-sample validated and matched the shared logical root.
+Compact K reduced persistent output by 80.4% and level-1 archive bytes by 37.8%,
+with a 63.9% end-to-end time increase in this focused implementation. The body
+store kept body bytes unchanged across linkage; only `metadata.jsonl` was
+rewritten. All 169 packed Contract bodies in every compact sample validated and
+matched the shared logical root.
 
 ## Recommendation
 
