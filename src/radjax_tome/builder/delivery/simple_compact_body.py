@@ -14,7 +14,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from radjax_contract.tome.m8g import body_raw_digest, encode_compact_body
+from radjax_contract.tome.m8g import body_raw_digest, encode_compact_body_packed
 
 from .modes import compact_body_from_logical_payload, compact_payload_for_storage
 
@@ -42,7 +42,7 @@ def write_compact_body_store(
     for payload in payloads:
         compact = compact_payload_for_storage(payload)
         body = compact_body_from_logical_payload(compact, profile=profile)
-        encoded = encode_compact_body(body)
+        encoded = encode_compact_body_packed(body)
         digest = body_raw_digest(encoded).hex()
         body_path = bodies / f"{digest}.body"
         if body_path.exists():

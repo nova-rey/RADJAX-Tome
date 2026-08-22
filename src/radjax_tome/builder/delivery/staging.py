@@ -16,6 +16,7 @@ from .modes import (
     COMPACT_K_IMMUTABLE_BODY,
     COMPACT_K_MONOLITHIC,
     LEGACY_PADDED_MONOLITHIC,
+    compact_payload_for_storage,
     validate_materialization_mode,
 )
 from .payloads import (
@@ -310,6 +311,11 @@ def _selected_payloads_from_backend(
                         record["selected_board"] = selected_board
                         selected_payload["selected_board"] = selected_board
                         write_started = perf_counter()
+                        if representation_mode in {
+                            COMPACT_K_MONOLITHIC,
+                            COMPACT_K_IMMUTABLE_BODY,
+                        }:
+                            selected_payload = compact_payload_for_storage(selected_payload)
                         payload_hash = _write_native_payload_shard(
                             _native_payload_stage_dir(config),
                             record_index=record_index,
@@ -345,14 +351,7 @@ def _selected_payloads_from_backend(
                             COMPACT_K_MONOLITHIC,
                             COMPACT_K_IMMUTABLE_BODY,
                         }:
-                            selected_payload.pop("top_selection_mask", None)
-                            selected_payload["storage_flavor"] = representation_mode
-                            selected_payload["logical_k"] = int(
-                                selected_payload["effective_top_k"]
-                            )
-                            selected_payload["physical_retained_entry_count"] = len(
-                                selected_payload["top_token_ids"]
-                            )
+                            selected_payload = compact_payload_for_storage(selected_payload)
                         if config.rerun_metrics is not None:
                             counters = config.rerun_metrics["materialization_counters"]
                             k = int(selected_payload["effective_top_k"])

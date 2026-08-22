@@ -201,12 +201,25 @@ def assemble_selected_delivery_artifacts(
             },
         )
     if not _native_streamed_payloads(config):
-        serialized_payloads = (
-            [compact_payload_for_storage(item) for item in selected_payloads]
-            if config.representation_mode
-            in {COMPACT_K_MONOLITHIC, COMPACT_K_IMMUTABLE_BODY}
-            else selected_payloads
-        )
+        if config.representation_mode == COMPACT_K_MONOLITHIC:
+            store_dir = selected_dir / "compact_body_store"
+            write_compact_body_store(
+                store_dir, selected_payloads, profile="compact_k_monolithic"
+            )
+            metadata = [
+                json.loads(line)
+                for line in (store_dir / "metadata.jsonl").read_text().splitlines()
+                if line
+            ]
+            serialized_payloads = metadata
+        elif config.representation_mode == COMPACT_K_IMMUTABLE_BODY:
+            serialized_payloads = [
+                {key: value for key, value in item.items()
+                 if key not in {"top_token_ids", "top_probs", "top_log_probs", "top_selection_mask"}}
+                for item in selected_payloads
+            ]
+        else:
+            serialized_payloads = selected_payloads
         write_json(
             selected_dir / "selected-exemplars-00000.json",
             {
