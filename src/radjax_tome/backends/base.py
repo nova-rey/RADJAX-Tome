@@ -82,6 +82,7 @@ class TeacherBatchInput:
     example_ids: tuple[str, ...]
     texts: tuple[str, ...]
     selected_positions_by_example: tuple[tuple[int, ...], ...] | None = None
+    selected_prefix_lengths_by_example: tuple[int, ...] | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "example_ids", tuple(self.example_ids))
@@ -100,6 +101,17 @@ class TeacherBatchInput:
             if any(position < 0 for row in positions for position in row):
                 raise ValueError("selected positions must be nonnegative")
             object.__setattr__(self, "selected_positions_by_example", positions)
+        if self.selected_prefix_lengths_by_example is not None:
+            lengths = tuple(
+                int(length) for length in self.selected_prefix_lengths_by_example
+            )
+            if len(lengths) != len(self.example_ids):
+                raise ValueError(
+                    "selected_prefix_lengths_by_example must match example_ids length"
+                )
+            if any(length <= 0 for length in lengths):
+                raise ValueError("selected prefix lengths must be positive")
+            object.__setattr__(self, "selected_prefix_lengths_by_example", lengths)
 
 
 @dataclass(frozen=True)

@@ -131,6 +131,21 @@ def _selected_payloads_from_backend(
         )
         for example_id, records in records_by_example_id.items()
     }
+    prefix_length_by_example_id = {
+        example_id: max(positions) + 1
+        for example_id, positions in positions_by_example_id.items()
+        if positions
+    }
+    if requested_batch_size > 1:
+        selected_examples = tuple(
+            sorted(
+                selected_examples,
+                key=lambda example: (
+                    prefix_length_by_example_id[example.example_id],
+                    selected_example_ids.index(example.example_id),
+                ),
+            )
+        )
     selected_row_by_record: dict[int, int] = {}
     selected_row_offset = 0
     for example_id in selected_example_ids:
@@ -157,10 +172,18 @@ def _selected_payloads_from_backend(
         while start < len(selected_examples):
             chunk = selected_examples[start : start + batch_size]
             position_started = perf_counter()
-            batch_selected_row_offset = sum(
-                len(positions_by_example_id[example_id])
-                for example_id in selected_example_ids[:start]
-            )
+            local_position_offset_by_example: dict[str, int] = {}
+            local_position_index_by_example: dict[str, dict[int, int]] = {}
+            local_position_offset = 0
+            for example in chunk:
+                positions = positions_by_example_id[example.example_id]
+                local_position_offset_by_example[example.example_id] = (
+                    local_position_offset
+                )
+                local_position_index_by_example[example.example_id] = {
+                    position: index for index, position in enumerate(positions)
+                }
+                local_position_offset += len(positions)
             if diagnostics is not None:
                 diagnostics.add(
                     "selected_position_index_preparation",
@@ -175,6 +198,14 @@ def _selected_payloads_from_backend(
                         selected_positions_by_example=(
                             tuple(
                                 positions_by_example_id[example.example_id]
+                                for example in chunk
+                            )
+                            if native_streaming
+                            else None
+                        ),
+                        selected_prefix_lengths_by_example=(
+                            tuple(
+                                prefix_length_by_example_id[example.example_id]
                                 for example in chunk
                             )
                             if native_streaming
@@ -258,8 +289,12 @@ def _selected_payloads_from_backend(
                             row=0 if native_streaming else rerun_row,
                             config=config,
                             position_index=(
-                                selected_row_by_record[record_index]
-                                - batch_selected_row_offset
+                                (
+                                    local_position_offset_by_example[example_id]
+                                    + local_position_index_by_example[example_id][
+                                        int(record["source_position"])
+                                    ]
+                                )
                                 if native_streaming
                                 else None
                             ),

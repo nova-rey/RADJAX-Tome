@@ -224,12 +224,20 @@ class GPUTorchTeacherEmissionBackend:
         encoded = _measure_backend_phase(
             phase_seconds,
             "tokenization_input_preparation",
-            lambda: tokenizer(
-                list(batch.texts),
-                padding="max_length",
-                truncation=True,
-                max_length=self.config.sequence_length,
-                return_tensors="pt",
+            lambda: (
+                _tokenize_selected_prefix_batch(
+                    tokenizer,
+                    batch,
+                    max_sequence_length=self.config.sequence_length,
+                )
+                if batch.selected_prefix_lengths_by_example is not None
+                else tokenizer(
+                    list(batch.texts),
+                    padding="max_length",
+                    truncation=True,
+                    max_length=self.config.sequence_length,
+                    return_tensors="pt",
+                )
             ),
         )
         try:
@@ -832,6 +840,44 @@ def _measurement_compact_shape_dtype(value: Any) -> dict[str, object]:
             for name, item in value.items()
         }
     return _measurement_tensor_shape_dtype(value)
+
+
+def _tokenize_selected_prefix_batch(
+    tokenizer: Any,
+    batch: TeacherBatchInput,
+    *,
+    max_sequence_length: int,
+) -> Any:
+    """Tokenize each selected source to its causally required prefix once.
+
+    The selected coordinates in the canonical teacher contract are model-row
+    positions, so the required exclusive prefix end is max(position)+1.
+    Individual truncation happens before padding; this prevents a long source
+    in the same batch from forcing shorter sources to carry a suffix.
+    """
+
+    lengths = batch.selected_prefix_lengths_by_example
+    if lengths is None or len(lengths) != len(batch.texts):
+        raise ValueError("selected prefix lengths are required for prefix tokenization")
+    if any(length > max_sequence_length for length in lengths):
+        raise ValueError("selected prefix exceeds configured sequence length")
+    encoded_rows = [
+        tokenizer(
+            text,
+            padding=False,
+            truncation=True,
+            max_length=int(length),
+            return_tensors=None,
+        )
+        for text, length in zip(batch.texts, lengths, strict=True)
+    ]
+    padded = tokenizer.pad(
+        encoded_rows,
+        padding="max_length",
+        max_length=max(lengths),
+        return_tensors="pt",
+    )
+    return padded
 
 
 def _torch_model_forward(
