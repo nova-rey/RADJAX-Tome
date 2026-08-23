@@ -8,6 +8,7 @@ from typing import Any
 
 from radjax_tome.builder.c6_integration import c5_records_for_delivery
 from radjax_tome.builder.production_stages.evidence import native_file_evidence
+from radjax_tome.builder.production_stages.shared import file_sha256
 from radjax_tome.fingerprint.corridor_budget import (
     CorridorBudgetPolicy,
     allocate_corridor_coverage,
@@ -22,7 +23,6 @@ from radjax_tome.fingerprint.corridor_claims import (
 )
 from radjax_tome.fingerprint.corridor_leaderboards import (
     CorridorLeaderboardPolicy,
-    build_corridor_candidate_leaderboards,
     inspect_corridor_candidate_leaderboards,
     load_candidate_records_jsonl,
     write_corridor_candidate_leaderboards,
@@ -52,19 +52,48 @@ def prepare_c6_selection(config: Any, authorities: Mapping[str, Any]) -> dict[st
     feature_records = load_candidate_records_jsonl(
         feature_path, source_artifact_id=str(feature_path)
     )
-    leaderboards = build_corridor_candidate_leaderboards(
+    leaderboard_policy = CorridorLeaderboardPolicy(
+        candidate_pool_cap=config.fingerprint_corridor_candidate_pool_cap,
+        full_width_cap_numerator=config.full_width_cap_numerator,
+        full_width_cap_denominator=config.full_width_cap_denominator,
+        retain_complete_candidate_pool=True,
+    )
+    backend = getattr(config, "c2_store_backend", "duckdb")
+    if backend != "duckdb":
+        raise ValueError(
+            "canonical C2 requires c2_store_backend='duckdb'; "
+            "the in-memory builder is reference-only"
+        )
+    from radjax_tome.fingerprint.corridor_duckdb import (
+        build_corridor_candidate_leaderboards_duckdb,
+    )
+
+    c2_scratch = config.output_dir / ".c2-scratch"
+    leaderboards = build_corridor_candidate_leaderboards_duckdb(
         feature_records,
-        CorridorLeaderboardPolicy(
-            candidate_pool_cap=config.fingerprint_corridor_candidate_pool_cap,
-            full_width_cap_numerator=config.full_width_cap_numerator,
-            full_width_cap_denominator=config.full_width_cap_denominator,
-            retain_complete_candidate_pool=True,
+        leaderboard_policy,
+        scratch_dir=c2_scratch,
+        memory_limit=getattr(config, "c2_duckdb_memory_limit", "512MiB"),
+        threads=int(getattr(config, "c2_duckdb_threads", 4)),
+        ingestion_batch_size=int(
+            getattr(config, "c2_duckdb_ingestion_batch_size", 4096)
+        ),
+        fetch_batch_size=int(getattr(config, "c2_duckdb_fetch_batch_size", 1024)),
+        # Bind cache reuse to the content authority, never to a host-specific
+        # path that would make a relocated run appear compatible.
+        input_authority=file_sha256(feature_path),
+        implementation_authority=str(
+            getattr(config, "tome_implementation_authority", "m8/c2-duckdb-store")
         ),
     )
     c2_path = write_corridor_candidate_leaderboards(
         leaderboards, c6_root / "corridor-leaderboards", overwrite=True
     )
-    c2_summary = inspect_corridor_candidate_leaderboards(c2_path)
+    c2_backend = getattr(leaderboards, "backend", None)
+    if c2_backend is not None:
+        c2_summary = c2_backend.summary_for_path(c2_path)
+    else:
+        c2_summary = inspect_corridor_candidate_leaderboards(c2_path)
     plan = allocate_corridor_coverage(
         leaderboards,
         CorridorBudgetPolicy(
@@ -134,6 +163,8 @@ def prepare_c6_selection(config: Any, authorities: Mapping[str, Any]) -> dict[st
     write_multi_role_selection_artifact(
         selected, c6_root / "multi-role-selection", overwrite=True
     )
+    if c2_backend is not None:
+        c2_backend.close()
     delivery_path = config.exemplar_delivery_path or "one_pass_pruned_candidate"
     return {
         "claims": claims,
@@ -162,12 +193,20 @@ def c6_budget_diagnostics(
 ) -> dict[str, Any]:
     requested = int(config.total_selected_exemplar_budget or 0)
     final_count = len(claims.selected_coordinates)
-    corridor_candidate_entries = [
-        (candidate.candidate_id, candidate.position)
-        for mode in leaderboards.modes
-        for candidate in mode.candidates
-    ]
-    corridor_candidates = set(corridor_candidate_entries)
+    backend = getattr(leaderboards, "backend", None)
+    if backend is not None:
+        corridor_candidate_entries_count = int(
+            leaderboards.summary.get("retained_candidate_count", 0)
+        )
+        corridor_candidates = None
+    else:
+        corridor_candidate_entries = [
+            (candidate.candidate_id, candidate.position)
+            for mode in leaderboards.modes
+            for candidate in mode.candidates
+        ]
+        corridor_candidate_entries_count = len(corridor_candidate_entries)
+        corridor_candidates = set(corridor_candidate_entries)
     global_candidate_entries = [
         (str(candidate["example_id"]), int(candidate["position"]))
         for board in global_supply.get("boards", [])
@@ -196,7 +235,11 @@ def c6_budget_diagnostics(
     shortfall = max(0, requested - final_count)
     if not shortfall:
         reason = None
-    elif len(corridor_candidates | global_candidates) < requested:
+    elif (
+        corridor_candidate_entries_count + len(global_candidates)
+        if backend is not None
+        else len(corridor_candidates | global_candidates)
+    ) < requested:
         reason = "insufficient_eligible_unique_candidates"
     elif global_claims < requested - corridor_claims:
         reason = "global_ranked_supply_exhaustion"
@@ -207,7 +250,11 @@ def c6_budget_diagnostics(
     return {
         "total_budget_requested": requested,
         "fingerprint_corridor_budget_requested": corridor_budget_requested,
-        "fingerprint_corridor_candidates_eligible_unique": len(corridor_candidates),
+        "fingerprint_corridor_candidates_eligible_unique": (
+            corridor_candidate_entries_count
+            if backend is not None
+            else len(corridor_candidates)
+        ),
         "fingerprint_corridor_claims_before_dedup": len(corridor_claim_set),
         "fingerprint_corridor_claims_accepted": corridor_claims,
         "global_supply_exported": len(global_candidates),
@@ -215,8 +262,11 @@ def c6_budget_diagnostics(
         "global_claims_accepted": global_claims,
         "cross_role_duplicate_count": len(intersection),
         "accepted_cross_role_overlap": len(corridor_claim_set & global_claim_set),
-        "within_role_duplicate_count": len(corridor_candidate_entries)
-        - len(corridor_candidates)
+        "within_role_duplicate_count": (
+            int(leaderboards.summary.get("duplicates_collapsed", 0))
+            if backend is not None
+            else len(corridor_candidate_entries) - len(corridor_candidates)
+        )
         + len(global_candidate_entries)
         - len(global_candidates),
         "final_unique_selected_count": final_count,

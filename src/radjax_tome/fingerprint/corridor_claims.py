@@ -55,18 +55,29 @@ class CorridorClaimError(ValueError):
 
 
 def _cap_candidates(candidates, capacity: int, numerator: int, denominator: int):
+    if capacity <= 0:
+        return []
     allowance = max(1, capacity * numerator // denominator)
-    ranked = list(candidates)
-    full = [candidate for candidate in ranked if candidate.full_width]
-    narrow = [candidate for candidate in ranked if not candidate.full_width]
-    # The allowance is a ceiling, not a reservation.  If fewer than the
-    # allowance of full-width candidates exist, the unused slots are filled by
-    # the next ranked narrow candidates.  Re-sort the chosen candidates by the
-    # original governed rank so arrival order cannot affect composition.
-    chosen_full = full[:allowance]
-    chosen_narrow = narrow[: capacity - len(chosen_full)]
-    chosen = set(id(candidate) for candidate in (*chosen_full, *chosen_narrow))
-    return [candidate for candidate in ranked if id(candidate) in chosen][:capacity]
+    chosen_full = []
+    chosen_narrow = []
+    for candidate in candidates:
+        if candidate.full_width:
+            if len(chosen_full) < allowance:
+                chosen_full.append(candidate)
+        elif len(chosen_narrow) < capacity:
+            chosen_narrow.append(candidate)
+    chosen = chosen_full + chosen_narrow[: max(0, capacity - len(chosen_full))]
+    chosen.sort(
+        key=lambda candidate: (
+            -float(candidate.corridor_training_utility or 0.0),
+            -candidate.membership_score,
+            -candidate.centrality_score,
+            -candidate.useful_difficulty_score,
+            candidate.candidate_id,
+            candidate.position,
+        )
+    )
+    return chosen[:capacity]
 
 
 @dataclass(frozen=True)
@@ -1159,6 +1170,10 @@ def _validate_c4_sources(
 def _reject_cross_corridor_coordinates(
     leaderboards: CorridorLeaderboardArtifact,
 ) -> None:
+    backend = getattr(leaderboards, "backend", None)
+    if backend is not None and hasattr(backend, "validate_disjoint"):
+        backend.validate_disjoint()
+        return
     owners: dict[tuple[str, int], int] = {}
     for mode in leaderboards.modes:
         for candidate in mode.candidates:

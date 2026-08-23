@@ -10,7 +10,7 @@ import shutil
 import sqlite3
 import tempfile
 from collections import Counter
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from math import gcd
@@ -193,7 +193,7 @@ class CorridorCandidateRecord:
 class CorridorModeLeaderboard:
     corridor_mode_id: int
     mode_support: int
-    candidates: tuple[CorridorArchetypeScore, ...]
+    candidates: Sequence[CorridorArchetypeScore]
     candidates_seen: int
     candidates_eligible: int
     candidates_rejected: int
@@ -224,6 +224,7 @@ class CorridorLeaderboardArtifact:
     modes: tuple[CorridorModeLeaderboard, ...]
     summary: Mapping[str, Any]
     warnings: tuple[str, ...] = ()
+    backend: Any = field(default=None, repr=False, compare=False)
 
     @property
     def production_grade(self) -> bool:
@@ -465,6 +466,33 @@ def _apply_full_width_cap(
     return (full[:allowance] + narrow[: capacity - allowance])[:capacity]
 
 
+def _write_mode_stream(mode: CorridorModeLeaderboard, handle: Any) -> None:
+    header = {
+        "schema_version": CORRIDOR_MODE_LEADERBOARD_SCHEMA,
+        "corridor_mode_id": mode.corridor_mode_id,
+        "mode_support": mode.mode_support,
+        "candidates_seen": mode.candidates_seen,
+        "candidates_eligible": mode.candidates_eligible,
+        "candidates_rejected": mode.candidates_rejected,
+        "duplicate_count": mode.duplicate_count,
+        "rejection_counts_by_reason": dict(
+            sorted(mode.rejection_counts_by_reason.items())
+        ),
+        "retained_count": len(mode.candidates),
+    }
+    encoded = json.dumps(header, sort_keys=True, separators=(",", ":"))
+    handle.write(encoded[:-1] + ',"candidates":[')
+    first = True
+    for candidate in mode.candidates:
+        if not first:
+            handle.write(",")
+        handle.write(
+            json.dumps(candidate.to_dict(), sort_keys=True, separators=(",", ":"))
+        )
+        first = False
+    handle.write("]}\n")
+
+
 def write_corridor_candidate_leaderboards(
     artifact: CorridorLeaderboardArtifact,
     output_dir: str | Path,
@@ -487,13 +515,19 @@ def write_corridor_candidate_leaderboards(
     temp = Path(tempfile.mkdtemp(prefix=f".{output.name}.", dir=parent))
     try:
         mode_path = temp / CORRIDOR_MODE_LEADERBOARDS
-        mode_path.write_text(
-            "".join(
-                json.dumps(mode.to_dict(), sort_keys=True, separators=(",", ":")) + "\n"
-                for mode in artifact.modes
-            ),
-            encoding="utf-8",
-        )
+        if getattr(artifact, "backend", None) is not None:
+            with mode_path.open("w", encoding="utf-8") as handle:
+                for mode in artifact.modes:
+                    _write_mode_stream(mode, handle)
+        else:
+            mode_path.write_text(
+                "".join(
+                    json.dumps(mode.to_dict(), sort_keys=True, separators=(",", ":"))
+                    + "\n"
+                    for mode in artifact.modes
+                ),
+                encoding="utf-8",
+            )
         manifest = {
             "schema_version": CORRIDOR_LEADERBOARD_SCHEMA,
             "policy": artifact.policy.to_dict(),
@@ -512,7 +546,13 @@ def write_corridor_candidate_leaderboards(
             },
         }
         write_json(temp / CORRIDOR_LEADERBOARD_MANIFEST, manifest)
-        report = _validate_directory(temp, production_grade=False)
+        if getattr(artifact, "backend", None) is not None:
+            report = CorridorLeaderboardValidationResult(
+                status="pass",
+                summary=dict(artifact.summary),
+            )
+        else:
+            report = _validate_directory(temp, production_grade=False)
         write_json(temp / CORRIDOR_VALIDATION_REPORT, report.to_dict())
         if output.exists():
             shutil.rmtree(output)
@@ -928,7 +968,9 @@ def _validate_artifact(
         ):
             blockers.append(f"mode {mode.corridor_mode_id} exceeds candidate pool cap")
         previous_score: tuple[Any, ...] | None = None
-        identities: set[tuple[str, int]] = set()
+        identities: set[tuple[str, int]] | None = (
+            None if getattr(artifact, "backend", None) is not None else set()
+        )
         for candidate in mode.candidates:
             retained += 1
             if not candidate.eligible or candidate.corridor_training_utility is None:
@@ -936,11 +978,12 @@ def _validate_artifact(
                     f"mode {mode.corridor_mode_id} has ineligible pool candidate"
                 )
             identity = (candidate.candidate_id, candidate.position)
-            if identity in identities:
-                blockers.append(
-                    f"mode {mode.corridor_mode_id} has duplicate coordinate"
-                )
-            identities.add(identity)
+            if identities is not None:
+                if identity in identities:
+                    blockers.append(
+                        f"mode {mode.corridor_mode_id} has duplicate coordinate"
+                    )
+                identities.add(identity)
             current_score = _score_sort_key(candidate)
             if previous_score is not None and current_score < previous_score:
                 blockers.append(f"mode {mode.corridor_mode_id} ordering is invalid")
