@@ -1,0 +1,10 @@
+{
+  "disposition": "SPARSE_SELECTED_LOGITS_BLOCKED",
+  "files": {
+    "sparse_benchmark_report.json": "sha256:496e1cdc92f47676dde2873166fcaa0a3a3c0d5f0fbe616a834eefb4bfcf7acf",
+    "sparse_diagnostic.md": "sha256:6e09861c2f3992e9657cab5c835416c5c45806b4c6f6711f87b50c03d38b8f52",
+    "sparse_evidence_call_graph.md": "sha256:a005e12b87208e94be5ae5222fe3b477d02483ec9ae3af7b80279f46cdec0812"
+  },
+  "schema": "m8_sparse_selected_logits_evidence_manifest_v1",
+  "t4_application": "ap-BdSjE78YtTVlsLRomb1QYq"
+}

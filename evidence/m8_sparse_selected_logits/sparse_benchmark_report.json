@@ -1,0 +1,21 @@
+{
+  "schema": "m8_sparse_selected_logits_benchmark_v1",
+  "status": "completed_but_lossless_raw_capture_incomplete",
+  "tome_start": "baf31babc2f9ea0e463354278a9bbc08759398f3",
+  "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "t4_application": "ap-BdSjE78YtTVlsLRomb1QYq",
+  "workload": {"sources": 64, "coordinates": 71, "batch_size": 1},
+  "projection_rows": {"dense": 8192, "sparse": 71, "avoided": 8121},
+  "bf16_logit_bytes": {"dense": 4294967296, "sparse": 37224448},
+  "raw_samples": [
+    {"order": 1, "implementation": "dense", "wall_seconds": 23.830159883, "teacher_seconds": 6.843310246, "status": "pass"},
+    {"order": 2, "implementation": "sparse", "wall_seconds": 24.041279666, "teacher_seconds": 6.551367419, "status": "pass"},
+    {"order": 3, "implementation": "sparse", "wall_seconds": null, "teacher_seconds": null, "status": "pass_but_console_record_truncated"},
+    {"order": 4, "implementation": "dense", "wall_seconds": 24.710444667, "teacher_seconds": 7.248848708, "status": "pass"},
+    {"order": 5, "implementation": "dense", "wall_seconds": 24.398383930, "teacher_seconds": 6.961516081, "status": "pass"},
+    {"order": 6, "implementation": "sparse", "wall_seconds": 23.889548540, "teacher_seconds": 6.468374900, "status": "pass"}
+  ],
+  "publication": {"dense": "passed parity/publication", "sparse": "passed parity/publication"},
+  "equivalence": {"status": "not_proven_from_preserved_raw_outputs", "reason": "per-coordinate canonical body bytes and governed logical roots were not persisted by the harness"},
+  "decision": "SPARSE_SELECTED_LOGITS_BLOCKED"
+}

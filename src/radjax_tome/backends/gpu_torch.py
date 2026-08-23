@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from importlib import import_module
@@ -245,6 +246,12 @@ class GPUTorchTeacherEmissionBackend:
                 "input tensor transfer to device", exc, device
             ) from exc
         try:
+            logits_to_keep = None
+            if (
+                batch.selected_positions_by_example is not None
+                and self.config.target_policy != "dense_logits"
+            ):
+                logits_to_keep = _selected_logits_to_keep(torch, batch)
             output = _measure_backend_phase(
                 phase_seconds,
                 "teacher_forward",
@@ -253,6 +260,7 @@ class GPUTorchTeacherEmissionBackend:
                     model,
                     input_ids=input_ids_tensor,
                     attention_mask=attention_mask_tensor,
+                    logits_to_keep=logits_to_keep,
                 ),
             )
         except Exception as exc:
@@ -271,7 +279,13 @@ class GPUTorchTeacherEmissionBackend:
         reduction_logits = _measure_backend_phase(
             phase_seconds,
             "selected_row_gather",
-            lambda: _gpu_selected_position_logits(torch, logits, batch),
+            lambda: (
+                _gpu_selected_position_logits(torch, logits, batch)
+                if logits_to_keep is None
+                else _gpu_selected_position_logits(
+                    torch, logits, batch, logits_to_keep=logits_to_keep
+                )
+            ),
         )
         estimated_dense_logits_dtype = _logits_dtype_name(logits)
         chunking_plan = _vocab_chunking_plan(self.config, self.config.target_policy)
@@ -442,6 +456,28 @@ class GPUTorchTeacherEmissionBackend:
             compact_payload=payload,
             estimated_dense_logits_dtype=estimated_dense_logits_dtype,
         )
+        if logits_to_keep is not None:
+            union_rows = int(logits_to_keep.numel())
+            requested_rows = sum(
+                len(positions)
+                for positions in batch.selected_positions_by_example or ()
+            )
+            dense_rows = int(input_ids_tensor.shape[0]) * int(input_ids_tensor.shape[1])
+            metadata.update(
+                {
+                    "sparse_vocab_projection_used": True,
+                    "sparse_vocab_projection_union_rows": union_rows,
+                    "sparse_vocab_projection_requested_rows": requested_rows,
+                    "sparse_vocab_projection_dense_rows_avoided": max(
+                        0, dense_rows - int(input_ids_tensor.shape[0]) * union_rows
+                    ),
+                    "sparse_vocab_projection_logits_to_keep": [
+                        int(value) for value in logits_to_keep.detach().cpu().tolist()
+                    ],
+                }
+            )
+        else:
+            metadata["sparse_vocab_projection_used"] = False
         self._record_selected_pass_measurement(
             metadata,
             phase_seconds,
@@ -804,9 +840,44 @@ def _torch_model_forward(
     *,
     input_ids: Any,
     attention_mask: Any,
+    logits_to_keep: Any | None = None,
 ) -> Any:
     with torch.no_grad():
-        return model(input_ids=input_ids, attention_mask=attention_mask)
+        if logits_to_keep is None:
+            return model(input_ids=input_ids, attention_mask=attention_mask)
+        try:
+            parameters = inspect.signature(model.forward).parameters
+        except (TypeError, ValueError) as exc:
+            raise TeacherBackendUnsupportedPolicyError(
+                "selected compact delivery requires model.forward(logits_to_keep=...)"
+            ) from exc
+        if "logits_to_keep" not in parameters and not any(
+            parameter.kind is inspect.Parameter.VAR_KEYWORD
+            for parameter in parameters.values()
+        ):
+            raise TeacherBackendUnsupportedPolicyError(
+                "selected compact delivery requires model.forward(logits_to_keep=...)"
+            )
+        return model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            logits_to_keep=logits_to_keep,
+        )
+
+
+def _selected_logits_to_keep(torch: Any, batch: TeacherBatchInput) -> Any:
+    """Return the sorted union of selected sequence positions for HF models."""
+
+    positions = sorted(
+        {
+            int(position)
+            for row in batch.selected_positions_by_example or ()
+            for position in row
+        }
+    )
+    if not positions:
+        raise ValueError("selected-position batch contains no positions")
+    return torch.tensor(positions, dtype=torch.int64)
 
 
 def check_gpu_torch_backend_available(config: TeacherBackendConfig) -> bool:
@@ -2516,18 +2587,46 @@ def _tensor_to_numpy(tensor: Any, dtype: type[np.generic]) -> np.ndarray:
 
 
 def _gpu_selected_position_logits(
-    torch: Any, logits: Any, batch: TeacherBatchInput
+    torch: Any,
+    logits: Any,
+    batch: TeacherBatchInput,
+    *,
+    logits_to_keep: Any | None = None,
 ) -> Any:
     """Gather selected token rows before any vocabulary reduction."""
 
     if batch.selected_positions_by_example is None:
         return logits
     selected_rows: list[Any] = []
+    index_by_position = None
+    if logits_to_keep is not None:
+        kept_positions = [
+            int(value) for value in logits_to_keep.detach().cpu().tolist()
+        ]
+        if int(logits.shape[1]) == len(kept_positions):
+            index_by_position = {
+                position: index for index, position in enumerate(kept_positions)
+            }
     for row, positions in enumerate(batch.selected_positions_by_example):
-        if any(position >= int(logits.shape[1]) for position in positions):
+        if index_by_position is None and any(
+            position >= int(logits.shape[1]) for position in positions
+        ):
             raise ValueError("selected position outside sequence length")
         if positions:
-            indices = torch.tensor(positions, dtype=torch.int64, device=logits.device)
+            if index_by_position is None:
+                indices = positions
+            else:
+                missing = [
+                    position
+                    for position in positions
+                    if position not in index_by_position
+                ]
+                if missing:
+                    raise ValueError(
+                        f"selected positions missing from logits_to_keep: {missing}"
+                    )
+                indices = [index_by_position[position] for position in positions]
+            indices = torch.tensor(indices, dtype=torch.int64, device=logits.device)
             selected_rows.append(logits[row].index_select(0, indices))
     if not selected_rows:
         raise ValueError("selected-position batch contains no positions")
