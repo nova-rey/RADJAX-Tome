@@ -3712,3 +3712,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-22 M8 C2 10K scaling measurement: deterministic 10,000-source / 1,280,000-candidate C1-C5 fixture completed in 177.47s with 46 final sorts over 1,066,170 eligible records; evidence at /home/nyx/m8g/evidence/M8_C2_10K_SCALE.
 
 - 2026-08-22 M8 C2 DuckDB store: typed run-owned DuckDB reserve cache, one windowed canonical rank materialization, lazy streaming C3-C5 integration, 1K/10K semantic gates, bounded-memory evidence, and incomplete 100K scale attempt.
+- 2026-08-23 M8 C2 DuckDB 100K store-only scale: streamed 12.8M candidates, one rank materialization, 10.66M ordered reserve rows, aggregate root `sha256:3e99131dbe3b03c114d39df042b6cfa273aaf722d53c538336e5b30714e00a72`; completed in 560.62s with a 1.5001 GiB RSS high-water, so strict memory acceptance remains unmet.

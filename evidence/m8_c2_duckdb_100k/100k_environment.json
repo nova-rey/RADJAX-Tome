@@ -1,0 +1,18 @@
+{
+  "tome": "dafe86bd70163c93034533518c8441f0f1c95adf",
+  "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "duckdb": "1.4.5",
+  "kernel": "6.1.0-52-amd64",
+  "architecture": "x86_64",
+  "logical_cpus": 12,
+  "filesystem": "ext4 on /dev/sda1",
+  "free_bytes_before": 92151408000,
+  "free_bytes_after": 94363041792,
+  "swap_policy": "monitored; no sustained thrashing observed",
+  "memory_limit": "512MiB",
+  "threads": 4,
+  "ingestion_batch_size": 32768,
+  "fetch_batch_size": 4096,
+  "scratch": "/home/nyx/m8g/tmp/m8_100k_duckdb_scale",
+  "scratch_deleted": true
+}
