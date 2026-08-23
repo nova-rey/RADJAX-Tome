@@ -1,0 +1,14 @@
+{
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "files": {
+    "body_comparison.json": "sha256:1fc6386c1ae648a804e85be82d2c752c342e1769818d1af324b60f12ee13e225",
+    "closure_recommendation.md": "sha256:ffb3cb765eed4a2ab48a47e978c2fbbd6e434f2bb5865d927a8e26f4b6511be9",
+    "padding_mask_diagnostic.json": "sha256:79f36a505af7c01ab812063d1f1cd575123f916d6ac22cf429b16c673107cc31",
+    "root_layer_comparison.json": "sha256:2ec9173a281178b4218882cdb31599fce7cac42a662baf82d546d428289d50dc",
+    "scope_accounting.md": "sha256:4e19238a6c64a6eaf8dd459cabcd761df6ce315539aafbd7c55ecd73c8a139cf"
+  },
+  "final_disposition": "M8_SELECTED_PASS_THROUGHPUT_GATE_MISS",
+  "schema": "m8_selected_pass_equivalence_closure_manifest_v1",
+  "source_report_sha256": "sha256:23036d8e197e133e2951aada44fd929a83fae927f4cee93e08f61ca4cbc8bcc8",
+  "tome_commit": "5f4a3837dd4191c9f8eb947775b361c349cd0193"
+}
