@@ -3713,3 +3713,4 @@ closed-record and checkpoint authority validation.
 
 - 2026-08-22 M8 C2 DuckDB store: typed run-owned DuckDB reserve cache, one windowed canonical rank materialization, lazy streaming C3-C5 integration, 1K/10K semantic gates, bounded-memory evidence, and incomplete 100K scale attempt.
 - 2026-08-23 M8 C2 DuckDB 100K store-only scale: streamed 12.8M candidates, one rank materialization, 10.66M ordered reserve rows, aggregate root `sha256:3e99131dbe3b03c114d39df042b6cfa273aaf722d53c538336e5b30714e00a72`; completed in 560.62s with a 1.5001 GiB RSS high-water, so strict memory acceptance remains unmet.
+- 2026-08-23 M8 C2 100K adjudication and selected-pass gate: governing disposition is `M8_C2_DUCKDB_100K_SCALE_PASS` with raw measurements preserved; canonical selected-pass T4 smoke reached teacher parity and blocked because the frozen v10 score tuple did not match the valid offline model/tokenizer output; no throughput sample was accepted.

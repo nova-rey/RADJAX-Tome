@@ -1,0 +1,12 @@
+{
+  "schema": "m8_selected_pass_evidence_manifest_v1",
+  "files": {
+    "evidence/m8_c2_duckdb_100k/100k_analysis.md": "sha256:39112649e7986f44ec5807c9d1ab56a7ae89935d67efeee8e02dafca02e0eca6",
+    "evidence/m8_c2_duckdb_100k/100k_adjudication.json": "sha256:00fb0017e4637f75d1927c2dc1e6ecddaffbb71d9503dcb303b6fde84e1e23fa",
+    "evidence/m8_selected_pass_throughput_gate/m8_cpu_authority_probe.json": "sha256:79db928f371aa3a566a889075a4076324b5967142b8993099c0e60d57a4613a5",
+    "evidence/m8_selected_pass_throughput_gate/m8_environment.json": "sha256:01bc79b85f5e4fe8d757c0c43adc04e59df2241e7b8e7ba9384a42ca03f03a5b",
+    "evidence/m8_selected_pass_throughput_gate/m8_selected_pass_analysis.md": "sha256:71b45e9cf6ef582e8e73ae298ada605d358409d3fa4ad1e43b4e5e9a3fb4592d",
+    "evidence/m8_selected_pass_throughput_gate/m8_selected_source_subset.json": "sha256:445dae256c6f952192461590c557fec3e0b723666d43fb12503a0d7e16bc9313",
+    "evidence/m8_selected_pass_throughput_gate/m8_t4_smoke_failures.json": "sha256:5674d1da860282ed479aa5ef83407c83fd1b619e6cb2bf2ce4da3d8e23228845"
+  }
+}

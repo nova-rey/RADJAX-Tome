@@ -1,0 +1,10 @@
+{
+  "schema": "m8_selected_pass_subset_v1",
+  "selection_rule": "first 64 unique selected sources in canonical C5 order; retain all selected coordinates for those sources",
+  "unique_sources": 64,
+  "selected_coordinates": 71,
+  "aggregate_digest": "sha256:f8e0dc3f778693dfb8f29f5824bee5bac5767829a91a20c7e2baf5e146c9e6b1",
+  "first_source": "corpus_000000662",
+  "last_source": "corpus_000000022",
+  "source_and_coordinate_lists_preserved": true
+}

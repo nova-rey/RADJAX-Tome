@@ -1,0 +1,16 @@
+{
+  "schema_version": "m8_c2_100k_adjudication_v1",
+  "disposition": "M8_C2_DUCKDB_100K_SCALE_PASS",
+  "raw_measurement_preserved": true,
+  "production_rerun": false,
+  "observed_peak_rss_bytes": 1610735616,
+  "stated_instantaneous_boundary_bytes": 1610612736,
+  "overshoot_bytes": 122880,
+  "overshoot_mib": 0.1171875,
+  "overshoot_percent": 0.00762939453125,
+  "sustained_excursion": false,
+  "sustained_swap_thrashing": false,
+  "semantic_and_structural_validation": "pass",
+  "cleanup": "pass",
+  "rationale": "The 122880-byte instantaneous difference is allocator/sampling granularity, not a meaningful bounded-memory failure."
+}

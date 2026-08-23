@@ -1,0 +1,10 @@
+{
+  "schema": "m8_selected_pass_cpu_authority_probe_v1",
+  "model_config_load": "pass",
+  "model_weights_load": "pass",
+  "tokenizer_model_load": "pass",
+  "tokenizer_encode_64_sources": "pass",
+  "forward_shape": [64,128,262144],
+  "bundled_tokenizer_json": "rejected: Token provenance://historical/ out of vocabulary",
+  "decision": "use matching tokenizer.model from the same teacher tree in a private benchmark copy; source authority unchanged"
+}

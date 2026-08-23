@@ -630,7 +630,7 @@ class GPUTorchTeacherEmissionBackend:
                     field for field in compact_fields if field in compact_payload
                 ],
                 "compact_bytes_transferred_to_host": sum(
-                    int(compact_payload[field].nbytes)
+                    _payload_nbytes(compact_payload[field])
                     for field in compact_fields
                     if field in compact_payload
                 ),
@@ -1179,6 +1179,10 @@ def _dynamic_cascaded_metadata(
     effective_max_k = min(config.dynamic_top_k_max, effective_vocab_size)
     effective_min_k = min(config.dynamic_top_k_min, effective_max_k)
     effective_top_k = compact_payload.get("effective_top_k")
+    if hasattr(effective_top_k, "detach"):
+        effective_top_k = effective_top_k.detach().cpu().numpy()
+    elif effective_top_k is not None:
+        effective_top_k = np.asarray(effective_top_k)
     if effective_top_k is None or effective_top_k.size == 0:
         observed_min = effective_min_k
         observed_max = effective_min_k
@@ -1484,17 +1488,35 @@ def _gpu_dynamic_cascaded_reduce(
     )
     tail_mass = torch.clamp(1.0 - head_payload["top_mass"], min=0.0, max=1.0)
     teacher_entropy = _entropy_from_workspace(torch, workspace)
-    return {
+    result = {
         "top_token_ids": head_payload["top_token_ids"],
         "top_log_probs": head_payload["top_log_probs"],
         "top_probs": head_payload["top_probs"],
-        "top_selection_mask": head_payload["top_selection_mask"],
         "effective_top_k": head_payload["effective_top_k"],
         "top_mass": head_payload["top_mass"],
         "tail_mass": tail_mass,
         "bucket_masses": bucket_masses,
         "teacher_entropy": teacher_entropy,
     }
+    # Compact exact-K payloads intentionally omit the temporary rectangular
+    # selection mask; legacy rectangular payloads retain it for compatibility.
+    if "top_selection_mask" in head_payload:
+        result["top_selection_mask"] = head_payload["top_selection_mask"]
+    if compact:
+        # Exact-K arrays are already host-owned above; move scalar/mass arrays
+        # across the same explicit device-to-host boundary before the public
+        # emission payload is consumed.
+        for field in (
+            "effective_top_k",
+            "top_mass",
+            "tail_mass",
+            "bucket_masses",
+            "teacher_entropy",
+        ):
+            value = result[field]
+            if hasattr(value, "detach"):
+                result[field] = value.detach().float().cpu().numpy()
+    return result
 
 
 def _gpu_corridor_exemplar_reduce(
@@ -2119,10 +2141,10 @@ def _dynamic_cascaded_head_from_probs(
                 count = int(effective_top_k[row, position].item())
                 ids_row.append(head_ids[row, position, :count].detach().cpu().numpy())
                 probs_row.append(
-                    head_probs[row, position, :count].detach().cpu().numpy()
+                    head_probs[row, position, :count].detach().float().cpu().numpy()
                 )
                 logs_row.append(
-                    head_log_probs[row, position, :count].detach().cpu().numpy()
+                    head_log_probs[row, position, :count].detach().float().cpu().numpy()
                 )
             compact_ids.append(ids_row)
             compact_probs.append(probs_row)
@@ -2724,6 +2746,15 @@ def _logits_dtype_name(logits: Any) -> str:
     if name.startswith("torch."):
         name = name.removeprefix("torch.")
     return name
+
+
+def _payload_nbytes(value: Any) -> int:
+    """Return bytes owned by rectangular or compact nested array payloads."""
+    if hasattr(value, "nbytes"):
+        return int(value.nbytes)
+    if isinstance(value, (list, tuple)):
+        return sum(_payload_nbytes(item) for item in value)
+    return 0
 
 
 def _dtype_nbytes(dtype_name: str) -> int:

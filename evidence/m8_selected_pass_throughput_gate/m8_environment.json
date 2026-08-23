@@ -1,0 +1,11 @@
+{
+  "schema": "m8_selected_pass_environment_v1",
+  "tome_commit": "e82efaa47ba15646634458e2b725b537e512fe4e",
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "tome_branch": "m8/selected-pass-throughput-gate",
+  "host": {"os": "Linux", "kernel": "6.1.0-52-amd64", "arch": "x86_64", "logical_cpus": 12, "ram_bytes": 4080498688},
+  "workload": {"source": "/home/nyx/m8g/published/m8-current-1k-workload-authoritative-v10", "selection_records": 64, "selected_coordinates": 71, "digest": "sha256:f8e0dc3f778693dfb8f29f5824bee5bac5767829a91a20c7e2baf5e146c9e6b1"},
+  "teacher": {"model": "Gemma3ForCausalLM", "parameters": 268098176, "vocab_size": 262144, "tokenizer_class": "GemmaTokenizer", "tokenizer_model_sha256": "1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c", "cpu_load": "pass", "cpu_forward": "pass"},
+  "modal_profile": "nova-rey",
+  "accepted_samples": 0
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "m8_selected_pass_smoke_failures_v1",
+  "accepted_samples": 0,
+  "applications": [
+    {"id":"ap-RD4kiBf0tdH94i3aagKP04","failure":"missing PYTHONPATH"},
+    {"id":"ap-2GeYSC53i5PuR08oF4wNID","failure":"missing score-pass shard in mounted closure"},
+    {"id":"ap-zfvTzB9yktLtfuIH8WOO3h","failure":"BF16 tensor numpy conversion"},
+    {"id":"ap-LMUmRNlhb1AoHdoqlQQJ4V","failure":"compact payload unconditionally required top_selection_mask"},
+    {"id":"ap-w1DbZul6p84VaRdJ9gv43y","failure":"nested list nbytes assumption"},
+    {"id":"ap-qlqJxEqUBpHKewCsZL6Gsw","failure":"torch scalar numpy conversion"},
+    {"id":"ap-ENDQwYbXIjt3pBa9XAngHa","failure":"missing compact mode constants import"},
+    {"id":"ap-4qV0XZ7iMKxuj7yQhXKuxq","failure":"canonical selected-delivery parity rejected frozen score tuple"},
+    {"id":"ap-FvucFkgTG5h33FAQ22OfFq","failure":"direct backend authority diagnostic"}
+  ],
+  "first_authoritative_failure": {
+    "stage":"selected_delivery_parity",
+    "source":"corpus_000000662",
+    "source_position":6,
+    "frozen_top_token_id":529,
+    "actual_top_token_id":506,
+    "frozen_teacher_entropy":0.84765625,
+    "actual_teacher_entropy":3.390625,
+    "record_matches_score_pass_tuple":true,
+    "entropy_parity_status":"pass",
+    "failure_reason":"selected rerun payload does not match score-pass source tuple",
+    "interpretation":"The valid offline model/tokenizer pair cannot reproduce the frozen v10 score-pass authority. No bypass or authority mutation was performed."
+  },
+  "modal_teardown":"all listed applications stopped; zero tasks; zero active benchmark containers"
+}

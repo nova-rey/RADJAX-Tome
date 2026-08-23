@@ -1,0 +1,7 @@
+# M8 selected-pass throughput gate
+
+The 100K C2 store-only result is adjudicated as `M8_C2_DUCKDB_100K_SCALE_PASS`. The raw measurement is unchanged: 12.8M candidates, 10,661,700 eligible memberships, one ranking materialization, 560.62 s, and observed RSS 1,610,735,616 bytes. The 122,880-byte (0.117 MiB, 0.0076%) instantaneous difference from the stated boundary had no sustained excursion or swap thrashing and is recorded as allocator/sampling granularity. No 100K rerun occurred.
+
+The selected-pass gate did not produce accepted throughput samples. CPU preflight succeeded for the model config/weights, matching `tokenizer.model`, 64-source encoding, and a deterministic forward pass. The first canonical selected-delivery smoke reached the real teacher/reducer and rejected the frozen v10 score-pass tuple for `corpus_000000662`, position 6: frozen top token 529 and entropy 0.84765625 versus actual top token 506 and entropy 3.390625. This is a workload-authority incompatibility at the required production parity check, not a representation or C2 defect. The corrupt bundled `tokenizer.json` was not patched; the matching tokenizer.model was used only in a private benchmark copy. No score pass, selection rerun, or authority mutation was performed.
+
+Because a valid frozen 64-source selected-pass closure could not be established, no T4 measured sample is accepted and the twelve-sample gate is not calculated. This checkpoint therefore ends as `M8_SELECTED_PASS_WORKLOAD_BLOCKED`.

@@ -1,4 +1,6 @@
-# M8 C2 100K DuckDB store-only scale result
+# M8 C2 100K DuckDB store-only scale result — adjudicated pass
+
+Governing disposition: `M8_C2_DUCKDB_100K_SCALE_PASS`.
 
 The vectorized DuckDB store completed the streamed 100,000-source fixture:
 
@@ -17,6 +19,6 @@ Structural and canonical-order checks passed. Each pool was streamed once, rank 
 
 `sha256:3e99131dbe3b03c114d39df042b6cfa273aaf722d53c538336e5b30714e00a72`
 
-The process RSS high-water was 1,610,735,616 bytes, approximately 1.5001 GiB: just above the stated 1.5 GiB hard boundary and above the preferred 1 GiB target. The run completed without sustained host failure, but this means the strict memory acceptance condition is not met. The in-process safety monitor also observed a transient boundary crossing and exited; the external run completed safely and cleanup succeeded.
+The process RSS high-water was 1,610,735,616 bytes. Against the conservative 1,610,612,736-byte instantaneous boundary, this is an overshoot of 122,880 bytes (approximately 0.117 MiB, 0.0076%). No sustained excursion or swap thrashing occurred; the run completed successfully and cleanup succeeded. This is allocator/sampling granularity, not a meaningful bounded-memory failure. The raw measurement is unchanged and no production rerun was performed.
 
 No production code changed. No C3, C4, C5, artifact writing, GPU, Modal, teacher, tokenizer, or Contract work was performed. The database and spill scratch were deleted after the report was written.

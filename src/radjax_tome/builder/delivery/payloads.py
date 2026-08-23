@@ -5,6 +5,7 @@ from __future__ import annotations
 
 # Shared constants and low-level, dependency-free helpers.
 from ._shared import *  # noqa: F403
+from .modes import COMPACT_K_IMMUTABLE_BODY, COMPACT_K_MONOLITHIC
 from .validation import (
     _one_pass_linkage_error,
     _one_pass_payload_ref_mismatch,
