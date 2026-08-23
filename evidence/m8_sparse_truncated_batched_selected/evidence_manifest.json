@@ -3,6 +3,7 @@
   "files": {
     "call_graph_and_disposition.md": "sha256:f39b2f93b01d29af6df114067671343b02d27840196699b079bef89a795d0c26",
     "equivalence_failure.json": "sha256:09b20660c97709ed5bc0551d7fbfdd8f7ad368dc813cfded688199908a5ca100",
+    "independent_review.md": "sha256:d18fc85db24ac902f37f1bd46efddade9e409124e24f070c4ac30130d74f8e06",
     "prefix_accounting.json": "sha256:58db1a4be559e4ac8c9d5369d441e64db6be31749745b9d9e20ae325ad054bc2"
   },
   "schema": "M8_SPARSE_TRUNCATED_BATCHED_SELECTED_EVIDENCE_MANIFEST_V1",
