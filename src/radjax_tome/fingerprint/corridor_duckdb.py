@@ -8,6 +8,8 @@ from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 try:
     import duckdb
 except ImportError as exc:  # pragma: no cover
@@ -42,13 +44,16 @@ class DuckDBRankedReserve(Sequence[CorridorArchetypeScore]):
         return self._count
 
     def __iter__(self) -> Iterator[CorridorArchetypeScore]:
+        self._store.metrics["reserve_queries"] += 1
         cursor = self._store.connection.execute(
             self._store._ordered_query(self._mode_id)
         )
         while True:
+            self._store.metrics["cursor_fetch_calls"] += 1
             rows = cursor.fetchmany(self._store.fetch_batch_size)
             if not rows:
                 return
+            self._store.metrics["rows_returned"] += len(rows)
             for row in rows:
                 yield self._store._score_from_row(row)
 
@@ -60,9 +65,14 @@ class DuckDBRankedReserve(Sequence[CorridorArchetypeScore]):
         if index < 0 or index >= self._count:
             raise IndexError(index)
         row = self._store.connection.execute(
-            self._store._ordered_query(self._mode_id) + " LIMIT 1 OFFSET ?",
-            [index],
+            "SELECT candidate_id, position, mode_id, corridor_fingerprint_id, "
+            "eligible, eligibility_reasons, membership_score, centrality_score, "
+            "useful_difficulty_score, corridor_training_utility, quality_score, "
+            "policy_id, full_width FROM ranked_candidates "
+            "WHERE mode_id = ? AND rank_ordinal = ?",
+            [self._mode_id, index],
         ).fetchone()
+        self._store.metrics["reserve_queries"] += 1
         if row is None:
             raise IndexError(index)
         return self._store._score_from_row(row)
@@ -164,6 +174,15 @@ class DuckDBCandidateStore:
         self._provenance: CorridorFeatureProvenance | None = None
         self._arrival = 0
         self._batch: list[tuple[Any, ...]] = []
+        self.metrics: dict[str, int] = {
+            "bulk_ingestion_batches": 0,
+            "bulk_ingestion_statements": 0,
+            "ranking_materializations": 0,
+            "reserve_queries": 0,
+            "cursor_fetch_calls": 0,
+            "rows_returned": 0,
+            "offset_queries": 0,
+        }
         self._pending_keys: dict[tuple[str, int], tuple[str, int]] = {}
         self._metadata_written = False
 
@@ -258,11 +277,34 @@ class DuckDBCandidateStore:
             return
         self._write_metadata()
         self.connection.execute("DELETE FROM incoming_candidates")
-        self.connection.executemany(
-            "INSERT INTO incoming_candidates VALUES ("
-            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )",
-            self._batch,
-        )
+        columns = list(zip(*self._batch, strict=True))
+        arrays = [
+            np.asarray(columns[0], dtype=object),
+            np.asarray(columns[1], dtype=np.int64),
+            np.asarray(columns[2], dtype=np.int64),
+            np.asarray(columns[3], dtype=np.int64),
+            np.asarray(columns[4], dtype=object),
+            np.asarray(columns[5], dtype=np.float64),
+            np.asarray(columns[6], dtype=np.float64),
+            np.asarray(columns[7], dtype=np.float64),
+            np.asarray(columns[8], dtype=np.float64),
+            np.asarray(columns[9], dtype=object),
+            np.asarray(columns[10], dtype=object),
+            np.asarray(columns[11], dtype=bool),
+            np.asarray(columns[12], dtype=object),
+            np.asarray(columns[13], dtype=bool),
+            np.asarray(columns[14], dtype=np.int64),
+            np.asarray(columns[15], dtype=object),
+        ]
+        self.connection.register("incoming_batch_relation", arrays)
+        self.metrics["bulk_ingestion_batches"] += 1
+        self.metrics["bulk_ingestion_statements"] += 1
+        try:
+            self.connection.execute(
+                "INSERT INTO incoming_candidates SELECT * FROM incoming_batch_relation"
+            )
+        finally:
+            self.connection.unregister("incoming_batch_relation")
         conflicts = self.connection.execute(
             """
             SELECT i.candidate_id, i.position, i.record_digest,
@@ -414,8 +456,10 @@ class DuckDBCandidateStore:
               ) - 1 AS rank_ordinal
             FROM candidates
             WHERE eligible = TRUE
+            ORDER BY mode_id, rank_ordinal
             """
         )
+        self.metrics["ranking_materializations"] += 1
         self.connection.execute("UPDATE execution_metadata SET complete = TRUE")
         self.connection.commit()
 
@@ -585,6 +629,7 @@ class DuckDBCandidateStore:
                 "temp_directory": str(self.tmp_dir.resolve()),
                 "ingestion_batch_size": self.ingestion_batch_size,
                 "fetch_batch_size": self.fetch_batch_size,
+                "query_metrics": dict(self.metrics),
             }
         )
         return summary

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 
 import pytest
@@ -148,3 +149,9 @@ def test_coordinate_overlap_is_counted_without_reserve_materialization(
         artifact.backend.count_coordinate_overlap([("shared", 0), ("external", 0)]) == 1
     )
     artifact.backend.close()
+
+
+def test_ranked_reserve_has_no_offset_pagination() -> None:
+    import radjax_tome.fingerprint.corridor_duckdb as module
+
+    assert "OFFSET" not in inspect.getsource(module.DuckDBRankedReserve)
