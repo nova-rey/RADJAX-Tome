@@ -861,16 +861,25 @@ def _tokenize_selected_prefix_batch(
         raise ValueError("selected prefix lengths are required for prefix tokenization")
     if any(length > max_sequence_length for length in lengths):
         raise ValueError("selected prefix exceeds configured sequence length")
-    encoded_rows = [
-        tokenizer(
+    encoded_rows = []
+    for text, length in zip(batch.texts, lengths, strict=True):
+        # Tokenize under the original policy first.  Retokenizing with a
+        # shorter max_length can move EOS/special tokens and change an input
+        # token before the selected causal row.
+        full = tokenizer(
             text,
             padding=False,
             truncation=True,
-            max_length=int(length),
+            max_length=max_sequence_length,
             return_tensors=None,
         )
-        for text, length in zip(batch.texts, lengths, strict=True)
-    ]
+        encoded_rows.append(
+            {
+                key: value[: int(length)]
+                for key, value in full.items()
+                if isinstance(value, list)
+            }
+        )
     padded = tokenizer.pad(
         encoded_rows,
         padding="max_length",
