@@ -365,10 +365,10 @@ def _source_coordinate_linkage_mismatch(
         return True
     if int(payload.get("source_top_token_id", -1)) != source_top_token_id:
         return True
-    top_token_ids = payload.get("top_token_ids")
-    if not isinstance(top_token_ids, list) or not top_token_ids:
+    payload_top_token_id = _first_payload_token_id(payload)
+    if payload_top_token_id is None:
         return True
-    if int(top_token_ids[0]) != source_top_token_id:
+    if payload_top_token_id != source_top_token_id:
         return True
     source_delivery_path = record.get("source_delivery_path")
     if source_delivery_path == ONE_PASS_PRUNED_CANDIDATE:
@@ -484,7 +484,9 @@ def _path_b_score_pass_record_matches(
             )
         else:
             shard_position = int(np.asarray(shard["score_selected_position"])[row])
-            shard_score = float(np.asarray(shard["score_selected_position_entropy"])[row])
+            shard_score = float(
+                np.asarray(shard["score_selected_position_entropy"])[row]
+            )
             shard_top_token_id = int(np.asarray(shard["score_top_token_id"])[row])
     except (IndexError, KeyError, TypeError, ValueError):
         return False
@@ -554,10 +556,10 @@ def _path_b_rerun_payload_mismatch(
     payload: dict[str, Any],
 ) -> list[str]:
     mismatch_fields: list[str] = []
-    top_token_ids = payload.get("top_token_ids")
-    if not isinstance(top_token_ids, list) or not top_token_ids:
+    payload_top_token_id = _first_payload_token_id(payload)
+    if payload_top_token_id is None:
         mismatch_fields.append("top_token_ids")
-    elif int(top_token_ids[0]) != int(record["source_top_token_id"]):
+    elif payload_top_token_id != int(record["source_top_token_id"]):
         mismatch_fields.append("top_token_ids[0]")
     if not _entropy_parity_close(
         payload.get("teacher_entropy"), record.get("source_score")
@@ -770,11 +772,11 @@ def _path_a_selected_payload_mismatch(
     payload: dict[str, Any],
     record: dict[str, Any],
 ) -> list[str]:
-    top_token_ids = payload.get("top_token_ids")
     mismatch_fields: list[str] = []
-    if not isinstance(top_token_ids, list) or not top_token_ids:
+    payload_top_token_id = _first_payload_token_id(payload)
+    if payload_top_token_id is None:
         mismatch_fields.append("top_token_ids")
-    elif int(top_token_ids[0]) != int(record["source_top_token_id"]):
+    elif payload_top_token_id != int(record["source_top_token_id"]):
         mismatch_fields.append("top_token_ids[0]")
     if not _close_float(payload.get("teacher_entropy"), record["source_score"]):
         mismatch_fields.append("teacher_entropy")
@@ -787,10 +789,13 @@ def _path_a_selected_payload_mismatch(
 
 def _first_payload_token_id(payload: dict[str, Any]) -> int | None:
     top_token_ids = payload.get("top_token_ids")
-    if not isinstance(top_token_ids, list) or not top_token_ids:
+    if top_token_ids is None:
         return None
     try:
-        return int(top_token_ids[0])
+        values = np.asarray(top_token_ids).reshape(-1)
+        if values.size == 0:
+            return None
+        return int(values[0])
     except (TypeError, ValueError):
         return None
 

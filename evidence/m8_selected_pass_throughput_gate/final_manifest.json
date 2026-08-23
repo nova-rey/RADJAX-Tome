@@ -1,0 +1,15 @@
+{
+  "files": {
+    "evidence/m8_selected_pass_throughput_gate/analysis.md": "sha256:e24aa289173d7a8a7bc8c58035650782b327bef1ca5ba305af692151cefe9905",
+    "evidence/m8_selected_pass_throughput_gate/current_teacher_authority.json": "sha256:f5510e2e152538c6450c61c5b1c2592b30d765694b076670c3993f1025ace11b",
+    "evidence/m8_selected_pass_throughput_gate/environment.json": "sha256:5f6411d6c988897fa855b8a7e10d5654c41db09c4073ab5b9e2a8b1d8d4b149d",
+    "evidence/m8_selected_pass_throughput_gate/evidence_manifest.json": "sha256:7ca7da53e623cdf1707e538a3eac45707171a7dd0ebc5905ff980e91aa4f4c5e",
+    "evidence/m8_selected_pass_throughput_gate/m8_cpu_authority_probe.json": "sha256:79db928f371aa3a566a889075a4076324b5967142b8993099c0e60d57a4613a5",
+    "evidence/m8_selected_pass_throughput_gate/m8_environment.json": "sha256:01bc79b85f5e4fe8d757c0c43adc04e59df2241e7b8e7ba9384a42ca03f03a5b",
+    "evidence/m8_selected_pass_throughput_gate/m8_selected_pass_analysis.md": "sha256:71b45e9cf6ef582e8e73ae298ada605d358409d3fa4ad1e43b4e5e9a3fb4592d",
+    "evidence/m8_selected_pass_throughput_gate/m8_selected_source_subset.json": "sha256:5d4890d0ba41cc84080239677f49a76bafd664375c2d3651ac929801c498fc49",
+    "evidence/m8_selected_pass_throughput_gate/m8_t4_smoke_failures.json": "sha256:5674d1da860282ed479aa5ef83407c83fd1b619e6cb2bf2ce4da3d8e23228845",
+    "evidence/m8_selected_pass_throughput_gate/raw_t4_report.json": "sha256:23036d8e197e133e2951aada44fd929a83fae927f4cee93e08f61ca4cbc8bcc8"
+  },
+  "schema": "m8_selected_pass_throughput_gate_manifest_v2"
+}

@@ -315,7 +315,9 @@ def _selected_payloads_from_backend(
                             COMPACT_K_MONOLITHIC,
                             COMPACT_K_IMMUTABLE_BODY,
                         }:
-                            selected_payload = compact_payload_for_storage(selected_payload)
+                            selected_payload = compact_payload_for_storage(
+                                selected_payload
+                            )
                         payload_hash = _write_native_payload_shard(
                             _native_payload_stage_dir(config),
                             record_index=record_index,
@@ -351,7 +353,9 @@ def _selected_payloads_from_backend(
                             COMPACT_K_MONOLITHIC,
                             COMPACT_K_IMMUTABLE_BODY,
                         }:
-                            selected_payload = compact_payload_for_storage(selected_payload)
+                            selected_payload = compact_payload_for_storage(
+                                selected_payload
+                            )
                         if config.rerun_metrics is not None:
                             counters = config.rerun_metrics["materialization_counters"]
                             k = int(selected_payload["effective_top_k"])
@@ -867,7 +871,13 @@ def _validate_native_staged_payload(
         raise ValueError(f"native payload coordinate mismatch: {path.name}")
     if payload.get("payload_hash") != _native_payload_hash(payload):
         raise ValueError(f"native payload hash mismatch: {path.name}")
-    for field in _REQUIRED_SELECTED_PAYLOAD_FIELDS:
+    required_fields = tuple(
+        field
+        for field in _REQUIRED_SELECTED_PAYLOAD_FIELDS
+        if field != "top_selection_mask"
+        or item.get("storage_flavor") == LEGACY_PADDED_MONOLITHIC
+    )
+    for field in required_fields:
         if field not in item:
             raise ValueError(f"native payload missing {field}: {path.name}")
     return item

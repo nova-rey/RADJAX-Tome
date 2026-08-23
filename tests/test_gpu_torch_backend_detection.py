@@ -221,7 +221,10 @@ def test_gpu_torch_emits_private_selected_pass_phase_metadata_when_observed(
         "attention_mask": {"shape": [2, 4], "dtype": "int32"},
         "logits": {"shape": [2, 4, 7], "dtype": "float32"},
         "gathered_logits": {"shape": [2, 4, 7], "dtype": "float32"},
-        "compact_result": {"top_token_ids": {"shape": [2, 4, 2], "dtype": "int32"}},
+        # The mocked compact reducer returns an opaque sentinel in this
+        # metadata-only observer test; production compact payload validation
+        # is covered by the canonical selected-delivery tests.
+        "compact_result": {"status": "not_applicable"},
     }
     assert spy.items == [metadata]
 

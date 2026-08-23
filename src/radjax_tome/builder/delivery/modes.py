@@ -56,9 +56,9 @@ def compact_payload_for_storage(payload: dict[str, Any]) -> dict[str, Any]:
     """Return one canonical K-length payload for new persistent storage."""
 
     compact = dict(payload)
-    ids = list(compact["top_token_ids"])
-    probs = list(compact["top_probs"])
-    logs = list(compact["top_log_probs"])
+    ids = _json_array_values(compact["top_token_ids"])
+    probs = _json_array_values(compact["top_probs"])
+    logs = _json_array_values(compact["top_log_probs"])
     k = int(compact["effective_top_k"])
     if k < 0 or k > len(ids) or len(ids) != len(probs) or len(ids) != len(logs):
         raise ValueError("effective_top_k and top arrays are inconsistent")
@@ -80,7 +80,30 @@ def compact_payload_for_storage(payload: dict[str, Any]) -> dict[str, Any]:
     compact["storage_flavor"] = COMPACT_K_MONOLITHIC
     compact["physical_retained_entry_count"] = k
     compact["logical_k"] = k
-    return compact
+    return {key: _json_value(value) for key, value in compact.items()}
+
+
+def _json_array_values(value: Any) -> list[Any]:
+    """Convert one governed contiguous array at the JSON persistence edge."""
+    tolist = getattr(value, "tolist", None)
+    if callable(tolist):
+        converted = tolist()
+        if isinstance(converted, list):
+            return converted
+        return [converted]
+    return list(value)
+
+
+def _json_value(value: Any) -> Any:
+    """Normalize buffer/native scalar values only at the JSON edge."""
+    tolist = getattr(value, "tolist", None)
+    if callable(tolist):
+        return _json_value(tolist())
+    if isinstance(value, dict):
+        return {key: _json_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_value(item) for item in value]
+    return value
 
 
 def collate_compact_logical_records(

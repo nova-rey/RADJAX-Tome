@@ -237,6 +237,24 @@ def test_live_path_b_rerun_entropy_accepts_one_quantization_step() -> None:
     assert "teacher_entropy" not in mismatch_fields
 
 
+def test_live_path_b_accepts_buffer_native_compact_token_ids() -> None:
+    record = {
+        "source_score": 4.0,
+        "source_top_token_id": 7,
+        "source_delivery_path": "two_pass_rerun_selected",
+        "payload_ref": {},
+    }
+    payload = {
+        "top_token_ids": np.asarray([7, 3], dtype=np.int32),
+        "teacher_entropy": 4.0,
+        "payload_ref": {},
+    }
+
+    assert "top_token_ids" not in exemplar_delivery._path_b_rerun_payload_mismatch(
+        record, payload
+    )
+
+
 def test_live_path_b_rerun_entropy_rejects_meaningful_divergence() -> None:
     record = {
         "source_score": 4.0,
