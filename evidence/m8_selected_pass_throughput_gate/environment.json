@@ -5,6 +5,7 @@
   "modal_app": "ap-CNCixC7Ro91uk0MSa35Mq3",
   "modal_profile": "nova-rey",
   "model_class": "Gemma3ForCausalLM",
+  "model_tree_sha256": "sha256:bb6abbc9654b5cb74f6b4f1f5235cf0808184616b0f511eebb4938402827965c",
   "ordinary_parity_weakened": false,
   "subset_digest": "sha256:f8e0dc3f778693dfb8f29f5824bee5bac5767829a91a20c7e2baf5e146c9e6b1",
   "tokenizer_model_sha256": "sha256:1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c",
@@ -12,4 +13,4 @@
   "v10_modified": false,
   "workload_coordinates": 71,
   "workload_sources": 64
-}
+}\n
