@@ -134,3 +134,17 @@ def test_streamed_backend_artifact_has_valid_readback_for_small_fixture(
     )
     assert validate_corridor_candidate_leaderboards(output).ok
     artifact.backend.close()
+
+
+def test_coordinate_overlap_is_counted_without_reserve_materialization(
+    tmp_path: Path,
+) -> None:
+    artifact = build_corridor_candidate_leaderboards_duckdb(
+        [_record("shared", mode=1), _record("only-corridor", mode=1)],
+        _policy(),
+        scratch_dir=tmp_path / "db",
+    )
+    assert (
+        artifact.backend.count_coordinate_overlap([("shared", 0), ("external", 0)]) == 1
+    )
+    artifact.backend.close()

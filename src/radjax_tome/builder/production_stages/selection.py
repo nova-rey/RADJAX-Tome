@@ -215,6 +215,10 @@ def c6_budget_diagnostics(
         if isinstance(candidate, Mapping)
     ]
     global_candidates = set(global_candidate_entries)
+    if backend is not None:
+        global_corridor_overlap = backend.count_coordinate_overlap(global_candidates)
+    else:
+        global_corridor_overlap = len(corridor_candidates & global_candidates)
     corridor_claim_set = {
         (claim.example_id, claim.position) for claim in claims.corridor_claims
     }
@@ -236,7 +240,9 @@ def c6_budget_diagnostics(
     if not shortfall:
         reason = None
     elif (
-        corridor_candidate_entries_count + len(global_candidates)
+        corridor_candidate_entries_count
+        + len(global_candidates)
+        - global_corridor_overlap
         if backend is not None
         else len(corridor_candidates | global_candidates)
     ) < requested:

@@ -478,6 +478,33 @@ class DuckDBCandidateStore:
                 f"coordinate appears in multiple corridor pools: {row[0]}:{row[1]}"
             )
 
+    def count_coordinate_overlap(self, coordinates: Iterable[tuple[str, int]]) -> int:
+        """Count global-supply coordinates already present in the reserve.
+
+        The diagnostic uses this bounded SQL join instead of materializing the
+        complete reserve in Python merely to compute a union cardinality.
+        """
+        self.connection.execute("DROP TABLE IF EXISTS diagnostic_coordinates")
+        self.connection.execute(
+            """CREATE TEMP TABLE diagnostic_coordinates (
+                candidate_id VARCHAR NOT NULL, position BIGINT NOT NULL
+            )"""
+        )
+        rows = [
+            (str(candidate_id), int(position)) for candidate_id, position in coordinates
+        ]
+        if rows:
+            self.connection.executemany(
+                "INSERT INTO diagnostic_coordinates VALUES (?, ?)", rows
+            )
+        overlap = self.connection.execute(
+            "SELECT COUNT(*) FROM diagnostic_coordinates d "
+            "JOIN candidates c ON c.candidate_id = d.candidate_id "
+            "AND c.position = d.position WHERE c.eligible = TRUE"
+        ).fetchone()[0]
+        self.connection.execute("DROP TABLE diagnostic_coordinates")
+        return int(overlap)
+
     def _mode_summary(
         self, mode_id: int, state: dict[str, Any]
     ) -> CorridorModeLeaderboard:
