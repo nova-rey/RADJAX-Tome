@@ -1,0 +1,31 @@
+{
+  "absolute_delta": 0.0078125,
+  "attempted": "sparse_truncated_batch1_smoke",
+  "coordinates": 71,
+  "diagnosis": "Retokenization with a shorter max_length moved special-token placement; corrected implementation now tokenizes under the original 128-token policy then slices. The remaining smoke delta demonstrates shape-dependent BF16 attention execution variation under prefix truncation beyond the existing governed policy; no output sample was accepted.",
+  "expected_score_entropy": 0.84765625,
+  "first_differing_coordinate": {
+    "selected_example_id": "corpus_000000662",
+    "selected_position": 6
+  },
+  "first_differing_field": "teacher_entropy",
+  "governed_tolerance": 0.00390625,
+  "modal_apps": [
+    "ap-VFfCA4dyUlcV4IamRYYJJN",
+    "ap-xXEFZW0HfOFeSUMuhOhztX",
+    "ap-2YD14V1D3fIBnZgnsGS7SH",
+    "ap-RsFXE91njnKfNBJUUuUzkA",
+    "ap-tdybTvnoeuJs8qasb73I3y",
+    "ap-cNeN09rg7dcFrDfP2ssK1k"
+  ],
+  "no_contract_change": true,
+  "no_score_pass": true,
+  "no_selection": true,
+  "observed_truncated_entropy": 0.85546875,
+  "schema": "M8_SPARSE_TRUNCATED_BATCHED_SELECTED_FAILURE_V1",
+  "sources": 64,
+  "status": "equivalence_failed",
+  "top_token_id_expected": 529,
+  "top_token_id_observed": 529,
+  "workload": "M8_SELECTED_PASS_CURRENT_TEACHER_64_V1"
+}

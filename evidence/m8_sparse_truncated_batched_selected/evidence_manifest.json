@@ -1,0 +1,10 @@
+{
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "files": {
+    "call_graph_and_disposition.md": "sha256:f39b2f93b01d29af6df114067671343b02d27840196699b079bef89a795d0c26",
+    "equivalence_failure.json": "sha256:09b20660c97709ed5bc0551d7fbfdd8f7ad368dc813cfded688199908a5ca100",
+    "prefix_accounting.json": "sha256:79ae00bc10b845504da90ca0a89f9668aaabc961dd5122d3b0465a6b9a452e14"
+  },
+  "schema": "M8_SPARSE_TRUNCATED_BATCHED_SELECTED_EVIDENCE_MANIFEST_V1",
+  "tome_commit": "b133de2c4c16d626e95b397e578226e11d8aff09"
+}

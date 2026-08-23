@@ -1,0 +1,867 @@
+{
+  "accounting": [
+    {
+      "example_id": "corpus_000000662",
+      "highest_selected_coordinate": 6,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 121,
+      "required_prefix_end_exclusive": 7,
+      "retained_tokens": 7,
+      "selected_positions": [
+        6
+      ]
+    },
+    {
+      "example_id": "corpus_000000827",
+      "highest_selected_coordinate": 16,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 111,
+      "required_prefix_end_exclusive": 17,
+      "retained_tokens": 17,
+      "selected_positions": [
+        16
+      ]
+    },
+    {
+      "example_id": "corpus_000000437",
+      "highest_selected_coordinate": 125,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 2,
+      "required_prefix_end_exclusive": 126,
+      "retained_tokens": 126,
+      "selected_positions": [
+        125
+      ]
+    },
+    {
+      "example_id": "corpus_000000346",
+      "highest_selected_coordinate": 76,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 51,
+      "required_prefix_end_exclusive": 77,
+      "retained_tokens": 77,
+      "selected_positions": [
+        76
+      ]
+    },
+    {
+      "example_id": "corpus_000000833",
+      "highest_selected_coordinate": 90,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 37,
+      "required_prefix_end_exclusive": 91,
+      "retained_tokens": 91,
+      "selected_positions": [
+        90
+      ]
+    },
+    {
+      "example_id": "corpus_000000307",
+      "highest_selected_coordinate": 53,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 74,
+      "required_prefix_end_exclusive": 54,
+      "retained_tokens": 54,
+      "selected_positions": [
+        53
+      ]
+    },
+    {
+      "example_id": "corpus_000000971",
+      "highest_selected_coordinate": 35,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 92,
+      "required_prefix_end_exclusive": 36,
+      "retained_tokens": 36,
+      "selected_positions": [
+        35
+      ]
+    },
+    {
+      "example_id": "corpus_000000978",
+      "highest_selected_coordinate": 118,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 9,
+      "required_prefix_end_exclusive": 119,
+      "retained_tokens": 119,
+      "selected_positions": [
+        118
+      ]
+    },
+    {
+      "example_id": "corpus_000000206",
+      "highest_selected_coordinate": 35,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 92,
+      "required_prefix_end_exclusive": 36,
+      "retained_tokens": 36,
+      "selected_positions": [
+        35
+      ]
+    },
+    {
+      "example_id": "corpus_000000480",
+      "highest_selected_coordinate": 92,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 35,
+      "required_prefix_end_exclusive": 93,
+      "retained_tokens": 93,
+      "selected_positions": [
+        92
+      ]
+    },
+    {
+      "example_id": "corpus_000000716",
+      "highest_selected_coordinate": 79,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 48,
+      "required_prefix_end_exclusive": 80,
+      "retained_tokens": 80,
+      "selected_positions": [
+        79
+      ]
+    },
+    {
+      "example_id": "corpus_000000079",
+      "highest_selected_coordinate": 11,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 116,
+      "required_prefix_end_exclusive": 12,
+      "retained_tokens": 12,
+      "selected_positions": [
+        11
+      ]
+    },
+    {
+      "example_id": "corpus_000000391",
+      "highest_selected_coordinate": 114,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 13,
+      "required_prefix_end_exclusive": 115,
+      "retained_tokens": 115,
+      "selected_positions": [
+        114
+      ]
+    },
+    {
+      "example_id": "corpus_000000411",
+      "highest_selected_coordinate": 29,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 98,
+      "required_prefix_end_exclusive": 30,
+      "retained_tokens": 30,
+      "selected_positions": [
+        29
+      ]
+    },
+    {
+      "example_id": "corpus_000000481",
+      "highest_selected_coordinate": 85,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 42,
+      "required_prefix_end_exclusive": 86,
+      "retained_tokens": 86,
+      "selected_positions": [
+        85
+      ]
+    },
+    {
+      "example_id": "corpus_000000399",
+      "highest_selected_coordinate": 24,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 103,
+      "required_prefix_end_exclusive": 25,
+      "retained_tokens": 25,
+      "selected_positions": [
+        24
+      ]
+    },
+    {
+      "example_id": "corpus_000000547",
+      "highest_selected_coordinate": 19,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 108,
+      "required_prefix_end_exclusive": 20,
+      "retained_tokens": 20,
+      "selected_positions": [
+        19
+      ]
+    },
+    {
+      "example_id": "corpus_000000729",
+      "highest_selected_coordinate": 14,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 113,
+      "required_prefix_end_exclusive": 15,
+      "retained_tokens": 15,
+      "selected_positions": [
+        14
+      ]
+    },
+    {
+      "example_id": "corpus_000000030",
+      "highest_selected_coordinate": 85,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 42,
+      "required_prefix_end_exclusive": 86,
+      "retained_tokens": 86,
+      "selected_positions": [
+        85,
+        15,
+        72
+      ]
+    },
+    {
+      "example_id": "corpus_000000048",
+      "highest_selected_coordinate": 106,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 21,
+      "required_prefix_end_exclusive": 107,
+      "retained_tokens": 107,
+      "selected_positions": [
+        106
+      ]
+    },
+    {
+      "example_id": "corpus_000000076",
+      "highest_selected_coordinate": 126,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 1,
+      "required_prefix_end_exclusive": 127,
+      "retained_tokens": 127,
+      "selected_positions": [
+        126
+      ]
+    },
+    {
+      "example_id": "corpus_000000107",
+      "highest_selected_coordinate": 121,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 6,
+      "required_prefix_end_exclusive": 122,
+      "retained_tokens": 122,
+      "selected_positions": [
+        121
+      ]
+    },
+    {
+      "example_id": "corpus_000000277",
+      "highest_selected_coordinate": 58,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 69,
+      "required_prefix_end_exclusive": 59,
+      "retained_tokens": 59,
+      "selected_positions": [
+        58
+      ]
+    },
+    {
+      "example_id": "corpus_000000287",
+      "highest_selected_coordinate": 15,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 112,
+      "required_prefix_end_exclusive": 16,
+      "retained_tokens": 16,
+      "selected_positions": [
+        15
+      ]
+    },
+    {
+      "example_id": "corpus_000000175",
+      "highest_selected_coordinate": 81,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 46,
+      "required_prefix_end_exclusive": 82,
+      "retained_tokens": 82,
+      "selected_positions": [
+        81
+      ]
+    },
+    {
+      "example_id": "corpus_000000455",
+      "highest_selected_coordinate": 64,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 63,
+      "required_prefix_end_exclusive": 65,
+      "retained_tokens": 65,
+      "selected_positions": [
+        64
+      ]
+    },
+    {
+      "example_id": "corpus_000000505",
+      "highest_selected_coordinate": 94,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 33,
+      "required_prefix_end_exclusive": 95,
+      "retained_tokens": 95,
+      "selected_positions": [
+        94
+      ]
+    },
+    {
+      "example_id": "corpus_000000472",
+      "highest_selected_coordinate": 88,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 39,
+      "required_prefix_end_exclusive": 89,
+      "retained_tokens": 89,
+      "selected_positions": [
+        88
+      ]
+    },
+    {
+      "example_id": "corpus_000000886",
+      "highest_selected_coordinate": 15,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 112,
+      "required_prefix_end_exclusive": 16,
+      "retained_tokens": 16,
+      "selected_positions": [
+        15
+      ]
+    },
+    {
+      "example_id": "corpus_000000136",
+      "highest_selected_coordinate": 81,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 46,
+      "required_prefix_end_exclusive": 82,
+      "retained_tokens": 82,
+      "selected_positions": [
+        81
+      ]
+    },
+    {
+      "example_id": "corpus_000000046",
+      "highest_selected_coordinate": 87,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 40,
+      "required_prefix_end_exclusive": 88,
+      "retained_tokens": 88,
+      "selected_positions": [
+        87
+      ]
+    },
+    {
+      "example_id": "corpus_000000121",
+      "highest_selected_coordinate": 115,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 12,
+      "required_prefix_end_exclusive": 116,
+      "retained_tokens": 116,
+      "selected_positions": [
+        115
+      ]
+    },
+    {
+      "example_id": "corpus_000000151",
+      "highest_selected_coordinate": 127,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 0,
+      "required_prefix_end_exclusive": 128,
+      "retained_tokens": 128,
+      "selected_positions": [
+        127
+      ]
+    },
+    {
+      "example_id": "corpus_000000037",
+      "highest_selected_coordinate": 111,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 16,
+      "required_prefix_end_exclusive": 112,
+      "retained_tokens": 112,
+      "selected_positions": [
+        111
+      ]
+    },
+    {
+      "example_id": "corpus_000000257",
+      "highest_selected_coordinate": 4,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 123,
+      "required_prefix_end_exclusive": 5,
+      "retained_tokens": 5,
+      "selected_positions": [
+        4
+      ]
+    },
+    {
+      "example_id": "corpus_000000765",
+      "highest_selected_coordinate": 110,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 17,
+      "required_prefix_end_exclusive": 111,
+      "retained_tokens": 111,
+      "selected_positions": [
+        110
+      ]
+    },
+    {
+      "example_id": "corpus_000000352",
+      "highest_selected_coordinate": 109,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 18,
+      "required_prefix_end_exclusive": 110,
+      "retained_tokens": 110,
+      "selected_positions": [
+        109,
+        55
+      ]
+    },
+    {
+      "example_id": "corpus_000000356",
+      "highest_selected_coordinate": 55,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 72,
+      "required_prefix_end_exclusive": 56,
+      "retained_tokens": 56,
+      "selected_positions": [
+        55
+      ]
+    },
+    {
+      "example_id": "corpus_000000023",
+      "highest_selected_coordinate": 3,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 124,
+      "required_prefix_end_exclusive": 4,
+      "retained_tokens": 4,
+      "selected_positions": [
+        3
+      ]
+    },
+    {
+      "example_id": "corpus_000000078",
+      "highest_selected_coordinate": 54,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 73,
+      "required_prefix_end_exclusive": 55,
+      "retained_tokens": 55,
+      "selected_positions": [
+        54
+      ]
+    },
+    {
+      "example_id": "corpus_000000508",
+      "highest_selected_coordinate": 43,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 84,
+      "required_prefix_end_exclusive": 44,
+      "retained_tokens": 44,
+      "selected_positions": [
+        43
+      ]
+    },
+    {
+      "example_id": "corpus_000000954",
+      "highest_selected_coordinate": 96,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 31,
+      "required_prefix_end_exclusive": 97,
+      "retained_tokens": 97,
+      "selected_positions": [
+        96
+      ]
+    },
+    {
+      "example_id": "corpus_000000337",
+      "highest_selected_coordinate": 108,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 19,
+      "required_prefix_end_exclusive": 109,
+      "retained_tokens": 109,
+      "selected_positions": [
+        108
+      ]
+    },
+    {
+      "example_id": "corpus_000000087",
+      "highest_selected_coordinate": 42,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 85,
+      "required_prefix_end_exclusive": 43,
+      "retained_tokens": 43,
+      "selected_positions": [
+        42
+      ]
+    },
+    {
+      "example_id": "corpus_000000135",
+      "highest_selected_coordinate": 52,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 75,
+      "required_prefix_end_exclusive": 53,
+      "retained_tokens": 53,
+      "selected_positions": [
+        52
+      ]
+    },
+    {
+      "example_id": "corpus_000000298",
+      "highest_selected_coordinate": 105,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 22,
+      "required_prefix_end_exclusive": 106,
+      "retained_tokens": 106,
+      "selected_positions": [
+        105
+      ]
+    },
+    {
+      "example_id": "corpus_000000001",
+      "highest_selected_coordinate": 26,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 101,
+      "required_prefix_end_exclusive": 27,
+      "retained_tokens": 27,
+      "selected_positions": [
+        26
+      ]
+    },
+    {
+      "example_id": "corpus_000000011",
+      "highest_selected_coordinate": 93,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 34,
+      "required_prefix_end_exclusive": 94,
+      "retained_tokens": 94,
+      "selected_positions": [
+        67,
+        24,
+        93
+      ]
+    },
+    {
+      "example_id": "corpus_000000026",
+      "highest_selected_coordinate": 93,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 34,
+      "required_prefix_end_exclusive": 94,
+      "retained_tokens": 94,
+      "selected_positions": [
+        93
+      ]
+    },
+    {
+      "example_id": "corpus_000000171",
+      "highest_selected_coordinate": 115,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 12,
+      "required_prefix_end_exclusive": 116,
+      "retained_tokens": 116,
+      "selected_positions": [
+        115
+      ]
+    },
+    {
+      "example_id": "corpus_000000981",
+      "highest_selected_coordinate": 125,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 2,
+      "required_prefix_end_exclusive": 126,
+      "retained_tokens": 126,
+      "selected_positions": [
+        125
+      ]
+    },
+    {
+      "example_id": "corpus_000000033",
+      "highest_selected_coordinate": 72,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 55,
+      "required_prefix_end_exclusive": 73,
+      "retained_tokens": 73,
+      "selected_positions": [
+        72
+      ]
+    },
+    {
+      "example_id": "corpus_000000198",
+      "highest_selected_coordinate": 116,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 11,
+      "required_prefix_end_exclusive": 117,
+      "retained_tokens": 117,
+      "selected_positions": [
+        116
+      ]
+    },
+    {
+      "example_id": "corpus_000000313",
+      "highest_selected_coordinate": 116,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 11,
+      "required_prefix_end_exclusive": 117,
+      "retained_tokens": 117,
+      "selected_positions": [
+        116
+      ]
+    },
+    {
+      "example_id": "corpus_000000005",
+      "highest_selected_coordinate": 120,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 7,
+      "required_prefix_end_exclusive": 121,
+      "retained_tokens": 121,
+      "selected_positions": [
+        50,
+        120
+      ]
+    },
+    {
+      "example_id": "corpus_000000019",
+      "highest_selected_coordinate": 47,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 80,
+      "required_prefix_end_exclusive": 48,
+      "retained_tokens": 48,
+      "selected_positions": [
+        47
+      ]
+    },
+    {
+      "example_id": "corpus_000000061",
+      "highest_selected_coordinate": 70,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 57,
+      "required_prefix_end_exclusive": 71,
+      "retained_tokens": 71,
+      "selected_positions": [
+        70
+      ]
+    },
+    {
+      "example_id": "corpus_000000592",
+      "highest_selected_coordinate": 16,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 111,
+      "required_prefix_end_exclusive": 17,
+      "retained_tokens": 17,
+      "selected_positions": [
+        16
+      ]
+    },
+    {
+      "example_id": "corpus_000000052",
+      "highest_selected_coordinate": 20,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 107,
+      "required_prefix_end_exclusive": 21,
+      "retained_tokens": 21,
+      "selected_positions": [
+        20
+      ]
+    },
+    {
+      "example_id": "corpus_000000625",
+      "highest_selected_coordinate": 105,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 22,
+      "required_prefix_end_exclusive": 106,
+      "retained_tokens": 106,
+      "selected_positions": [
+        105
+      ]
+    },
+    {
+      "example_id": "corpus_000000860",
+      "highest_selected_coordinate": 62,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 65,
+      "required_prefix_end_exclusive": 63,
+      "retained_tokens": 63,
+      "selected_positions": [
+        62
+      ]
+    },
+    {
+      "example_id": "corpus_000000260",
+      "highest_selected_coordinate": 104,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 23,
+      "required_prefix_end_exclusive": 105,
+      "retained_tokens": 105,
+      "selected_positions": [
+        104
+      ]
+    },
+    {
+      "example_id": "corpus_000000006",
+      "highest_selected_coordinate": 89,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 38,
+      "required_prefix_end_exclusive": 90,
+      "retained_tokens": 90,
+      "selected_positions": [
+        89,
+        54
+      ]
+    },
+    {
+      "example_id": "corpus_000000022",
+      "highest_selected_coordinate": 4,
+      "original_valid_tokens": 128,
+      "removable_suffix_tokens": 123,
+      "required_prefix_end_exclusive": 5,
+      "retained_tokens": 5,
+      "selected_positions": [
+        4
+      ]
+    }
+  ],
+  "batch8": [
+    {
+      "padded_tokens": 1008,
+      "padding_tokens": 481,
+      "sources": 8,
+      "union_positions": [
+        6,
+        16,
+        35,
+        53,
+        76,
+        90,
+        118,
+        125
+      ],
+      "useful_tokens": 527,
+      "vocab_rows": 8
+    },
+    {
+      "padded_tokens": 920,
+      "padding_tokens": 443,
+      "sources": 8,
+      "union_positions": [
+        11,
+        24,
+        29,
+        35,
+        79,
+        85,
+        92,
+        114
+      ],
+      "useful_tokens": 477,
+      "vocab_rows": 8
+    },
+    {
+      "padded_tokens": 1016,
+      "padding_tokens": 464,
+      "sources": 8,
+      "union_positions": [
+        14,
+        15,
+        19,
+        58,
+        72,
+        85,
+        106,
+        121,
+        126
+      ],
+      "useful_tokens": 552,
+      "vocab_rows": 9
+    },
+    {
+      "padded_tokens": 928,
+      "padding_tokens": 295,
+      "sources": 8,
+      "union_positions": [
+        15,
+        64,
+        81,
+        87,
+        88,
+        94,
+        115
+      ],
+      "useful_tokens": 633,
+      "vocab_rows": 7
+    },
+    {
+      "padded_tokens": 1024,
+      "padding_tokens": 443,
+      "sources": 8,
+      "union_positions": [
+        3,
+        4,
+        54,
+        55,
+        109,
+        110,
+        111,
+        127
+      ],
+      "useful_tokens": 581,
+      "vocab_rows": 8
+    },
+    {
+      "padded_tokens": 872,
+      "padding_tokens": 299,
+      "sources": 8,
+      "union_positions": [
+        24,
+        26,
+        42,
+        43,
+        52,
+        67,
+        93,
+        96,
+        105,
+        108
+      ],
+      "useful_tokens": 573,
+      "vocab_rows": 10
+    },
+    {
+      "padded_tokens": 1008,
+      "padding_tokens": 196,
+      "sources": 8,
+      "union_positions": [
+        47,
+        50,
+        72,
+        93,
+        115,
+        116,
+        120,
+        125
+      ],
+      "useful_tokens": 812,
+      "vocab_rows": 8
+    },
+    {
+      "padded_tokens": 848,
+      "padding_tokens": 370,
+      "sources": 8,
+      "union_positions": [
+        4,
+        16,
+        20,
+        54,
+        62,
+        70,
+        89,
+        104,
+        105
+      ],
+      "useful_tokens": 478,
+      "vocab_rows": 9
+    }
+  ],
+  "coordinates": 71,
+  "environment": {
+    "model_config": "/tmp/preflight-model",
+    "python": "3.11.12",
+    "transformers": "5.15.1"
+  },
+  "original_valid_tokens": 8192,
+  "required_valid_tokens": 4633,
+  "schema": "M8_SELECTED_PREFIX_ACCOUNTING_V1",
+  "sources": 64,
+  "suffix_tokens_avoidable": 3559
+}
