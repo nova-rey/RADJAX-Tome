@@ -863,5 +863,21 @@
   "required_valid_tokens": 4633,
   "schema": "M8_SELECTED_PREFIX_ACCOUNTING_V1",
   "sources": 64,
-  "suffix_tokens_avoidable": 3559
+  "suffix_tokens_avoidable": 3559,
+  "summary": {
+    "batch8_dense_rows": 8192,
+    "batch8_padded_tokens": 7624,
+    "batch8_padding_tokens": 2991,
+    "batch8_selected_coordinate_rows": 71,
+    "batch8_union_rows": 67,
+    "batch8_useful_tokens": 4633,
+    "retained_max": 128,
+    "retained_mean": 72.390625,
+    "retained_median": 82.0,
+    "retained_min": 4,
+    "retained_p90": 117,
+    "sources_benefiting": 63,
+    "sources_requiring_full_128": 1,
+    "suffix_reduction_fraction": 0.4344482421875
+  }
 }
