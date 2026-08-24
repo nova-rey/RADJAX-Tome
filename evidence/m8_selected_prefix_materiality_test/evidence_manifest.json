@@ -1,0 +1,13 @@
+{
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "disposition": "SELECTED_PREFIX_BEHAVIORALLY_DIFFERENT_REJECTED",
+  "files": {
+    "analysis.md": "sha256:31d5faa8c8246b45978e0c24aaf5a05d54dc698dc8748c89ad1270183e06d1f5",
+    "materiality.json": "sha256:24b69b6ad431e5dd41579cdef20db94499d7a8de6d204f8b1741518d7734f64a"
+  },
+  "schema": "M8_SELECTED_PREFIX_MATERIALITY_EVIDENCE_MANIFEST_V1",
+  "selected_coordinates": 71,
+  "sources": 64,
+  "tome_commit": "ccaa6f6a69d2ed3f1ed580de4ad6558c3776340a",
+  "workload": "M8_SELECTED_PASS_CURRENT_TEACHER_64_V1"
+}
