@@ -1,0 +1,253 @@
+{
+  "body_digest_differences": 4,
+  "body_manifest_counts": {
+    "dense": 71,
+    "sparse": 71
+  },
+  "body_roots": {
+    "dense": "sha256:f63622774d09ba2de5f714982d6ffd37e2451037d4ccbe44032e6584bcdf72ca",
+    "equal": false,
+    "sparse": "sha256:4fcb35932e3e0c557b79ae5f3774df76c8860b37578aef1ef46fa46449a46e70"
+  },
+  "coordinates": 71,
+  "field_differences": {
+    "categorical_coordinates": 4,
+    "coordinates": 4,
+    "details": [
+      {
+        "dense_k": 262144,
+        "dense_top_token_ids": [
+          1941,
+          236772,
+          13443,
+          6061,
+          5700,
+          6571,
+          7875,
+          19239,
+          990,
+          6667
+        ],
+        "fields": [
+          "top_token_ids",
+          "top_probs",
+          "top_log_probs"
+        ],
+        "selected_example_id": "corpus_000000206",
+        "selected_position": 35,
+        "sparse_k": 262144,
+        "sparse_top_token_ids": [
+          1941,
+          236772,
+          13443,
+          6061,
+          5700,
+          6571,
+          7875,
+          19239,
+          990,
+          6667
+        ]
+      },
+      {
+        "dense_k": 1141,
+        "dense_top_token_ids": [
+          563,
+          2820,
+          11979,
+          17230,
+          692,
+          815,
+          3189,
+          8787,
+          3952,
+          740
+        ],
+        "fields": [
+          "top_token_ids",
+          "top_probs",
+          "top_log_probs"
+        ],
+        "selected_example_id": "corpus_000000260",
+        "selected_position": 104,
+        "sparse_k": 1141,
+        "sparse_top_token_ids": [
+          563,
+          2820,
+          11979,
+          17230,
+          692,
+          815,
+          3189,
+          8787,
+          3952,
+          740
+        ]
+      },
+      {
+        "dense_k": 361,
+        "dense_top_token_ids": [
+          506,
+          4803,
+          4993,
+          1023,
+          4181,
+          672,
+          496,
+          3755,
+          6647,
+          16106
+        ],
+        "fields": [
+          "top_token_ids",
+          "top_probs",
+          "top_log_probs",
+          "effective_top_k",
+          "bucket_masses"
+        ],
+        "selected_example_id": "corpus_000000298",
+        "selected_position": 105,
+        "sparse_k": 421,
+        "sparse_top_token_ids": [
+          506,
+          4803,
+          4993,
+          1023,
+          4181,
+          672,
+          496,
+          3755,
+          6647,
+          1061
+        ]
+      },
+      {
+        "dense_k": 262144,
+        "dense_top_token_ids": [
+          236858,
+          236789,
+          532,
+          237095,
+          236764,
+          239111,
+          503,
+          237130,
+          236929,
+          13571
+        ],
+        "fields": [
+          "top_token_ids",
+          "top_probs",
+          "top_log_probs"
+        ],
+        "selected_example_id": "corpus_000000978",
+        "selected_position": 118,
+        "sparse_k": 262144,
+        "sparse_top_token_ids": [
+          236858,
+          236789,
+          532,
+          237095,
+          236764,
+          239111,
+          503,
+          237130,
+          236929,
+          13571
+        ]
+      }
+    ],
+    "max_abs": {
+      "bucket_masses": 0.00244140625,
+      "tail_mass": 0.0,
+      "teacher_entropy": 0.0,
+      "top_log_probs": 0.125,
+      "top_mass": 0.0,
+      "top_probs": 0.000762939453125
+    },
+    "sample_median_abs": {
+      "bucket_masses": 0.0,
+      "tail_mass": 0.0,
+      "teacher_entropy": 0.0,
+      "top_log_probs": 0.0,
+      "top_mass": 0.0,
+      "top_probs": 0.0
+    }
+  },
+  "logical_roots": {
+    "dense": "sha256:e2df0c33984c9836fb0cffa9e8b23f4b209c707da680c2f06e994d37f7d9d35a",
+    "equal": false,
+    "sparse": "sha256:4d083dbad3986da0b5463477477b877a9d470134779bfb8f483fe6691c241f2e"
+  },
+  "projection_rows": {
+    "avoided": 8121,
+    "dense": 8192,
+    "sparse": 71
+  },
+  "raw_samples": [
+    {
+      "mode": "dense",
+      "output_root": "sha256:862b8123ca35d862c3e7881aeffb2f2c842848c31782354b2a3e7dc99d3d5067",
+      "peak_gpu_bytes": 1755066368,
+      "peak_host_bytes": 5319106560,
+      "run": 0,
+      "teacher_seconds": 7.290268025999993,
+      "wall_seconds": 24.592561210000007
+    },
+    {
+      "mode": "sparse",
+      "output_root": "sha256:ba0356f1aa932edebb6a8c13e9e041252777343067847c0e752b3d705bca3657",
+      "peak_gpu_bytes": 1755066368,
+      "peak_host_bytes": 5357682688,
+      "run": 1,
+      "teacher_seconds": 6.864034742000058,
+      "wall_seconds": 24.356269955000002
+    },
+    {
+      "mode": "sparse",
+      "output_root": "sha256:c5f42c5bb80e447beb85ae2c8912444e6b2039ab9a8b34d1de53d051d8471a16",
+      "peak_gpu_bytes": 1755066368,
+      "peak_host_bytes": 5368811520,
+      "run": 2,
+      "teacher_seconds": 6.503812934000109,
+      "wall_seconds": 23.377428314
+    },
+    {
+      "mode": "dense",
+      "output_root": "sha256:44953ea369c45d6179fb2e9ce5b96beb673289e5c18ff358222e551e6dc12911",
+      "peak_gpu_bytes": 1755066368,
+      "peak_host_bytes": 5369860096,
+      "run": 3,
+      "teacher_seconds": 6.838082288000052,
+      "wall_seconds": 23.875767745000005
+    },
+    {
+      "mode": "dense",
+      "output_root": "sha256:57bcf0b0103477e4d08105d97e0a63ab6940263c136eae0981468943b18685f7",
+      "peak_gpu_bytes": 1755066368,
+      "peak_host_bytes": 5369860096,
+      "run": 4,
+      "teacher_seconds": 7.5559522860000925,
+      "wall_seconds": 24.879150047999985
+    },
+    {
+      "mode": "sparse",
+      "output_root": "sha256:74ce51deca176bfc571f340da18debfcc19b953e9a476025e071a0e668f9d634",
+      "peak_gpu_bytes": 1755066368,
+      "peak_host_bytes": 5369860096,
+      "run": 5,
+      "teacher_seconds": 6.960086912999998,
+      "wall_seconds": 24.210041321000006
+    }
+  ],
+  "schema": "M8_SPARSE_SELECTED_LOGITS_FINAL_COMPARISON_V1",
+  "sources": 64,
+  "timing_medians": {
+    "dense_teacher": 7.290268025999993,
+    "dense_wall": 24.592561210000007,
+    "sparse_teacher": 6.864034742000058,
+    "sparse_wall": 24.210041321000006,
+    "teacher_change_fraction": -0.05846606496219575,
+    "wall_change_fraction": -0.015554292443702766
+  }
+}

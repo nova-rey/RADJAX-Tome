@@ -1,0 +1,20 @@
+{
+  "archive_sha256": {
+    "dense": "sha256:8ad56fb5dbfef1828f7977509437b093471fa9e442446ad6123154855b60e158",
+    "sparse": "sha256:82f8b54289ea73ce4ae16301f03bcc450e811a06f01c2191604e7515bc61cf6b"
+  },
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "disposition": "SPARSE_SELECTED_LOGITS_BEHAVIORALLY_DIFFERENT_REJECTED",
+  "files": {
+    "closure.md": "sha256:26d7a66ff4f1df1f3eeee93d9cdded846b6e1a3f9689f2a5ba7b2551c1eac97f",
+    "comparison.json": "sha256:bab09d767f0094be0d49150bbaab51075a4e1782055708cadafa38753c4fbd5f",
+    "raw_timing_report.json": "sha256:267aabc081d7f76c5c72e6b66ec52423218485d42d9f1391b529730dffe0efb2"
+  },
+  "m8": "M8_CLOSED",
+  "schema": "M8_SPARSE_SELECTED_LOGITS_FINAL_CLOSURE_MANIFEST_V1",
+  "selected_coordinates": 71,
+  "sources": 64,
+  "sparse_implementation_commit": "f420000de1afd53daea0a32da72393277868d081",
+  "tome_commit": "d09347158a7892e5a1f33f4fe18f56aef1701b7c",
+  "workload": "M8_SELECTED_PASS_CURRENT_TEACHER_64_V1"
+}
