@@ -87,7 +87,18 @@ def main(argv: list[str] | None = None) -> int:
             and raw.index(command) + 1 < len(raw)
             and not raw[raw.index(command) + 1].startswith("--")
         )
-        or (command == "doctor" and ("--config" in raw or len(raw) == 1))
+        or (
+            command == "doctor"
+            and not any(
+                option in raw
+                for option in (
+                    "--teacher-backend",
+                    "--teacher-mode",
+                    "--target-type",
+                    "--runtime-mode",
+                )
+            )
+        )
     ):
         from radjax_tome.cli.mainline import main as mainline_main
 
