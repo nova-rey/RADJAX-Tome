@@ -3825,3 +3825,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 final evidence refresh: bound the closure audit to the package-boundary implementation tip, 20-test focused gate, and final wheel digest.
 
 - 2026-08-28 M9 Contract-status correction: preserved negative outcomes returned by Contract v3 standard, governed, and external-attestation APIs instead of hard-coding every non-raising result to pass.
+
+- 2026-08-28 M9 evidence refresh: rebound the audit report and wheel digest to the Contract-status correction tip.
