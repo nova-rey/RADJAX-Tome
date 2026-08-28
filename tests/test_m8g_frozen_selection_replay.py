@@ -154,11 +154,17 @@ def test_replay_member_path_cannot_escape_adoption_root(
 
 def test_replay_metadata_is_atomic_idempotent_and_conflict_safe(tmp_path: Path) -> None:
     source = tmp_path / "source.json"
-    source.write_text(json.dumps({
-        "schema_version": "qrwkv_xla.teacher_target_store.v1",
-        "num_examples": 1000,
-    }), encoding="utf-8")
+    source.write_text(
+        json.dumps(
+            {
+                "schema_version": "qrwkv_xla.teacher_target_store.v1",
+                "num_examples": 1000,
+            }
+        ),
+        encoding="utf-8",
+    )
     import hashlib
+
     digest = "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
     run_root = tmp_path / "run"
     _publish_replay_metadata(source=source, run_root=run_root, expected_digest=digest)
@@ -166,7 +172,9 @@ def test_replay_metadata_is_atomic_idempotent_and_conflict_safe(tmp_path: Path) 
     _publish_replay_metadata(source=source, run_root=run_root, expected_digest=digest)
     (run_root / "metadata.json").write_bytes(b"conflict")
     with pytest.raises(ValueError, match="conflicts"):
-        _publish_replay_metadata(source=source, run_root=run_root, expected_digest=digest)
+        _publish_replay_metadata(
+            source=source, run_root=run_root, expected_digest=digest
+        )
 
 
 def test_replay_metadata_rejects_invalid_schema_and_symlink(tmp_path: Path) -> None:
@@ -174,11 +182,15 @@ def test_replay_metadata_rejects_invalid_schema_and_symlink(tmp_path: Path) -> N
     source.write_text("{}", encoding="utf-8")
     digest = "sha256:" + __import__("hashlib").sha256(source.read_bytes()).hexdigest()
     with pytest.raises(ValueError, match="schema"):
-        _publish_replay_metadata(source=source, run_root=tmp_path / "run", expected_digest=digest)
+        _publish_replay_metadata(
+            source=source, run_root=tmp_path / "run", expected_digest=digest
+        )
     link = tmp_path / "link.json"
     link.symlink_to(source)
     with pytest.raises(ValueError, match="regular file"):
-        _publish_replay_metadata(source=link, run_root=tmp_path / "run2", expected_digest=digest)
+        _publish_replay_metadata(
+            source=link, run_root=tmp_path / "run2", expected_digest=digest
+        )
 
 
 def test_v19_rich_replay_resolves_all_score_pass_tuples() -> None:
@@ -186,19 +198,20 @@ def test_v19_rich_replay_resolves_all_score_pass_tuples() -> None:
     root = Path("/home/nyx/m8g/published/m8g-current-1k-workload-authoritative-v19")
     if not root.is_dir():
         pytest.skip("durable v19 workload is available only on the benchmark host")
+    import numpy as np
+
+    from radjax_tome.artifact_validation.delivery import (
+        _path_b_score_pass_record_matches,
+    )
+    from radjax_tome.builder.c6_integration import c5_records_for_delivery
     from radjax_tome.fingerprint.multi_role_selection import (
         load_multi_role_selection_artifact_for_replay,
     )
-    from radjax_tome.builder.c6_integration import c5_records_for_delivery
-    from radjax_tome.artifact_validation.delivery import _path_b_score_pass_record_matches
-    import numpy as np
 
     artifact = load_multi_role_selection_artifact_for_replay(
         root / "selection-checkpoint/c6/multi-role-selection"
     )
-    records = c5_records_for_delivery(
-        artifact, delivery_path="two_pass_rerun_selected"
-    )
+    records = c5_records_for_delivery(artifact, delivery_path="two_pass_rerun_selected")
     shard_file = root / "selection-checkpoint/shards/shard-00000.npz"
     arrays = np.load(shard_file, allow_pickle=False)
     shard = {name: arrays[name] for name in arrays.files}

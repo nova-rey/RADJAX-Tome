@@ -3833,3 +3833,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28: Corrected the approved M9 plan Markdown EOF hygiene before publication; plan content and disposition remain unchanged.
 
 - 2026-08-28 M9 CI reconciliation: recorded the preserved dirty worktree and clean continuation branch before mandatory CI recovery; no dirty changes were copied or absorbed.
+
+- 2026-08-28 M9 CI lint reconciliation: applied nonsemantic Ruff import, formatting, line-length, strict-zip, and missing-import corrections across inherited source, test, tool, and M8G archival files; executable behavior was not intentionally changed.

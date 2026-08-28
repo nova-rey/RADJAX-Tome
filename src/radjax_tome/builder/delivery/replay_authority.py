@@ -14,12 +14,13 @@ from typing import Any
 
 from radjax_tome.builder.c6_integration import c5_records_for_delivery
 from radjax_tome.corpora import validate_corpus_artifact
+from radjax_tome.fingerprint.multi_role_selection import (
+    load_multi_role_selection_artifact,
+    load_multi_role_selection_artifact_for_replay,
+)
 from radjax_tome.provenance.teacher_model import (
     inspect_teacher_model,
     validate_teacher_model_provenance,
-)
-from radjax_tome.fingerprint.multi_role_selection import (
-    load_multi_role_selection_artifact_for_replay,
 )
 
 
@@ -46,7 +47,9 @@ def _sha256(path: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
-def _publish_replay_metadata(*, source: Path, run_root: Path, expected_digest: str) -> None:
+def _publish_replay_metadata(
+    *, source: Path, run_root: Path, expected_digest: str
+) -> None:
     """Atomically expose authority-bound score-pass metadata at RUN_ROOT."""
     if not source.is_file() or source.is_symlink():
         raise ValueError("frozen replay metadata is not a regular file")
@@ -96,7 +99,7 @@ def _publish_replay_shards(*, source: Path, run_root: Path) -> str:
         dest_files = sorted(destination.rglob("*.npz"))
         if [p.name for p in source_files] != [p.name for p in dest_files]:
             raise ValueError("run-root shard destination conflicts with authority")
-        for left, right in zip(source_files, dest_files):
+        for left, right in zip(source_files, dest_files, strict=True):
             if _sha256(left) != _sha256(right):
                 raise ValueError("run-root shard destination digest conflict")
     else:
@@ -105,14 +108,20 @@ def _publish_replay_shards(*, source: Path, run_root: Path) -> str:
             shutil.rmtree(temporary)
         shutil.copytree(source, temporary, symlinks=False)
         os.replace(temporary, destination)
-    return "sha256:" + hashlib.sha256(
-        json.dumps(
-            [
-                {"path": p.relative_to(run_root).as_posix(), "sha256": _sha256(p)}
-                for p in sorted(destination.rglob("*")) if p.is_file()
-            ], sort_keys=True, separators=(",", ":")
-        ).encode()
-    ).hexdigest()
+    return (
+        "sha256:"
+        + hashlib.sha256(
+            json.dumps(
+                [
+                    {"path": p.relative_to(run_root).as_posix(), "sha256": _sha256(p)}
+                    for p in sorted(destination.rglob("*"))
+                    if p.is_file()
+                ],
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+        ).hexdigest()
+    )
 
 
 def _owned_member_path(root: Path, relative: object) -> Path:
@@ -202,8 +211,11 @@ def adopt_verified_selection_replay(
         authority = json.loads(authority_path.read_text(encoding="utf-8"))
         try:
             from radjax_contract.tome import validate_role_binding
+
             validate_role_binding("workload_authority", "authority")
-            validate_role_binding("runtime_teacher_provenance", "runtime_teacher_provenance")
+            validate_role_binding(
+                "runtime_teacher_provenance", "runtime_teacher_provenance"
+            )
         except ImportError as exc:
             raise ValueError("replay Contract role-binding API unavailable") from exc
         if authority.get("provenance") != "NEW_DETERMINISTIC_M8G_1K_WORKLOAD":
@@ -213,9 +225,17 @@ def adopt_verified_selection_replay(
             raise ValueError("current replay runtime teacher provenance is missing")
         runtime_record = json.loads(runtime_locator.read_text(encoding="utf-8"))
         if runtime_record.get("schema_version") != "teacher_model_provenance_v1":
-            if authority.get("replay_compatibility_version") != "current-production-replay-v1":
-                raise ValueError("teacher_model_provenance.json schema_version is unsupported")
-            raise ValueError("current replay runtime teacher provenance must use teacher_model_provenance_v1")
+            if (
+                authority.get("replay_compatibility_version")
+                != "current-production-replay-v1"
+            ):
+                raise ValueError(
+                    "teacher_model_provenance.json schema_version is unsupported"
+                )
+            raise ValueError(
+                "current replay runtime teacher provenance must use "
+                "teacher_model_provenance_v1"
+            )
         selected_sources = int(authority["counts"]["selected_sources"])
         selected_coordinates = int(authority["counts"]["selected_coordinates"])
         replay_root = artifact_root
@@ -225,7 +245,8 @@ def adopt_verified_selection_replay(
         metadata_digest = _sha256(metadata_source)
         inventory_entries = document.get("entries") or document.get("inventory") or []
         metadata_entries = [
-            entry for entry in inventory_entries
+            entry
+            for entry in inventory_entries
             if entry.get("path") == "selection-checkpoint/metadata.json"
         ]
         if len(metadata_entries) != 1:
@@ -342,7 +363,9 @@ def adopt_verified_selection_replay(
             if not shard_tree.is_dir() or shard_tree.is_symlink():
                 raise ValueError("current replay score-pass shard closure is missing")
             if any(path.is_symlink() for path in shard_tree.rglob("*")):
-                raise ValueError("current replay score-pass shard closure contains symlink")
+                raise ValueError(
+                    "current replay score-pass shard closure contains symlink"
+                )
             shutil.copytree(shard_tree, input_root / "shards", symlinks=False)
             for relative in (
                 "runtime_teacher_model_provenance_authority.json",
@@ -371,7 +394,9 @@ def adopt_verified_selection_replay(
             # validate it through the exact production validator.
             model_root = input_root / "model" / "model"
             projection = inspect_teacher_model(model_root, check="metadata_only")
-            projection["portable_source"] = "runtime_teacher_model_provenance_authority.json"
+            projection["portable_source"] = (
+                "runtime_teacher_model_provenance_authority.json"
+            )
             projection["portable_source_sha256"] = _sha256(
                 input_root / "runtime_teacher_model_provenance_authority.json"
             )

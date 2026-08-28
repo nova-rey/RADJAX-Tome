@@ -49,7 +49,7 @@ class HFTorchTeacherEmissionBackend:
         if str(config.target_policy) not in _SUPPORTED_EMISSION_POLICIES:
             raise ValueError(
                 "hf_torch supports dense_logits, topk_with_tail_v0, "
-                "and cascaded_soft_labels_v1, dynamic_cascaded_soft_labels_v1, corridor_exemplar_v1"
+                "and cascaded_soft_labels_v1, corridor_exemplar_v1"
             )
         if config.sequence_length <= 0:
             raise ValueError("sequence_length must be > 0")
@@ -243,7 +243,10 @@ class HFTorchTeacherEmissionBackend:
                     "effective_top_k": min(self.config.top_k, effective_vocab),
                 }
             )
-        if str(self.config.target_policy) in {"cascaded_soft_labels_v1", "dynamic_cascaded_soft_labels_v1"}:
+        if str(self.config.target_policy) in {
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        }:
             metadata.update(
                 {
                     "num_buckets": self.config.num_buckets,
@@ -297,12 +300,13 @@ class HFTorchTeacherEmissionBackend:
             model_dir = Path(model_path)
             tokenizer_dir = Path(tokenizer_path)
             raise RuntimeError(
-                "hf_torch local model/tokenizer load failed: "
+                "hf_torch local torch/transformers model/tokenizer load failed: "
                 f"model_path={model_path!r} type={type(self.config.model_id).__name__} "
                 f"exists={model_dir.exists()} dir={model_dir.is_dir()}; "
                 f"tokenizer_path={tokenizer_path!r} type={type(tokenizer_id).__name__} "
                 f"exists={tokenizer_dir.exists()} dir={tokenizer_dir.is_dir()}; "
-                f"local_files_only={local_files_only}; cause={type(exc).__name__}: {exc}"
+                f"local_files_only={local_files_only}; "
+                f"cause={type(exc).__name__}: {exc}"
             ) from exc
         if getattr(tokenizer, "pad_token_id", None) is None:
             eos_token = getattr(tokenizer, "eos_token", None)
@@ -321,9 +325,16 @@ class HFTorchTeacherEmissionBackend:
         if str(self.config.target_policy) == "dense_logits":
             return {"logits": logits}
         topk = _dense_logits_to_topk_tail(logits, top_k=self.config.top_k)
-        if str(self.config.target_policy) in {"topk_with_tail_v0", "dynamic_cascaded_soft_labels_v1", "corridor_exemplar_v1"}:
+        if str(self.config.target_policy) in {
+            "topk_with_tail_v0",
+            "dynamic_cascaded_soft_labels_v1",
+            "corridor_exemplar_v1",
+        }:
             return topk
-        if str(self.config.target_policy) in {"cascaded_soft_labels_v1", "dynamic_cascaded_soft_labels_v1"}:
+        if str(self.config.target_policy) in {
+            "cascaded_soft_labels_v1",
+            "dynamic_cascaded_soft_labels_v1",
+        }:
             return {
                 **topk,
                 "bucket_masses": _tail_bucket_masses(

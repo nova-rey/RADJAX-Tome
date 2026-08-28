@@ -193,13 +193,9 @@ def validate_selected_exemplar_delivery(
             "compact_k_immutable_body",
         }:
             required_fields = tuple(
-                field
-                for field in required_fields
-                if field != "top_selection_mask"
+                field for field in required_fields if field != "top_selection_mask"
             )
-        missing = [
-            field for field in required_fields if field not in payload
-        ]
+        missing = [field for field in required_fields if field not in payload]
         if missing:
             blockers.append(
                 "selected exemplar payload missing compressed teacher target fields: "

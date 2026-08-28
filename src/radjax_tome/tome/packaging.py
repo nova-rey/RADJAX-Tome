@@ -82,6 +82,7 @@ def plan_package_destination(
         raise ValueError("refusing to overwrite a nonempty package directory")
     return {"status": "ready", "action": "replace", "path": candidate}
 
+
 _CORE_FILES = (
     "metadata.json",
     "vocab_contract.json",
