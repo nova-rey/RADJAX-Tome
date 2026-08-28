@@ -1,27 +1,31 @@
 {
-  "schema_version": "radjax_tome_m9_closure_audit_v1",
-  "status": "implementation_partial",
-  "branch": "m9/opinionated-mainline-cli-reconciled",
-  "commit": "b828272133a15cdb7283472fcc9d2f815f1fc9c3",
+  "schema_version": "radjax_tome_m9_closure_audit_v2",
+  "status": "closed",
+  "branch": "m9/opinionated-mainline-cli-ci-reconciliation",
+  "commit": "7550ea9bcae23917fdaaee3d7506efaef849c6bf",
   "accepted_m8": "88d6f418e0f39ab2ec61d9047f974f04657e5214",
   "origin_main": "deed286a8725cc98f4a5d6a25aa80582d692e108",
-  "rejected_branch": "8a2dc2794ec32227f6187fa22837ba1f8dae0ccb",
   "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
   "public_commands": ["build", "validate", "inspect", "package", "doctor", "research"],
-  "focused_m9_hydra": {"passed": 20},
-  "full_suite": {"passed": 581, "skipped": 25, "failed_before_completion": 20},
+  "pytest": {"passed": 1212, "skipped": 9, "failed": 0},
+  "ruff_check": "pass",
+  "ruff_format_check": "pass",
+  "compileall": "pass",
+  "diff_check": "pass",
+  "wheel_build": "pass",
   "clean_install": {
     "python": "3.12",
-    "wheel_sha256": "42a990f9b22272a86fa8551451f3388057973b4cf9aa163477e69f710d9386aa",
+    "wheel_sha256": "ef1a7c1a40853c483a692df571385ddffd96f561f0876e2739a8d3d0776e7c8a",
     "contract_commit_verified": true,
     "doctor": "pass",
     "package_validate_inspect": "pass"
   },
-  "review": {"status": "not_obtained"},
-  "blockers": [
-    "origin/main no longer equals the plan prerequisite 6a6c653",
-    "full suite has correctness and stale-boundary failures",
-    "full Ruff gate is not green on tracked archival benchmark code",
-    "independent review gate is incomplete"
-  ]
+  "selected_rerun_batch_size": 1,
+  "review": {"status": "pass", "mode": "focused-independent-read-only"},
+  "known_baseline_exceptions": {
+    "accepted_m8_ruff_violations": 216,
+    "original_m9_ruff_violations": 205,
+    "m9_new_ruff_violations": 0,
+    "historical_p6_receipt_rewritten": false
+  }
 }
