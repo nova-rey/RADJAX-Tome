@@ -26,6 +26,17 @@ from .staging import (
 from .validation import _validate_path_b_score_pass_records
 
 
+def _existing_delivery_created_at(artifact_dir: Path) -> str | None:
+    """Reuse the authoritative delivery timestamp during a deterministic resume."""
+    try:
+        value = read_json_object(
+            artifact_dir / "leaderboards" / SELECTED_EXEMPLARS_FILENAME
+        ).get("created_at")
+    except (OSError, ValueError):
+        return None
+    return str(value) if value else None
+
+
 def _materialize_selected_payloads(
     selected_records: list[dict[str, Any]],
     *,
@@ -74,7 +85,7 @@ def run_selected_delivery_rerun(
             raise ValueError(
                 "selected-pass measurement requires an evidence metrics sink"
             )
-    created_at = _now()
+    created_at = _existing_delivery_created_at(config.artifact_dir) or _now()
     delivery_started = perf_counter()
     store = TeacherTargetStore.open(config.artifact_dir)
     examples = _load_examples(

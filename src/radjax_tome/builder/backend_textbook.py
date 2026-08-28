@@ -4,8 +4,8 @@ import hashlib
 import json
 import os
 import shutil
-from collections.abc import Callable, Iterable
-from dataclasses import asdict, dataclass
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -110,6 +110,7 @@ class BackendTeacherTextbookBuildConfig:
     selection_integration_policy: str = "global_only_v1"
     selection_integration_config_hash: str | None = None
     native_c6_path_b_execution: bool = False
+    metadata: Mapping[str, object] = field(default_factory=dict)
 
 
 def build_backend_teacher_textbook(
@@ -587,6 +588,7 @@ def teacher_backend_config_from_build_config(
         fallback_policy=config.fallback_policy,  # type: ignore[arg-type]
         local_files_only=config.local_files_only,
         allow_downloads=config.allow_downloads,
+        metadata=config.metadata,
     )
 
 

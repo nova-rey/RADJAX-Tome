@@ -3765,3 +3765,9 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 production-path correction: made the target-store compactness decision explicit in the production backend metadata, preserving direct M8 compact-mode behavior while preventing global target stores from emitting unsafe object arrays.
 
 - 2026-08-28 M9 correction follow-up: retained compact M8 behavior for direct backend callers and scoped only the production target-store override, avoiding an accidental regression in the standalone mode contract.
+
+- 2026-08-28 M9 resume correction: reused the existing selected-delivery creation timestamp when rebuilding a resumable workspace, preserving deterministic public artifact bytes across canonical resume.
+
+- 2026-08-28 M9 target-store correction: propagated an explicit noncompact target-store marker through the streaming builder configuration so production dynamic stores remain safe while direct backend representation tests retain their M8 mode behavior.
+
+- 2026-08-28 M9 resume correction: treated the atomically completed compact-body metadata file as the resumable publication boundary, preventing a second canonical resume from attempting to recreate an already-published body store.

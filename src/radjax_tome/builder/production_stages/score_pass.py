@@ -62,6 +62,10 @@ def streaming_config(
         selection_integration_config_hash=selection_integration_hash(config),
         exemplar_selection_enabled=native_c6_path_b_enabled(config),
         native_c6_path_b_execution=native_c6_path_b_enabled(config),
+        metadata={
+            "target_store_compact": False,
+            "representation_mode": getattr(config, "representation_mode", None),
+        },
     )
 
 

@@ -207,15 +207,19 @@ def assemble_selected_delivery_artifacts(
         if prepared.publication_payloads is None:
             raise ValueError("compact C6 requires the canonical payload handoff")
         store_dir = selected_dir / "compact_body_store"
-        write_compact_body_store_pipelined_from_compact(
-            store_dir, prepared.publication_payloads, profile="compact_k_monolithic"
-        )
+        if not (store_dir / "metadata.jsonl").is_file():
+            write_compact_body_store_pipelined_from_compact(
+                store_dir,
+                prepared.publication_payloads,
+                profile="compact_k_monolithic",
+            )
     if not _native_streamed_payloads(config):
         if config.representation_mode == COMPACT_K_MONOLITHIC:
             store_dir = selected_dir / "compact_body_store"
-            write_compact_body_store_pipelined_from_compact(
-                store_dir, selected_payloads, profile="compact_k_monolithic"
-            )
+            if not (store_dir / "metadata.jsonl").is_file():
+                write_compact_body_store_pipelined_from_compact(
+                    store_dir, selected_payloads, profile="compact_k_monolithic"
+                )
             metadata = [
                 json.loads(line)
                 for line in (store_dir / "metadata.jsonl").read_text().splitlines()
