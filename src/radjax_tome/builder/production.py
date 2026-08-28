@@ -368,7 +368,7 @@ def _build_production_gpu_tome_compatibility(
                         ),
                         "run_root_shards_path": str(config.output_dir / "shards"),
                         "selected_sources": replay_authority.selected_sources,
-                        "selected_coordinates": replay_authority.selected_coordinates,
+                        "selected_coordinates": (replay_authority.selected_coordinates),
                     },
                 )
             if config.preflight_only:
@@ -407,7 +407,9 @@ def _build_production_gpu_tome_compatibility(
                             "replay_identity": replay_authority.replay_identity,
                             "adopted_root": str(replay_authority.adopted_root),
                             "selected_sources": replay_authority.selected_sources,
-                            "selected_coordinates": replay_authority.selected_coordinates,
+                            "selected_coordinates": (
+                                replay_authority.selected_coordinates
+                            ),
                             "metadata_digest": replay_authority.metadata_digest,
                             "run_root_metadata_path": str(
                                 config.output_dir / "metadata.json"

@@ -3807,3 +3807,9 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 clean-install correction: routed global `--json doctor` through the canonical public parser while retaining explicit legacy doctor flags under compatibility routing.
 
 - 2026-08-28 M9 closure audit: recorded the live authority divergence, focused and clean-install results, full-suite/Ruff blockers, and machine-readable partial evidence without claiming milestone closure.
+
+- 2026-08-28 M9 lint correction: formatted the shared preflight additions and split the remaining production report field so all changed production files pass targeted Ruff checks.
+
+- 2026-08-28 M9 lint follow-up: split the replay adoption report’s remaining long coordinate field and revalidated the targeted style gate.
+
+- 2026-08-28 M9 final style pass: applied Ruff formatting to the routed CLI and shared preflight/production modules and confirmed the changed-file lint gate.

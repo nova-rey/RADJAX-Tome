@@ -62,9 +62,13 @@ def main(argv: list[str] | None = None) -> int:
             "compatibility parser; run 'radjax-tome research COMMAND --help'."
         )
         return 0
-    if command in {"validate", "inspect"} and "--help" not in raw and (
-        raw.index(command) + 1 >= len(raw)
-        or raw[raw.index(command) + 1].startswith("--")
+    if (
+        command in {"validate", "inspect"}
+        and "--help" not in raw
+        and (
+            raw.index(command) + 1 >= len(raw)
+            or raw[raw.index(command) + 1].startswith("--")
+        )
     ):
         print(
             f"WARNING deprecated compatibility form '{command} --path'; use "

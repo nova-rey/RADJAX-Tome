@@ -153,7 +153,10 @@ def assess_production_preflight(
     """
     blockers: list[str] = []
     configuration_checked = config is not None
-    if config is not None and getattr(config, "verified_selection_replay_path", None) is None:
+    if (
+        config is not None
+        and getattr(config, "verified_selection_replay_path", None) is None
+    ):
         validate_required_inputs(config, blockers)
     if resume and overwrite:
         blockers.append("resume and overwrite are mutually exclusive")
@@ -169,7 +172,12 @@ def assess_production_preflight(
     if candidate in {Path("/"), Path.home(), Path.cwd()} or candidate.is_symlink():
         blockers.append("destination is unsafe")
         return ProductionPreflightAssessment(
-            "fail", candidate, "unsafe", "reject", tuple(blockers), configuration_checked
+            "fail",
+            candidate,
+            "unsafe",
+            "reject",
+            tuple(blockers),
+            configuration_checked,
         )
     if not candidate.exists():
         state = "missing"
@@ -230,7 +238,12 @@ def assess_production_preflight(
             "fail", candidate, state, "reject", tuple(blockers), configuration_checked
         )
     return ProductionPreflightAssessment(
-        "pass", candidate, state, "resume" if resume else "replace", (), configuration_checked
+        "pass",
+        candidate,
+        state,
+        "resume" if resume else "replace",
+        (),
+        configuration_checked,
     )
 
 
