@@ -1,0 +1,15 @@
+{
+  "branch": "m9/opinionated-mainline-cli",
+  "checks": {
+    "clean_install_import": "pass with declared dependency resolution attempted",
+    "compileall": "pass",
+    "diff_check": "pass",
+    "focused_tests": "40 passed",
+    "format": "pass",
+    "ruff": "pass",
+    "wheel": "built"
+  },
+  "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "scope": "M9 opinionated mainline CLI; no Contract source changes, no historical evidence changes",
+  "tome_head": "6a6c65378cfd86a190e44e861ed9323927c2acc8"
+}

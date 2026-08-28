@@ -935,6 +935,35 @@ def _build_parser() -> argparse.ArgumentParser:
     doctor.add_argument("--write-report", type=Path)
     doctor.set_defaults(func=_cmd_doctor)
 
+    run = subparsers.add_parser("run", help="Run a canonical M5-configured Tome build.")
+    run.add_argument(
+        "--intent",
+        type=Path,
+        required=True,
+        help="JSON/YAML radjax_tome_build_intent_v1",
+    )
+    run.add_argument("--resume", action="store_true")
+    run.add_argument("--overwrite", action="store_true")
+    run.set_defaults(func=_cmd_m9_run)
+    status = subparsers.add_parser("status", help="Show artifact lifecycle status.")
+    status.add_argument("--artifact", type=Path, required=True)
+    status.set_defaults(func=_cmd_m9_status)
+    package = subparsers.add_parser(
+        "package", help="Package an existing Tome artifact."
+    )
+    package.add_argument("--artifact", type=Path, required=True)
+    package.add_argument("--output", type=Path, required=True)
+    package.add_argument(
+        "--profile", choices=("student", "full_debug_provenance"), required=True
+    )
+    package.add_argument("--archive", choices=("none", "tgz"), default="none")
+    package.add_argument("--overwrite", action="store_true")
+    package.set_defaults(func=_cmd_m9_package)
+    research = subparsers.add_parser(
+        "research", help="Access advanced research commands explicitly."
+    )
+    research.add_argument("args", nargs=argparse.REMAINDER)
+    research.set_defaults(func=_cmd_m9_research)
     return parser
 
 
@@ -2114,6 +2143,64 @@ def _write_artifact_metadata_sanity_report(
     from radjax_tome.reports import write_artifact_metadata_sanity_report
 
     write_artifact_metadata_sanity_report(report, path)
+
+
+def _cmd_m9_run(args: argparse.Namespace) -> int:
+    from radjax_tome.cli.m9 import load_build_intent, run_intent
+
+    try:
+        report = run_intent(
+            load_build_intent(args.intent), resume=args.resume, overwrite=args.overwrite
+        )
+    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+        print(
+            json.dumps({"status": "fail", "error": str(exc)}, sort_keys=True),
+            file=sys.stderr,
+        )
+        return 2
+    print(json.dumps(report, sort_keys=True, default=str))
+    return 0 if report.get("status") in {"pass", "warn"} else 1
+
+
+def _cmd_m9_status(args: argparse.Namespace) -> int:
+    from radjax_tome.cli.m9 import status
+
+    print(json.dumps(status(args.artifact), sort_keys=True, default=str))
+    return 0
+
+
+def _cmd_m9_package(args: argparse.Namespace) -> int:
+    from radjax_tome.tome.packaging import package_tome_artifact
+
+    try:
+        result = package_tome_artifact(
+            args.artifact,
+            args.output,
+            profile=args.profile,
+            archive=args.archive,
+            overwrite=args.overwrite,
+        )
+    except (OSError, ValueError, TypeError) as exc:
+        print(
+            json.dumps({"status": "fail", "error": str(exc)}, sort_keys=True),
+            file=sys.stderr,
+        )
+        return 2
+    print(
+        json.dumps(
+            {"status": "pass", "output": str(getattr(result, "output", result))},
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+def _cmd_m9_research(args: argparse.Namespace) -> int:
+    print(
+        "research commands are advanced; use a named command from --help",
+        file=sys.stderr,
+    )
+    return 2
 
 
 if __name__ == "__main__":

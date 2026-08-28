@@ -1,5 +1,13 @@
 # RADJAX-Tome Project Ledger
 
+## 2026-08-27 — M9 Mainline CLI checkpoint
+
+M9 implementation begins from the verified fast-forward mainline. The canonical
+Contract dependency is pinned to the accepted buffer-native commit and
+production selected-rerun presets use batch size 1; historical evidence remains
+unchanged.
+
+
 ## 2026-07-31 — M7A Payload Sharding Characterization
 
 M7 begins from an explicit characterization of the current selected-payload

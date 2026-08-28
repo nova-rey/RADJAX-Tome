@@ -370,3 +370,7 @@ Historical migration and quarantine audit scripts are archive-only on:
 - `archive/tome-large-docs`
 
 See `docs/TOME_ARCHIVE_POINTERS.md` for archive inspection commands.
+
+## M9 mainline intent workflow
+
+Use radjax-tome run --intent build_intent.json or YAML. The command validates and classifies its destination before build side effects; use --resume or --overwrite explicitly for existing output directories. status, validate, inspect, and package operate on the same artifact lifecycle.
