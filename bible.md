@@ -3731,3 +3731,7 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 config/preflight boundary: added complete closed JSON/YAML M5 intent loading with duplicate/unknown/missing-field rejection, config-relative paths, canonical destination override ownership, and mutation-free destination assessment.
 
 - 2026-08-28 M9 public root: established the six-command mainline, module invocation, stable result/error rendering, canonical-config build routing, and closed production artifact dispatch while retaining legacy commands behind deprecation routing.
+
+- 2026-08-28 M9 lifecycle boundary: added archive-aware validation dispatch and mutation-free package destination planning, preserving the existing Contract-owned validators and deterministic package writer.
+
+- 2026-08-28 M9 public lifecycle coverage: added root-command, canonical output-routing, unsupported-format, and package-destination safety regressions.

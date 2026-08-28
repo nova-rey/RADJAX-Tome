@@ -64,6 +64,24 @@ SHARD_MANIFEST_SCHEMA = "tome_shard_manifest_v1"
 CORRIDOR_ASSIGNMENT_MANIFEST_SCHEMA = "corridor_assignment_manifest_v1"
 SELECTED_PAYLOAD_MANIFEST_SCHEMA = "selected_payload_manifest_v1"
 
+
+def plan_package_destination(
+    output: Path, *, overwrite: bool = False
+) -> dict[str, Any]:
+    """Return a safe package destination decision without mutating the filesystem."""
+    candidate = output if output.is_absolute() else output.absolute()
+    if candidate.is_symlink() or candidate in {Path("/"), Path.home()}:
+        raise ValueError("package destination is unsafe")
+    if not candidate.exists():
+        return {"status": "ready", "action": "create", "path": candidate}
+    if candidate.is_dir() and not any(candidate.iterdir()):
+        return {"status": "ready", "action": "use", "path": candidate}
+    if not overwrite:
+        raise ValueError(f"package output already exists: {candidate}")
+    if candidate.is_dir() and any(candidate.iterdir()):
+        raise ValueError("refusing to overwrite a nonempty package directory")
+    return {"status": "ready", "action": "replace", "path": candidate}
+
 _CORE_FILES = (
     "metadata.json",
     "vocab_contract.json",
@@ -248,6 +266,7 @@ def package_tome_artifact(
         raise ValueError("student_contract_profile must be one of: v4, v5, v6")
     if archive not in {"none", "tgz"}:
         raise ValueError("archive must be one of: none, tgz")
+    plan_package_destination(output, overwrite=overwrite)
     source_artifact = ValidatedProducerArtifact.from_directory(artifact_dir)
     source = source_artifact.root
     if output.exists() and not overwrite:
