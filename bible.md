@@ -3791,3 +3791,7 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 resume correction: treated the atomically completed compact-body metadata file as the resumable publication boundary, preventing a second canonical resume from attempting to recreate an already-published body store.
 
 - 2026-08-28 M9 quality correction: formatted the new public-surface modules, snapshots, and output-contract tests and rechecked changed-file lint/diff hygiene.
+
+- 2026-08-28 M9 override correction: routed CLI resume/overwrite flags through the canonical advanced-override API alongside output_dir, preserving one normalized production request.
+
+- 2026-08-28 M9 preflight correction: resolved and validated the canonical production request before invoking the state machine for non-preflight-only public builds, preserving fail-closed config errors before mutation.

@@ -93,9 +93,34 @@ def run(args: argparse.Namespace) -> CLIResult:
     try:
         if args.command == "build":
             intent = load_tome_build_intent(args.config)
-            overrides = {"output_dir": args.output} if args.output else {}
+            overrides = {}
+            if args.output:
+                overrides["output_dir"] = args.output
+            if args.resume:
+                overrides["resume"] = True
+            if args.overwrite:
+                overrides["overwrite"] = True
             if overrides:
                 intent = apply_production_advanced_overrides(intent, overrides)
+            resolved = resolve_tome_build_intent(intent, source="m9_cli")
+            production = production_build_config_from_resolved(resolved)
+            if not args.preflight_only:
+                from radjax_tome.builder.production_stages.preflight import (
+                    validate_required_inputs,
+                )
+
+                blockers: list[str] = []
+                validate_required_inputs(production, blockers)
+                if blockers:
+                    return _error(
+                        "build",
+                        "M5_CONFIG_INVALID",
+                        "; ".join(blockers),
+                        2,
+                        repair=(
+                            "correct the canonical config inputs and rerun preflight"
+                        ),
+                    )
             assessment = assess_production_preflight(
                 intent.outputs.output_dir, resume=args.resume, overwrite=args.overwrite
             )
@@ -117,25 +142,10 @@ def run(args: argparse.Namespace) -> CLIResult:
                         "action": assessment.action,
                     },
                 )
-            intent = intent.__class__(
-                **{
-                    **intent.__dict__,
-                    "execution": intent.execution.__class__(
-                        **{
-                            **intent.execution.__dict__,
-                            "resume": args.resume,
-                            "overwrite": args.overwrite,
-                        }
-                    ),
-                }
-            )
             from radjax_tome.builder.production import build_production_gpu_tome
 
-            resolved = resolve_tome_build_intent(intent, source="m9_cli")
             with contextlib.redirect_stdout(sys.stderr):
-                report = build_production_gpu_tome(
-                    production_build_config_from_resolved(resolved)
-                )
+                report = build_production_gpu_tome(production)
             result = CLIResult(
                 "build",
                 report.get("status", "fail"),
