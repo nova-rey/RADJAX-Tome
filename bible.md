@@ -3770,4 +3770,8 @@ closed-record and checkpoint authority validation.
 
 - 2026-08-28 M9 target-store correction: propagated an explicit noncompact target-store marker through the streaming builder configuration so production dynamic stores remain safe while direct backend representation tests retain their M8 mode behavior.
 
+- 2026-08-28 M9 public-surface correction: made doctor use the canonical resolved configuration and read-only required-input/runtime reports, added package receipts, and enforced external-attestation evaluation-time requirements at the dispatch boundary.
+
+- 2026-08-28 M9 compatibility correction: made research help and legacy validate/inspect flag forms explicit at the top-level router so the six-command public surface remains unambiguous.
+
 - 2026-08-28 M9 resume correction: treated the atomically completed compact-body metadata file as the resumable publication boundary, preventing a second canonical resume from attempting to recreate an already-published body store.

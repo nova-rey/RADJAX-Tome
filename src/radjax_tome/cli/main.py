@@ -56,6 +56,21 @@ def main(argv: list[str] | None = None) -> int:
             "engineering commands",
             file=sys.stderr,
         )
+    if command == "research" and "--help" in raw:
+        print(
+            "research: retained engineering commands are delegated to the "
+            "compatibility parser; run 'radjax-tome research COMMAND --help'."
+        )
+        return 0
+    if command in {"validate", "inspect"} and (
+        raw.index(command) + 1 >= len(raw)
+        or raw[raw.index(command) + 1].startswith("--")
+    ):
+        print(
+            f"WARNING deprecated compatibility form '{command} --path'; use "
+            f"'radjax-tome {command} ARTIFACT'",
+            file=sys.stderr,
+        )
     if command in mainline_commands and (
         command in {"package", "research"}
         or (command == "build" and "--config" in raw)

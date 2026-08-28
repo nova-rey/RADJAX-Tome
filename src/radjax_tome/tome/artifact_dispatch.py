@@ -5,6 +5,7 @@ from __future__ import annotations
 import tarfile
 import tempfile
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -33,16 +34,27 @@ def validate_artifact(
     mode: str = "standard",
     expected: Path | None = None,
     attestation: Path | None = None,
+    attestation_policy: str = "optional",
+    evaluation_time: str | None = None,
 ) -> dict[str, Any]:
     """Validate v3/v4 production artifacts and canonical packages."""
     if mode not in {"standard", "governed", "external-attestation"}:
         raise ValueError("unsupported validation mode")
+    if attestation_policy not in {"optional", "required"}:
+        raise ValueError("unsupported attestation policy")
     if mode == "governed" and expected is None:
         raise ValueError("governed validation requires --expected")
-    if mode == "external-attestation" and (attestation is None or expected is None):
-        raise ValueError(
-            "external-attestation validation requires --expected and --attestation"
-        )
+    if mode == "external-attestation" and attestation is None:
+        raise ValueError("external-attestation validation requires --attestation")
+    if mode == "external-attestation" and evaluation_time is None:
+        raise ValueError("external-attestation validation requires --evaluation-time")
+    if attestation_policy == "required" and attestation is None:
+        raise ValueError("required attestation policy needs --attestation")
+    if evaluation_time is not None:
+        try:
+            datetime.fromisoformat(evaluation_time.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("evaluation time must be RFC3339") from exc
     candidate = _root(path.resolve())
     if candidate.is_file() and candidate.suffix == ".tgz":
         with tempfile.TemporaryDirectory(prefix="radjax-validate-") as directory:
@@ -53,7 +65,12 @@ def validate_artifact(
                 roots[0] if len(roots) == 1 and roots[0].is_dir() else Path(directory)
             )
             return validate_artifact(
-                root, mode=mode, expected=expected, attestation=attestation
+                root,
+                mode=mode,
+                expected=expected,
+                attestation=attestation,
+                attestation_policy=attestation_policy,
+                evaluation_time=evaluation_time,
             )
     if candidate.is_dir() and (candidate / "cover_page.json").is_file():
         import json

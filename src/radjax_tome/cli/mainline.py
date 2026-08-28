@@ -157,6 +157,8 @@ def run(args: argparse.Namespace) -> CLIResult:
                 mode=args.mode,
                 expected=args.expected,
                 attestation=args.attestation,
+                attestation_policy=args.attestation_policy,
+                evaluation_time=args.evaluation_time,
             )
             code = 0 if report["status"] == "pass" else 4
             return CLIResult(
@@ -189,7 +191,7 @@ def run(args: argparse.Namespace) -> CLIResult:
                 overwrite=args.overwrite,
                 student_contract_profile=args.student_contract_profile,
             )
-            return CLIResult(
+            cli_result = CLIResult(
                 "package",
                 "pass",
                 0,
@@ -199,16 +201,52 @@ def run(args: argparse.Namespace) -> CLIResult:
                     "transport": args.transport,
                 },
             )
+            receipt = args.output.with_name(args.output.name + ".m9_receipt.json")
+            receipt.write_text(
+                json.dumps(cli_result.to_dict(), sort_keys=True, default=str) + "\n",
+                encoding="utf-8",
+            )
+            cli_result.artifact["receipt_path"] = str(receipt)
+            return cli_result
         if args.command == "doctor":
+            from radjax_tome.backends import TeacherBackendConfig
+            from radjax_tome.builder.production_stages.delivery import backend_config
+            from radjax_tome.builder.production_stages.preflight import (
+                validate_required_inputs,
+            )
+            from radjax_tome.reports import build_runtime_doctor_report
+
             if args.config:
-                load_tome_build_intent(args.config)
+                intent = load_tome_build_intent(args.config)
+                resolved = resolve_tome_build_intent(intent, source="m9_doctor")
+                production = production_build_config_from_resolved(resolved)
+                blockers: list[str] = []
+                validate_required_inputs(production, blockers)
+                runtime = build_runtime_doctor_report(
+                    backend_config(production),
+                    exemplar_selection_enabled=production.exemplar_selection_enabled,
+                )
+                status = "pass" if not blockers else "fail"
+                return CLIResult(
+                    "doctor",
+                    status,
+                    0 if status == "pass" else 2,
+                    reports={
+                        "config": str(args.config),
+                        "preflight": {"status": status, "blockers": blockers},
+                        "runtime": runtime,
+                    },
+                )
+            runtime = build_runtime_doctor_report(
+                TeacherBackendConfig(backend_id="cpu_reference", runtime_mode="cpu")
+            )
             return CLIResult(
                 "doctor",
                 "pass",
                 0,
                 reports={
                     "python": sys.version,
-                    "config": str(args.config) if args.config else None,
+                    "runtime": runtime,
                 },
             )
         return CLIResult(

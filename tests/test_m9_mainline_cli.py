@@ -3,6 +3,7 @@ import json
 from dataclasses import asdict
 
 from radjax_tome.builder.config import canonical_production_build_intent
+from radjax_tome.cli.main import main
 from radjax_tome.cli.mainline import parser, run
 
 
@@ -50,3 +51,7 @@ def test_preflight_only_uses_canonical_output_override(tmp_path: Path) -> None:
     result = run(args)
     assert result.exit_code == 0
     assert result.artifact["workspace"] == str(tmp_path / "override")
+
+
+def test_public_research_help_is_routed_without_legacy_required_command() -> None:
+    assert main(["research", "--help"]) == 0
