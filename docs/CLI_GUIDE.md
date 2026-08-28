@@ -1,32 +1,43 @@
 # RADJAX-Tome CLI Guide
 
-Start with the public CLI:
+## Recommended CLI
+
+The supported mainline has six commands. Build consumes a complete canonical
+M5 intent; it does not accept the historical flag bag.
 
 ```bash
-python -m radjax_tome.cli.main build \
-  --output artifacts/cli_happy_path_fake_tome \
-  --teacher-mode fake \
-  --max-examples 2 \
-  --sequence-length 8 \
-  --overwrite
+radjax-tome build --config docs/examples/m9_tome_build_intent.yaml --preflight-only
 
-python -m radjax_tome.cli.main validate \
-  --path artifacts/cli_happy_path_fake_tome
+radjax-tome validate ./OUTPUT.v4.tgz
 
-python -m radjax_tome.cli.main inspect \
-  --path artifacts/cli_happy_path_fake_tome
+radjax-tome inspect ./OUTPUT.v4.tgz
+
+radjax-tome package ./producer-workspace \
+  --output ./student.tgz --profile student
+
+radjax-tome doctor --config docs/examples/m9_tome_build_intent.yaml
 ```
 
-If installed from the package, the console entry point is equivalent:
+Machine-readable output is selected before the command:
 
 ```bash
-radjax-tome build --output artifacts/cli_happy_path_fake_tome --teacher-mode fake --max-examples 2 --sequence-length 8 --overwrite
-radjax-tome validate --path artifacts/cli_happy_path_fake_tome
-radjax-tome inspect --path artifacts/cli_happy_path_fake_tome
+radjax-tome --json validate ./OUTPUT.v4.tgz
 ```
 
-Fake mode is CPU-only, offline, and does not require PyTorch, Transformers, JAX,
-or network access.
+`--output WORKSPACE` is an optional narrow build override. It is applied
+through the canonical M5 override API and does not introduce a second
+destination model. `--resume` and `--overwrite` are likewise operational
+overrides; preflight refuses unsafe or unrelated destinations.
+
+The public validator accepts Contract v3, M7 v4, canonical package, and
+`.rtome` production forms. Historical flag-based validation remains available
+under `research` and emits a deprecation warning.
+
+## Research and compatibility
+
+The commands below are retained engineering interfaces, not the supported
+mainline. Invoke them explicitly through `radjax-tome research ...` or use
+their existing scripts when reproducing archived evidence.
 
 Build offline fingerprint-corridor candidate micro-leaderboards from explicit
 compact feature records:

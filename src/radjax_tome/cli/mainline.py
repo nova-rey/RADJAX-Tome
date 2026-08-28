@@ -122,7 +122,10 @@ def run(args: argparse.Namespace) -> CLIResult:
                         ),
                     )
             assessment = assess_production_preflight(
-                intent.outputs.output_dir, resume=args.resume, overwrite=args.overwrite
+                intent.outputs.output_dir,
+                config=production,
+                resume=args.resume,
+                overwrite=args.overwrite,
             )
             if assessment.status != "pass":
                 return _error(

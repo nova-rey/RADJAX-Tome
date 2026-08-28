@@ -213,6 +213,7 @@ class _ProductionRunState:
     main_pass_wall_seconds: float = 0.0
     terminal_report: dict[str, Any] | None = None
     native_resume_resolution: Any | None = None
+    preflight_assessment: Any | None = None
 
 
 def build_production_gpu_tome(
@@ -269,7 +270,10 @@ def _build_production_gpu_tome_compatibility(
     )
 
     assessment = assess_production_preflight(
-        config.output_dir, resume=config.resume, overwrite=config.overwrite
+        config.output_dir,
+        config=config,
+        resume=config.resume,
+        overwrite=config.overwrite,
     )
     if assessment.status != "pass":
         return {
@@ -278,7 +282,7 @@ def _build_production_gpu_tome_compatibility(
             "failure_phase": "preflight",
             "destination": str(assessment.destination),
         }
-    state = _new_production_run_state(config)
+    state = _new_production_run_state(config, preflight_assessment=assessment)
     replay_authority = None
     if canonical_config is None:
         if config.verified_selection_replay_path:
@@ -733,7 +737,9 @@ def _build_production_gpu_tome_compatibility(
     return _finalize_production_report(report, report_path, progress)
 
 
-def _new_production_run_state(config: ProductionBuildConfig) -> _ProductionRunState:
+def _new_production_run_state(
+    config: ProductionBuildConfig, *, preflight_assessment: Any | None = None
+) -> _ProductionRunState:
     created_at = _now()
     production_started = perf_counter()
     preflight_started = perf_counter()
@@ -755,6 +761,7 @@ def _new_production_run_state(config: ProductionBuildConfig) -> _ProductionRunSt
         blockers=[],
         warnings=[],
         already_complete=_already_complete(config),
+        preflight_assessment=preflight_assessment,
     )
 
 

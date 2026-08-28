@@ -41,6 +41,166 @@
     }
   ],
   "records": {
+    "cli:finalize-replay-workload": {
+      "archive_or_removal_condition": "Retain until the frozen replay evidence is retired.",
+      "kind": "public-cli-command",
+      "owning_milestone": "M8",
+      "rationale": "Historical replay-workload finalization utility retained outside the M9 paved road.",
+      "replacement_or_target_boundary": "research compatibility namespace",
+      "status": "research-frozen"
+    },
+    "docs:M8G_BENCHMARK_PREPARATION": {
+      "archive_or_removal_condition": "Retain with M8 benchmark evidence.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8",
+      "rationale": "Historical M8 benchmark preparation record.",
+      "replacement_or_target_boundary": "M8 evidence archive",
+      "status": "research-frozen"
+    },
+    "docs:M8G_RECOVERY_BLOCKER_RESOLUTION": {
+      "archive_or_removal_condition": "Retain with M8 recovery evidence.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8",
+      "rationale": "Historical M8 recovery-blocker resolution record.",
+      "replacement_or_target_boundary": "M8 evidence archive",
+      "status": "research-frozen"
+    },
+    "docs:m8_hash_cost_measurement": {
+      "archive_or_removal_condition": "Retain with M8 performance evidence.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M8",
+      "rationale": "Historical M8 compact hashing measurement.",
+      "replacement_or_target_boundary": "M8 evidence archive",
+      "status": "research-frozen"
+    },
+    "scripts/validate_m8g_workload_bundle.py": {
+      "archive_or_removal_condition": "Remove only when M8 replay evidence is retired.",
+      "kind": "script",
+      "owning_milestone": "M8",
+      "rationale": "Validates the frozen M8 workload bundle and is not a public M9 command.",
+      "replacement_or_target_boundary": "research compatibility namespace",
+      "status": "research-frozen"
+    },
+    "src/radjax_tome/__main__.py": {
+      "archive_or_removal_condition": "Remove only if module invocation is retired.",
+      "kind": "source-module",
+      "owning_milestone": "M9",
+      "rationale": "Thin module entry point delegating to the public CLI.",
+      "replacement_or_target_boundary": "six-command public CLI",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/config_io.py": {
+      "archive_or_removal_condition": "Remove with canonical M5 configuration.",
+      "kind": "source-module",
+      "owning_milestone": "M9",
+      "rationale": "Strict closed JSON/YAML deserialization for canonical M5 build intents.",
+      "replacement_or_target_boundary": "canonical M5 config boundary",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/compact_k.py": {
+      "archive_or_removal_condition": "Retain while compact selected delivery is supported.",
+      "kind": "production-module",
+      "owning_milestone": "M8",
+      "rationale": "M8 compact selected-payload delivery implementation.",
+      "replacement_or_target_boundary": "M8 compact delivery owner",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/delivery/gpu_overlap.py": {
+      "archive_or_removal_condition": "Retain while the accepted overlap path is supported.",
+      "kind": "production-module",
+      "owning_milestone": "M8",
+      "rationale": "Accepted M8 GPU overlap delivery helper outside the public CLI layer.",
+      "replacement_or_target_boundary": "M8 delivery owner",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/delivery/immutable_body.py": {
+      "archive_or_removal_condition": "Retain while immutable selected bodies are supported.",
+      "kind": "production-module",
+      "owning_milestone": "M8",
+      "rationale": "Accepted M8 immutable selected-body storage helper.",
+      "replacement_or_target_boundary": "M8 delivery owner",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/delivery/modes.py": {
+      "archive_or_removal_condition": "Retain while M8 delivery modes remain supported.",
+      "kind": "production-module",
+      "owning_milestone": "M8",
+      "rationale": "M8 delivery-mode declarations used by the production state machine.",
+      "replacement_or_target_boundary": "M8 delivery owner",
+      "status": "supporting"
+    },
+    "src/radjax_tome/builder/delivery/replay_authority.py": {
+      "archive_or_removal_condition": "Retain while verified replay adoption is supported.",
+      "kind": "production-module",
+      "owning_milestone": "M8",
+      "rationale": "M8 verified replay authority and closure validation boundary.",
+      "replacement_or_target_boundary": "research compatibility namespace",
+      "status": "research-frozen"
+    },
+    "src/radjax_tome/builder/delivery/simple_compact_body.py": {
+      "archive_or_removal_condition": "Retain while accepted compact-body storage is supported.",
+      "kind": "production-module",
+      "owning_milestone": "M8",
+      "rationale": "Accepted M8 compact-body implementation; explicitly preserved from obsolete M9 archaeology.",
+      "replacement_or_target_boundary": "M8 compact delivery owner",
+      "status": "canonical"
+    },
+    "src/radjax_tome/cli/mainline.py": {
+      "archive_or_removal_condition": "Remove with the M9 public CLI.",
+      "kind": "source-module",
+      "owning_milestone": "M9",
+      "rationale": "Public six-command parser and canonical lifecycle dispatcher.",
+      "replacement_or_target_boundary": "six-command public CLI",
+      "status": "canonical"
+    },
+    "src/radjax_tome/cli/models.py": {
+      "archive_or_removal_condition": "Remove with the M9 public CLI.",
+      "kind": "source-module",
+      "owning_milestone": "M9",
+      "rationale": "Stable machine result, warning, and error records.",
+      "replacement_or_target_boundary": "radjax_tome_cli_result_v1",
+      "status": "canonical"
+    },
+    "src/radjax_tome/cli/rendering.py": {
+      "archive_or_removal_condition": "Remove with the M9 public CLI.",
+      "kind": "source-module",
+      "owning_milestone": "M9",
+      "rationale": "Human and machine stream ownership for public command results.",
+      "replacement_or_target_boundary": "radjax_tome_cli_result_v1",
+      "status": "canonical"
+    },
+    "src/radjax_tome/cli/research.py": {
+      "archive_or_removal_condition": "Remove only after retained engineering commands are retired.",
+      "kind": "source-module",
+      "owning_milestone": "M9",
+      "rationale": "Explicit compatibility namespace for historical engineering commands.",
+      "replacement_or_target_boundary": "research compatibility namespace",
+      "status": "compatibility-only"
+    },
+    "src/radjax_tome/fingerprint/corridor_duckdb.py": {
+      "archive_or_removal_condition": "Retain while corridor evidence utilities are supported.",
+      "kind": "production-module",
+      "owning_milestone": "M8",
+      "rationale": "Research/evidence corridor storage utility outside the public paved road.",
+      "replacement_or_target_boundary": "research compatibility namespace",
+      "status": "research-frozen"
+    },
+    "src/radjax_tome/tome/artifact_dispatch.py": {
+      "archive_or_removal_condition": "Remove with unified public artifact validation.",
+      "kind": "source-module",
+      "owning_milestone": "M9",
+      "rationale": "Closed dispatch for currently promised production artifact forms.",
+      "replacement_or_target_boundary": "public validate and inspect",
+      "status": "canonical"
+    },
+    "src/radjax_tome/workload_finalization.py": {
+      "archive_or_removal_condition": "Retain while frozen replay finalization is supported.",
+      "kind": "production-module",
+      "owning_milestone": "M8",
+      "rationale": "Historical M8 workload finalization implementation retained behind compatibility boundaries.",
+      "replacement_or_target_boundary": "research compatibility namespace",
+      "status": "research-frozen"
+    },
     "src/radjax_tome/tome/artifact_v3.py": {
       "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
       "kind": "production-module",

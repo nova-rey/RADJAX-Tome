@@ -134,24 +134,42 @@ class ProductionPreflightAssessment:
     destination_state: str
     action: str
     blockers: tuple[str, ...] = ()
+    configuration_checked: bool = False
 
 
 def assess_production_preflight(
-    output_dir: Path, *, resume: bool = False, overwrite: bool = False
+    output_dir: Path,
+    *,
+    config: Any | None = None,
+    resume: bool = False,
+    overwrite: bool = False,
 ) -> ProductionPreflightAssessment:
-    """Classify a destination without creating, deleting, or writing anything."""
+    """Assess config and destination without creating, deleting, or writing.
+
+    ``config`` is optional for compatibility with callers that only need the
+    destination matrix.  The production façade and public CLI both pass the
+    resolved M5 request so the same pure assessment owns their first failure
+    boundary.
+    """
+    blockers: list[str] = []
+    configuration_checked = config is not None
+    if config is not None and getattr(config, "verified_selection_replay_path", None) is None:
+        validate_required_inputs(config, blockers)
     if resume and overwrite:
+        blockers.append("resume and overwrite are mutually exclusive")
         return ProductionPreflightAssessment(
             "fail",
             output_dir,
             "invalid",
             "reject",
-            ("resume and overwrite are mutually exclusive",),
+            tuple(blockers),
+            configuration_checked,
         )
     candidate = output_dir if output_dir.is_absolute() else output_dir.absolute()
     if candidate in {Path("/"), Path.home(), Path.cwd()} or candidate.is_symlink():
+        blockers.append("destination is unsafe")
         return ProductionPreflightAssessment(
-            "fail", candidate, "unsafe", "reject", ("destination is unsafe",)
+            "fail", candidate, "unsafe", "reject", tuple(blockers), configuration_checked
         )
     if not candidate.exists():
         state = "missing"
@@ -162,44 +180,57 @@ def assess_production_preflight(
     else:
         state = "empty_directory"
     if state == "special":
+        blockers.append("destination is not a directory")
         return ProductionPreflightAssessment(
-            "fail", candidate, state, "reject", ("destination is not a directory",)
+            "fail", candidate, state, "reject", tuple(blockers), configuration_checked
         )
     if state == "missing":
         return ProductionPreflightAssessment(
-            "fail" if resume else "pass",
+            "fail" if resume or blockers else "pass",
             candidate,
             state,
-            "reject" if resume else "create",
-            ("cannot resume a missing destination",) if resume else (),
+            "reject" if resume or blockers else "create",
+            tuple(blockers)
+            + (("cannot resume a missing destination",) if resume else ()),
+            configuration_checked,
         )
     if state == "empty_directory":
         return ProductionPreflightAssessment(
-            "fail" if resume else "pass",
+            "fail" if resume or blockers else "pass",
             candidate,
             state,
-            "reject" if resume else "use",
-            ("cannot resume an empty destination",) if resume else (),
+            "reject" if resume or blockers else "use",
+            tuple(blockers)
+            + (("cannot resume an empty destination",) if resume else ()),
+            configuration_checked,
         )
     markers = ("run_manifest.json", "production_build_report.json", "metadata.json")
     if not any((candidate / marker).is_file() for marker in markers):
+        blockers.append("destination contains no canonical Tome ownership marker")
         return ProductionPreflightAssessment(
             "fail",
             candidate,
             state,
             "reject",
-            ("destination contains no canonical Tome ownership marker",),
+            tuple(blockers),
+            configuration_checked,
         )
     if not (resume or overwrite):
+        blockers.append("destination contains existing entries")
         return ProductionPreflightAssessment(
             "fail",
             candidate,
             state,
             "reject",
-            ("destination contains existing entries",),
+            tuple(blockers),
+            configuration_checked,
+        )
+    if blockers:
+        return ProductionPreflightAssessment(
+            "fail", candidate, state, "reject", tuple(blockers), configuration_checked
         )
     return ProductionPreflightAssessment(
-        "pass", candidate, state, "resume" if resume else "replace"
+        "pass", candidate, state, "resume" if resume else "replace", (), configuration_checked
     )
 
 

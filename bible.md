@@ -3799,3 +3799,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 validation correction: routed supported v3 standard, governed, and external-attestation modes through the pinned Contract mode APIs instead of merely checking mode-specific option presence.
 
 - 2026-08-28 M9 verification wrapper cleanup: suppressed the retained-parser deprecation warning for canonical `validate --help` and `inspect --help` invocations so public help snapshots are warning-free.
+
+- 2026-08-28 M9 preflight and disposition correction: shared the pure config-plus-destination assessment at the public and production boundaries, and classified newly tracked M8/M9 modules and retained commands in the Hydra inventory.
