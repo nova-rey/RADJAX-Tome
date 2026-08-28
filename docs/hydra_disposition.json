@@ -1,5 +1,10 @@
 {
   "baseline": "7a56a0808453f4b4ecc6cefe3ee63b724c701980",
+  "m9_public_surface": {
+    "commands": ["build", "validate", "inspect", "package", "doctor", "research"],
+    "legacy_commands": "compatibility_or_research",
+    "production_validation_forms": ["contract_v3", "m7_v4", "canonical_package", "rtome"]
+  },
   "generated_from": [
     "docs/MAINLINE_CONSOLIDATION_ARC.md",
     "docs/HYDRA_INVENTORY.md"

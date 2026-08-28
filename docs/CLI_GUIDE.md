@@ -370,3 +370,20 @@ Historical migration and quarantine audit scripts are archive-only on:
 - `archive/tome-large-docs`
 
 See `docs/TOME_ARCHIVE_POINTERS.md` for archive inspection commands.
+
+## M9 public mainline
+
+The supported paved path is deliberately six commands: `build`, `validate`,
+`inspect`, `package`, `doctor`, and `research`. Build requires a complete
+`radjax_tome_build_intent_v1` JSON/YAML document and drives the existing M5/M4
+production state machine. `--output` is a narrow operational override owned by
+the canonical configuration API. Use `package` for profile projection; build
+does not silently reinterpret package settings.
+
+`validate` and `inspect` dispatch only promised production forms: Contract v3,
+M7 v4, canonical student/full-debug packages, and `.rtome` transport. Other
+historical or research formats remain available through `research` and are not
+advertised as production validation.
+
+Legacy command names remain executable as compatibility shims and emit a
+deprecation warning. They are intentionally absent from normal top-level help.

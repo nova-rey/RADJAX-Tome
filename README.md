@@ -9,29 +9,23 @@ student models.
 
 ## Recommended CLI
 
-Start with the public CLI:
+Start with the six-command public CLI. `build` consumes a complete canonical
+M5 intent; see [the example](docs/examples/m9_tome_build_intent.yaml).
 
 ```bash
-python -m radjax_tome.cli.main build \
-  --output artifacts/cli_happy_path_fake_tome \
-  --teacher-mode fake \
-  --max-examples 2 \
-  --sequence-length 8 \
-  --overwrite
+radjax-tome build --config docs/examples/m9_tome_build_intent.yaml --preflight-only
 
-python -m radjax_tome.cli.main validate \
-  --path artifacts/cli_happy_path_fake_tome
+radjax-tome validate ./OUTPUT.v4.tgz
 
-python -m radjax_tome.cli.main inspect \
-  --path artifacts/cli_happy_path_fake_tome
+radjax-tome inspect ./OUTPUT.v4.tgz
 ```
 
 Installed console entry point:
 
 ```bash
-radjax-tome build --output artifacts/cli_happy_path_fake_tome --teacher-mode fake --max-examples 2 --sequence-length 8 --overwrite
-radjax-tome validate --path artifacts/cli_happy_path_fake_tome
-radjax-tome inspect --path artifacts/cli_happy_path_fake_tome
+radjax-tome --help
+radjax-tome doctor
+radjax-tome research --help
 ```
 
 For advanced/dev scripts, see `docs/CLI_GUIDE.md`.

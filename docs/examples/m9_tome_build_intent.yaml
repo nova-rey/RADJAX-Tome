@@ -1,0 +1,86 @@
+schema_version: radjax_tome_build_intent_v1
+teacher:
+  model: MODEL_PATH
+  tokenizer_id: null
+  backend: gpu_torch
+  runtime_mode: cpu_gpu
+  model_provenance_path: TEACHER_PROVENANCE.json
+corpus:
+  dataset_path: DATASET.jsonl
+  corpus_manifest_path: CORPUS_MANIFEST.json
+  max_examples: null
+behavior:
+  target_policy: corridor_exemplar_v1
+  sequence_length: 16
+  vocab_size: 32
+  top_k: 8
+  num_buckets: 4
+  dynamic_top_k_min: 1
+  dynamic_top_k_max: 32
+  dynamic_mass_threshold: 0.95
+corridor_policy:
+  long_tail_warning_k: 8192
+  very_long_tail_warning_k: 32768
+  perverse_tail_warning_k: 65536
+  reject_perverse_exemplars: false
+  primary_selected_exemplar_budget: null
+  long_tail_side_board_cap: 128
+  perverse_tail_side_board_cap: 32
+  include_long_tail_in_primary: false
+  include_perverse_tail_in_primary: false
+  include_perverse_tail_in_student: false
+selection:
+  exemplar_delivery_path: null
+  exemplar_selection_enabled: false
+  exemplar_leaderboard_capacity: 16
+  selected_exemplar_budget: null
+  selected_exemplar_fraction: null
+  retain_unselected_exemplar_payloads: false
+  exemplar_score_policy: entropy_top_n_v1
+  selected_rerun_batch_size: null
+  track_delivery_timing: false
+  selection_integration_policy: global_only_v1
+  total_selected_exemplar_budget: null
+  fingerprint_corridor_budget_fraction: '0.50'
+  fingerprint_corridor_budget_max: null
+  fingerprint_corridor_mode_cap: 10
+  fingerprint_corridor_candidate_pool_cap: 4
+  require_full_selected_budget: true
+  full_width_cap_numerator: 1
+  full_width_cap_denominator: 3
+  representation_mode: compact_k_monolithic
+  verified_selection_replay_path: null
+  verified_selection_bundle_manifest_path: null
+execution:
+  gpu_batch_size_mode: auto
+  gpu_batch_size_preset: 8
+  gpu_batch_size_custom: null
+  gpu_batch_size_auto_min: 1
+  gpu_batch_size_auto_max: 64
+  shard_size_examples: 1024
+  payload_records_per_shard: 128
+  resume: false
+  overwrite: false
+  strict_provenance: true
+  fail_on_plan_warnings: false
+  no_build_if_plan_warn: false
+  max_artifact_bytes: null
+  progress: true
+outputs:
+  output_dir: WORKSPACE
+  run_plan_path: null
+  production_report_path: null
+  parity_report_path: null
+  run_manifest_path: null
+  progress_log_path: null
+  parity_left: null
+compatibility:
+  corridor_feature_jsonl_path: null
+  global_board_supply_path: null
+  c4_claims_path: null
+  c5_selection_path: null
+  source_passports_path: null
+package:
+  profile: unpacked
+  transport: directory
+  artifact_contract_version: v2

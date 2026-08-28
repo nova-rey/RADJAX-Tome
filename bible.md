@@ -3735,3 +3735,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 lifecycle boundary: added archive-aware validation dispatch and mutation-free package destination planning, preserving the existing Contract-owned validators and deterministic package writer.
 
 - 2026-08-28 M9 public lifecycle coverage: added root-command, canonical output-routing, unsupported-format, and package-destination safety regressions.
+
+- 2026-08-28 M9 documentation: made the six-command canonical-config path the README and CLI-guide happy path, documented production artifact limits and compatibility routing, and added a complete M5 YAML example.
