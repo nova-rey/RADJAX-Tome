@@ -3813,3 +3813,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 lint follow-up: split the replay adoption report’s remaining long coordinate field and revalidated the targeted style gate.
 
 - 2026-08-28 M9 final style pass: applied Ruff formatting to the routed CLI and shared preflight/production modules and confirmed the changed-file lint gate.
+
+- 2026-08-28 M9 evidence refresh: bound the closure audit to the final branch tip and wheel digest, and completed the Hydra inventory classification for the closure report itself.

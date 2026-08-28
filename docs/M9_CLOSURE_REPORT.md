@@ -12,7 +12,7 @@ branch as evidence.
 - live `origin/m8/sparse-selected-logits-final-closure`: the accepted M8 base
 - live `origin/main`: `deed286a8725cc98f4a5d6a25aa80582d692e108`
 - reconciled branch: `m9/opinionated-mainline-cli-reconciled`
-- audited branch tip: `622108ba134ce28bcae89d2f31584927d8472d62`
+- audited branch tip: `f9bf9eb03d1d7469547e516ecbc1770c3ec31a7a`
 - rejected branch `8a2dc2794ec32227f6187fa22837ba1f8dae0ccb`: untouched and not used
 - Contract pin: `373e3d17060d4ce1c4a0db6065c9289da714bde7`
 
@@ -28,12 +28,14 @@ loading, canonical output overrides, pure destination safety checks, Contract
 v3 mode dispatch, M7/package dispatch, machine results, receipts, compatibility
 routing, help snapshots, and selected-rerun batch size 1 in accepted presets.
 
-Focused M9 plus Hydra disposition checks passed: **19 passed**. A Python 3.12
+Focused M9 plus Hydra disposition checks passed: **19 passed** before the final
+inventory record was added; the final inventory check is included in the
+refreshed evidence below. A Python 3.12
 wheel install passed version, canonical help, module help, machine doctor,
 package, validate, and inspect checks. The installed Contract resolved to the
 exact pinned commit above. Wheel SHA-256 for that smoke was recorded as:
 
-`3862112f4ff63d54829a22516d70ded0ba76001370eddb85539d7d22537e74a2`
+`2fa80fdaf31e72f1cd0bfd4c3f276a6433ada712511c0fc73d8b297913f9d091`
 
 ## Blocking evidence
 

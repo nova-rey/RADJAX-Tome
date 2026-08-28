@@ -201,6 +201,14 @@
       "replacement_or_target_boundary": "research compatibility namespace",
       "status": "research-frozen"
     },
+    "docs:M9_CLOSURE_REPORT": {
+      "archive_or_removal_condition": "Retain as the M9 closure audit and replace only after a verified closure.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M9",
+      "rationale": "Records M9 implementation evidence, nonclaims, and unresolved authority/correctness blockers.",
+      "replacement_or_target_boundary": "M9 closure evidence",
+      "status": "supporting"
+    },
     "src/radjax_tome/tome/artifact_v3.py": {
       "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
       "kind": "production-module",
