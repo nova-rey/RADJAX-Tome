@@ -55,15 +55,52 @@ def validate_artifact(
                 roots[0], mode=mode, expected=expected, attestation=attestation
             )
     if candidate.is_dir() and (candidate / "cover_page.json").is_file():
-        report = validate_tome_package(candidate)
+        import json
+
+        cover = json.loads((candidate / "cover_page.json").read_text())
+        schema = cover.get("schema_version") if isinstance(cover, dict) else None
+        package = cover.get("package") if isinstance(cover, dict) else None
+        if schema == "radjax_tome_cover_v4":
+            from radjax_contract.tome import validate_streaming_tome
+
+            report = validate_streaming_tome(candidate)
+            return {
+                "status": "pass" if report.ok else "fail",
+                "kind": "m7_v4",
+                "report": report.__dict__,
+            }
+        if isinstance(package, dict) and package.get("profile") in {
+            "student",
+            "full_debug_provenance",
+        }:
+            report = validate_tome_package(candidate)
+            return {
+                "status": "pass" if report.ok else "fail",
+                "kind": "package",
+                "report": report.to_dict()
+                if hasattr(report, "to_dict")
+                else report.__dict__,
+            }
+        from radjax_contract.tome.v3.validation import validate_tome_artifact_v3
+
+        report = validate_tome_artifact_v3(candidate)
         return {
             "status": "pass" if report.ok else "fail",
-            "kind": "package",
-            "report": report.to_dict()
-            if hasattr(report, "to_dict")
-            else report.__dict__,
+            "kind": "contract_v3",
+            "report": report.__dict__,
         }
     if candidate.is_file() and candidate.suffix == ".rtome":
+        from radjax_contract.tome.v3.validation import validate_tome_artifact_v3
+
+        try:
+            report = validate_tome_artifact_v3(candidate)
+            return {
+                "status": "pass" if report.ok else "fail",
+                "kind": "contract_v3",
+                "report": report.__dict__,
+            }
+        except (OSError, TypeError, ValueError):
+            pass
         from radjax_tome.tome.bundle import validate_tome_bundle
 
         report = validate_tome_bundle(candidate)
@@ -73,7 +110,7 @@ def validate_artifact(
             "report": report.__dict__,
         }
     if candidate.is_dir() or candidate.suffix == ".tgz":
-        from radjax_tome.tome.payload_sharding_v4 import validate_streaming_tome
+        from radjax_contract.tome import validate_streaming_tome
 
         report = validate_streaming_tome(candidate)
         return {

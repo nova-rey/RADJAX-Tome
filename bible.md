@@ -3739,3 +3739,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 documentation: made the six-command canonical-config path the README and CLI-guide happy path, documented production artifact limits and compatibility routing, and added a complete M5 YAML example.
 
 - 2026-08-28 M9 safety correction: production now performs a mutation-free canonical destination ownership assessment before progress/state initialization, and rejects overwrite of nonempty directories lacking Tome ownership markers.
+
+- 2026-08-28 M9 dispatch correction: classified v3, M7 v4, package, and `.rtome` fixtures through their Contract-owned validators and added a config-versus-`--output` precedence regression.
