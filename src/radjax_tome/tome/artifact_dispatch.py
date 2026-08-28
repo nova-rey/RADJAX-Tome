@@ -49,10 +49,11 @@ def validate_artifact(
             with tarfile.open(candidate, "r:*") as archive:
                 archive.extractall(directory, filter="data")
             roots = list(Path(directory).iterdir())
-            if len(roots) != 1 or not roots[0].is_dir():
-                raise ValueError("archive must contain one artifact root")
+            root = (
+                roots[0] if len(roots) == 1 and roots[0].is_dir() else Path(directory)
+            )
             return validate_artifact(
-                roots[0], mode=mode, expected=expected, attestation=attestation
+                root, mode=mode, expected=expected, attestation=attestation
             )
     if candidate.is_dir() and (candidate / "cover_page.json").is_file():
         import json

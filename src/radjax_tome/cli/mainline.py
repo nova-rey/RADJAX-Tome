@@ -221,8 +221,18 @@ def run(args: argparse.Namespace) -> CLIResult:
                 "invocation",
             ),
         )
+    except KeyboardInterrupt:
+        return _error(args.command, "INTERRUPTED", "command interrupted", 130)
     except (OSError, ValueError, TypeError, KeyError) as exc:
-        return _error(args.command, "COMMAND_FAILED", str(exc), 2)
+        message = str(exc)
+        if args.command == "validate":
+            code = 3 if "unsupported" in message else 4
+            error_code = "UNSUPPORTED_ARTIFACT" if code == 3 else "VALIDATION_FAILED"
+        elif args.command == "package" and "already exists" in message:
+            code, error_code = 5, "OUTPUT_CONFLICT"
+        else:
+            code, error_code = 2, "COMMAND_FAILED"
+        return _error(args.command, error_code, message, code)
 
 
 def main(argv: list[str] | None = None) -> int:
