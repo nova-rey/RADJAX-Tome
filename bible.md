@@ -3821,3 +3821,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 closure wording correction: aligned the report’s focused-test statement with the final 19-test run, including the completed Hydra inventory.
 
 - 2026-08-28 M9 package-boundary correction: rejected non-unpacked/non-directory package projections in public `build` with stable remediation, directing profile and transport requests to the dedicated `package` command.
+
+- 2026-08-28 M9 final evidence refresh: bound the closure audit to the package-boundary implementation tip, 20-test focused gate, and final wheel digest.
