@@ -1,7 +1,7 @@
 {
   "branch": "m9/opinionated-mainline-cli",
   "checks": {
-    "clean_install_import": "pass with declared dependency resolution attempted",
+    "clean_install_import": "pass (fresh venv with declared dependencies; codec module radjax_contract.tome.m8g)",
     "compileall": "pass",
     "diff_check": "pass",
     "focused_tests": "40 passed",

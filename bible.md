@@ -3057,3 +3057,7 @@ provenance mutation; each is rejected before output production.
 ## 2026-08-27  M9 CLI validation closure
 
 The opinionated mainline CLI, strict M5 intent loading, mutation-free destination preflight, lifecycle status/package surface, exact Contract pin regression, clean-install import, and focused validation are complete and pushed.
+
+## 2026-08-27  M9 clean-install receipt
+
+A fresh temporary environment installed the built Tome wheel with declared dependencies and imported the public compact-body boundary; the buffer-native codec resolved from Contract.
