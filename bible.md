@@ -3759,3 +3759,9 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 native-publication correction: carried the compact-record validation allowance into the production v4 materialization path, including resumed sealed-record publication.
 
 - 2026-08-28 M9 Contract-boundary correction: v4 adaptation now materializes an all-true selection mask for compact active-K arrays only at the Contract publication edge; legacy compact files remain mask-free.
+
+- 2026-08-28 M9 production-path correction: disabled object-array compact emission for ordinary dynamic target stores unless selected-source replay explicitly owns that representation, keeping safe non-pickle target-store validation viable without changing direct M8 mode tests.
+
+- 2026-08-28 M9 production-path correction: made the target-store compactness decision explicit in the production backend metadata, preserving direct M8 compact-mode behavior while preventing global target stores from emitting unsafe object arrays.
+
+- 2026-08-28 M9 correction follow-up: retained compact M8 behavior for direct backend callers and scoped only the production target-store override, avoiding an accidental regression in the standalone mode contract.

@@ -365,6 +365,7 @@ class CPUReferenceTeacherEmissionBackend:
                 compact=(
                     self.config.representation_mode
                     in {"compact_k_monolithic", "compact_k_immutable_body"}
+                    and bool(self.config.metadata.get("target_store_compact", True))
                 ),
             )
         if self.config.target_policy == "corridor_exemplar_v1":

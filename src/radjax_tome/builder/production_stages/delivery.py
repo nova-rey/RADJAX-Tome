@@ -48,6 +48,7 @@ def backend_config(config: Any) -> TeacherBackendConfig:
         metadata={
             "representation_mode": representation_mode,
             "selected_source_replay": True,
+            "target_store_compact": False,
         },
     )
 
