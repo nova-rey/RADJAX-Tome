@@ -3801,3 +3801,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 verification wrapper cleanup: suppressed the retained-parser deprecation warning for canonical `validate --help` and `inspect --help` invocations so public help snapshots are warning-free.
 
 - 2026-08-28 M9 preflight and disposition correction: shared the pure config-plus-destination assessment at the public and production boundaries, and classified newly tracked M8/M9 modules and retained commands in the Hydra inventory.
+
+- 2026-08-28 M9 dry-run correction: kept `build --preflight-only` a mutation-free canonical destination/config projection for placeholder examples, while non-dry-run builds retain full input validation before state creation.

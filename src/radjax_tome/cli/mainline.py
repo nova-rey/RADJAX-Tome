@@ -123,7 +123,10 @@ def run(args: argparse.Namespace) -> CLIResult:
                     )
             assessment = assess_production_preflight(
                 intent.outputs.output_dir,
-                config=production,
+                # A preflight-only invocation is also the documented config
+                # projection/destination dry run; input artifacts are checked
+                # by the production preflight before any real build.
+                config=None if args.preflight_only else production,
                 resume=args.resume,
                 overwrite=args.overwrite,
             )
