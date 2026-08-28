@@ -3745,3 +3745,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 archive correction: made public archive validation handle the existing root-level deterministic package layout while retaining Contract validation and safe extraction.
 
 - 2026-08-28 M9 output correction: mapped public validation, unsupported-artifact, packaging-conflict, and interruption failures to the approved stable exit-code categories.
+
+- 2026-08-28 M9 production-path correction: restored the explicit selected-materialization mode imports required by the accepted M8 rerun owner, allowing canonical CPU production execution to reach its existing path without changing payload semantics.

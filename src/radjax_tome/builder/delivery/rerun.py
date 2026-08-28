@@ -6,6 +6,7 @@ from __future__ import annotations
 # Shared constants and low-level, dependency-free helpers.
 from ._shared import *  # noqa: F403
 from .measurement import SelectedPassMeasurementControl
+from .modes import COMPACT_K_IMMUTABLE_BODY, COMPACT_K_MONOLITHIC
 from .payloads import (
     _attach_long_tail_diagnostics,
     _candidate_is_perverse,
