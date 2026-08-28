@@ -3817,3 +3817,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 evidence refresh: bound the closure audit to the final branch tip and wheel digest, and completed the Hydra inventory classification for the closure report itself.
 
 - 2026-08-28 M9 audit binding correction: staged the final closure receipt fields explicitly so the committed machine evidence matches the audited branch tip and wheel digest.
+
+- 2026-08-28 M9 closure wording correction: aligned the report’s focused-test statement with the final 19-test run, including the completed Hydra inventory.

@@ -28,9 +28,8 @@ loading, canonical output overrides, pure destination safety checks, Contract
 v3 mode dispatch, M7/package dispatch, machine results, receipts, compatibility
 routing, help snapshots, and selected-rerun batch size 1 in accepted presets.
 
-Focused M9 plus Hydra disposition checks passed: **19 passed** before the final
-inventory record was added; the final inventory check is included in the
-refreshed evidence below. A Python 3.12
+Focused M9 plus Hydra disposition checks passed: **19 passed**, including the
+final inventory record. A Python 3.12
 wheel install passed version, canonical help, module help, machine doctor,
 package, validate, and inspect checks. The installed Contract resolved to the
 exact pinned commit above. Wheel SHA-256 for that smoke was recorded as:
