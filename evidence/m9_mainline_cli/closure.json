@@ -9,7 +9,9 @@
     "ruff": "pass",
     "wheel": "built"
   },
+  "clean_install_import": "pass (declared Contract, numpy, PyYAML, jsonschema installed)",
   "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
   "scope": "M9 opinionated mainline CLI; no Contract source changes, no historical evidence changes",
+  "tome_final_commit": "8690833216f7f2dbf8f7dd05b4ec550b4e9f8aae",
   "tome_head": "6a6c65378cfd86a190e44e861ed9323927c2acc8"
 }
