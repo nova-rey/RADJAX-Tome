@@ -68,3 +68,32 @@ def test_public_subcommand_help_does_not_fall_into_legacy_parser() -> None:
             main(["build", "--help"])
     assert result.value.code == 0
     assert "--config CONFIG" in output.getvalue()
+
+
+def test_build_rejects_package_projection_fields(tmp_path: Path) -> None:
+    source = canonical_production_build_intent(
+        teacher_model="model",
+        dataset_path=Path("data.jsonl"),
+        corpus_manifest_path=Path("manifest.json"),
+        teacher_model_provenance_path=Path("provenance.json"),
+        output_dir=Path("config-output"),
+    )
+    payload = asdict(source)
+    payload["package"]["profile"] = "student"
+    payload["package"]["transport"] = "tgz"
+
+    def encode(value: object) -> object:
+        if isinstance(value, Path):
+            return str(value)
+        if isinstance(value, dict):
+            return {key: encode(item) for key, item in value.items()}
+        return value
+
+    config = tmp_path / "intent.json"
+    config.write_text(json.dumps(encode(payload)))
+    result = run(
+        parser().parse_args(["build", "--config", str(config), "--preflight-only"])
+    )
+    assert result.exit_code == 3
+    assert result.error is not None
+    assert result.error.code == "PACKAGE_PROJECTION_UNSUPPORTED"

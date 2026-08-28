@@ -104,6 +104,21 @@ def run(args: argparse.Namespace) -> CLIResult:
                 intent = apply_production_advanced_overrides(intent, overrides)
             resolved = resolve_tome_build_intent(intent, source="m9_cli")
             production = production_build_config_from_resolved(resolved)
+            if (
+                intent.package.profile != "unpacked"
+                or intent.package.transport != "directory"
+            ):
+                return _error(
+                    "build",
+                    "PACKAGE_PROJECTION_UNSUPPORTED",
+                    "public build produces the canonical unpacked directory only; "
+                    "package profile/transport must use the package command",
+                    3,
+                    repair=(
+                        "set package.profile=unpacked and package.transport=directory, "
+                        "or run 'radjax-tome package'"
+                    ),
+                )
             if not args.preflight_only:
                 from radjax_tome.builder.production_stages.preflight import (
                     validate_required_inputs,
