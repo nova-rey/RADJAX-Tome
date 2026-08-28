@@ -3737,3 +3737,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 public lifecycle coverage: added root-command, canonical output-routing, unsupported-format, and package-destination safety regressions.
 
 - 2026-08-28 M9 documentation: made the six-command canonical-config path the README and CLI-guide happy path, documented production artifact limits and compatibility routing, and added a complete M5 YAML example.
+
+- 2026-08-28 M9 safety correction: production now performs a mutation-free canonical destination ownership assessment before progress/state initialization, and rejects overwrite of nonempty directories lacking Tome ownership markers.

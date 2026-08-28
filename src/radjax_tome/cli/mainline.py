@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -133,13 +134,21 @@ def run(args: argparse.Namespace) -> CLIResult:
             report = build_production_gpu_tome(
                 production_build_config_from_resolved(resolved)
             )
-            return CLIResult(
+            result = CLIResult(
                 "build",
                 report.get("status", "fail"),
                 0 if report.get("status") in {"pass", "warn"} else 7,
                 artifact={"workspace": str(intent.outputs.output_dir)},
                 reports={"production": report},
             )
+            if result.exit_code == 0:
+                receipt = intent.outputs.output_dir / "m9_cli_receipt.json"
+                receipt.parent.mkdir(parents=True, exist_ok=True)
+                receipt.write_text(
+                    json.dumps(result.to_dict(), sort_keys=True, default=str) + "\n"
+                )
+                result.artifact["receipt_path"] = str(receipt)
+            return result
         if args.command == "validate":
             from radjax_tome.tome.artifact_dispatch import validate_artifact
 
@@ -191,6 +200,8 @@ def run(args: argparse.Namespace) -> CLIResult:
                 },
             )
         if args.command == "doctor":
+            if args.config:
+                load_tome_build_intent(args.config)
             return CLIResult(
                 "doctor",
                 "pass",

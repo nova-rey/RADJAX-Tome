@@ -264,6 +264,20 @@ def _build_production_gpu_tome_compatibility(
     *,
     canonical_config: Any | None = None,
 ) -> dict[str, Any]:
+    from radjax_tome.builder.production_stages.preflight import (
+        assess_production_preflight,
+    )
+
+    assessment = assess_production_preflight(
+        config.output_dir, resume=config.resume, overwrite=config.overwrite
+    )
+    if assessment.status != "pass":
+        return {
+            "status": "fail",
+            "blockers": list(assessment.blockers),
+            "failure_phase": "preflight",
+            "destination": str(assessment.destination),
+        }
     state = _new_production_run_state(config)
     replay_authority = None
     if canonical_config is None:
@@ -336,13 +350,18 @@ def _build_production_gpu_tome_compatibility(
                         "schema_version": "frozen_selection_replay_adoption_v2",
                         "status": "pass",
                         "workload_identity": json.loads(
-                            (config.verified_selection_replay_path / "workload_authority.json").read_text()
+                            (
+                                config.verified_selection_replay_path
+                                / "workload_authority.json"
+                            ).read_text()
                         ).get("workload_identity"),
                         "replay_identity": replay_authority.replay_identity,
                         "adopted_root": str(replay_authority.adopted_root),
                         "metadata_digest": replay_authority.metadata_digest,
                         "layout_digest": layout_digest,
-                        "run_root_metadata_path": str(config.output_dir / "metadata.json"),
+                        "run_root_metadata_path": str(
+                            config.output_dir / "metadata.json"
+                        ),
                         "run_root_shards_path": str(config.output_dir / "shards"),
                         "selected_sources": replay_authority.selected_sources,
                         "selected_coordinates": replay_authority.selected_coordinates,
@@ -365,29 +384,44 @@ def _build_production_gpu_tome_compatibility(
                     parity_status="not_run",
                     build_status="preflight_only",
                 )
-                report.update({
-                    "preflight_only": True,
-                    "full_teacher_pass_count": 0,
-                    "selected_source_pass_count": 0,
-                    "c1_through_c5_execution": False,
-                    "materialization_performed": False,
-                    "publication_performed": False,
-                    "adoption_report": {
-                        "status": "pass",
-                        "workload_identity": json.loads((config.verified_selection_replay_path / "workload_authority.json").read_text()).get("workload_identity"),
-                        "replay_identity": replay_authority.replay_identity,
-                        "adopted_root": str(replay_authority.adopted_root),
-                        "selected_sources": replay_authority.selected_sources,
-                        "selected_coordinates": replay_authority.selected_coordinates,
-                        "metadata_digest": replay_authority.metadata_digest,
-                        "run_root_metadata_path": str(config.output_dir / "metadata.json"),
-                    },
-                    "teacher_provenance_schema": "teacher_model_provenance_v1",
-                    "resolved_model_path": str(replay_authority.adopted_root / "input/model/model"),
-                    "representation_mode": config.representation_mode,
-                    "resume_identity": replay_authority.replay_identity + ":" + config.representation_mode,
-                })
-                return _finalize_production_report(report, state.report_path, state.progress)
+                report.update(
+                    {
+                        "preflight_only": True,
+                        "full_teacher_pass_count": 0,
+                        "selected_source_pass_count": 0,
+                        "c1_through_c5_execution": False,
+                        "materialization_performed": False,
+                        "publication_performed": False,
+                        "adoption_report": {
+                            "status": "pass",
+                            "workload_identity": json.loads(
+                                (
+                                    config.verified_selection_replay_path
+                                    / "workload_authority.json"
+                                ).read_text()
+                            ).get("workload_identity"),
+                            "replay_identity": replay_authority.replay_identity,
+                            "adopted_root": str(replay_authority.adopted_root),
+                            "selected_sources": replay_authority.selected_sources,
+                            "selected_coordinates": replay_authority.selected_coordinates,
+                            "metadata_digest": replay_authority.metadata_digest,
+                            "run_root_metadata_path": str(
+                                config.output_dir / "metadata.json"
+                            ),
+                        },
+                        "teacher_provenance_schema": "teacher_model_provenance_v1",
+                        "resolved_model_path": str(
+                            replay_authority.adopted_root / "input/model/model"
+                        ),
+                        "representation_mode": config.representation_mode,
+                        "resume_identity": replay_authority.replay_identity
+                        + ":"
+                        + config.representation_mode,
+                    }
+                )
+                return _finalize_production_report(
+                    report, state.report_path, state.progress
+                )
             score_result = _existing_stage_success(
                 state,
                 "frozen_selection_replay",
@@ -3293,7 +3327,9 @@ def _selection_integration_hash(config: ProductionBuildConfig) -> str:
 
 
 def _hash_payload(payload: Mapping[str, Any]) -> str:
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode()
+    encoded = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), default=str
+    ).encode()
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 

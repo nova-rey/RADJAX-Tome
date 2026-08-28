@@ -181,6 +181,15 @@ def assess_production_preflight(
             "reject" if resume else "use",
             ("cannot resume an empty destination",) if resume else (),
         )
+    markers = ("run_manifest.json", "production_build_report.json", "metadata.json")
+    if not any((candidate / marker).is_file() for marker in markers):
+        return ProductionPreflightAssessment(
+            "fail",
+            candidate,
+            state,
+            "reject",
+            ("destination contains no canonical Tome ownership marker",),
+        )
     if not (resume or overwrite):
         return ProductionPreflightAssessment(
             "fail",
