@@ -21,9 +21,17 @@ def test_external_attestation_requires_attestation_and_evaluation_time(
 ) -> None:
     result = run(
         parser().parse_args(
-            ["validate", str(tmp_path / "missing.tgz"), "--mode", "external-attestation"]
+            [
+                "validate",
+                str(tmp_path / "missing.tgz"),
+                "--mode",
+                "external-attestation",
+            ]
         )
     )
     assert result.exit_code == 4
     assert result.error is not None
-    assert "evaluation-time" in result.error.message or "attestation" in result.error.message
+    assert (
+        "evaluation-time" in result.error.message
+        or "attestation" in result.error.message
+    )

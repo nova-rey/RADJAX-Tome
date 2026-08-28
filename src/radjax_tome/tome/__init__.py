@@ -1,5 +1,10 @@
 """Tome artifact helpers."""
 
+from radjax_tome.tome.artifact_dispatch import (
+    ArtifactInspection,
+    inspect_artifact,
+    validate_artifact,
+)
 from radjax_tome.tome.bundle import (
     TomeBundleValidationReport,
     inspect_tome_bundle,
@@ -53,11 +58,6 @@ from radjax_tome.tome.packaging import (
     open_student_tome,
     package_tome_artifact,
     validate_tome_package,
-)
-from radjax_tome.tome.artifact_dispatch import (
-    ArtifactInspection,
-    inspect_artifact,
-    validate_artifact,
 )
 from radjax_tome.tome.payload_sharding_v4 import (
     ShardedTomeV4Result,

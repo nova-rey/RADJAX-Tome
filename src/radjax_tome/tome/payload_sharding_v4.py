@@ -520,8 +520,10 @@ def _validate_semantic_record_for_write(
     run.
     """
     required_fields = _SEMANTIC_FIELDS
-    if allow_compact_without_mask and isinstance(record, dict) and (
-        "top_selection_mask" not in record
+    if (
+        allow_compact_without_mask
+        and isinstance(record, dict)
+        and ("top_selection_mask" not in record)
     ):
         required_fields = required_fields - {"top_selection_mask"}
     elif isinstance(record, dict) and record.get("storage_flavor") in {
@@ -589,9 +591,9 @@ def _legacy_selected_records(source: Path) -> Iterable[dict[str, Any]]:
             # direct v4 writers remain strict about undeclared fields.
             projected = {key: record[key] for key in record if key in allowed}
             if "top_selection_mask" not in projected:
-                projected["top_selection_mask"] = [
-                    True
-                ] * len(projected["top_token_ids"])
+                projected["top_selection_mask"] = [True] * len(
+                    projected["top_token_ids"]
+                )
             yield projected
 
 

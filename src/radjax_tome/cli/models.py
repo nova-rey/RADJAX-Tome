@@ -40,8 +40,6 @@ class CLIResult:
         value["versions"] = {
             "radjax_tome": "0.1.0",
             "radjax_contract": "0.9.0",
-            "radjax_contract_commit": (
-                "373e3d17060d4ce1c4a0db6065c9289da714bde7"
-            ),
+            "radjax_contract_commit": ("373e3d17060d4ce1c4a0db6065c9289da714bde7"),
         }
         return value

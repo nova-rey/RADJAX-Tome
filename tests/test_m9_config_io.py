@@ -20,12 +20,14 @@ def _payload(tmp_path: Path) -> dict:
             output_dir=Path("out"),
         )
     )
+
     def paths(item: object) -> object:
         if isinstance(item, dict):
             return {key: paths(value) for key, value in item.items()}
         if isinstance(item, Path):
             return str(item)
         return item
+
     return paths(value)  # type: ignore[return-value]
 
 
@@ -36,13 +38,18 @@ def test_json_and_yaml_load_same_intent(tmp_path: Path) -> None:
     json_path.write_text(json.dumps(payload))
     yaml_path.write_text(json.dumps(payload))
     assert load_tome_build_intent(json_path) == load_tome_build_intent(yaml_path)
-    assert load_tome_build_intent(json_path).outputs.output_dir == (tmp_path / "out").resolve()
+    assert (
+        load_tome_build_intent(json_path).outputs.output_dir
+        == (tmp_path / "out").resolve()
+    )
 
 
 def test_duplicate_and_unknown_fields_are_rejected(tmp_path: Path) -> None:
     payload = _payload(tmp_path)
     path = tmp_path / "intent.json"
-    path.write_text('{"schema_version":"radjax_tome_build_intent_v1","schema_version":"x"}')
+    path.write_text(
+        '{"schema_version":"radjax_tome_build_intent_v1","schema_version":"x"}'
+    )
     with pytest.raises(ValueError, match="duplicate key"):
         load_tome_build_intent(path)
     payload["unexpected"] = 1

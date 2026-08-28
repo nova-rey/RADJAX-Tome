@@ -34,4 +34,7 @@ def test_every_canonical_production_preset_uses_selected_batch_one() -> None:
     )
     assert PRODUCTION_PRESETS == ("smoke", "t4-1k", "t4-10k", "production-100k")
     for preset in PRODUCTION_PRESETS:
-        assert apply_production_preset(intent, preset).selection.selected_rerun_batch_size == 1
+        assert (
+            apply_production_preset(intent, preset).selection.selected_rerun_batch_size
+            == 1
+        )

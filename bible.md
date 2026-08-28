@@ -3789,3 +3789,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 output evidence correction: added focused machine-result and external-attestation exit-contract tests covering stable versions, JSON serializability, and required evidence fields.
 
 - 2026-08-28 M9 resume correction: treated the atomically completed compact-body metadata file as the resumable publication boundary, preventing a second canonical resume from attempting to recreate an already-published body store.
+
+- 2026-08-28 M9 quality correction: formatted the new public-surface modules, snapshots, and output-contract tests and rechecked changed-file lint/diff hygiene.
