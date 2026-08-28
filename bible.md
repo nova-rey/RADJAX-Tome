@@ -3805,3 +3805,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 dry-run correction: kept `build --preflight-only` a mutation-free canonical destination/config projection for placeholder examples, while non-dry-run builds retain full input validation before state creation.
 
 - 2026-08-28 M9 clean-install correction: routed global `--json doctor` through the canonical public parser while retaining explicit legacy doctor flags under compatibility routing.
+
+- 2026-08-28 M9 closure audit: recorded the live authority divergence, focused and clean-install results, full-suite/Ruff blockers, and machine-readable partial evidence without claiming milestone closure.

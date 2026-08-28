@@ -1,0 +1,27 @@
+{
+  "schema_version": "radjax_tome_m9_closure_audit_v1",
+  "status": "implementation_partial",
+  "branch": "m9/opinionated-mainline-cli-reconciled",
+  "commit": "622108ba134ce28bcae89d2f31584927d8472d62",
+  "accepted_m8": "88d6f418e0f39ab2ec61d9047f974f04657e5214",
+  "origin_main": "deed286a8725cc98f4a5d6a25aa80582d692e108",
+  "rejected_branch": "8a2dc2794ec32227f6187fa22837ba1f8dae0ccb",
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "public_commands": ["build", "validate", "inspect", "package", "doctor", "research"],
+  "focused_m9_hydra": {"passed": 19},
+  "full_suite": {"passed": 581, "skipped": 25, "failed_before_completion": 20},
+  "clean_install": {
+    "python": "3.12",
+    "wheel_sha256": "3862112f4ff63d54829a22516d70ded0ba76001370eddb85539d7d22537e74a2",
+    "contract_commit_verified": true,
+    "doctor": "pass",
+    "package_validate_inspect": "pass"
+  },
+  "review": {"status": "not_obtained"},
+  "blockers": [
+    "origin/main no longer equals the plan prerequisite 6a6c653",
+    "full suite has correctness and stale-boundary failures",
+    "full Ruff gate is not green on tracked archival benchmark code",
+    "independent review gate is incomplete"
+  ]
+}
