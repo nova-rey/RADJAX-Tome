@@ -28,6 +28,55 @@ def _root(path: Path) -> Path:
     raise ValueError("unsupported artifact path")
 
 
+def _validate_v3_mode(
+    candidate: Path,
+    *,
+    mode: str,
+    expected: Path | None,
+    attestation: Path | None,
+    attestation_policy: str,
+    evaluation_time: str | None,
+) -> dict[str, Any]:
+    """Run the pinned Contract v3 mode API without weakening its semantics."""
+    from radjax_contract.tome.v3 import (
+        AttestationRequirement,
+        compare_governed_tome_artifact_v3,
+        validate_tome_artifact_v3,
+        verify_external_tome_attestation_v3,
+    )
+
+    standard = validate_tome_artifact_v3(candidate)
+    if mode == "standard":
+        return {
+            "status": "pass",
+            "kind": "contract_v3",
+            "report": standard.__dict__,
+        }
+    if mode == "governed":
+        assert expected is not None
+        governed = compare_governed_tome_artifact_v3(candidate, expected)
+        return {
+            "status": "pass",
+            "kind": "contract_v3",
+            "report": governed.__dict__,
+        }
+    assert attestation is not None and evaluation_time is not None
+    evaluated = datetime.fromisoformat(evaluation_time.replace("Z", "+00:00"))
+    if evaluated.tzinfo is None:
+        raise ValueError("evaluation time must include timezone")
+    external = verify_external_tome_attestation_v3(
+        candidate,
+        attestation,
+        requirement=AttestationRequirement(attestation_policy),
+        evaluation_time_utc=evaluated,
+    )
+    return {
+        "status": "pass",
+        "kind": "contract_v3",
+        "report": external.__dict__,
+    }
+
+
 def validate_artifact(
     path: Path,
     *,
@@ -99,24 +148,24 @@ def validate_artifact(
                 if hasattr(report, "to_dict")
                 else report.__dict__,
             }
-        from radjax_contract.tome.v3.validation import validate_tome_artifact_v3
-
-        report = validate_tome_artifact_v3(candidate)
-        return {
-            "status": "pass" if report.ok else "fail",
-            "kind": "contract_v3",
-            "report": report.__dict__,
-        }
+        return _validate_v3_mode(
+            candidate,
+            mode=mode,
+            expected=expected,
+            attestation=attestation,
+            attestation_policy=attestation_policy,
+            evaluation_time=evaluation_time,
+        )
     if candidate.is_file() and candidate.suffix == ".rtome":
-        from radjax_contract.tome.v3.validation import validate_tome_artifact_v3
-
         try:
-            report = validate_tome_artifact_v3(candidate)
-            return {
-                "status": "pass" if report.ok else "fail",
-                "kind": "contract_v3",
-                "report": report.__dict__,
-            }
+            return _validate_v3_mode(
+                candidate,
+                mode=mode,
+                expected=expected,
+                attestation=attestation,
+                attestation_policy=attestation_policy,
+                evaluation_time=evaluation_time,
+            )
         except (OSError, TypeError, ValueError):
             pass
         from radjax_tome.tome.bundle import validate_tome_bundle
