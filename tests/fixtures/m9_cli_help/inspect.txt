@@ -1,0 +1,3 @@
+usage: radjax-tome inspect [-h] artifact
+
+Validate and inspect an artifact

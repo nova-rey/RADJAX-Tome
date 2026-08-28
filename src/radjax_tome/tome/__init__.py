@@ -54,6 +54,11 @@ from radjax_tome.tome.packaging import (
     package_tome_artifact,
     validate_tome_package,
 )
+from radjax_tome.tome.artifact_dispatch import (
+    ArtifactInspection,
+    inspect_artifact,
+    validate_artifact,
+)
 from radjax_tome.tome.payload_sharding_v4 import (
     ShardedTomeV4Result,
     pack_sharded_tome_v4,
@@ -72,6 +77,7 @@ __all__ = [
     "CanonicalContentManifest",
     "FULL_DEBUG_PROVENANCE",
     "IndexedStudentTomeReader",
+    "ArtifactInspection",
     "HistoricalTomeDescriptor",
     "HISTORICAL_PACKAGE_COVER_SCHEMA",
     "LEGACY_COVER_PAGE_V2",
@@ -96,6 +102,8 @@ __all__ = [
     "inspect_tome_bundle",
     "pack_tome_bundle",
     "package_tome_artifact",
+    "inspect_artifact",
+    "validate_artifact",
     "package_legacy_artifact_as_sharded_tome_v4",
     "pack_sharded_tome_v4",
     "read_historical_tome_descriptor",

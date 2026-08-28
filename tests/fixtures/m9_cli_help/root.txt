@@ -1,0 +1,4 @@
+usage: radjax-tome [-h] [--json] [--quiet] [--debug] [--no-color] [--version]
+                   {build,validate,inspect,package,doctor,research} ...
+
+Opinionated RADJAX-Tome production lifecycle CLI

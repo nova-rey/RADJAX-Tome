@@ -92,7 +92,9 @@ def main(argv: list[str] | None = None) -> int:
         from radjax_tome.cli.mainline import main as mainline_main
 
         if command == "research":
-            return _legacy_main(raw[raw.index(command) + 1 :])
+            from radjax_tome.cli.research import main as research_main
+
+            return research_main(raw[raw.index(command) + 1 :])
         return mainline_main(raw)
     parser = _build_parser()
     args = parser.parse_args(argv)

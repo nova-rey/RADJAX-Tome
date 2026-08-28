@@ -3782,4 +3782,10 @@ closed-record and checkpoint authority validation.
 
 - 2026-08-28 M9 stream correction: route production progress to stderr and map broken output pipes to the approved 141 exit without contaminating machine-readable stdout.
 
+- 2026-08-28 M9 module-boundary correction: exposed the closed artifact dispatcher through the Tome package and gave retained engineering commands a dedicated research compatibility entry point.
+
+- 2026-08-28 M9 evidence correction: added durable public root and six-command help snapshots for the documented mainline surface.
+
+- 2026-08-28 M9 output evidence correction: added focused machine-result and external-attestation exit-contract tests covering stable versions, JSON serializability, and required evidence fields.
+
 - 2026-08-28 M9 resume correction: treated the atomically completed compact-body metadata file as the resumable publication boundary, preventing a second canonical resume from attempting to recreate an already-published body store.

@@ -1,0 +1,3 @@
+usage: radjax-tome doctor [-h] [--config CONFIG]
+
+Report runtime capability

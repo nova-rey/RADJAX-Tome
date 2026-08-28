@@ -1,0 +1,7 @@
+usage: radjax-tome package [-h] --output OUTPUT --profile
+                           {student,full_debug_provenance}
+                           [--transport {tgz,directory}]
+                           [--student-contract-profile {v5,v6}] [--overwrite]
+                           workspace
+
+Project a producer workspace into a package

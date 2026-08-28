@@ -1,0 +1,4 @@
+usage: radjax-tome build [-h] --config CONFIG [--output OUTPUT] [--resume]
+                         [--overwrite] [--preflight-only]
+
+Build from a complete canonical M5 config

@@ -1,0 +1,7 @@
+usage: radjax-tome validate [-h] [--mode {standard,governed,external-attestation}]
+                            [--expected EXPECTED] [--attestation ATTESTATION]
+                            [--attestation-policy {optional,required}]
+                            [--evaluation-time EVALUATION_TIME]
+                            artifact
+
+Validate a promised production artifact
