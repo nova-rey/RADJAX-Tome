@@ -3797,3 +3797,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 preflight correction: resolved and validated the canonical production request before invoking the state machine for non-preflight-only public builds, preserving fail-closed config errors before mutation.
 
 - 2026-08-28 M9 validation correction: routed supported v3 standard, governed, and external-attestation modes through the pinned Contract mode APIs instead of merely checking mode-specific option presence.
+
+- 2026-08-28 M9 verification wrapper cleanup: suppressed the retained-parser deprecation warning for canonical `validate --help` and `inspect --help` invocations so public help snapshots are warning-free.
