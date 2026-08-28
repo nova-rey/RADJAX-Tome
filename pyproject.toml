@@ -12,7 +12,7 @@ dependencies = [
   "numpy>=1.26",
   "PyYAML>=6.0",
   "duckdb==1.4.5",
-  "radjax-contract @ git+https://github.com/nova-rey/RADJAX-Contract.git@46fbf040aa37ae6aa161473b893c25e5de091e8d",
+  "radjax-contract @ git+https://github.com/nova-rey/RADJAX-Contract.git@373e3d17060d4ce1c4a0db6065c9289da714bde7",
 ]
 
 [project.optional-dependencies]
