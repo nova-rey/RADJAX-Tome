@@ -767,4 +767,3 @@ After Rey approves:
 Do not use the existing `8a2dc279` closure as accepted M9 evidence, do not modify Contract or Student, and do not begin M10.
 
 **M9_PLAN_READY_WITH_BOUNDED_PREREQUISITE**
-
