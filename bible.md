@@ -3815,3 +3815,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 final style pass: applied Ruff formatting to the routed CLI and shared preflight/production modules and confirmed the changed-file lint gate.
 
 - 2026-08-28 M9 evidence refresh: bound the closure audit to the final branch tip and wheel digest, and completed the Hydra inventory classification for the closure report itself.
+
+- 2026-08-28 M9 audit binding correction: staged the final closure receipt fields explicitly so the committed machine evidence matches the audited branch tip and wheel digest.
