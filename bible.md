@@ -3774,4 +3774,12 @@ closed-record and checkpoint authority validation.
 
 - 2026-08-28 M9 compatibility correction: made research help and legacy validate/inspect flag forms explicit at the top-level router so the six-command public surface remains unambiguous.
 
+- 2026-08-28 M9 help correction: routed canonical subcommand help through the six-command parser while retaining explicit legacy collision flags for compatibility dispatch.
+
+- 2026-08-28 M9 result-schema correction: added the approved Contract/version bindings, canonical config authority field, stage/timing slots, and top-level receipt path to public CLI results.
+
+- 2026-08-28 M9 receipt correction: populate receipt paths before serializing build and package receipts so each receipt self-describes its own location.
+
+- 2026-08-28 M9 stream correction: route production progress to stderr and map broken output pipes to the approved 141 exit without contaminating machine-readable stdout.
+
 - 2026-08-28 M9 resume correction: treated the atomically completed compact-body metadata file as the resumable publication boundary, preventing a second canonical resume from attempting to recreate an already-published body store.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sys
 from pathlib import Path
@@ -131,23 +132,29 @@ def run(args: argparse.Namespace) -> CLIResult:
             from radjax_tome.builder.production import build_production_gpu_tome
 
             resolved = resolve_tome_build_intent(intent, source="m9_cli")
-            report = build_production_gpu_tome(
-                production_build_config_from_resolved(resolved)
-            )
+            with contextlib.redirect_stdout(sys.stderr):
+                report = build_production_gpu_tome(
+                    production_build_config_from_resolved(resolved)
+                )
             result = CLIResult(
                 "build",
                 report.get("status", "fail"),
                 0 if report.get("status") in {"pass", "warn"} else 7,
                 artifact={"workspace": str(intent.outputs.output_dir)},
                 reports={"production": report},
+                config={
+                    "schema_version": "radjax_tome_build_intent_v1",
+                    "selection_authority_hash": resolved.selection_authority_hash,
+                },
             )
             if result.exit_code == 0:
                 receipt = intent.outputs.output_dir / "m9_cli_receipt.json"
                 receipt.parent.mkdir(parents=True, exist_ok=True)
+                result.artifact["receipt_path"] = str(receipt)
+                result.receipt_path = str(receipt)
                 receipt.write_text(
                     json.dumps(result.to_dict(), sort_keys=True, default=str) + "\n"
                 )
-                result.artifact["receipt_path"] = str(receipt)
             return result
         if args.command == "validate":
             from radjax_tome.tome.artifact_dispatch import validate_artifact
@@ -202,11 +209,12 @@ def run(args: argparse.Namespace) -> CLIResult:
                 },
             )
             receipt = args.output.with_name(args.output.name + ".m9_receipt.json")
+            cli_result.artifact["receipt_path"] = str(receipt)
+            cli_result.receipt_path = str(receipt)
             receipt.write_text(
                 json.dumps(cli_result.to_dict(), sort_keys=True, default=str) + "\n",
                 encoding="utf-8",
             )
-            cli_result.artifact["receipt_path"] = str(receipt)
             return cli_result
         if args.command == "doctor":
             from radjax_tome.backends import TeacherBackendConfig
@@ -276,5 +284,8 @@ def run(args: argparse.Namespace) -> CLIResult:
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     result = run(args)
-    emit(result, machine=args.machine, quiet=args.quiet)
+    try:
+        emit(result, machine=args.machine, quiet=args.quiet)
+    except BrokenPipeError:
+        return 141
     return result.exit_code

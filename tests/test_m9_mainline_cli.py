@@ -1,6 +1,10 @@
 from pathlib import Path
 import json
 from dataclasses import asdict
+import contextlib
+import io
+
+import pytest
 
 from radjax_tome.builder.config import canonical_production_build_intent
 from radjax_tome.cli.main import main
@@ -55,3 +59,12 @@ def test_preflight_only_uses_canonical_output_override(tmp_path: Path) -> None:
 
 def test_public_research_help_is_routed_without_legacy_required_command() -> None:
     assert main(["research", "--help"]) == 0
+
+
+def test_public_subcommand_help_does_not_fall_into_legacy_parser() -> None:
+    output = io.StringIO()
+    with contextlib.redirect_stdout(output):
+        with pytest.raises(SystemExit) as result:
+            main(["build", "--help"])
+    assert result.value.code == 0
+    assert "--config CONFIG" in output.getvalue()

@@ -73,6 +73,14 @@ def main(argv: list[str] | None = None) -> int:
         )
     if command in mainline_commands and (
         command in {"package", "research"}
+        or (
+            command in {"build", "validate", "inspect", "doctor"}
+            and "--help" in raw
+            and not any(
+                option in raw
+                for option in ("--path", "--teacher-backend", "--target-type")
+            )
+        )
         or (command == "build" and "--config" in raw)
         or (
             command in {"validate", "inspect"}
