@@ -3725,3 +3725,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-23 M8 sparse truncation numerical diagnostic: five repeated direct T4 comparisons showed stable low-order full-versus-prefix variation in a separate Torch 2.13/CUDA 13 runtime, but production parity remained outside tolerance and no broader rule or sample acceptance was justified.
 - 2026-08-23 M8 selected-prefix materiality test: full versus truncated BF16 retained-token order/set changed on 8 of 71 coordinates and dynamic K changed on 2; truncated batch-1 teacher timing was 0.955% slower, so truncation and batching were rejected without tolerance or Contract changes.
 - 2026-08-23 M8 final sparse-selected-logits closure: full-length sparse projection reduced projected rows from 8,192 to 71 but changed canonical retained payloads on 4 of 71 coordinates (one Dynamic K change) and improved total wall time only 1.5554%; sparse rejected and M8 closed.
+
+- 2026-08-28: Approved the decision-complete M9 opinionated mainline CLI implementation plan at `Approved Plans/M9 - Opinionated Mainline CLI Approved Plan.md`; this documentation commit performs no M9 implementation.
