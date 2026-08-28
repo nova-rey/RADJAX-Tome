@@ -3727,3 +3727,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-23 M8 final sparse-selected-logits closure: full-length sparse projection reduced projected rows from 8,192 to 71 but changed canonical retained payloads on 4 of 71 coordinates (one Dynamic K change) and improved total wall time only 1.5554%; sparse rejected and M8 closed.
 
 - 2026-08-28 M9 prerequisite reconciliation: pinned the accepted buffer-native Contract commit and restored selected-rerun batch size 1 across every canonical production preset; no Contract or selection implementation was changed.
+
+- 2026-08-28 M9 config/preflight boundary: added complete closed JSON/YAML M5 intent loading with duplicate/unknown/missing-field rejection, config-relative paths, canonical destination override ownership, and mutation-free destination assessment.

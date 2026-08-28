@@ -60,6 +60,7 @@ from radjax_tome.builder.config import (
     validate_resolved_tome_build_config,
     validate_tome_build_intent,
 )
+from radjax_tome.builder.config_io import load_tome_build_intent
 from radjax_tome.builder.exemplar_delivery import (
     EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA,
     EXEMPLAR_DELIVERY_REPORT_FILENAME,
@@ -186,6 +187,7 @@ __all__ = [
     "validate_teacher_textbook",
     "validate_tome_build_intent",
     "validate_resolved_tome_build_config",
+    "load_tome_build_intent",
     "validate_exemplar_selection_manifest",
     "validate_integrated_selection_contract",
     "write_corridor_coverage_report",

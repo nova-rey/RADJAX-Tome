@@ -559,6 +559,7 @@ def apply_production_preset(
 
 
 _PRODUCTION_OVERRIDE_SECTIONS = {
+    # Destination overrides remain owned by the canonical M5 API.
     "artifact_contract_version": ("package", "artifact_contract_version"),
     "teacher_model": ("teacher", "model"),
     "tokenizer_id": ("teacher", "tokenizer_id"),
@@ -944,7 +945,12 @@ def validate_tome_build_intent(
     ):
         if value is not None:
             _require_path(errors, value, name)
-    if intent.teacher.backend not in {"gpu_torch", "hf_torch", "cpu_reference", "smoke_tokenizer"}:
+    if intent.teacher.backend not in {
+        "gpu_torch",
+        "hf_torch",
+        "cpu_reference",
+        "smoke_tokenizer",
+    }:
         errors.append("teacher.backend is unsupported")
     if intent.teacher.runtime_mode not in {"cpu", "cpu_gpu"}:
         errors.append("teacher.runtime_mode is unsupported")

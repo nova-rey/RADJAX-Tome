@@ -9,6 +9,7 @@ from __future__ import annotations
 import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from time import perf_counter
 from typing import Any
 
@@ -122,6 +123,75 @@ class PreflightOperations:
     runtime_doctor: Callable[[Any], dict[str, Any]] = build_runtime_doctor_report
     build_plan: Callable[[Any], dict[str, Any]] = build_gpu_run_plan
     write_plan: Callable[[dict[str, Any], Any], None] = write_gpu_run_plan
+
+
+@dataclass(frozen=True)
+class ProductionPreflightAssessment:
+    """Mutation-free destination decision used before production execution."""
+
+    status: str
+    destination: Path
+    destination_state: str
+    action: str
+    blockers: tuple[str, ...] = ()
+
+
+def assess_production_preflight(
+    output_dir: Path, *, resume: bool = False, overwrite: bool = False
+) -> ProductionPreflightAssessment:
+    """Classify a destination without creating, deleting, or writing anything."""
+    if resume and overwrite:
+        return ProductionPreflightAssessment(
+            "fail",
+            output_dir,
+            "invalid",
+            "reject",
+            ("resume and overwrite are mutually exclusive",),
+        )
+    candidate = output_dir if output_dir.is_absolute() else output_dir.absolute()
+    if candidate in {Path("/"), Path.home(), Path.cwd()} or candidate.is_symlink():
+        return ProductionPreflightAssessment(
+            "fail", candidate, "unsafe", "reject", ("destination is unsafe",)
+        )
+    if not candidate.exists():
+        state = "missing"
+    elif candidate.is_file() or not candidate.is_dir():
+        state = "special"
+    elif any(candidate.iterdir()):
+        state = "nonempty_directory"
+    else:
+        state = "empty_directory"
+    if state == "special":
+        return ProductionPreflightAssessment(
+            "fail", candidate, state, "reject", ("destination is not a directory",)
+        )
+    if state == "missing":
+        return ProductionPreflightAssessment(
+            "fail" if resume else "pass",
+            candidate,
+            state,
+            "reject" if resume else "create",
+            ("cannot resume a missing destination",) if resume else (),
+        )
+    if state == "empty_directory":
+        return ProductionPreflightAssessment(
+            "fail" if resume else "pass",
+            candidate,
+            state,
+            "reject" if resume else "use",
+            ("cannot resume an empty destination",) if resume else (),
+        )
+    if not (resume or overwrite):
+        return ProductionPreflightAssessment(
+            "fail",
+            candidate,
+            state,
+            "reject",
+            ("destination contains existing entries",),
+        )
+    return ProductionPreflightAssessment(
+        "pass", candidate, state, "resume" if resume else "replace"
+    )
 
 
 def _failure_report(
