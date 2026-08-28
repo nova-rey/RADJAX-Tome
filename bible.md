@@ -3747,3 +3747,15 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 output correction: mapped public validation, unsupported-artifact, packaging-conflict, and interruption failures to the approved stable exit-code categories.
 
 - 2026-08-28 M9 production-path correction: restored the explicit selected-materialization mode imports required by the accepted M8 rerun owner, allowing canonical CPU production execution to reach its existing path without changing payload semantics.
+
+- 2026-08-28 M9 validation correction: made persisted compact and immutable selected payloads exempt only from the legacy selection-mask field requirement, preserving canonical K-length storage and the locked historical field inventory.
+
+- 2026-08-28 M9 v4-boundary correction: applied the same mode-aware selection-mask rule when adapting legacy compact payload shards into the streaming v4 semantic surface.
+
+- 2026-08-28 M9 v4-writer correction: allowed compact and immutable records through the additive writer's semantic precheck while retaining strict validation for legacy padded records.
+
+- 2026-08-28 M9 v4-adapter correction: scoped mask omission to the legacy compact-adaptation calls, keeping direct v4 writes strict while permitting canonical compact records to publish without synthetic fields.
+
+- 2026-08-28 M9 native-publication correction: carried the compact-record validation allowance into the production v4 materialization path, including resumed sealed-record publication.
+
+- 2026-08-28 M9 Contract-boundary correction: v4 adaptation now materializes an all-true selection mask for compact active-K arrays only at the Contract publication edge; legacy compact files remain mask-free.

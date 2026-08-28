@@ -187,8 +187,18 @@ def validate_selected_exemplar_delivery(
         if sequence_length is not None and not 0 <= position < sequence_length:
             blockers.append(f"selected position outside sequence length: {position}")
     for payload in payloads:
+        required_fields = _REQUIRED_SELECTED_PAYLOAD_FIELDS
+        if payload.get("storage_flavor") in {
+            "compact_k_monolithic",
+            "compact_k_immutable_body",
+        }:
+            required_fields = tuple(
+                field
+                for field in required_fields
+                if field != "top_selection_mask"
+            )
         missing = [
-            field for field in _REQUIRED_SELECTED_PAYLOAD_FIELDS if field not in payload
+            field for field in required_fields if field not in payload
         ]
         if missing:
             blockers.append(

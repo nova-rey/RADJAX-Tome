@@ -215,6 +215,7 @@ def _materialize_directory_from_staged_records(
         nonselected_training_payload=_nonselected_payload(source_identity.to_dict()),
         profile="student",
         capacity=state.payload_records_per_shard,
+        allow_compact_without_mask=True,
     )
 
 

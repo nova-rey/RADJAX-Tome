@@ -130,6 +130,7 @@ def write_sharded_tome_v4_from_legacy_artifact(
         profile=profile,
         payload_records_per_shard=payload_records_per_shard,
         overwrite=overwrite,
+        allow_compact_without_mask=True,
     )
 
 
@@ -169,6 +170,7 @@ def package_legacy_artifact_as_sharded_tome_v4(
             nonselected_training_payload=_nonselected_payload(identity.to_dict()),
             profile=profile,
             capacity=payload_records_per_shard,
+            allow_compact_without_mask=True,
         )
         _validate_publishable(stage)
         if output.exists():
@@ -216,6 +218,7 @@ def write_sharded_tome_v4(
     profile: str = "student",
     payload_records_per_shard: int = 128,
     overwrite: bool = False,
+    allow_compact_without_mask: bool = False,
 ) -> ShardedTomeV4Result:
     """Write a compact, count-sharded v4 directory without buffering a shard.
 
@@ -249,6 +252,7 @@ def write_sharded_tome_v4(
             nonselected_training_payload=nonselected_training_payload,
             profile=profile,
             capacity=payload_records_per_shard,
+            allow_compact_without_mask=allow_compact_without_mask,
         )
         _validate_publishable(stage)
         if output.exists():
@@ -343,6 +347,7 @@ def _write_directory(
     nonselected_training_payload: tuple[dict[str, str], ...],
     profile: str,
     capacity: int,
+    allow_compact_without_mask: bool = False,
 ) -> ShardedTomeV4Result:
     selected_dir = root / "selected_exemplars"
     shard_dir = selected_dir / "shards"
@@ -364,7 +369,9 @@ def _write_directory(
     index_handle = index_path.open("wb")
     try:
         for record in records:
-            _validate_semantic_record_for_write(record)
+            _validate_semantic_record_for_write(
+                record, allow_compact_without_mask=allow_compact_without_mask
+            )
             _assert_finite(record)
             encoded = _canonical_bytes(record)
             semantic_digest = _digest_bytes(encoded)
@@ -502,7 +509,9 @@ def _write_directory(
     )
 
 
-def _validate_semantic_record_for_write(record: Any) -> None:
+def _validate_semantic_record_for_write(
+    record: Any, *, allow_compact_without_mask: bool = False
+) -> None:
     """Reject a malformed semantic payload while it is still staging-only.
 
     Full package validation remains Contract-owned at final publication.  This
@@ -510,7 +519,17 @@ def _validate_semantic_record_for_write(record: Any) -> None:
     a successfully returned artifact before that authoritative validation can
     run.
     """
-    if not isinstance(record, dict) or not _SEMANTIC_FIELDS <= set(record):
+    required_fields = _SEMANTIC_FIELDS
+    if allow_compact_without_mask and isinstance(record, dict) and (
+        "top_selection_mask" not in record
+    ):
+        required_fields = required_fields - {"top_selection_mask"}
+    elif isinstance(record, dict) and record.get("storage_flavor") in {
+        "compact_k_monolithic",
+        "compact_k_immutable_body",
+    }:
+        required_fields = required_fields - {"top_selection_mask"}
+    if not isinstance(record, dict) or not required_fields <= set(record):
         raise ValueError("record is missing a required semantic field")
     allowed = _SEMANTIC_FIELDS | {"opaque_extensions"}
     if set(record) - allowed:
@@ -556,13 +575,24 @@ def _legacy_selected_records(source: Path) -> Iterable[dict[str, Any]]:
         if not isinstance(records, list):
             raise ValueError(f"legacy selected payload shard is invalid: {path.name}")
         for record in records:
-            if not isinstance(record, dict) or not _SEMANTIC_FIELDS <= set(record):
+            required_fields = _SEMANTIC_FIELDS
+            if isinstance(record, dict) and record.get("storage_flavor") in {
+                "compact_k_monolithic",
+                "compact_k_immutable_body",
+            }:
+                required_fields = required_fields - {"top_selection_mask"}
+            if not isinstance(record, dict) or not required_fields <= set(record):
                 raise ValueError(f"legacy selected payload is incomplete: {path.name}")
             # Native v3 delivery receipts may contain nonsemantic staging and
             # linkage details such as ``payload_hash``.  The versioned v4
             # adapter projects the closed public semantic surface explicitly;
             # direct v4 writers remain strict about undeclared fields.
-            yield {key: record[key] for key in record if key in allowed}
+            projected = {key: record[key] for key in record if key in allowed}
+            if "top_selection_mask" not in projected:
+                projected["top_selection_mask"] = [
+                    True
+                ] * len(projected["top_token_ids"])
+            yield projected
 
 
 def _nonselected_payload(identity: dict[str, Any]) -> tuple[dict[str, str], ...]:
