@@ -48,7 +48,7 @@ def _validate_v3_mode(
     standard = validate_tome_artifact_v3(candidate)
     if mode == "standard":
         return {
-            "status": "pass",
+            "status": "pass" if getattr(standard, "ok", False) else "fail",
             "kind": "contract_v3",
             "report": standard.__dict__,
         }
@@ -56,7 +56,7 @@ def _validate_v3_mode(
         assert expected is not None
         governed = compare_governed_tome_artifact_v3(candidate, expected)
         return {
-            "status": "pass",
+            "status": "pass" if getattr(governed, "ok", False) else "fail",
             "kind": "contract_v3",
             "report": governed.__dict__,
         }
@@ -71,7 +71,7 @@ def _validate_v3_mode(
         evaluation_time_utc=evaluated,
     )
     return {
-        "status": "pass",
+        "status": "pass" if getattr(external, "ok", False) else "fail",
         "kind": "contract_v3",
         "report": external.__dict__,
     }
