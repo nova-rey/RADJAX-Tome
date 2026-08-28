@@ -3831,3 +3831,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28: Approved the decision-complete M9 opinionated mainline CLI implementation plan at `Approved Plans/M9 - Opinionated Mainline CLI Approved Plan.md`; this documentation commit performs no M9 implementation.
 
 - 2026-08-28: Corrected the approved M9 plan Markdown EOF hygiene before publication; plan content and disposition remain unchanged.
+
+- 2026-08-28 M9 CI reconciliation: recorded the preserved dirty worktree and clean continuation branch before mandatory CI recovery; no dirty changes were copied or absorbed.
