@@ -3835,3 +3835,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 CI reconciliation: recorded the preserved dirty worktree and clean continuation branch before mandatory CI recovery; no dirty changes were copied or absorbed.
 
 - 2026-08-28 M9 CI lint reconciliation: applied nonsemantic Ruff import, formatting, line-length, strict-zip, and missing-import corrections across inherited source, test, tool, and M8G archival files; executable behavior was not intentionally changed.
+
+- 2026-08-28 M9 CI correctness reconciliation: repaired compact payload compatibility boundaries, historical v4 mask materialization, selected-payload linkage, canonical resume disposition, current P6 generator qualification, and stale authority expectations; preserved historical receipts and recorded all 20 inherited failure dispositions in `docs/M9_CI_RECONCILIATION_REPORT.md`.

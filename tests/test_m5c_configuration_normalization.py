@@ -150,6 +150,8 @@ def test_m5c_cli_and_programmatic_requests_resolve_identically() -> None:
             "exemplar_delivery_path": "two_pass_rerun_selected",
             "exemplar_selection_enabled": True,
             "retain_unselected_exemplar_payloads": True,
+            "include_perverse_tail_in_primary": True,
+            "include_perverse_tail_in_student": True,
             "progress": False,
         }
     )

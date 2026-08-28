@@ -22,7 +22,16 @@ from radjax_tome.cli.rendering import emit
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(
         prog="radjax-tome",
-        description="Opinionated RADJAX-Tome production lifecycle CLI",
+        description=(
+            "RADJAX-Tome produces teacher-side distillation artifacts. "
+            "Opinionated production lifecycle CLI.\n\n"
+            "Recommended commands: build, validate, inspect, package, doctor, research"
+            "\nLegacy-compatible research commands: "
+            "build-fingerprint-corridor-leaderboards, "
+            "allocate-fingerprint-corridor-coverage, "
+            "claim-corridor-and-backfill-global, build-multi-role-selected-exemplars, "
+            "pack, unpack, prove-capabilities"
+        ),
     )
     root.add_argument("--json", action="store_true", dest="machine")
     root.add_argument("--quiet", action="store_true")
@@ -285,6 +294,7 @@ def run(args: argparse.Namespace) -> CLIResult:
                 0,
                 reports={
                     "python": sys.version,
+                    "radjax_tome": "ok",
                     "runtime": runtime,
                 },
             )

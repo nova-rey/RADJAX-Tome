@@ -1979,8 +1979,9 @@ def _gpu_corridor_source_payload(
         dynamic_mass_threshold=config.dynamic_mass_threshold,
         num_buckets=config.num_buckets,
         vocab_chunk_size=vocab_chunk_size,
-        compact=config.representation_mode
-        in {"compact_k_monolithic", "compact_k_immutable_body"},
+        # Corridor scoring consumes rectangular device tensors.  Compact
+        # object-array materialization is only a final public-boundary format.
+        compact=False,
     )
 
 

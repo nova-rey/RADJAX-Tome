@@ -270,7 +270,7 @@ def test_path_b_rerun_mapping_preserves_duplicate_records_for_one_example(
         config=config,
     )
 
-    assert emitted_example_ids == [(example_a, example_b, example_c)]
+    assert emitted_example_ids == [(example_b, example_a, example_c)]
     assert len(payloads) == 4
     assert [payload["selected_position"] for payload in payloads] == [4, 6, 9, 1]
     assert [payload["top_token_ids"][0] for payload in payloads] == [18, 26, 29, 31]

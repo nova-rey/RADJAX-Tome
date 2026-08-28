@@ -589,6 +589,10 @@ def teacher_backend_config_from_build_config(
         local_files_only=config.local_files_only,
         allow_downloads=config.allow_downloads,
         metadata=config.metadata,
+        # The legacy TeacherTargetStore contract is a padded NumPy surface.
+        # The canonical M9 production path owns compact materialization
+        # explicitly; this compatibility builder must not emit object arrays.
+        representation_mode="legacy_padded_monolithic",
     )
 
 

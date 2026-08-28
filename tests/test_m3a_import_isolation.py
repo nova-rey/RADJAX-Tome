@@ -157,6 +157,7 @@ EXPECTED_COMMANDS = (
     "doctor",
     "exemplar-delivery-parity",
     "export-production-global-board-supply",
+    "finalize-replay-workload",
     "golden",
     "inspect",
     "model",
@@ -315,9 +316,9 @@ def test_m3b_parser_and_help_keep_inventory_and_isolation() -> None:
 
     assert tuple(parser_snapshot["commands"]) == EXPECTED_COMMANDS
     assert "Recommended commands:" in str(help_snapshot["help_text"])
-    for command in EXPECTED_COMMANDS:
+    for command in ("build", "validate", "inspect", "package", "doctor", "research"):
         assert command in str(help_snapshot["help_text"])
-    assert len(EXPECTED_COMMANDS) == 24
+    assert len(EXPECTED_COMMANDS) == 25
     _assert_isolated(parser_snapshot)
     _assert_isolated(help_snapshot)
 

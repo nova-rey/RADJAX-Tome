@@ -5,7 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from radjax_tome.backends import TeacherBackendConfig
-from radjax_tome.builder.delivery.modes import validate_materialization_mode
+from radjax_tome.builder.delivery.modes import (
+    LEGACY_PADDED_MONOLITHIC,
+    validate_materialization_mode,
+)
 from radjax_tome.builder.exemplar_delivery import (
     ExemplarDeliveryConfig,
     run_selected_delivery_rerun,
@@ -21,6 +24,10 @@ def backend_config(config: Any) -> TeacherBackendConfig:
     representation_mode = validate_materialization_mode(
         getattr(config, "representation_mode", None)
     )
+    if not native_c6_path_b_enabled(config):
+        # The compatibility/research router retains the historical padded
+        # payload contract.  Compact bodies are owned by canonical Path B.
+        representation_mode = LEGACY_PADDED_MONOLITHIC
     return TeacherBackendConfig(
         backend_id=config.teacher_backend,
         runtime_mode=config.runtime_mode,
@@ -64,6 +71,8 @@ def exemplar_delivery_config(
     representation_mode = validate_materialization_mode(
         getattr(config, "representation_mode", None)
     )
+    if not native_c6_path_b_enabled(config):
+        representation_mode = LEGACY_PADDED_MONOLITHIC
     return ExemplarDeliveryConfig(
         artifact_dir=config.output_dir,
         dataset_path=config.dataset_path,

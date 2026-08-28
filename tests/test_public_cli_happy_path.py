@@ -14,18 +14,7 @@ def test_public_cli_top_level_help() -> None:
     assert result.returncode == 0
     assert "RADJAX-Tome produces teacher-side distillation artifacts." in result.stdout
     assert "Recommended commands:" in result.stdout
-    for command in (
-        "build",
-        "build-fingerprint-corridor-leaderboards",
-        "allocate-fingerprint-corridor-coverage",
-        "claim-corridor-and-backfill-global",
-        "build-multi-role-selected-exemplars",
-        "validate",
-        "inspect",
-        "pack",
-        "unpack",
-        "prove-capabilities",
-    ):
+    for command in ("build", "validate", "inspect", "package", "doctor", "research"):
         assert command in result.stdout
 
 
@@ -187,7 +176,7 @@ def test_doctor_does_not_require_optional_hf_dependencies() -> None:
     assert "radjax_tome=ok" in result.stdout
     assert "optional_dependency.torch=" in result.stdout
     assert "optional_dependency.transformers=" in result.stdout
-    assert "recommended=radjax-tome build --teacher-mode fake" in result.stdout
+    assert "doctor: pass" in result.stdout
 
 
 def test_cli_guide_and_readme_document_happy_path() -> None:

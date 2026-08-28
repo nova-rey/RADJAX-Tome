@@ -193,6 +193,8 @@ def run_selected_delivery_rerun(
         _measurement_control=_measurement_control,
         full_payloads=full_payloads,
     )
+    if full_payloads is not None and config.delivery_path == ONE_PASS_PRUNED_CANDIDATE:
+        full_payloads.extend(dict(payload) for payload in selected_payloads)
     if config.delivery_path == TWO_PASS_RERUN_SELECTED:
         _notify_delivery_progress(
             config,

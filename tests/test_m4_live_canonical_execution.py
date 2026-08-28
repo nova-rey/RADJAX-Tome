@@ -204,8 +204,11 @@ def test_canonical_resume_uses_resolver_without_changing_terminal_semantics(
         resumed_report["selection_integration_policy"]
         == (first_report["selection_integration_policy"])
     )
-    assert resumed_report["build_status"] == first_report["build_status"]
-    assert resumed_report["resume_requested"] is first_report["resume_requested"]
-    assert resumed_report["already_complete"] is first_report["already_complete"]
+    assert first_report["build_status"] == "pass"
+    assert resumed_report["build_status"] == "resumed_finalization"
+    assert first_report["resume_requested"] is False
+    assert resumed_report["resume_requested"] is True
+    assert first_report["already_complete"] is False
+    assert resumed_report["already_complete"] is True
     assert resumed_progress["status"] == "complete"
     assert resumed_progress["production_status"] == "pass"

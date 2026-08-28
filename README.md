@@ -13,6 +13,7 @@ Start with the six-command public CLI. `build` consumes a complete canonical
 M5 intent; see [the example](docs/examples/m9_tome_build_intent.yaml).
 
 ```bash
+python -m radjax_tome.cli.main build --config docs/examples/m9_tome_build_intent.yaml --preflight-only
 radjax-tome build --config docs/examples/m9_tome_build_intent.yaml --preflight-only
 
 radjax-tome validate ./OUTPUT.v4.tgz

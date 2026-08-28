@@ -36,6 +36,9 @@ def _config(**overrides: object) -> TeacherBackendConfig:
         "dynamic_top_k_max": 5,
         "dynamic_mass_threshold": 0.75,
         "dynamic_top_k_policy": "mass_threshold_v1",
+        # These tests exercise the historical padded TeacherEmissionResult
+        # contract; compact K storage is covered by test_m8g_canonical_modes.
+        "representation_mode": "legacy_padded_monolithic",
     }
     payload.update(overrides)
     return TeacherBackendConfig(**payload)

@@ -44,7 +44,13 @@ def selection_integration_hash(config: Any) -> str:
         "dynamic_top_k_min": config.dynamic_top_k_min,
         "dynamic_top_k_max": config.dynamic_top_k_max,
         "dynamic_mass_threshold": config.dynamic_mass_threshold,
-        "selected_rerun_batch_size": config.selected_rerun_batch_size,
+        "selected_rerun_batch_size": (
+            config.selected_rerun_batch_size
+            if config.selected_rerun_batch_size is not None
+            else 1
+            if config.exemplar_delivery_path == "two_pass_rerun_selected"
+            else None
+        ),
         "total_selected_exemplar_budget": config.total_selected_exemplar_budget,
         "fingerprint_corridor_budget_fraction": (
             config.fingerprint_corridor_budget_fraction
@@ -60,10 +66,8 @@ def selection_integration_hash(config: Any) -> str:
         "c4_schema": "radjax.c4_corridor_global_claims.v1",
         "c5_schema": "radjax.multi_role_selected_exemplar.v1",
         "delivery_path": config.exemplar_delivery_path,
-        "full_width_composition_cap": {
-            "numerator": config.full_width_cap_numerator,
-            "denominator": config.full_width_cap_denominator,
-        },
+        "full_width_cap_numerator": config.full_width_cap_numerator,
+        "full_width_cap_denominator": config.full_width_cap_denominator,
     }
     return hash_payload(payload)
 

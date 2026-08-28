@@ -209,6 +209,14 @@
       "replacement_or_target_boundary": "M9 closure evidence",
       "status": "supporting"
     },
+    "docs:M9_CI_RECONCILIATION_HANDOFF": {
+      "archive_or_removal_condition": "Retain with the M9 CI reconciliation history.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M9",
+      "rationale": "Records the preserved dirty worktree and the clean continuation boundary used for mandatory CI recovery.",
+      "replacement_or_target_boundary": "M9 CI reconciliation evidence",
+      "status": "supporting"
+    },
     "src/radjax_tome/tome/artifact_v3.py": {
       "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
       "kind": "production-module",
@@ -2923,6 +2931,14 @@
       "rationale": "Design-only Contract amendment for compact dynamic-top-K resources and immutable body/linkage transactions; no Contract implementation is included.",
       "replacement_or_target_boundary": "RADJAX-Contract amendment review and later opt-in Tome implementation.",
       "status": "canonical"
+    },
+    "docs/M9_CI_RECONCILIATION_REPORT.md": {
+      "archive_or_removal_condition": "Retain with the M9 closure evidence.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M9",
+      "rationale": "Durable disposition of the inherited mandatory CI failures and bounded corrections.",
+      "replacement_or_target_boundary": "M9 closure evidence",
+      "status": "supporting"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

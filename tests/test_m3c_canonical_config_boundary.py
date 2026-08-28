@@ -25,6 +25,7 @@ EXPECTED_COMMANDS = (
     "doctor",
     "exemplar-delivery-parity",
     "export-production-global-board-supply",
+    "finalize-replay-workload",
     "golden",
     "inspect",
     "model",
@@ -248,11 +249,11 @@ def test_cli_production_normalizes_defaults_and_exact_native_mapping(
     )
     assert cli_main.main(list(required)) == 0
     default = captured.pop()
-    assert default.intent.behavior.target_policy == "corridor_exemplar_v1"
-    assert default.intent.selection.selection_integration_policy == "global_only_v1"
-    assert default.intent.selection.exemplar_selection_enabled is False
-    assert default.intent.selection.exemplar_delivery_path is None
-    assert default.intent.selection.total_selected_exemplar_budget is None
+    assert default.target_policy == "corridor_exemplar_v1"
+    assert default.selection_integration_policy == "global_only_v1"
+    assert default.exemplar_selection_enabled is False
+    assert default.exemplar_delivery_path is None
+    assert default.total_selected_exemplar_budget is None
 
     exact_native = required + (
         "--exemplar-selection-enabled",
@@ -265,11 +266,8 @@ def test_cli_production_normalizes_defaults_and_exact_native_mapping(
     )
     assert cli_main.main(list(exact_native)) == 0
     mapped = captured.pop()
-    assert mapped.intent.behavior.target_policy == "corridor_exemplar_v1"
-    assert (
-        mapped.intent.selection.selection_integration_policy
-        == "corridor_first_global_backfill_v1"
-    )
-    assert mapped.intent.selection.exemplar_selection_enabled is True
-    assert mapped.intent.selection.exemplar_delivery_path == "two_pass_rerun_selected"
-    assert mapped.intent.selection.total_selected_exemplar_budget == 4
+    assert mapped.target_policy == "corridor_exemplar_v1"
+    assert mapped.selection_integration_policy == "corridor_first_global_backfill_v1"
+    assert mapped.exemplar_selection_enabled is True
+    assert mapped.exemplar_delivery_path == "two_pass_rerun_selected"
+    assert mapped.total_selected_exemplar_budget == 4

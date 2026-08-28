@@ -596,6 +596,8 @@ _PRODUCTION_OVERRIDE_SECTIONS = {
         "corridor_policy",
         "include_perverse_tail_in_student",
     ),
+    "full_width_cap_numerator": ("selection", "full_width_cap_numerator"),
+    "full_width_cap_denominator": ("selection", "full_width_cap_denominator"),
     "gpu_batch_size_mode": ("execution", "gpu_batch_size_mode"),
     "gpu_batch_size_preset": ("execution", "gpu_batch_size_preset"),
     "gpu_batch_size_custom": ("execution", "gpu_batch_size_custom"),
@@ -659,6 +661,8 @@ _PRODUCTION_OVERRIDE_SECTIONS = {
     "c4_claims_path": ("compatibility", "c4_claims_path"),
     "c5_selection_path": ("compatibility", "c5_selection_path"),
     "source_passports_path": ("compatibility", "source_passports_path"),
+    "preflight_only": ("execution", "preflight_only"),
+    "replay_authority_identity": ("selection", "replay_authority_identity"),
 }
 
 
@@ -1461,7 +1465,13 @@ def selection_authority_payload_v1(
         "dynamic_top_k_min": behavior.dynamic_top_k_min,
         "dynamic_top_k_max": behavior.dynamic_top_k_max,
         "dynamic_mass_threshold": behavior.dynamic_mass_threshold,
-        "selected_rerun_batch_size": selection.selected_rerun_batch_size,
+        "selected_rerun_batch_size": (
+            selection.selected_rerun_batch_size
+            if selection.selected_rerun_batch_size is not None
+            else 1
+            if selection.exemplar_delivery_path == "two_pass_rerun_selected"
+            else None
+        ),
         "total_selected_exemplar_budget": selection.total_selected_exemplar_budget,
         "fingerprint_corridor_budget_fraction": (
             selection.fingerprint_corridor_budget_fraction

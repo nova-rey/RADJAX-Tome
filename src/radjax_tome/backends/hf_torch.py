@@ -20,7 +20,6 @@ _SUPPORTED_EMISSION_POLICIES = {
     "dense_logits",
     "topk_with_tail_v0",
     "cascaded_soft_labels_v1",
-    "dynamic_cascaded_soft_labels_v1",
     "corridor_exemplar_v1",
 }
 _CAPABILITY_STATUS: dict[TargetPolicy, str] = {

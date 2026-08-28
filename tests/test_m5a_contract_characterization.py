@@ -38,6 +38,8 @@ _PRODUCTION_CONFIG_FIELDS = (
     "include_long_tail_in_primary",
     "include_perverse_tail_in_primary",
     "include_perverse_tail_in_student",
+    "full_width_cap_numerator",
+    "full_width_cap_denominator",
     "gpu_batch_size_mode",
     "gpu_batch_size_preset",
     "gpu_batch_size_custom",
@@ -80,6 +82,11 @@ _PRODUCTION_CONFIG_FIELDS = (
     "c4_claims_path",
     "c5_selection_path",
     "source_passports_path",
+    "representation_mode",
+    "verified_selection_replay_path",
+    "verified_selection_bundle_manifest_path",
+    "replay_authority_identity",
+    "preflight_only",
 )
 
 _AUTHORITY_FIELDS = (
@@ -138,14 +145,14 @@ def test_m5a_inventory_covers_the_current_flat_production_surface() -> None:
     assert tuple(field.name for field in fields(ProductionBuildConfig)) == (
         _PRODUCTION_CONFIG_FIELDS
     )
-    assert len(_PRODUCTION_CONFIG_FIELDS) == 69
+    assert len(_PRODUCTION_CONFIG_FIELDS) == 76
 
 
 def test_m5a_pins_the_existing_selection_authority_projection() -> None:
     config = _config()
 
     assert _selection_integration_hash(config) == (
-        "sha256:c7bdbfe538c007db6b65c7fc87850b29355dfeef5300c5bd4fc6efb178e987ab"
+        "sha256:95f7aeb53e67d7c8aa564ecdfe3493c81d1a8db8e3df4d22109c4e2fb29fc61c"
     )
     for field in _AUTHORITY_FIELDS:
         value = getattr(config, field)

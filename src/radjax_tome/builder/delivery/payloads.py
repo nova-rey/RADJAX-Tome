@@ -21,7 +21,7 @@ def _selected_payloads_from_one_pass_capture(
 ) -> list[dict[str, Any]]:
     payloads: list[dict[str, Any]] = []
     shard_cache: dict[int, dict[str, np.ndarray]] = {}
-    for record in selected_records:
+    for record_index, record in enumerate(selected_records):
         payload_ref = record.get("payload_ref", {})
         if not isinstance(payload_ref, dict) or not payload_ref:
             raise ValueError("selected record missing one-pass payload_ref")
@@ -44,14 +44,14 @@ def _selected_payloads_from_one_pass_capture(
                 ),
                 mismatch_fields=payload_ref_mismatch,
             )
-        payloads.append(
-            _selected_payload_from_one_pass_shard(
-                record,
-                shard=shard,
-                row=source_row,
-                config=config,
-            )
+        payload = _selected_payload_from_one_pass_shard(
+            record,
+            shard=shard,
+            row=source_row,
+            config=config,
         )
+        payload["_record_index"] = record_index
+        payloads.append(payload)
     return payloads
 
 

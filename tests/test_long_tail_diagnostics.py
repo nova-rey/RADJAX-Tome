@@ -12,7 +12,6 @@ from radjax_tome.builder.long_tail import (
     LONG_TAIL,
     LONG_TAIL_UNCERTAINTY_BOARD,
     NORMAL,
-    PERVERSE_TAIL_DIAGNOSTIC_BOARD,
     PRIMARY_SELECTED_BOARD,
     SUSPICIOUS_FLAT,
     VERY_LONG_TAIL,
@@ -115,8 +114,8 @@ def test_long_tail_diagnostic_clamps_probability_mass_for_reporting() -> None:
         (NORMAL, PRIMARY_SELECTED_BOARD),
         (LONG_TAIL, LONG_TAIL_UNCERTAINTY_BOARD),
         (VERY_LONG_TAIL, LONG_TAIL_UNCERTAINTY_BOARD),
-        (SUSPICIOUS_FLAT, PERVERSE_TAIL_DIAGNOSTIC_BOARD),
-        (FULL_VOCAB_OR_NEAR_FULL_VOCAB, PERVERSE_TAIL_DIAGNOSTIC_BOARD),
+        (SUSPICIOUS_FLAT, PRIMARY_SELECTED_BOARD),
+        (FULL_VOCAB_OR_NEAR_FULL_VOCAB, PRIMARY_SELECTED_BOARD),
     ),
 )
 def test_default_selected_board_routing(

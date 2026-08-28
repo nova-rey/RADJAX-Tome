@@ -371,12 +371,7 @@ def run_preflight(state: Any, *, operations: PreflightOperations) -> Any:
         )
         operations.record_terminal_report(state, report)
         return operations.terminal_stage_failure(state, "preflight")
-    if finalization_probe.eligible and (
-        not c6_resume_requested
-        or state.native_resume_resolution is None
-        or state.native_resume_resolution.stage
-        in {"validation_linkage", "reconciliation_cover", "final_reporting"}
-    ):
+    if finalization_probe.eligible:
         state.terminal_report = operations.resume_finalization(
             config,
             created_at=state.created_at,

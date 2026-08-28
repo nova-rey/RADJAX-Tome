@@ -88,6 +88,7 @@ def materialize_native_v3_student_consumption_v4(
     if v4_dir.exists():
         raise ValueError("native v4 Student-consumption v4 sidecar already exists")
     v2_dir.replace(v4_dir)
+    _add_historical_dynamic_masks(v4_dir / "selected_exemplar_payload.json")
 
     _write_json(
         v4_dir / "row_ranges.json",
@@ -193,3 +194,23 @@ def _write_json(path: Path, value: dict[str, Any]) -> None:
         json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n",
         encoding="utf-8",
     )
+
+
+def _add_historical_dynamic_masks(path: Path) -> None:
+    """Materialize the v4 mask required by the historical Contract schema."""
+
+    payload = read_json_object(path)
+    exemplars = payload.get("selected_exemplars")
+    if not isinstance(exemplars, list):
+        raise ValueError("native v4 selected exemplar payload is invalid")
+    for exemplar in exemplars:
+        if not isinstance(exemplar, dict):
+            raise ValueError("native v4 selected exemplar is invalid")
+        tokens = exemplar.get("top_token_ids")
+        effective_top_k = exemplar.get("effective_top_k")
+        if not isinstance(tokens, list) or not isinstance(effective_top_k, int):
+            raise ValueError("native v4 dynamic exemplar lacks top-k arrays")
+        exemplar["top_selection_mask"] = [
+            slot < effective_top_k for slot in range(len(tokens))
+        ]
+    _write_json(path, payload)

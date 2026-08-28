@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MIRROR = ROOT / "contracts" / "radjax_tome" / "student_consumption" / "v4"
 PIN_DOCUMENT = ROOT / "docs" / "C3_STUDENT_CONSUMPTION_CONTRACT_PIN.md"
 PINNED_COMMIT = "b1209f21fef9405776a757f1a5749d3152bbc3c6"
-CURRENT_CONTRACT_COMMIT = "1fa43e1aea2e198511db86dafb0aeefa525d48c7"
+CURRENT_CONTRACT_COMMIT = "373e3d17060d4ce1c4a0db6065c9289da714bde7"
 
 
 def _entries(root: Path) -> dict[str, str]:

@@ -44,7 +44,7 @@ def test_replay_authority_is_bound_into_resolved_configuration(tmp_path: Path) -
     assert selection.verified_selection_replay_path == tmp_path / "artifact"
     assert selection.verified_selection_bundle_manifest_path == tmp_path / "bundle.json"
     assert normalized.resolved.intent.selection.representation_mode == (
-        "legacy_padded_monolithic"
+        "compact_k_monolithic"
     )
 
 

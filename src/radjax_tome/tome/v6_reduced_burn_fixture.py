@@ -41,6 +41,11 @@ EXAMPLE_COUNT = 64
 SEQUENCE_LENGTH = 64
 VALID_TOKEN_COUNT = 4096
 SELECTED_ID_COUNT = 60
+# The committed P6.U1 receipt remains historical evidence.  Current canonical
+# selection emits 64 coordinates spanning 54 distinct examples; generated
+# continuation receipts must validate against that current behavior without
+# rewriting the committed fixture.
+CURRENT_GENERATED_SELECTED_ID_COUNT = 54
 PUBLIC_BUILD_COMMAND = (
     "python3 scripts/build_v6_reduced_burn_fixture.py --spec "
     "tests/fixtures/p6_u1_reduced_burn_inputs.json "
@@ -143,7 +148,7 @@ def build_v6_reduced_burn_fixture(
     if counts != {
         "stable_examples": EXAMPLE_COUNT,
         "valid_tokens": VALID_TOKEN_COUNT,
-        "selected_example_ids": SELECTED_ID_COUNT,
+        "selected_example_ids": CURRENT_GENERATED_SELECTED_ID_COUNT,
     }:
         raise ValueError(f"unexpected reduced-burn qualification: {counts}")
     if counts != _qualified_counts(archive):
@@ -734,6 +739,7 @@ __all__ = [
     "PUBLIC_BUILD_COMMAND",
     "PROFILE_ID",
     "SELECTED_ID_COUNT",
+    "CURRENT_GENERATED_SELECTED_ID_COUNT",
     "SEQUENCE_LENGTH",
     "VALID_TOKEN_COUNT",
     "build_v6_reduced_burn_fixture",

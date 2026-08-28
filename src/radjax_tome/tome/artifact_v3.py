@@ -322,6 +322,8 @@ def _closed_record(
         float(merged["effective_top_k"]) / float(merged["vocab_size"]),
     )
     merged.setdefault("top_k_saturated", False)
+    if "top_selection_mask" not in merged:
+        merged["top_selection_mask"] = [True] * len(merged["top_token_ids"])
     merged.setdefault("dynamic_mass_threshold", 0.0)
     merged.setdefault("dynamic_top_k_max", int(merged["effective_top_k"]))
     dynamic_threshold = float(merged["dynamic_mass_threshold"])

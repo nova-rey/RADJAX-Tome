@@ -97,6 +97,8 @@ def test_m5b_resolved_projection_keeps_the_legacy_selection_authority_hash() -> 
         "fingerprint_corridor_mode_cap": 10,
         "fingerprint_corridor_candidate_pool_cap": 4,
         "require_full_selected_budget": True,
+        "full_width_cap_numerator": 1,
+        "full_width_cap_denominator": 3,
         "c2_schema": "radjax.c2_corridor_candidate_leaderboards.v1",
         "c3_schema": "radjax.c3_corridor_coverage_plan.v1",
         "c4_schema": "radjax.c4_corridor_global_claims.v1",

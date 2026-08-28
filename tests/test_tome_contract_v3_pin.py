@@ -7,7 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 CONTRACT_ROOT = ROOT / "contracts" / "radjax_tome" / "v3"
 RELEASE_FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "tome_artifact_v3_smoke"
-CONTRACT_COMMIT = "1fa43e1aea2e198511db86dafb0aeefa525d48c7"
+CONTRACT_COMMIT = "373e3d17060d4ce1c4a0db6065c9289da714bde7"
+RELEASE_COMMIT = "1fa43e1aea2e198511db86dafb0aeefa525d48c7"
 ASSET_TREE_DIGEST = (
     "sha256:4f81cd901ad074cc24e279e37b7fbfbe25c22fb6b7fd77cbcc747b202995acf8"
 )
@@ -64,8 +65,8 @@ def test_sanitized_release_receipt_matches_the_pin_and_asset_hash_metadata() -> 
     assert receipt["package_name"] == "radjax-contract"
     assert receipt["package_version"] == "0.9.0"
     assert receipt["release_tag"] == "v0.9.0"
-    assert receipt["release_commit"] == CONTRACT_COMMIT
-    assert receipt["peeled_tag_commit"] == CONTRACT_COMMIT
+    assert receipt["release_commit"] == RELEASE_COMMIT
+    assert receipt["peeled_tag_commit"] == RELEASE_COMMIT
     assert receipt["artifact_contract_id"] == "radjax_tome_artifact_contract"
     assert receipt["artifact_contract_version"] == "3.0.0"
     assert receipt["reviewed_semantic_commit"] == (

@@ -18,6 +18,19 @@ def emit(result: CLIResult, *, machine: bool, quiet: bool = False) -> None:
             print(f"repair: {result.error.repair}", file=sys.stderr)
     elif not quiet:
         print(f"{result.command}: {result.status}")
+        if result.command == "doctor" and result.reports.get("python"):
+            print(f"python={result.reports['python']}")
+            if result.reports.get("radjax_tome"):
+                print(f"radjax_tome={result.reports['radjax_tome']}")
+            runtime = result.reports.get("runtime")
+            if isinstance(runtime, dict):
+                for dependency in ("torch", "transformers", "jax"):
+                    status = runtime.get(f"{dependency}_available")
+                    if status is not None:
+                        print(
+                            f"optional_dependency.{dependency}="
+                            f"{'available' if status else 'unavailable'}"
+                        )
         if result.artifact:
             for key, value in result.artifact.items():
                 if value is not None:
