@@ -3729,3 +3729,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 prerequisite reconciliation: pinned the accepted buffer-native Contract commit and restored selected-rerun batch size 1 across every canonical production preset; no Contract or selection implementation was changed.
 
 - 2026-08-28 M9 config/preflight boundary: added complete closed JSON/YAML M5 intent loading with duplicate/unknown/missing-field rejection, config-relative paths, canonical destination override ownership, and mutation-free destination assessment.
+
+- 2026-08-28 M9 public root: established the six-command mainline, module invocation, stable result/error rendering, canonical-config build routing, and closed production artifact dispatch while retaining legacy commands behind deprecation routing.

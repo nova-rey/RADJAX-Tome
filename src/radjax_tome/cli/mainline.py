@@ -1,0 +1,221 @@
+"""Opinionated six-command public CLI."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+from radjax_tome.builder.config import (
+    apply_production_advanced_overrides,
+    production_build_config_from_resolved,
+    resolve_tome_build_intent,
+)
+from radjax_tome.builder.config_io import load_tome_build_intent
+from radjax_tome.builder.production_stages.preflight import assess_production_preflight
+from radjax_tome.cli.models import CLIError, CLIResult
+from radjax_tome.cli.rendering import emit
+
+
+def parser() -> argparse.ArgumentParser:
+    root = argparse.ArgumentParser(
+        prog="radjax-tome",
+        description="Opinionated RADJAX-Tome production lifecycle CLI",
+    )
+    root.add_argument("--json", action="store_true", dest="machine")
+    root.add_argument("--quiet", action="store_true")
+    root.add_argument("--debug", action="store_true")
+    root.add_argument("--no-color", action="store_true")
+    root.add_argument("--version", action="version", version="radjax-tome 0.1.0")
+    commands = root.add_subparsers(dest="command", required=True)
+    build = commands.add_parser(
+        "build", help="Build from a complete canonical M5 config"
+    )
+    build.add_argument("--config", type=Path, required=True)
+    build.add_argument(
+        "--output", type=Path, help="Canonical output_dir operational override"
+    )
+    build.add_argument("--resume", action="store_true")
+    build.add_argument("--overwrite", action="store_true")
+    build.add_argument("--preflight-only", action="store_true")
+    validate = commands.add_parser(
+        "validate", help="Validate a promised production artifact"
+    )
+    validate.add_argument("artifact", type=Path)
+    validate.add_argument(
+        "--mode",
+        choices=("standard", "governed", "external-attestation"),
+        default="standard",
+    )
+    validate.add_argument("--expected", type=Path)
+    validate.add_argument("--attestation", type=Path)
+    validate.add_argument(
+        "--attestation-policy", choices=("optional", "required"), default="optional"
+    )
+    validate.add_argument("--evaluation-time")
+    inspect = commands.add_parser("inspect", help="Validate and inspect an artifact")
+    inspect.add_argument("artifact", type=Path)
+    package = commands.add_parser(
+        "package", help="Project a producer workspace into a package"
+    )
+    package.add_argument("workspace", type=Path)
+    package.add_argument("--output", type=Path, required=True)
+    package.add_argument(
+        "--profile", choices=("student", "full_debug_provenance"), required=True
+    )
+    package.add_argument("--transport", choices=("tgz", "directory"), default="tgz")
+    package.add_argument(
+        "--student-contract-profile", choices=("v5", "v6"), default="v5"
+    )
+    package.add_argument("--overwrite", action="store_true")
+    doctor = commands.add_parser("doctor", help="Report runtime capability")
+    doctor.add_argument("--config", type=Path)
+    commands.add_parser(
+        "research", help="Access retained engineering commands"
+    ).add_argument("args", nargs=argparse.REMAINDER)
+    return root
+
+
+def _error(
+    command: str, code: str, message: str, exit_code: int, *, repair: str | None = None
+) -> CLIResult:
+    return CLIResult(
+        command,
+        "fail",
+        exit_code,
+        error=CLIError(code, message, "preflight", repair=repair),
+    )
+
+
+def run(args: argparse.Namespace) -> CLIResult:
+    try:
+        if args.command == "build":
+            intent = load_tome_build_intent(args.config)
+            overrides = {"output_dir": args.output} if args.output else {}
+            if overrides:
+                intent = apply_production_advanced_overrides(intent, overrides)
+            assessment = assess_production_preflight(
+                intent.outputs.output_dir, resume=args.resume, overwrite=args.overwrite
+            )
+            if assessment.status != "pass":
+                return _error(
+                    "build",
+                    "OUTPUT_CONFLICT",
+                    "; ".join(assessment.blockers),
+                    5,
+                    repair="choose a safe destination or use --resume/--overwrite",
+                )
+            if args.preflight_only:
+                return CLIResult(
+                    "build",
+                    "pass",
+                    0,
+                    artifact={
+                        "workspace": str(assessment.destination),
+                        "action": assessment.action,
+                    },
+                )
+            intent = intent.__class__(
+                **{
+                    **intent.__dict__,
+                    "execution": intent.execution.__class__(
+                        **{
+                            **intent.execution.__dict__,
+                            "resume": args.resume,
+                            "overwrite": args.overwrite,
+                        }
+                    ),
+                }
+            )
+            from radjax_tome.builder.production import build_production_gpu_tome
+
+            resolved = resolve_tome_build_intent(intent, source="m9_cli")
+            report = build_production_gpu_tome(
+                production_build_config_from_resolved(resolved)
+            )
+            return CLIResult(
+                "build",
+                report.get("status", "fail"),
+                0 if report.get("status") in {"pass", "warn"} else 7,
+                artifact={"workspace": str(intent.outputs.output_dir)},
+                reports={"production": report},
+            )
+        if args.command == "validate":
+            from radjax_tome.tome.artifact_dispatch import validate_artifact
+
+            report = validate_artifact(
+                args.artifact,
+                mode=args.mode,
+                expected=args.expected,
+                attestation=args.attestation,
+            )
+            code = 0 if report["status"] == "pass" else 4
+            return CLIResult(
+                "validate",
+                report["status"],
+                code,
+                artifact={"input": str(args.artifact), "format": report["kind"]},
+                reports=report,
+            )
+        if args.command == "inspect":
+            from radjax_tome.tome.artifact_dispatch import inspect_artifact
+
+            item = inspect_artifact(args.artifact)
+            return CLIResult(
+                "inspect",
+                "pass",
+                0,
+                artifact={"input": str(item.path), "format": item.kind},
+                reports={"validation": item.validation, "metadata": item.metadata},
+            )
+        if args.command == "package":
+            from radjax_tome.tome.packaging import package_tome_artifact
+
+            archive = "tgz" if args.transport == "tgz" else "none"
+            result = package_tome_artifact(
+                args.workspace,
+                args.output,
+                profile=args.profile,
+                archive=archive,
+                overwrite=args.overwrite,
+                student_contract_profile=args.student_contract_profile,
+            )
+            return CLIResult(
+                "package",
+                "pass",
+                0,
+                artifact={
+                    "output": str(result.output_path),
+                    "profile": args.profile,
+                    "transport": args.transport,
+                },
+            )
+        if args.command == "doctor":
+            return CLIResult(
+                "doctor",
+                "pass",
+                0,
+                reports={
+                    "python": sys.version,
+                    "config": str(args.config) if args.config else None,
+                },
+            )
+        return CLIResult(
+            "research",
+            "fail",
+            2,
+            error=CLIError(
+                "RESEARCH_ROUTING",
+                "use a retained command after research",
+                "invocation",
+            ),
+        )
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        return _error(args.command, "COMMAND_FAILED", str(exc), 2)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parser().parse_args(argv)
+    result = run(args)
+    emit(result, machine=args.machine, quiet=args.quiet)
+    return result.exit_code

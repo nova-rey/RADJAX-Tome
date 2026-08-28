@@ -11,7 +11,7 @@ from radjax_tome.builder.config import (
 
 def test_contract_pin_is_the_accepted_buffer_native_commit() -> None:
     pyproject = (Path(__file__).parents[1] / "pyproject.toml").read_text()
-    assert "radjax-contract.git@373e3d17060d4ce1c4a0db6065c9289da714bde7" in pyproject
+    assert "RADJAX-Contract.git@373e3d17060d4ce1c4a0db6065c9289da714bde7" in pyproject
 
 
 def test_accepted_buffer_native_contract_api_imports() -> None:

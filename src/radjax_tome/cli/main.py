@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import replace
 import importlib.util
 import json
 import platform
 import sys
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 
 HELP_DESCRIPTION = """RADJAX-Tome produces teacher-side distillation artifacts.
@@ -34,6 +34,49 @@ Recommended commands:
 
 
 def main(argv: list[str] | None = None) -> int:
+    raw = list(sys.argv[1:] if argv is None else argv)
+    command = next((item for item in raw if not item.startswith("-")), None)
+    # Keep the legacy parser available as an explicit compatibility adapter;
+    # only complete canonical invocations enter the opinionated mainline.
+    mainline_commands = {
+        "build",
+        "validate",
+        "inspect",
+        "package",
+        "doctor",
+        "research",
+    }
+    if ("--help" in raw or "--version" in raw) and not command:
+        from radjax_tome.cli.mainline import main as mainline_main
+
+        return mainline_main(raw)
+    if command not in mainline_commands and command is not None:
+        print(
+            f"WARNING deprecated command '{command}'; use 'research' for retained "
+            "engineering commands",
+            file=sys.stderr,
+        )
+    if command in mainline_commands and (
+        command in {"package", "research"}
+        or (command == "build" and "--config" in raw)
+        or (
+            command in {"validate", "inspect"}
+            and raw.index(command) + 1 < len(raw)
+            and not raw[raw.index(command) + 1].startswith("--")
+        )
+        or (command == "doctor" and ("--config" in raw or len(raw) == 1))
+    ):
+        from radjax_tome.cli.mainline import main as mainline_main
+
+        if command == "research":
+            return _legacy_main(raw[raw.index(command) + 1 :])
+        return mainline_main(raw)
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+def _legacy_main(argv: list[str]) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
     return args.func(args)
@@ -681,7 +724,10 @@ def _build_parser() -> argparse.ArgumentParser:
     production.add_argument(
         "--preflight-only",
         action="store_true",
-        help="Run canonical replay adoption and production preflight without inference or materialization.",
+        help=(
+            "Run canonical replay adoption and production preflight without "
+            "inference or materialization."
+        ),
     )
     # The canonical normalizer owns defaults.  Suppressing parser defaults is
     # what lets it distinguish an explicit advanced override from an omitted
