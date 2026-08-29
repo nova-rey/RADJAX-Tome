@@ -20,9 +20,12 @@ def write_shards(
     records: Iterable[CanonicalCorpusRecord],
     *,
     shard_capacity: int = 128,
+    max_shard_bytes: int | None = None,
 ) -> list[dict[str, Any]]:
     if shard_capacity < 1:
         raise ValueError("shard capacity must be positive")
+    if max_shard_bytes is not None and max_shard_bytes < 1:
+        raise ValueError("max shard bytes must be positive")
     shards = root / SHARDS_DIR
     indexes = root / INDEXES_DIR
     shards.mkdir(parents=True, exist_ok=True)
@@ -43,6 +46,11 @@ def write_shards(
             with index_path.open("wb") as index_handle:
                 for row_number, record in enumerate(items):
                     encoded = canonical_bytes(record.to_dict()) + b"\n"
+                    if (
+                        max_shard_bytes is not None
+                        and offset + len(encoded) > max_shard_bytes
+                    ):
+                        raise ValueError("shard exceeds resources.max_shard_bytes")
                     handle.write(encoded)
                     index_line = (
                         canonical_bytes(

@@ -47,9 +47,9 @@ def deduplicate_records(
         )"""
     )
     total = 0
+    pending: list[list[object]] = []
     for record in records:
-        connection.execute(
-            "INSERT INTO rows VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        pending.append(
             [
                 record.source_id,
                 record.source_ordinal,
@@ -64,6 +64,15 @@ def deduplicate_records(
             ],
         )
         total += 1
+        if len(pending) == 512:
+            connection.executemany(
+                "INSERT INTO rows VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", pending
+            )
+            pending.clear()
+    if pending:
+        connection.executemany(
+            "INSERT INTO rows VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", pending
+        )
 
     collisions = connection.execute(
         "SELECT text_digest FROM rows GROUP BY text_digest "
@@ -76,19 +85,21 @@ def deduplicate_records(
         )
     if enabled:
         winner_sql = """
-            SELECT r.*,
-              (SELECT COUNT(*) FROM rows d WHERE d.text_digest = r.text_digest
-               AND d.text_bytes = r.text_bytes) AS duplicate_count
-            FROM rows r
-            WHERE NOT EXISTS (
-              SELECT 1 FROM rows earlier
-              WHERE earlier.text_digest = r.text_digest
-                AND earlier.text_bytes = r.text_bytes
-                AND (earlier.source_ordinal, earlier.logical_locator,
-                     earlier.chunk_index)
-                    < (r.source_ordinal, r.logical_locator, r.chunk_index)
-            )
-            ORDER BY r.source_ordinal, r.logical_locator, r.chunk_index
+            SELECT source_id, source_ordinal, logical_locator, chunk_index,
+                   chunk_count, text, text_digest, source_digest,
+                   declared_record_id, text_bytes, duplicate_count
+            FROM (
+              SELECT r.*,
+                COUNT(*) OVER (PARTITION BY text_digest, text_bytes)
+                  AS duplicate_count,
+                ROW_NUMBER() OVER (
+                  PARTITION BY text_digest, text_bytes
+                  ORDER BY source_ordinal, logical_locator, chunk_index
+                ) AS winner_number
+              FROM rows r
+            ) ranked
+            WHERE winner_number = 1
+            ORDER BY source_ordinal, logical_locator, chunk_index
         """
     else:
         winner_sql = """

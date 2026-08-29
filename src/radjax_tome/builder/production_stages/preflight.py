@@ -95,7 +95,9 @@ def validate_required_inputs(config: Any, blockers: list[str]) -> None:
         ("corpus manifest", config.corpus_manifest_path),
         ("teacher model provenance", config.teacher_model_provenance_path),
     ):
-        if not path.is_file() and not (label == "corpus manifest" and corpus_is_v2):
+        if not path.is_file() and not (
+            corpus_is_v2 and label in {"dataset", "corpus manifest"}
+        ):
             blockers.append(f"{label} path missing: {path}")
     if blockers:
         return

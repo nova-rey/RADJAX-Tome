@@ -999,6 +999,9 @@ def build_corpus_artifact_v2(
                 "shard_capacity", intent.layout.get("shard_size_examples", 128)
             )
         ),
+        max_shard_bytes=int(intent.layout["max_shard_bytes"])
+        if intent.layout.get("max_shard_bytes") is not None
+        else None,
     )
     write_member(staging / "shard_inventory.json", inventory)
     write_member(staging / "source_manifest.json", source_inventory)
