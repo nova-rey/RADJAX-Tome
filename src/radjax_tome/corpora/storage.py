@@ -8,7 +8,7 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Any
 
-from radjax_tome.corpora.config import canonical_bytes, sha256
+from radjax_tome.corpora.config import canonical_bytes
 from radjax_tome.corpora.records import CanonicalCorpusRecord
 
 SHARDS_DIR = "shards"
@@ -38,24 +38,26 @@ def write_shards(
         shard_path = shards / shard_name
         index_path = indexes / index_name
         offset = 0
-        index_lines: list[bytes] = []
+        index_digest = hashlib.sha256()
         with shard_path.open("wb") as handle:
-            for row_number, record in enumerate(items):
-                encoded = canonical_bytes(record.to_dict()) + b"\n"
-                handle.write(encoded)
-                index_lines.append(
-                    canonical_bytes(
-                        {
-                            "example_id": record.example_id,
-                            "row": row_number,
-                            "offset": offset,
-                            "length": len(encoded),
-                        }
+            with index_path.open("wb") as index_handle:
+                for row_number, record in enumerate(items):
+                    encoded = canonical_bytes(record.to_dict()) + b"\n"
+                    handle.write(encoded)
+                    index_line = (
+                        canonical_bytes(
+                            {
+                                "example_id": record.example_id,
+                                "row": row_number,
+                                "offset": offset,
+                                "length": len(encoded),
+                            }
+                        )
+                        + b"\n"
                     )
-                    + b"\n"
-                )
-                offset += len(encoded)
-        index_path.write_bytes(b"".join(index_lines))
+                    index_handle.write(index_line)
+                    index_digest.update(index_line)
+                    offset += len(encoded)
         inventory.append(
             {
                 "shard_id": shard_number,
@@ -64,8 +66,8 @@ def write_shards(
                 "record_count": len(items),
                 "first_example_id": items[0].example_id,
                 "last_example_id": items[-1].example_id,
-                "raw_sha256": sha256(shard_path.read_bytes()),
-                "index_sha256": sha256(index_path.read_bytes()),
+                "raw_sha256": _file_digest(shard_path),
+                "index_sha256": "sha256:" + index_digest.hexdigest(),
                 "size_bytes": shard_path.stat().st_size,
             }
         )
@@ -133,6 +135,14 @@ def _verify_digest(path: Path, expected: str) -> None:
             digest.update(chunk)
     if "sha256:" + digest.hexdigest() != expected:
         raise ValueError(f"corpus member digest mismatch: {path.name}")
+
+
+def _file_digest(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
 
 
 def _safe_member(root: Path, relative: str) -> Path:

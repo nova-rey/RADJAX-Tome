@@ -55,9 +55,9 @@ class CanonicalCorpusRecord:
             result["duplicate_provenance"] = list(self.duplicate_provenance)
         if self.duplicate_count > 1:
             result["duplicate_count"] = self.duplicate_count
-            result["duplicate_provenance_truncated"] = len(
-                self.duplicate_provenance
-            ) < self.duplicate_count - 1
+            result["duplicate_provenance_truncated"] = (
+                len(self.duplicate_provenance) < self.duplicate_count - 1
+            )
         return result
 
 

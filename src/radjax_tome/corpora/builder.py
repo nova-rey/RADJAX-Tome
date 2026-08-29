@@ -945,7 +945,7 @@ def build_corpus_artifact_v2(
                         source_ordinal=source_ordinal,
                         logical_locator=item.logical_locator,
                         chunk_index=chunk_index,
-                            chunk_count=chunk_count,
+                        chunk_count=chunk_count,
                         text=chunk,
                         normalized_text_digest=digest_text(chunk),
                         source_digest=item.source_digest,
@@ -1078,7 +1078,9 @@ def build_corpus_artifact_v2(
                 "dedup_report.json",
                 "build_report.json",
             ],
-            "member_inventory_policy": "sha256_size_role_schema_v1_excludes_cover_self_hash",
+            "member_inventory_policy": (
+                "sha256_size_role_schema_v1_excludes_cover_self_hash"
+            ),
             "members": _public_member_inventory(staging),
             "atomic_overwrite": False,
         },
@@ -1209,7 +1211,9 @@ def _public_member_inventory(root: Path) -> list[dict[str, Any]]:
             {
                 "path": relative,
                 "role": role,
-                "media_type": "application/json" if path.suffix == ".json" else "application/jsonl",
+                "media_type": "application/json"
+                if path.suffix == ".json"
+                else "application/jsonl",
                 "schema": None,
                 "size_bytes": path.stat().st_size,
                 "sha256": _sha256_file(path),

@@ -25,7 +25,8 @@ def parser() -> argparse.ArgumentParser:
         description=(
             "RADJAX-Tome produces teacher-side distillation artifacts. "
             "Opinionated production lifecycle CLI.\n\n"
-            "Recommended commands: build, corpus, validate, inspect, package, doctor, research"
+            "Recommended commands: build, corpus, validate, inspect, package, "
+            "doctor, research"
             "\nLegacy-compatible research commands: "
             "build-fingerprint-corridor-leaderboards, "
             "allocate-fingerprint-corridor-coverage, "
@@ -49,12 +50,12 @@ def parser() -> argparse.ArgumentParser:
     corpus_build.add_argument("--config", type=Path, required=True)
     corpus_build.add_argument("--resume", action="store_true")
     corpus_build.add_argument("--overwrite", action="store_true")
-    corpus_commands.add_parser("validate", help="Validate a corpus artifact").add_argument(
-        "artifact", type=Path
-    )
-    corpus_commands.add_parser("inspect", help="Inspect a corpus artifact").add_argument(
-        "artifact", type=Path
-    )
+    corpus_commands.add_parser(
+        "validate", help="Validate a corpus artifact"
+    ).add_argument("artifact", type=Path)
+    corpus_commands.add_parser(
+        "inspect", help="Inspect a corpus artifact"
+    ).add_argument("artifact", type=Path)
     build = commands.add_parser(
         "build", help="Build from a complete canonical M5 config"
     )
@@ -391,4 +392,3 @@ def main(argv: list[str] | None = None) -> int:
     except BrokenPipeError:
         return 141
     return result.exit_code
-

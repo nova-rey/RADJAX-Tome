@@ -328,7 +328,12 @@ def load_corpus_build_intent(path: str | Path) -> CorpusBuildIntent:
             or layout[name] < 1
         ):
             raise ValueError(f"layout.{name} must be a positive integer")
-    for name in ("worker_count", "max_open_files", "max_artifact_bytes", "max_memory_bytes"):
+    for name in (
+        "worker_count",
+        "max_open_files",
+        "max_artifact_bytes",
+        "max_memory_bytes",
+    ):
         if name in resources and (
             not isinstance(resources[name], int)
             or isinstance(resources[name], bool)

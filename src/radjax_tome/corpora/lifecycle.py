@@ -70,7 +70,11 @@ def preflight_corpus_build(intent: CorpusBuildIntent) -> dict[str, Any]:
     destination_resolved = destination.resolve()
     for source in intent.sources:
         source_resolved = source.path.resolve()
-        if source_resolved == destination_resolved or source_resolved in destination_resolved.parents or destination_resolved in source_resolved.parents:
+        if (
+            source_resolved == destination_resolved
+            or source_resolved in destination_resolved.parents
+            or destination_resolved in source_resolved.parents
+        ):
             raise CorpusLifecycleError("source and output destination may not overlap")
     return {
         "status": "pass",
@@ -151,14 +155,20 @@ def publish_staging(
     try:
         quarantined = quarantine.stat()
         if (quarantined.st_ino, quarantined.st_dev) != (before.st_ino, before.st_dev):
-            raise CorpusLifecycleError("overwrite destination changed before quarantine")
+            raise CorpusLifecycleError(
+                "overwrite destination changed before quarantine"
+            )
         os.rename(staging, destination)
         _fsync_directory(destination.parent)
         journal.path = destination / "journal" / JOURNAL_FILENAME
         journal.append("NEW_PROMOTED", atomic_visibility=False)
         validate(destination)
     except Exception:
-        if destination.exists() and destination.is_dir() and (destination / STAGING_MARKER).is_file():
+        if (
+            destination.exists()
+            and destination.is_dir()
+            and (destination / STAGING_MARKER).is_file()
+        ):
             shutil.rmtree(destination)
         if quarantine.exists():
             os.rename(quarantine, destination)
@@ -179,7 +189,10 @@ def recover_publication(journal_path: str | Path, parent: Path) -> str:
     quarantine_name = last.get("quarantine")
     destination = Path(last.get("destination", "")) if last.get("destination") else None
     if last["event_type"] == "OLD_QUARANTINED" and quarantine_name and destination:
-        if destination.is_absolute() or destination.parent.resolve() != parent.resolve():
+        if (
+            destination.is_absolute()
+            or destination.parent.resolve() != parent.resolve()
+        ):
             return "no_safe_action"
         quarantine = parent / Path(quarantine_name).name
         if Path(quarantine_name).name != quarantine_name:
