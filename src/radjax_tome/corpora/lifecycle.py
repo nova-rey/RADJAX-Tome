@@ -96,7 +96,7 @@ class CorpusJournal:
         self.previous_hash: str | None = None
 
     @classmethod
-    def reopen(cls, path: Path, expected_config_identity: str) -> "CorpusJournal":
+    def reopen(cls, path: Path, expected_config_identity: str) -> CorpusJournal:
         """Reopen an owned journal without resetting its hash chain."""
         journal = cls(path, path.parents[1].name, expected_config_identity)
         if not path.is_file():
