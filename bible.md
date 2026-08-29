@@ -3863,3 +3863,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-29 M10 audit remediation: routed corpus commands through the canonical mainline parser, made preflight-only validate the resolved production inputs, enforced declared source IDs and strict corpus policy bounds, and retained valid chunks before a short final chunk.
 - 2026-08-29 M10 audit remediation: streamed corpus validation and shard/index hashing, removed whole-tree source discovery buffering, and preserved the existing semantic identity while reducing validation memory retention.
 - 2026-08-29 M10 final completion: enforced shard/index offset coverage, required closed member metadata, and reopened durable resume journals with sequence, identity, and hash-chain verification.
+- 2026-08-29 M10 final completion: persisted complete duplicate provenance in a streamed sidecar while retaining only a bounded row preview, with a 101-record duplicate-group regression.

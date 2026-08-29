@@ -99,6 +99,29 @@ def test_dedup_more_than_one_fetch_batch_reports_all_winners() -> None:
     )
 
 
+def test_dedup_large_group_persists_complete_provenance(tmp_path: Path) -> None:
+    records = [
+        SourceRecord(
+            source_id="s",
+            source_ordinal=0,
+            logical_locator=f"r-{index:04d}",
+            chunk_index=0,
+            chunk_count=1,
+            text="same",
+            normalized_text_digest="sha256:" + "1" * 64,
+            source_digest="sha256:" + "a" * 64,
+        )
+        for index in range(101)
+    ]
+    sidecar = tmp_path / "duplicate_provenance.jsonl"
+    winners, counts = deduplicate_records(records, provenance_path=sidecar)
+    emitted = list(winners)
+    assert counts["output_records"] == len(emitted) == 1
+    provenance = sidecar.read_text(encoding="utf-8").splitlines()
+    assert len(provenance) == 101
+    assert emitted[0].duplicate_count == 101
+
+
 def test_v2_validation_rejects_undeclared_public_member(tmp_path: Path) -> None:
     build_corpus_artifact_v2(load_corpus_build_intent(_intent(tmp_path)))
     (tmp_path / "artifact" / "UNDECLARED.txt").write_text("x")

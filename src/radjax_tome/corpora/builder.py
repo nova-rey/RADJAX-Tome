@@ -975,6 +975,7 @@ def build_corpus_artifact_v2(
             "duckdb_memory_limit", intent.resources.get("memory_limit")
         ),
         worker_count=worker_count,
+        provenance_path=staging / "duplicate_provenance.jsonl",
     )
     journal.append("INGEST_COMPLETE", candidate_count=arrival)
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 from collections.abc import Iterable, Iterator
@@ -17,6 +18,7 @@ def deduplicate_records(
     database_path: Path | None = None,
     memory_limit: str | None = None,
     worker_count: int = 1,
+    provenance_path: Path | None = None,
 ) -> tuple[Iterator[CanonicalCorpusRecord], dict[str, int]]:
     """Spill source rows to private DuckDB and yield winners in stable order."""
 
@@ -97,6 +99,11 @@ def deduplicate_records(
     def output() -> Iterator[CanonicalCorpusRecord]:
         index = 0
         provenance_cursor = connection.cursor()
+        provenance_handle = (
+            provenance_path.open("w", encoding="utf-8")
+            if provenance_path is not None
+            else None
+        )
         try:
             result = connection.execute(winner_sql)
             while batch := result.fetchmany(256):
@@ -116,14 +123,30 @@ def deduplicate_records(
                     ) = row
                     provenance = ()
                     if enabled and int(duplicate_count) > 1:
-                        matches = provenance_cursor.execute(
+                        provenance_cursor.execute(
                             "SELECT source_id || ':' || logical_locator || ':' || "
                             "CAST(chunk_index AS VARCHAR) FROM rows WHERE "
                             "text_digest = ? AND text_bytes = ? ORDER BY "
                             "source_ordinal, logical_locator, chunk_index",
                             [digest, _text_bytes],
-                        ).fetchmany(33)
-                        provenance = tuple(str(match[0]) for match in matches[1:33])
+                        )
+                        preview: list[str] = []
+                        match_index = 0
+                        while matches := provenance_cursor.fetchmany(256):
+                            for match in matches:
+                                locator = str(match[0])
+                                if match_index > 0 and len(preview) < 32:
+                                    preview.append(locator)
+                                if provenance_handle is not None:
+                                    provenance_handle.write(
+                                        json.dumps(
+                                            {"winner": index + 1, "locator": locator},
+                                            sort_keys=True,
+                                        )
+                                        + "\n"
+                                    )
+                                match_index += 1
+                        provenance = tuple(preview)
                     index += 1
                     yield CanonicalCorpusRecord(
                         example_id=f"corpus_{index:09d}",
@@ -143,6 +166,8 @@ def deduplicate_records(
                     )
         finally:
             provenance_cursor.close()
+            if provenance_handle is not None:
+                provenance_handle.close()
             connection.close()
             if temporary_database:
                 try:
