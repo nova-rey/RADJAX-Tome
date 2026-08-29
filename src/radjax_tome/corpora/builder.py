@@ -961,42 +961,22 @@ def build_corpus_artifact_v2(
     )
     records, counts = deduplicate_records(candidate_records(), enabled=dedup_enabled)
     journal.append("INGEST_COMPLETE", candidate_count=arrival)
-    canonical_records = list(records)
-    # Public IDs and semantic identity are assigned only after canonical order.
-    identity_records = []
-    for index, record in enumerate(canonical_records, start=1):
-        record = replace(
-            record,
-            identity_digest=example_id_hash(
-                source_id=record.source_id,
-                logical_locator=record.logical_locator,
-                chunk_index=record.chunk_index,
-                text_digest=record.text_digest,
-            ),
-        )
-        canonical_records[index - 1] = record
-        identity_records.append(record)
-        if record.example_id != f"corpus_{index:09d}":
-            raise ValueError("corpus ID allocation is not contiguous")
-    semantic = semantic_identity(
-        policy=policy,
-        tokenizer_binding_digest=binding_digest,
-        records=canonical_records,
-        source_declarations=[
-            {
-                "source_id": source.source_id,
-                "adapter": source.adapter,
-                "include": list(source.include),
-                "exclude": list(source.exclude),
-                "text_field": source.text_field,
-                "record_id_field": source.record_id_field,
-            }
-            for source in intent.sources
-        ],
-    )
+
+    def identified_records() -> Iterable[Any]:
+        for record in records:
+            yield replace(
+                record,
+                identity_digest=example_id_hash(
+                    source_id=record.source_id,
+                    logical_locator=record.logical_locator,
+                    chunk_index=record.chunk_index,
+                    text_digest=record.text_digest,
+                ),
+            )
+
     inventory = write_shards(
         staging,
-        iter(canonical_records),
+        identified_records(),
         shard_capacity=int(
             intent.layout.get(
                 "shard_capacity", intent.layout.get("shard_size_examples", 128)
@@ -1014,24 +994,33 @@ def build_corpus_artifact_v2(
         {"schema_version": "corpus_dedup_report_v2", **counts},
     )
     write_member(staging / "normalized_intent.json", _jsonable_intent(intent))
+    from radjax_tome.corpora.storage import VerifiedCorpusReader
+
+    source_declarations = [
+        {
+            "source_id": source.source_id,
+            "adapter": source.adapter,
+            "include": list(source.include),
+            "exclude": list(source.exclude),
+            "text_field": source.text_field,
+            "record_id_field": source.record_id_field,
+        }
+        for source in intent.sources
+    ]
+    semantic = semantic_identity(
+        policy=policy,
+        tokenizer_binding_digest=binding_digest,
+        records=(_record_from_dict(row) for row in VerifiedCorpusReader(staging)),
+        source_declarations=source_declarations,
+    )
     manifest = {
         "schema_version": CORPUS_ARTIFACT_SCHEMA_V2,
         "artifact_type": CORPUS_ARTIFACT_SCHEMA_V2,
         "semantic_identity": semantic,
         "tokenizer_binding_digest": binding_digest,
         "policy": policy,
-        "source_declarations": [
-            {
-                "source_id": source.source_id,
-                "adapter": source.adapter,
-                "include": list(source.include),
-                "exclude": list(source.exclude),
-                "text_field": source.text_field,
-                "record_id_field": source.record_id_field,
-            }
-            for source in intent.sources
-        ],
-        "num_examples": len(canonical_records),
+        "source_declarations": source_declarations,
+        "num_examples": counts["output_records"],
         "num_sources": len(intent.sources),
         "shard_count": len(inventory),
         "storage_schema": "uncompressed_canonical_jsonl_with_offsets_v1",
@@ -1098,7 +1087,7 @@ def build_corpus_artifact_v2(
         "status": "pass",
         "artifact_path": str(destination),
         "semantic_identity": semantic,
-        "num_examples": len(canonical_records),
+        "num_examples": counts["output_records"],
         "num_sources": len(intent.sources),
         "shard_count": len(inventory),
     }
@@ -1162,6 +1151,22 @@ def _transaction_intent(intent: Any) -> dict[str, Any]:
     execution["resume"] = False
     value["execution"] = execution
     return value
+
+
+def _record_from_dict(row: Mapping[str, Any]) -> Any:
+    from radjax_tome.corpora.records import CanonicalCorpusRecord
+
+    return CanonicalCorpusRecord(
+        example_id=str(row["example_id"]),
+        source_id=str(row["source_id"]),
+        source_ordinal=int(row["source_ordinal"]),
+        logical_locator=str(row["logical_locator"]),
+        chunk_index=int(row["chunk_index"]),
+        chunk_count=int(row.get("chunk_count", 1)),
+        text=str(row["text"]),
+        text_digest=str(row["text_digest"]),
+        source_digest=str(row.get("source_digest", "")),
+    )
 
 
 __all__ = [

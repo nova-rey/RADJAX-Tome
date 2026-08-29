@@ -3851,3 +3851,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-29 M10.9: recorded the M10 implementation audit, mandatory gate results, clean-install smoke, and evidence-bound closure receipt; independent review remains explicitly pending.
 - 2026-08-29 M10 review correction: added tokenizer-binding digest validation, artifact-root containment, preflight limit checks, intent-bound resume checks, artifact byte limits, streaming v2 directory acceptance, and focused tamper coverage.
 - 2026-08-29 M10 review correction follow-up: made resume transaction identity invariant to the operational resume flag and verified interrupted staging recovery.
+- 2026-08-29 M10 review correction follow-up: recorded the closure report in the Hydra inventory after the final audit-documentation addition.

@@ -49,6 +49,14 @@
       "replacement_or_target_boundary": "M10 closure evidence",
       "status": "canonical"
     },
+    "docs:M10_CLOSURE_REPORT": {
+      "archive_or_removal_condition": "Retain with M10 closure evidence.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M10",
+      "rationale": "Binds M10 validation claims to the audited implementation and Contract pin.",
+      "replacement_or_target_boundary": "M10 closure evidence",
+      "status": "supporting"
+    },
     "src/radjax_tome/builder/corpus_input.py": {
       "archive_or_removal_condition": "Retain while v1 and v2 production corpus inputs coexist.",
       "kind": "source-module",
