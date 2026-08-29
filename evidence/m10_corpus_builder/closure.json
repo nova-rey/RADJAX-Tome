@@ -1,9 +1,9 @@
 {
   "schema_version": "radjax_tome_m10_closure_v1",
-  "audited_implementation_commit": "2190756",
+  "audited_implementation_commit": "e0382d4",
   "contract_pin": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
   "pytest": {"passed": 1225, "skipped": 9, "failed": 0},
-  "focused_m10_tests": {"passed": 12, "failed": 0},
+  "focused_m10_tests": {"passed": 13, "failed": 0},
   "ruff_check": "pass",
   "ruff_format_check": "pass",
   "compileall": "pass",
@@ -12,5 +12,8 @@
   "clean_install_pip_check": "pass",
   "clean_install_cli_build_validate_inspect": "pass",
   "deterministic_rebuild": "semantic_identity_and_shard_bytes_match",
-  "independent_review": "not_obtained_bounded_auditor_timeout"
+  "bounded_memory_smoke": {"records": 1000, "rss_delta_kb": 57116, "duckdb_memory_limit": "64MB", "worker_count": 1, "max_open_files": 8},
+  "filter_dedup_counts": {"input_records": 1000, "output_records": 1000, "duplicates_removed": 0},
+  "independent_review": {"verdict": "PASS", "commit": "e0382d4", "scope": "v2 production preflight dispatch and v1 compatibility"},
+  "wheel_sha256": "14b88eb43560938a50ae868a6fc7d4080f0e10fcf8669c1e307727c7ae642b21"
 }

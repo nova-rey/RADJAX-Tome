@@ -1,6 +1,6 @@
 # M10 closure report
 
-Audited implementation commit: `2190756`
+Audited implementation commit: `e0382d4`
 
 M10 adds the strict local corpus builder v2, deterministic normalization and
 exact byte-defended deduplication, canonical shards and offset indexes,
@@ -16,14 +16,17 @@ Validation performed:
 - `compileall`, `git diff --check`, and wheel build: pass;
 - clean Python 3.12 wheel install and `pip check`: pass;
 - clean-install `corpus build`, `corpus validate`, and `corpus inspect`: pass;
-- focused M10 tests: 12 passed;
+- focused M10 tests: 13 passed;
 - deterministic rebuild: semantic identity and shard/index bytes matched;
 - operational `normalized_intent.json` retains destination paths and therefore
   is intentionally the only path-dependent diagnostic member.
+- bounded subprocess smoke: 1,000 records, 64 MiB DuckDB limit, 57,116 KiB
+  measured RSS increase, with one worker and eight-file policy recorded.
 
 Contract pin: `373e3d17060d4ce1c4a0db6065c9289da714bde7`.
 
 The original dirty M9 worktree remains preserved separately and was not copied
 or committed. No Contract, Golden evidence, or M11/M14 work was changed.
 
-Independent review: not obtained; the bounded auditor did not return a verdict.
+Independent review: PASS at `e0382d4`; the v2 production-preflight dispatch
+correction was rechecked independently and v1 handling remained intact.

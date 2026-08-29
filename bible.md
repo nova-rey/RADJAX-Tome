@@ -3857,3 +3857,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-29 M10 closure evidence refresh: rebound the provisional closure report and JSON receipt to implementation commit `2190756` and the final 1,225-test run; review disposition remains pending.
 - 2026-08-29 M10 bounded review correction: routed v2 corpus directories through the v2 validator during production preflight instead of the legacy v1 validator.
 - 2026-08-29 M10 bounded-review disposition: preserved the final validation receipt with the independent auditor timeout explicitly recorded; M10 remains unclosed pending an auditable review verdict.
+- 2026-08-29 M10 final closure refresh: bound implementation, quality gates, 1,000-record RSS smoke, wheel digest, and independent PASS review to `e0382d4`; closure evidence is ready for final checksum and push.
