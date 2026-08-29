@@ -100,6 +100,51 @@ def _error(
 
 def run(args: argparse.Namespace) -> CLIResult:
     try:
+        if args.command == "corpus":
+            from dataclasses import replace
+
+            from radjax_tome.corpora import (
+                build_corpus_artifact_v2,
+                inspect_corpus_artifact_v2,
+                load_corpus_build_intent,
+                validate_corpus_artifact_v2,
+            )
+
+            if args.corpus_command == "build":
+                intent = load_corpus_build_intent(args.config)
+                if args.resume and args.overwrite:
+                    return _error(
+                        "corpus build",
+                        "INVALID_CONFIGURATION",
+                        "--resume and --overwrite are mutually exclusive",
+                        2,
+                    )
+                execution = dict(intent.execution)
+                execution["resume"] = args.resume or execution.get("resume", False)
+                execution["overwrite"] = args.overwrite or execution.get(
+                    "overwrite", False
+                )
+                if execution["resume"] and execution["overwrite"]:
+                    return _error(
+                        "corpus build",
+                        "INVALID_CONFIGURATION",
+                        "--resume and --overwrite are mutually exclusive",
+                        2,
+                    )
+                if execution != dict(intent.execution):
+                    intent = replace(intent, execution=execution)
+                report = build_corpus_artifact_v2(intent)
+                return CLIResult("corpus build", "pass", 0, reports=report)
+            if args.corpus_command == "validate":
+                result = validate_corpus_artifact_v2(args.artifact)
+                return CLIResult(
+                    "corpus validate",
+                    result.status,
+                    0 if result.ok else 4,
+                    reports=result.to_dict(),
+                )
+            item = inspect_corpus_artifact_v2(args.artifact)
+            return CLIResult("corpus inspect", "pass", 0, reports=item.to_dict())
         if args.command == "build":
             intent = load_tome_build_intent(args.config)
             overrides = {}
@@ -323,8 +368,79 @@ def run(args: argparse.Namespace) -> CLIResult:
 
 
 def main(argv: list[str] | None = None) -> int:
+    raw = list(sys.argv[1:] if argv is None else argv)
+    if "corpus" in raw:
+        return _main_corpus(raw)
     args = parser().parse_args(argv)
     result = run(args)
+    try:
+        emit(result, machine=args.machine, quiet=args.quiet)
+    except BrokenPipeError:
+        return 141
+    return result.exit_code
+
+
+def _corpus_parser() -> argparse.ArgumentParser:
+    root = argparse.ArgumentParser(prog="radjax-tome")
+    root.add_argument("--json", action="store_true", dest="machine")
+    root.add_argument("--quiet", action="store_true")
+    commands = root.add_subparsers(dest="command", required=True)
+    corpus = commands.add_parser("corpus")
+    children = corpus.add_subparsers(dest="corpus_command", required=True)
+    build = children.add_parser("build")
+    build.add_argument("--config", type=Path, required=True)
+    build.add_argument("--resume", action="store_true")
+    build.add_argument("--overwrite", action="store_true")
+    validate = children.add_parser("validate")
+    validate.add_argument("artifact", type=Path)
+    inspect = children.add_parser("inspect")
+    inspect.add_argument("artifact", type=Path)
+    return root
+
+
+def _main_corpus(raw: list[str]) -> int:
+    args = _corpus_parser().parse_args(raw)
+    from dataclasses import replace
+
+    from radjax_tome.corpora import (
+        build_corpus_artifact_v2,
+        inspect_corpus_artifact_v2,
+        load_corpus_build_intent,
+        validate_corpus_artifact_v2,
+    )
+
+    try:
+        if args.corpus_command == "build":
+            intent = load_corpus_build_intent(args.config)
+            if args.resume and args.overwrite:
+                raise ValueError("--resume and --overwrite are mutually exclusive")
+            execution = dict(intent.execution)
+            execution["resume"] = args.resume or execution.get("resume", False)
+            execution["overwrite"] = args.overwrite or execution.get("overwrite", False)
+            if execution != dict(intent.execution):
+                intent = replace(intent, execution=execution)
+            result = CLIResult(
+                "corpus build", "pass", 0, reports=build_corpus_artifact_v2(intent)
+            )
+        elif args.corpus_command == "validate":
+            report = validate_corpus_artifact_v2(args.artifact)
+            result = CLIResult(
+                "corpus validate",
+                report.status,
+                0 if report.ok else 4,
+                reports=report.to_dict(),
+            )
+        else:
+            result = CLIResult(
+                "corpus inspect",
+                "pass",
+                0,
+                reports=inspect_corpus_artifact_v2(args.artifact).to_dict(),
+            )
+    except KeyboardInterrupt:
+        result = _error("corpus", "INTERRUPTED", "command interrupted", 130)
+    except (OSError, TypeError, ValueError, KeyError) as exc:
+        result = _error("corpus", "COMMAND_FAILED", str(exc), 2)
     try:
         emit(result, machine=args.machine, quiet=args.quiet)
     except BrokenPipeError:
