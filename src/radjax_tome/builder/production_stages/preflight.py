@@ -83,16 +83,25 @@ def validate_required_inputs(config: Any, blockers: list[str]) -> None:
         and config.selected_rerun_batch_size < 1
     ):
         blockers.append("selected_rerun_batch_size must be positive")
+    corpus_is_v2 = (
+        config.corpus_manifest_path.is_dir()
+        and (config.corpus_manifest_path / "corpus_cover.json").is_file()
+    )
     for label, path in (
         ("dataset", config.dataset_path),
         ("corpus manifest", config.corpus_manifest_path),
         ("teacher model provenance", config.teacher_model_provenance_path),
     ):
-        if not path.is_file():
+        if not path.is_file() and not (label == "corpus manifest" and corpus_is_v2):
             blockers.append(f"{label} path missing: {path}")
     if blockers:
         return
-    corpus_report = validate_corpus_artifact(config.corpus_manifest_path.parent)
+    corpus_root = (
+        config.corpus_manifest_path
+        if corpus_is_v2
+        else config.corpus_manifest_path.parent
+    )
+    corpus_report = validate_corpus_artifact(corpus_root)
     blockers.extend(
         f"corpus manifest invalid: {item}" for item in corpus_report.blockers
     )

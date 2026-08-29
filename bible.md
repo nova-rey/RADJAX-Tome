@@ -3853,3 +3853,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-29 M10 review correction follow-up: made resume transaction identity invariant to the operational resume flag and verified interrupted staging recovery.
 - 2026-08-29 M10 review correction follow-up: recorded the closure report in the Hydra inventory after the final audit-documentation addition.
 - 2026-08-29 M10 bounded-resource correction: configured DuckDB memory/thread limits and emitted explicit resource-limit provenance in the v2 build report.
+- 2026-08-29 M10 production-boundary correction: allowed canonical production preflight to validate a v2 corpus directory while preserving v1 manifest-file handling.
