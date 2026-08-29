@@ -959,7 +959,15 @@ def build_corpus_artifact_v2(
             "enabled", policy.get("deduplication_enabled", True)
         )
     )
-    records, counts = deduplicate_records(candidate_records(), enabled=dedup_enabled)
+    worker_count = int(intent.resources.get("worker_count", 1))
+    records, counts = deduplicate_records(
+        candidate_records(),
+        enabled=dedup_enabled,
+        memory_limit=intent.resources.get(
+            "duckdb_memory_limit", intent.resources.get("memory_limit")
+        ),
+        worker_count=worker_count,
+    )
     journal.append("INGEST_COMPLETE", candidate_count=arrival)
 
     def identified_records() -> Iterable[Any]:
@@ -1037,6 +1045,13 @@ def build_corpus_artifact_v2(
             "shard_count": len(inventory),
             "atomic_overwrite": False,
             "config_identity": config_identity,
+            "resources": {
+                "memory_limit": intent.resources.get("memory_limit"),
+                "duckdb_memory_limit": intent.resources.get("duckdb_memory_limit"),
+                "worker_count": worker_count,
+                "max_open_files": intent.resources.get("max_open_files"),
+                "max_artifact_bytes": intent.resources.get("max_artifact_bytes"),
+            },
         },
     )
     write_member(

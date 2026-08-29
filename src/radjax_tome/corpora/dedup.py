@@ -15,6 +15,8 @@ def deduplicate_records(
     *,
     enabled: bool = True,
     database_path: Path | None = None,
+    memory_limit: str | None = None,
+    worker_count: int = 1,
 ) -> tuple[Iterator[CanonicalCorpusRecord], dict[str, int]]:
     """Spill source rows to private DuckDB and yield winners in stable order."""
 
@@ -28,6 +30,11 @@ def deduplicate_records(
         os.unlink(name)
         database_path = Path(name)
     connection = duckdb.connect(str(database_path))
+    if memory_limit is not None:
+        connection.execute("SET memory_limit = ?", [memory_limit])
+    if worker_count != 1:
+        raise ValueError("corpus v2 requires resources.worker_count=1")
+    connection.execute("SET threads = 1")
     connection.execute(
         """CREATE TABLE rows (
             source_id VARCHAR, source_ordinal INTEGER, logical_locator VARCHAR,
