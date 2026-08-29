@@ -846,7 +846,7 @@ def build_corpus_artifact_v2(
             except (OSError, TypeError, ValueError):
                 continue
             journal_path = candidate / "journal" / "corpus_build_journal_v1.jsonl"
-            journal = Journal(journal_path, candidate.name, "resume")
+            journal = Journal.reopen(journal_path, config_identity)
             publish(
                 candidate,
                 destination,
@@ -1214,12 +1214,22 @@ def _public_member_inventory(root: Path) -> list[dict[str, Any]]:
                 "media_type": "application/json"
                 if path.suffix == ".json"
                 else "application/jsonl",
-                "schema": None,
+                "schema": _member_schema(relative),
                 "size_bytes": path.stat().st_size,
                 "sha256": _sha256_file(path),
             }
         )
     return members
+
+
+def _member_schema(relative: str) -> str:
+    if relative.startswith("shards/"):
+        return "corpus_record_v2"
+    if relative.startswith("indexes/"):
+        return "corpus_index_v1"
+    if relative == "resources/tokenizer_vocabulary.jsonl":
+        return "tokenizer_vocabulary_v1"
+    return "json_document_v1"
 
 
 def _record_from_dict(row: Mapping[str, Any]) -> Any:

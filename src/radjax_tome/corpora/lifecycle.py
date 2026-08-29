@@ -95,6 +95,35 @@ class CorpusJournal:
         self.sequence = 0
         self.previous_hash: str | None = None
 
+    @classmethod
+    def reopen(cls, path: Path, expected_config_identity: str) -> "CorpusJournal":
+        """Reopen an owned journal without resetting its hash chain."""
+        journal = cls(path, path.parents[1].name, expected_config_identity)
+        if not path.is_file():
+            raise CorpusLifecycleError("resume journal is missing")
+        last: dict[str, Any] | None = None
+        with path.open(encoding="utf-8") as handle:
+            for sequence, line in enumerate(handle):
+                event = json.loads(line)
+                if event.get("sequence") != sequence:
+                    raise CorpusLifecycleError("resume journal sequence is invalid")
+                if event.get("config_identity") != expected_config_identity:
+                    raise CorpusLifecycleError("resume journal identity mismatch")
+                supplied = event.pop("event_hash", None)
+                if supplied != sha256(canonical_bytes(event)):
+                    raise CorpusLifecycleError("resume journal hash chain is invalid")
+                if last is not None and event.get("previous_event_hash") != last.get(
+                    "event_hash"
+                ):
+                    raise CorpusLifecycleError("resume journal predecessor is invalid")
+                event["event_hash"] = supplied
+                last = event
+        if last is None:
+            raise CorpusLifecycleError("resume journal is empty")
+        journal.sequence = int(last["sequence"]) + 1
+        journal.previous_hash = str(last["event_hash"])
+        return journal
+
     def append(self, event_type: str, **fields: Any) -> dict[str, Any]:
         event = {
             "sequence": self.sequence,

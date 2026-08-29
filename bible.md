@@ -3862,3 +3862,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-29 M10 audit remediation: made overwrite fail closed for unowned destinations, repaired cross-batch dedup streaming, closed the public-member inventory against undeclared files, and added an owned staging marker.
 - 2026-08-29 M10 audit remediation: routed corpus commands through the canonical mainline parser, made preflight-only validate the resolved production inputs, enforced declared source IDs and strict corpus policy bounds, and retained valid chunks before a short final chunk.
 - 2026-08-29 M10 audit remediation: streamed corpus validation and shard/index hashing, removed whole-tree source discovery buffering, and preserved the existing semantic identity while reducing validation memory retention.
+- 2026-08-29 M10 final completion: enforced shard/index offset coverage, required closed member metadata, and reopened durable resume journals with sequence, identity, and hash-chain verification.

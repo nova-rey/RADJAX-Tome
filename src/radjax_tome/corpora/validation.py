@@ -319,6 +319,16 @@ def _validate_member_inventory(root: Path, cover: dict[str, Any]) -> list[Corpus
             continue
         seen.add(relative)
         path = actual[relative]
+        if (
+            not isinstance(entry.get("role"), str)
+            or not isinstance(entry.get("media_type"), str)
+            or not isinstance(entry.get("schema"), str)
+        ):
+            issues.append(
+                CorpusIssue(
+                    "INVENTORY_INVALID", f"incomplete member metadata: {relative}"
+                )
+            )
         if entry.get("size_bytes") != path.stat().st_size:
             issues.append(
                 CorpusIssue("MEMBER_SIZE_MISMATCH", f"member size mismatch: {relative}")

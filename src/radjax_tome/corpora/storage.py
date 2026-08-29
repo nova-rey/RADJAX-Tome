@@ -99,11 +99,19 @@ class VerifiedCorpusReader:
                 index_path.open("rb") as index_handle,
                 shard_path.open("rb") as shard_handle,
             ):
+                expected_offset = 0
                 for raw_index in index_handle:
                     index_row = json.loads(raw_index)
                     count += 1
                     offset = int(index_row["offset"])
                     length = int(index_row["length"])
+                    if (
+                        int(index_row.get("row", -1)) != count - 1
+                        or offset != expected_offset
+                    ):
+                        raise ValueError(
+                            f"index offsets are not contiguous: {shard_path.name}"
+                        )
                     shard_handle.seek(offset)
                     encoded = shard_handle.read(length)
                     if len(encoded) != length or not encoded.endswith(b"\n"):
@@ -112,8 +120,11 @@ class VerifiedCorpusReader:
                     if row.get("example_id") != index_row.get("example_id"):
                         raise ValueError(f"index identity mismatch: {shard_path.name}")
                     yield row
+                    expected_offset = offset + length
             if count != int(item["record_count"]):
                 raise ValueError(f"index count mismatch: {shard_path.name}")
+            if expected_offset != shard_path.stat().st_size:
+                raise ValueError(f"index does not cover shard: {shard_path.name}")
 
 
 def write_json(path: Path, value: Any) -> None:
