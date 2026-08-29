@@ -1,7 +1,7 @@
 {
   "schema_version": "radjax_tome_m10_closure_v2",
   "audited_implementation_commit": "1571cbb14ecd475845b29e144358742402710cf8",
-  "final_closure_commit": "PENDING",
+  "final_closure_commit": "f094e5f",
   "contract_pin": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
   "focused_m10_tests": {
     "passed": 33,
