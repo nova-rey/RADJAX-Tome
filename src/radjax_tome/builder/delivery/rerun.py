@@ -319,6 +319,28 @@ def _validate_delivery_config(config: ExemplarDeliveryConfig) -> None:
 
 
 def _load_examples(path: Path, *, max_examples: int) -> tuple[TinyTextExample, ...]:
+    if path.is_dir() and (path / "corpus_cover.json").is_file():
+        from radjax_tome.builder.corpus_input import (
+            iter_corpus_examples,
+            resolve_corpus_input,
+        )
+
+        resolved = resolve_corpus_input(path)
+        examples: list[TinyTextExample] = []
+        for index, payload in enumerate(iter_corpus_examples(resolved)):
+            if index >= max_examples:
+                break
+            if not isinstance(payload, dict) or not isinstance(
+                payload.get("text"), str
+            ):
+                raise ValueError("corpus record must contain string field text")
+            examples.append(
+                TinyTextExample(
+                    example_id=str(payload.get("example_id", f"example-{index + 1}")),
+                    text=payload["text"],
+                )
+            )
+        return tuple(examples)
     examples: list[TinyTextExample] = []
     with path.open("r", encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):

@@ -860,6 +860,7 @@ def build_corpus_artifact_v2(
             return report
         raise ValueError("resume refused: no valid owned staging state")
 
+    destination.parent.mkdir(parents=True, exist_ok=True)
     staging = Path(
         tempfile.mkdtemp(
             prefix=f".{destination.name}.m10-", dir=str(destination.parent)

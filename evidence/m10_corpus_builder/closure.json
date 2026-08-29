@@ -1,19 +1,39 @@
 {
-  "schema_version": "radjax_tome_m10_closure_v1",
-  "audited_implementation_commit": "e0382d4",
+  "schema_version": "radjax_tome_m10_closure_v2",
+  "audited_implementation_commit": "1571cbb14ecd475845b29e144358742402710cf8",
+  "final_closure_commit": "PENDING",
   "contract_pin": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
-  "pytest": {"passed": 1225, "skipped": 9, "failed": 0},
-  "focused_m10_tests": {"passed": 13, "failed": 0},
-  "ruff_check": "pass",
-  "ruff_format_check": "pass",
+  "focused_m10_tests": {
+    "passed": 33,
+    "failed": 0
+  },
+  "production_focused_tests": {
+    "passed": 37,
+    "failed": 0
+  },
+  "full_pytest": {
+    "passed": 1213,
+    "skipped": 25,
+    "failed": 2,
+    "failures": "historical Python 3.11 tarfile filter compatibility"
+  },
+  "ruff": "pass",
   "compileall": "pass",
   "diff_check": "pass",
   "wheel_build": "pass",
-  "clean_install_pip_check": "pass",
-  "clean_install_cli_build_validate_inspect": "pass",
-  "deterministic_rebuild": "semantic_identity_and_shard_bytes_match",
-  "bounded_memory_smoke": {"records": 1000, "rss_delta_kb": 57116, "duckdb_memory_limit": "64MB", "worker_count": 1, "max_open_files": 8},
-  "filter_dedup_counts": {"input_records": 1000, "output_records": 1000, "duplicates_removed": 0},
-  "independent_review": {"verdict": "PASS", "commit": "e0382d4", "scope": "v2 production preflight dispatch and v1 compatibility"},
-  "wheel_sha256": "14b88eb43560938a50ae868a6fc7d4080f0e10fcf8669c1e307727c7ae642b21"
+  "clean_install": "pass",
+  "deterministic_rebuild": "pass",
+  "interruption_resume": "pass",
+  "corruption_rejection": "pass",
+  "relocation_identity": "pass",
+  "bounded_memory_50k": {
+    "records": 50000,
+    "elapsed_s": 406.916,
+    "cpu_s": 315.781,
+    "peak_rss_kb": 152932,
+    "artifact_bytes": 27696605,
+    "valid": true,
+    "duckdb_memory_limit": "64MB"
+  },
+  "independent_review": "not requested; external audit remains required"
 }

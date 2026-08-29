@@ -80,6 +80,7 @@ def validate_corpus_artifact_v2(path: str | Path) -> CorpusValidationResult:
         "shard_inventory.json",
         "filter_report.json",
         "dedup_report.json",
+        "duplicate_provenance.jsonl",
         "build_report.json",
     )
     for name in required:

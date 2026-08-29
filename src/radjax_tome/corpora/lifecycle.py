@@ -218,10 +218,7 @@ def recover_publication(journal_path: str | Path, parent: Path) -> str:
     quarantine_name = last.get("quarantine")
     destination = Path(last.get("destination", "")) if last.get("destination") else None
     if last["event_type"] == "OLD_QUARANTINED" and quarantine_name and destination:
-        if (
-            destination.is_absolute()
-            or destination.parent.resolve() != parent.resolve()
-        ):
+        if destination.parent.resolve() != parent.resolve():
             return "no_safe_action"
         quarantine = parent / Path(quarantine_name).name
         if Path(quarantine_name).name != quarantine_name:

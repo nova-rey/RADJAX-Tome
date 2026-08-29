@@ -204,3 +204,39 @@ def test_v2_binding_tampering_is_rejected(tmp_path: Path) -> None:
     payload["canonical_binding_digest"] = "sha256:" + "0" * 64
     binding.write_text(json.dumps(payload))
     assert not validate_corpus_artifact_v2(tmp_path / "artifact").ok
+
+
+def test_recover_absolute_destination_after_quarantine(tmp_path: Path) -> None:
+    from radjax_tome.corpora.lifecycle import CorpusJournal, recover_publication
+
+    parent = tmp_path / "publish"
+    parent.mkdir()
+    destination = parent / "artifact"
+    destination.mkdir()
+    (destination / ".radjax_corpus_staging").write_text("owned\n")
+    sibling = parent / "unrelated"
+    sibling.mkdir()
+    quarantine = parent / ".artifact.quarantine-test"
+    destination.rename(quarantine)
+    journal_path = tmp_path / "journal.jsonl"
+    journal = CorpusJournal(journal_path, "tx", "cfg")
+    journal.append(
+        "OLD_QUARANTINED", destination=str(destination), quarantine=quarantine.name
+    )
+    assert recover_publication(journal_path, parent) == "restored"
+    assert destination.is_dir() and not quarantine.exists() and sibling.is_dir()
+
+
+def test_recover_rejects_destination_outside_parent(tmp_path: Path) -> None:
+    from radjax_tome.corpora.lifecycle import CorpusJournal, recover_publication
+
+    parent = tmp_path / "publish"
+    parent.mkdir()
+    journal_path = tmp_path / "journal.jsonl"
+    journal = CorpusJournal(journal_path, "tx", "cfg")
+    journal.append(
+        "OLD_QUARANTINED",
+        destination=str(tmp_path / "elsewhere" / "artifact"),
+        quarantine=".artifact.q",
+    )
+    assert recover_publication(journal_path, parent) == "no_safe_action"
