@@ -318,6 +318,19 @@ def load_text_examples(
         ]
         return tuple(examples[:max_examples])
 
+    if path.is_dir() and (path / "corpus_cover.json").is_file():
+        from radjax_tome.builder.corpus_input import (
+            iter_corpus_examples,
+            resolve_corpus_input,
+        )
+
+        resolved = resolve_corpus_input(path)
+        return tuple(
+            TinyTextExample(example_id=str(row["example_id"]), text=str(row["text"]))
+            for index, row in enumerate(iter_corpus_examples(resolved))
+            if index < max_examples
+        )
+
     loaded: list[TinyTextExample] = []
     with path.open(encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):

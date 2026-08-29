@@ -45,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
         "package",
         "doctor",
         "research",
+        "corpus",
     }
     if ("--help" in raw or "--version" in raw) and not command:
         from radjax_tome.cli.mainline import main as mainline_main
@@ -77,6 +78,17 @@ def main(argv: list[str] | None = None) -> int:
         )
     if command in mainline_commands and (
         command in {"package", "research"}
+        or (
+            command == "corpus"
+            and (
+                "--config" in raw
+                or (
+                    raw.index(command) + 1 < len(raw)
+                    and raw[raw.index(command) + 1] in {"validate", "inspect"}
+                    and "--path" not in raw
+                )
+            )
+        )
         or (
             command in {"build", "validate", "inspect", "doctor"}
             and "--help" in raw

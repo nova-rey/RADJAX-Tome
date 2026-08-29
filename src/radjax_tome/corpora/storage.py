@@ -1,0 +1,127 @@
+"""Canonical shard and offset-index storage for corpus v2."""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Iterable, Iterator
+from pathlib import Path
+from typing import Any
+
+from radjax_tome.corpora.config import canonical_bytes, sha256
+from radjax_tome.corpora.records import CanonicalCorpusRecord
+
+SHARDS_DIR = "shards"
+INDEXES_DIR = "indexes"
+
+
+def write_shards(
+    root: Path,
+    records: Iterable[CanonicalCorpusRecord],
+    *,
+    shard_capacity: int = 128,
+) -> list[dict[str, Any]]:
+    if shard_capacity < 1:
+        raise ValueError("shard capacity must be positive")
+    shards = root / SHARDS_DIR
+    indexes = root / INDEXES_DIR
+    shards.mkdir(parents=True, exist_ok=True)
+    indexes.mkdir(parents=True, exist_ok=True)
+    inventory: list[dict[str, Any]] = []
+    batch: list[CanonicalCorpusRecord] = []
+
+    def flush(items: list[CanonicalCorpusRecord], shard_number: int) -> None:
+        if not items:
+            return
+        shard_name = f"records-{shard_number:05d}.jsonl"
+        index_name = f"records-{shard_number:05d}.index.jsonl"
+        shard_path = shards / shard_name
+        index_path = indexes / index_name
+        offset = 0
+        index_lines: list[bytes] = []
+        with shard_path.open("wb") as handle:
+            for row_number, record in enumerate(items):
+                encoded = canonical_bytes(record.to_dict()) + b"\n"
+                handle.write(encoded)
+                index_lines.append(
+                    canonical_bytes(
+                        {
+                            "example_id": record.example_id,
+                            "row": row_number,
+                            "offset": offset,
+                            "length": len(encoded),
+                        }
+                    )
+                    + b"\n"
+                )
+                offset += len(encoded)
+        index_path.write_bytes(b"".join(index_lines))
+        inventory.append(
+            {
+                "shard_id": shard_number,
+                "shard": f"{SHARDS_DIR}/{shard_name}",
+                "index": f"{INDEXES_DIR}/{index_name}",
+                "record_count": len(items),
+                "first_example_id": items[0].example_id,
+                "last_example_id": items[-1].example_id,
+                "raw_sha256": sha256(shard_path.read_bytes()),
+                "index_sha256": sha256(index_path.read_bytes()),
+                "size_bytes": shard_path.stat().st_size,
+            }
+        )
+
+    for record in records:
+        batch.append(record)
+        if len(batch) == shard_capacity:
+            flush(batch, len(inventory))
+            batch = []
+    flush(batch, len(inventory))
+    return inventory
+
+
+class VerifiedCorpusReader:
+    """Verify each complete shard/index pair before yielding its first row."""
+
+    def __init__(self, root: str | Path):
+        self.root = Path(root).resolve()
+        self._inventory = _read_json(self.root / "shard_inventory.json")
+
+    def __iter__(self) -> Iterator[dict[str, Any]]:
+        for item in self._inventory:
+            shard_path = self.root / str(item["shard"])
+            index_path = self.root / str(item["index"])
+            _verify_digest(shard_path, item["raw_sha256"])
+            _verify_digest(index_path, item["index_sha256"])
+            index_rows = [
+                json.loads(line) for line in index_path.read_bytes().splitlines()
+            ]
+            raw = shard_path.read_bytes()
+            if len(index_rows) != int(item["record_count"]):
+                raise ValueError(f"index count mismatch: {shard_path.name}")
+            for index_row in index_rows:
+                offset = int(index_row["offset"])
+                length = int(index_row["length"])
+                encoded = raw[offset : offset + length]
+                if len(encoded) != length or not encoded.endswith(b"\n"):
+                    raise ValueError(f"index range mismatch: {shard_path.name}")
+                row = json.loads(encoded)
+                if row.get("example_id") != index_row.get("example_id"):
+                    raise ValueError(f"index identity mismatch: {shard_path.name}")
+                yield row
+
+
+def write_json(path: Path, value: Any) -> None:
+    path.write_bytes(canonical_bytes(value) + b"\n")
+
+
+def _read_json(path: Path) -> Any:
+    if not path.is_file():
+        raise ValueError(f"missing corpus member: {path.name}")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _verify_digest(path: Path, expected: str) -> None:
+    if not path.is_file() or sha256(path.read_bytes()) != expected:
+        raise ValueError(f"corpus member digest mismatch: {path.name}")
+
+
+__all__ = ["VerifiedCorpusReader", "write_json", "write_shards"]

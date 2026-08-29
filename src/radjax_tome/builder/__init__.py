@@ -60,7 +60,16 @@ from radjax_tome.builder.config import (
     validate_resolved_tome_build_config,
     validate_tome_build_intent,
 )
-from radjax_tome.builder.config_io import load_tome_build_intent
+from radjax_tome.builder.config_io import (
+    load_tome_build_intent,
+    load_tome_build_intent_v2,
+)
+from radjax_tome.builder.corpus_input import (
+    ResolvedCorpusInput,
+    iter_corpus_examples,
+    open_corpus_input,
+    resolve_corpus_input,
+)
 from radjax_tome.builder.exemplar_delivery import (
     EXEMPLAR_DELIVERY_PARITY_REPORT_SCHEMA,
     EXEMPLAR_DELIVERY_REPORT_FILENAME,
@@ -188,6 +197,11 @@ __all__ = [
     "validate_tome_build_intent",
     "validate_resolved_tome_build_config",
     "load_tome_build_intent",
+    "load_tome_build_intent_v2",
+    "ResolvedCorpusInput",
+    "iter_corpus_examples",
+    "open_corpus_input",
+    "resolve_corpus_input",
     "validate_exemplar_selection_manifest",
     "validate_integrated_selection_contract",
     "write_corridor_coverage_report",

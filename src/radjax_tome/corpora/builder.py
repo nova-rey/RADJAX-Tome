@@ -4,13 +4,52 @@ import fnmatch
 import hashlib
 import json
 import shutil
+import tempfile
 from collections.abc import Iterable, Mapping
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from radjax_tome.corpora.config import CORPUS_ARTIFACT_SCHEMA_V2
 from radjax_tome.io.json import read_json_object, write_json
+
+
+def _m10_imports() -> tuple[Any, ...]:
+    """Keep v1 imports lazy and make the v2 boundary explicit."""
+    from radjax_tome.corpora.config import load_corpus_build_intent
+    from radjax_tome.corpora.dedup import deduplicate_records
+    from radjax_tome.corpora.identity import (
+        corpus_semantic_identity,
+        example_identity,
+        normalized_text,
+        text_digest,
+    )
+    from radjax_tome.corpora.lifecycle import (
+        CorpusJournal,
+        preflight_corpus_build,
+        publish_staging,
+    )
+    from radjax_tome.corpora.records import SourceRecord
+    from radjax_tome.corpora.sources import iter_source_records
+    from radjax_tome.corpora.storage import write_json, write_shards
+
+    return (
+        load_corpus_build_intent,
+        deduplicate_records,
+        corpus_semantic_identity,
+        example_identity,
+        normalized_text,
+        text_digest,
+        CorpusJournal,
+        preflight_corpus_build,
+        publish_staging,
+        SourceRecord,
+        iter_source_records,
+        write_json,
+        write_shards,
+    )
+
 
 CORPUS_JSONL_FILENAME = "corpus.jsonl"
 CORPUS_MANIFEST_FILENAME = "corpus_manifest.json"
@@ -734,3 +773,372 @@ def _sha256_text(text: str) -> str:
 
 def _sha256_bytes(payload: bytes) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+# ---------------------------------------------------------------------------
+# M10 v2 boundary.  The v1 functions above are deliberately retained verbatim
+# for historical configs and fixtures.
+
+
+def build_corpus_artifact_v2(
+    intent: Any,
+    *,
+    fault_after: str | None = None,
+) -> dict[str, Any]:
+    """Build and publish a deterministic, sharded corpus v2 artifact."""
+
+    (
+        load_intent,
+        deduplicate_records,
+        semantic_identity,
+        example_id_hash,
+        normalize,
+        digest_text,
+        Journal,
+        preflight,
+        publish,
+        SourceRecord,
+        iter_sources,
+        write_member,
+        write_shards,
+    ) = _m10_imports()
+    if isinstance(intent, (str, Path)):
+        intent = load_intent(intent)
+    preflight(intent)
+    destination = intent.output_path
+    if intent.resume and destination.is_dir():
+        from radjax_tome.corpora.validation import validate_corpus_artifact_v2
+
+        existing = validate_corpus_artifact_v2(destination)
+        if existing.ok:
+            return {
+                "status": "resumed",
+                "artifact_path": str(destination),
+                "semantic_identity": existing.semantic_identity,
+                "num_examples": existing.num_examples,
+            }
+        raise ValueError("resume refused: existing corpus artifact is invalid")
+
+    if intent.resume and not destination.exists():
+        staging_candidates = sorted(
+            destination.parent.glob(f".{destination.name}.m10-*"),
+            key=lambda path: path.stat().st_mtime,
+        )
+        for candidate in reversed(staging_candidates):
+            try:
+                _require_valid(candidate)
+            except (OSError, TypeError, ValueError):
+                continue
+            journal_path = candidate / "journal" / "corpus_build_journal_v1.jsonl"
+            journal = Journal(journal_path, candidate.name, "resume")
+            publish(
+                candidate,
+                destination,
+                overwrite=False,
+                validate=lambda path: _require_valid(path),
+                journal=journal,
+            )
+            report = json.loads((destination / "build_report.json").read_text())
+            report["status"] = "resumed"
+            return report
+        raise ValueError("resume refused: no valid owned staging state")
+
+    staging = Path(
+        tempfile.mkdtemp(
+            prefix=f".{destination.name}.m10-", dir=str(destination.parent)
+        )
+    )
+    transaction_id = staging.name
+    policy = dict(intent.policy)
+    tokenizer_value = policy.get("tokenizer", "smoke")
+    from radjax_tome.corpora.language_tokenizer_binding import (
+        capture_language_tokenizer_binding,
+    )
+    from radjax_tome.corpora.tokenizer import create_tokenizer
+
+    config_identity = _sha256_bytes(
+        json.dumps(
+            _jsonable_intent(intent), sort_keys=True, separators=(",", ":")
+        ).encode()
+    )
+    journal = Journal(
+        staging / "journal" / "corpus_build_journal_v1.jsonl",
+        transaction_id,
+        config_identity,
+    )
+    journal.append("PREFLIGHTED")
+    tokenizer = create_tokenizer(tokenizer_value)
+    binding = capture_language_tokenizer_binding(tokenizer)
+    binding_path = staging / "language_tokenizer_binding_v1.json"
+    binding_path.parent.mkdir(parents=True, exist_ok=True)
+    binding_path.write_bytes(
+        binding.binding and _canonical_json(binding.binding) + b"\n"
+    )
+    resource_path = staging / "resources" / "tokenizer_vocabulary.jsonl"
+    resource_path.parent.mkdir(parents=True, exist_ok=True)
+    resource_path.write_bytes(binding.vocabulary_jsonl)
+    binding_digest = str(binding.binding["canonical_binding_digest"])
+    journal.append("SOURCES_RESOLVED")
+
+    minimum = int(
+        policy.get("filtering", {}).get("min_chars", policy.get("min_chars", 1))
+    )
+    maximum = int(
+        policy.get("chunking", {}).get("max_chars", policy.get("max_chars", 12_000))
+    )
+    if minimum < 1 or maximum < minimum:
+        raise ValueError("invalid corpus filtering/chunking limits")
+    source_inventory: list[dict[str, Any]] = []
+    filtered: list[dict[str, Any]] = []
+    arrival = 0
+
+    def candidate_records() -> Iterable[Any]:
+        nonlocal arrival
+        for source_ordinal, spec in enumerate(intent.sources):
+            candidate_count = retained_count = 0
+            for item in iter_sources(spec):
+                raw_text = item.text
+                normalized_text_value = normalize(raw_text)
+                chunks = (
+                    [
+                        normalized_text_value[index : index + maximum]
+                        for index in range(0, len(normalized_text_value), maximum)
+                    ]
+                    if normalized_text_value
+                    else []
+                )
+                if not chunks or any(len(chunk) < minimum for chunk in chunks):
+                    filtered.append(
+                        {
+                            "source_id": spec.source_id,
+                            "reason": "CORPUS_FILTER_EMPTY"
+                            if not normalized_text_value
+                            else "CORPUS_FILTER_BELOW_MINIMUM",
+                        }
+                    )
+                    continue
+                candidate_count += len(chunks)
+                for chunk_index, chunk in enumerate(chunks):
+                    retained_count += 1
+                    arrival += 1
+                    yield SourceRecord(
+                        source_id=spec.source_id,
+                        source_ordinal=source_ordinal,
+                        logical_locator=item.logical_locator,
+                        chunk_index=chunk_index,
+                        chunk_count=len(chunks),
+                        text=chunk,
+                        normalized_text_digest=digest_text(chunk),
+                        source_digest=item.source_digest,
+                        declared_record_id=item.declared_record_id,
+                    )
+            source_inventory.append(
+                {
+                    "source_id": spec.source_id,
+                    "source_ordinal": source_ordinal,
+                    "adapter": spec.adapter,
+                    "path": str(spec.path),
+                    "candidate_count": candidate_count,
+                    "retained_count": retained_count,
+                }
+            )
+
+    dedup_enabled = bool(
+        policy.get("deduplication", {}).get(
+            "enabled", policy.get("deduplication_enabled", True)
+        )
+    )
+    records, counts = deduplicate_records(candidate_records(), enabled=dedup_enabled)
+    journal.append("INGEST_COMPLETE", candidate_count=arrival)
+    canonical_records = list(records)
+    # Public IDs and semantic identity are assigned only after canonical order.
+    identity_records = []
+    for index, record in enumerate(canonical_records, start=1):
+        record = replace(
+            record,
+            identity_digest=example_id_hash(
+                source_id=record.source_id,
+                logical_locator=record.logical_locator,
+                chunk_index=record.chunk_index,
+                text_digest=record.text_digest,
+            ),
+        )
+        canonical_records[index - 1] = record
+        identity_records.append(record)
+        if record.example_id != f"corpus_{index:09d}":
+            raise ValueError("corpus ID allocation is not contiguous")
+    semantic = semantic_identity(
+        policy=policy,
+        tokenizer_binding_digest=binding_digest,
+        records=canonical_records,
+        source_declarations=[
+            {
+                "source_id": source.source_id,
+                "adapter": source.adapter,
+                "include": list(source.include),
+                "exclude": list(source.exclude),
+                "text_field": source.text_field,
+                "record_id_field": source.record_id_field,
+            }
+            for source in intent.sources
+        ],
+    )
+    inventory = write_shards(
+        staging,
+        iter(canonical_records),
+        shard_capacity=int(
+            intent.layout.get(
+                "shard_capacity", intent.layout.get("shard_size_examples", 128)
+            )
+        ),
+    )
+    write_member(staging / "shard_inventory.json", inventory)
+    write_member(staging / "source_manifest.json", source_inventory)
+    write_member(
+        staging / "filter_report.json",
+        {"schema_version": "corpus_filter_report_v2", "records": filtered},
+    )
+    write_member(
+        staging / "dedup_report.json",
+        {"schema_version": "corpus_dedup_report_v2", **counts},
+    )
+    write_member(staging / "normalized_intent.json", _jsonable_intent(intent))
+    manifest = {
+        "schema_version": CORPUS_ARTIFACT_SCHEMA_V2,
+        "artifact_type": CORPUS_ARTIFACT_SCHEMA_V2,
+        "semantic_identity": semantic,
+        "tokenizer_binding_digest": binding_digest,
+        "policy": policy,
+        "source_declarations": [
+            {
+                "source_id": source.source_id,
+                "adapter": source.adapter,
+                "include": list(source.include),
+                "exclude": list(source.exclude),
+                "text_field": source.text_field,
+                "record_id_field": source.record_id_field,
+            }
+            for source in intent.sources
+        ],
+        "num_examples": len(canonical_records),
+        "num_sources": len(intent.sources),
+        "shard_count": len(inventory),
+        "storage_schema": "uncompressed_canonical_jsonl_with_offsets_v1",
+    }
+    write_member(staging / "corpus_manifest.json", manifest)
+    write_member(
+        staging / "build_report.json",
+        {
+            "schema_version": "corpus_build_report_v2",
+            "status": "pass",
+            "semantic_identity": semantic,
+            "counts": counts,
+            "filtered_count": len(filtered),
+            "shard_count": len(inventory),
+            "atomic_overwrite": False,
+        },
+    )
+    write_member(
+        staging / "corpus_cover.json",
+        {
+            "schema_version": CORPUS_ARTIFACT_SCHEMA_V2,
+            "artifact_type": CORPUS_ARTIFACT_SCHEMA_V2,
+            "semantic_members": ["corpus_manifest.json", "normalized_intent.json"],
+            "provenance_members": [
+                "source_manifest.json",
+                "language_tokenizer_binding_v1.json",
+            ],
+            "physical_members": ["shard_inventory.json", "shards", "indexes"],
+            "diagnostic_members": [
+                "filter_report.json",
+                "dedup_report.json",
+                "build_report.json",
+            ],
+            "atomic_overwrite": False,
+        },
+    )
+    journal.append("SHARDS_SEALED", shard_count=len(inventory))
+    from radjax_tome.corpora.validation import validate_corpus_artifact_v2
+
+    validation = validate_corpus_artifact_v2(staging)
+    if not validation.ok:
+        raise ValueError(
+            "built corpus artifact failed validation: " + "; ".join(validation.blockers)
+        )
+    journal.append("VALIDATED", semantic_identity=semantic)
+    if fault_after == "validated":
+        raise InterruptedError("fault injection after validation")
+    publish(
+        staging,
+        destination,
+        overwrite=intent.overwrite,
+        validate=lambda path: _require_valid(path),
+        journal=journal,
+    )
+    return {
+        "status": "pass",
+        "artifact_path": str(destination),
+        "semantic_identity": semantic,
+        "num_examples": len(canonical_records),
+        "num_sources": len(intent.sources),
+        "shard_count": len(inventory),
+    }
+
+
+def _require_valid(path: Path) -> None:
+    from radjax_tome.corpora.validation import validate_corpus_artifact_v2
+
+    result = validate_corpus_artifact_v2(path)
+    if not result.ok:
+        raise ValueError("corpus validation failed: " + "; ".join(result.blockers))
+
+
+def _canonical_json(value: Any) -> bytes:
+    return json.dumps(
+        value, ensure_ascii=True, allow_nan=False, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+
+
+def _jsonable_intent(intent: Any) -> dict[str, Any]:
+    def convert(value: Any) -> Any:
+        if isinstance(value, Path):
+            return str(value)
+        if isinstance(value, dict):
+            return {str(key): convert(item) for key, item in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [convert(item) for item in value]
+        if hasattr(value, "__dict__"):
+            return convert(vars(value))
+        return value
+
+    return convert(
+        {
+            "schema_version": intent.schema_version,
+            "artifact": dict(intent.artifact),
+            "sources": [
+                {
+                    "source_id": item.source_id,
+                    "adapter": item.adapter,
+                    "include": list(item.include),
+                    "exclude": list(item.exclude),
+                    "text_field": item.text_field,
+                    "record_id_field": item.record_id_field,
+                    "path": str(item.path),
+                }
+                for item in intent.sources
+            ],
+            "policy": dict(intent.policy),
+            "layout": dict(intent.layout),
+            "resources": dict(intent.resources),
+            "output": dict(intent.output),
+            "execution": dict(intent.execution),
+            "reporting": dict(intent.reporting),
+        }
+    )
+
+
+__all__ = [
+    "build_corpus_artifact_v2",
+    "build_corpus_artifact",
+    "validate_corpus_artifact",
+]

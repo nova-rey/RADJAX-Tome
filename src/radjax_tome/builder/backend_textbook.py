@@ -663,6 +663,25 @@ def _iter_corpus_jsonl_examples(
     *,
     max_examples: int | None,
 ) -> Iterable[tuple[int, TinyTextExample]]:
+    if path.is_dir() and (path / "corpus_cover.json").is_file():
+        from radjax_tome.builder.corpus_input import (
+            iter_corpus_examples,
+            resolve_corpus_input,
+        )
+
+        for row_index, payload in enumerate(
+            iter_corpus_examples(resolve_corpus_input(path))
+        ):
+            if max_examples is not None and row_index >= max_examples:
+                break
+            yield (
+                row_index,
+                TinyTextExample(
+                    example_id=str(payload["example_id"]),
+                    text=str(payload["text"]),
+                ),
+            )
+        return
     emitted = 0
     with path.open("r", encoding="utf-8") as handle:
         for row_index, line in enumerate(handle):

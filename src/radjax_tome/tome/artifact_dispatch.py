@@ -156,6 +156,15 @@ def validate_artifact(
             attestation_policy=attestation_policy,
             evaluation_time=evaluation_time,
         )
+    if candidate.is_dir() and (candidate / "corpus_cover.json").is_file():
+        from radjax_tome.corpora.validation import validate_corpus_artifact_v2
+
+        report = validate_corpus_artifact_v2(candidate)
+        return {
+            "status": "pass" if report.ok else "fail",
+            "kind": "corpus_v2",
+            "report": report.to_dict(),
+        }
     if candidate.is_file() and candidate.suffix == ".rtome":
         try:
             return _validate_v3_mode(
@@ -199,6 +208,8 @@ def inspect_artifact(path: Path) -> ArtifactInspection:
 
         for name in (
             "cover_page.json",
+            "corpus_cover.json",
+            "corpus_manifest.json",
             "metadata.json",
             "production_build_report.json",
         ):

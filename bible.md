@@ -3839,3 +3839,10 @@ closed-record and checkpoint authority validation.
 - 2026-08-28 M9 CI correctness reconciliation: repaired compact payload compatibility boundaries, historical v4 mask materialization, selected-payload linkage, canonical resume disposition, current P6 generator qualification, and stale authority expectations; preserved historical receipts and recorded all 20 inherited failure dispositions in `docs/M9_CI_RECONCILIATION_REPORT.md`.
 
 - 2026-08-28 M9 closure: bound the final closure report and machine receipt to audited implementation `7550ea9bcae23917fdaaee3d7506efaef849c6bf`, with green mandatory CI, clean-install lifecycle smoke, and focused independent review.
+
+- 2026-08-29 M10.1: added the strict v2 corpus intent, path-independent authority projection, immutable source/canonical records, and production input reference without changing v1 selection authority.
+- 2026-08-29 M10.2: added deterministic UTF-8 source adapters, normalization, exact byte-defended deduplication, duplicate provenance, and semantic identity.
+- 2026-08-29 M10.3: added canonical JSONL shards with verified byte indexes and self-describing v2 artifact validation/inspection.
+- 2026-08-29 M10.4: added fsynced staging journals, recoverable publication, overwrite quarantine, and resume-safe lifecycle handling.
+- 2026-08-29 M10.5: integrated v2 dispatch and shared production readers while preserving legacy corpus behavior and the M9 CLI grammar.
+- 2026-08-29 M10.6: added focused M10 regression coverage for relocation identity, exact duplicates, corruption rejection, and interruption/resume recovery.

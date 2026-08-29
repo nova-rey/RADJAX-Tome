@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, get_type_hints
 
 from radjax_tome.builder.config import TomeBuildIntent, validate_tome_build_intent
+from radjax_tome.corpora.config import CorpusArtifactReference, CorpusBuildIntentV2
 
 
 def _unique_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -94,3 +95,47 @@ def load_tome_build_intent(path: Path) -> TomeBuildIntent:
     if errors:
         raise ValueError("invalid Tome build intent: " + "; ".join(errors))
     return intent
+
+
+def load_tome_build_intent_v2(path: str | Path) -> CorpusBuildIntentV2:
+    """Load the explicit path-independent corpus reference projection."""
+
+    source = Path(path).resolve()
+    raw = _read(source)
+    if not isinstance(raw, dict):
+        raise ValueError("build intent v2 must be an object")
+    if set(raw) != {"schema_version", "corpus"}:
+        raise ValueError("build intent v2 requires only schema_version and corpus")
+    if raw["schema_version"] != "radjax_tome_build_intent_v2":
+        raise ValueError("unsupported build intent v2 schema_version")
+    corpus = raw["corpus"]
+    if not isinstance(corpus, dict):
+        raise ValueError("build intent v2 corpus must be an object")
+    required = {"artifact_path", "expected_semantic_identity", "max_examples"}
+    if set(corpus) != required:
+        raise ValueError(
+            "build intent v2 corpus requires exactly artifact_path, "
+            "expected_semantic_identity, and max_examples"
+        )
+    artifact_path = corpus["artifact_path"]
+    expected = corpus["expected_semantic_identity"]
+    max_examples = corpus["max_examples"]
+    if not isinstance(artifact_path, str):
+        raise ValueError("build intent v2 corpus.artifact_path must be a string")
+    if not isinstance(expected, str) or not expected.startswith("sha256:"):
+        raise ValueError("build intent v2 expected_semantic_identity must be a digest")
+    if max_examples is not None and (
+        not isinstance(max_examples, int)
+        or isinstance(max_examples, bool)
+        or max_examples <= 0
+    ):
+        raise ValueError(
+            "build intent v2 max_examples must be a positive integer or null"
+        )
+    resolved = Path(artifact_path)
+    if not resolved.is_absolute():
+        resolved = (source.parent / resolved).resolve()
+    return CorpusBuildIntentV2(
+        corpus=CorpusArtifactReference(resolved, expected, max_examples),
+        source_path=source,
+    )

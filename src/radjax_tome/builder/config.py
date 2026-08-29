@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 from radjax_tome.builder.teacher_textbook import TeacherTextbookBuildConfig
+from radjax_tome.corpora.config import CorpusArtifactReference
 
 if TYPE_CHECKING:
     from radjax_tome.builder.production import ProductionBuildConfig
@@ -1513,6 +1514,7 @@ __all__ = [
     "CompatibilityOverrides",
     "CorridorPolicyIntent",
     "CorpusIntent",
+    "CorpusArtifactReference",
     "ExecutionIntent",
     "OutputIntent",
     "PackageIntent",
