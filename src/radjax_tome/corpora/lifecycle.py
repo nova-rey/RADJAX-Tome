@@ -24,6 +24,12 @@ def preflight_corpus_build(intent: CorpusBuildIntent) -> dict[str, Any]:
     """Validate only configuration and destination topology; perform no writes."""
 
     destination = intent.output_path
+    minimum = intent.policy.get("filtering", {}).get("min_chars")
+    maximum = intent.policy.get("chunking", {}).get("max_chars")
+    if not isinstance(minimum, int) or minimum < 1:
+        raise CorpusLifecycleError("policy.filtering.min_chars must be >= 1")
+    if not isinstance(maximum, int) or maximum < minimum:
+        raise CorpusLifecycleError("policy.chunking.max_chars must be >= min_chars")
     if destination.exists() and destination.is_symlink():
         raise CorpusLifecycleError("output destination may not be a symlink")
     for parent in [destination.parent, *destination.parent.parents]:

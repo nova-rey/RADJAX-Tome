@@ -3848,3 +3848,6 @@ closed-record and checkpoint authority validation.
 - 2026-08-29 M10.6: added focused M10 regression coverage for relocation identity, exact duplicates, corruption rejection, and interruption/resume recovery.
 - 2026-08-29 M10.7: applied the final Ruff formatting normalization to the M10 corpus CLI route; command behavior is unchanged.
 - 2026-08-29 M10.8: reconciled the Hydra disposition inventory for the new M10 corpus modules and documentation without changing historical evidence.
+- 2026-08-29 M10.9: recorded the M10 implementation audit, mandatory gate results, clean-install smoke, and evidence-bound closure receipt; independent review remains explicitly pending.
+- 2026-08-29 M10 review correction: added tokenizer-binding digest validation, artifact-root containment, preflight limit checks, intent-bound resume checks, artifact byte limits, streaming v2 directory acceptance, and focused tamper coverage.
+- 2026-08-29 M10 review correction follow-up: made resume transaction identity invariant to the operational resume flag and verified interrupted staging recovery.

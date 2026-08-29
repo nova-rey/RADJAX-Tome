@@ -1,0 +1,16 @@
+{
+  "schema_version": "radjax_tome_m10_closure_v1",
+  "audited_implementation_commit": "3b94a94",
+  "contract_pin": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "pytest": {"passed": 1223, "skipped": 9, "failed": 0},
+  "focused_m10_tests": {"passed": 12, "failed": 0},
+  "ruff_check": "pass",
+  "ruff_format_check": "pass",
+  "compileall": "pass",
+  "diff_check": "pass",
+  "wheel_build": "pass",
+  "clean_install_pip_check": "pass",
+  "clean_install_cli_build_validate_inspect": "pass",
+  "deterministic_rebuild": "semantic_identity_and_shard_bytes_match",
+  "independent_review": "pending"
+}

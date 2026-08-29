@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterable, Iterator
 from pathlib import Path
@@ -87,26 +88,30 @@ class VerifiedCorpusReader:
 
     def __iter__(self) -> Iterator[dict[str, Any]]:
         for item in self._inventory:
-            shard_path = self.root / str(item["shard"])
-            index_path = self.root / str(item["index"])
+            shard_path = _safe_member(self.root, str(item["shard"]))
+            index_path = _safe_member(self.root, str(item["index"]))
             _verify_digest(shard_path, item["raw_sha256"])
             _verify_digest(index_path, item["index_sha256"])
-            index_rows = [
-                json.loads(line) for line in index_path.read_bytes().splitlines()
-            ]
-            raw = shard_path.read_bytes()
-            if len(index_rows) != int(item["record_count"]):
+            count = 0
+            with (
+                index_path.open("rb") as index_handle,
+                shard_path.open("rb") as shard_handle,
+            ):
+                for raw_index in index_handle:
+                    index_row = json.loads(raw_index)
+                    count += 1
+                    offset = int(index_row["offset"])
+                    length = int(index_row["length"])
+                    shard_handle.seek(offset)
+                    encoded = shard_handle.read(length)
+                    if len(encoded) != length or not encoded.endswith(b"\n"):
+                        raise ValueError(f"index range mismatch: {shard_path.name}")
+                    row = json.loads(encoded)
+                    if row.get("example_id") != index_row.get("example_id"):
+                        raise ValueError(f"index identity mismatch: {shard_path.name}")
+                    yield row
+            if count != int(item["record_count"]):
                 raise ValueError(f"index count mismatch: {shard_path.name}")
-            for index_row in index_rows:
-                offset = int(index_row["offset"])
-                length = int(index_row["length"])
-                encoded = raw[offset : offset + length]
-                if len(encoded) != length or not encoded.endswith(b"\n"):
-                    raise ValueError(f"index range mismatch: {shard_path.name}")
-                row = json.loads(encoded)
-                if row.get("example_id") != index_row.get("example_id"):
-                    raise ValueError(f"index identity mismatch: {shard_path.name}")
-                yield row
 
 
 def write_json(path: Path, value: Any) -> None:
@@ -120,8 +125,21 @@ def _read_json(path: Path) -> Any:
 
 
 def _verify_digest(path: Path, expected: str) -> None:
-    if not path.is_file() or sha256(path.read_bytes()) != expected:
+    if not path.is_file():
         raise ValueError(f"corpus member digest mismatch: {path.name}")
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if "sha256:" + digest.hexdigest() != expected:
+        raise ValueError(f"corpus member digest mismatch: {path.name}")
+
+
+def _safe_member(root: Path, relative: str) -> Path:
+    candidate = (root / relative).resolve()
+    if candidate != root and root not in candidate.parents:
+        raise ValueError(f"corpus member escapes artifact root: {relative}")
+    return candidate
 
 
 __all__ = ["VerifiedCorpusReader", "write_json", "write_shards"]

@@ -92,6 +92,7 @@ def validate_corpus_artifact_v2(path: str | Path) -> CorpusValidationResult:
         cover = _json(root / "corpus_cover.json")
         manifest = _json(root / "corpus_manifest.json")
         inventory = _json(root / "shard_inventory.json")
+        binding = _json(root / "language_tokenizer_binding_v1.json")
     except ValueError as exc:
         return CorpusValidationResult(
             "fail", (CorpusIssue("MALFORMED_JSON", str(exc)),)
@@ -109,6 +110,34 @@ def validate_corpus_artifact_v2(path: str | Path) -> CorpusValidationResult:
             CorpusIssue("INVENTORY_INVALID", "shard inventory must be an array")
         )
         return CorpusValidationResult("fail", tuple(issues))
+    if not isinstance(binding, dict):
+        issues.append(
+            CorpusIssue("BINDING_INVALID", "tokenizer binding must be an object")
+        )
+    else:
+        binding_payload = {
+            "tokenizer": binding.get("tokenizer"),
+            "canonical_inventory_digest": binding.get("canonical_inventory_digest"),
+            "vocabulary": binding.get("vocabulary"),
+        }
+        expected_binding = sha256(
+            json.dumps(
+                binding_payload,
+                ensure_ascii=True,
+                separators=(",", ":"),
+                sort_keys=True,
+            ).encode()
+        )
+        if binding.get("canonical_binding_digest") != expected_binding:
+            issues.append(
+                CorpusIssue("BINDING_INVALID", "tokenizer binding digest mismatch")
+            )
+        if manifest.get("tokenizer_binding_digest") != binding.get(
+            "canonical_binding_digest"
+        ):
+            issues.append(
+                CorpusIssue("BINDING_MISMATCH", "manifest tokenizer binding mismatch")
+            )
     try:
         rows = list(VerifiedCorpusReader(root))
     except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:

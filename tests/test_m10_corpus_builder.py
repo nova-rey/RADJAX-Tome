@@ -195,3 +195,12 @@ def test_v2_interruption_can_resume_owned_staging(tmp_path: Path) -> None:
     resumed = build_corpus_artifact_v2(load_corpus_build_intent(intent_path))
     assert resumed["status"] == "resumed"
     assert validate_corpus_artifact_v2(tmp_path / "artifact").ok
+
+
+def test_v2_binding_tampering_is_rejected(tmp_path: Path) -> None:
+    build_corpus_artifact_v2(load_corpus_build_intent(_config(tmp_path)))
+    binding = tmp_path / "artifact" / "language_tokenizer_binding_v1.json"
+    payload = json.loads(binding.read_text())
+    payload["canonical_binding_digest"] = "sha256:" + "0" * 64
+    binding.write_text(json.dumps(payload))
+    assert not validate_corpus_artifact_v2(tmp_path / "artifact").ok

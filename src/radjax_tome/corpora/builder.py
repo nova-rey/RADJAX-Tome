@@ -806,11 +806,22 @@ def build_corpus_artifact_v2(
         intent = load_intent(intent)
     preflight(intent)
     destination = intent.output_path
+    config_identity = _sha256_bytes(
+        json.dumps(
+            _transaction_intent(intent), sort_keys=True, separators=(",", ":")
+        ).encode()
+    )
     if intent.resume and destination.is_dir():
         from radjax_tome.corpora.validation import validate_corpus_artifact_v2
 
         existing = validate_corpus_artifact_v2(destination)
-        if existing.ok:
+        report_path = destination / "build_report.json"
+        existing_identity = None
+        if report_path.is_file():
+            existing_identity = json.loads(report_path.read_text()).get(
+                "config_identity"
+            )
+        if existing.ok and existing_identity == config_identity:
             return {
                 "status": "resumed",
                 "artifact_path": str(destination),
@@ -827,6 +838,11 @@ def build_corpus_artifact_v2(
         for candidate in reversed(staging_candidates):
             try:
                 _require_valid(candidate)
+                staged_report = json.loads(
+                    (candidate / "build_report.json").read_text()
+                )
+                if staged_report.get("config_identity") != config_identity:
+                    continue
             except (OSError, TypeError, ValueError):
                 continue
             journal_path = candidate / "journal" / "corpus_build_journal_v1.jsonl"
@@ -856,11 +872,6 @@ def build_corpus_artifact_v2(
     )
     from radjax_tome.corpora.tokenizer import create_tokenizer
 
-    config_identity = _sha256_bytes(
-        json.dumps(
-            _jsonable_intent(intent), sort_keys=True, separators=(",", ":")
-        ).encode()
-    )
     journal = Journal(
         staging / "journal" / "corpus_build_journal_v1.jsonl",
         transaction_id,
@@ -1036,6 +1047,7 @@ def build_corpus_artifact_v2(
             "filtered_count": len(filtered),
             "shard_count": len(inventory),
             "atomic_overwrite": False,
+            "config_identity": config_identity,
         },
     )
     write_member(
@@ -1065,6 +1077,13 @@ def build_corpus_artifact_v2(
         raise ValueError(
             "built corpus artifact failed validation: " + "; ".join(validation.blockers)
         )
+    max_bytes = intent.resources.get("max_artifact_bytes")
+    if max_bytes is not None:
+        total_bytes = sum(
+            path.stat().st_size for path in staging.rglob("*") if path.is_file()
+        )
+        if total_bytes > int(max_bytes):
+            raise ValueError("artifact exceeds resources.max_artifact_bytes")
     journal.append("VALIDATED", semantic_identity=semantic)
     if fault_after == "validated":
         raise InterruptedError("fault injection after validation")
@@ -1135,6 +1154,14 @@ def _jsonable_intent(intent: Any) -> dict[str, Any]:
             "reporting": dict(intent.reporting),
         }
     )
+
+
+def _transaction_intent(intent: Any) -> dict[str, Any]:
+    value = _jsonable_intent(intent)
+    execution = dict(value["execution"])
+    execution["resume"] = False
+    value["execution"] = execution
+    return value
 
 
 __all__ = [

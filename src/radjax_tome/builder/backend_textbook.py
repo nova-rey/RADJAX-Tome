@@ -631,7 +631,10 @@ def _validate_streaming_build_config(
 ) -> None:
     if config.dataset_path is None:
         raise ValueError("streaming backend build requires dataset_path")
-    if not config.dataset_path.is_file():
+    if not config.dataset_path.is_file() and not (
+        config.dataset_path.is_dir()
+        and (config.dataset_path / "corpus_cover.json").is_file()
+    ):
         raise ValueError(f"streaming dataset path is missing: {config.dataset_path}")
     if config.batch_size < 1:
         raise ValueError("streaming batch_size must be positive")
