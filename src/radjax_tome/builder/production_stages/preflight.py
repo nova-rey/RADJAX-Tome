@@ -17,7 +17,10 @@ from radjax_tome.builder.c6_integration import (
     C6_SELECTION_INTEGRATION_POLICY,
     GLOBAL_ONLY_SELECTION_POLICY,
 )
-from radjax_tome.corpora import validate_corpus_artifact
+from radjax_tome.corpora import (
+    validate_corpus_artifact,
+    validate_corpus_artifact_v2,
+)
 from radjax_tome.provenance import validate_teacher_model_provenance
 from radjax_tome.reports import (
     GPURunPlanConfig,
@@ -101,7 +104,11 @@ def validate_required_inputs(config: Any, blockers: list[str]) -> None:
         if corpus_is_v2
         else config.corpus_manifest_path.parent
     )
-    corpus_report = validate_corpus_artifact(corpus_root)
+    corpus_report = (
+        validate_corpus_artifact_v2(corpus_root)
+        if corpus_is_v2
+        else validate_corpus_artifact(corpus_root)
+    )
     blockers.extend(
         f"corpus manifest invalid: {item}" for item in corpus_report.blockers
     )
