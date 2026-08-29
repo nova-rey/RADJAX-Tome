@@ -3854,3 +3854,5 @@ closed-record and checkpoint authority validation.
 - 2026-08-29 M10 review correction follow-up: recorded the closure report in the Hydra inventory after the final audit-documentation addition.
 - 2026-08-29 M10 bounded-resource correction: configured DuckDB memory/thread limits and emitted explicit resource-limit provenance in the v2 build report.
 - 2026-08-29 M10 production-boundary correction: allowed canonical production preflight to validate a v2 corpus directory while preserving v1 manifest-file handling.
+- 2026-08-29 M10 closure evidence refresh: rebound the provisional closure report and JSON receipt to implementation commit `2190756` and the final 1,225-test run; review disposition remains pending.
+- 2026-08-29 M10 bounded-review disposition: preserved the final validation receipt with the independent auditor timeout explicitly recorded; M10 remains unclosed pending an auditable review verdict.
