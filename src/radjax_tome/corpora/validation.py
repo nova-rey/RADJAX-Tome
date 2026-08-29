@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -105,6 +106,7 @@ def validate_corpus_artifact_v2(path: str | Path) -> CorpusValidationResult:
         issues.append(
             CorpusIssue("SCHEMA_UNSUPPORTED", "corpus manifest schema is unsupported")
         )
+    issues.extend(_validate_member_inventory(root, cover))
     if not isinstance(inventory, list):
         issues.append(
             CorpusIssue("INVENTORY_INVALID", "shard inventory must be an array")
@@ -261,6 +263,53 @@ def _semantic_from_rows(
 
 def _json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _validate_member_inventory(root: Path, cover: dict[str, Any]) -> list[CorpusIssue]:
+    issues: list[CorpusIssue] = []
+    declared = cover.get("members")
+    if cover.get("member_inventory_policy") != "sha256_size_role_schema_v1_excludes_cover_self_hash":
+        issues.append(CorpusIssue("INVENTORY_INVALID", "unsupported cover inventory policy"))
+    if not isinstance(declared, list):
+        return issues + [CorpusIssue("INVENTORY_INVALID", "cover members must be an array")]
+    actual: dict[str, Path] = {}
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            issues.append(CorpusIssue("SYMLINK_MEMBER", f"symlinked corpus member: {path.name}"))
+        if path.is_file():
+            relative = path.relative_to(root).as_posix()
+            if (
+                relative != "corpus_cover.json"
+                and not relative.startswith("journal/")
+                and not relative.startswith(".")
+            ):
+                actual[relative] = path
+    seen: set[str] = set()
+    for entry in declared:
+        if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
+            issues.append(CorpusIssue("INVENTORY_INVALID", "cover member entry is invalid"))
+            continue
+        relative = entry["path"]
+        if relative in seen or relative not in actual:
+            issues.append(CorpusIssue("INVENTORY_INVALID", f"invalid or duplicate member: {relative}"))
+            continue
+        seen.add(relative)
+        path = actual[relative]
+        if entry.get("size_bytes") != path.stat().st_size:
+            issues.append(CorpusIssue("MEMBER_SIZE_MISMATCH", f"member size mismatch: {relative}"))
+        if entry.get("sha256") != _file_digest(path):
+            issues.append(CorpusIssue("MEMBER_DIGEST_MISMATCH", f"member digest mismatch: {relative}"))
+    for relative in sorted(set(actual) - seen):
+        issues.append(CorpusIssue("UNDECLARED_MEMBER", f"undeclared corpus member: {relative}"))
+    return issues
+
+
+def _file_digest(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return "sha256:" + digest.hexdigest()
 
 
 __all__ = [

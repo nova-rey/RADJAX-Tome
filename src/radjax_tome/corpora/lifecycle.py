@@ -16,7 +16,7 @@ JOURNAL_FILENAME = "corpus_build_journal_v1.jsonl"
 STAGING_MARKER = ".radjax_corpus_staging"
 
 
-class CorpusLifecycleError(RuntimeError):
+class CorpusLifecycleError(ValueError):
     """A recoverable or fail-closed corpus publication error."""
 
 
@@ -58,6 +58,20 @@ def preflight_corpus_build(intent: CorpusBuildIntent) -> dict[str, Any]:
             )
     if destination.resolve() in {Path.cwd().resolve(), Path("/")}:
         raise CorpusLifecycleError("unsafe output destination")
+    if destination.exists() and intent.overwrite:
+        if not destination.is_dir():
+            raise CorpusLifecycleError("overwrite requires an owned corpus directory")
+        from radjax_tome.corpora.validation import validate_corpus_artifact_v2
+
+        if not validate_corpus_artifact_v2(destination).ok:
+            raise CorpusLifecycleError(
+                "overwrite refuses a non-v2 or unowned destination"
+            )
+    destination_resolved = destination.resolve()
+    for source in intent.sources:
+        source_resolved = source.path.resolve()
+        if source_resolved == destination_resolved or source_resolved in destination_resolved.parents or destination_resolved in source_resolved.parents:
+            raise CorpusLifecycleError("source and output destination may not overlap")
     return {
         "status": "pass",
         "destination": str(destination),
@@ -104,6 +118,7 @@ def publish_staging(
     overwrite: bool,
     validate: Callable[[Path], Any],
     journal: CorpusJournal,
+    ownership_check: Callable[[Path], bool] | None = None,
 ) -> None:
     """Promote a validated staging tree with explicit non-atomic overwrite semantics."""
 
@@ -115,10 +130,14 @@ def publish_staging(
     if not destination.exists():
         os.rename(staging, destination)
         _fsync_directory(destination.parent)
+        journal.path = destination / "journal" / JOURNAL_FILENAME
         journal.append("PROMOTED", atomic_visibility=True)
         return
     if not overwrite:
         raise CorpusLifecycleError("output already exists")
+    if ownership_check is not None and not ownership_check(destination):
+        raise CorpusLifecycleError("overwrite destination ownership changed")
+    before = destination.stat()
     quarantine = (
         destination.parent / f".{destination.name}.quarantine-{secrets.token_hex(8)}"
     )
@@ -130,12 +149,16 @@ def publish_staging(
         quarantine=str(quarantine.name),
     )
     try:
+        quarantined = quarantine.stat()
+        if (quarantined.st_ino, quarantined.st_dev) != (before.st_ino, before.st_dev):
+            raise CorpusLifecycleError("overwrite destination changed before quarantine")
         os.rename(staging, destination)
         _fsync_directory(destination.parent)
+        journal.path = destination / "journal" / JOURNAL_FILENAME
         journal.append("NEW_PROMOTED", atomic_visibility=False)
         validate(destination)
     except Exception:
-        if destination.exists():
+        if destination.exists() and destination.is_dir() and (destination / STAGING_MARKER).is_file():
             shutil.rmtree(destination)
         if quarantine.exists():
             os.rename(quarantine, destination)
@@ -156,7 +179,11 @@ def recover_publication(journal_path: str | Path, parent: Path) -> str:
     quarantine_name = last.get("quarantine")
     destination = Path(last.get("destination", "")) if last.get("destination") else None
     if last["event_type"] == "OLD_QUARANTINED" and quarantine_name and destination:
-        quarantine = parent / quarantine_name
+        if destination.is_absolute() or destination.parent.resolve() != parent.resolve():
+            return "no_safe_action"
+        quarantine = parent / Path(quarantine_name).name
+        if Path(quarantine_name).name != quarantine_name:
+            return "no_safe_action"
         if not destination.exists() and quarantine.exists():
             os.rename(quarantine, destination)
             _fsync_directory(parent)

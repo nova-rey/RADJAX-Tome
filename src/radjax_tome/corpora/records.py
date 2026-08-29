@@ -32,6 +32,7 @@ class CanonicalCorpusRecord:
     source_digest: str
     declared_record_id: str | None = None
     duplicate_provenance: tuple[str, ...] = ()
+    duplicate_count: int = 1
     identity_digest: str | None = None
 
     def to_dict(self) -> dict[str, object]:
@@ -52,6 +53,11 @@ class CanonicalCorpusRecord:
             result["declared_record_id"] = self.declared_record_id
         if self.duplicate_provenance:
             result["duplicate_provenance"] = list(self.duplicate_provenance)
+        if self.duplicate_count > 1:
+            result["duplicate_count"] = self.duplicate_count
+            result["duplicate_provenance_truncated"] = len(
+                self.duplicate_provenance
+            ) < self.duplicate_count - 1
         return result
 
 

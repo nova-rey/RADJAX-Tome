@@ -853,6 +853,7 @@ def build_corpus_artifact_v2(
                 overwrite=False,
                 validate=lambda path: _require_valid(path),
                 journal=journal,
+                ownership_check=_is_owned_v2_artifact,
             )
             report = json.loads((destination / "build_report.json").read_text())
             report["status"] = "resumed"
@@ -863,6 +864,9 @@ def build_corpus_artifact_v2(
         tempfile.mkdtemp(
             prefix=f".{destination.name}.m10-", dir=str(destination.parent)
         )
+    )
+    (staging / ".radjax_corpus_staging").write_text(
+        config_identity + "\n", encoding="utf-8"
     )
     transaction_id = staging.name
     policy = dict(intent.policy)
@@ -1070,6 +1074,8 @@ def build_corpus_artifact_v2(
                 "dedup_report.json",
                 "build_report.json",
             ],
+            "member_inventory_policy": "sha256_size_role_schema_v1_excludes_cover_self_hash",
+            "members": _public_member_inventory(staging),
             "atomic_overwrite": False,
         },
     )
@@ -1097,6 +1103,7 @@ def build_corpus_artifact_v2(
         overwrite=intent.overwrite,
         validate=lambda path: _require_valid(path),
         journal=journal,
+        ownership_check=_is_owned_v2_artifact,
     )
     return {
         "status": "pass",
@@ -1114,6 +1121,12 @@ def _require_valid(path: Path) -> None:
     result = validate_corpus_artifact_v2(path)
     if not result.ok:
         raise ValueError("corpus validation failed: " + "; ".join(result.blockers))
+
+
+def _is_owned_v2_artifact(path: Path) -> bool:
+    from radjax_tome.corpora.validation import validate_corpus_artifact_v2
+
+    return path.is_dir() and validate_corpus_artifact_v2(path).ok
 
 
 def _canonical_json(value: Any) -> bytes:
@@ -1166,6 +1179,39 @@ def _transaction_intent(intent: Any) -> dict[str, Any]:
     execution["resume"] = False
     value["execution"] = execution
     return value
+
+
+def _public_member_inventory(root: Path) -> list[dict[str, Any]]:
+    members = []
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or path.is_symlink():
+            continue
+        relative = path.relative_to(root).as_posix()
+        if relative == "corpus_cover.json" or relative.startswith("journal/"):
+            continue
+        if relative.startswith("."):
+            continue
+        role = "physical"
+        if relative in {"corpus_manifest.json", "normalized_intent.json"}:
+            role = "semantic"
+        elif relative in {
+            "source_manifest.json",
+            "language_tokenizer_binding_v1.json",
+        } or relative.startswith("resources/"):
+            role = "provenance"
+        elif relative.endswith("_report.json"):
+            role = "diagnostic"
+        members.append(
+            {
+                "path": relative,
+                "role": role,
+                "media_type": "application/json" if path.suffix == ".json" else "application/jsonl",
+                "schema": None,
+                "size_bytes": path.stat().st_size,
+                "sha256": _sha256_file(path),
+            }
+        )
+    return members
 
 
 def _record_from_dict(row: Mapping[str, Any]) -> Any:

@@ -24,6 +24,7 @@ def deduplicate_records(
         import duckdb
     except ImportError as exc:  # pragma: no cover
         raise ValueError("M10 corpus construction requires DuckDB 1.4.5") from exc
+    temporary_database = database_path is None
     if database_path is None:
         fd, name = tempfile.mkstemp(prefix="radjax-corpus-", suffix=".duckdb")
         os.close(fd)
@@ -95,6 +96,7 @@ def deduplicate_records(
 
     def output() -> Iterator[CanonicalCorpusRecord]:
         index = 0
+        provenance_cursor = connection.cursor()
         try:
             result = connection.execute(winner_sql)
             while batch := result.fetchmany(256):
@@ -114,14 +116,14 @@ def deduplicate_records(
                     ) = row
                     provenance = ()
                     if enabled and int(duplicate_count) > 1:
-                        matches = connection.execute(
+                        matches = provenance_cursor.execute(
                             "SELECT source_id || ':' || logical_locator || ':' || "
                             "CAST(chunk_index AS VARCHAR) FROM rows WHERE "
                             "text_digest = ? AND text_bytes = ? ORDER BY "
                             "source_ordinal, logical_locator, chunk_index",
                             [digest, _text_bytes],
-                        ).fetchall()
-                        provenance = tuple(str(match[0]) for match in matches[1:])
+                        ).fetchmany(33)
+                        provenance = tuple(str(match[0]) for match in matches[1:33])
                     index += 1
                     yield CanonicalCorpusRecord(
                         example_id=f"corpus_{index:09d}",
@@ -137,9 +139,16 @@ def deduplicate_records(
                             None if record_id is None else str(record_id)
                         ),
                         duplicate_provenance=provenance,
+                        duplicate_count=int(duplicate_count),
                     )
         finally:
+            provenance_cursor.close()
             connection.close()
+            if temporary_database:
+                try:
+                    Path(database_path).unlink()
+                except FileNotFoundError:
+                    pass
 
     winners = int(
         connection.execute(f"SELECT COUNT(*) FROM ({winner_sql})").fetchone()[0]
