@@ -207,6 +207,9 @@ def load_corpus_build_intent(path: str | Path) -> CorpusBuildIntent:
         _source(item, base=source.parent, index=index)
         for index, item in enumerate(sources_raw)
     )
+    source_ids = [item.source_id for item in sources]
+    if len(source_ids) != len(set(source_ids)):
+        raise ValueError("sources.source_id values must be unique")
     artifact = _section(raw["artifact"], "artifact")
     policy = _section(raw["policy"], "policy")
     layout = _section(raw["layout"], "layout")
@@ -266,6 +269,16 @@ def load_corpus_build_intent(path: str | Path) -> CorpusBuildIntent:
         raise ValueError("policy.chunking.max_chars must be an integer")
     if not isinstance(deduplication["enabled"], bool):
         raise ValueError("policy.deduplication.enabled must be boolean")
+    if policy["normalization"] != "text_normalize_lf_strip_trailing_ws_v1":
+        raise ValueError("policy.normalization is unsupported")
+    if policy["ordering"] != "declared_source_ordinal_logical_locator_chunk_index_v1":
+        raise ValueError("policy.ordering is unsupported")
+    if chunking["name"] != "char_window_v1":
+        raise ValueError("policy.chunking.name is unsupported")
+    if not isinstance(policy["tokenizer"], str) or not policy["tokenizer"]:
+        raise ValueError("policy.tokenizer must be a non-empty string")
+    if filtering["min_chars"] < 1 or chunking["max_chars"] < filtering["min_chars"]:
+        raise ValueError("policy filtering/chunking bounds are invalid")
     _check_fields(
         layout, {"shard_capacity", "shard_size_examples", "max_shard_bytes"}, "layout"
     )
@@ -308,6 +321,20 @@ def load_corpus_build_intent(path: str | Path) -> CorpusBuildIntent:
     ):
         if not isinstance(value, bool):
             raise ValueError(f"execution.{name} must be boolean")
+    for name in ("shard_capacity", "shard_size_examples", "max_shard_bytes"):
+        if name in layout and (
+            not isinstance(layout[name], int)
+            or isinstance(layout[name], bool)
+            or layout[name] < 1
+        ):
+            raise ValueError(f"layout.{name} must be a positive integer")
+    for name in ("worker_count", "max_open_files", "max_artifact_bytes", "max_memory_bytes"):
+        if name in resources and (
+            not isinstance(resources[name], int)
+            or isinstance(resources[name], bool)
+            or resources[name] < 1
+        ):
+            raise ValueError(f"resources.{name} must be a positive integer")
     if execution.get("resume", False) and execution.get("overwrite", False):
         raise ValueError(
             "execution.resume and execution.overwrite are mutually exclusive"

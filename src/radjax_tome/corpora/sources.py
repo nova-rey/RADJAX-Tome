@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from collections.abc import Iterator
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -27,12 +28,7 @@ def _iter_text_tree(spec: CorpusSourceSpec) -> Iterator[SourceRecord]:
     root = spec.path
     if not root.exists():
         raise ValueError(f"source does not exist: {spec.source_id}")
-    files = (
-        (root,)
-        if root.is_file()
-        else tuple(path for path in root.rglob("*") if path.is_file())
-    )
-    candidates: list[Path] = []
+    files = (root,) if root.is_file() else _walk_files(root)
     for path in files:
         if path.suffix.lower() not in {".txt", ".md", ".markdown", ".py"}:
             continue
@@ -43,8 +39,6 @@ def _iter_text_tree(spec: CorpusSourceSpec) -> Iterator[SourceRecord]:
             continue
         if any(_matches(relative, pattern) for pattern in spec.exclude):
             continue
-        candidates.append(path)
-    for path in sorted(candidates, key=lambda item: _logical_path(item, root)):
         raw = path.read_bytes()
         text = raw.decode("utf-8", errors="strict")
         yield SourceRecord(
@@ -59,11 +53,20 @@ def _iter_text_tree(spec: CorpusSourceSpec) -> Iterator[SourceRecord]:
         )
 
 
+def _walk_files(root: Path) -> Iterator[Path]:
+    """Walk deterministically while retaining only one directory listing."""
+    for directory, dirnames, filenames in os.walk(root):
+        dirnames.sort()
+        for filename in sorted(filenames):
+            yield Path(directory) / filename
+
+
 def _iter_jsonl(spec: CorpusSourceSpec) -> Iterator[SourceRecord]:
     if not spec.path.is_file():
         raise ValueError(f"JSONL source does not exist: {spec.source_id}")
     with spec.path.open("rb") as handle:
         source_digest = _sha256_file(spec.path)
+        seen_record_ids: set[str] = set()
         for line_number, raw_line in enumerate(handle, start=1):
             try:
                 line = raw_line.decode("utf-8", errors="strict")
@@ -92,10 +95,22 @@ def _iter_jsonl(spec: CorpusSourceSpec) -> Iterator[SourceRecord]:
                     f"source {spec.source_id} JSONL record {line_number} "
                     "ID field must be a string"
                 )
+            if record_id is not None:
+                if record_id in seen_record_ids:
+                    raise ValueError(
+                        f"source {spec.source_id} JSONL record {line_number} "
+                        "duplicates its declared record ID"
+                    )
+                seen_record_ids.add(record_id)
+            logical_locator = (
+                record_id
+                if record_id is not None
+                else f"{spec.path.name}#record-{line_number:09d}"
+            )
             yield SourceRecord(
                 source_id=spec.source_id,
                 source_ordinal=0,
-                logical_locator=f"{spec.path.name}#record-{line_number:09d}",
+                logical_locator=logical_locator,
                 chunk_index=0,
                 chunk_count=1,
                 text=text,

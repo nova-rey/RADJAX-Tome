@@ -25,7 +25,7 @@ def parser() -> argparse.ArgumentParser:
         description=(
             "RADJAX-Tome produces teacher-side distillation artifacts. "
             "Opinionated production lifecycle CLI.\n\n"
-            "Recommended commands: build, validate, inspect, package, doctor, research"
+            "Recommended commands: build, corpus, validate, inspect, package, doctor, research"
             "\nLegacy-compatible research commands: "
             "build-fingerprint-corridor-leaderboards, "
             "allocate-fingerprint-corridor-coverage, "
@@ -39,6 +39,22 @@ def parser() -> argparse.ArgumentParser:
     root.add_argument("--no-color", action="store_true")
     root.add_argument("--version", action="version", version="radjax-tome 0.1.0")
     commands = root.add_subparsers(dest="command", required=True)
+    corpus = commands.add_parser(
+        "corpus", help="Build, validate, and inspect a config-driven corpus v2 artifact"
+    )
+    corpus_commands = corpus.add_subparsers(dest="corpus_command", required=True)
+    corpus_build = corpus_commands.add_parser(
+        "build", help="Build a corpus artifact from a v2 corpus intent"
+    )
+    corpus_build.add_argument("--config", type=Path, required=True)
+    corpus_build.add_argument("--resume", action="store_true")
+    corpus_build.add_argument("--overwrite", action="store_true")
+    corpus_commands.add_parser("validate", help="Validate a corpus artifact").add_argument(
+        "artifact", type=Path
+    )
+    corpus_commands.add_parser("inspect", help="Inspect a corpus artifact").add_argument(
+        "artifact", type=Path
+    )
     build = commands.add_parser(
         "build", help="Build from a complete canonical M5 config"
     )
@@ -195,7 +211,7 @@ def run(args: argparse.Namespace) -> CLIResult:
                 # A preflight-only invocation is also the documented config
                 # projection/destination dry run; input artifacts are checked
                 # by the production preflight before any real build.
-                config=None if args.preflight_only else production,
+                config=production,
                 resume=args.resume,
                 overwrite=args.overwrite,
             )
@@ -368,9 +384,6 @@ def run(args: argparse.Namespace) -> CLIResult:
 
 
 def main(argv: list[str] | None = None) -> int:
-    raw = list(sys.argv[1:] if argv is None else argv)
-    if "corpus" in raw:
-        return _main_corpus(raw)
     args = parser().parse_args(argv)
     result = run(args)
     try:
@@ -379,70 +392,3 @@ def main(argv: list[str] | None = None) -> int:
         return 141
     return result.exit_code
 
-
-def _corpus_parser() -> argparse.ArgumentParser:
-    root = argparse.ArgumentParser(prog="radjax-tome")
-    root.add_argument("--json", action="store_true", dest="machine")
-    root.add_argument("--quiet", action="store_true")
-    commands = root.add_subparsers(dest="command", required=True)
-    corpus = commands.add_parser("corpus")
-    children = corpus.add_subparsers(dest="corpus_command", required=True)
-    build = children.add_parser("build")
-    build.add_argument("--config", type=Path, required=True)
-    build.add_argument("--resume", action="store_true")
-    build.add_argument("--overwrite", action="store_true")
-    validate = children.add_parser("validate")
-    validate.add_argument("artifact", type=Path)
-    inspect = children.add_parser("inspect")
-    inspect.add_argument("artifact", type=Path)
-    return root
-
-
-def _main_corpus(raw: list[str]) -> int:
-    args = _corpus_parser().parse_args(raw)
-    from dataclasses import replace
-
-    from radjax_tome.corpora import (
-        build_corpus_artifact_v2,
-        inspect_corpus_artifact_v2,
-        load_corpus_build_intent,
-        validate_corpus_artifact_v2,
-    )
-
-    try:
-        if args.corpus_command == "build":
-            intent = load_corpus_build_intent(args.config)
-            if args.resume and args.overwrite:
-                raise ValueError("--resume and --overwrite are mutually exclusive")
-            execution = dict(intent.execution)
-            execution["resume"] = args.resume or execution.get("resume", False)
-            execution["overwrite"] = args.overwrite or execution.get("overwrite", False)
-            if execution != dict(intent.execution):
-                intent = replace(intent, execution=execution)
-            result = CLIResult(
-                "corpus build", "pass", 0, reports=build_corpus_artifact_v2(intent)
-            )
-        elif args.corpus_command == "validate":
-            report = validate_corpus_artifact_v2(args.artifact)
-            result = CLIResult(
-                "corpus validate",
-                report.status,
-                0 if report.ok else 4,
-                reports=report.to_dict(),
-            )
-        else:
-            result = CLIResult(
-                "corpus inspect",
-                "pass",
-                0,
-                reports=inspect_corpus_artifact_v2(args.artifact).to_dict(),
-            )
-    except KeyboardInterrupt:
-        result = _error("corpus", "INTERRUPTED", "command interrupted", 130)
-    except (OSError, TypeError, ValueError, KeyError) as exc:
-        result = _error("corpus", "COMMAND_FAILED", str(exc), 2)
-    try:
-        emit(result, machine=args.machine, quiet=args.quiet)
-    except BrokenPipeError:
-        return 141
-    return result.exit_code

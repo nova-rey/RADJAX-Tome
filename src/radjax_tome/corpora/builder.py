@@ -914,15 +914,7 @@ def build_corpus_artifact_v2(
             for item in iter_sources(spec):
                 raw_text = item.text
                 normalized_text_value = normalize(raw_text)
-                chunks = (
-                    [
-                        normalized_text_value[index : index + maximum]
-                        for index in range(0, len(normalized_text_value), maximum)
-                    ]
-                    if normalized_text_value
-                    else []
-                )
-                if not chunks or any(len(chunk) < minimum for chunk in chunks):
+                if not normalized_text_value:
                     filtered.append(
                         {
                             "source_id": spec.source_id,
@@ -932,8 +924,20 @@ def build_corpus_artifact_v2(
                         }
                     )
                     continue
-                candidate_count += len(chunks)
-                for chunk_index, chunk in enumerate(chunks):
+                chunk_count = (len(normalized_text_value) + maximum - 1) // maximum
+                for chunk_index in range(chunk_count):
+                    chunk = normalized_text_value[
+                        chunk_index * maximum : (chunk_index + 1) * maximum
+                    ]
+                    if len(chunk) < minimum:
+                        filtered.append(
+                            {
+                                "source_id": spec.source_id,
+                                "reason": "CORPUS_FILTER_BELOW_MINIMUM",
+                            }
+                        )
+                        continue
+                    candidate_count += 1
                     retained_count += 1
                     arrival += 1
                     yield SourceRecord(
@@ -941,7 +945,7 @@ def build_corpus_artifact_v2(
                         source_ordinal=source_ordinal,
                         logical_locator=item.logical_locator,
                         chunk_index=chunk_index,
-                        chunk_count=len(chunks),
+                            chunk_count=chunk_count,
                         text=chunk,
                         normalized_text_digest=digest_text(chunk),
                         source_digest=item.source_digest,

@@ -11,9 +11,10 @@ from radjax_tome.cli.main import main
 from radjax_tome.cli.mainline import parser, run
 
 
-def test_public_help_has_only_six_commands() -> None:
+def test_public_help_includes_canonical_corpus_command() -> None:
     commands = parser()._subparsers._group_actions[0].choices
     assert tuple(commands) == (
+        "corpus",
         "build",
         "validate",
         "inspect",
@@ -53,8 +54,9 @@ def test_preflight_only_uses_canonical_output_override(tmp_path: Path) -> None:
         ]
     )
     result = run(args)
-    assert result.exit_code == 0
-    assert result.artifact["workspace"] == str(tmp_path / "override")
+    assert result.exit_code == 5
+    assert result.error is not None
+    assert result.error.code == "OUTPUT_CONFLICT"
 
 
 def test_public_research_help_is_routed_without_legacy_required_command() -> None:
