@@ -3847,3 +3847,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-29 M10.5: integrated v2 dispatch and shared production readers while preserving legacy corpus behavior and the M9 CLI grammar.
 - 2026-08-29 M10.6: added focused M10 regression coverage for relocation identity, exact duplicates, corruption rejection, and interruption/resume recovery.
 - 2026-08-29 M10.7: applied the final Ruff formatting normalization to the M10 corpus CLI route; command behavior is unchanged.
+- 2026-08-29 M10.8: reconciled the Hydra disposition inventory for the new M10 corpus modules and documentation without changing historical evidence.

@@ -41,6 +41,86 @@
     }
   ],
   "records": {
+    "docs:M10_CORPUS_BUILDER": {
+      "archive_or_removal_condition": "Retain with M10 corpus builder documentation.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M10",
+      "rationale": "Documents the strict v2 corpus artifact, CLI, and recovery boundary.",
+      "replacement_or_target_boundary": "M10 closure evidence",
+      "status": "canonical"
+    },
+    "src/radjax_tome/builder/corpus_input.py": {
+      "archive_or_removal_condition": "Retain while v1 and v2 production corpus inputs coexist.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Shared verified corpus input adapter for production readers.",
+      "replacement_or_target_boundary": "Future corpus input contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/config.py": {
+      "archive_or_removal_condition": "Retain while corpus v2 is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Strict corpus intent and path-independent authority projection.",
+      "replacement_or_target_boundary": "Future versioned corpus schema",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/dedup.py": {
+      "archive_or_removal_condition": "Retain while exact corpus v2 deduplication is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Private DuckDB exact deduplication with byte collision defense.",
+      "replacement_or_target_boundary": "Future corpus deduplication schema",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/identity.py": {
+      "archive_or_removal_condition": "Retain while corpus v2 identity is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Semantic identity and normalization primitives for corpus v2.",
+      "replacement_or_target_boundary": "Future versioned corpus identity",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/lifecycle.py": {
+      "archive_or_removal_condition": "Retain while restart-safe corpus publication is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Staging journal, recovery, and destination publication boundary.",
+      "replacement_or_target_boundary": "Future storage lifecycle contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/records.py": {
+      "archive_or_removal_condition": "Retain while corpus v2 records are supported.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Immutable source and canonical corpus record types.",
+      "replacement_or_target_boundary": "Future versioned corpus records",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/sources.py": {
+      "archive_or_removal_condition": "Retain while local corpus v2 adapters are supported.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Strict deterministic UTF-8 local source adapters.",
+      "replacement_or_target_boundary": "Future source adapter contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/storage.py": {
+      "archive_or_removal_condition": "Retain while corpus v2 shard storage is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Canonical JSONL shards and verified byte offset indexes.",
+      "replacement_or_target_boundary": "Future corpus storage schema",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/validation.py": {
+      "archive_or_removal_condition": "Retain while corpus v2 validation is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Self-describing corpus v2 validation and inspection boundary.",
+      "replacement_or_target_boundary": "Future corpus validation schema",
+      "status": "canonical"
+    },
     "cli:finalize-replay-workload": {
       "archive_or_removal_condition": "Retain until the frozen replay evidence is retired.",
       "kind": "public-cli-command",
