@@ -93,14 +93,18 @@ def load_tome_build_intent(path: Path) -> TomeBuildIntent:
             )
         adapted = dict(raw)
         adapted["schema_version"] = "radjax_tome_build_intent_v1"
-        adapted["corpus"] = dict(
-            corpus, dataset_path=artifact_path, corpus_manifest_path=artifact_path
-        )
+        adapted_corpus = {
+            key: value
+            for key, value in corpus.items()
+            if key not in {"artifact_path", "expected_semantic_identity"}
+        }
+        adapted_corpus["dataset_path"] = artifact_path
+        adapted_corpus["corpus_manifest_path"] = artifact_path
+        adapted["corpus"] = adapted_corpus
         return replace(
             load_tome_build_intent_from_raw(source, adapted),
             schema_version="radjax_tome_build_intent_v2",
         )
-    return load_tome_build_intent_from_raw(source, raw)
     return load_tome_build_intent_from_raw(source, raw)
 
 

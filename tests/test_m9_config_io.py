@@ -65,3 +65,19 @@ def test_missing_section_is_rejected(tmp_path: Path) -> None:
     path.write_text(json.dumps(payload))
     with pytest.raises(ValueError, match="missing build intent fields"):
         load_tome_build_intent(path)
+
+
+def test_v2_complete_production_intent_loads(tmp_path: Path) -> None:
+    payload = _payload(tmp_path)
+    payload["schema_version"] = "radjax_tome_build_intent_v2"
+    corpus = payload["corpus"]
+    corpus["artifact_path"] = str(tmp_path / "corpus")
+    corpus["expected_semantic_identity"] = "sha256:" + "1" * 64
+    corpus.pop("dataset_path")
+    corpus.pop("corpus_manifest_path")
+    path = tmp_path / "intent-v2.json"
+    path.write_text(json.dumps(payload))
+    intent = load_tome_build_intent(path)
+    assert intent.schema_version == "radjax_tome_build_intent_v2"
+    assert intent.corpus.dataset_path == (tmp_path / "corpus").resolve()
+    assert intent.corpus.corpus_manifest_path == (tmp_path / "corpus").resolve()
