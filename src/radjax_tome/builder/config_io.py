@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import fields, is_dataclass, replace
+from dataclasses import MISSING, fields, is_dataclass, replace
 from pathlib import Path
 from typing import Any, get_type_hints
 
@@ -44,7 +44,11 @@ def _dataclass(value: Any, cls: type[Any], *, base: Path, label: str) -> Any:
         raise ValueError(f"{label} must be an object")
     declared = {field.name for field in fields(cls)}
     unknown = sorted(set(value) - declared)
-    missing = sorted(declared - set(value))
+    missing = sorted(
+        name
+        for name in (declared - set(value))
+        if next(field for field in fields(cls) if field.name == name).default is MISSING
+    )
     if unknown:
         raise ValueError(f"unknown {label} fields: {', '.join(unknown)}")
     if missing:
@@ -100,6 +104,7 @@ def load_tome_build_intent(path: Path) -> TomeBuildIntent:
         }
         adapted_corpus["dataset_path"] = artifact_path
         adapted_corpus["corpus_manifest_path"] = artifact_path
+        adapted_corpus["expected_semantic_identity"] = expected_identity
         adapted["corpus"] = adapted_corpus
         return replace(
             load_tome_build_intent_from_raw(source, adapted),

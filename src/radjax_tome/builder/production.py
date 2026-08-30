@@ -85,6 +85,7 @@ class ProductionBuildConfig:
     corpus_manifest_path: Path
     teacher_model_provenance_path: Path
     output_dir: Path
+    expected_corpus_semantic_identity: str | None = None
     artifact_contract_version: str = "v2"
     tokenizer_id: str | None = None
     teacher_backend: str = "gpu_torch"

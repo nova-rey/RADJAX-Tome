@@ -78,6 +78,7 @@ class CorpusIntent:
     dataset_path: Path
     corpus_manifest_path: Path
     max_examples: int | None
+    expected_semantic_identity: str | None = None
 
 
 @dataclass(frozen=True)
@@ -770,6 +771,7 @@ def production_build_config_from_resolved(
         tokenizer_id=intent.teacher.tokenizer_id,
         dataset_path=intent.corpus.dataset_path,
         corpus_manifest_path=intent.corpus.corpus_manifest_path,
+        expected_corpus_semantic_identity=intent.corpus.expected_semantic_identity,
         teacher_model_provenance_path=intent.teacher.model_provenance_path,
         output_dir=intent.outputs.output_dir,
         artifact_contract_version=intent.package.artifact_contract_version,

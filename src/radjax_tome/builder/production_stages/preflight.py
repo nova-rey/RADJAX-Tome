@@ -111,6 +111,13 @@ def validate_required_inputs(config: Any, blockers: list[str]) -> None:
         if corpus_is_v2
         else validate_corpus_artifact(corpus_root)
     )
+    expected_identity = getattr(config, "expected_corpus_semantic_identity", None)
+    if (
+        corpus_is_v2
+        and expected_identity
+        and corpus_report.semantic_identity != expected_identity
+    ):
+        blockers.append("corpus semantic identity does not match production intent")
     blockers.extend(
         f"corpus manifest invalid: {item}" for item in corpus_report.blockers
     )
