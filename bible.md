@@ -3882,3 +3882,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-30 M10 v1 compatibility correction: defaulted the optional v2 corpus identity field only at the v1 adapter boundary, preserving legacy configs that omit it.
 - 2026-08-30 M10 v2 strictness correction: complete production dispatch now requires max_examples and rejects unknown corpus reference keys before adaptation.
 - 2026-08-30 M10 v2 strictness finalization: production corpus references now require the exact three-key set and reject legacy dataset/manifest keys in v2.
+- 2026-08-30 M10 v2 strictness final edge: validated max_examples as null or a positive integer in complete production dispatch and added regression coverage.

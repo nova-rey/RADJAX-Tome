@@ -110,3 +110,17 @@ def test_v2_intent_resolves_and_carries_identity(tmp_path: Path) -> None:
     resolved = resolve_tome_build_intent(load_tome_build_intent(path))
     production = production_build_config_from_resolved(resolved)
     assert production.expected_corpus_semantic_identity == "sha256:" + "2" * 64
+
+
+def test_v2_max_examples_is_strict(tmp_path: Path) -> None:
+    payload = _payload(tmp_path)
+    payload["schema_version"] = "radjax_tome_build_intent_v2"
+    payload["corpus"]["artifact_path"] = str(tmp_path / "corpus")
+    payload["corpus"]["expected_semantic_identity"] = "sha256:" + "3" * 64
+    payload["corpus"]["max_examples"] = 0
+    payload["corpus"].pop("dataset_path", None)
+    payload["corpus"].pop("corpus_manifest_path", None)
+    path = tmp_path / "intent-v2.json"
+    path.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match="max_examples"):
+        load_tome_build_intent(path)

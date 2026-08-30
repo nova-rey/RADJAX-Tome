@@ -99,6 +99,15 @@ def load_tome_build_intent(path: Path) -> TomeBuildIntent:
                 "build intent v2 corpus requires exactly artifact_path, "
                 "expected_semantic_identity, and max_examples"
             )
+        max_examples = corpus["max_examples"]
+        if max_examples is not None and (
+            not isinstance(max_examples, int)
+            or isinstance(max_examples, bool)
+            or max_examples <= 0
+        ):
+            raise ValueError(
+                "build intent v2 max_examples must be a positive integer or null"
+            )
         if "max_examples" not in corpus:
             raise ValueError("build intent v2 corpus requires max_examples")
         if not isinstance(artifact_path, str) or not isinstance(expected_identity, str):
