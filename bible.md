@@ -3871,3 +3871,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-29 M10 final completion: closed the verified v2 reader, absolute-destination recovery boundary, destination-parent creation, and mandatory duplicate-provenance inventory; recorded the 50K bounded-memory run and preserved unrelated historical test compatibility failures for external audit.
 - 2026-08-30 M10 final remediation: added safe archive extraction compatibility for Python 3.11/3.12 and routed affected production/test paths through the bounded traversal-checked helper; v2 and artifact-integrity fixes remain scoped to reproduced defects.
 - 2026-08-30 M10 remediation closure: full suite now passes on Python 3.11 after safe archive extraction compatibility; final evidence remains bound to the last code commit and is ready for external audit.
+- 2026-08-30 M10 tokenizer-boundary remediation: production preflight now rejects corpus-v2 tokenizer binding mismatches before teacher or backend creation.

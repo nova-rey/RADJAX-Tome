@@ -114,6 +114,20 @@ def validate_required_inputs(config: Any, blockers: list[str]) -> None:
     blockers.extend(
         f"corpus manifest invalid: {item}" for item in corpus_report.blockers
     )
+    if corpus_is_v2 and not corpus_report.blockers:
+        binding_path = corpus_root / "language_tokenizer_binding_v1.json"
+        try:
+            import json
+
+            binding = json.loads(binding_path.read_text(encoding="utf-8"))
+            configured = getattr(config, "tokenizer_id", None)
+            bound = binding.get("tokenizer") if isinstance(binding, dict) else None
+            if configured and bound and str(configured) != str(bound):
+                blockers.append(
+                    "corpus tokenizer binding does not match production tokenizer_id"
+                )
+        except (OSError, ValueError, TypeError) as exc:
+            blockers.append(f"corpus tokenizer binding could not be checked: {exc}")
     teacher_report = validate_teacher_model_provenance(
         config.teacher_model_provenance_path
     )
