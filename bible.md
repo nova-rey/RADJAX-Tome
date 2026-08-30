@@ -3879,3 +3879,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-30 M10 final v2 intent closure: artifact reference fields are consumed before strict production dataclass validation; complete v2 requests now load through the canonical M5 boundary with v1 behavior preserved.
 - 2026-08-30 M10 semantic identity bridge: carried expected corpus semantic identity through ProductionBuildConfig and rejected v2 preflight identity mismatches before execution.
 - 2026-08-30 M10 final semantic-binding closure: v2 expected semantic identity is now carried into production preflight and checked before execution.
+- 2026-08-30 M10 v1 compatibility correction: defaulted the optional v2 corpus identity field only at the v1 adapter boundary, preserving legacy configs that omit it.

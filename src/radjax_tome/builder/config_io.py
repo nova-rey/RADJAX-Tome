@@ -127,6 +127,10 @@ def load_tome_build_intent_from_raw(source: Path, raw: Any) -> TomeBuildIntent:
         raise ValueError(
             "unsupported schema_version; expected radjax_tome_build_intent_v1"
         )
+    raw = dict(raw)
+    corpus = dict(raw.get("corpus", {}))
+    corpus.setdefault("expected_semantic_identity", None)
+    raw["corpus"] = corpus
     intent = _dataclass(raw, TomeBuildIntent, base=source.parent, label="build intent")
     errors = validate_tome_build_intent(intent)
     if errors:

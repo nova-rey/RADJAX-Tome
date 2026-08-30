@@ -81,3 +81,13 @@ def test_v2_complete_production_intent_loads(tmp_path: Path) -> None:
     assert intent.schema_version == "radjax_tome_build_intent_v2"
     assert intent.corpus.dataset_path == (tmp_path / "corpus").resolve()
     assert intent.corpus.corpus_manifest_path == (tmp_path / "corpus").resolve()
+
+
+def test_v1_config_without_v2_identity_remains_compatible(tmp_path: Path) -> None:
+    payload = _payload(tmp_path)
+    payload["corpus"].pop("expected_semantic_identity", None)
+    path = tmp_path / "intent-v1.json"
+    path.write_text(json.dumps(payload))
+    intent = load_tome_build_intent(path)
+    assert intent.schema_version == "radjax_tome_build_intent_v1"
+    assert intent.corpus.expected_semantic_identity is None
