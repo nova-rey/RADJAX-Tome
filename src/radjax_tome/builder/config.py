@@ -895,7 +895,10 @@ def validate_tome_build_intent(
     """Reject malformed canonical requests before any runtime initialization."""
 
     errors: list[str] = []
-    if intent.schema_version != CANONICAL_BUILD_INTENT_SCHEMA:
+    if intent.schema_version not in {
+        CANONICAL_BUILD_INTENT_SCHEMA,
+        "radjax_tome_build_intent_v2",
+    }:
         errors.append("build intent schema_version mismatch")
     for name, value, expected in (
         ("teacher", intent.teacher, TeacherIntent),

@@ -3880,3 +3880,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-30 M10 semantic identity bridge: carried expected corpus semantic identity through ProductionBuildConfig and rejected v2 preflight identity mismatches before execution.
 - 2026-08-30 M10 final semantic-binding closure: v2 expected semantic identity is now carried into production preflight and checked before execution.
 - 2026-08-30 M10 v1 compatibility correction: defaulted the optional v2 corpus identity field only at the v1 adapter boundary, preserving legacy configs that omit it.
+- 2026-08-30 M10 v2 strictness correction: complete production dispatch now requires max_examples and rejects unknown corpus reference keys before adaptation.
