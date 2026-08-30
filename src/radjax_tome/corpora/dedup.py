@@ -145,13 +145,16 @@ def deduplicate_records(
                         match_index = 0
                         while matches := provenance_cursor.fetchmany(256):
                             for match in matches:
-                                locator = str(match[0])
+                                provenance_locator = str(match[0])
                                 if match_index > 0 and len(preview) < 32:
-                                    preview.append(locator)
+                                    preview.append(provenance_locator)
                                 if provenance_handle is not None:
                                     provenance_handle.write(
                                         json.dumps(
-                                            {"winner": index + 1, "locator": locator},
+                                            {
+                                                "winner": index + 1,
+                                                "locator": provenance_locator,
+                                            },
                                             sort_keys=True,
                                         )
                                         + "\n"

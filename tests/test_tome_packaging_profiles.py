@@ -25,6 +25,7 @@ from radjax_tome.tome import (
     validate_tome_bundle,
     validate_tome_package,
 )
+from radjax_tome.tome.archive_compat import safe_extractall
 from tests.helpers.subprocess import run_cli
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -535,7 +536,7 @@ def test_student_tgz_round_trip_and_cli(artifact: Path, tmp_path: Path) -> None:
     )
     extracted = tmp_path / "extracted"
     with tarfile.open(archive, "r:gz") as handle:
-        handle.extractall(extracted, filter="data")
+        safe_extractall(handle, extracted)
     package_root = extracted
     package_cli_output = tmp_path / "student-cli"
     package_cli = run_cli(

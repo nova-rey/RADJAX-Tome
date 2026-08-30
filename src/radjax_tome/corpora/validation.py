@@ -198,6 +198,7 @@ def validate_corpus_artifact_v2(path: str | Path) -> CorpusValidationResult:
     except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
         issues.append(CorpusIssue("SHARD_INVALID", str(exc)))
         return CorpusValidationResult("fail", tuple(issues))
+    issues.extend(_validate_duplicate_provenance(root))
     expected_count = int(manifest.get("num_examples", -1))
     if expected_count != row_count:
         issues.append(
@@ -269,6 +270,165 @@ def _semantic_from_records(records: Any, manifest: dict[str, Any]) -> str:
         records=records,
         source_declarations=list(manifest.get("source_declarations", [])),
     )
+
+
+def _validate_duplicate_provenance(root: Path) -> list[CorpusIssue]:
+    """Cross-check the complete duplicate sidecar against canonical winners."""
+    issues: list[CorpusIssue] = []
+    sidecar = root / "duplicate_provenance.jsonl"
+    try:
+        handle = sidecar.open(encoding="utf-8")
+    except OSError as exc:
+        return [CorpusIssue("PROVENANCE_INVALID", str(exc), sidecar.name)]
+
+    pending: dict[str, Any] | None = None
+    line_number = 0
+
+    def next_entry() -> dict[str, Any] | None:
+        nonlocal line_number
+        line = handle.readline()
+        if not line:
+            return None
+        line_number += 1
+        try:
+            value = json.loads(line)
+        except json.JSONDecodeError as exc:
+            issues.append(
+                CorpusIssue(
+                    "PROVENANCE_INVALID",
+                    f"duplicate provenance line {line_number} is malformed: {exc}",
+                    sidecar.name,
+                )
+            )
+            return None
+        if (
+            not isinstance(value, dict)
+            or set(value) != {"winner", "locator"}
+            or isinstance(value.get("winner"), bool)
+            or not isinstance(value.get("winner"), int)
+            or value["winner"] < 1
+            or not isinstance(value.get("locator"), str)
+            or not value["locator"]
+        ):
+            issues.append(
+                CorpusIssue(
+                    "PROVENANCE_INVALID",
+                    f"duplicate provenance line {line_number} has invalid fields",
+                    sidecar.name,
+                )
+            )
+            return None
+        return value
+
+    try:
+        pending = next_entry()
+        for row_number, row in enumerate(VerifiedCorpusReader(root), 1):
+            duplicate_count = row.get("duplicate_count", 1)
+            if (
+                isinstance(duplicate_count, bool)
+                or not isinstance(duplicate_count, int)
+                or duplicate_count < 1
+            ):
+                issues.append(
+                    CorpusIssue(
+                        "PROVENANCE_INVALID",
+                        f"winner {row_number} has invalid duplicate_count",
+                    )
+                )
+                continue
+            preview = row.get("duplicate_provenance", [])
+            if not isinstance(preview, list) or any(
+                not isinstance(item, str) or not item for item in preview
+            ):
+                issues.append(
+                    CorpusIssue(
+                        "PROVENANCE_INVALID",
+                        f"winner {row_number} has invalid duplicate preview",
+                    )
+                )
+                preview = []
+            if duplicate_count == 1:
+                if pending is not None:
+                    issues.append(
+                        CorpusIssue(
+                            "PROVENANCE_MISMATCH",
+                            "unexpected duplicate provenance for winner "
+                            + str(pending.get("winner")),
+                            sidecar.name,
+                        )
+                    )
+                    pending = next_entry()
+                continue
+            entries: list[str] = []
+            for _ in range(duplicate_count):
+                if pending is None:
+                    issues.append(
+                        CorpusIssue(
+                            "PROVENANCE_MISMATCH",
+                            "duplicate provenance is truncated for winner "
+                            + str(row_number),
+                            sidecar.name,
+                        )
+                    )
+                    break
+                if pending["winner"] != row_number:
+                    issues.append(
+                        CorpusIssue(
+                            "PROVENANCE_MISMATCH",
+                            "duplicate provenance winner is out of order at line "
+                            + str(line_number),
+                            sidecar.name,
+                        )
+                    )
+                    break
+                entries.append(pending["locator"])
+                pending = next_entry()
+            owner = (
+                f"{row.get('source_id')}:{row.get('logical_locator')}"
+                f":{row.get('chunk_index')}"
+            )
+            if entries and entries[0] != owner:
+                issues.append(
+                    CorpusIssue(
+                        "PROVENANCE_MISMATCH",
+                        "duplicate provenance winner "
+                        + str(row_number)
+                        + " does not identify the canonical row",
+                        sidecar.name,
+                    )
+                )
+            if entries[1 : 1 + len(preview)] != preview:
+                issues.append(
+                    CorpusIssue(
+                        "PROVENANCE_MISMATCH",
+                        "duplicate provenance preview mismatch for winner "
+                        + str(row_number),
+                        sidecar.name,
+                    )
+                )
+            truncated = len(preview) < duplicate_count - 1
+            if row.get("duplicate_provenance_truncated", False) is not truncated:
+                issues.append(
+                    CorpusIssue(
+                        "PROVENANCE_MISMATCH",
+                        "duplicate provenance truncation flag mismatch for winner "
+                        + str(row_number),
+                        sidecar.name,
+                    )
+                )
+        if pending is not None:
+            issues.append(
+                CorpusIssue(
+                    "PROVENANCE_MISMATCH",
+                    f"trailing duplicate provenance for winner {pending.get('winner')}",
+                    sidecar.name,
+                )
+            )
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        issues.append(CorpusIssue("PROVENANCE_INVALID", str(exc), sidecar.name))
+    finally:
+        handle.close()
+    return issues
 
 
 def _json(path: Path) -> Any:

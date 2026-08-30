@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from radjax_tome.tome.archive_compat import safe_extractall
 from radjax_tome.tome.packaging import validate_tome_package
 
 
@@ -108,7 +109,7 @@ def validate_artifact(
     if candidate.is_file() and candidate.suffix == ".tgz":
         with tempfile.TemporaryDirectory(prefix="radjax-validate-") as directory:
             with tarfile.open(candidate, "r:*") as archive:
-                archive.extractall(directory, filter="data")
+                safe_extractall(archive, directory)
             roots = list(Path(directory).iterdir())
             root = (
                 roots[0] if len(roots) == 1 and roots[0].is_dir() else Path(directory)

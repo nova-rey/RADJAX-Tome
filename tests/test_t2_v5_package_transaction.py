@@ -18,6 +18,7 @@ from radjax_tome.tome import (
     package_legacy_artifact_as_sharded_tome_v4,
     package_tome_artifact,
 )
+from radjax_tome.tome.archive_compat import safe_extractall
 from tests.test_tome_packaging_profiles import _artifact
 
 
@@ -34,7 +35,7 @@ def _mutate_m7_inner_exemplar(archive_path: Path, destination: Path) -> Path:
     """Rebuild a self-consistent M7 archive with v6-invalid exemplar semantics."""
     root = destination.parent / "mutated-m7"
     with tarfile.open(archive_path, "r:gz") as archive:
-        archive.extractall(root, filter="data")
+        safe_extractall(archive, root)
     shard = root / "selected_exemplars/shards/shard-00000.jsonl"
     records = [json.loads(line) for line in shard.read_text().splitlines()]
     records[0]["top_probs"][0] = 0.0

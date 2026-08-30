@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -135,3 +136,33 @@ def test_v2_validation_rejects_binding_substitution(tmp_path: Path) -> None:
     payload["tokenizer"] = {"forged": True}
     binding.write_text(json.dumps(payload), encoding="utf-8")
     assert not validate_corpus_artifact_v2(tmp_path / "artifact").ok
+
+
+def test_v2_validation_rejects_duplicate_provenance_sidecar_substitution(
+    tmp_path: Path,
+) -> None:
+    intent_path = _intent(tmp_path)
+    source = tmp_path / "src" / "rows.jsonl"
+    source.write_text(
+        json.dumps({"text": "same"}) + "\n" + json.dumps({"text": "same"}) + "\n",
+        encoding="utf-8",
+    )
+    build_corpus_artifact_v2(load_corpus_build_intent(intent_path))
+    root = tmp_path / "artifact"
+    sidecar = root / "duplicate_provenance.jsonl"
+    sidecar.write_text(
+        json.dumps({"winner": 1, "locator": "rows:forged:0"}) + "\n",
+        encoding="utf-8",
+    )
+    cover_path = root / "corpus_cover.json"
+    cover = json.loads(cover_path.read_text(encoding="utf-8"))
+    for member in cover["members"]:
+        if member["path"] == "duplicate_provenance.jsonl":
+            member["size_bytes"] = sidecar.stat().st_size
+            member["sha256"] = (
+                "sha256:" + hashlib.sha256(sidecar.read_bytes()).hexdigest()
+            )
+    cover_path.write_text(json.dumps(cover), encoding="utf-8")
+    result = validate_corpus_artifact_v2(root)
+    assert not result.ok
+    assert any(issue.code == "PROVENANCE_MISMATCH" for issue in result.issues)
