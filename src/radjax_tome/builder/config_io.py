@@ -90,14 +90,15 @@ def load_tome_build_intent(path: Path) -> TomeBuildIntent:
             raise ValueError("build intent v2 corpus must be an object")
         artifact_path = corpus.get("artifact_path")
         expected_identity = corpus.get("expected_semantic_identity")
-        if set(corpus) - {
+        if set(corpus) != {
             "artifact_path",
             "expected_semantic_identity",
             "max_examples",
-            "dataset_path",
-            "corpus_manifest_path",
         }:
-            raise ValueError("unknown build intent v2 corpus fields")
+            raise ValueError(
+                "build intent v2 corpus requires exactly artifact_path, "
+                "expected_semantic_identity, and max_examples"
+            )
         if "max_examples" not in corpus:
             raise ValueError("build intent v2 corpus requires max_examples")
         if not isinstance(artifact_path, str) or not isinstance(expected_identity, str):
