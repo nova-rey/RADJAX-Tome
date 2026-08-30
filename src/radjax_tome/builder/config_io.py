@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import fields, is_dataclass
+from dataclasses import fields, is_dataclass, replace
 from pathlib import Path
 from typing import Any, get_type_hints
 
@@ -77,6 +77,34 @@ def _dataclass(value: Any, cls: type[Any], *, base: Path, label: str) -> Any:
 def load_tome_build_intent(path: Path) -> TomeBuildIntent:
     source = path.resolve()
     raw = _read(source)
+    if (
+        isinstance(raw, dict)
+        and raw.get("schema_version") == "radjax_tome_build_intent_v2"
+    ):
+        corpus = raw.get("corpus")
+        if not isinstance(corpus, dict):
+            raise ValueError("build intent v2 corpus must be an object")
+        artifact_path = corpus.get("artifact_path")
+        expected_identity = corpus.get("expected_semantic_identity")
+        if not isinstance(artifact_path, str) or not isinstance(expected_identity, str):
+            raise ValueError(
+                "build intent v2 requires corpus artifact_path and "
+                "expected_semantic_identity"
+            )
+        adapted = dict(raw)
+        adapted["schema_version"] = "radjax_tome_build_intent_v1"
+        adapted["corpus"] = dict(
+            corpus, dataset_path=artifact_path, corpus_manifest_path=artifact_path
+        )
+        return replace(
+            load_tome_build_intent_from_raw(source, adapted),
+            schema_version="radjax_tome_build_intent_v2",
+        )
+    return load_tome_build_intent_from_raw(source, raw)
+    return load_tome_build_intent_from_raw(source, raw)
+
+
+def load_tome_build_intent_from_raw(source: Path, raw: Any) -> TomeBuildIntent:
     if not isinstance(raw, dict):
         raise ValueError("build intent must be an object")
     expected = {field.name for field in fields(TomeBuildIntent)}
