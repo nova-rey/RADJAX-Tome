@@ -1,6 +1,6 @@
 # M10 closure report
 
-Audited implementation commit: `5653a9a6003b40e7aaa5d798bfb571b70bc48604`. Contract remains pinned to `373e3d17060d4ce1c4a0db6065c9289da714bde7`; no Contract files changed.
+Audited implementation commit: `aece7ba6003b40e7aaa5d798bfb571b70bc48604`. Contract remains pinned to `373e3d17060d4ce1c4a0db6065c9289da714bde7`; no Contract files changed.
 
 The final remediation routes complete corpus-v2 M5 production intent through the canonical loader and resolver, and routes corpus-v2 production through strict canonical loading and the shared verified reader, validates tokenizer binding before production execution, enforces closed artifact/member and duplicate-provenance semantics, preserves bounded streamed storage/validation, and provides safe Python 3.11/3.12 archive extraction without weakening traversal checks.
 

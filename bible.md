@@ -3876,3 +3876,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-30 M10 v2 production intent bridge: public loader now strictly dispatches complete corpus-referenced v2 requests through the canonical v1-shaped M5 resolver while preserving v1 behavior and authority projection.
 - 2026-08-30 M10 final closure: complete corpus-v2 production intent now dispatches through the canonical M5 loader/resolver while preserving v1 behavior and the fixed selection-authority projection.
 - 2026-08-30 M10 v2 loader correction: consume artifact_path and expected_semantic_identity at the adapter boundary while preserving the complete production sections and strict v1 dataclass validation.
+- 2026-08-30 M10 final v2 intent closure: artifact reference fields are consumed before strict production dataclass validation; complete v2 requests now load through the canonical M5 boundary with v1 behavior preserved.
