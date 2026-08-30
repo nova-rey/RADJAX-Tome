@@ -1,7 +1,7 @@
 {
   "schema_version": "radjax_tome_m10_closure_v2",
-  "audited_implementation_commit": "aece7ba",
-  "final_closure_commit": "aece7ba",
+  "audited_implementation_commit": "1beef6ec0a0ebb65dbd3855b44aa84d742207e5e",
+  "final_closure_commit": "1beef6ec0a0ebb65dbd3855b44aa84d742207e5e",
   "contract_pin": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
   "focused_m10_tests": {
     "passed": 33,
@@ -43,5 +43,6 @@
   "focused_loader_tests": {
     "passed": 4,
     "failed": 0
-  }
+  },
+  "v2_semantic_identity_preflight": "pass"
 }
