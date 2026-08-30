@@ -1,7 +1,7 @@
 {
   "schema_version": "radjax_tome_m10_closure_v2",
-  "audited_implementation_commit": "59531faf56aee97dbf195914c7ab81adadaab07e",
-  "final_closure_commit": "59531faf56aee97dbf195914c7ab81adadaab07e",
+  "audited_implementation_commit": "86bbc03c1185c6083cc0044695777a5cadc84ab8",
+  "final_closure_commit": "86bbc03c1185c6083cc0044695777a5cadc84ab8",
   "contract_pin": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
   "focused_m10_tests": {
     "passed": 33,
@@ -37,5 +37,6 @@
   "independent_review": "not requested; external audit remains required",
   "python311_archive_compat": "pass",
   "duplicate_provenance_semantics": "pass",
-  "v2_production_integration": "pass"
+  "v2_production_integration": "pass",
+  "tokenizer_binding_preflight": "pass"
 }
