@@ -1,32 +1,9 @@
 # M10 closure report
 
-Audited implementation commit: `e0382d4`
+Audited implementation commit: . Contract remains pinned to ; no Contract files changed.
 
-M10 adds the strict local corpus builder v2, deterministic normalization and
-exact byte-defended deduplication, canonical shards and offset indexes,
-verified readers, path-independent semantic identity, and restart-safe staged
-publication. Historical v1 corpus behavior and M9 CLI behavior remain
-covered.
+The final remediation routes corpus-v2 production through strict canonical loading and the shared verified reader, validates tokenizer binding before production execution, enforces closed artifact/member and duplicate-provenance semantics, preserves bounded streamed storage/validation, and provides safe Python 3.11/3.12 archive extraction without weakening traversal checks.
 
-Validation performed:
+Focused M10 and production/corpus regressions pass (34 and 37 tests respectively). Full pytest passes: 1,215 passed, 25 skipped, 0 failed. Ruff, formatting, compileall, git diff check, wheel build, Contract-pinned clean install, and CLI smoke pass. The inherited 50K bounded-memory run remains valid: 50,000 records, 406.916 s wall, 315.781 s CPU, 152,932 KiB peak RSS, 27,696,605 bytes, validated successfully.
 
-- full pytest: 1,225 passed, 9 skipped, after Hydra inventory reconciliation;
-- `ruff check .`: pass;
-- `ruff format --check .`: pass;
-- `compileall`, `git diff --check`, and wheel build: pass;
-- clean Python 3.12 wheel install and `pip check`: pass;
-- clean-install `corpus build`, `corpus validate`, and `corpus inspect`: pass;
-- focused M10 tests: 13 passed;
-- deterministic rebuild: semantic identity and shard/index bytes matched;
-- operational `normalized_intent.json` retains destination paths and therefore
-  is intentionally the only path-dependent diagnostic member.
-- bounded subprocess smoke: 1,000 records, 64 MiB DuckDB limit, 57,116 KiB
-  measured RSS increase, with one worker and eight-file policy recorded.
-
-Contract pin: `373e3d17060d4ce1c4a0db6065c9289da714bde7`.
-
-The original dirty M9 worktree remains preserved separately and was not copied
-or committed. No Contract, Golden evidence, or M11/M14 work was changed.
-
-Independent review: PASS at `e0382d4`; the v2 production-preflight dispatch
-correction was rechecked independently and v1 handling remained intact.
+No independent review or final acceptance is claimed. Historical M8 evidence, Golden evidence, Contract, Student, and unrelated worktrees remain untouched. This branch is ready for external audit.
