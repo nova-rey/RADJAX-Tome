@@ -3874,3 +3874,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-30 M10 tokenizer-boundary remediation: production preflight now rejects corpus-v2 tokenizer binding mismatches before teacher or backend creation.
 - 2026-08-30 M10 final remediation closure: bound tokenizer compatibility, strict duplicate provenance, and Python 3.11 extraction fixes to the final evidence; full suite and focused gates pass, with no Contract or historical evidence changes.
 - 2026-08-30 M10 v2 production intent bridge: public loader now strictly dispatches complete corpus-referenced v2 requests through the canonical v1-shaped M5 resolver while preserving v1 behavior and authority projection.
+- 2026-08-30 M10 final closure: complete corpus-v2 production intent now dispatches through the canonical M5 loader/resolver while preserving v1 behavior and the fixed selection-authority projection.
