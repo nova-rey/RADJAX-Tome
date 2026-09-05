@@ -1,48 +1,53 @@
 {
-  "schema_version": "radjax_tome_m10_closure_v2",
-  "audited_implementation_commit": "1beef6ec0a0ebb65dbd3855b44aa84d742207e5e",
-  "final_closure_commit": "1beef6ec0a0ebb65dbd3855b44aa84d742207e5e",
-  "contract_pin": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
-  "focused_m10_tests": {
-    "passed": 33,
-    "failed": 0
+  "audited_implementation_commit": "cfa382b3af0a6d9210ea0cb42a0c8ad17f3946c2",
+  "bounded_memory_50k": {
+    "artifact_bytes": 27696605,
+    "cpu_s": 315.781,
+    "duckdb_memory_limit": "64MB",
+    "elapsed_s": 406.916,
+    "peak_rss_kb": 152932,
+    "records": 50000,
+    "valid": true
   },
-  "production_focused_tests": {
-    "passed": 37,
-    "failed": 0
+  "clean_install": "pass (Python 3.11; Python 3.12 unavailable on host)",
+  "closure_disposition": "M10_CLOSED_READY_FOR_INTEGRATION",
+  "compileall": "pass",
+  "contract_pin": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "corruption_rejection": "pass",
+  "deterministic_rebuild": "pass",
+  "diff_check": "pass",
+  "duplicate_provenance_semantics": "pass",
+  "final_closure_commit": "cfa382b3af0a6d9210ea0cb42a0c8ad17f3946c2",
+  "focused_loader_tests": {
+    "failed": 0,
+    "passed": 4
+  },
+  "focused_m10_tests": {
+    "failed": 0,
+    "passed": 37
   },
   "full_pytest": {
-    "passed": 1215,
-    "skipped": 25,
-    "failed": 0
+    "failed": 0,
+    "passed": 1224,
+    "skipped": 25
   },
-  "ruff": "pass",
-  "compileall": "pass",
-  "diff_check": "pass",
-  "wheel_build": "pass",
-  "clean_install": "pass",
-  "deterministic_rebuild": "pass",
+  "independent_review": "PASS_WITH_RESERVATIONS",
   "interruption_resume": "pass",
-  "corruption_rejection": "pass",
-  "relocation_identity": "pass",
-  "bounded_memory_50k": {
-    "records": 50000,
-    "elapsed_s": 406.916,
-    "cpu_s": 315.781,
-    "peak_rss_kb": 152932,
-    "artifact_bytes": 27696605,
-    "valid": true,
-    "duckdb_memory_limit": "64MB"
+  "production_focused_tests": {
+    "failed": 0,
+    "passed": 44
   },
-  "independent_review": "not requested; external audit remains required",
   "python311_archive_compat": "pass",
-  "duplicate_provenance_semantics": "pass",
-  "v2_production_integration": "pass",
-  "tokenizer_binding_preflight": "pass",
+  "python312_validation": "unavailable on validation host",
+  "relocation_identity": "pass",
+  "review_reservation": "Reviewer environment could not independently recollect pytest dependencies; venv test receipts are preserved.",
+  "review_scope": "tokenizer fix, v2 production smoke, v1 compatibility, evidence accuracy",
+  "ruff": "pass",
+  "ruff_format": "pass",
+  "schema_version": "radjax_tome_m10_closure_v2",
+  "tokenizer_binding_preflight": "pass: canonical binding digest comparison; tokenizer_id fallback to teacher_model; mismatch fails before execution",
   "v2_complete_m5_intent": "pass",
-  "focused_loader_tests": {
-    "passed": 4,
-    "failed": 0
-  },
-  "v2_semantic_identity_preflight": "pass"
+  "v2_production_integration": "pass",
+  "v2_semantic_identity_preflight": "pass",
+  "wheel_build": "pass"
 }

@@ -3888,3 +3888,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-30 M10 validation cleanup: removed a duplicate corpus semantic-identity override entry introduced while aligning the full-suite characterization with the preflight binding fix.
 - 2026-08-30 M10 tokenizer resolution parity: preflight now mirrors hf_torch effective-tokenizer fallback, including the fake-tokenizer sentinel, and constructs HF tokenizer bindings with local-files-only semantics before execution.
 - 2026-08-30 M10 final tokenizer remediation: mirrored HF tokenizer resolution for local IDs and production fallback, made v2 receipts report their source schema, and added independent semantic-identity preflight coverage.
+- 2026-08-30 M10 final closure: recorded the targeted tokenizer review PASS_WITH_RESERVATIONS, rebound closure evidence to audited implementation cfa382b3af0a6d9210ea0cb42a0c8ad17f3946c2, and preserved the complete venv validation receipts.
