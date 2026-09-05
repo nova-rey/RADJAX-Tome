@@ -31,6 +31,7 @@ from radjax_tome.corpora.config import (
     selection_authority_payload_v2,
 )
 from radjax_tome.corpora.identity import corpus_semantic_identity
+from radjax_tome.corpora.feasibility import assess_corpus_feasibility
 from radjax_tome.corpora.language_tokenizer_binding import (
     CapturedLanguageTokenizerBinding,
     capture_language_tokenizer_binding,
@@ -108,6 +109,7 @@ __all__ = [
     "available_tokenizer_backends",
     "build_corpus_artifact",
     "build_corpus_artifact_v2",
+    "assess_corpus_feasibility",
     "build_prompt_corpus_manifest",
     "capture_language_tokenizer_binding",
     "corpus_semantic_identity",

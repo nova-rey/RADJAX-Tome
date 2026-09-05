@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import MISSING, fields, is_dataclass, replace
 from pathlib import Path
 from typing import Any, get_type_hints
@@ -37,6 +38,71 @@ def _read(path: Path) -> Any:
 
     Loader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, mapping)
     return yaml.load(text, Loader=Loader)
+
+
+def _document_value(value: Any) -> Any:
+    """Convert canonical dataclasses to JSON/YAML-safe document values."""
+    if isinstance(value, Path):
+        return str(value.resolve())
+    if is_dataclass(value):
+        return {
+            field.name: _document_value(getattr(value, field.name))
+            for field in fields(value)
+            if field.name != "source_path"
+        }
+    if isinstance(value, Mapping):
+        return {str(key): _document_value(item) for key, item in value.items()}
+    if isinstance(value, (tuple, list)):
+        return [_document_value(item) for item in value]
+    return value
+
+
+def tome_build_intent_document(intent: TomeBuildIntent) -> dict[str, Any]:
+    """Return the reloadable public document for a canonical build intent."""
+    document = _document_value(intent)
+    if intent.schema_version == "radjax_tome_build_intent_v2":
+        if intent.corpus.dataset_path != intent.corpus.corpus_manifest_path:
+            raise ValueError(
+                "v2 build intent requires dataset_path and corpus_manifest_path "
+                "to identify the same corpus artifact"
+            )
+        corpus = dict(document["corpus"])
+        document["schema_version"] = "radjax_tome_build_intent_v2"
+        document["corpus"] = {
+            "artifact_path": corpus.pop("dataset_path"),
+            "expected_semantic_identity": corpus.pop("expected_semantic_identity"),
+            "max_examples": corpus.pop("max_examples"),
+        }
+    return document
+
+
+def parse_tome_build_intent_document(
+    document: Any, *, source_path: str | Path = "build-intent.json"
+) -> TomeBuildIntent:
+    """Parse an already decoded JSON/YAML document through the canonical loader."""
+    source = Path(source_path).resolve()
+    if (
+        isinstance(document, dict)
+        and document.get("schema_version") == "radjax_tome_build_intent_v2"
+    ):
+        return _adapt_v2_raw(source, document)
+    return load_tome_build_intent_from_raw(source, document)
+
+
+def serialize_tome_build_intent(
+    intent: TomeBuildIntent, *, format: str = "json"
+) -> str:
+    """Serialize an intent without changing its canonical meaning."""
+    document = tome_build_intent_document(intent)
+    if format == "json":
+        return json.dumps(document, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
+    if format in {"yaml", "yml"}:
+        try:
+            import yaml
+        except ImportError as exc:  # pragma: no cover
+            raise ValueError("YAML build intents require PyYAML") from exc
+        return yaml.safe_dump(document, sort_keys=True)
+    raise ValueError("unsupported build intent serialization format")
 
 
 def _dataclass(value: Any, cls: type[Any], *, base: Path, label: str) -> Any:
@@ -85,52 +151,54 @@ def load_tome_build_intent(path: Path) -> TomeBuildIntent:
         isinstance(raw, dict)
         and raw.get("schema_version") == "radjax_tome_build_intent_v2"
     ):
-        corpus = raw.get("corpus")
-        if not isinstance(corpus, dict):
-            raise ValueError("build intent v2 corpus must be an object")
-        artifact_path = corpus.get("artifact_path")
-        expected_identity = corpus.get("expected_semantic_identity")
-        if set(corpus) != {
-            "artifact_path",
-            "expected_semantic_identity",
-            "max_examples",
-        }:
-            raise ValueError(
-                "build intent v2 corpus requires exactly artifact_path, "
-                "expected_semantic_identity, and max_examples"
-            )
-        max_examples = corpus["max_examples"]
-        if max_examples is not None and (
-            not isinstance(max_examples, int)
-            or isinstance(max_examples, bool)
-            or max_examples <= 0
-        ):
-            raise ValueError(
-                "build intent v2 max_examples must be a positive integer or null"
-            )
-        if "max_examples" not in corpus:
-            raise ValueError("build intent v2 corpus requires max_examples")
-        if not isinstance(artifact_path, str) or not isinstance(expected_identity, str):
-            raise ValueError(
-                "build intent v2 requires corpus artifact_path and "
-                "expected_semantic_identity"
-            )
-        adapted = dict(raw)
-        adapted["schema_version"] = "radjax_tome_build_intent_v1"
-        adapted_corpus = {
-            key: value
-            for key, value in corpus.items()
-            if key not in {"artifact_path", "expected_semantic_identity"}
-        }
-        adapted_corpus["dataset_path"] = artifact_path
-        adapted_corpus["corpus_manifest_path"] = artifact_path
-        adapted_corpus["expected_semantic_identity"] = expected_identity
-        adapted["corpus"] = adapted_corpus
-        return replace(
-            load_tome_build_intent_from_raw(source, adapted),
-            schema_version="radjax_tome_build_intent_v2",
-        )
+        return _adapt_v2_raw(source, raw)
     return load_tome_build_intent_from_raw(source, raw)
+
+
+def _adapt_v2_raw(source: Path, raw: dict[str, Any]) -> TomeBuildIntent:
+    corpus = raw.get("corpus")
+    if not isinstance(corpus, dict):
+        raise ValueError("build intent v2 corpus must be an object")
+    artifact_path = corpus.get("artifact_path")
+    expected_identity = corpus.get("expected_semantic_identity")
+    if set(corpus) != {
+        "artifact_path",
+        "expected_semantic_identity",
+        "max_examples",
+    }:
+        raise ValueError(
+            "build intent v2 corpus requires exactly artifact_path, "
+            "expected_semantic_identity, and max_examples"
+        )
+    max_examples = corpus["max_examples"]
+    if max_examples is not None and (
+        not isinstance(max_examples, int)
+        or isinstance(max_examples, bool)
+        or max_examples <= 0
+    ):
+        raise ValueError(
+            "build intent v2 max_examples must be a positive integer or null"
+        )
+    if not isinstance(artifact_path, str) or not isinstance(expected_identity, str):
+        raise ValueError(
+            "build intent v2 requires corpus artifact_path and "
+            "expected_semantic_identity"
+        )
+    adapted = dict(raw)
+    adapted["schema_version"] = "radjax_tome_build_intent_v1"
+    adapted_corpus = {
+        key: value
+        for key, value in corpus.items()
+        if key not in {"artifact_path", "expected_semantic_identity"}
+    }
+    adapted_corpus["dataset_path"] = artifact_path
+    adapted_corpus["corpus_manifest_path"] = artifact_path
+    adapted_corpus["expected_semantic_identity"] = expected_identity
+    adapted["corpus"] = adapted_corpus
+    return replace(
+        load_tome_build_intent_from_raw(source, adapted),
+        schema_version="radjax_tome_build_intent_v2",
+    )
 
 
 def load_tome_build_intent_from_raw(source: Path, raw: Any) -> TomeBuildIntent:

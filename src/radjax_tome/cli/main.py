@@ -26,6 +26,7 @@ Recommended commands:
   package-artifact
   validate-package
   corpus
+  tui
   finalize-replay-workload
   pack
   unpack
@@ -46,6 +47,7 @@ def main(argv: list[str] | None = None) -> int:
         "doctor",
         "research",
         "corpus",
+        "tui",
     }
     if ("--help" in raw or "--version" in raw) and not command:
         from radjax_tome.cli.mainline import main as mainline_main
@@ -78,6 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         )
     if command in mainline_commands and (
         command in {"package", "research"}
+        or command == "tui"
         or (
             command == "corpus"
             and (

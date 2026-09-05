@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tempfile
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -357,6 +358,85 @@ def load_corpus_build_intent(path: str | Path) -> CorpusBuildIntent:
     )
 
 
+def _document_value(value: Any) -> Any:
+    if isinstance(value, Path):
+        return str(value.resolve())
+    if isinstance(value, Mapping):
+        return {str(key): _document_value(item) for key, item in value.items()}
+    if isinstance(value, (tuple, list)):
+        return [_document_value(item) for item in value]
+    if hasattr(value, "__dataclass_fields__"):
+        return {
+            name: _document_value(getattr(value, name))
+            for name in value.__dataclass_fields__
+            if name != "source_path"
+        }
+    return value
+
+
+def corpus_build_intent_document(intent: CorpusBuildIntent) -> dict[str, Any]:
+    """Return a reloadable, path-explicit corpus build document."""
+    return _document_value(intent)
+
+
+def parse_corpus_build_intent_document(
+    document: Any, *, source_path: str | Path = "corpus-intent.json"
+) -> CorpusBuildIntent:
+    """Parse a decoded document using the canonical corpus loader semantics."""
+    source = Path(source_path).resolve()
+    handle = tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        suffix=".json",
+        prefix=".m11-parse-",
+        dir=source.parent if source.parent.is_dir() else None,
+        delete=False,
+    )
+    temporary = Path(handle.name)
+    try:
+        handle.write(json.dumps(document, ensure_ascii=True, sort_keys=True))
+        handle.close()
+    except Exception:
+        handle.close()
+        temporary.unlink(missing_ok=True)
+        raise
+    try:
+        return replace(load_corpus_build_intent(temporary), source_path=source)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def serialize_corpus_build_intent(
+    intent: CorpusBuildIntent, *, format: str = "json"
+) -> str:
+    document = corpus_build_intent_document(intent)
+    if format == "json":
+        return json.dumps(document, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
+    if format in {"yaml", "yml"}:
+        try:
+            import yaml
+        except ImportError as exc:  # pragma: no cover
+            raise ValueError("YAML corpus intents require PyYAML") from exc
+        return yaml.safe_dump(document, sort_keys=True)
+    raise ValueError("unsupported corpus intent serialization format")
+
+
+def apply_corpus_operational_overrides(
+    intent: CorpusBuildIntent,
+    *,
+    resume: bool | None = None,
+    overwrite: bool | None = None,
+) -> CorpusBuildIntent:
+    execution = dict(intent.execution)
+    if resume is not None:
+        execution["resume"] = resume
+    if overwrite is not None:
+        execution["overwrite"] = overwrite
+    if execution.get("resume") and execution.get("overwrite"):
+        raise ValueError("--resume and --overwrite are mutually exclusive")
+    return replace(intent, execution=execution)
+
+
 def selection_authority_payload_v2(
     *,
     corpus_semantic_identity: str,
@@ -438,7 +518,11 @@ __all__ = [
     "CorpusBuildIntentV2",
     "CorpusSourceSpec",
     "canonical_bytes",
+    "apply_corpus_operational_overrides",
+    "corpus_build_intent_document",
     "load_corpus_build_intent",
+    "parse_corpus_build_intent_document",
+    "serialize_corpus_build_intent",
     "selection_authority_hash_v2",
     "selection_authority_payload_v2",
     "sha256",

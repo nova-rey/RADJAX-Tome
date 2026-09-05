@@ -1,0 +1,23 @@
+Screen {
+    align: center middle;
+}
+
+#wizard-scroll {
+    width: 100%;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#title {
+    text-style: bold;
+    padding: 1 0;
+}
+
+#notice, #screens, #status {
+    padding: 1 0;
+}
+
+Button {
+    width: 100%;
+    margin: 1 0;
+}

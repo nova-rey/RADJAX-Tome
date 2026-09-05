@@ -21,6 +21,7 @@ def test_public_help_includes_canonical_corpus_command() -> None:
         "package",
         "doctor",
         "research",
+        "tui",
     )
 
 

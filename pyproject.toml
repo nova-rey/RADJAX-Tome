@@ -29,6 +29,9 @@ dev = [
   "ruff>=0.6",
   "jsonschema>=4.23",
 ]
+tui = [
+  "textual==8.2.8",
+]
 
 [project.scripts]
 radjax-tome = "radjax_tome.cli.main:main"

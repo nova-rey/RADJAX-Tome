@@ -7,7 +7,11 @@ from pathlib import Path
 import pytest
 
 from radjax_tome.builder.config import canonical_production_build_intent
-from radjax_tome.builder.config_io import load_tome_build_intent
+from radjax_tome.builder.config_io import (
+    load_tome_build_intent,
+    parse_tome_build_intent_document,
+    tome_build_intent_document,
+)
 
 
 def _payload(tmp_path: Path) -> dict:
@@ -124,3 +128,67 @@ def test_v2_max_examples_is_strict(tmp_path: Path) -> None:
     path.write_text(json.dumps(payload))
     with pytest.raises(ValueError, match="max_examples"):
         load_tome_build_intent(path)
+
+
+def test_canonical_document_round_trip_preserves_v1_fields(tmp_path: Path) -> None:
+    path = tmp_path / "intent.json"
+    path.write_text(json.dumps(_payload(tmp_path)))
+    intent = load_tome_build_intent(path)
+
+    document = tome_build_intent_document(intent)
+    reloaded = parse_tome_build_intent_document(
+        document, source_path=tmp_path / "roundtrip.json"
+    )
+
+    assert tome_build_intent_document(reloaded) == document
+    assert reloaded.schema_version == "radjax_tome_build_intent_v1"
+
+
+def test_canonical_document_round_trip_preserves_complete_v2_projection(
+    tmp_path: Path,
+) -> None:
+    payload = _payload(tmp_path)
+    payload["schema_version"] = "radjax_tome_build_intent_v2"
+    payload["corpus"] = {
+        "artifact_path": str(tmp_path / "corpus"),
+        "expected_semantic_identity": "sha256:" + "4" * 64,
+        "max_examples": None,
+    }
+    path = tmp_path / "intent-v2.json"
+    path.write_text(json.dumps(payload))
+    intent = load_tome_build_intent(path)
+
+    document = tome_build_intent_document(intent)
+    reloaded = parse_tome_build_intent_document(
+        document, source_path=tmp_path / "roundtrip-v2.json"
+    )
+
+    assert set(document["corpus"]) == {
+        "artifact_path",
+        "expected_semantic_identity",
+        "max_examples",
+    }
+    assert tome_build_intent_document(reloaded) == document
+    assert reloaded.schema_version == "radjax_tome_build_intent_v2"
+
+
+def test_v2_export_rejects_distinct_dataset_and_manifest_paths(tmp_path: Path) -> None:
+    from dataclasses import replace
+
+    payload = _payload(tmp_path)
+    payload["schema_version"] = "radjax_tome_build_intent_v2"
+    payload["corpus"] = {
+        "artifact_path": str(tmp_path / "corpus"),
+        "expected_semantic_identity": "sha256:" + "5" * 64,
+        "max_examples": None,
+    }
+    path = tmp_path / "intent-v2.json"
+    path.write_text(json.dumps(payload))
+    intent = load_tome_build_intent(path)
+    invalid = replace(
+        intent,
+        corpus=replace(intent.corpus, corpus_manifest_path=tmp_path / "other"),
+    )
+
+    with pytest.raises(ValueError, match="same corpus artifact"):
+        tome_build_intent_document(invalid)

@@ -50,6 +50,11 @@ def parser() -> argparse.ArgumentParser:
     corpus_build.add_argument("--config", type=Path, required=True)
     corpus_build.add_argument("--resume", action="store_true")
     corpus_build.add_argument("--overwrite", action="store_true")
+    corpus_build.add_argument(
+        "--preflight-only",
+        action="store_true",
+        help="Check inputs without creating staging",
+    )
     corpus_commands.add_parser(
         "validate", help="Validate a corpus artifact"
     ).add_argument("artifact", type=Path)
@@ -101,6 +106,11 @@ def parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "research", help="Access retained engineering commands"
     ).add_argument("args", nargs=argparse.REMAINDER)
+    tui = commands.add_parser(
+        "tui", help="Open an optional corpus or production wizard"
+    )
+    tui.add_argument("workflow", choices=("corpus", "production"))
+    tui.add_argument("--config", type=Path)
     return root
 
 
@@ -121,6 +131,7 @@ def run(args: argparse.Namespace) -> CLIResult:
             from dataclasses import replace
 
             from radjax_tome.corpora import (
+                assess_corpus_feasibility,
                 build_corpus_artifact_v2,
                 inspect_corpus_artifact_v2,
                 load_corpus_build_intent,
@@ -150,6 +161,14 @@ def run(args: argparse.Namespace) -> CLIResult:
                     )
                 if execution != dict(intent.execution):
                     intent = replace(intent, execution=execution)
+                feasibility = assess_corpus_feasibility(intent)
+                if args.preflight_only:
+                    return CLIResult(
+                        "corpus build",
+                        "pass",
+                        0,
+                        reports={"preflight": feasibility},
+                    )
                 report = build_corpus_artifact_v2(intent)
                 return CLIResult("corpus build", "pass", 0, reports=report)
             if args.corpus_command == "validate":
@@ -162,6 +181,17 @@ def run(args: argparse.Namespace) -> CLIResult:
                 )
             item = inspect_corpus_artifact_v2(args.artifact)
             return CLIResult("corpus inspect", "pass", 0, reports=item.to_dict())
+        if args.command == "tui":
+            if args.machine:
+                return _error(
+                    "tui",
+                    "INVALID_CONFIGURATION",
+                    "--json tui is unsupported; use the headless CLI commands",
+                    2,
+                )
+            from radjax_tome.tui.launcher import tui_fallback_or_run
+
+            return tui_fallback_or_run(args.workflow, args.config)
         if args.command == "build":
             intent = load_tome_build_intent(args.config)
             overrides = {}

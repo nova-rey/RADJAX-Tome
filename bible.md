@@ -3893,3 +3893,4 @@ closed-record and checkpoint authority validation.
 - 2026-09-05: Published the M11 TUI and corpus-wizard plan under Unapproved Plans; implementation and integration remain unapproved.
 
 - 2026-09-05: Reconciled and moved the M11 plan to Approved Plans: main starts at 8f78939, the existing 1ab4a73 planning branch is reference-only, packaging is a separate confirmed post-build action, and config export is explicit no-clobber Save As.
+- 2026-09-05: M11 implementation tranche: added canonical production and corpus intent document round trips, strict v2 path projection, no-clobber Save As publication, corpus feasibility preflight, status projections, and the public TUI command with lazy optional dependency loading.
