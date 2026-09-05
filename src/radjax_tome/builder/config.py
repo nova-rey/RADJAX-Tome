@@ -572,7 +572,6 @@ _PRODUCTION_OVERRIDE_SECTIONS = {
     "corpus_manifest_path": ("corpus", "corpus_manifest_path"),
     "max_examples": ("corpus", "max_examples"),
     "expected_corpus_semantic_identity": ("corpus", "expected_semantic_identity"),
-    "expected_corpus_semantic_identity": ("corpus", "expected_semantic_identity"),
     "target_policy": ("behavior", "target_policy"),
     "sequence_length": ("behavior", "sequence_length"),
     "vocab_size": ("behavior", "vocab_size"),
