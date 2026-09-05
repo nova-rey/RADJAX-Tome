@@ -245,7 +245,7 @@ def run(args: argparse.Namespace) -> CLIResult:
                 artifact={"workspace": str(intent.outputs.output_dir)},
                 reports={"production": report},
                 config={
-                    "schema_version": "radjax_tome_build_intent_v1",
+                    "schema_version": intent.schema_version,
                     "selection_authority_hash": resolved.selection_authority_hash,
                 },
             )

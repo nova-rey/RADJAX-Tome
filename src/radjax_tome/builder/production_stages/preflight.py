@@ -132,17 +132,26 @@ def validate_required_inputs(config: Any, blockers: list[str]) -> None:
             from radjax_tome.corpora.tokenizer import create_tokenizer
 
             binding = json.loads(binding_path.read_text(encoding="utf-8"))
-            configured = getattr(config, "tokenizer_id", None) or getattr(
-                config, "teacher_model", None
-            )
+            configured = getattr(config, "tokenizer_id", None)
+            if not configured or configured == "fake-deterministic-tokenizer":
+                configured = getattr(config, "teacher_model", None)
             if not configured:
                 blockers.append(
                     "corpus tokenizer binding cannot be checked without "
                     "a tokenizer identity"
                 )
             else:
+                tokenizer_spec = (
+                    "smoke"
+                    if configured == "smoke"
+                    else {
+                        "backend": "hf",
+                        "tokenizer_id": str(configured),
+                        "local_files_only": True,
+                    }
+                )
                 expected_binding = capture_language_tokenizer_binding(
-                    create_tokenizer(configured)
+                    create_tokenizer(tokenizer_spec)
                 ).binding.get("canonical_binding_digest")
                 actual_binding = (
                     binding.get("canonical_binding_digest")

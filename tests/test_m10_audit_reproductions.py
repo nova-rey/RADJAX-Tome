@@ -194,6 +194,30 @@ def test_v2_preflight_accepts_matching_smoke_tokenizer_binding(
     assert blockers == []
 
 
+def test_v2_preflight_rejects_semantic_identity_mismatch_independently(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    intent_path = _intent(tmp_path)
+    build_corpus_artifact_v2(load_corpus_build_intent(intent_path))
+    config = ProductionBuildConfig(
+        teacher_model="teacher",
+        tokenizer_id="smoke",
+        dataset_path=tmp_path / "unused-dataset.jsonl",
+        corpus_manifest_path=tmp_path / "artifact",
+        teacher_model_provenance_path=tmp_path / "provenance.json",
+        output_dir=tmp_path / "output",
+        expected_corpus_semantic_identity="sha256:" + "0" * 64,
+    )
+    (tmp_path / "provenance.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        "radjax_tome.builder.production_stages.preflight.validate_teacher_model_provenance",
+        lambda path: type("TeacherReport", (), {"blockers": ()})(),
+    )
+    blockers: list[str] = []
+    validate_required_inputs(config, blockers)
+    assert any("semantic identity" in item for item in blockers)
+
+
 def test_v2_preflight_resolves_missing_tokenizer_id_like_production(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
