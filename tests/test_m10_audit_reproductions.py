@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from radjax_tome.builder.production import ProductionBuildConfig
+from radjax_tome.builder.production_stages.preflight import validate_required_inputs
 from radjax_tome.corpora import build_corpus_artifact_v2, load_corpus_build_intent
 from radjax_tome.corpora.dedup import deduplicate_records
 from radjax_tome.corpora.records import SourceRecord
@@ -166,3 +168,81 @@ def test_v2_validation_rejects_duplicate_provenance_sidecar_substitution(
     result = validate_corpus_artifact_v2(root)
     assert not result.ok
     assert any(issue.code == "PROVENANCE_MISMATCH" for issue in result.issues)
+
+
+def test_v2_preflight_accepts_matching_smoke_tokenizer_binding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    intent_path = _intent(tmp_path)
+    report = build_corpus_artifact_v2(load_corpus_build_intent(intent_path))
+    config = ProductionBuildConfig(
+        teacher_model="teacher",
+        tokenizer_id="smoke",
+        dataset_path=tmp_path / "unused-dataset.jsonl",
+        corpus_manifest_path=tmp_path / "artifact",
+        teacher_model_provenance_path=tmp_path / "provenance.json",
+        output_dir=tmp_path / "output",
+        expected_corpus_semantic_identity=str(report["semantic_identity"]),
+    )
+    (tmp_path / "provenance.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        "radjax_tome.builder.production_stages.preflight.validate_teacher_model_provenance",
+        lambda path: type("TeacherReport", (), {"blockers": ()})(),
+    )
+    blockers: list[str] = []
+    validate_required_inputs(config, blockers)
+    assert blockers == []
+
+
+def test_v2_preflight_resolves_missing_tokenizer_id_like_production(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    intent_path = _intent(tmp_path)
+    report = build_corpus_artifact_v2(load_corpus_build_intent(intent_path))
+    config = ProductionBuildConfig(
+        teacher_model="smoke",
+        tokenizer_id=None,
+        dataset_path=tmp_path / "unused-dataset.jsonl",
+        corpus_manifest_path=tmp_path / "artifact",
+        teacher_model_provenance_path=tmp_path / "provenance.json",
+        output_dir=tmp_path / "output",
+        expected_corpus_semantic_identity=str(report["semantic_identity"]),
+    )
+    (tmp_path / "provenance.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        "radjax_tome.builder.production_stages.preflight.validate_teacher_model_provenance",
+        lambda path: type("TeacherReport", (), {"blockers": ()})(),
+    )
+    blockers: list[str] = []
+    validate_required_inputs(config, blockers)
+    assert blockers == []
+
+
+def test_v2_preflight_rejects_different_tokenizer_binding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    intent_path = _intent(tmp_path)
+    report = build_corpus_artifact_v2(load_corpus_build_intent(intent_path))
+    config = ProductionBuildConfig(
+        teacher_model="teacher",
+        tokenizer_id="other",
+        dataset_path=tmp_path / "unused-dataset.jsonl",
+        corpus_manifest_path=tmp_path / "artifact",
+        teacher_model_provenance_path=tmp_path / "provenance.json",
+        output_dir=tmp_path / "output",
+        expected_corpus_semantic_identity=str(report["semantic_identity"]),
+    )
+    (tmp_path / "provenance.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        "radjax_tome.builder.production_stages.preflight.validate_teacher_model_provenance",
+        lambda path: type("TeacherReport", (), {"blockers": ()})(),
+    )
+    from radjax_tome.corpora.tokenizer import SmokeTokenizer
+
+    monkeypatch.setattr(
+        "radjax_tome.corpora.tokenizer.create_tokenizer",
+        lambda value: SmokeTokenizer(vocab_size=513),
+    )
+    blockers: list[str] = []
+    validate_required_inputs(config, blockers)
+    assert any("CORPUS_TOKENIZER_BINDING_MISMATCH" in item for item in blockers)

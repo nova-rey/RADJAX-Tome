@@ -126,13 +126,34 @@ def validate_required_inputs(config: Any, blockers: list[str]) -> None:
         try:
             import json
 
+            from radjax_tome.corpora.language_tokenizer_binding import (
+                capture_language_tokenizer_binding,
+            )
+            from radjax_tome.corpora.tokenizer import create_tokenizer
+
             binding = json.loads(binding_path.read_text(encoding="utf-8"))
-            configured = getattr(config, "tokenizer_id", None)
-            bound = binding.get("tokenizer") if isinstance(binding, dict) else None
-            if configured and bound and str(configured) != str(bound):
+            configured = getattr(config, "tokenizer_id", None) or getattr(
+                config, "teacher_model", None
+            )
+            if not configured:
                 blockers.append(
-                    "corpus tokenizer binding does not match production tokenizer_id"
+                    "corpus tokenizer binding cannot be checked without "
+                    "a tokenizer identity"
                 )
+            else:
+                expected_binding = capture_language_tokenizer_binding(
+                    create_tokenizer(configured)
+                ).binding.get("canonical_binding_digest")
+                actual_binding = (
+                    binding.get("canonical_binding_digest")
+                    if isinstance(binding, dict)
+                    else None
+                )
+                if expected_binding != actual_binding:
+                    blockers.append(
+                        "CORPUS_TOKENIZER_BINDING_MISMATCH: corpus binding does not "
+                        "match production tokenizer"
+                    )
         except (OSError, ValueError, TypeError) as exc:
             blockers.append(f"corpus tokenizer binding could not be checked: {exc}")
     teacher_report = validate_teacher_model_provenance(
