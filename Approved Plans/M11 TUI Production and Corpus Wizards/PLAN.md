@@ -6,7 +6,7 @@ Status: finalized plan for approval and implementation. This document is plannin
 
 ## Authority and base
 
-Implement from `6b1e3c8563af748b872f68b8f4efd604fcbd4288` on a fresh branch named `m11/tui-production-corpus-wizards`. Contract remains pinned to `373e3d17060d4ce1c4a0db6065c9289da714bde7`. Accepted M8 (`88d6f418e0f39ab2ec61d9047f974f04657e5214`) and M9 (`7550ea9bcae23917fdaaee3d7506efaef849c6bf`, integrated through `ac23f0ea8a8a474d841e80f787003ac6492409ab`) are ancestors of the accepted M10 main tip. Package version is `0.1.0`, Python `>=3.11`, setuptools, and argparse; CI covers Python 3.11 and 3.12.
+Start from `main` at `8f78939c509226cc091da84921cc6efbec660595`, which includes the accepted M10 integration and this plan publication. The proposed M11 branch `m11/tui-production-corpus-wizards` already exists at `1ab4a73feaffa4d9a39443114a21244140d225ba` and contains a planning commit. Inspect and reconcile those documentation-only differences, preserving both plans. Do not try to create that existing branch and do not treat its existence as a blocker. Create or continue a uniquely named implementation branch/worktree from the reconciled main tip. Contract remains pinned to `373e3d17060d4ce1c4a0db6065c9289da714bde7`. Accepted M8 (`88d6f418e0f39ab2ec61d9047f974f04657e5214`) and M9 (`7550ea9bcae23917fdaaee3d7506efaef849c6bf`, integrated through `ac23f0ea8a8a474d841e80f787003ac6492409ab`) are ancestors of the accepted M10 main tip. Package version is `0.1.0`, Python `>=3.11`, setuptools, and argparse; CI covers Python 3.11 and 3.12.
 
 The current checkout contains preserved dirty historical edits in `bible.md` and `src/radjax_tome/backends/hf_torch.py`. Do not use it for implementation. Create a clean worktree from the accepted main tip and leave the dirty checkout untouched. Every implementation commit appends `bible.md`; integration into `main` requires separate authorization.
 
@@ -35,15 +35,15 @@ Add `radjax-tome tui [corpus|production] [--config CONFIG]`. No workflow opens a
 
 Use shared screens: Start, Inputs, Behavior, Resources/Destination, Review, Preflight, Save/Confirmation, and Run Status/Results. Tab and Shift-Tab have deterministic focus order; Enter activates only the focused action; Escape backs out or asks before discarding; Ctrl-S saves; Ctrl-Q confirms exit; Ctrl-C requests cancellation. Use words and symbols in addition to color. Keep a single-column scrolling layout usable at 80×24, preserve drafts on resize, and show a resize/help notice below 60×18. Do not claim screen-reader support; prove keyboard-only operation.
 
-Corpus screens select local sources, adapter, source ID/path, include/exclude, JSONL field and record-ID field, accepted normalization/order/chunking policies, minimum/max characters, exact deduplication, smoke tokenizer, resource limits, and destination. Production screens select teacher/model, tokenizer, provenance, validated corpus artifact, canonical preset/behavior/resource choices, destination, resume/overwrite, and package settings. Basic controls are grouped first; an Advanced view and canonical JSON editor preserve every supported field. No hidden defaults: values originate in canonical constructors/presets or are explicit visible choices.
+Corpus screens select local sources, adapter, source ID/path, include/exclude, JSONL field and record-ID field, accepted normalization/order/chunking policies, minimum/max characters, exact deduplication, smoke tokenizer, resource limits, and destination. Production screens select teacher/model, tokenizer, provenance, validated corpus artifact, canonical preset/behavior/resource choices, destination, and resume/overwrite. Packaging is not a production-config setting: after a successful build, offer a separate explicitly confirmed package action that calls the existing `package` command with its own profile, transport, and destination. Basic controls are grouped first; an Advanced view and canonical JSON editor preserve every supported field. No hidden defaults: values originate in canonical constructors/presets or are explicit visible choices.
 
-Opening, editing, previewing, and saving never load models, allocate accelerators, create staging, delete output, or start a build. A run requires explicit confirmation after a fresh preflight and a byte check of the saved config. Config drafts contain only canonical document data and UI provenance, never execution state or derived semantic identity.
+Opening, editing, previewing, and Save As never load models, allocate accelerators, create staging, delete output, or start a build. A run requires explicit confirmation after a fresh preflight and a byte check of the saved config. Config drafts contain only canonical document data and UI provenance, never execution state or derived semantic identity.
 
 ## Configuration and save behavior
 
 Add `parse_tome_build_intent_document`, `tome_build_intent_document`, and JSON/YAML serialization to `builder/config_io.py`; make `load_tome_build_intent` delegate to them while retaining duplicate-key and unknown-field rejection. Add equivalent corpus functions to `corpora/config.py` plus `apply_corpus_operational_overrides`, extracted from current `cli.mainline.run` behavior.
 
-Add `src/radjax_tome/io/config_export.py` for exclusive, fsynced, no-clobber publication. Reparse serialized text through the canonical parser before writing; write a temporary sibling and publish atomically without replacing an existing target. Resolve relative filesystem paths against the source config directory on load and export absolute paths by default. Preserve model/tokenizer identity strings as strings and do not expand environment variables or `~`.
+Add `src/radjax_tome/io/config_export.py` for exclusive, fsynced, no-clobber publication. Save is explicitly Save As: every Ctrl-S opens a filename prompt and writes a new filename; it never overwrites the prior saved config. Reparse serialized text through the canonical parser before writing; write a temporary sibling and publish atomically without replacing an existing target. If the requested filename exists, explain that Save As is no-clobber, preserve the existing file, and ask for a different filename. Resolve relative filesystem paths against the source config directory on load and export absolute paths by default. Preserve model/tokenizer identity strings as strings and do not expand environment variables or `~`.
 
 ## Preflight, destination, resume, and overwrite
 
@@ -61,7 +61,7 @@ The matrix is:
 | Complete valid output | default conflict; explicit resume/overwrite | explicit matching resume or owner-approved overwrite |
 | Resume + overwrite | reject | reject |
 
-The TUI never deletes files, guesses completion, or cleans broad paths. Packaging delegates to `plan_package_destination` and `package_tome_artifact`; profile and transport remain explicit. Corpus resume is documented as publication retry, not arbitrary mid-ingestion recovery.
+The TUI never deletes files, guesses completion, or cleans broad paths. Packaging is a separate post-build action. It delegates to `plan_package_destination` and `package_tome_artifact` only after the user explicitly confirms profile, transport, and archive destination; those options are not written into a production build config and cannot make build preflight fail. Corpus resume is documented as publication retry, not arbitrary mid-ingestion recovery.
 
 ## Execution, progress, cancellation, and output
 
@@ -78,7 +78,7 @@ Cancellation confirms, sends SIGINT once to the owned child/process group, drain
 
 ## File-level implementation plan
 
-Modify `builder/config_io.py`, `corpora/config.py`, `corpora/lifecycle.py`, `corpora/builder.py`, `cli/main.py`, and `cli/mainline.py` only for the adapters and routing described above. Add `builder/status.py`, `io/config_export.py`, and the lazy `tui/` package (`launcher.py`, `draft.py`, `fields.py`, `app.py`, `screens.py`, `controller.py`, `process.py`, and `app.tcss`). Update `pyproject.toml`, CI, `docs/hydra_disposition.json`, and minimal README/help documentation. Add `docs/M11_TUI_WIZARDS.md`, synchronized help fixtures, and focused `tests/test_m11_*.py` files. Do not alter Contract, M10 schemas, Golden fixtures, research scripts, or lower-layer semantics. Append `bible.md` in every commit.
+Modify `builder/config_io.py`, `corpora/config.py`, `corpora/lifecycle.py`, `corpora/builder.py`, `cli/main.py`, and `cli/mainline.py` only for the adapters and routing described above. Remove package-profile/transport controls from the production-config form; expose them only on the confirmed post-build package screen. Add `builder/status.py`, `io/config_export.py`, and the lazy `tui/` package (`launcher.py`, `draft.py`, `fields.py`, `app.py`, `screens.py`, `controller.py`, `process.py`, and `app.tcss`). Update `pyproject.toml`, CI, `docs/hydra_disposition.json`, and minimal README/help documentation. Add `docs/M11_TUI_WIZARDS.md`, synchronized help fixtures, and focused `tests/test_m11_*.py` files. Do not alter Contract, M10 schemas, Golden fixtures, research scripts, or lower-layer semantics. Append `bible.md` in every commit.
 
 ## Test matrix and sequence
 
@@ -101,7 +101,7 @@ Install the wheel in disposable Python 3.11 and 3.12 environments, test base and
 
 Commit boundaries:
 
-1. Canonical config serializers, safe export, and early real CPU proof.
+1. Canonical config serializers, explicit Save As export, and early real CPU proof.
 2. Shared corpus feasibility/status/preflight and safety tests.
 3. Textual optional launcher, draft/controller, forms, and subprocess execution.
 4. UX/accessibility-by-keyboard, documentation, CI, and compatibility containment.
@@ -122,4 +122,10 @@ The highest risks are invalid v2 serialization, accidental loss of advanced fiel
 The next action after approval is Step 0: create the clean worktree/branch from `6b1e3c8563af748b872f68b8f4efd604fcbd4288`, then implement the configuration adapters and early CPU proof before visual polish. Integration into `main` remains separately authorized.
 
 M11_PLAN_READY_FOR_APPROVAL
+
+- 2026-08-30 M10 tokenizer resolution parity: preflight now mirrors hf_torch effective-tokenizer fallback, including the fake-tokenizer sentinel, and constructs HF tokenizer bindings with local-files-only semantics before execution.
+- 2026-08-30 M10 final tokenizer remediation: mirrored HF tokenizer resolution for local IDs and production fallback, made v2 receipts report their source schema, and added independent semantic-identity preflight coverage.
+- 2026-08-30 M10 final closure: recorded the targeted tokenizer review PASS_WITH_RESERVATIONS, rebound closure evidence to audited implementation cfa382b3af0a6d9210ea0cb42a0c8ad17f3946c2, and preserved the complete venv validation receipts.
+
+- 2026-09-05: Published the M11 TUI and corpus-wizard plan under Unapproved Plans; implementation and integration remain unapproved.
 
