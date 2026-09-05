@@ -3884,3 +3884,4 @@ closed-record and checkpoint authority validation.
 - 2026-08-30 M10 v2 strictness finalization: production corpus references now require the exact three-key set and reject legacy dataset/manifest keys in v2.
 - 2026-08-30 M10 v2 strictness final edge: validated max_examples as null or a positive integer in complete production dispatch and added regression coverage.
 - 2026-08-30 M10 tokenizer binding identity correction: production v2 preflight now resolves the configured tokenizer through the canonical factory, compares canonical binding digests, and rejects mismatches before execution; matching, fallback, and mismatch regressions added.
+- 2026-08-30 M10 closure consistency: synchronized the flat ProductionBuildConfig characterization and override registry with the corpus semantic identity field, and registered the safe archive compatibility module in the Hydra inventory so the complete suite remains green.

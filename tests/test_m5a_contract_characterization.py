@@ -16,6 +16,7 @@ _PRODUCTION_CONFIG_FIELDS = (
     "corpus_manifest_path",
     "teacher_model_provenance_path",
     "output_dir",
+    "expected_corpus_semantic_identity",
     "artifact_contract_version",
     "tokenizer_id",
     "teacher_backend",
@@ -145,7 +146,7 @@ def test_m5a_inventory_covers_the_current_flat_production_surface() -> None:
     assert tuple(field.name for field in fields(ProductionBuildConfig)) == (
         _PRODUCTION_CONFIG_FIELDS
     )
-    assert len(_PRODUCTION_CONFIG_FIELDS) == 76
+    assert len(_PRODUCTION_CONFIG_FIELDS) == 77
 
 
 def test_m5a_pins_the_existing_selection_authority_projection() -> None:

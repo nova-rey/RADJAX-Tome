@@ -1,9 +1,21 @@
 {
   "baseline": "7a56a0808453f4b4ecc6cefe3ee63b724c701980",
   "m9_public_surface": {
-    "commands": ["build", "validate", "inspect", "package", "doctor", "research"],
+    "commands": [
+      "build",
+      "validate",
+      "inspect",
+      "package",
+      "doctor",
+      "research"
+    ],
     "legacy_commands": "compatibility_or_research",
-    "production_validation_forms": ["contract_v3", "m7_v4", "canonical_package", "rtome"]
+    "production_validation_forms": [
+      "contract_v3",
+      "m7_v4",
+      "canonical_package",
+      "rtome"
+    ]
   },
   "generated_from": [
     "docs/MAINLINE_CONSOLIDATION_ARC.md",
@@ -329,54 +341,54 @@
       "replacement_or_target_boundary": "RADJAX-Contract v0.9.0 release assets",
       "status": "canonical"
     },
-      "docs:C1_TOME_ARTIFACT_CONTRACT_V3_PIN": {
+    "docs:C1_TOME_ARTIFACT_CONTRACT_V3_PIN": {
       "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
       "kind": "release-pin",
       "owning_milestone": "Program-C",
       "rationale": "Records the immutable Contract v3 release and mirror identity.",
       "replacement_or_target_boundary": "RADJAX-Contract v0.9.0",
-        "status": "canonical"
-      },
-      "docs:C3_TOME_V3_TRANSACTION_AND_VERIFY": {
-        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
-        "kind": "top-level-doc",
-        "owning_milestone": "Program-C",
-        "rationale": "Documents the v3 verification-mode boundary and private transactional publication semantics.",
-        "replacement_or_target_boundary": "Released RADJAX Contract v3 adoption evidence.",
-        "status": "canonical"
-      },
-      "src/radjax_tome/cli/main.py:verify-artifact": {
-        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
-        "kind": "public-cli-command",
-        "owning_milestone": "Program-C",
-        "rationale": "Thin standard, governed, and external-attestation adapter over Contract v3 validation APIs.",
-        "replacement_or_target_boundary": "Released RADJAX Contract v3 verification path.",
-        "status": "canonical"
-      },
-      "tests/test_tome_v3_verification_cli.py": {
-        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
-        "kind": "test",
-        "owning_milestone": "Program-C",
-        "rationale": "Verifies v3 CLI mode selection, caller-input failures, and private journal visibility boundary.",
-        "replacement_or_target_boundary": "Program-C v3 verification conformance.",
-        "status": "canonical"
-      },
-      "tests/test_tome_v3_journal_transitions.py": {
-        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
-        "kind": "test",
-        "owning_milestone": "Program-C",
-        "rationale": "Exercises each private Contract journal restart boundary, deterministic transaction and staging mutation refusal, directory-only and archive-only recovery topologies, symlink ownership refusal, matching/conflicting archive recovery, and idempotent cleanup.",
-        "replacement_or_target_boundary": "Program-C v3 transaction recovery conformance.",
-        "status": "canonical"
-      },
-      "tests/test_tome_v3_canonical_production.py": {
-        "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
-        "kind": "test",
-        "owning_milestone": "Program-C",
-        "rationale": "Proves opt-in v3 emission through the canonical production state machine and both transports.",
-        "replacement_or_target_boundary": "Program-C canonical v3 production conformance.",
-        "status": "canonical"
-      },
+      "status": "canonical"
+    },
+    "docs:C3_TOME_V3_TRANSACTION_AND_VERIFY": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "top-level-doc",
+      "owning_milestone": "Program-C",
+      "rationale": "Documents the v3 verification-mode boundary and private transactional publication semantics.",
+      "replacement_or_target_boundary": "Released RADJAX Contract v3 adoption evidence.",
+      "status": "canonical"
+    },
+    "src/radjax_tome/cli/main.py:verify-artifact": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "public-cli-command",
+      "owning_milestone": "Program-C",
+      "rationale": "Thin standard, governed, and external-attestation adapter over Contract v3 validation APIs.",
+      "replacement_or_target_boundary": "Released RADJAX Contract v3 verification path.",
+      "status": "canonical"
+    },
+    "tests/test_tome_v3_verification_cli.py": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "test",
+      "owning_milestone": "Program-C",
+      "rationale": "Verifies v3 CLI mode selection, caller-input failures, and private journal visibility boundary.",
+      "replacement_or_target_boundary": "Program-C v3 verification conformance.",
+      "status": "canonical"
+    },
+    "tests/test_tome_v3_journal_transitions.py": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "test",
+      "owning_milestone": "Program-C",
+      "rationale": "Exercises each private Contract journal restart boundary, deterministic transaction and staging mutation refusal, directory-only and archive-only recovery topologies, symlink ownership refusal, matching/conflicting archive recovery, and idempotent cleanup.",
+      "replacement_or_target_boundary": "Program-C v3 transaction recovery conformance.",
+      "status": "canonical"
+    },
+    "tests/test_tome_v3_canonical_production.py": {
+      "archive_or_removal_condition": "Remove with the explicit v3 adoption branch.",
+      "kind": "test",
+      "owning_milestone": "Program-C",
+      "rationale": "Proves opt-in v3 emission through the canonical production state machine and both transports.",
+      "replacement_or_target_boundary": "Program-C canonical v3 production conformance.",
+      "status": "canonical"
+    },
     "cli:allocate-fingerprint-corridor-coverage": {
       "archive_or_removal_condition": "M2 parity and M3 archive pointer.",
       "kind": "public-cli-command",
@@ -2293,11 +2305,11 @@
       "status": "canonical"
     },
     "src/radjax_tome/builder/delivery/staging.py": {
-      "archive_or_removal_condition": null,
+      "archive_or_removal_condition": "Archive the private counter hooks only when the M8 measurement seam is superseded.",
       "kind": "source-module",
-      "owning_milestone": "M6",
-      "rationale": "Transactional selected-rerun staging owner.",
-      "replacement_or_target_boundary": "Canonical selected-delivery owners.",
+      "owning_milestone": "M8C",
+      "rationale": "Counts canonical hash input bytes, JSON bytes, temporary writes, and atomic replacements only when the existing benchmark-only observer is attached; production behavior is unchanged.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
       "status": "canonical"
     },
     "src/radjax_tome/builder/delivery/validation.py": {
@@ -2661,11 +2673,11 @@
       "status": "canonical"
     },
     "src/radjax_tome/builder/delivery/measurement.py": {
-      "archive_or_removal_condition": null,
+      "archive_or_removal_condition": "Archive the private counter schema only when its measurement contract is superseded by a governed M8 successor.",
       "kind": "source-module",
-      "owning_milestone": "M8A/M8B.1",
-      "rationale": "Private selected-pass diagnostics, temporary-root control, optional resource observer, deterministic sampler, and frozen M8B benchmark statistics.",
-      "replacement_or_target_boundary": "M8A instrumentation and M8B.1 current-base staging measurement seams.",
+      "owning_milestone": "M8C",
+      "rationale": "Adds disabled-by-default operation and byte counters to the existing selected-pass diagnostic observer; counters are nonsemantic and benchmark-only.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
       "status": "canonical"
     },
     "src/radjax_tome/builder/delivery/replay.py": {
@@ -2687,9 +2699,9 @@
     "tests/test_m8b_selected_staging_measurement.py": {
       "archive_or_removal_condition": null,
       "kind": "source-module",
-      "owning_milestone": "M8B.1",
-      "rationale": "Locks the private M8B selected-staging statistical definitions and rejects altered benchmark receipts without changing authority.",
-      "replacement_or_target_boundary": "M8B.1 current-base selected-staging baseline evidence.",
+      "owning_milestone": "M8C",
+      "rationale": "Verifies the private operation-count schema and byte/file counters on a controlled staging fixture.",
+      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
       "status": "canonical"
     },
     "scripts/run_m8a_selected_pass_measurements.py": {
@@ -2892,30 +2904,6 @@
       "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
       "status": "canonical"
     },
-    "src/radjax_tome/builder/delivery/measurement.py": {
-      "archive_or_removal_condition": "Archive the private counter schema only when its measurement contract is superseded by a governed M8 successor.",
-      "kind": "source-module",
-      "owning_milestone": "M8C",
-      "rationale": "Adds disabled-by-default operation and byte counters to the existing selected-pass diagnostic observer; counters are nonsemantic and benchmark-only.",
-      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
-      "status": "canonical"
-    },
-    "src/radjax_tome/builder/delivery/staging.py": {
-      "archive_or_removal_condition": "Archive the private counter hooks only when the M8 measurement seam is superseded.",
-      "kind": "source-module",
-      "owning_milestone": "M8C",
-      "rationale": "Counts canonical hash input bytes, JSON bytes, temporary writes, and atomic replacements only when the existing benchmark-only observer is attached; production behavior is unchanged.",
-      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
-      "status": "canonical"
-    },
-    "tests/test_m8b_selected_staging_measurement.py": {
-      "archive_or_removal_condition": null,
-      "kind": "source-module",
-      "owning_milestone": "M8C",
-      "rationale": "Verifies the private operation-count schema and byte/file counters on a controlled staging fixture.",
-      "replacement_or_target_boundary": "M8 selected-pass staging redesign evidence.",
-      "status": "canonical"
-    },
     "docs/evidence/M8C_CURRENT_BASELINE_ENVIRONMENT.json": {
       "archive_or_removal_condition": "Archive with the M8C diagnostic record after independent review or replace only with a governed successor receipt.",
       "kind": "fixture",
@@ -3027,6 +3015,14 @@
       "rationale": "Durable disposition of the inherited mandatory CI failures and bounded corrections.",
       "replacement_or_target_boundary": "M9 closure evidence",
       "status": "supporting"
+    },
+    "src/radjax_tome/tome/archive_compat.py": {
+      "archive_or_removal_condition": "Retain while Python 3.11/3.12 safe archive extraction is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M10",
+      "rationale": "Shared traversal-safe archive extraction compatibility boundary.",
+      "replacement_or_target_boundary": "Future archive extraction compatibility",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"
