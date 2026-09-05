@@ -3894,3 +3894,4 @@ closed-record and checkpoint authority validation.
 
 - 2026-09-05: Reconciled and moved the M11 plan to Approved Plans: main starts at 8f78939, the existing 1ab4a73 planning branch is reference-only, packaging is a separate confirmed post-build action, and config export is explicit no-clobber Save As.
 - 2026-09-05: M11 implementation tranche: added canonical production and corpus intent document round trips, strict v2 path projection, no-clobber Save As publication, corpus feasibility preflight, status projections, and the public TUI command with lazy optional dependency loading.
+- 2026-09-05: M11 boundary regression coverage: verified v1/v2 canonical reloads, rejected lossy v2 exports, preserved corpus source provenance, enforced no-clobber Save As, and confirmed ordinary imports do not load Textual.
