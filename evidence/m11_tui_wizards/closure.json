@@ -11,6 +11,7 @@
     "m10_accepted_base": "6b1e3c8563af748b872f68b8f4efd604fcbd4288",
     "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
     "implementation_commit": "20cbbdeb732f4717d668791c7690967f6ae10690",
+    "closure_evidence_commit": "9ec7d920c714f53bdc8c6d3ac4c4332109810d29",
     "branch": "m11/tui-production-corpus-wizards-implementation"
   },
   "scope": [
