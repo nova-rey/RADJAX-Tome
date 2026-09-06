@@ -43,6 +43,13 @@ boundaries, corruption rejection, and deterministic rebuild regressions pass.
 The complete CPU production v2 smoke passed score pass, selection, selected
 rerun, and final Tome validation.
 
+The separate public package action passed with profile
+`full_debug_provenance`, directory transport, and receipt digest
+`3907ac726110387710fc12b412a75dac9e05e1a2dc454e421f44a1cdd6fd869f`. The
+student profile correctly rejected this synthetic CPU artifact because it has
+no tokenizer-binding capture; this inherited limitation is surfaced rather
+than bypassed.
+
 The 50K synthetic corpus proof passed with 50,000 examples and 98 shards. The
 direct bounded path measured 55,780 KiB child maximum RSS over 8.691 seconds;
 the run used explicit deduplication disabled and therefore makes no DuckDB

@@ -27,6 +27,13 @@
     "final_validation": "pass",
     "tome_semantic_identity": "sha256:656fcf82f5ece3c9e8033ecb5b122849c74df546e0a3bde9dea751450c58bb1c"
   },
+  "packaging": {
+    "profile": "full_debug_provenance",
+    "transport": "directory",
+    "status": "pass",
+    "receipt_sha256": "3907ac726110387710fc12b412a75dac9e05e1a2dc454e421f44a1cdd6fd869f",
+    "student_profile_on_synthetic_cpu_artifact": "rejected_expected_missing_tokenizer_binding_capture"
+  },
   "tui": {
     "corpus_mount": "pass",
     "production_mount": "pass",

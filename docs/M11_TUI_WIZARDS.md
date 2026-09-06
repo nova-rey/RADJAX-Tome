@@ -54,3 +54,8 @@ It emitted 50,000 examples in 98 shards with identity
 the measured child maximum RSS was 55,780 KiB and elapsed time was 8.691 s.
 The DuckDB-enabled path remains covered separately by the multi-batch and
 large-duplicate-group regressions.
+
+Packaging remains a separate confirmed action. The clean CPU smoke package
+passed with `full_debug_provenance` and directory transport. The `student`
+profile rejected that synthetic artifact because tokenizer-binding capture was
+not present; this is the inherited tokenizer limitation reported by preflight.

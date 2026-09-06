@@ -50,6 +50,8 @@
     "interruption_boundaries": "pass",
     "corruption_rejection": "pass",
     "complete_cpu_production_smoke": "pass",
+    "package_full_debug_provenance_directory": "pass",
+    "package_student_synthetic_cpu": "rejected_expected_missing_tokenizer_binding_capture",
     "selected_rerun": "pass",
     "final_tome_validation": "pass"
   },
