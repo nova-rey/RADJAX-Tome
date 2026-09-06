@@ -13,6 +13,7 @@ class WizardDraft:
     document: dict[str, Any]
     source_path: Path | None = None
     saved_path: Path | None = None
+    saved_bytes: bytes | None = None
     provenance: dict[str, Any] = field(
         default_factory=lambda: {
             "surface": "tui",
@@ -22,7 +23,7 @@ class WizardDraft:
 
     @property
     def dirty(self) -> bool:
-        return self.saved_path is None
+        return self.saved_path is None or self.saved_bytes is None
 
 
 __all__ = ["WizardDraft"]

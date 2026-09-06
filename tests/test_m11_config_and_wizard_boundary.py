@@ -17,6 +17,7 @@ from radjax_tome.corpora.config import (
 from radjax_tome.corpora.feasibility import assess_corpus_feasibility
 from radjax_tome.corpora.lifecycle import CorpusJournal
 from radjax_tome.io.config_export import save_as_config
+from radjax_tome.tui.controller import load_draft, saved_document_matches
 
 
 def _corpus_config(root: Path) -> Path:
@@ -139,3 +140,19 @@ def test_base_import_does_not_load_optional_textual() -> None:
         text=True,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_saved_config_byte_check_rejects_unsaved_editor_text(tmp_path: Path) -> None:
+    config = _corpus_config(tmp_path)
+    draft = load_draft("corpus", config)
+    saved = (
+        json.dumps(draft.document, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
+    )
+
+    assert not saved_document_matches(draft, saved)
+    config.write_text(saved, encoding="utf-8")
+    draft = load_draft("corpus", config)
+    assert saved_document_matches(draft, saved)
+    assert not saved_document_matches(
+        draft, saved.replace('"artifact"', '"changed"', 1)
+    )

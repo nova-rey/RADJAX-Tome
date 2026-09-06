@@ -27,7 +27,7 @@ def parser() -> argparse.ArgumentParser:
             "RADJAX-Tome produces teacher-side distillation artifacts. "
             "Opinionated production lifecycle CLI.\n\n"
             "Recommended commands: build, corpus, validate, inspect, package, "
-            "doctor, research"
+            "doctor, research, tui"
             "\nLegacy-compatible research commands: "
             "build-fingerprint-corridor-leaderboards, "
             "allocate-fingerprint-corridor-coverage, "
@@ -244,8 +244,8 @@ def run(args: argparse.Namespace) -> CLIResult:
                 # projection/destination dry run; input artifacts are checked
                 # by the production preflight before any real build.
                 config=production,
-                resume=args.resume,
-                overwrite=args.overwrite,
+                resume=intent.execution.resume,
+                overwrite=intent.execution.overwrite,
             )
             if assessment.status != "pass":
                 return _error(

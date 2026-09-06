@@ -3119,6 +3119,38 @@
       "rationale": "Lazy runtime-only confirmation screen that does not leak Textual into base startup.",
       "replacement_or_target_boundary": "Future wizard confirmation contract",
       "status": "canonical"
+    },
+    "src/radjax_tome/tui/app.tcss": {
+      "archive_or_removal_condition": "Retain while the optional M11 wizard layout is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Nonsemantic Textual layout styling for the canonical wizard surface.",
+      "replacement_or_target_boundary": "Future wizard layout contract",
+      "status": "supporting"
+    },
+    "docs:M11_CLOSURE_REPORT": {
+      "archive_or_removal_condition": "Retain with the M11 closure evidence.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M11",
+      "rationale": "Durable M11 implementation, gate, review, and limitation report.",
+      "replacement_or_target_boundary": "M11 closure evidence",
+      "status": "supporting"
+    },
+    "docs:M11_REMEDIATION_REPORT": {
+      "archive_or_removal_condition": "Retain with the M11 independent review record.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M11",
+      "rationale": "Bounded correction disposition for the M11 independent review findings.",
+      "replacement_or_target_boundary": "M11 closure evidence",
+      "status": "supporting"
+    },
+    "docs:M11_TUI_WIZARDS": {
+      "archive_or_removal_condition": "Retain while M11 wizard workflows are supported.",
+      "kind": "top-level-doc",
+      "owning_milestone": "M11",
+      "rationale": "Canonical TUI owner boundaries and workflow behavior documentation.",
+      "replacement_or_target_boundary": "Future TUI workflow documentation",
+      "status": "supporting"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

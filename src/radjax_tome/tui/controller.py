@@ -35,7 +35,13 @@ def load_draft(workflow: str, path: str | Path) -> WizardDraft:
         document = corpus_build_intent_document(load_corpus_build_intent(source))
     else:
         document = tome_build_intent_document(load_tome_build_intent(source))
-    return WizardDraft(workflow, document, source_path=source, saved_path=source)
+    return WizardDraft(
+        workflow,
+        document,
+        source_path=source,
+        saved_path=source,
+        saved_bytes=source.read_bytes(),
+    )
 
 
 def draft_text(draft: WizardDraft) -> str:
@@ -60,6 +66,7 @@ def save_draft_as(draft: WizardDraft, destination: str | Path) -> Path:
         parse=lambda text: parser(json.loads(text)),
     )
     draft.saved_path = target
+    draft.saved_bytes = target.read_bytes()
     return target
 
 
@@ -86,7 +93,19 @@ def save_draft_text_as(draft: WizardDraft, destination: str | Path, text: str) -
     )
     draft.document = canonical
     draft.saved_path = saved
+    draft.saved_bytes = saved.read_bytes()
     return saved
+
+
+def saved_document_matches(draft: WizardDraft, text: str) -> bool:
+    """Require the exact canonical bytes saved by Save As before execution."""
+
+    if draft.saved_path is None:
+        return False
+    try:
+        return draft.saved_path.read_bytes() == text.encode("utf-8")
+    except OSError:
+        return False
 
 
 def preflight_draft(draft: WizardDraft) -> dict[str, Any]:
@@ -103,6 +122,24 @@ def preflight_draft(draft: WizardDraft) -> dict[str, Any]:
     validate_required_inputs(production, blockers)
     if blockers:
         raise ValueError("; ".join(blockers))
+    resume_resolution: dict[str, Any] | None = None
+    if intent.execution.resume:
+        from radjax_tome.builder.native_path_b.api import (
+            resolve_canonical_path_b_config,
+        )
+        from radjax_tome.builder.native_path_b.resume import (
+            resolve_native_path_b_resume,
+        )
+
+        resolution = resolve_native_path_b_resume(
+            intent.outputs.output_dir,
+            config=resolve_canonical_path_b_config(production),
+        )
+        resume_resolution = {
+            "complete": resolution.complete,
+            "stage": resolution.stage,
+            "reason": resolution.failure.reason if resolution.failure else None,
+        }
     assessment = assess_production_preflight(
         intent.outputs.output_dir,
         config=production,
@@ -116,6 +153,7 @@ def preflight_draft(draft: WizardDraft) -> dict[str, Any]:
         "workflow": "production",
         "action": assessment.action,
         "selection_authority_hash": resolved.selection_authority_hash,
+        "resume_resolution": resume_resolution,
         "transformed": False,
     }
 
@@ -128,4 +166,5 @@ __all__ = [
     "parse_draft_text",
     "save_draft_as",
     "save_draft_text_as",
+    "saved_document_matches",
 ]
