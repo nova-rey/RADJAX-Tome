@@ -15,7 +15,7 @@
     "m10_accepted_base": "6b1e3c8563af748b872f68b8f4efd604fcbd4288",
     "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
     "implementation_commit": "07367a7fc56ac285768857a9440ac95e1353f276",
-    "closure_evidence_commit": "pending-seal",
+    "closure_evidence_commit": "9fd440d45905a23e560060ecfdb334d6e9a67f5f",
     "approved_plan": "Approved Plans/M11 TUI Production and Corpus Wizards/PLAN.md",
     "approved_plan_commit": "009f36042d7aad2bc976c3ea546187032cad16c6",
     "branch": "m11/tui-production-corpus-wizards-implementation"
