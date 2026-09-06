@@ -6,7 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from radjax_tome.builder.config import canonical_production_build_intent
+from radjax_tome.builder.config import (
+    apply_production_preset,
+    canonical_production_build_intent,
+)
 from radjax_tome.builder.config_io import (
     load_tome_build_intent,
     parse_tome_build_intent_document,
@@ -142,6 +145,25 @@ def test_canonical_document_round_trip_preserves_v1_fields(tmp_path: Path) -> No
 
     assert tome_build_intent_document(reloaded) == document
     assert reloaded.schema_version == "radjax_tome_build_intent_v1"
+
+
+def test_round_trip_preserves_non_path_fields_ending_in_path(tmp_path: Path) -> None:
+    path = tmp_path / "intent.json"
+    intent = apply_production_preset(
+        canonical_production_build_intent(
+            teacher_model="teacher",
+            dataset_path=Path("data.jsonl"),
+            corpus_manifest_path=Path("manifest.json"),
+            teacher_model_provenance_path=Path("provenance.json"),
+            output_dir=Path("out"),
+        ),
+        "smoke",
+    )
+    path.write_text(json.dumps(tome_build_intent_document(intent)))
+
+    reloaded = load_tome_build_intent(path)
+
+    assert reloaded.selection.exemplar_delivery_path == "two_pass_rerun_selected"
 
 
 def test_canonical_document_round_trip_preserves_complete_v2_projection(
