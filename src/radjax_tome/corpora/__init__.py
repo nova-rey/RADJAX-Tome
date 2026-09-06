@@ -30,8 +30,8 @@ from radjax_tome.corpora.config import (
     selection_authority_hash_v2,
     selection_authority_payload_v2,
 )
-from radjax_tome.corpora.identity import corpus_semantic_identity
 from radjax_tome.corpora.feasibility import assess_corpus_feasibility
+from radjax_tome.corpora.identity import corpus_semantic_identity
 from radjax_tome.corpora.language_tokenizer_binding import (
     CapturedLanguageTokenizerBinding,
     capture_language_tokenizer_binding,

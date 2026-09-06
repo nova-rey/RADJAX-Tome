@@ -45,8 +45,6 @@ def test_textual_save_button_requires_a_new_filename() -> None:
         async with WizardApp("corpus").run_test(size=(100, 30)) as pilot:
             await pilot.press("ctrl+s")
             await pilot.pause()
-            assert "new config filename" in str(
-                pilot.app.query_one("#status").render()
-            )
+            assert "new config filename" in str(pilot.app.query_one("#status").render())
 
     asyncio.run(exercise())

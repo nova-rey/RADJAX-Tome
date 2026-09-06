@@ -65,9 +65,9 @@ def test_corpus_config_round_trip_and_operational_override(tmp_path: Path) -> No
         document, source_path=tmp_path / "roundtrip.json"
     )
 
-    assert serialize_corpus_build_intent(
-        reloaded
-    ) == serialize_corpus_build_intent(intent)
+    assert serialize_corpus_build_intent(reloaded) == serialize_corpus_build_intent(
+        intent
+    )
     assert apply_corpus_operational_overrides(intent, resume=True).resume
     with pytest.raises(ValueError, match="mutually exclusive"):
         apply_corpus_operational_overrides(intent, resume=True, overwrite=True)

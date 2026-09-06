@@ -23,9 +23,7 @@ def save_as_config(
     parsed = parse(text)
     if parsed is None:
         raise ValueError("config parser returned no document")
-    temporary = target.with_name(
-        f".{target.name}.m11-{secrets.token_hex(8)}.tmp"
-    )
+    temporary = target.with_name(f".{target.name}.m11-{secrets.token_hex(8)}.tmp")
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     descriptor = os.open(temporary, flags, 0o600)
     try:

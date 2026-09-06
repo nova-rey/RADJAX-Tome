@@ -22,6 +22,37 @@ def deduplicate_records(
 ) -> tuple[Iterator[CanonicalCorpusRecord], dict[str, int]]:
     """Spill source rows to private DuckDB and yield winners in stable order."""
 
+    if not enabled:
+        if provenance_path is not None:
+            provenance_path.parent.mkdir(parents=True, exist_ok=True)
+            provenance_path.touch()
+        counts = {
+            "input_records": 0,
+            "output_records": 0,
+            "duplicates_removed": 0,
+        }
+
+        def passthrough() -> Iterator[CanonicalCorpusRecord]:
+            for index, record in enumerate(records, start=1):
+                counts["input_records"] = index
+                counts["output_records"] = index
+                yield CanonicalCorpusRecord(
+                    example_id=f"corpus_{index:09d}",
+                    source_id=record.source_id,
+                    source_ordinal=record.source_ordinal,
+                    logical_locator=record.logical_locator,
+                    chunk_index=record.chunk_index,
+                    chunk_count=record.chunk_count,
+                    text=record.text,
+                    text_digest=record.normalized_text_digest,
+                    source_digest=record.source_digest,
+                    declared_record_id=record.declared_record_id,
+                    duplicate_provenance=(),
+                    duplicate_count=1,
+                )
+
+        return passthrough(), counts
+
     try:
         import duckdb
     except ImportError as exc:  # pragma: no cover

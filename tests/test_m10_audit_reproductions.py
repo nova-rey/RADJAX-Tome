@@ -125,6 +125,32 @@ def test_dedup_large_group_persists_complete_provenance(tmp_path: Path) -> None:
     assert emitted[0].duplicate_count == 101
 
 
+def test_dedup_disabled_streams_without_database_and_reports_counts() -> None:
+    records = [
+        SourceRecord(
+            source_id="s",
+            source_ordinal=0,
+            logical_locator=f"r-{index:04d}",
+            chunk_index=0,
+            chunk_count=1,
+            text=f"value-{index}",
+            normalized_text_digest=f"sha256:{index:064x}",
+            source_digest="sha256:" + "a" * 64,
+        )
+        for index in range(1_000)
+    ]
+
+    winners, counts = deduplicate_records(records, enabled=False)
+    emitted = list(winners)
+
+    assert len(emitted) == 1_000
+    assert counts == {
+        "input_records": 1_000,
+        "output_records": 1_000,
+        "duplicates_removed": 0,
+    }
+
+
 def test_v2_validation_rejects_undeclared_public_member(tmp_path: Path) -> None:
     build_corpus_artifact_v2(load_corpus_build_intent(_intent(tmp_path)))
     (tmp_path / "artifact" / "UNDECLARED.txt").write_text("x")
