@@ -122,6 +122,20 @@ def validate_artifact(
                 attestation_policy=attestation_policy,
                 evaluation_time=evaluation_time,
             )
+    if candidate.is_dir() and all(
+        (candidate / name).is_file()
+        for name in ("metadata.json", "teacher_manifest.json", "validation_report.json")
+    ):
+        from radjax_tome.artifact_validation.teacher_textbook import (
+            validate_teacher_textbook,
+        )
+
+        report = validate_teacher_textbook(candidate)
+        return {
+            "status": report.status,
+            "kind": "teacher_textbook",
+            "report": report.to_dict(),
+        }
     if candidate.is_dir() and (candidate / "cover_page.json").is_file():
         import json
 

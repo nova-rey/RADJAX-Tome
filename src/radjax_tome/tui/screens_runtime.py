@@ -5,8 +5,12 @@ from textual.widgets import Button, Label
 
 
 class ConfirmScreen(ModalScreen[bool]):
+    def __init__(self, message: str = "Exit without starting a build?") -> None:
+        super().__init__()
+        self.message = message
+
     def compose(self):
-        yield Label("Exit without starting a build?", id="confirm-label")
+        yield Label(self.message, id="confirm-label")
         yield Button("Exit", id="confirm-exit")
         yield Button("Stay", id="confirm-stay")
 

@@ -15,7 +15,11 @@ from radjax_tome.backends.base import (
     resolve_exemplar_capture_policy,
     resolve_gpu_batch_size_policy,
 )
-from radjax_tome.corpora import corpus_provenance_from_manifest, read_corpus_manifest
+from radjax_tome.corpora import (
+    corpus_provenance_from_manifest,
+    read_corpus_manifest,
+    validate_corpus_artifact_v2,
+)
 from radjax_tome.io.json import write_json
 from radjax_tome.provenance import (
     teacher_model_provenance_summary,
@@ -338,6 +342,20 @@ def _summarize_probe_results(results: list[dict[str, object]]) -> dict[str, Any]
 
 
 def _dataset_summary(path: Path, blockers: list[str]) -> dict[str, Any]:
+    if path.is_dir() and (path / "corpus_cover.json").is_file():
+        result = validate_corpus_artifact_v2(path)
+        if not result.ok:
+            blockers.extend(
+                f"corpus artifact invalid: {item}" for item in result.blockers
+            )
+        return {
+            "dataset_path": str(path),
+            "exists": True,
+            "artifact_schema": "radjax_tome_corpus_artifact_v2",
+            "num_examples": result.num_examples,
+            "max_examples_effective": None,
+            "semantic_identity": result.semantic_identity,
+        }
     summary: dict[str, Any] = {
         "dataset_path": str(path),
         "exists": path.is_file(),
@@ -370,6 +388,26 @@ def _corpus_provenance_summary(
         message = "no corpus manifest; run planning has weaker provenance"
         (blockers if strict else warnings).append(message)
         return {"provided": False, "status": "missing"}
+    if path.is_dir() and (path / "corpus_cover.json").is_file():
+        result = validate_corpus_artifact_v2(path)
+        if not result.ok:
+            blockers.extend(
+                f"corpus manifest invalid: {item}" for item in result.blockers
+            )
+            return {
+                "provided": True,
+                "status": "fail",
+                "corpus_manifest_path": str(path),
+            }
+        return {
+            "provided": True,
+            "status": "pass",
+            "corpus_manifest_path": str(path),
+            "semantic_identity": result.semantic_identity,
+            "num_examples": result.num_examples,
+            "schema_version": "radjax_tome_corpus_artifact_v2",
+            "path_independent": True,
+        }
     try:
         manifest = read_corpus_manifest(path)
         provenance = corpus_provenance_from_manifest(path)

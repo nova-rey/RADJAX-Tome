@@ -38,6 +38,7 @@ from radjax_tome.builder.teacher_textbook import (
 )
 from radjax_tome.corpora import (
     capture_language_tokenizer_binding,
+    inspect_corpus_artifact_v2,
     stringify_corpus_provenance,
 )
 from radjax_tome.io.json import write_json
@@ -1109,6 +1110,8 @@ def _hash_json_payload(payload: dict[str, object]) -> str:
 def _sha256_file(path: Path | None) -> str:
     if path is None:
         raise ValueError("cannot hash missing path")
+    if path.is_dir() and (path / "corpus_cover.json").is_file():
+        return inspect_corpus_artifact_v2(path).semantic_identity
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -1585,6 +1588,16 @@ def _metadata_source(config: BackendTeacherTextbookBuildConfig) -> dict[str, str
 
 
 def _corpus_provenance(config: BackendTeacherTextbookBuildConfig) -> dict[str, str]:
+    path = config.corpus_manifest_path
+    if path is not None and path.is_dir() and (path / "corpus_cover.json").is_file():
+        inspection = inspect_corpus_artifact_v2(path)
+        return {
+            "source_corpus_hash": inspection.semantic_identity,
+            "source_corpus_schema_version": inspection.schema_version,
+            "source_corpus_num_examples": str(inspection.num_examples),
+            "source_corpus_num_sources": str(inspection.num_sources),
+            "source_corpus_manifest_path": str(path),
+        }
     return stringify_corpus_provenance(config.corpus_manifest_path)
 
 

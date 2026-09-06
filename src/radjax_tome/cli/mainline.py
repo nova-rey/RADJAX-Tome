@@ -10,6 +10,7 @@ from pathlib import Path
 
 from radjax_tome.builder.config import (
     apply_production_advanced_overrides,
+    normalize_production_build_request,
     production_build_config_from_resolved,
     resolve_tome_build_intent,
 )
@@ -276,7 +277,9 @@ def run(args: argparse.Namespace) -> CLIResult:
                 reports={"production": report},
                 config={
                     "schema_version": intent.schema_version,
-                    "selection_authority_hash": resolved.selection_authority_hash,
+                    "selection_authority_hash": normalize_production_build_request(
+                        resolved
+                    ).selection_authority_hash,
                 },
             )
             if result.exit_code == 0:

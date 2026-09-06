@@ -11,6 +11,26 @@ from typing import Any, get_type_hints
 from radjax_tome.builder.config import TomeBuildIntent, validate_tome_build_intent
 from radjax_tome.corpora.config import CorpusArtifactReference, CorpusBuildIntentV2
 
+_PATH_FIELDS = {
+    "model_provenance_path",
+    "dataset_path",
+    "corpus_manifest_path",
+    "output_dir",
+    "run_plan_path",
+    "production_report_path",
+    "parity_report_path",
+    "run_manifest_path",
+    "progress_log_path",
+    "parity_left",
+    "verified_selection_replay_path",
+    "verified_selection_bundle_manifest_path",
+    "corridor_feature_jsonl_path",
+    "global_board_supply_path",
+    "c4_claims_path",
+    "c5_selection_path",
+    "source_passports_path",
+}
+
 
 def _unique_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
@@ -128,12 +148,7 @@ def _dataclass(value: Any, cls: type[Any], *, base: Path, label: str) -> Any:
             item = _dataclass(
                 item, field_type, base=base, label=f"{label}.{field.name}"
             )
-        elif field.name.endswith("_path") or field.name in {
-            "dataset_path",
-            "corpus_manifest_path",
-            "output_dir",
-            "parity_left",
-        }:
+        elif field.name in _PATH_FIELDS:
             if item is not None:
                 if not isinstance(item, str):
                     raise ValueError(f"{label}.{field.name} must be a string or null")

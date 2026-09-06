@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -37,6 +38,33 @@ def assess_corpus_feasibility(intent: CorpusBuildIntent) -> dict[str, Any]:
                     }:
                         with candidate.open("rb") as handle:
                             handle.read(1)
+        if source.adapter == "local_jsonl_text_v1":
+            if not path.is_file():
+                raise ValueError(
+                    f"JSONL source must be a readable file: {source.source_id}"
+                )
+            with path.open(encoding="utf-8") as handle:
+                for line_number, line in enumerate(handle, start=1):
+                    if not line.strip():
+                        raise ValueError(
+                            f"JSONL source contains a blank line at {line_number}"
+                        )
+                    try:
+                        record = json.loads(line)
+                    except json.JSONDecodeError as exc:
+                        raise ValueError(
+                            f"JSONL source is invalid at line {line_number}"
+                        ) from exc
+                    if not isinstance(record, dict):
+                        raise ValueError(
+                            f"JSONL source record {line_number} must be an object"
+                        )
+                    text = record.get(source.text_field)
+                    if not isinstance(text, str):
+                        raise ValueError(
+                            f"JSONL source record {line_number} text field must be "
+                            "a string"
+                        )
     tokenizer = create_tokenizer(str(intent.policy["tokenizer"]))
     return {
         "status": "pass",

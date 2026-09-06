@@ -7,12 +7,15 @@ from pathlib import Path
 
 import pytest
 
+from radjax_tome.builder.status import read_corpus_journal
 from radjax_tome.corpora.config import (
     apply_corpus_operational_overrides,
     load_corpus_build_intent,
     parse_corpus_build_intent_document,
     serialize_corpus_build_intent,
 )
+from radjax_tome.corpora.feasibility import assess_corpus_feasibility
+from radjax_tome.corpora.lifecycle import CorpusJournal
 from radjax_tome.io.config_export import save_as_config
 
 
@@ -84,6 +87,44 @@ def test_save_as_reparses_and_never_clobbers(tmp_path: Path) -> None:
         save_as_config(existing, text, parse=json.loads)
     assert existing.read_text(encoding="utf-8") == "sentinel\n"
     assert not list(tmp_path.glob(".*.m11-*.tmp"))
+
+
+def test_feasibility_parses_jsonl_without_staging(tmp_path: Path) -> None:
+    config = _corpus_config(tmp_path)
+    payload = json.loads(config.read_text(encoding="utf-8"))
+    source = tmp_path / "rows.jsonl"
+    source.write_text("not-json\n", encoding="utf-8")
+    payload["sources"] = [
+        {
+            "source_id": "rows",
+            "adapter": "local_jsonl_text_v1",
+            "path": "rows.jsonl",
+        }
+    ]
+    config.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="invalid at line 1"):
+        assess_corpus_feasibility(load_corpus_build_intent(config))
+    assert not (tmp_path / "artifact").exists()
+
+
+def test_journal_status_reader_verifies_hash_chain(tmp_path: Path) -> None:
+    journal_path = tmp_path / "journal.jsonl"
+    journal = CorpusJournal(journal_path, "tx", "config")
+    journal.append("START")
+    journal.append("COMPLETE", count=2)
+
+    report = read_corpus_journal(journal_path)
+
+    assert report["status"] == "present"
+    assert report["event_count"] == 2
+    assert report["latest"]["event_type"] == "COMPLETE"
+
+    journal_path.write_text(
+        journal_path.read_text(encoding="utf-8").replace('"count":2', '"count":3'),
+        encoding="utf-8",
+    )
+    assert read_corpus_journal(journal_path)["status"] == "invalid"
 
 
 def test_base_import_does_not_load_optional_textual() -> None:

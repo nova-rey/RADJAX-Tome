@@ -242,6 +242,27 @@ def _validate_selected_ids_against_dataset(
     if not dataset_path_value:
         return
     dataset_path = Path(str(dataset_path_value))
+    if dataset_path.is_dir() and (dataset_path / "corpus_cover.json").is_file():
+        try:
+            from radjax_tome.builder.corpus_input import (
+                iter_corpus_examples,
+                resolve_corpus_input,
+            )
+
+            remaining = set(selected_ids)
+            for example in iter_corpus_examples(resolve_corpus_input(dataset_path)):
+                remaining.discard(str(example.get("example_id")))
+                if not remaining:
+                    break
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            blockers.append(f"delivery_report.json dataset_path invalid: {exc}")
+            return
+        if remaining:
+            blockers.append(
+                "selected_exemplars.json references examples not present in dataset: "
+                + ", ".join(sorted(remaining))
+            )
+        return
     if not dataset_path.is_file():
         blockers.append("delivery_report.json dataset_path is missing")
         return

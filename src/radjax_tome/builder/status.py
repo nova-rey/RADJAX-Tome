@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from radjax_tome.corpora.config import canonical_bytes, sha256
+
 
 def read_production_progress(path: str | Path) -> dict[str, Any]:
     target = Path(path)
@@ -26,13 +28,23 @@ def read_corpus_journal(path: str | Path) -> dict[str, Any]:
         return {"status": "missing", "path": str(target)}
     latest: dict[str, Any] | None = None
     count = 0
+    previous_hash: str | None = None
     try:
         with target.open(encoding="utf-8") as handle:
             for line in handle:
                 event = json.loads(line)
                 if not isinstance(event, dict):
                     raise ValueError("journal event is not an object")
+                if event.get("sequence") != count:
+                    raise ValueError("journal sequence is invalid")
+                supplied = event.pop("event_hash", None)
+                if supplied != sha256(canonical_bytes(event)):
+                    raise ValueError("journal event hash is invalid")
+                if event.get("previous_event_hash") != previous_hash:
+                    raise ValueError("journal predecessor is invalid")
+                event["event_hash"] = supplied
                 latest = event
+                previous_hash = str(supplied)
                 count += 1
     except (OSError, ValueError) as exc:
         return {"status": "invalid", "path": str(target), "error": str(exc)}

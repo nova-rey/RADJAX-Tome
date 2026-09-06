@@ -18,6 +18,20 @@ Screen {
 }
 
 Button {
+    width: auto;
+    margin: 1 0;
+}
+
+#actions {
+    height: auto;
     width: 100%;
+}
+
+#config-editor {
+    height: 24;
+    min-height: 10;
+}
+
+#package-output, #package-profile, #package-transport {
     margin: 1 0;
 }
