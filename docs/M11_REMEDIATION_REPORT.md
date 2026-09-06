@@ -1,7 +1,7 @@
 # M11 bounded remediation report
 
-This report records the finite M11 implementation corrections. It is not an
-independent review and does not claim external acceptance.
+This report records the finite M11 implementation corrections and the single
+independent read-only review. It does not claim a second independent review.
 
 ## Configuration and workflow
 
@@ -37,6 +37,11 @@ behavior was modified.
 
 ## External review status
 
-No independent reviewer was run in this implementation pass, as required by
-the execution boundary. The pushed branch is intentionally returned for one
-external audit.
+The registered read-only auditor returned `FAIL` on implementation
+`20cbbdeb`. One bounded correction pass fixed each blocking finding: workflow
+tabs and field controls, bounded subprocess streaming with confirmed interrupt
+and force-stop, effective resume/overwrite preflight plus native resume
+projection, and exact saved-byte checks. The targeted M11/config/CLI tests,
+full suite, quality gates, and clean-install smoke passed afterward. No second
+reviewer was invoked; the preserved initial report and correction evidence are
+the auditable record.

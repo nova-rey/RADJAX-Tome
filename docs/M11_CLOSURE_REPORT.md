@@ -2,7 +2,10 @@
 
 Implementation branch: `m11/tui-production-corpus-wizards-implementation`.
 
-Audited implementation tip: `20cbbdeb732f4717d668791c7690967f6ae10690`.
+Approved plan: `Approved Plans/M11 TUI Production and Corpus Wizards/PLAN.md`
+at `009f36042d7aad2bc976c3ea546187032cad16c6`.
+Audited implementation tip after the bounded correction:
+`07367a7fc56ac285768857a9440ac95e1353f276`.
 Contract: `373e3d17060d4ce1c4a0db6065c9289da714bde7`.
 M10 accepted base: `6b1e3c8563af748b872f68b8f4efd604fcbd4288`.
 
@@ -23,13 +26,14 @@ builder-independent.
 
 ## Gates
 
-- Full pytest: `1254 passed, 9 skipped, 0 failed`.
+- Full pytest: `1257 passed, 9 skipped, 0 failed`.
 - `python -m ruff check .`: pass.
 - `python -m ruff format --check .`: pass.
 - `python -m compileall -q src scripts tests`: pass.
 - `git diff --check`: pass.
 - `python -m build`: pass; wheel and sdist produced.
 - Clean Python 3.12 install with the exact Contract commit: `pip check` pass.
+- Wheel SHA-256: `3d55be62c6304a6a3d9b501c1dd91068ba1e7588d1321aa46574a6b3ba27b293`.
 
 ## Workflow evidence
 
@@ -47,8 +51,11 @@ large duplicate-group tests.
 
 ## Review and limitations
 
-No independent review was performed during this run. This branch is ready for
-one external audit, not for a claim of independent acceptance. Filesystem
+The independent read-only auditor initially returned `FAIL` on the prior
+implementation. One bounded correction pass fixed the four blocking findings;
+the targeted recheck and final gates pass. No second reviewer was invoked.
+The original review and correction record are in
+`evidence/m11_tui_wizards/independent_review.md`. Filesystem
 publication guarantees remain the implemented recoverable journal/quarantine
 semantics; universal atomic replacement is not claimed. The original dirty M9
 worktree was preserved separately and was not copied or modified.

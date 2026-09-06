@@ -1,0 +1,53 @@
+{
+  "schema_version": "radjax_tome_m11_command_results_v1",
+  "implementation_commit": "20cbbdeb732f4717d668791c7690967f6ae10690",
+  "correction_commit": "pending",
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "public_help": {"root": "pass", "tui": "pass", "json_tui_rejection": "pass"},
+  "clean_install": {
+    "python": "3.12",
+    "pip_check": "pass",
+    "base_import_does_not_load_textual": "pass",
+    "corpus_build_validate_inspect": "pass",
+    "production_build_validate": "pass"
+  },
+  "corpus_workflow": {
+    "build": "pass",
+    "validate": "pass",
+    "inspect": "pass",
+    "resume": "pass",
+    "relocation_identity": "pass",
+    "corruption_rejection": "pass",
+    "semantic_identity": "sha256:7a4676cc1f3fdc8273e43e5d238cd1f4c86c8cc069ed8ec893ebe9e90be9c372"
+  },
+  "production_workflow": {
+    "cpu_score_pass": "pass",
+    "selection": "pass",
+    "selected_rerun": "pass",
+    "final_validation": "pass",
+    "tome_semantic_identity": "sha256:656fcf82f5ece3c9e8033ecb5b122849c74df546e0a3bde9dea751450c58bb1c"
+  },
+  "tui": {
+    "corpus_mount": "pass",
+    "production_mount": "pass",
+    "80x24": "pass",
+    "small_terminal_notice": "pass",
+    "save_as_no_clobber": "pass",
+    "keyboard_bindings": "pass",
+    "cancellation_and_bounded_transport": "pass after bounded correction"
+  },
+  "bounded_memory": {
+    "records": 50000,
+    "shards": 98,
+    "child_max_rss_kib": 55780,
+    "elapsed_seconds": 8.691,
+    "deduplication_enabled": false,
+    "duckdb_spill_claim": false
+  },
+  "review": {
+    "initial_verdict": "FAIL",
+    "correction": "bounded single pass",
+    "targeted_recheck": "pass",
+    "second_review": false
+  }
+}

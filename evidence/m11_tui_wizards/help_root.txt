@@ -1,0 +1,8 @@
+radjax-tome root help snapshot
+
+usage: radjax-tome [-h] [--json] [--quiet] [--debug] [--no-color] [--version]
+                   {corpus,build,validate,inspect,package,doctor,research,tui}
+                   ...
+
+Recommended commands: build, corpus, validate, inspect, package, doctor, research, tui
+    tui                 Open an optional corpus or production wizard

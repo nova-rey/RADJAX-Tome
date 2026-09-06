@@ -1,0 +1,10 @@
+radjax-tome tui --help snapshot
+
+usage: radjax-tome tui [-h] [--config CONFIG] {corpus,production}
+
+positional arguments:
+  {corpus,production}
+
+options:
+  -h, --help           show this help message and exit
+  --config CONFIG

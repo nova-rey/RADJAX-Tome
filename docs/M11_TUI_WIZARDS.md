@@ -1,6 +1,8 @@
 # M11 TUI and corpus wizards
 
-M11 adds a lazy optional Textual interface for the two canonical workflows:
+M11 adds a lazy optional Textual 8.2.8 interface for the two canonical
+workflows (using the versioned Textual testing APIs documented at
+https://textual.textualize.io/guide/testing/):
 corpus-v2 construction and production Tome construction. The interface is an
 editor and workflow shell; it does not define a second configuration or
 execution model.

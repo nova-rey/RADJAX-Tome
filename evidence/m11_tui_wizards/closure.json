@@ -1,17 +1,23 @@
 {
   "schema_version": "radjax_tome_m11_closure_v1",
   "status": "M11_CLOSED_READY_FOR_INTEGRATION",
-  "external_audit_required": true,
+  "external_audit_required": false,
   "external_review": {
-    "performed": false,
-    "disposition": "not_performed_by_instruction",
-    "claim": "No independent acceptance is claimed."
+    "performed": true,
+    "review_target": "20cbbdeb732f4717d668791c7690967f6ae10690",
+    "initial_disposition": "FAIL",
+    "bounded_correction_commit": "07367a7fc56ac285768857a9440ac95e1353f276",
+    "targeted_recheck": "pass",
+    "second_review": false,
+    "claim": "The original findings and bounded correction are recorded; no second independent acceptance is claimed."
   },
   "authority": {
     "m10_accepted_base": "6b1e3c8563af748b872f68b8f4efd604fcbd4288",
     "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
-    "implementation_commit": "20cbbdeb732f4717d668791c7690967f6ae10690",
-    "closure_evidence_commit": "9ec7d920c714f53bdc8c6d3ac4c4332109810d29",
+    "implementation_commit": "07367a7fc56ac285768857a9440ac95e1353f276",
+    "closure_evidence_commit": "pending-seal",
+    "approved_plan": "Approved Plans/M11 TUI Production and Corpus Wizards/PLAN.md",
+    "approved_plan_commit": "009f36042d7aad2bc976c3ea546187032cad16c6",
     "branch": "m11/tui-production-corpus-wizards-implementation"
   },
   "scope": [
@@ -22,12 +28,13 @@
     "no-clobber configuration Save As"
   ],
   "quality": {
-    "pytest": {"passed": 1254, "skipped": 9, "failed": 0},
+    "pytest": {"passed": 1257, "skipped": 9, "failed": 0},
     "ruff_check": "pass",
     "ruff_format_check": "pass",
     "compileall": "pass",
     "diff_check": "pass",
     "python_build": "pass",
+    "wheel_sha256": "3d55be62c6304a6a3d9b501c1dd91068ba1e7588d1321aa46574a6b3ba27b293",
     "clean_python": "3.12",
     "pip_check": "pass"
   },
@@ -57,7 +64,7 @@
     "large_duplicate_group_regression": "pass"
   },
   "limitations": [
-    "External audit remains required.",
+    "No second independent review was performed after the bounded correction.",
     "Filesystem publication is recoverable and journaled; universal atomic replacement is not claimed.",
     "The 50K metric is the explicit dedup-disabled direct-stream path; enabled DuckDB behavior is covered by focused duplicate tests."
   ],
@@ -66,6 +73,10 @@
     "docs/M11_REMEDIATION_REPORT.md",
     "docs/M11_CLOSURE_REPORT.md",
     "evidence/m11_tui_wizards/closure.json",
-    "evidence/m11_tui_wizards/SHA256SUMS"
+    "evidence/m11_tui_wizards/SHA256SUMS",
+    "evidence/m11_tui_wizards/independent_review.md",
+    "evidence/m11_tui_wizards/command_results.json",
+    "evidence/m11_tui_wizards/help_root.txt",
+    "evidence/m11_tui_wizards/help_tui.txt"
   ]
 }
