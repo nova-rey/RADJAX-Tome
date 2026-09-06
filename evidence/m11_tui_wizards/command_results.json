@@ -5,11 +5,12 @@
   "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
   "public_help": {"root": "pass", "tui": "pass", "json_tui_rejection": "pass"},
   "clean_install": {
-    "python": "3.12",
+    "python": ["3.11.2", "3.12.14"],
     "pip_check": "pass",
     "base_import_does_not_load_textual": "pass",
     "corpus_build_validate_inspect": "pass",
-    "production_build_validate": "pass"
+    "production_build_validate": "pass",
+    "tui_extra": {"python": "3.12.14", "textual": "8.2.8", "pip_check": "pass", "wizard_import": "pass"}
   },
   "corpus_workflow": {
     "build": "pass",

@@ -35,8 +35,9 @@
     "diff_check": "pass",
     "python_build": "pass",
     "wheel_sha256": "3d55be62c6304a6a3d9b501c1dd91068ba1e7588d1321aa46574a6b3ba27b293",
-    "clean_python": "3.12",
-    "pip_check": "pass"
+    "clean_python": ["3.11.2", "3.12.14"],
+    "pip_check": "pass",
+    "tui_extra": {"python": "3.12.14", "textual": "8.2.8", "pip_check": "pass", "wizard_import": "pass"}
   },
   "contract_install": {
     "requested_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",

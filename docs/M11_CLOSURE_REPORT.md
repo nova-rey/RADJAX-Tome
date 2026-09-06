@@ -32,7 +32,10 @@ builder-independent.
 - `python -m compileall -q src scripts tests`: pass.
 - `git diff --check`: pass.
 - `python -m build`: pass; wheel and sdist produced.
-- Clean Python 3.12 install with the exact Contract commit: `pip check` pass.
+- Clean Python 3.11 and 3.12 base installs with the exact Contract commit:
+  `pip check` pass.
+- Separate Python 3.12 `[tui]` install: Textual `8.2.8`, `pip check` pass,
+  and `WizardApp` import pass.
 - Wheel SHA-256: `3d55be62c6304a6a3d9b501c1dd91068ba1e7588d1321aa46574a6b3ba27b293`.
 
 ## Workflow evidence

@@ -40,8 +40,8 @@ interrupt/broken-pipe conventions.
 
 ## Validation summary
 
-The canonical corpus and production paths were exercised from a clean Python
-3.12 wheel installation pinned to Contract commit
+The canonical corpus and production paths were exercised from clean Python
+3.11 and 3.12 wheel installations pinned to Contract commit
 `373e3d17060d4ce1c4a0db6065c9289da714bde7`. A v2 corpus was built, validated,
 and inspected; its semantic identity was preserved after relocation. A complete
 CPU production v2 build performed the score pass, selection, selected rerun,
