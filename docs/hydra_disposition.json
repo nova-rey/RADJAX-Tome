@@ -3023,6 +3023,102 @@
       "rationale": "Shared traversal-safe archive extraction compatibility boundary.",
       "replacement_or_target_boundary": "Future archive extraction compatibility",
       "status": "canonical"
+    },
+    "src/radjax_tome/builder/status.py": {
+      "archive_or_removal_condition": "Retain while M11 status screens consume canonical progress projections.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Read-only bounded projections for owner-written production and corpus journals.",
+      "replacement_or_target_boundary": "Future status projection contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/corpora/feasibility.py": {
+      "archive_or_removal_condition": "Retain while corpus wizard preflight is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Mutation-free corpus source and tokenizer feasibility checks.",
+      "replacement_or_target_boundary": "Future corpus preflight contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/io/config_export.py": {
+      "archive_or_removal_condition": "Retain while canonical wizard Save As is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Exclusive fsynced publication for reparsed configuration drafts.",
+      "replacement_or_target_boundary": "Future canonical configuration publication",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tui/__init__.py": {
+      "archive_or_removal_condition": "Retain while the optional TUI package is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Lazy optional Textual package boundary with no base-startup import.",
+      "replacement_or_target_boundary": "Future interactive configuration surface",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tui/app.py": {
+      "archive_or_removal_condition": "Retain while M11 production and corpus wizards are supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Textual wizard shell delegating editing, preflight, execution, and packaging to canonical owners.",
+      "replacement_or_target_boundary": "Future TUI workflow contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tui/controller.py": {
+      "archive_or_removal_condition": "Retain while wizard state is delegated through canonical loaders.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Canonical draft loading, Save As reparsing, and production/corpus preflight bridge.",
+      "replacement_or_target_boundary": "Future wizard controller contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tui/draft.py": {
+      "archive_or_removal_condition": "Retain while canonical wizard drafts are supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Minimal workflow draft state with explicit provenance and save boundary.",
+      "replacement_or_target_boundary": "Future wizard draft contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tui/fields.py": {
+      "archive_or_removal_condition": "Retain while structured wizard field addressing is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Small canonical document field access helpers.",
+      "replacement_or_target_boundary": "Future form field model",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tui/launcher.py": {
+      "archive_or_removal_condition": "Retain while optional interactive launch and headless fallback are supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Lazy Textual availability gate and actionable non-TTY fallback.",
+      "replacement_or_target_boundary": "Future interactive launcher",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tui/process.py": {
+      "archive_or_removal_condition": "Retain while wizards execute canonical workflows asynchronously.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Bounded subprocess transport for canonical JSON CLI and separate packaging.",
+      "replacement_or_target_boundary": "Future process transport contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tui/screens.py": {
+      "archive_or_removal_condition": "Retain while the approved wizard screen map is supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Shared screen names and keyboard bindings for both workflows.",
+      "replacement_or_target_boundary": "Future wizard navigation contract",
+      "status": "canonical"
+    },
+    "src/radjax_tome/tui/screens_runtime.py": {
+      "archive_or_removal_condition": "Retain while runtime confirmation screens are supported.",
+      "kind": "source-module",
+      "owning_milestone": "M11",
+      "rationale": "Lazy runtime-only confirmation screen that does not leak Textual into base startup.",
+      "replacement_or_target_boundary": "Future wizard confirmation contract",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

@@ -244,13 +244,10 @@ def _validate_selected_ids_against_dataset(
     dataset_path = Path(str(dataset_path_value))
     if dataset_path.is_dir() and (dataset_path / "corpus_cover.json").is_file():
         try:
-            from radjax_tome.builder.corpus_input import (
-                iter_corpus_examples,
-                resolve_corpus_input,
-            )
+            from radjax_tome.corpora.validation import open_verified_corpus
 
             remaining = set(selected_ids)
-            for example in iter_corpus_examples(resolve_corpus_input(dataset_path)):
+            for example in open_verified_corpus(dataset_path):
                 remaining.discard(str(example.get("example_id")))
                 if not remaining:
                     break
