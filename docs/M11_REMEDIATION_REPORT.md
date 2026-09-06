@@ -1,0 +1,42 @@
+# M11 bounded remediation report
+
+This report records the finite M11 implementation corrections. It is not an
+independent review and does not claim external acceptance.
+
+## Configuration and workflow
+
+Canonical production and corpus intent documents now round-trip without losing
+advanced fields or v2 corpus identity. Lossy v2 exports are rejected, v1
+normalization and selection authority are preserved, and Save As is exclusive
+and fsynced. The public TUI uses canonical preflight, build, validate, and
+package commands. Textual is optional and lazy.
+
+## Production integration
+
+The v2 artifact reference is resolved once and carried through production
+planning, streaming, teacher-textbook validation, score/selection, selected
+rerun, progress reporting, and final validation. Corpus semantic identity and
+tokenizer binding are checked before model/backend execution. The public CPU
+smoke proves the complete v2 route, including selected rerun and final Tome
+validation.
+
+## Bounded corpus path
+
+The explicit dedup-disabled path now streams records directly with bounded
+counters instead of opening an unnecessary DuckDB pipeline. The enabled path
+retains cursor-safe winner selection and streamed duplicate provenance. The
+50K proof and large duplicate-group regressions preserve counts, identity, and
+provenance without materializing the corpus.
+
+## Architecture and inventory
+
+Artifact validation consumes the lower-level verified corpus reader rather than
+creating a builder-to-validation import cycle. The Hydra disposition inventory
+contains every new M11 module. No Contract, Student, Golden evidence, or M8
+behavior was modified.
+
+## External review status
+
+No independent reviewer was run in this implementation pass, as required by
+the execution boundary. The pushed branch is intentionally returned for one
+external audit.

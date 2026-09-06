@@ -1,0 +1,70 @@
+{
+  "schema_version": "radjax_tome_m11_closure_v1",
+  "status": "M11_CLOSED_READY_FOR_INTEGRATION",
+  "external_audit_required": true,
+  "external_review": {
+    "performed": false,
+    "disposition": "not_performed_by_instruction",
+    "claim": "No independent acceptance is claimed."
+  },
+  "authority": {
+    "m10_accepted_base": "6b1e3c8563af748b872f68b8f4efd604fcbd4288",
+    "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+    "implementation_commit": "20cbbdeb732f4717d668791c7690967f6ae10690",
+    "branch": "m11/tui-production-corpus-wizards-implementation"
+  },
+  "scope": [
+    "canonical production and corpus intent serialization",
+    "lazy optional Textual corpus and production wizards",
+    "canonical v2 corpus production integration",
+    "bounded corpus streaming and status boundaries",
+    "no-clobber configuration Save As"
+  ],
+  "quality": {
+    "pytest": {"passed": 1254, "skipped": 9, "failed": 0},
+    "ruff_check": "pass",
+    "ruff_format_check": "pass",
+    "compileall": "pass",
+    "diff_check": "pass",
+    "python_build": "pass",
+    "clean_python": "3.12",
+    "pip_check": "pass"
+  },
+  "contract_install": {
+    "requested_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+    "runtime_reported_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7"
+  },
+  "workflow": {
+    "corpus_build_validate_inspect": "pass",
+    "deterministic_rebuild": "pass",
+    "relocation_identity": "pass",
+    "resume": "pass",
+    "interruption_boundaries": "pass",
+    "corruption_rejection": "pass",
+    "complete_cpu_production_smoke": "pass",
+    "selected_rerun": "pass",
+    "final_tome_validation": "pass"
+  },
+  "bounded_memory": {
+    "records": 50000,
+    "shards": 98,
+    "deduplication_enabled": false,
+    "elapsed_seconds": 8.691,
+    "child_max_rss_kib": 55780,
+    "semantic_identity": "sha256:8f1bc7682cbb0f3bab11eb94e3279d241a23402027738dd0acca20c0e1ed828d",
+    "duckdb_spill_claim": false,
+    "large_duplicate_group_regression": "pass"
+  },
+  "limitations": [
+    "External audit remains required.",
+    "Filesystem publication is recoverable and journaled; universal atomic replacement is not claimed.",
+    "The 50K metric is the explicit dedup-disabled direct-stream path; enabled DuckDB behavior is covered by focused duplicate tests."
+  ],
+  "evidence_files": [
+    "docs/M11_TUI_WIZARDS.md",
+    "docs/M11_REMEDIATION_REPORT.md",
+    "docs/M11_CLOSURE_REPORT.md",
+    "evidence/m11_tui_wizards/closure.json",
+    "evidence/m11_tui_wizards/SHA256SUMS"
+  ]
+}
