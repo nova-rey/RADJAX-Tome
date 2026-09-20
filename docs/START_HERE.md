@@ -62,8 +62,8 @@ readiness.
 5. Package only a corridor-selected producer workspace:
 
        radjax-tome package ./producer-workspace \
-         --output ./student-package.tgz --profile student --transport tgz
-       radjax-tome --json validate ./student-package.tgz
+         --output ./student-package --profile student --transport directory
+       radjax-tome --json validate ./student-package
 
    The synthetic dynamic CPU fixture intentionally lacks corridor artifacts and
    cannot produce a Student-compatible package. That is a supported

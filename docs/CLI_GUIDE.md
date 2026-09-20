@@ -32,7 +32,9 @@ identity before any mutation. `package` is a separately confirmed
 operation; it does not implicitly package a build.
 
 `validate` and `inspect` route through the canonical artifact dispatcher and
-accept supported Contract, producer-workspace, and package forms. `--json`
+accept supported Contract, producer-workspace, and unpacked package directories.
+The current mainline does not validate a .tgz path directly; extract an archive
+and validate its unpacked directory. `--json`
 results use the stable `radjax_tome_cli_result_v1` envelope; human output is
 intended for terminals. Errors name a phase, code, and repair when available.
 

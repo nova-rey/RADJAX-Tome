@@ -3918,3 +3918,4 @@ closed-record and checkpoint authority validation.
 - 2026-09-20: M12 documentation map: documented the installed corpus-v2 and M5/M4 reader journey, configuration/artifact boundaries, optional TUI, troubleshooting, and Hydra-derived research status without changing runtime semantics; verified the synthetic CPU journey and stated the corridor-package limitation honestly.
 - 2026-09-20: M12 ledger correction: registered the five new canonical/supporting reader pages in Hydra so the tracked documentation inventory and CLI surface remain complete.
 - 2026-09-20: M12 schema correction: classified new reader-page records as top-level-doc to preserve the existing Hydra v1 inventory schema.
+- 2026-09-20: M12 reader-review correction: changed the package walkthrough to validate the unpacked directory transport and stated that direct .tgz validation is unsupported by the current mainline.
