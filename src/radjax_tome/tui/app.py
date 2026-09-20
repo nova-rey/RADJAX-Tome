@@ -23,6 +23,7 @@ from textual.widgets import (
 
 from radjax_tome.builder.config import canonical_production_build_intent
 from radjax_tome.builder.config_io import tome_build_intent_document
+from radjax_tome.builder.status import read_corpus_journal, read_production_progress
 from radjax_tome.tui.controller import (
     draft_text,
     load_draft,
@@ -105,6 +106,7 @@ class WizardApp(App[None]):
         self._cancel_event: asyncio.Event | None = None
         self._force_event: asyncio.Event | None = None
         self._cancel_requested = False
+        self._status_task: asyncio.Task[None] | None = None
 
     def _field_specs(self) -> list[tuple[str, str, str]]:
         document = self.draft.document
@@ -294,6 +296,39 @@ class WizardApp(App[None]):
     def _set_status(self, message: str) -> None:
         self.query_one("#status", Static).update(message)
 
+    def _owner_status(self) -> dict[str, Any]:
+        document = self.draft.document
+        if self.draft.saved_path is None:
+            return {"status": "missing"}
+        base = self.draft.saved_path.parent
+        if self.workflow == "corpus":
+            artifact = Path(document.get("output", {}).get("artifact_path", ""))
+            if not artifact.is_absolute():
+                artifact = base / artifact
+            return read_corpus_journal(
+                artifact / "journal" / "corpus_build_journal_v1.jsonl"
+            )
+        output = Path(document.get("outputs", {}).get("output_dir", ""))
+        if not output.is_absolute():
+            output = base / output
+        return read_production_progress(output / "production_progress.json")
+
+    async def _poll_owner_status(self) -> None:
+        while self._running:
+            status = self._owner_status()
+            if status.get("status") == "present":
+                if self.workflow == "corpus":
+                    latest = status.get("latest") or {}
+                    self._set_status(
+                        f"Corpus status: {latest.get('event_type', 'progress')}"
+                    )
+                else:
+                    progress = status.get("progress") or {}
+                    self._set_status(
+                        f"Production status: {progress.get('stage', 'progress')}"
+                    )
+            await asyncio.sleep(0.5)
+
     def action_save_as(self) -> None:
         self._save()
 
@@ -406,6 +441,7 @@ class WizardApp(App[None]):
         self._cancel_requested = False
         self._cancel_event = asyncio.Event()
         self._force_event = asyncio.Event()
+        self._status_task = asyncio.create_task(self._poll_owner_status())
         try:
             preflight_draft(self.draft)
             self._set_status("Preflight passed; running canonical CLI...")
@@ -416,7 +452,12 @@ class WizardApp(App[None]):
                 force_event=self._force_event,
                 process_holder=self._set_process,
             )
-            if result.returncode == 130:
+            if result.force_stopped:
+                self._set_status(
+                    "Canonical workflow force-stopped; resumability is unverified; "
+                    "workspace and staging preserved."
+                )
+            elif result.returncode == 130:
                 self._set_status(
                     "Canonical workflow interrupted; workspace and staging preserved."
                 )
@@ -429,6 +470,10 @@ class WizardApp(App[None]):
         except (OSError, TypeError, ValueError) as exc:
             self._set_status(f"Run failed: {exc}")
         finally:
+            if self._status_task is not None:
+                self._status_task.cancel()
+                await asyncio.gather(self._status_task, return_exceptions=True)
+                self._status_task = None
             self._running = False
             self._process = None
             self._cancel_event = None

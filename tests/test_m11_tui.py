@@ -94,3 +94,34 @@ def test_subprocess_transport_interrupts_and_preserves_state() -> None:
         assert result.transport_error == "canonical CLI interrupted"
 
     asyncio.run(exercise())
+
+
+def test_subprocess_force_stop_reports_unverified_resumability() -> None:
+    async def exercise() -> None:
+        cancel = asyncio.Event()
+        force = asyncio.Event()
+        task = asyncio.create_task(
+            _run_json_process(
+                [
+                    sys.executable,
+                    "-c",
+                    "import signal, time; signal.signal(signal.SIGINT, signal.SIG_IGN); print('{}', flush=True); time.sleep(30)",
+                ],
+                stderr_limit=128,
+                stdout_limit=1024,
+                cancel_event=cancel,
+                force_event=force,
+            )
+        )
+        await asyncio.sleep(0.1)
+        cancel.set()
+        await asyncio.sleep(0.1)
+        force.set()
+        result = await asyncio.wait_for(task, timeout=5)
+        assert result.force_stopped is True
+        assert result.returncode == 137
+        assert result.transport_error == (
+            "canonical CLI force-stopped; resumability unverified"
+        )
+
+    asyncio.run(exercise())

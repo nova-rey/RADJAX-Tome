@@ -19,6 +19,7 @@ class ProcessResult:
     result: dict[str, object] | None
     stderr: str
     transport_error: str | None = None
+    force_stopped: bool = False
 
 
 async def _read_bounded(
@@ -76,6 +77,7 @@ async def _run_json_process(
     cancel_task: asyncio.Task[bool] | None = None
     force_task: asyncio.Task[bool] | None = None
     interrupted = False
+    force_stopped = False
     try:
         waiters: set[asyncio.Task[Any]] = {wait_task}
         if cancel_event is not None:
@@ -92,6 +94,7 @@ async def _run_json_process(
                 {wait_task, force_task}, return_when=asyncio.FIRST_COMPLETED
             )
             if force_task in done and not wait_task.done():
+                force_stopped = True
                 process.kill()
                 await wait_task
         await asyncio.gather(wait_task, stdout_task, stderr_task)
@@ -114,6 +117,14 @@ async def _run_json_process(
     elif stderr_exceeded:
         transport_error = f"CLI stderr exceeded {stderr_limit} byte limit"
     if interrupted:
+        if force_stopped:
+            return ProcessResult(
+                137,
+                None,
+                stderr.decode("utf-8", errors="replace"),
+                transport_error or "canonical CLI force-stopped; resumability unverified",
+                True,
+            )
         return ProcessResult(
             130,
             None,
