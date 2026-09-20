@@ -3920,3 +3920,4 @@ closed-record and checkpoint authority validation.
 - 2026-09-20: M12 schema correction: classified new reader-page records as top-level-doc to preserve the existing Hydra v1 inventory schema.
 - 2026-09-20: M12 reader-review correction: changed the package walkthrough to validate the unpacked directory transport and stated that direct .tgz validation is unsupported by the current mainline.
 - 2026-09-20: M12 evidence seal: recorded the installed reader journey, complete test/gate receipts, research-map consistency, review correction and limitations; the final handoff reports this evidence-only seal commit.
+- 2026-09-20: M12 inventory correction: registered M12_CLOSURE_REPORT.md in Hydra so the tracked top-level documentation inventory remains complete.

@@ -3218,6 +3218,14 @@
       "rationale": "Current safe diagnostics and limitations.",
       "replacement_or_target_boundary": "M12 current user documentation.",
       "status": "supporting"
+    },
+    "docs:M12_CLOSURE_REPORT": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M12",
+      "rationale": "M12 closure and evidence map.",
+      "replacement_or_target_boundary": "M12 current user documentation.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"
