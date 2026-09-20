@@ -122,7 +122,8 @@ async def _run_json_process(
                 137,
                 None,
                 stderr.decode("utf-8", errors="replace"),
-                transport_error or "canonical CLI force-stopped; resumability unverified",
+                transport_error
+                or "canonical CLI force-stopped; resumability unverified",
                 True,
             )
         return ProcessResult(

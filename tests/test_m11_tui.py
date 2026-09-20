@@ -105,7 +105,11 @@ def test_subprocess_force_stop_reports_unverified_resumability() -> None:
                 [
                     sys.executable,
                     "-c",
-                    "import signal, time; signal.signal(signal.SIGINT, signal.SIG_IGN); print('{}', flush=True); time.sleep(30)",
+                    (
+                        "import signal, time; "
+                        "signal.signal(signal.SIGINT, signal.SIG_IGN); "
+                        "print('{}', flush=True); time.sleep(30)"
+                    ),
                 ],
                 stderr_limit=128,
                 stdout_limit=1024,
