@@ -3,7 +3,7 @@
 ## Authority
 
 - Accepted M11 integration base: 53b19674a724a0999aa1c80f8b40d7e839a17c75
-- Final audited content/test commit: 4a322606b686289e36f86694c33fc77d00d5e8eb
+- Final audited content/test commit: c6934f4
 - Branch: m12/user-docs-research-map
 - Contract: 373e3d17060d4ce1c4a0db6065c9289da714bde7 (unchanged)
 - Student revision: no Student checkout was available; this report makes no
@@ -20,7 +20,7 @@ The installed wheel was tested outside the checkout in a disposable Python
 ran through corpus build, validate, and inspect with one source and one record;
 all JSON statuses were pass and the artifact carried a path-independent
 sha256 semantic identity. A complete v2 production template loads through the
-canonical M5 loader and is marked preflight-validated by the docs checks.
+canonical M5 loader and is marked canonical-loader-validated by the docs checks.
 
 The accepted CPU-reference v2 production smoke (inherited from the M11
 authority and unchanged by M12) completed score, selection, selected rerun,
@@ -68,7 +68,7 @@ reader pages. The human map is not a competing status registry.
 - compileall: pass.
 - git diff --check: pass.
 - Wheel: radjax_tome-0.1.0-py3-none-any.whl,
-  SHA-256 eb2c5fc968ec59e47be6af1ab8b1e1006087c021884671c68ea01b2d3609fd22.
+  SHA-256 002675e47469a05f7f5b55422b822a1103863da3445db1b4420190906abb99f3.
 - Clean install: Python 3.11.2 disposable environment, pip check pass,
   help/version/doctor pass, Contract commit reported exactly.
 - One focused reader review found the direct-tgz validation wording defect;

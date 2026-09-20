@@ -98,7 +98,7 @@ semantic identity that a production intent references. See
 Install the optional extra only when a terminal wizard is useful:
 
 ```bash
-python -m pip install './dist/radjax_tome-*.whl[tui]'
+python -m pip install './dist/radjax_tome-0.1.0-py3-none-any.whl[tui]'
 radjax-tome tui corpus --config ./corpus-intent.json
 radjax-tome tui production --config ./tome-intent-v2.json
 ```

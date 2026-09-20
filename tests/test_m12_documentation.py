@@ -104,7 +104,7 @@ def test_examples_have_stable_execution_classifications_and_optional_tui_isolate
         path.read_text(encoding="utf-8")
         for path in [ROOT / "README.md", *DOCS.glob("*.md")]
     ).lower()
-    for marker in ("executed", "preflight-validated", "template"):
+    for marker in ("executed", "canonical-loader-validated", "template"):
         assert marker in text, (
             f"documentation is missing example classification: {marker}"
         )

@@ -80,7 +80,7 @@ backend construction. Replace placeholders and run preflight first:
     radjax-tome build --config ./tome-intent-v2.json --preflight-only
     radjax-tome build --config ./tome-intent-v2.json
 
-The v2 configuration above is preflight-validated by the documentation checks. These are production templates, not a claim that this documentation run
+The v2 configuration above is canonical-loader-validated by the documentation checks. These are production templates, not a claim that this documentation run
 downloaded a model or ran an accelerator. See CONFIGURATION_REFERENCE.md and
 TEACHER_BACKENDS.md.
 

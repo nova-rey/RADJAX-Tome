@@ -4,7 +4,7 @@
     "python": "3.11.2",
     "install": "disposable clean wheel environment",
     "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
-    "wheel_sha256": "eb2c5fc968ec59e47be6af1ab8b1e1006087c021884671c68ea01b2d3609fd22"
+    "wheel_sha256": "002675e47469a05f7f5b55422b822a1103863da3445db1b4420190906abb99f3"
   },
   "offline_cpu_journey": {
     "source_count": 1,
@@ -19,7 +19,7 @@
     "classification": "executed_offline_cpu_not_teacher_inference"
   },
   "production": {
-    "classification": "preflight_validated_template_with_inherited_m11_cpu_reference_smoke",
+    "classification": "canonical_loader_validated_template_with_inherited_m11_cpu_reference_smoke",
     "score_selection_selected_rerun": "inherited_m11_receipt_pass",
     "teacher_download_or_gpu": false
   },
