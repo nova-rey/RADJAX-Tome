@@ -1,0 +1,13 @@
+Processing /tmp/m13-golden-1k-10k
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: radjax-tome
+  Building wheel for radjax-tome (pyproject.toml): started
+  Building wheel for radjax-tome (pyproject.toml): finished with status 'done'
+  Created wheel for radjax-tome: filename=radjax_tome-0.1.0-py3-none-any.whl size=649177 sha256=a2e94a8e3020da6426fa45e38cca1709348c396d12094bb4cd3647755bf0614a
+  Stored in directory: /home/nyx/.cache/pip/wheels/4f/5f/94/a93dcbfa5dc03167442c0acc47fa7f1246ea7fd0d049398c09
+Successfully built radjax-tome

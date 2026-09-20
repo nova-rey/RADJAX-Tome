@@ -1,0 +1,2 @@
+WARNING deprecated command 'golden'; use 'research' for retained engineering commands
+{"count": 256, "semantic_root": "sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba", "status": "pass"}

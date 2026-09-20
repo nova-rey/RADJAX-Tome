@@ -3922,3 +3922,5 @@ closed-record and checkpoint authority validation.
 - 2026-09-20: M12 evidence seal: recorded the installed reader journey, complete test/gate receipts, research-map consistency, review correction and limitations; the final handoff reports this evidence-only seal commit.
 - 2026-09-20: M12 inventory correction: registered M12_CLOSURE_REPORT.md in Hydra so the tracked top-level documentation inventory remains complete.
 - 2026-09-20: M12 final correction: replaced the wildcard TUI install example with the exact 0.1.0 wheel filename, relabeled the v2 template as canonical-loader-validated, and refreshed closure claims without adding a preflight receipt.
+
+- 2026-09-20: M13 bounded rehearsal: verified integrated M12 main, Golden fixture, current 1K teacher closure, and one real Tesla T4 smoke; did not claim Golden parity or 10K scaling because the frozen Golden corpus identity and a genuine 10K corpus/config/provenance authority were unavailable.

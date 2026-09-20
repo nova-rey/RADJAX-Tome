@@ -1,0 +1,68 @@
+{
+  "available_10k": {
+    "found": true,
+    "reason": "M13 prohibits synthetic substitutes; no genuine 10K corpus/config/provenance was found.",
+    "source": "/home/nyx/m8g/tmp/m8_10k_scaling/fixture and evidence/m8_c2_10k_scale",
+    "status": "derived_synthetic_not_authoritative"
+  },
+  "available_current_1k": {
+    "corpus_hash": "sha256:7719ed62c5bb8feedd7f7e955e52d0b373d8b09e3ec9f6b8256f99a8b5a7e9d1",
+    "manifest_file_sha256": "sha256:71482286edfb37b7b353dbdccbd7e5250a3e13d4919fe61ca717ff61b3fc024b",
+    "manifest_hash": "sha256:eea502c2e6adb33290342b3b39aba71a8ad19fc0f401182de61127d276b6b9be",
+    "model_directory_hash": "sha256:77c344d305f916b3201311543888f5a95705c3e34de72f62610b9e47afb833d6",
+    "model_provenance_file_sha256": "sha256:5ff306214e7b1b9ec6d43462ca081a96586f4944e9c5a702132e3c3d547a1824",
+    "num_examples": 1000,
+    "num_sources": 1000,
+    "source": "Modal volume m8g-current-1k-workload:/current",
+    "tokenizer_binding": null
+  },
+  "branch": "m13/golden-1k-10k-rehearsal",
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "golden_fixture": {
+    "corpus_hash": "sha256:518a5213981de49f52fd3e18a880d73aee31eec86eb6dedaf8b39a3c6f7ab878",
+    "corpus_manifest_hash": "sha256:7357fae12008fc3951f2ebfd819410c5c8d4612f12137d349031cd73a3186494",
+    "model_directory_hash": "sha256:77c344d305f916b3201311543888f5a95705c3e34de72f62610b9e47afb833d6",
+    "num_examples": 1000,
+    "path": "tests/fixtures/golden_t4_1k",
+    "schema": "radjax_tome.golden_contract.v1",
+    "selected_coordinates": 256,
+    "semantic_root": "sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba",
+    "tokenizer_hash": "sha256:29aa73c8a911e1f39dddb0200fe8f4817fd369b8c0ce4f25aec6f1157e22690b",
+    "weights_hash": "sha256:e68ec3300bde8aec6fb868b42a6b8ddfdef677a7c38dd279a639278a8b94a46b"
+  },
+  "golden_validation": {
+    "command": "PYTHONPATH=src:/home/nyx/m8g/repos/contract/src python -m radjax_tome.cli.main golden validate --fixture tests/fixtures/golden_t4_1k",
+    "count": 256,
+    "result": "pass",
+    "semantic_root": "sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba"
+  },
+  "harness": {
+    "focused_tests": "41 passed",
+    "path": "scripts/m13_t4_smoke.py",
+    "sha256": "sha256:0f6d9801eaaca5a6941a76db36887936a715397a16289a00290474f6536f1d78"
+  },
+  "m12_ancestry": {
+    "m11": "53b19674a724a0999aa1c80f8b40d7e839a17c75",
+    "m12": "97907b3681e49bfc107866d480596981c2eccaa6",
+    "main_contains_m11": true,
+    "main_contains_m12": true
+  },
+  "m12_corrections": {
+    "template_label": "docs/START_HERE.md labels v2 as canonical-loader-validated",
+    "tui_install": "docs/CLI_GUIDE.md uses exact wheel filename with [tui]"
+  },
+  "modal": {
+    "active_tasks": 0,
+    "all_stopped": true,
+    "apps": [
+      "ap-HPEJNIQkGjJrH4HxirPi7M",
+      "ap-1MnCFeIdNr97k0SGWsAbWl",
+      "ap-ebfHcvO6VL7jX1bhqUAEHB"
+    ],
+    "t4_rate_usd_per_hour": 0.59,
+    "today_billing_report": "evidence/m13_golden_1k_10k/modal_billing_today.json"
+  },
+  "schema_version": "m13_authority_inventory_v1",
+  "starting_origin_main": "97907b3681e49bfc107866d480596981c2eccaa6",
+  "tested_tome_commit": "97907b3681e49bfc107866d480596981c2eccaa6"
+}\n

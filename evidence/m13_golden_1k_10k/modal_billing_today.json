@@ -1,0 +1,74 @@
+[
+  {
+    "object_id": "ap-1MnCFeIdNr97k0SGWsAbWl",
+    "description": "radjax-m13-golden-smoke",
+    "environment": "main",
+    "interval_start": "2026-09-20T00:00:00",
+    "resource": "CPU",
+    "cost": "0.00023048"
+  },
+  {
+    "object_id": "ap-1MnCFeIdNr97k0SGWsAbWl",
+    "description": "radjax-m13-golden-smoke",
+    "environment": "main",
+    "interval_start": "2026-09-20T00:00:00",
+    "resource": "T4",
+    "cost": "0.00327768"
+  },
+  {
+    "object_id": "ap-1MnCFeIdNr97k0SGWsAbWl",
+    "description": "radjax-m13-golden-smoke",
+    "environment": "main",
+    "interval_start": "2026-09-20T00:00:00",
+    "resource": "Memory",
+    "cost": "0.00002376"
+  },
+  {
+    "object_id": "ap-HPEJNIQkGjJrH4HxirPi7M",
+    "description": "radjax-m13-golden-smoke",
+    "environment": "main",
+    "interval_start": "2026-09-20T00:00:00",
+    "resource": "CPU",
+    "cost": "0.00021386"
+  },
+  {
+    "object_id": "ap-HPEJNIQkGjJrH4HxirPi7M",
+    "description": "radjax-m13-golden-smoke",
+    "environment": "main",
+    "interval_start": "2026-09-20T00:00:00",
+    "resource": "T4",
+    "cost": "0.00354680"
+  },
+  {
+    "object_id": "ap-HPEJNIQkGjJrH4HxirPi7M",
+    "description": "radjax-m13-golden-smoke",
+    "environment": "main",
+    "interval_start": "2026-09-20T00:00:00",
+    "resource": "Memory",
+    "cost": "0.00002703"
+  },
+  {
+    "object_id": "ap-ebfHcvO6VL7jX1bhqUAEHB",
+    "description": "radjax-m13-golden-smoke",
+    "environment": "main",
+    "interval_start": "2026-09-20T00:00:00",
+    "resource": "CPU",
+    "cost": "0.00018338"
+  },
+  {
+    "object_id": "ap-ebfHcvO6VL7jX1bhqUAEHB",
+    "description": "radjax-m13-golden-smoke",
+    "environment": "main",
+    "interval_start": "2026-09-20T00:00:00",
+    "resource": "T4",
+    "cost": "0.00229442"
+  },
+  {
+    "object_id": "ap-ebfHcvO6VL7jX1bhqUAEHB",
+    "description": "radjax-m13-golden-smoke",
+    "environment": "main",
+    "interval_start": "2026-09-20T00:00:00",
+    "resource": "Memory",
+    "cost": "0.00001669"
+  }
+]\n
