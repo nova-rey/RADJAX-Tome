@@ -14,7 +14,7 @@
   "authority": {
     "m10_accepted_base": "6b1e3c8563af748b872f68b8f4efd604fcbd4288",
     "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
-    "implementation_commit": "07367a7fc56ac285768857a9440ac95e1353f276",
+    "implementation_commit": "44c6fd5596d0c943b1eab9010bde2d40cbdd1bf1",
     "closure_evidence_commit": "972b84bf4b5cf0e6973edf8bb76d7b456ed11f8e",
     "approved_plan": "Approved Plans/M11 TUI Production and Corpus Wizards/PLAN.md",
     "approved_plan_commit": "009f36042d7aad2bc976c3ea546187032cad16c6",
@@ -28,13 +28,13 @@
     "no-clobber configuration Save As"
   ],
   "quality": {
-    "pytest": {"passed": 1257, "skipped": 9, "failed": 0},
+    "pytest": {"passed": 1239, "skipped": 27, "failed": 0},
     "ruff_check": "pass",
     "ruff_format_check": "pass",
     "compileall": "pass",
     "diff_check": "pass",
     "python_build": "pass",
-    "wheel_sha256": "3d55be62c6304a6a3d9b501c1dd91068ba1e7588d1321aa46574a6b3ba27b293",
+    "wheel_sha256": "c7087f6f6abe5ffe5ccb375e53946dd02e9818ba27a63b73a7b8920ab7f3a550",
     "clean_python": ["3.11.2", "3.12.14"],
     "pip_check": "pass",
     "tui_extra": {"python": "3.12.14", "textual": "8.2.8", "pip_check": "pass", "wizard_import": "pass"}

@@ -1,7 +1,7 @@
 {
   "schema_version": "radjax_tome_m11_command_results_v1",
-  "implementation_commit": "07367a7fc56ac285768857a9440ac95e1353f276",
-  "correction_commit": "07367a7fc56ac285768857a9440ac95e1353f276",
+  "implementation_commit": "44c6fd5596d0c943b1eab9010bde2d40cbdd1bf1",
+  "correction_commit": "4c9deddafd9576d318e8ee4d79c1d0f5b87cbcf2",
   "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
   "public_help": {"root": "pass", "tui": "pass", "json_tui_rejection": "pass"},
   "clean_install": {
@@ -42,7 +42,9 @@
     "small_terminal_notice": "pass",
     "save_as_no_clobber": "pass",
     "keyboard_bindings": "pass",
-    "cancellation_and_bounded_transport": "pass after bounded correction"
+    "cancellation_and_bounded_transport": "pass after bounded correction",
+    "owner_status_polling": "pass",
+    "force_stop_resumability_unverified": "pass"
   },
   "bounded_memory": {
     "records": 50000,

@@ -5,7 +5,7 @@ Implementation branch: `m11/tui-production-corpus-wizards-implementation`.
 Approved plan: `Approved Plans/M11 TUI Production and Corpus Wizards/PLAN.md`
 at `009f36042d7aad2bc976c3ea546187032cad16c6`.
 Audited implementation tip after the bounded correction:
-`07367a7fc56ac285768857a9440ac95e1353f276`.
+`44c6fd5596d0c943b1eab9010bde2d40cbdd1bf1`.
 Contract: `373e3d17060d4ce1c4a0db6065c9289da714bde7`.
 M10 accepted base: `6b1e3c8563af748b872f68b8f4efd604fcbd4288`.
 
@@ -26,7 +26,7 @@ builder-independent.
 
 ## Gates
 
-- Full pytest: `1257 passed, 9 skipped, 0 failed`.
+- Full pytest: `1239 passed, 27 skipped, 0 failed`.
 - `python -m ruff check .`: pass.
 - `python -m ruff format --check .`: pass.
 - `python -m compileall -q src scripts tests`: pass.
@@ -36,7 +36,7 @@ builder-independent.
   `pip check` pass.
 - Separate Python 3.12 `[tui]` install: Textual `8.2.8`, `pip check` pass,
   and `WizardApp` import pass.
-- Wheel SHA-256: `3d55be62c6304a6a3d9b501c1dd91068ba1e7588d1321aa46574a6b3ba27b293`.
+- Wheel SHA-256: `c7087f6f6abe5ffe5ccb375e53946dd02e9818ba27a63b73a7b8920ab7f3a550`.
 
 ## Workflow evidence
 
@@ -62,8 +62,10 @@ large duplicate-group tests.
 ## Review and limitations
 
 The independent read-only auditor initially returned `FAIL` on the prior
-implementation. One bounded correction pass fixed the four blocking findings;
-the targeted recheck and final gates pass. No second reviewer was invoked.
+implementation. One bounded correction pass fixed the original findings and
+the final audit-gap findings for owner-status polling and forced-stop
+resumability reporting; the targeted recheck and final gates pass. No second
+reviewer was invoked.
 The original review and correction record are in
 `evidence/m11_tui_wizards/independent_review.md`. Filesystem
 publication guarantees remain the implemented recoverable journal/quarantine
