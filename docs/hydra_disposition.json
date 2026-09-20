@@ -3178,6 +3178,46 @@
       "rationale": "M11 optional controller over canonical lifecycle.",
       "replacement_or_target_boundary": "M9 supported command surface or research namespace.",
       "status": "canonical"
+    },
+    "docs:ARTIFACTS_AND_PACKAGES": {
+      "archive_or_removal_condition": null,
+      "kind": "documentation",
+      "owning_milestone": "M12",
+      "rationale": "Current artifact and package reference.",
+      "replacement_or_target_boundary": "M12 current user documentation.",
+      "status": "canonical"
+    },
+    "docs:CONFIGURATION_REFERENCE": {
+      "archive_or_removal_condition": null,
+      "kind": "documentation",
+      "owning_milestone": "M12",
+      "rationale": "Current M5 configuration reference.",
+      "replacement_or_target_boundary": "M12 current user documentation.",
+      "status": "canonical"
+    },
+    "docs:RESEARCH_STATUS_MAP": {
+      "archive_or_removal_condition": null,
+      "kind": "documentation",
+      "owning_milestone": "M12",
+      "rationale": "Human view derived from the Hydra ledger.",
+      "replacement_or_target_boundary": "M12 current user documentation.",
+      "status": "supporting"
+    },
+    "docs:START_HERE": {
+      "archive_or_removal_condition": null,
+      "kind": "documentation",
+      "owning_milestone": "M12",
+      "rationale": "Current user journey.",
+      "replacement_or_target_boundary": "M12 current user documentation.",
+      "status": "canonical"
+    },
+    "docs:TROUBLESHOOTING": {
+      "archive_or_removal_condition": null,
+      "kind": "documentation",
+      "owning_milestone": "M12",
+      "rationale": "Current safe diagnostics and limitations.",
+      "replacement_or_target_boundary": "M12 current user documentation.",
+      "status": "supporting"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"
