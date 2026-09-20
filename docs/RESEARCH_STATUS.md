@@ -1,21 +1,22 @@
 # Research Status
 
-The supported product direction is native two-pass fingerprint-corridor Path B.
-This page is a concise navigation view of the authoritative
-`docs/hydra_disposition.json` ledger; it does not delete, rename, or discredit
-historical work.
+This page is a short pointer to the authoritative
+`docs/hydra_disposition.json` ledger. The expanded reader map is
+`docs/RESEARCH_STATUS_MAP.md`; neither page replaces the ledger or historical
+evidence.
 
 ## Product Mainline
 
-- **Canonical:** corpus construction, the GPU score pass, fingerprint-corridor
-  authority, claims and frozen multi-role selection, selected rerun delivery,
-  strict linkage audit, cover pages, packaging, and bundles.
+- **Canonical:** corpus-v2 construction, M5/M4 configuration and lifecycle,
+  GPU score pass, fingerprint-corridor authority, claims and frozen multi-role
+  selection, selected rerun delivery, strict linkage audit, cover pages,
+  packaging, and bundles.
 - **Supporting:** target schemas and stores, I/O, provenance, quantization,
-  planning, doctor, parity, and the current CLI facade.
+  planning, doctor, parity, TUI facade, and artifact dispatch.
 
 ## Preserved Research
 
-The following are research-frozen pending the M3 archive/preservation gate:
+The following remain research-frozen or compatibility-only:
 
 - experimental multi-GPU Path B;
 - HF specimen/export/Qwen-policy experiments;
@@ -25,25 +26,15 @@ The following are research-frozen pending the M3 archive/preservation gate:
 - chronological roadmaps, capability matrices, migration inventories, and
   optimization handoffs.
 
-M3 must use the existing archive precedent:
-`archive/tome-migration-audit` and `archive/tome-large-docs`. No new branch
-name is implied by this document.
+Historical M8 measurements and rejected optimizations remain evidence only;
+batch 1 is the canonical selected-pass policy.
 
 ## Compatibility and Removal
 
-TeacherTextbook readers, reference/fake backends, legacy target utilities, the
-toy build route, and duplicate wrappers remain only while M2 parity proves a
-safe replacement. Expert C2-C5 commands are marked `remove-after-parity` and
-move under a future research namespace in M9 rather than remaining peer product
-commands.
+Legacy TeacherTextbook readers, reference/fake backends, target utilities, and
+expert C2-C5 commands remain compatibility/research surfaces. Use the
+`research` namespace or archived scripts when reproducing evidence; do not
+present them as a second production pipeline.
 
-## Known Baseline Boundary Violations
-
-`backends/__init__.py`, `builder/__init__.py`, and `reports/__init__.py`
-currently import research-frozen exports. This is a truthful M1 baseline fact,
-not a runtime edit in this milestone. M3 preserves the research surfaces and
-M6 narrows package exports so canonical imports no longer execute those
-research imports.
-
-See `docs/hydra_disposition.json` for the record-level owner, target boundary,
+See `docs/hydra_disposition.json` for record-level owner, target boundary,
 and archive/removal condition.

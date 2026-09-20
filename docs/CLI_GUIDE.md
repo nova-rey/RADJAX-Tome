@@ -2,399 +2,116 @@
 
 ## Recommended CLI
 
-The supported mainline has six commands. Build consumes a complete canonical
-M5 intent; it does not accept the historical flag bag.
+The installed mainline advertises `corpus`, `build`, `validate`, `inspect`,
+`package`, `doctor`, `research`, and optional `tui`. Build consumes a
+complete canonical M5 intent; it does not accept the historical flag bag.
 
 ```bash
-radjax-tome build --config docs/examples/m9_tome_build_intent.yaml --preflight-only
+radjax-tome corpus build --config ./corpus-intent.json
+radjax-tome corpus validate ./corpus-artifact
+radjax-tome corpus inspect ./corpus-artifact
 
-radjax-tome validate ./OUTPUT.v4.tgz
-
-radjax-tome inspect ./OUTPUT.v4.tgz
-
+radjax-tome build --config ./tome-intent.json --preflight-only
+radjax-tome validate ./producer-workspace
+radjax-tome inspect ./producer-workspace
 radjax-tome package ./producer-workspace \
-  --output ./student.tgz --profile student
-
-radjax-tome doctor --config docs/examples/m9_tome_build_intent.yaml
+  --output ./student.tgz --profile student --transport tgz
+radjax-tome doctor --config ./tome-intent.json
 ```
 
 Machine-readable output is selected before the command:
 
 ```bash
-radjax-tome --json validate ./OUTPUT.v4.tgz
+radjax-tome --json validate ./producer-workspace
 ```
 
-`--output WORKSPACE` is an optional narrow build override. It is applied
-through the canonical M5 override API and does not introduce a second
-destination model. `--resume` and `--overwrite` are likewise operational
-overrides; preflight refuses unsafe or unrelated destinations.
+`--output PATH`, `--resume`, and `--overwrite` are narrow operational
+overrides applied by the canonical M5/M4 lifecycle. They do not introduce a
+second destination model. Preflight validates ownership and destination
+identity before any mutation. `package` is a separately confirmed
+operation; it does not implicitly package a build.
 
-The public validator accepts Contract v3, M7 v4, canonical package, and
-`.rtome` production forms. Historical flag-based validation remains available
-under `research` and emits a deprecation warning.
+`validate` and `inspect` route through the canonical artifact dispatcher and
+accept supported Contract, producer-workspace, and package forms. `--json`
+results use the stable `radjax_tome_cli_result_v1` envelope; human output is
+intended for terminals. Errors name a phase, code, and repair when available.
+
+### Command safety
+
+| Command | Reads | Writes/side effects | Expensive work |
+| --- | --- | --- | --- |
+| `doctor` | config and local capability metadata | optional report only | no model execution |
+| `corpus build` | declared local sources | corpus artifact and journal | CPU corpus work |
+| `corpus validate/inspect` | corpus artifact | no mutation | bounded verification |
+| `build --preflight-only` | intent, corpus, provenance | no output mutation | no model/backend allocation |
+| `build` | verified corpus and teacher | producer workspace | teacher/selection work |
+| `validate/inspect` | artifact/package | optional report only | artifact verification |
+| `package` | validated producer workspace | new package only | archive/copy work |
+| `tui` | config or wizard inputs | Save As only after confirmation | same canonical commands |
+
+Resume is only at the durable lifecycle boundaries recorded by the producer;
+it is not a promise of arbitrary mid-shard recovery. Overwrite requires an
+explicit flag and positive ownership. Cancellation leaves a recoverable or
+quarantined state rather than silently replacing an unrelated destination.
+
+## Retained script classification
+
+| Script | Classification | Use when |
+| --- | --- | --- |
+| mainline CLI | recommended wrapper / legacy-compatible | normal production and corpus work |
+| research commands | advanced diagnostic | reproducing accepted experiments |
+| internal helpers | internal/development | contributor tests only |
+| archived reports | archive-only | historical evidence and provenance |
 
 ## Research and compatibility
 
-The commands below are retained engineering interfaces, not the supported
-mainline. Invoke them explicitly through `radjax-tome research ...` or use
-their existing scripts when reproducing archived evidence.
+Legacy and research commands remain available for reproducibility but are not
+the normal happy path. Use `radjax-tome research --help` or the existing
+scripts when reproducing an archived result. The human-readable status map is
+`docs/RESEARCH_STATUS_MAP.md`; its source of truth is
+`docs/hydra_disposition.json`.
 
-Build offline fingerprint-corridor candidate micro-leaderboards from explicit
-compact feature records:
+The historical names below are retained as compatibility/research interfaces:
+`build-fingerprint-corridor-leaderboards`,
+`allocate-fingerprint-corridor-coverage`,
+`claim-corridor-and-backfill-global`,
+`build-multi-role-selected-exemplars`, `pack`, and `unpack`. They are not
+a second production pipeline and should not be copied into new user configs.
 
-```bash
-radjax-tome build-fingerprint-corridor-leaderboards \
-  --artifact ./corridor_tome \
-  --candidate-jsonl ./corridor_tome/candidate_features.jsonl \
-  --output ./corridor_tome/fingerprint_leaderboards \
-  --candidate-pool-cap 4 \
-  --overwrite
-```
-
-This command fails closed when real compact feature fields are unavailable. It
-does not infer corridor features from selected payloads. See
-`docs/CORRIDOR_LEADERBOARDS_C2.md`.
-
-Allocate a bounded corridor coverage plan from a C2 leaderboard artifact:
+## Corpus workflow (current grammar)
 
 ```bash
-radjax-tome allocate-fingerprint-corridor-coverage \
-  --leaderboards ./corridor_tome/fingerprint_leaderboards \
-  --total-selected-exemplar-budget 5000 \
-  --corridor-budget-fraction 0.50 \
-  --corridor-mode-cap 10 \
-  --output ./corridor_tome/corridor_coverage_plan \
-  --overwrite
+radjax-tome corpus build --config ./corpus-intent.json
+radjax-tome corpus inspect ./corpus-artifact
+radjax-tome corpus validate ./corpus-artifact
+radjax-tome build --config ./tome-intent-v2.json --preflight-only
 ```
 
-C3 allocates slots only. It does not claim candidate coordinates or alter
-production selection. See `docs/CORRIDOR_BUDGET_C3.md`.
+The corpus builder is local-only. It writes a verified corpus-v2 artifact and
+semantic identity that a production intent references. See
+`docs/CORPUS_BUILDER.md` and `docs/CONFIGURATION_REFERENCE.md`.
 
-Builds now write an unpacked Tome `cover_page.json`; `validate` checks it when
-present, and `inspect` prints its summary fields. See `docs/TOME_COVER_PAGE.md`.
+## Optional TUI
 
-Use `pack` and `unpack` for deterministic `.rtome` bundle v1 archives. Bundle
-validation and inspection work through the same `validate --path` and
-`inspect --path` commands. See `docs/TOME_BUNDLE.md`.
-
-Build deterministic local corpus artifacts before Tome generation:
+Install the optional extra only when a terminal wizard is useful:
 
 ```bash
-radjax-tome corpus build \
-  --input ./sources \
-  --output ./corpus_out \
-  --include "**/*.md" \
-  --include "**/*.txt" \
-  --overwrite
-
-radjax-tome corpus inspect --path ./corpus_out
-radjax-tome corpus validate --path ./corpus_out
-
-radjax-tome build \
-  --dataset ./corpus_out/corpus.jsonl \
-  --corpus-manifest ./corpus_out/corpus_manifest.json \
-  --output artifacts/from_corpus \
-  --teacher-mode fake \
-  --overwrite
+python -m pip install './dist/radjax_tome-*.whl[tui]'
+radjax-tome tui corpus --config ./corpus-intent.json
+radjax-tome tui production --config ./tome-intent-v2.json
 ```
 
-The corpus builder is local-only. It writes `corpus_hash` and
-`manifest_hash` provenance that generated Tomes can cite. See
-`docs/CORPUS_BUILDER.md`.
+The TUI is a controller over the same canonical loader, preflight, state
+machine, validators, and package lifecycle. Save As is no-clobber and requires
+confirmation. On a non-TTY or a terminal below the supported size, use the
+headless commands; the TUI does not provide a separate semantics system.
 
-Corpus source formats are intentionally narrow: `.txt`, `.md`, `.markdown`,
-`.py`, and `.jsonl` rows with `text`. Structured `.json` import is not
-supported yet.
 
-Inspect and validate local teacher model provenance before Tome generation:
+## Supporting utilities and historical references
 
-```bash
-radjax-tome model inspect \
-  --model-path ./local_teacher \
-  --output ./teacher_model_provenance.json
-
-radjax-tome model validate \
-  --provenance ./teacher_model_provenance.json
-
-radjax-tome build \
-  --teacher-model ./local_teacher \
-  --teacher-model-provenance ./teacher_model_provenance.json \
-  --output artifacts/from_teacher_model_provenance \
-  --teacher-mode fake \
-  --overwrite
-```
-
-`model inspect` is local-only and does not download teacher models. It records
-verified file hashes, inferred or declared friendly identity, and
-`network_used=false`. See `docs/TEACHER_MODEL_PROVENANCE.md`.
-
-Compare two generated Tome artifact directories after they exist:
-
-```bash
-radjax-tome parity \
-  --left ./artifact_cpu \
-  --right ./artifact_gpu \
-  --left-label cpu_reference \
-  --right-label gpu_torch \
-  --output ./parity_report.json
-```
-
-`parity` writes `tome_parity_report_v1` and checks sidecars, target-store
-metadata, shard arrays, finite values, numeric tolerances, selector manifests,
-corpus provenance, teacher model provenance, and metadata truth. See
-`docs/PARITY_HARNESS.md`.
-
-For runtime/backend preflight and artifact metadata sanity checks:
-
-```bash
-radjax-tome doctor
-
-radjax-tome doctor \
-  --teacher-backend gpu_torch \
-  --runtime-mode cpu_gpu \
-  --target-policy corridor_exemplar_v1
-
-radjax-tome inspect \
-  --path artifacts/backend_tome \
-  --metadata-sanity
-
-radjax-tome validate \
-  --path artifacts/backend_tome \
-  --metadata-sanity \
-  --write-report
-```
-
-`doctor` writes a `runtime_doctor_report_v1` preflight summary when
-`--write-report PATH` is provided. Metadata sanity writes
-`metadata_sanity_report.json` during `validate --metadata-sanity
---write-report`. These commands report backend availability, remediation
-hints, selector metadata sanity, and batch-size metadata sanity; they do not
-add reducer math, selector policy, real auto batch probing, production global
-selection, multidevice scheduling, or TPU/JAX support.
-
-Plan a GPU run before a large build:
-
-```bash
-radjax-tome plan \
-  --teacher-backend gpu_torch \
-  --runtime-mode cpu_gpu \
-  --target-policy corridor_exemplar_v1 \
-  --teacher-model /models/MODEL \
-  --tokenizer-id /models/MODEL \
-  --dataset ./corpus_out/corpus.jsonl \
-  --corpus-manifest ./corpus_out/corpus_manifest.json \
-  --teacher-model-provenance ./teacher_model_provenance.json \
-  --gpu-batch-size-mode auto \
-  --gpu-batch-size-auto-min 1 \
-  --gpu-batch-size-auto-max 64 \
-  --output run_plan.json
-```
-
-`plan` writes `gpu_run_plan_v1` without running a production build. In auto GPU
-batch mode it performs bounded tiny local probes, records the selected batch
-size, and marks memory/artifact estimates as rough. It does not download
-models, perform network verification, add streaming/resume, or add multidevice
-or TPU/JAX support. See `docs/GPU_RUN_PLANNER.md`.
-
-Run a resumable streaming backend build after planning:
-
-```bash
-radjax-tome build \
-  --streaming \
-  --teacher-backend gpu_torch \
-  --runtime-mode cpu_gpu \
-  --target-policy corridor_exemplar_v1 \
-  --teacher-model /models/MODEL \
-  --teacher-model-provenance ./teacher_model_provenance.json \
-  --dataset ./corpus_out/corpus.jsonl \
-  --corpus-manifest ./corpus_out/corpus_manifest.json \
-  --output ./tome_out \
-  --shard-size-examples 1024
-
-radjax-tome build ... --streaming --resume
-```
-
-`--streaming` writes `run_manifest.json`, `progress_log.jsonl`, normal Tome
-sidecars, and atomically renamed shards. `--resume` verifies the resume config
-hash and completed shard hashes before continuing. See
-`docs/STREAMING_RESUME.md`.
-
-Run the one-command production path when you want planning, streaming emission,
-validation, cover writing, and production reporting in one local-only workflow:
-
-```bash
-radjax-tome production-build \
-  --teacher-model /models/MODEL \
-  --tokenizer-id /models/MODEL \
-  --dataset ./corpus_out/corpus.jsonl \
-  --corpus-manifest ./corpus_out/corpus_manifest.json \
-  --teacher-model-provenance ./teacher_model_provenance.json \
-  --output ./tome_out
-```
-
-`production-build` defaults to `gpu_torch`, `cpu_gpu`,
-`corridor_exemplar_v1`, streaming output, strict local files, no downloads, and
-error-on-fallback behavior. It writes `run_plan.json` and
-`production_build_report.json`; use `--resume` after interruption and
-`--parity-left BASELINE` for optional post-build parity. See
-`docs/PRODUCTION_BUILD.md`.
-
-Enable selected-only corridor/exemplar delivery explicitly when you want broad
-corridor scoring but compressed exemplar payloads only for selected winners:
-
-```bash
-radjax-tome production-build \
-  --teacher-model /models/MODEL \
-  --tokenizer-id /models/MODEL \
-  --dataset ./corpus_out/corpus.jsonl \
-  --corpus-manifest ./corpus_out/corpus_manifest.json \
-  --teacher-model-provenance ./teacher_model_provenance.json \
-  --output ./tome_out \
-  --target-policy corridor_exemplar_v1 \
-  --exemplar-selection-enabled \
-  --exemplar-delivery-path two_pass_rerun_selected \
-  --selected-exemplar-budget 1024 \
-  --no-retain-unselected-exemplar-payloads \
-  --track-delivery-timing
-```
-
-Compare selected-only Path A and Path B outputs with:
-
-```bash
-radjax-tome exemplar-delivery-parity \
-  --path-a ./path_a_artifact \
-  --path-b ./path_b_artifact \
-  --output parity_report.json
-```
-
-For experimental Path B candidate scheduling across explicit device IDs:
-
-```bash
-radjax-tome multi-gpu-path-b \
-  --teacher-model /models/MODEL \
-  --dataset ./corpus_out/corpus.jsonl \
-  --corpus-manifest ./corpus_out/corpus_manifest.json \
-  --teacher-model-provenance ./teacher_model_provenance.json \
-  --output ./multi_gpu_path_b_out \
-  --devices cuda:0,cuda:1 \
-  --target-policy corridor_exemplar_v1 \
-  --batch-size-per-device 4 \
-  --shard-size-examples 1024 \
-  --fake-workers
-```
-
-`multi-gpu-path-b` is opt-in and experimental. It does not use DDP, model
-parallelism, combined VRAM, network verification, model downloads, or TPU/JAX.
-Single-GPU `production-build` remains the recommended path. See
-`docs/MULTI_GPU_PATH_B.md`.
-
-For GPU teacher setup on a fresh machine, install the GPU/HF optional extra and
-run doctor before building:
-
-```bash
-pip install -e ".[gpu-teacher]"
-
-radjax-tome doctor \
-  --teacher-backend gpu_torch \
-  --runtime-mode cpu_gpu \
-  --target-policy corridor_exemplar_v1 \
-  --write-report runtime_doctor_report.json
-```
-
-`gpu-teacher` currently aliases the `torch` and `transformers` dependencies
-used by `teacher-hf`. PyTorch CUDA wheels are platform-specific; follow
-PyTorch's install selector if the default wheel does not expose CUDA. See
-`docs/GPU_INSTALL.md`.
-
-For advanced diagnostics:
-
-```bash
-python -m radjax_tome.cli.main prove-capabilities \
-  --work-dir artifacts/cli_capabilities \
-  --overwrite
-```
-
-`prove-capabilities` is a public diagnostic command backed by reusable library
-code under `radjax_tome.capabilities`. The legacy-compatible
-`scripts/prove_tome_generation_capabilities.py` wrapper remains available for
-existing automation.
-
-`scripts/` contains lower-level utilities used by tests, development, and
-targeted inspection workflows. They remain available, but they are not all
-equally user-facing.
-
-For fingerprint API imports, see `docs/FINGERPRINT_API.md`.
-
-For the offline C4 coordinate-claim stage, run:
-
-```bash
-radjax-tome claim-corridor-and-backfill-global \
-  --leaderboards ./corridor_leaderboards \
-  --coverage-plan ./coverage_plan \
-  --global-leaderboards ./global_board_supply.json \
-  --output ./corridor_claims \
-  --overwrite
-```
-
-The global input uses `radjax.c4_global_board_supply.v1`. C4 claims the
-validated C3 corridor representatives before consuming ranked global supply;
-collisions and replacement lineage are written to JSONL claim files. It does
-not run teacher inference or emit training payloads. Use `--allow-underfill`
-only for an intentionally incomplete supply, and use the explicit
-non-production override flags for development artifacts.
-
-Project C4 claims into durable C5 multi-role records with:
-
-```bash
-radjax-tome build-multi-role-selected-exemplars \
-  --claims ./corridor_claims \
-  --output ./multi-role-selection \
-  --overwrite
-```
-
-This creates rich JSONL records plus a backward-compatible flat projection.
-It preserves one payload identity per coordinate and records
-`not_materialized_in_c5`; it does not alter `production-build`. C6 owns
-production audit, report, packaging, and payload integration.
-
-| Script | Classification | Use when |
-|---|---|---|
-| `scripts/build_teacher_textbook.py` | recommended wrapper / legacy-compatible | You need the current TeacherTextbook builder directly. |
-| `scripts/build_teacher_tome.py` | recommended wrapper / legacy-compatible | You need the older toy module CLI directly. |
-| `scripts/validate_teacher_textbook.py` | recommended wrapper / legacy-compatible | You need direct TeacherTextbook validation. |
-| `scripts/inspect_targets.py` | recommended wrapper / legacy-compatible | You need direct target-store inspection. |
-| `scripts/prove_tome_generation_capabilities.py` | advanced diagnostic | You are validating the repo capability surface. |
-| `scripts/export_teacher_targets.py` | advanced | You need raw synthetic target-store export. |
-| `scripts/validate_fingerprint_artifact.py` | advanced | You need direct fingerprint artifact validation. |
-| `scripts/inspect_fingerprint_artifact.py` | advanced | You need direct fingerprint artifact inspection. |
-| `scripts/inspect_prompt_corpus.py` | advanced | You need prompt corpus inspection. |
-| `scripts/resolve_qwen_policy.py` | advanced | You need to inspect a Qwen policy resolution. |
-| `scripts/split_prompt_corpus.py` | advanced | You need to split prompt corpora outside the happy path. |
-| `scripts/tokenize_corpus.py` | advanced | You need standalone corpus tokenization. |
-| `scripts/validate_producer_pipeline.py` | internal/development | You are checking producer pipeline development state. |
-| `scripts/ab_compare_teacher_textbook.py` | internal/development | You are doing builder parity or regression work. |
-| `scripts/audit_tome_refactor_surface.py` | internal/development | You are working on cleanup/refactor audits. |
-
-Historical migration and quarantine audit scripts are archive-only on:
-
-- `archive/tome-migration-audit`
-- `archive/tome-large-docs`
-
-See `docs/TOME_ARCHIVE_POINTERS.md` for archive inspection commands.
-
-## M9 public mainline
-
-The supported paved path is deliberately six commands: `build`, `validate`,
-`inspect`, `package`, `doctor`, and `research`. Build requires a complete
-`radjax_tome_build_intent_v1` JSON/YAML document and drives the existing M5/M4
-production state machine. `--output` is a narrow operational override owned by
-the canonical configuration API. Use `package` for profile projection; build
-does not silently reinterpret package settings.
-
-`validate` and `inspect` dispatch only promised production forms: Contract v3,
-M7 v4, canonical student/full-debug packages, and `.rtome` transport. Other
-historical or research formats remain available through `research` and are not
-advertised as production validation.
-
-Legacy command names remain executable as compatibility shims and emit a
-deprecation warning. They are intentionally absent from normal top-level help.
+The supported parity utility remains documented at docs/PARITY_HARNESS.md and
+invoked as `radjax-tome parity` when comparing already-built artifacts. Teacher
+model provenance is prepared with `radjax-tome model inspect` and the legacy
+flag `--teacher-model-provenance` is retained only in the compatibility
+interfaces. Fingerprint API details remain at docs/FINGERPRINT_API.md; they are
+not a second public build configuration.

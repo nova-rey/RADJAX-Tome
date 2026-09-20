@@ -2,12 +2,14 @@
   "baseline": "7a56a0808453f4b4ecc6cefe3ee63b724c701980",
   "m9_public_surface": {
     "commands": [
+      "corpus",
       "build",
       "validate",
       "inspect",
       "package",
       "doctor",
-      "research"
+      "research",
+      "tui"
     ],
     "legacy_commands": "compatibility_or_research",
     "production_validation_forms": [
@@ -15,7 +17,8 @@
       "m7_v4",
       "canonical_package",
       "rtome"
-    ]
+    ],
+    "documentation_note": "M12 human map is docs/RESEARCH_STATUS_MAP.md; this ledger remains authoritative."
   },
   "generated_from": [
     "docs/MAINLINE_CONSOLIDATION_ARC.md",
@@ -3151,6 +3154,30 @@
       "rationale": "Canonical TUI owner boundaries and workflow behavior documentation.",
       "replacement_or_target_boundary": "Future TUI workflow documentation",
       "status": "supporting"
+    },
+    "cli:package": {
+      "archive_or_removal_condition": null,
+      "kind": "public-cli-command",
+      "owning_milestone": "M9",
+      "rationale": "M9 public command surface.",
+      "replacement_or_target_boundary": "M9 supported command surface or research namespace.",
+      "status": "supporting"
+    },
+    "cli:research": {
+      "archive_or_removal_condition": null,
+      "kind": "public-cli-command",
+      "owning_milestone": "M9",
+      "rationale": "M9 public command surface.",
+      "replacement_or_target_boundary": "M9 supported command surface or research namespace.",
+      "status": "research-frozen"
+    },
+    "cli:tui": {
+      "archive_or_removal_condition": null,
+      "kind": "public-cli-command",
+      "owning_milestone": "M9",
+      "rationale": "M11 optional controller over canonical lifecycle.",
+      "replacement_or_target_boundary": "M9 supported command surface or research namespace.",
+      "status": "canonical"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"

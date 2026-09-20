@@ -3915,3 +3915,4 @@ closed-record and checkpoint authority validation.
 - 2026-09-20: M11 formatting gate correction: wrapped the forced-stop diagnostic and regression fixture without changing behavior.
 - 2026-09-20: M11 final audit closure refresh: rebound implementation and quality receipts to 44c6fd5, recorded owner-status and force-stop corrections, and preserved the targeted PASS WITH RESERVATIONS disposition.
 - 2026-09-20: M11 final evidence seal: bound closure_evidence_commit to bfb3393 and recorded the targeted PASS WITH RESERVATIONS recheck; no production behavior changed.
+- 2026-09-20: M12 documentation map: documented the installed corpus-v2 and M5/M4 reader journey, configuration/artifact boundaries, optional TUI, troubleshooting, and Hydra-derived research status without changing runtime semantics; verified the synthetic CPU journey and stated the corridor-package limitation honestly.

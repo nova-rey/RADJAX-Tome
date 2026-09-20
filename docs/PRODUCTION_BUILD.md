@@ -1,3 +1,8 @@
+
+# Historical/compatibility reference
+
+This page preserves the older flag-based production-build material. The current supported public workflow is `radjax-tome build --config ...`; start with [Start here](START_HERE.md) and [CLI guide](CLI_GUIDE.md). Do not copy legacy flags into a new mainline configuration.
+
 # Production Build
 
 Spec 4.7 adds the one-command production GPU Tome build path:
