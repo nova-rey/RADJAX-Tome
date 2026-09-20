@@ -3914,3 +3914,4 @@ closed-record and checkpoint authority validation.
 - 2026-09-20: M11 targeted audit correction: routed the wizard run screen through owner-written production/corpus status readers and report forced termination as resumability-unverified; added force-stop regression coverage.
 - 2026-09-20: M11 formatting gate correction: wrapped the forced-stop diagnostic and regression fixture without changing behavior.
 - 2026-09-20: M11 final audit closure refresh: rebound implementation and quality receipts to 44c6fd5, recorded owner-status and force-stop corrections, and preserved the targeted PASS WITH RESERVATIONS disposition.
+- 2026-09-20: M11 final evidence seal: bound closure_evidence_commit to bfb3393 and recorded the targeted PASS WITH RESERVATIONS recheck; no production behavior changed.

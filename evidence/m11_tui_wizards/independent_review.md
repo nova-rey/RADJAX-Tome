@@ -41,3 +41,13 @@ The corrected implementation passed the focused M11/TUI/config/CLI tests and
 the existing mandatory repository gates were rerun after the correction. No
 second reviewer was invoked; this report preserves the original FAIL and the
 bounded correction result rather than fabricating a fresh independent verdict.
+
+## Final targeted recheck
+
+The same read-only auditor rechecked the final M11 tip
+`bfb3393168a621a4cd4eb1b290815d3e2af8bff1` after the bounded acceptance
+correction. It returned `PASS WITH RESERVATIONS`: command-results authority,
+owner-status polling, forced-stop resumability reporting, full-suite receipt,
+wheel digest, Contract pin, and evidence checksums all matched. The only
+reservation was corrected by the final closure-evidence seal binding this
+report to the content commit above.
