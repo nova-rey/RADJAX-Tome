@@ -1,0 +1,29 @@
+{
+  "schema_version": "radjax_tome_m12_user_docs_closure_v1",
+  "starting_authority": "53b19674a724a0999aa1c80f8b40d7e839a17c75",
+  "audited_implementation_commit": "4a322606b686289e36f86694c33fc77d00d5e8eb",
+  "branch": "m12/user-docs-research-map",
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "student_revision": null,
+  "status": "ready_for_integration",
+  "full_pytest": {"passed": 1243, "skipped": 27, "failed": 0},
+  "wheel": {
+    "filename": "radjax_tome-0.1.0-py3-none-any.whl",
+    "sha256": "eb2c5fc968ec59e47be6af1ab8b1e1006087c021884671c68ea01b2d3609fd22"
+  },
+  "clean_install": {
+    "python": "3.11.2",
+    "pip_check": "pass",
+    "cli_help": "pass",
+    "cli_version": "pass",
+    "doctor": "pass"
+  },
+  "reader_review": {
+    "initial": "FAIL",
+    "finding": "direct .tgz validation was implied by the package walkthrough",
+    "correction_commit": "4a322606b686289e36f86694c33fc77d00d5e8eb",
+    "targeted_recheck": "PASS"
+  },
+  "evidence_seal_commit": "reported in final handoff after sealing",
+  "disposition": "M12_CLOSED_READY_FOR_INTEGRATION"
+}

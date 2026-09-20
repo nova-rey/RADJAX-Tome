@@ -1,0 +1,34 @@
+{
+  "schema_version": "radjax_tome_m12_workflow_receipt_v1",
+  "environment": {
+    "python": "3.11.2",
+    "install": "disposable clean wheel environment",
+    "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+    "wheel_sha256": "eb2c5fc968ec59e47be6af1ab8b1e1006087c021884671c68ea01b2d3609fd22"
+  },
+  "offline_cpu_journey": {
+    "source_count": 1,
+    "record_count": 1,
+    "commands": [
+      "corpus build --config",
+      "corpus validate ARTIFACT",
+      "corpus inspect ARTIFACT"
+    ],
+    "statuses": ["pass", "pass", "pass"],
+    "semantic_identity": "sha256:8e25877a9cdbc849f2ee268287d0925e47fb85d70ba280d715fb0e96a54b06b2",
+    "classification": "executed_offline_cpu_not_teacher_inference"
+  },
+  "production": {
+    "classification": "preflight_validated_template_with_inherited_m11_cpu_reference_smoke",
+    "score_selection_selected_rerun": "inherited_m11_receipt_pass",
+    "teacher_download_or_gpu": false
+  },
+  "package": {
+    "profile": "full_debug_provenance",
+    "transport": "directory",
+    "package_status": "pass",
+    "unpacked_validate_status": "pass",
+    "student_profile_for_synthetic_dynamic_artifact": "not_eligible_missing_corridor_artifacts",
+    "direct_tgz_validation": "unsupported_mainline_input"
+  }
+}
