@@ -3910,3 +3910,4 @@ closed-record and checkpoint authority validation.
 - 2026-09-05: M11 terminal evidence seal: bound the complete final evidence set to commit `c9e6833`; the next commit only records that binding and refreshes the checksum.
 
 - 2026-09-20: M11 acceptance audit correction: rebound command-results authority from the pre-correction implementation to audited implementation 07367a7fc56ac285768857a9440ac95e1353f276; no production behavior changed.
+- 2026-09-20: M11 acceptance evidence seal: closure metadata now binds the corrected command-results evidence to correction commit 972b84bf4b5cf0e6973edf8bb76d7b456ed11f8e; no production behavior changed.
