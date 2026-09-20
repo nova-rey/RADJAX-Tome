@@ -3908,3 +3908,5 @@ closed-record and checkpoint authority validation.
 - 2026-09-05: M11 final closure seal: bound the complete evidence set, including packaging disposition, to evidence commit `b3d1666`; this final seal changes only the recorded evidence commit and checksum.
 - 2026-09-05: M11 clean-install matrix: verified base wheels on Python 3.11.2 and 3.12.14 plus a separate Textual 8.2.8 extra install; all disposable environments passed `pip check` and the optional wizard import.
 - 2026-09-05: M11 terminal evidence seal: bound the complete final evidence set to commit `c9e6833`; the next commit only records that binding and refreshes the checksum.
+
+- 2026-09-20: M11 acceptance audit correction: rebound command-results authority from the pre-correction implementation to audited implementation 07367a7fc56ac285768857a9440ac95e1353f276; no production behavior changed.
