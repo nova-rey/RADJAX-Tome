@@ -3924,3 +3924,5 @@ closed-record and checkpoint authority validation.
 - 2026-09-20: M12 final correction: replaced the wildcard TUI install example with the exact 0.1.0 wheel filename, relabeled the v2 template as canonical-loader-validated, and refreshed closure claims without adding a preflight receipt.
 
 - 2026-09-20: M13 bounded rehearsal: verified integrated M12 main, Golden fixture, current 1K teacher closure, and one real Tesla T4 smoke; did not claim Golden parity or 10K scaling because the frozen Golden corpus identity and a genuine 10K corpus/config/provenance authority were unavailable.
+
+- 2026-09-20: M13 evidence hygiene correction: stripped trailing spaces from captured Modal smoke log lines and resealed the evidence checksums; no test, authority, or runtime claim changed.

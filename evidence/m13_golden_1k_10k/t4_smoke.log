@@ -1,4 +1,4 @@
-✓ Initialized. View run at 
+✓ Initialized. View run at
 https://modal.com/apps/nova-rey/main/ap-ebfHcvO6VL7jX1bhqUAEHB
 ✓ Created objects.
 ├── 🔨 Created mount /tmp/m13-golden-1k-10k/scripts/m13_t4_smoke.py
@@ -10,5 +10,5 @@ https://modal.com/apps/nova-rey/main/ap-ebfHcvO6VL7jX1bhqUAEHB
 [1ALoading weights: 100%|██████████| 236/236 [00:00<00:00, 1762.95it/s]
 {"contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7", "gpu": "Tesla T4", "logit_shape": [1, 128, 262144], "model_config_sha256": "8983343e5bfbf8e336d222a522a1d781443491e9de2d081b8856f8fd26ab6046", "status": "pass", "tokenizer_config_sha256": "94b03056ec5831e9021c3e3fe9db682778c4f2d081c4188f1fcb8b90541cf1cf", "tokens": 128, "tome_commit": "97907b3681e49bfc107866d480596981c2eccaa6", "torch": "2.13.0+cu130"}
 Stopping app - local entrypoint completed.
-✓ App completed. View run at 
+✓ App completed. View run at
 https://modal.com/apps/nova-rey/main/ap-ebfHcvO6VL7jX1bhqUAEHB
