@@ -3928,3 +3928,4 @@ closed-record and checkpoint authority validation.
 - 2026-09-20: M13 evidence hygiene correction: stripped trailing spaces from captured Modal smoke log lines and resealed the evidence checksums; no test, authority, or runtime claim changed.
 
 - 2026-09-21: M13 bounded selected-delivery correction: immutable compact publication now consumes the explicit full-payload handoff while retaining scalar summaries for reporting; exact DuckDB 1.4.5 and output-path safety were verified before further rehearsal.
+- 2026-09-21: M13 diagnostic cleanup: removed temporary traceback instrumentation after identifying the DuckDB and immutable-publication defects; no runtime behavior changed.
