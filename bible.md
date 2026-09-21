@@ -3926,3 +3926,5 @@ closed-record and checkpoint authority validation.
 - 2026-09-20: M13 bounded rehearsal: verified integrated M12 main, Golden fixture, current 1K teacher closure, and one real Tesla T4 smoke; did not claim Golden parity or 10K scaling because the frozen Golden corpus identity and a genuine 10K corpus/config/provenance authority were unavailable.
 
 - 2026-09-20: M13 evidence hygiene correction: stripped trailing spaces from captured Modal smoke log lines and resealed the evidence checksums; no test, authority, or runtime claim changed.
+
+- 2026-09-21: M13 bounded selected-delivery correction: immutable compact publication now consumes the explicit full-payload handoff while retaining scalar summaries for reporting; exact DuckDB 1.4.5 and output-path safety were verified before further rehearsal.

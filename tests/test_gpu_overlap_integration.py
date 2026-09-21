@@ -8,6 +8,7 @@ def test_native_c6_compact_uses_buffer_pipeline():
     assert "_native_streamed_payloads(config)" in source
     assert "COMPACT_K_MONOLITHIC" in source
     assert "write_compact_body_store_pipelined_from_compact" in source
+    assert "prepared.publication_payloads" in source
 
 
 def test_pipeline_uses_public_buffer_contract_boundary():

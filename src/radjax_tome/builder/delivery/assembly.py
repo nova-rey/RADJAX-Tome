@@ -49,7 +49,16 @@ def _publish_immutable_bodies(prepared: PreparedSelectedDelivery) -> None:
     authority = bytes.fromhex(
         (config.delivery_authority_hash or "sha256:" + "00" * 32).split(":", 1)[-1]
     )
-    for payload in prepared.selected_payloads:
+    # Native compact delivery keeps scalar summaries in selected_payloads
+    # while retaining the full logical arrays in the explicit publication
+    # handoff. Immutable-body publication must consume that handoff rather
+    # than reconstructing a body from a summary-only record.
+    publication_payloads = (
+        prepared.publication_payloads
+        if prepared.publication_payloads is not None
+        else tuple(prepared.selected_payloads)
+    )
+    for payload in publication_payloads:
         compact = compact_payload_for_storage(payload)
         body = compact_body_from_logical_payload(compact, profile="producer_evidence")
         body_bytes = encode_compact_body(body)
