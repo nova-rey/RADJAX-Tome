@@ -3929,3 +3929,4 @@ closed-record and checkpoint authority validation.
 
 - 2026-09-21: M13 bounded selected-delivery correction: immutable compact publication now consumes the explicit full-payload handoff while retaining scalar summaries for reporting; exact DuckDB 1.4.5 and output-path safety were verified before further rehearsal.
 - 2026-09-21: M13 diagnostic cleanup: removed temporary traceback instrumentation after identifying the DuckDB and immutable-publication defects; no runtime behavior changed.
+- 2026-09-21: M13 continuation recovered the exact Golden corpus and manifest from the evidence-supported stopped Lightning Studio without GPU or teacher work on Lightning; one canonical T4 public run completed 1K and 10K real-teacher rehearsals, with 10K scaling evidence preserved and Golden parity left unclaimed after governed comparison failure.

@@ -1,0 +1,17 @@
+{
+  "apps": [
+    "ap-aI1lv0vKH1iAKQs9JPq4dm",
+    "ap-s5jCHRyw6PraiYmRhZqf7R",
+    "ap-243uKUVs4yZ1kwn3dqg8rr"
+  ],
+  "all_stopped": true,
+  "active_tasks": 0,
+  "task_owned_volume": "m13-golden-authority",
+  "volume_retained_for_evidence": true,
+  "task_ids": {
+    "ap-aI1lv0vKH1iAKQs9JPq4dm": "not exposed by Modal CLI after completion",
+    "ap-cntAVT3MhmS6A5eBif41oX": "not exposed by Modal CLI after completion",
+    "ap-243uKUVs4yZ1kwn3dqg8rr": "not exposed by Modal CLI after completion",
+    "ap-hxlV26KcNomukLk1WDDtgw": "not exposed by Modal CLI after completion"
+  }
+}

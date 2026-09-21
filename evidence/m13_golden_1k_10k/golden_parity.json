@@ -1,0 +1,19 @@
+{
+  "fixture_validation": {
+    "status": "pass",
+    "semantic_root": "sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba",
+    "count": 256
+  },
+  "comparison": "not_passed",
+  "comparator": "radjax_tome.golden.compare.compare_fixture_artifact",
+  "comparator_error": "golden capture payload arrays or effective_top_k are invalid for compact_k_monolithic output",
+  "observed_selected_coordinates": 256,
+  "expected_selected_coordinates": 256,
+  "coordinate_sequence_equal": false,
+  "coordinate_set_equal": false,
+  "missing_coordinates": 130,
+  "extra_coordinates": 130,
+  "raw_observed_semantic_identity": "sha256:c6d591c7736db57c6a256a1ab6873e2e71d94ef41eb63d6fe0e83e8e67dca2d8",
+  "historical_fixture_semantic_root": "sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba",
+  "disposition": "GOLDEN_PARITY_NOT_ESTABLISHED"
+}

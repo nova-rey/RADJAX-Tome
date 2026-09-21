@@ -1,0 +1,26 @@
+WARNING deprecated command 'golden'; use 'research' for retained engineering commands
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/m13-golden-1k-10k/src/radjax_tome/cli/main.py", line 2287, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/tmp/m13-golden-1k-10k/src/radjax_tome/cli/main.py", line 131, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/tmp/m13-golden-1k-10k/src/radjax_tome/cli/main.py", line 2194, in _cmd_golden_compare
+    report = compare_fixture_artifact(args.fixture, args.artifact)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/m13-golden-1k-10k/src/radjax_tome/golden/compare.py", line 19, in compare_fixture_artifact
+    capture_golden_contract(
+  File "/tmp/m13-golden-1k-10k/src/radjax_tome/golden/projection.py", line 65, in capture_golden_contract
+    payload_rows = _project_payload_shards(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/m13-golden-1k-10k/src/radjax_tome/golden/projection.py", line 341, in _project_payload_shards
+    _payload_semantics(
+  File "/tmp/m13-golden-1k-10k/src/radjax_tome/golden/projection.py", line 409, in _payload_semantics
+    projected.update(digest_active_payload_storage(row))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/m13-golden-1k-10k/src/radjax_tome/golden/contract.py", line 264, in digest_active_payload_storage
+    raise ValueError("golden capture payload arrays or effective_top_k are invalid")
+ValueError: golden capture payload arrays or effective_top_k are invalid

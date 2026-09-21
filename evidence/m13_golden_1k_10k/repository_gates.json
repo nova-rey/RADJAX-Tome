@@ -1,0 +1,11 @@
+{
+  "focused_tests": "63 passed in 28.17s",
+  "full_pytest": "1242 passed, 27 skipped, 1 unrelated failure in tests/test_hydra_disposition.py::test_hydra_disposition_has_complete_tracked_inventory",
+  "ruff_check": "pass",
+  "ruff_format": "pass",
+  "compileall": "pass",
+  "git_diff_check": "pass",
+  "wheel": "pass",
+  "wheel_sha256": "sha256:f0ee998fc46ac0e30557cde2b439a3a5256990acefabc9e34c330a7f3cdc1c50",
+  "failure_scope": "existing Hydra inventory does not list legacy CLI entries; no M13 code/evidence path implicated"
+}

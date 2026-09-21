@@ -1,0 +1,11 @@
+{
+  "workspace_validation_local": "failed_due_to_runtime_absolute_dataset_path_/work",
+  "modal_cpu_postflight_app": "ap-243uKUVs4yZ1kwn3dqg8rr",
+  "modal_cpu_postflight_attempt": "stopped_after_15_minutes_without_receipt",
+  "first_postflight_failure": "temporary_image_missing_jsonschema",
+  "package_transfer_revalidation": "not_completed",
+  "raw_artifacts_preserved": true,
+  "resume_probe_app": "ap-hxlV26KcNomukLk1WDDtgw",
+  "resume_probe": "stopped_after_bounded_wait_without_receipt",
+  "resume_evidence": "complete run_manifest.json had 10/10 shards and no incomplete shards before probe"
+}

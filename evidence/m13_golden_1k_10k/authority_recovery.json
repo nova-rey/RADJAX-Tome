@@ -1,0 +1,33 @@
+{
+  "lightning_teamspace": "nova-rey-org/radjax",
+  "studios": [
+    {
+      "name": "dream-stream",
+      "status": "stopped",
+      "selection": false
+    },
+    {
+      "name": "everbar-motherlode-cpu",
+      "status": "stopped",
+      "selection": false
+    },
+    {
+      "name": "radjax-tome-1",
+      "status": "stopped",
+      "selection": true,
+      "reason": "M8/Golden evidence-supported source"
+    }
+  ],
+  "lightning_gpu_or_teacher_execution": false,
+  "artifact": "lit://nova-rey-org/radjax/studios/radjax-tome-1/radjax_m8b_checkpoint_31b94ad",
+  "corpus_sha256": "sha256:518a5213981de49f52fd3e18a880d73aee31eec86eb6dedaf8b39a3c6f7ab878",
+  "manifest_internal_sha256": "sha256:7357fae12008fc3951f2ebfd819410c5c8d4612f12137d349031cd73a3186494",
+  "corpus_examples": 99989,
+  "effective_runs": {
+    "golden_1k": 1000,
+    "scale_10k": 10000
+  },
+  "model_directory_sha256": "sha256:77c344d305f916b3201311543888f5a95705c3e34de72f62610b9e47afb833d6",
+  "weights_sha256": "sha256:e68ec3300bde8aec6fb868b42a6b8ddfdef677a7c38dd279a639278a8b94a46b",
+  "tokenizer_sha256": "sha256:29aa73c8a911e1f39dddb0200fe8f4817fd369b8c0ce4f25aec6f1157e22690b"
+}
