@@ -1,0 +1,6 @@
+{
+  "returned_metadata_tome_commit": "b5ce585",
+  "mounted_source_commit": "a1ba7d3",
+  "source_mount": "/tmp/m13-golden-1k-10k/src",
+  "interpretation": "The temporary harness metadata argument was stale; the Modal source mount was the checked-out branch tip. No selected-pass production code changed between those commits; only Golden comparison/projection and evidence files changed."
+}
