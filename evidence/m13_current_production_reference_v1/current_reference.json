@@ -1,0 +1,75 @@
+{
+  "schema_version": "radjax_tome.m13_current_production_reference.v1",
+  "reference_name": "M13_CURRENT_PRODUCTION_REFERENCE_V1",
+  "acceptance_status": "accepted_under_owner_versioned_reference_decision",
+  "decision_record": "docs/M13_OWNER_DECISION_2026-09-24.md",
+  "producing_tome_commit": "a1ba7d308a2fe44065e1e05273609469547635d4",
+  "producing_commit_source": "evidence/m13_golden_1k_10k_continuation/policy_aligned_provenance.json",
+  "acceptance_evidence_commit": "279b9f85d9727d62cf243eaefe6cc5251944da79",
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "workload": {
+    "examples": 1000,
+    "sequence_length": 128,
+    "corpus_sha256": "sha256:518a5213981de49f52fd3e18a880d73aee31eec86eb6dedaf8b39a3c6f7ab878",
+    "corpus_manifest_sha256": "sha256:7357fae12008fc3951f2ebfd819410c5c8d4612f12137d349031cd73a3186494"
+  },
+  "teacher": {
+    "backend": "gpu_torch",
+    "model_directory_sha256": "sha256:77c344d305f916b3201311543888f5a95705c3e34de72f62610b9e47afb833d6",
+    "model_config_sha256": "sha256:7fe7acd83287d352cd13a7477460025cea0eb3b7271b55812da55bd733c4fcc5",
+    "weights_sha256": "sha256:e68ec3300bde8aec6fb868b42a6b8ddfdef677a7c38dd279a639278a8b94a46b",
+    "tokenizer_sha256": "sha256:29aa73c8a911e1f39dddb0200fe8f4817fd369b8c0ce4f25aec6f1157e22690b",
+    "runtime": "Torch 2.14.0+cu130",
+    "dtype": "float32",
+    "device": "Tesla T4",
+    "settings": {
+      "local_files_only": true,
+      "teacher_batch_size": 1,
+      "selected_rerun_batch_size": 1
+    }
+  },
+  "selection": {
+    "c2_candidate_pool_cap": 4,
+    "c3_corridor_mode_cap": 10,
+    "corridor_budget": 128,
+    "global_budget": 128,
+    "total_selected_coordinates": 256,
+    "shortfall": 0,
+    "integration_policy": "corridor_first_global_backfill_v1",
+    "dynamic_top_k_min": 32,
+    "dynamic_top_k_max": 262144,
+    "dynamic_mass_threshold": 0.99,
+    "score_pass_config_sha256": "sha256:dbdc75c3dc22f9c5eb923a5899f11764ac6b6edede20c0ef2f71b70723db4e0a",
+    "score_pass_authority_sha256": "sha256:4f06ee9f0bb9ec5349c1b68d1db64cd45c22602fbe9fe7cc7eb368ab76293976",
+    "selection_integration_config_sha256": "sha256:964ec9029e70744991fb7b12e92bf3687a55653091ccdf1a012890fb160cee51",
+    "selection_authority_sha256": "sha256:32d42c02ada3f761e799e7c6b1bb36b6bc51e26919ad308ce5d1ce9584a18175"
+  },
+  "outputs": {
+    "current_logical_evidence_root": "sha256:bbd2e6204579d7d6cdf67010eacc4b4d6178e19a6900dbc2219aafe8d80cb182",
+    "canonical_tome_semantic_identity": "sha256:32d42c02ada3f761e799e7c6b1bb36b6bc51e26919ad308ce5d1ce9584a18175",
+    "production_build_report_sha256": "sha256:f9670c62bba4f958acb94cf1ddd67561b1ab5e0607f92459942c1a72051def7d",
+    "authority_manifest_sha256": "sha256:579ad4d76122b37b8142f859a8500d703e1548a409920ce6a5b9a4379d310201",
+    "selection_budget_diagnostics_sha256": "sha256:caddefc77a523d1b3caf6de3b30db1e1b45a868b8e43f93e1e45ff312626ee10",
+    "cli_receipt_sha256": "sha256:4c4b80dc6eef71275bfaf76a2bc9e846768d657a105b5bf5709a780b231772ca",
+    "retained_file_manifest": "/home/nyx/m8g/m13-recovery/m13-current-production-reference-v1/REFERENCE_FILE_SHA256SUMS",
+    "retained_file_manifest_sha256": "sha256:694d2181cc3da1f3d834ef342fef3df0c02301484e1cdff820cfbd53309611ca",
+    "retained_output_root": "/home/nyx/m8g/m13-recovery/m13-current-production-reference-v1"
+  },
+  "historical_golden": {
+    "fixture": "tests/fixtures/golden_t4_1k",
+    "semantic_root": "sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba",
+    "comparison_status": "failed_historical_parity",
+    "common_coordinates": 128,
+    "missing_coordinates": 128,
+    "extra_coordinates": 128,
+    "comparison_report": "evidence/m13_golden_1k_10k_continuation/policy_aligned_rerun1_compare.json",
+    "causal_limit": "historical producer/runtime and complete score/C1-C5 intermediates unavailable"
+  },
+  "claims_not_made": [
+    "historical_golden_parity",
+    "cross_runtime_reproducibility",
+    "student_training_quality",
+    "training_success",
+    "full_10k_interruption_recovery"
+  ]
+}

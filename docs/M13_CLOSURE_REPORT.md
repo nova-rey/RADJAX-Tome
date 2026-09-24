@@ -1,6 +1,10 @@
 # M13 Golden 1K parity and 10K scaling rehearsal
 
-Status: **M13_BLOCKED** (10K rehearsal passed; Golden parity gate did not).
+Status: **M13_CLOSED_UNDER_VERSIONED_REFERENCE_ACCEPTANCE**. Historical
+Golden parity remains failed; the current-production reference is accepted
+under the dated owner decision in docs/M13_OWNER_DECISION_2026-09-24.md.
+
+## Historical record and revised gate
 
 The run used the integrated M12 authority at `97907b3681e49bfc107866d480596981c2eccaa6`, source commit `e3b3ef2`, and Contract `373e3d17060d4ce1c4a0db6065c9289da714bde7`. Lightning recovery selected the evidence-supported stopped `radjax-tome-1` Studio and recovered the exact Golden corpus `sha256:518a5213981de49f52fd3e18a880d73aee31eec86eb6dedaf8b39a3c6f7ab878` with manifest identity `sha256:7357fae12008fc3951f2ebfd819410c5c8d4612f12137d349031cd73a3186494`. No teacher or GPU work ran on Lightning.
 
@@ -11,3 +15,36 @@ The frozen Golden fixture itself validates offline (256 coordinates; semantic ro
 The CPU postflight package/transfer attempt was stopped after 15 minutes without a receipt; raw outputs remain durable on the task-owned Modal volume and local retrieval. The earlier local validator also correctly rejected the copied report's runtime `/work` dataset path outside its original mount. These are recorded as postflight limitations, not silently treated as passes.
 
 See `evidence/m13_golden_1k_10k/` for recovery inventory, raw run summaries, parity failure, postflight attempt, teardown, and checksums. No main merge or M14 work was performed.
+
+## Owner-approved current-production acceptance
+Rey approved a separately versioned current-production reference as M13's
+acceptance oracle. The historical Golden fixture, comparator, and failed
+reports remain immutable and are not reclassified as passing. The final
+policy-aligned retained 1K run is named
+M13_CURRENT_PRODUCTION_REFERENCE_V1; its producing SHA is
+a1ba7d308a2fe44065e1e05273609469547635d4, its acceptance/evidence SHA is
+279b9f85d9727d62cf243eaefe6cc5251944da79, and its Contract pin remains
+373e3d17060d4ce1c4a0db6065c9289da714bde7.
+
+The accepted reference binds the recovered corpus and manifest, teacher and
+tokenizer identities, effective Torch/dtype/runtime record, C2 cap 4, C3 cap
+10, 128/128 corridor/global budgets, selection configuration hashes, current
+semantic roots, and retained raw intermediate digests. The complete retained
+output is outside the checkout at
+/home/nyx/m8g/m13-recovery/m13-current-production-reference-v1; its file
+manifest digest is recorded in
+evidence/m13_current_production_reference_v1/current_reference.json.
+
+The historical comparison remains an explicit failure: 128 common, 128
+missing, and 128 extra coordinates. Upstream score/feature and configuration
+differences are recorded, and the historical producer/runtime/intermediate
+score tables are unavailable. M13 acceptance therefore does not assert that
+algorithm evolution explains every difference, does not widen tolerances, and
+does not claim numerical equivalence, Student quality, or training success.
+
+The accepted 10K run, package/transfer and revalidation receipts, and
+controlled interruption/resume receipt remain valid inherited evidence. The
+resume probe covers a separate three-record fixture at
+after_v4_shard_sealed; it is not a full-10K interruption claim. See
+docs/M13_CURRENT_REFERENCE_V1.md and
+evidence/m13_current_production_reference_v1/.

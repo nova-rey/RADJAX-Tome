@@ -305,13 +305,23 @@ Run semantic parity on 1K, then a fresh 10K scaling trial.
 
 Exit criteria:
 
-- 1K semantic parity passes;
+- historical Golden parity is preserved as an explicit failed comparison;
+- a separately versioned current-production 1K reference is accepted with
+  bound producer SHA, Contract pin, corpus/manifest and teacher identities,
+  effective selection rules, runtime record, semantic roots, and retained
+  intermediate digests;
 - 10K completes without unbounded host-memory growth;
 - selected-pass and finalization timing profiles are captured;
 - dedupe, backfill, board overlap, and corridor coverage remain plausible;
 - discovered defects become blockers before 100K.
 
 ### M14 — First canonical 100K production run
+
+The M14 prerequisite is the accepted
+M13_CURRENT_PRODUCTION_REFERENCE_V1, not a silent replacement of the
+historical Golden fixture. M14 must record the current reference identity and
+producer SHA in its resolved config/receipt and must not claim historical
+Golden parity or numerical equivalence.
 
 Run the consolidated mainline against the validated 100K corpus and publish a production evidence bundle.
 
