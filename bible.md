@@ -3948,3 +3948,4 @@ closed-record and checkpoint authority validation.
 - 2026-09-24: M13 owner amendment: preserved historical Golden parity as FAILED (128 common/128 missing/128 extra with upstream score/feature and unavailable historical producer/runtime/intermediates) and accepted the separately versioned current-production reference; no Golden, Contract, tolerance, or selection change.
 - 2026-09-24: M13 P6/U1 recheck: the previously recorded numpy.ndarray/first_valid_index failure was not reproducible in the clean authoritative environment; focused reproducibility and full pytest passed without skips or weakened assertions.
 - 2026-09-24: M13 amendment test formatting: added explicit current-reference validation/mutation coverage; no runtime semantics changed.
+- 2026-09-24: M13 Hydra inventory correction: registered the two owner-amendment documentation pages so the complete tracked-document inventory remains authoritative; no runtime behavior changed.
