@@ -3936,3 +3936,5 @@ closed-record and checkpoint authority validation.
 - 2026-09-24: M13 continuation: made Golden comparison compact-payload aware without dropping governed fields, excluded execution-only temp paths from portability summaries, and completed the Hydra disposition inventory for M13 evidence; preserved the actual historical/current authority mismatch for decision.
 
 - 2026-09-24: M13 continuation evidence seal: compact Golden comparison, package transfer, and genuine shard-boundary resume receipts are preserved; the focused review passed with reservations, and the remaining Golden mismatch is recorded as a frozen/current authority conflict rather than a forced parity result.
+
+- 2026-09-24: M13 policy-aligned 1K T4 diagnostic: frozen C2/C3 caps completed selection but current selected-delivery parity failed; a teacher-batch-8 attempt OOMed and the feasible batch-1 run preserved the exact mismatch without changing Golden or tolerance policy.

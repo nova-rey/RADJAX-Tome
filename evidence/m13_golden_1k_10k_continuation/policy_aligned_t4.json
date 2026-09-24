@@ -1,0 +1,37 @@
+{
+  "app_id": "ap-h7WghR5QLJbc1HksDNezsd",
+  "variant": "frozen C2/C3 caps and selected rerun batch 8; feasible teacher batch 1",
+  "requested": {
+    "c2_candidate_pool_cap": 4,
+    "c3_corridor_mode_cap": 10,
+    "selected_rerun_batch_size": 8,
+    "teacher_batch_size": 1
+  },
+  "result": "fail",
+  "exit_code": 7,
+  "wall_seconds": 419.460286626,
+  "examples": 1000,
+  "selected_coordinates": 256,
+  "validation_status": "pass",
+  "selected_delivery_failure": {
+    "failure_stage": "selected_exemplar_delivery",
+    "entropy_absolute_delta": 3.438110828399658,
+    "entropy_allowed_tolerance": 0.00390625,
+    "score_top_token_id": 708,
+    "rerun_payload_top_token_id": 184,
+    "score_selected_position": 2,
+    "selected_example_id": "corpus_000000118",
+    "reason": "selected rerun payload does not match score-pass source tuple"
+  },
+  "authority": {
+    "selection_integration_config_hash": "sha256:78781698155c0049a106964dfd6f8a4f1b881e4097be7771b3461f7ccff1d40a",
+    "score_pass_authority_hash": "sha256:b7dcd06151dc0d219cbb8e194e87d65a91d71a1e6ca2680988103991b82bcc58"
+  },
+  "interpretation": "The frozen policy can be executed and selects 256 coordinates, but current teacher/reducer selected-delivery parity fails. This confirms runtime/reduction authority drift; it is not a coordinate-map repair target.",
+  "oom_control": {
+    "app_id": "ap-OJCQZygzigLmLRiqdzEfnA",
+    "variant": "teacher batch 8 plus frozen policy",
+    "result": "failed before completion",
+    "error": "T4 OOM allocating 1 GiB; free approximately 360-404 MiB"
+  }
+}
