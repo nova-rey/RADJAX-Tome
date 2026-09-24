@@ -1,0 +1,9 @@
+{
+  "focused_command": "PYTHONPATH=.:src pytest -q tests/test_hydra_disposition.py tests/test_golden_contract_compare.py tests/test_golden_contract_schema.py tests/test_golden_projection_truth_gate.py tests/test_golden_t4_1k_fixture.py",
+  "result": "45 passed in 4.46s",
+  "inventory_added": [
+    "docs:M13_CLOSURE_REPORT",
+    "scripts/m13_t4_smoke.py"
+  ],
+  "full_suite_note": "Correctly rooted full-suite invocation was run; see repository logs."
+}

@@ -1,0 +1,5 @@
+{
+  "standard_pip_attempt": "blocked by offline VCS dependency resolution for radjax-contract@373e3d17",
+  "corrected_install": "pass: exact local Contract 0.9.0 wheel installed, Tome wheel installed --no-deps, radjax-tome --help succeeded",
+  "reason": "The wheel metadata pins the exact Contract git commit; the offline receipt uses the already verified wheel for that commit and does not alter runtime."
+}

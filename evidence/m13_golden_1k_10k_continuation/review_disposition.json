@@ -1,0 +1,17 @@
+{
+  "verdict": "PASS_WITH_RESERVATIONS",
+  "scope": "compact Golden reader, Hydra inventory, coordinate authority diagnosis, package/transfer/resume evidence",
+  "blocker_fixed": "SHA256SUMS self-entry removed before sealing",
+  "reservations": [
+    "resume receipt reports staging_exists_after=true; this is receipt-backed completed staging, not claimed cleanup",
+    "full pytest is 1243 passed, 27 skipped, 1 unrelated P6/U1 failure: numpy.ndarray lacks first_valid_index",
+    "offline clean install required exact local Contract wheel plus Tome --no-deps because VCS dependency resolution was unavailable"
+  ],
+  "substantive_findings": [
+    "compact payload comparison validates governed arrays and reports semantic failure with 800 differences",
+    "130 missing and 130 extra coordinates arise from pre-C5 authority divergence, not coordinate remapping",
+    "full_debug_provenance package, transfer, extraction, and revalidation passed",
+    "Hydra inventory additions are appropriate"
+  ],
+  "reviewer": "m13_continuation_review"
+}

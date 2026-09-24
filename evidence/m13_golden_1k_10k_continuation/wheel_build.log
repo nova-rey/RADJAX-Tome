@@ -1,0 +1,486 @@
+* Creating isolated environment: venv+pip...
+* Installing packages in isolated environment:
+  - setuptools>=68
+  - wheel
+* Getting build dependencies for wheel...
+running egg_info
+writing src/radjax_tome.egg-info/PKG-INFO
+writing dependency_links to src/radjax_tome.egg-info/dependency_links.txt
+writing entry points to src/radjax_tome.egg-info/entry_points.txt
+writing requirements to src/radjax_tome.egg-info/requires.txt
+writing top-level names to src/radjax_tome.egg-info/top_level.txt
+reading manifest file 'src/radjax_tome.egg-info/SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file 'src/radjax_tome.egg-info/SOURCES.txt'
+* Installed build dependency versions:
+  - setuptools==84.0.0
+  - wheel==0.48.0
+* Building wheel...
+running bdist_wheel
+running build
+running build_py
+copying src/radjax_tome/golden/contract.py -> build/lib/radjax_tome/golden
+copying src/radjax_tome/golden/projection.py -> build/lib/radjax_tome/golden
+running egg_info
+writing src/radjax_tome.egg-info/PKG-INFO
+writing dependency_links to src/radjax_tome.egg-info/dependency_links.txt
+writing entry points to src/radjax_tome.egg-info/entry_points.txt
+writing requirements to src/radjax_tome.egg-info/requires.txt
+writing top-level names to src/radjax_tome.egg-info/top_level.txt
+reading manifest file 'src/radjax_tome.egg-info/SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file 'src/radjax_tome.egg-info/SOURCES.txt'
+installing to build/bdist.linux-x86_64/wheel
+running install
+running install_lib
+creating build/bdist.linux-x86_64/wheel
+creating build/bdist.linux-x86_64/wheel/radjax_tome
+creating build/bdist.linux-x86_64/wheel/radjax_tome/parity
+copying build/lib/radjax_tome/parity/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/parity
+copying build/lib/radjax_tome/parity/artifact_compare.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/parity
+copying build/lib/radjax_tome/parity/runner.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/parity
+creating build/bdist.linux-x86_64/wheel/radjax_tome/targets
+copying build/lib/radjax_tome/targets/compression.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/targets
+copying build/lib/radjax_tome/targets/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/targets
+copying build/lib/radjax_tome/targets/schema.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/targets
+copying build/lib/radjax_tome/targets/consumption.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/targets
+copying build/lib/radjax_tome/targets/export.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/targets
+copying build/lib/radjax_tome/targets/inspection.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/targets
+copying build/lib/radjax_tome/targets/multishard.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/targets
+copying build/lib/radjax_tome/targets/store.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/targets
+copying build/lib/radjax_tome/_lazy_exports.py -> build/bdist.linux-x86_64/wheel/./radjax_tome
+copying build/lib/radjax_tome/quantization.py -> build/bdist.linux-x86_64/wheel/./radjax_tome
+copying build/lib/radjax_tome/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome
+creating build/bdist.linux-x86_64/wheel/radjax_tome/audit
+copying build/lib/radjax_tome/audit/refactor_surface.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/audit
+copying build/lib/radjax_tome/audit/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/audit
+copying build/lib/radjax_tome/audit/selected_linkage.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/audit
+creating build/bdist.linux-x86_64/wheel/radjax_tome/backends
+copying build/lib/radjax_tome/backends/registry.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/cpu.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/orchestration.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/hf_export.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/qwen_policy.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/base.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/hf_causal_lm.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/emission.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/compatibility_exports.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/fake.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/hf_specimen.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/synthetic.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/hf_torch.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+copying build/lib/radjax_tome/backends/gpu_torch.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/backends
+creating build/bdist.linux-x86_64/wheel/radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/measurement.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/corridor_budget.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/corridor_leaderboards.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/real_teacher_artifacts.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/loader.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/multi_role_selection.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/generation.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/corridor_duckdb.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/corridor_claims.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/corridor.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/capture_summary.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/summary.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/corridor_archetypes.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/inspection.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/exemplars.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/validation.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/artifacts.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+copying build/lib/radjax_tome/fingerprint/provenance.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/fingerprint
+creating build/bdist.linux-x86_64/wheel/radjax_tome/capabilities
+copying build/lib/radjax_tome/capabilities/proof.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/capabilities
+copying build/lib/radjax_tome/capabilities/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/capabilities
+copying build/lib/radjax_tome/__main__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome
+creating build/bdist.linux-x86_64/wheel/radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/sources.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/language_tokenizer_binding.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/builder.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/splitters.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/tokenizer.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/storage.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/tokenization.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/feasibility.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/config.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/loaders.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/dedup.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/identity.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/lifecycle.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/validation.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/prompts.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/corpora/records.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/corpora
+copying build/lib/radjax_tome/workload_finalization.py -> build/bdist.linux-x86_64/wheel/./radjax_tome
+creating build/bdist.linux-x86_64/wheel/radjax_tome/emit
+copying build/lib/radjax_tome/emit/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/emit
+copying build/lib/radjax_tome/emit/teacher_tome.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/emit
+creating build/bdist.linux-x86_64/wheel/radjax_tome/cli
+copying build/lib/radjax_tome/cli/research.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/cli
+copying build/lib/radjax_tome/cli/build_teacher_tome.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/cli
+copying build/lib/radjax_tome/cli/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/cli
+copying build/lib/radjax_tome/cli/mainline.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/cli
+copying build/lib/radjax_tome/cli/rendering.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/cli
+copying build/lib/radjax_tome/cli/main.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/cli
+copying build/lib/radjax_tome/cli/models.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/cli
+creating build/bdist.linux-x86_64/wheel/radjax_tome/tui
+copying build/lib/radjax_tome/tui/process.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tui
+copying build/lib/radjax_tome/tui/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tui
+copying build/lib/radjax_tome/tui/controller.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tui
+copying build/lib/radjax_tome/tui/app.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tui
+copying build/lib/radjax_tome/tui/launcher.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tui
+copying build/lib/radjax_tome/tui/fields.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tui
+copying build/lib/radjax_tome/tui/screens.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tui
+copying build/lib/radjax_tome/tui/screens_runtime.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tui
+copying build/lib/radjax_tome/tui/draft.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tui
+creating build/bdist.linux-x86_64/wheel/radjax_tome/tome
+copying build/lib/radjax_tome/tome/artifact_dispatch.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/v6_reduced_burn_fixture.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/producer_validation.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/artifact_v3.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/payload_sharding_v4.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/archive_compat.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/student_consumption_v5.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/artifact_descriptor.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/v6_fixture.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/compatibility.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/packaging.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/cover_page.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/bundle.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/student_consumption_v4.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/contracts.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/golden_fixture.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/v5_fixture.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/canonical_artifact.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/student_consumption_v6.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/student_consumption_v3.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+copying build/lib/radjax_tome/tome/student_consumption_v2.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/tome
+creating build/bdist.linux-x86_64/wheel/radjax_tome/reports
+copying build/lib/radjax_tome/reports/metadata_sanity.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/arc.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/writers.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/baseline.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/rendering.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/fingerprint_quality.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/runtime_doctor.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/compatibility_exports.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/run_plan.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+copying build/lib/radjax_tome/reports/parity.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/reports
+creating build/bdist.linux-x86_64/wheel/radjax_tome/provenance
+copying build/lib/radjax_tome/provenance/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/provenance
+copying build/lib/radjax_tome/provenance/teacher_model.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/provenance
+copying build/lib/radjax_tome/provenance/hashes.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/provenance
+creating build/bdist.linux-x86_64/wheel/radjax_tome/builder
+copying build/lib/radjax_tome/builder/backend_textbook.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/corridor_artifacts.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/full_width_policy.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+creating build/bdist.linux-x86_64/wheel/radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/delivery.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/authorities.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/verification.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/score_pass.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/evidence.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/preflight.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/shared.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/reporting.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/v4_publication.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/assembly.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/selection.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/production_stages/path_b_integration.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/production_stages
+copying build/lib/radjax_tome/builder/exemplar_delivery.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/long_tail.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+creating build/bdist.linux-x86_64/wheel/radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/delivery.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/authorities.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/verification.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/score_pass.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/evidence.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/corridors.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/api.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/preflight.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/orchestrator.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/contracts.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/assembly.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/resume.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/selection.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/native_path_b/finalization.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/native_path_b
+copying build/lib/radjax_tome/builder/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/teacher_textbook.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/exemplar_selection.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+creating build/bdist.linux-x86_64/wheel/radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/_legacy.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/measurement.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/replay_authority.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/compact_k.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/staging.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/_shared.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/modes.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/gpu_overlap.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/reporting.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/replay.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/assembly.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/simple_compact_body.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/immutable_body.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/validation.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/payloads.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/parity.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/delivery/rerun.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder/delivery
+copying build/lib/radjax_tome/builder/authority_hashes.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/status.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/config.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/compatibility_exports.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/c6_integration.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/exemplar_delivery_contracts.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/production.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/corpus_input.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/multi_gpu_path_b.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/validation.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/records.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/cascaded_soft_labels.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+copying build/lib/radjax_tome/builder/config_io.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/builder
+creating build/bdist.linux-x86_64/wheel/radjax_tome/golden
+copying build/lib/radjax_tome/golden/contract.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/golden
+copying build/lib/radjax_tome/golden/projection.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/golden
+copying build/lib/radjax_tome/golden/compare.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/golden
+copying build/lib/radjax_tome/golden/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/golden
+creating build/bdist.linux-x86_64/wheel/radjax_tome/artifact_validation
+copying build/lib/radjax_tome/artifact_validation/delivery.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/artifact_validation
+copying build/lib/radjax_tome/artifact_validation/long_tail.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/artifact_validation
+copying build/lib/radjax_tome/artifact_validation/corridors.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/artifact_validation
+copying build/lib/radjax_tome/artifact_validation/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/artifact_validation
+copying build/lib/radjax_tome/artifact_validation/teacher_textbook.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/artifact_validation
+copying build/lib/radjax_tome/artifact_validation/selection.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/artifact_validation
+creating build/bdist.linux-x86_64/wheel/radjax_tome/io
+copying build/lib/radjax_tome/io/jsonl.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/io
+copying build/lib/radjax_tome/io/arrays.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/io
+copying build/lib/radjax_tome/io/__init__.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/io
+copying build/lib/radjax_tome/io/json.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/io
+copying build/lib/radjax_tome/io/config_export.py -> build/bdist.linux-x86_64/wheel/./radjax_tome/io
+running install_egg_info
+Copying src/radjax_tome.egg-info to build/bdist.linux-x86_64/wheel/./radjax_tome-0.1.0-py3.11.egg-info
+running install_scripts
+creating build/bdist.linux-x86_64/wheel/radjax_tome-0.1.0.dist-info/WHEEL
+creating '/tmp/m13-wheel-cont/.tmp-wdtj4dvv/radjax_tome-0.1.0-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+adding 'radjax_tome/__init__.py'
+adding 'radjax_tome/__main__.py'
+adding 'radjax_tome/_lazy_exports.py'
+adding 'radjax_tome/quantization.py'
+adding 'radjax_tome/workload_finalization.py'
+adding 'radjax_tome/artifact_validation/__init__.py'
+adding 'radjax_tome/artifact_validation/corridors.py'
+adding 'radjax_tome/artifact_validation/delivery.py'
+adding 'radjax_tome/artifact_validation/long_tail.py'
+adding 'radjax_tome/artifact_validation/selection.py'
+adding 'radjax_tome/artifact_validation/teacher_textbook.py'
+adding 'radjax_tome/audit/__init__.py'
+adding 'radjax_tome/audit/refactor_surface.py'
+adding 'radjax_tome/audit/selected_linkage.py'
+adding 'radjax_tome/backends/__init__.py'
+adding 'radjax_tome/backends/base.py'
+adding 'radjax_tome/backends/compatibility_exports.py'
+adding 'radjax_tome/backends/cpu.py'
+adding 'radjax_tome/backends/emission.py'
+adding 'radjax_tome/backends/fake.py'
+adding 'radjax_tome/backends/gpu_torch.py'
+adding 'radjax_tome/backends/hf_causal_lm.py'
+adding 'radjax_tome/backends/hf_export.py'
+adding 'radjax_tome/backends/hf_specimen.py'
+adding 'radjax_tome/backends/hf_torch.py'
+adding 'radjax_tome/backends/orchestration.py'
+adding 'radjax_tome/backends/qwen_policy.py'
+adding 'radjax_tome/backends/registry.py'
+adding 'radjax_tome/backends/synthetic.py'
+adding 'radjax_tome/builder/__init__.py'
+adding 'radjax_tome/builder/authority_hashes.py'
+adding 'radjax_tome/builder/backend_textbook.py'
+adding 'radjax_tome/builder/c6_integration.py'
+adding 'radjax_tome/builder/cascaded_soft_labels.py'
+adding 'radjax_tome/builder/compatibility_exports.py'
+adding 'radjax_tome/builder/config.py'
+adding 'radjax_tome/builder/config_io.py'
+adding 'radjax_tome/builder/corpus_input.py'
+adding 'radjax_tome/builder/corridor_artifacts.py'
+adding 'radjax_tome/builder/exemplar_delivery.py'
+adding 'radjax_tome/builder/exemplar_delivery_contracts.py'
+adding 'radjax_tome/builder/exemplar_selection.py'
+adding 'radjax_tome/builder/full_width_policy.py'
+adding 'radjax_tome/builder/long_tail.py'
+adding 'radjax_tome/builder/multi_gpu_path_b.py'
+adding 'radjax_tome/builder/production.py'
+adding 'radjax_tome/builder/records.py'
+adding 'radjax_tome/builder/status.py'
+adding 'radjax_tome/builder/teacher_textbook.py'
+adding 'radjax_tome/builder/validation.py'
+adding 'radjax_tome/builder/delivery/__init__.py'
+adding 'radjax_tome/builder/delivery/_legacy.py'
+adding 'radjax_tome/builder/delivery/_shared.py'
+adding 'radjax_tome/builder/delivery/assembly.py'
+adding 'radjax_tome/builder/delivery/compact_k.py'
+adding 'radjax_tome/builder/delivery/gpu_overlap.py'
+adding 'radjax_tome/builder/delivery/immutable_body.py'
+adding 'radjax_tome/builder/delivery/measurement.py'
+adding 'radjax_tome/builder/delivery/modes.py'
+adding 'radjax_tome/builder/delivery/parity.py'
+adding 'radjax_tome/builder/delivery/payloads.py'
+adding 'radjax_tome/builder/delivery/replay.py'
+adding 'radjax_tome/builder/delivery/replay_authority.py'
+adding 'radjax_tome/builder/delivery/reporting.py'
+adding 'radjax_tome/builder/delivery/rerun.py'
+adding 'radjax_tome/builder/delivery/simple_compact_body.py'
+adding 'radjax_tome/builder/delivery/staging.py'
+adding 'radjax_tome/builder/delivery/validation.py'
+adding 'radjax_tome/builder/native_path_b/__init__.py'
+adding 'radjax_tome/builder/native_path_b/api.py'
+adding 'radjax_tome/builder/native_path_b/assembly.py'
+adding 'radjax_tome/builder/native_path_b/authorities.py'
+adding 'radjax_tome/builder/native_path_b/contracts.py'
+adding 'radjax_tome/builder/native_path_b/corridors.py'
+adding 'radjax_tome/builder/native_path_b/delivery.py'
+adding 'radjax_tome/builder/native_path_b/evidence.py'
+adding 'radjax_tome/builder/native_path_b/finalization.py'
+adding 'radjax_tome/builder/native_path_b/orchestrator.py'
+adding 'radjax_tome/builder/native_path_b/preflight.py'
+adding 'radjax_tome/builder/native_path_b/resume.py'
+adding 'radjax_tome/builder/native_path_b/score_pass.py'
+adding 'radjax_tome/builder/native_path_b/selection.py'
+adding 'radjax_tome/builder/native_path_b/verification.py'
+adding 'radjax_tome/builder/production_stages/__init__.py'
+adding 'radjax_tome/builder/production_stages/assembly.py'
+adding 'radjax_tome/builder/production_stages/authorities.py'
+adding 'radjax_tome/builder/production_stages/delivery.py'
+adding 'radjax_tome/builder/production_stages/evidence.py'
+adding 'radjax_tome/builder/production_stages/path_b_integration.py'
+adding 'radjax_tome/builder/production_stages/preflight.py'
+adding 'radjax_tome/builder/production_stages/reporting.py'
+adding 'radjax_tome/builder/production_stages/score_pass.py'
+adding 'radjax_tome/builder/production_stages/selection.py'
+adding 'radjax_tome/builder/production_stages/shared.py'
+adding 'radjax_tome/builder/production_stages/v4_publication.py'
+adding 'radjax_tome/builder/production_stages/verification.py'
+adding 'radjax_tome/capabilities/__init__.py'
+adding 'radjax_tome/capabilities/proof.py'
+adding 'radjax_tome/cli/__init__.py'
+adding 'radjax_tome/cli/build_teacher_tome.py'
+adding 'radjax_tome/cli/main.py'
+adding 'radjax_tome/cli/mainline.py'
+adding 'radjax_tome/cli/models.py'
+adding 'radjax_tome/cli/rendering.py'
+adding 'radjax_tome/cli/research.py'
+adding 'radjax_tome/corpora/__init__.py'
+adding 'radjax_tome/corpora/builder.py'
+adding 'radjax_tome/corpora/config.py'
+adding 'radjax_tome/corpora/dedup.py'
+adding 'radjax_tome/corpora/feasibility.py'
+adding 'radjax_tome/corpora/identity.py'
+adding 'radjax_tome/corpora/language_tokenizer_binding.py'
+adding 'radjax_tome/corpora/lifecycle.py'
+adding 'radjax_tome/corpora/loaders.py'
+adding 'radjax_tome/corpora/prompts.py'
+adding 'radjax_tome/corpora/records.py'
+adding 'radjax_tome/corpora/sources.py'
+adding 'radjax_tome/corpora/splitters.py'
+adding 'radjax_tome/corpora/storage.py'
+adding 'radjax_tome/corpora/tokenization.py'
+adding 'radjax_tome/corpora/tokenizer.py'
+adding 'radjax_tome/corpora/validation.py'
+adding 'radjax_tome/emit/__init__.py'
+adding 'radjax_tome/emit/teacher_tome.py'
+adding 'radjax_tome/fingerprint/__init__.py'
+adding 'radjax_tome/fingerprint/artifacts.py'
+adding 'radjax_tome/fingerprint/capture_summary.py'
+adding 'radjax_tome/fingerprint/corridor.py'
+adding 'radjax_tome/fingerprint/corridor_archetypes.py'
+adding 'radjax_tome/fingerprint/corridor_budget.py'
+adding 'radjax_tome/fingerprint/corridor_claims.py'
+adding 'radjax_tome/fingerprint/corridor_duckdb.py'
+adding 'radjax_tome/fingerprint/corridor_leaderboards.py'
+adding 'radjax_tome/fingerprint/exemplars.py'
+adding 'radjax_tome/fingerprint/generation.py'
+adding 'radjax_tome/fingerprint/inspection.py'
+adding 'radjax_tome/fingerprint/loader.py'
+adding 'radjax_tome/fingerprint/measurement.py'
+adding 'radjax_tome/fingerprint/multi_role_selection.py'
+adding 'radjax_tome/fingerprint/provenance.py'
+adding 'radjax_tome/fingerprint/real_teacher_artifacts.py'
+adding 'radjax_tome/fingerprint/summary.py'
+adding 'radjax_tome/fingerprint/validation.py'
+adding 'radjax_tome/golden/__init__.py'
+adding 'radjax_tome/golden/compare.py'
+adding 'radjax_tome/golden/contract.py'
+adding 'radjax_tome/golden/projection.py'
+adding 'radjax_tome/io/__init__.py'
+adding 'radjax_tome/io/arrays.py'
+adding 'radjax_tome/io/config_export.py'
+adding 'radjax_tome/io/json.py'
+adding 'radjax_tome/io/jsonl.py'
+adding 'radjax_tome/parity/__init__.py'
+adding 'radjax_tome/parity/artifact_compare.py'
+adding 'radjax_tome/parity/runner.py'
+adding 'radjax_tome/provenance/__init__.py'
+adding 'radjax_tome/provenance/hashes.py'
+adding 'radjax_tome/provenance/teacher_model.py'
+adding 'radjax_tome/reports/__init__.py'
+adding 'radjax_tome/reports/arc.py'
+adding 'radjax_tome/reports/baseline.py'
+adding 'radjax_tome/reports/compatibility_exports.py'
+adding 'radjax_tome/reports/fingerprint_quality.py'
+adding 'radjax_tome/reports/metadata_sanity.py'
+adding 'radjax_tome/reports/parity.py'
+adding 'radjax_tome/reports/rendering.py'
+adding 'radjax_tome/reports/run_plan.py'
+adding 'radjax_tome/reports/runtime_doctor.py'
+adding 'radjax_tome/reports/writers.py'
+adding 'radjax_tome/targets/__init__.py'
+adding 'radjax_tome/targets/compression.py'
+adding 'radjax_tome/targets/consumption.py'
+adding 'radjax_tome/targets/export.py'
+adding 'radjax_tome/targets/inspection.py'
+adding 'radjax_tome/targets/multishard.py'
+adding 'radjax_tome/targets/schema.py'
+adding 'radjax_tome/targets/store.py'
+adding 'radjax_tome/tome/__init__.py'
+adding 'radjax_tome/tome/archive_compat.py'
+adding 'radjax_tome/tome/artifact_descriptor.py'
+adding 'radjax_tome/tome/artifact_dispatch.py'
+adding 'radjax_tome/tome/artifact_v3.py'
+adding 'radjax_tome/tome/bundle.py'
+adding 'radjax_tome/tome/canonical_artifact.py'
+adding 'radjax_tome/tome/compatibility.py'
+adding 'radjax_tome/tome/contracts.py'
+adding 'radjax_tome/tome/cover_page.py'
+adding 'radjax_tome/tome/golden_fixture.py'
+adding 'radjax_tome/tome/packaging.py'
+adding 'radjax_tome/tome/payload_sharding_v4.py'
+adding 'radjax_tome/tome/producer_validation.py'
+adding 'radjax_tome/tome/student_consumption_v2.py'
+adding 'radjax_tome/tome/student_consumption_v3.py'
+adding 'radjax_tome/tome/student_consumption_v4.py'
+adding 'radjax_tome/tome/student_consumption_v5.py'
+adding 'radjax_tome/tome/student_consumption_v6.py'
+adding 'radjax_tome/tome/v5_fixture.py'
+adding 'radjax_tome/tome/v6_fixture.py'
+adding 'radjax_tome/tome/v6_reduced_burn_fixture.py'
+adding 'radjax_tome/tui/__init__.py'
+adding 'radjax_tome/tui/app.py'
+adding 'radjax_tome/tui/controller.py'
+adding 'radjax_tome/tui/draft.py'
+adding 'radjax_tome/tui/fields.py'
+adding 'radjax_tome/tui/launcher.py'
+adding 'radjax_tome/tui/process.py'
+adding 'radjax_tome/tui/screens.py'
+adding 'radjax_tome/tui/screens_runtime.py'
+adding 'radjax_tome-0.1.0.dist-info/licenses/LICENSE'
+adding 'radjax_tome-0.1.0.dist-info/METADATA'
+adding 'radjax_tome-0.1.0.dist-info/WHEEL'
+adding 'radjax_tome-0.1.0.dist-info/entry_points.txt'
+adding 'radjax_tome-0.1.0.dist-info/top_level.txt'
+adding 'radjax_tome-0.1.0.dist-info/RECORD'
+removing build/bdist.linux-x86_64/wheel
+Successfully built radjax_tome-0.1.0-py3-none-any.whl

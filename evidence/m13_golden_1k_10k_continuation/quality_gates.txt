@@ -1,0 +1,4 @@
+compileall=pass
+diff_check=pass
+ruff_check=pass
+ruff_format=pass

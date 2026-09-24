@@ -1,0 +1,40 @@
+{
+  "interruption": {
+    "error": "intentional M13 interruption",
+    "event": "after_v4_shard_sealed",
+    "status": "interrupted"
+  },
+  "pre_resume": {
+    "archive_exists": false,
+    "final_exists": false,
+    "stage_exists": true,
+    "stage_files": [
+      "shards/shard-00000.jsonl",
+      "v4-shard-receipt.json"
+    ]
+  },
+  "resume": {
+    "archive": "/tmp/m13-postflight-scratch/resume-proof/fake_tome.v4.tgz",
+    "archive_bytes": 3588,
+    "archive_sha256": "sha256:7dbfd99a2361d220d15580422df8f87813b666c536dc6810ccea8d960418b1d1",
+    "contract_validation": {
+      "archive": {
+        "errors": [],
+        "ok": true,
+        "warnings": []
+      },
+      "directory": {
+        "errors": [],
+        "ok": true,
+        "warnings": []
+      }
+    },
+    "directory": "/tmp/m13-postflight-scratch/resume-proof/fake_tome.v4",
+    "final_exists": true,
+    "selected_count": 3,
+    "semantic_identity": "sha256:fc6dbcc06359ffc769fc1cee5481b8744e13f48b1b5996066493a424d5cf0e28",
+    "shard_count": 2,
+    "staging_exists_after": true
+  },
+  "source": "/tmp/m13-postflight-scratch/resume-proof/fake_tome"
+}

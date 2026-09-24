@@ -1,0 +1,98 @@
+{
+  "packaging": {
+    "archive": "/tmp/m13-postflight-scratch/package-full-debug.tgz",
+    "archive_bytes": 109240911,
+    "archive_sha256": "sha256:90e15d38cba767ce3956df3892f5b562ba6b3c8f18445e4073d5e2f9fd8d818d",
+    "archive_validation": {
+      "blockers": [],
+      "contents_ok": true,
+      "cover_page_ok": true,
+      "deterministic_layout_ok": true,
+      "format_ok": true,
+      "status": "pass",
+      "warnings": []
+    },
+    "extracted_package_validation": {
+      "blockers": [],
+      "content_manifest_ok": true,
+      "corridor_assignment_ok": true,
+      "profile": "full_debug_provenance",
+      "selected_linkage_audit_ok": true,
+      "selected_payloads_ok": true,
+      "shard_manifest_ok": true,
+      "status": "pass",
+      "warnings": []
+    },
+    "profile": "full_debug_provenance"
+  },
+  "resume": {
+    "interruption": {
+      "error": "intentional M13 interruption",
+      "event": "after_v4_shard_sealed",
+      "status": "interrupted"
+    },
+    "pre_resume": {
+      "archive_exists": false,
+      "final_exists": false,
+      "stage_exists": true,
+      "stage_files": [
+        "shards/shard-00000.jsonl",
+        "v4-shard-receipt.json"
+      ]
+    },
+    "resume": {
+      "archive": "/tmp/m13-postflight-scratch/resume-proof/fake_tome.v4.tgz",
+      "archive_bytes": 3588,
+      "archive_sha256": "sha256:7dbfd99a2361d220d15580422df8f87813b666c536dc6810ccea8d960418b1d1",
+      "contract_validation": {
+        "archive": {
+          "errors": [],
+          "ok": true,
+          "warnings": []
+        },
+        "directory": {
+          "errors": [],
+          "ok": true,
+          "warnings": []
+        }
+      },
+      "directory": "/tmp/m13-postflight-scratch/resume-proof/fake_tome.v4",
+      "final_exists": true,
+      "selected_count": 3,
+      "semantic_identity": "sha256:fc6dbcc06359ffc769fc1cee5481b8744e13f48b1b5996066493a424d5cf0e28",
+      "shard_count": 2,
+      "staging_exists_after": true
+    },
+    "source": "/tmp/m13-postflight-scratch/resume-proof/fake_tome"
+  },
+  "schema": "m13_postflight_receipt_v2",
+  "source_artifact": "/tmp/m13-final-fetch/golden-1k",
+  "transfer": {
+    "bytes": 109240911,
+    "destination": "/tmp/m13-postflight-transfer/golden-1k-full-debug.tgz",
+    "revalidation": {
+      "bundle": {
+        "blockers": [],
+        "contents_ok": true,
+        "cover_page_ok": true,
+        "deterministic_layout_ok": true,
+        "format_ok": true,
+        "status": "pass",
+        "warnings": []
+      },
+      "extracted": "/tmp/m13-postflight-transfer/extracted",
+      "package": {
+        "blockers": [],
+        "content_manifest_ok": true,
+        "corridor_assignment_ok": true,
+        "profile": "full_debug_provenance",
+        "selected_linkage_audit_ok": true,
+        "selected_payloads_ok": true,
+        "shard_manifest_ok": true,
+        "status": "pass",
+        "warnings": []
+      }
+    },
+    "sha256": "sha256:90e15d38cba767ce3956df3892f5b562ba6b3c8f18445e4073d5e2f9fd8d818d"
+  }
+}

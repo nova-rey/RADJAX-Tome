@@ -1,0 +1,84 @@
+..........s........s.................................................... [  5%]
+........................................................................ [ 11%]
+........................................................................ [ 17%]
+........................................................................ [ 22%]
+........................................................................ [ 28%]
+........................................................................ [ 34%]
+....sssssssss.sssss.ssss.................s.sss.......................... [ 39%]
+........................................................................ [ 45%]
+..ss.................................................................... [ 51%]
+........................................................................ [ 56%]
+........................................................................ [ 62%]
+........................................................................ [ 68%]
+.......................................F................................ [ 73%]
+........................................................................ [ 79%]
+........................................................................ [ 85%]
+........................................................................ [ 90%]
+........................................................................ [ 96%]
+..............................................                           [100%]
+=================================== FAILURES ===================================
+__________ test_p6_u1_fresh_identical_input_builds_are_byte_identical __________
+
+tmp_path = PosixPath('/tmp/pytest-of-nyx/pytest-601/test_p6_u1_fresh_identical_inp0')
+
+    def test_p6_u1_fresh_identical_input_builds_are_byte_identical(tmp_path: Path) -> None:
+        spec_path, spec = load_declared_inputs(SPEC)
+>       first = build_v6_reduced_burn_pair(
+            tmp_path / "first", tmp_path / "second", spec_path=spec_path
+        )
+
+tests/test_p6_u1_reduced_burn_authority.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/radjax_tome/tome/v6_reduced_burn_fixture.py:249: in build_v6_reduced_burn_pair
+    primary = build_v6_reduced_burn_fixture(primary_output, spec_path=spec_file)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+output_dir = PosixPath('/tmp/pytest-of-nyx/pytest-601/test_p6_u1_fresh_identical_inp0/first')
+spec_path = PosixPath('/tmp/m13-golden-1k-10k/tests/fixtures/p6_u1_reduced_burn_inputs.json')
+overwrite = False, command = None
+
+    def build_v6_reduced_burn_fixture(
+        output_dir: str | Path,
+        *,
+        spec_path: str | Path,
+        overwrite: bool = False,
+        command: str | None = None,
+    ) -> Path:
+        """Produce the reduced-burn artifact via canonical production and packaging."""
+    
+        spec_file, spec = load_declared_inputs(spec_path)
+        root = Path(output_dir).resolve()
+        if root.exists() and not overwrite:
+            raise ValueError(f"fixture output already exists: {root}")
+        if root.exists():
+            shutil.rmtree(root)
+        root.mkdir(parents=True)
+        inputs = spec_file.parent / spec["input_root"]
+        corpus = inputs / spec["corpus"]["dataset_path"]
+        manifest = inputs / spec["corpus"]["manifest_path"]
+        provenance = inputs / spec["teacher"]["provenance_path"]
+        model = inputs / spec["teacher"]["model_path"]
+        _validate_input_files(spec, inputs, corpus, manifest, provenance, model)
+        production_config = _production_config(spec)
+        report = build_production_gpu_tome(
+            ProductionBuildConfig(
+                teacher_model=str(model),
+                tokenizer_id=spec["teacher"]["tokenizer_id"],
+                dataset_path=corpus,
+                corpus_manifest_path=manifest,
+                teacher_model_provenance_path=provenance,
+                output_dir=root / "producer_artifact",
+                **production_config,
+            )
+        )
+        if report["status"] != "pass":
+>           raise ValueError(
+                "reduced-burn production failed: " + "; ".join(report["blockers"])
+            )
+E           ValueError: reduced-burn production failed: AttributeError: 'numpy.ndarray' object has no attribute 'first_valid_index'
+
+src/radjax_tome/tome/v6_reduced_burn_fixture.py:130: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_p6_u1_reduced_burn_authority.py::test_p6_u1_fresh_identical_input_builds_are_byte_identical
+1 failed, 1243 passed, 27 skipped in 136.73s (0:02:16)
