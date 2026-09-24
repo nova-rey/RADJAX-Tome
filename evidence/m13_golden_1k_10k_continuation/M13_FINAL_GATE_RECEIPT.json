@@ -1,0 +1,25 @@
+{
+  "schema_version": "m13_final_gate_receipt.v1",
+  "audited_implementation_commit": "0c6f5452f824ba2952642115da856801a5af5107",
+  "contract_commit": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+  "focused_tests": "37 passed",
+  "full_pytest": "1246 passed, 27 skipped, 0 failed",
+  "ruff": "pass (/tmp/m13-cpu-venv/bin/ruff check; format --check)",
+  "compileall": "pass",
+  "git_diff_check": "pass",
+  "wheel": {
+    "path": "/tmp/m13-final-wheel/radjax_tome-0.1.0-py3-none-any.whl",
+    "sha256": "sha256:93d6dde8af5780c58cce3c7a8611783d030c3aea13fa2a495fbceeb0a0d4c5cd"
+  },
+  "clean_install": {
+    "python": "3.11.2",
+    "contract": "local exact-authority wheel; resolver metadata conflict avoided with --no-deps then declared runtime deps installed",
+    "cli_help": "pass",
+    "current_reference_validate": "pass"
+  },
+  "reference_compare": "pass",
+  "mutation_rejection": "pass",
+  "p6_u1_focused": "pass",
+  "inherited_10k": "accepted prior receipt; not rerun",
+  "inherited_resume": "three-record/two-shard after_v4_shard_sealed fixture; not full-10k"
+}

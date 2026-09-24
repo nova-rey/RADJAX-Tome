@@ -12,7 +12,7 @@ failed and is retained as a separate comparison.
 | Reference schema | `radjax_tome.m13_current_production_reference.v1` |
 | Producing Tome commit | `a1ba7d308a2fe44065e1e05273609469547635d4` |
 | Producing-commit evidence | `evidence/m13_golden_1k_10k_continuation/policy_aligned_provenance.json` |
-| Acceptance/evidence commit | `279b9f85d9727d62cf243eaefe6cc5251944da79` |
+| Acceptance/evidence commit | `0c6f5452f824ba2952642115da856801a5af5107` |
 | Contract commit | `373e3d17060d4ce1c4a0db6065c9289da714bde7` |
 | Current artifact semantic root | `sha256:bbd2e6204579d7d6cdf67010eacc4b4d6178e19a6900dbc2219aafe8d80cb182` |
 | Canonical Tome semantic identity | `sha256:32d42c02ada3f761e799e7c6b1bb36b6bc51e26919ad308ce5d1ce9584a18175` |

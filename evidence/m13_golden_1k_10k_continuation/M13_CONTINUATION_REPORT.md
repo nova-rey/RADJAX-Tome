@@ -1,4 +1,5 @@
 # M13 continuation report
+> Superseded current-status receipt: the historical blocked disposition below is retained for traceability. The owner-amended current disposition is `M13_CLOSED_UNDER_VERSIONED_REFERENCE_ACCEPTANCE`; it must not be read as the current status.
 
 ## Scope
 

@@ -3949,3 +3949,6 @@ closed-record and checkpoint authority validation.
 - 2026-09-24: M13 P6/U1 recheck: the previously recorded numpy.ndarray/first_valid_index failure was not reproducible in the clean authoritative environment; focused reproducibility and full pytest passed without skips or weakened assertions.
 - 2026-09-24: M13 amendment test formatting: added explicit current-reference validation/mutation coverage; no runtime semantics changed.
 - 2026-09-24: M13 Hydra inventory correction: registered the two owner-amendment documentation pages so the complete tracked-document inventory remains authoritative; no runtime behavior changed.
+
+- 2026-09-24: M13 review correction: fixed the internal current-reference manifest pointer, rebound all acceptance-SHA claims to audited implementation 0c6f545, and marked prior blocked reports as superseded historical receipts; no runtime or historical Golden evidence changed.
+- 2026-09-24: M13 evidence seal correction: normalized the amendment SHA256SUMS file to standard sha256sum format and verified every amended file.

@@ -1,4 +1,5 @@
 # M13 final status
+> Superseded current-status receipt: the historical blocked disposition below is retained for traceability. The owner-amended current disposition is `M13_CLOSED_UNDER_VERSIONED_REFERENCE_ACCEPTANCE`; it must not be read as the current status.
 
 * Branch: m13/golden-1k-10k-rehearsal
 * Final code/evidence tip before this evidence seal: 58991d0558719ea6b0626987cabe2660f5b4da6f

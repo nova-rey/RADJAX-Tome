@@ -23,7 +23,7 @@ reports remain immutable and are not reclassified as passing. The final
 policy-aligned retained 1K run is named
 M13_CURRENT_PRODUCTION_REFERENCE_V1; its producing SHA is
 a1ba7d308a2fe44065e1e05273609469547635d4, its acceptance/evidence SHA is
-279b9f85d9727d62cf243eaefe6cc5251944da79, and its Contract pin remains
+0c6f5452f824ba2952642115da856801a5af5107 (audited implementation), and its Contract pin remains
 373e3d17060d4ce1c4a0db6065c9289da714bde7.
 
 The accepted reference binds the recovered corpus and manifest, teacher and
