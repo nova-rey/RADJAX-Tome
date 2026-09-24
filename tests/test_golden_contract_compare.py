@@ -298,6 +298,27 @@ def test_binary_payload_digest_uses_chunked_encoding_for_full_vocabulary(
     )
 
 
+def test_binary_payload_digest_accepts_compact_arrays_without_mask() -> None:
+    compact = golden_contract.digest_active_payload_storage(
+        {
+            "effective_top_k": 2,
+            "top_token_ids": [11, 7],
+            "top_probs": [0.75, 0.2],
+            "top_log_probs": [-0.2876821, -1.609438],
+        }
+    )
+    dense = golden_contract.digest_active_payload_storage(
+        {
+            "effective_top_k": 2,
+            "top_token_ids": [11, 7],
+            "top_probs": [0.75, 0.2],
+            "top_log_probs": [-0.2876821, -1.609438],
+            "top_selection_mask": [True, True],
+        }
+    )
+    assert compact == dense
+
+
 def test_compare_streams_jsonl_without_eager_projection_loader(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -588,6 +588,7 @@ def _semantic_board_summary(value: Any) -> Any:
                 "elapsed_seconds",
                 "host_memory_bytes",
                 "device_memory_bytes",
+                "temp_directory",
                 "path",
                 "shard_path",
             } or (

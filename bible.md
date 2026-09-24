@@ -3932,3 +3932,5 @@ closed-record and checkpoint authority validation.
 - 2026-09-21: M13 continuation recovered the exact Golden corpus and manifest from the evidence-supported stopped Lightning Studio without GPU or teacher work on Lightning; one canonical T4 public run completed 1K and 10K real-teacher rehearsals, with 10K scaling evidence preserved and Golden parity left unclaimed after governed comparison failure.
 
 - 2026-09-21: M13 review disposition: independent audit passed with reservations; corrected evidence states Golden parity and package/resume receipts are incomplete, while 10K scaling remains preserved.
+
+- 2026-09-24: M13 continuation: made Golden comparison compact-payload aware without dropping governed fields, excluded execution-only temp paths from portability summaries, and completed the Hydra disposition inventory for M13 evidence; preserved the actual historical/current authority mismatch for decision.

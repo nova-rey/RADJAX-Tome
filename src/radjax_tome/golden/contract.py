@@ -252,9 +252,9 @@ def validate_sparse_payload_semantics_record(row: Mapping[str, Any]) -> None:
 def digest_active_payload_storage(row: Mapping[str, Any]) -> dict[str, str]:
     effective_top_k = row.get("effective_top_k")
     arrays = {
-        key: row.get(key)
-        for key in ("top_token_ids", "top_probs", "top_log_probs", "top_selection_mask")
+        key: row.get(key) for key in ("top_token_ids", "top_probs", "top_log_probs")
     }
+    mask = row.get("top_selection_mask")
     if (
         not isinstance(effective_top_k, int)
         or isinstance(effective_top_k, bool)
@@ -265,15 +265,27 @@ def digest_active_payload_storage(row: Mapping[str, Any]) -> dict[str, str]:
     lengths = {len(value) for value in arrays.values()}
     if len(lengths) != 1:
         raise ValueError("golden capture payload arrays have inconsistent lengths")
-    mask = arrays["top_selection_mask"]
-    if any(not isinstance(value, bool) for value in mask):
-        raise ValueError("golden capture top_selection_mask must contain booleans")
-    active_count = sum(mask)
-    if active_count != effective_top_k:
-        raise ValueError(
-            "golden capture top_selection_mask active count does not equal "
-            "effective_top_k"
-        )
+    if mask is None:
+        # compact_k_monolithic stores exactly the active prefix and omits the
+        # dense selection mask; the three arrays remain the governed payload.
+        active_count = len(arrays["top_token_ids"])
+        if active_count != effective_top_k:
+            raise ValueError(
+                "golden capture compact payload length does not equal effective_top_k"
+            )
+    else:
+        if not isinstance(mask, list) or any(
+            not isinstance(value, bool) for value in mask
+        ):
+            raise ValueError("golden capture top_selection_mask must contain booleans")
+        if len(mask) != len(arrays["top_token_ids"]):
+            raise ValueError("golden capture payload arrays have inconsistent lengths")
+        active_count = sum(mask)
+        if active_count != effective_top_k:
+            raise ValueError(
+                "golden capture top_selection_mask active count does not equal "
+                "effective_top_k"
+            )
     token_hasher = _active_payload_hasher("token-ids", active_count)
     probability_hasher = _active_payload_hasher("probabilities", active_count)
     log_probability_hasher = _active_payload_hasher("log-probabilities", active_count)
@@ -281,11 +293,14 @@ def digest_active_payload_storage(row: Mapping[str, Any]) -> dict[str, str]:
     token_buffer: list[int] = []
     probability_buffer: list[float] = []
     log_probability_buffer: list[float] = []
+    active_values = (
+        mask if mask is not None else (True for _ in arrays["top_token_ids"])
+    )
     for token_id, probability, log_probability, active in zip(
         arrays["top_token_ids"],
         arrays["top_probs"],
         arrays["top_log_probs"],
-        mask,
+        active_values,
         strict=True,
     ):
         if not active:

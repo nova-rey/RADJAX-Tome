@@ -3226,6 +3226,22 @@
       "rationale": "M12 closure and evidence map.",
       "replacement_or_target_boundary": "M12 current user documentation.",
       "status": "canonical"
+    },
+    "docs:M13_CLOSURE_REPORT": {
+      "archive_or_removal_condition": null,
+      "kind": "top-level-doc",
+      "owning_milestone": "M13",
+      "rationale": "M13 Golden 1K parity and 10K scaling rehearsal closure evidence.",
+      "replacement_or_target_boundary": "M13 rehearsal evidence; not a Golden release or M14 input.",
+      "status": "research-frozen"
+    },
+    "scripts/m13_t4_smoke.py": {
+      "archive_or_removal_condition": "Retain while M13 T4 rehearsal receipts remain reproducible; remove only with replacement evidence.",
+      "kind": "script",
+      "owning_milestone": "M13",
+      "rationale": "Bounded T4 smoke and rehearsal helper used by M13 evidence.",
+      "replacement_or_target_boundary": "M13-only evidence tooling; not the normal public CLI path.",
+      "status": "research-frozen"
     }
   },
   "schema_version": "radjax_tome.hydra_disposition.v1"
