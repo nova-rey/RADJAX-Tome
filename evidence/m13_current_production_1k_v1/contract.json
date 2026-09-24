@@ -1,0 +1,86 @@
+{
+  "board_summary_digest": "sha256:a1297a3d79248cea85ac70de9885055dd6327ddeed32e4fb6fbb1d029cfdd884",
+  "capture_metadata": {
+    "capture_status": "captured",
+    "source_path": "redacted"
+  },
+  "collection_roots": {
+    "payload_semantics": "sha256:d7394d85bbd3b0393391a23ee69dcd676d37e32bbe30819ce4235def972ae9ed",
+    "selected_obligations": "sha256:37d713a502478ef3dca85b0acf1b93add9ef5e88382b413a6979441765762804",
+    "source_passports": "sha256:3095f4b1d2b8f41c8a990f1e2bb75467ec9029893525afdb06afb4d0bbbc4b9d"
+  },
+  "fixture_metadata": {
+    "canonical_pipeline": "native_two_pass_fingerprint_corridor_path_b",
+    "capture_tool_version": "m4d-v2",
+    "profile": "full_debug_provenance",
+    "repository_revision": null
+  },
+  "fixture_name": "t4_gemma3_270m_fingerprint_corridor_path_b_1k",
+  "input_identity": {
+    "chunking_policy": "char_window_v1",
+    "corpus_hash": "sha256:518a5213981de49f52fd3e18a880d73aee31eec86eb6dedaf8b39a3c6f7ab878",
+    "corpus_manifest_hash": "sha256:7357fae12008fc3951f2ebfd819410c5c8d4612f12137d349031cd73a3186494",
+    "deduplication_policy": "exact_normalized_text_sha256_v1",
+    "normalization_policy": "text_normalize_lf_strip_trailing_ws_v1",
+    "num_examples": 1000,
+    "sequence_length": 128,
+    "teacher_identity": {
+      "config_hash": "sha256:7fe7acd83287d352cd13a7477460025cea0eb3b7271b55812da55bd733c4fcc5",
+      "model_directory_hash": "sha256:77c344d305f916b3201311543888f5a95705c3e34de72f62610b9e47afb833d6",
+      "model_name": "google-gemma-3-270m-local",
+      "model_revision": null,
+      "tokenizer_hash": "sha256:29aa73c8a911e1f39dddb0200fe8f4817fd369b8c0ce4f25aec6f1157e22690b",
+      "weights_hash": "sha256:e68ec3300bde8aec6fb868b42a6b8ddfdef677a7c38dd279a639278a8b94a46b"
+    },
+    "teacher_model_hashes": {
+      "config_hash": "sha256:7fe7acd83287d352cd13a7477460025cea0eb3b7271b55812da55bd733c4fcc5",
+      "model_directory_hash": "sha256:77c344d305f916b3201311543888f5a95705c3e34de72f62610b9e47afb833d6",
+      "tokenizer_hash": "sha256:29aa73c8a911e1f39dddb0200fe8f4817fd369b8c0ce4f25aec6f1157e22690b",
+      "weights_hash": "sha256:e68ec3300bde8aec6fb868b42a6b8ddfdef677a7c38dd279a639278a8b94a46b"
+    },
+    "tokenizer_identity": "sha256:29aa73c8a911e1f39dddb0200fe8f4817fd369b8c0ce4f25aec6f1157e22690b",
+    "vocab_size": 262144
+  },
+  "schema_version": "radjax_tome.golden_contract.v2",
+  "semantic_policy": {
+    "delivery_path": "two_pass_rerun_selected",
+    "dynamic_mass_threshold": 0.99,
+    "dynamic_top_k_max": 262144,
+    "dynamic_top_k_min": 32,
+    "native_execution_mode": "native_c6_path_b_v1",
+    "num_buckets": null,
+    "retain_unselected_exemplar_payloads": null,
+    "run_manifest_hash": "sha256:dbdc75c3dc22f9c5eb923a5899f11764ac6b6edede20c0ef2f71b70723db4e0a",
+    "runtime_mode": "cpu_gpu",
+    "score_pass_authority_contract_version": "radjax.c6.score_pass_authority.v2",
+    "score_pass_config_hash": "sha256:dbdc75c3dc22f9c5eb923a5899f11764ac6b6edede20c0ef2f71b70723db4e0a",
+    "selected_rerun_batch_size": 1,
+    "selection_integration_config_hash": "sha256:964ec9029e70744991fb7b12e92bf3687a55653091ccdf1a012890fb160cee51",
+    "selection_integration_policy": "corridor_first_global_backfill_v1",
+    "target_policy": "corridor_exemplar_v1",
+    "teacher_backend": "gpu_torch"
+  },
+  "semantic_root": "sha256:5e65c5388a7079f143421b5a35a72a586083cf47a3e37e82cac13eff4f608fdb",
+  "stage_summary": [
+    {
+      "stage": "production_build_report",
+      "status": "pass"
+    },
+    {
+      "stage": "validation_report",
+      "status": "pass"
+    },
+    {
+      "stage": "delivery_report",
+      "status": "pass"
+    },
+    {
+      "stage": "selected_linkage_audit",
+      "status": "pass"
+    },
+    {
+      "stage": "c6_reconciliation",
+      "status": "pass"
+    }
+  ]
+}

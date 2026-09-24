@@ -1,0 +1,19 @@
+{
+  "schema_version": "m13_p6_u1_recheck.v1",
+  "prior_receipt": {
+    "status": "failed",
+    "failure": "AttributeError: numpy.ndarray lacks first_valid_index",
+    "scope": "fresh reproducibility build"
+  },
+  "reproduction": {
+    "focused_test": "tests/test_p6_u1_reduced_burn_authority.py::test_p6_u1_fresh_identical_input_builds_are_byte_identical",
+    "result": "pass",
+    "environment": "/tmp/m11-clean-venv Python 3.11.2"
+  },
+  "final_gate": {
+    "command": "PYTHONPATH=src /tmp/m11-clean-venv/bin/python -m pytest -q",
+    "result": "1246 passed, 27 skipped",
+    "status": "pass"
+  },
+  "disposition": "Prior failure was not reproducible in the authoritative clean environment; no production or test-code change, skip, or assertion weakening was added."
+}

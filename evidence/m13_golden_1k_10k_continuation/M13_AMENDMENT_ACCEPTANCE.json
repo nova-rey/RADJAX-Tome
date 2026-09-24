@@ -1,0 +1,39 @@
+{
+  "schema_version": "m13_owner_amendment_acceptance.v1",
+  "decision_date": "2026-09-24",
+  "disposition": "M13_CLOSED_UNDER_VERSIONED_REFERENCE_ACCEPTANCE",
+  "historical_golden": {
+    "status": "FAILED_PRESERVED",
+    "common": 128,
+    "missing": 128,
+    "extra": 128,
+    "upstream_score_feature_differences": true,
+    "causal_limit": "historical producer/runtime/intermediates unavailable"
+  },
+  "current_reference": {
+    "name": "M13_CURRENT_PRODUCTION_REFERENCE_V1",
+    "manifest": "evidence/m13_current_production_reference_v1/reference_manifest.json",
+    "durable_root": "/home/nyx/m8g/m13-recovery/m13-current-production-reference-v1",
+    "producing_sha": "a1ba7d308a2fe44065e1e05273609469547635d4",
+    "acceptance_sha": "279b9f85d9727d62cf243eaefe6cc5251944da79",
+    "contract": "373e3d17060d4ce1c4a0db6065c9289da714bde7",
+    "semantic_root": "sha256:bbd2e6204579d7d6cdf67010eacc4b4d6178e19a6900dbc2219aafe8d80cb182"
+  },
+  "checks": {
+    "reference_contract_validate": "pass",
+    "reference_artifact_compare": "pass",
+    "governed_mutation_rejected": "pass",
+    "historical_fixture_distinct": "pass",
+    "focused_m13_and_golden": "28 passed",
+    "p6_u1_focused": "pass",
+    "full_pytest": "1246 passed, 27 skipped",
+    "ten_k": "inherited accepted receipt; not rerun",
+    "resume": "inherited three-record/two-shard fixture; not full-10k"
+  },
+  "claims_not_made": [
+    "historical_golden_parity",
+    "cross_runtime_reproducibility",
+    "student_quality_or_training_success",
+    "full_10k_interruption_recovery"
+  ]
+}
