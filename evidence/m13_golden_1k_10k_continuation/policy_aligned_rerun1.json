@@ -1,0 +1,32 @@
+{
+  "app_id": "ap-lGWh7AuCgFH47ysYqacyNH",
+  "variant": "frozen C2/C3 caps, teacher batch 1, selected rerun batch 1",
+  "requested": {
+    "c2_candidate_pool_cap": 4,
+    "c3_corridor_mode_cap": 10,
+    "teacher_batch_size": 1,
+    "selected_rerun_batch_size": 1
+  },
+  "result": "pass",
+  "exit_code": 0,
+  "wall_seconds": 722.849096293,
+  "num_examples": 1000,
+  "selected_coordinates": 256,
+  "validation_status": "pass",
+  "selected_delivery_status": "pass",
+  "selected_rerun_examples": 231,
+  "selected_rerun_teacher_seconds": 14.172533018,
+  "selected_rerun_wall_seconds": 26.507613357,
+  "production_wall_seconds": 538.928894615,
+  "selection_integration_config_hash": "sha256:964ec9029e70744991fb7b12e92bf3687a55653091ccdf1a012890fb160cee51",
+  "score_pass_authority_hash": "sha256:4f06ee9f0bb9ec5349c1b68d1db64cd45c22602fbe9fe7cc7eb368ab76293976",
+  "canonical_tome_semantic_identity": "sha256:32d42c02ada3f761e799e7c6b1bb36b6bc51e26919ad308ce5d1ce9584a18175",
+  "golden_coordinate_set_comparison": {
+    "golden_count": 256,
+    "observed_count": 256,
+    "intersection": 128,
+    "missing": 128,
+    "extra": 128
+  },
+  "interpretation": "Frozen C2/C3 policy and feasible batch-1 rerun complete successfully, but the coordinate set remains different from historical Golden. This isolates the remaining divergence to score/runtime authority rather than a delivery or coordinate-map failure."
+}

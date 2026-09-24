@@ -10,11 +10,15 @@ The original comparator rejection was a reader gap: compact `compact_k_monolithi
 
 ## Earliest divergence
 
-The frozen and current runs use identical corpus, manifest, model, weights, tokenizer, example count, and sequence length. They are not the same experiment: frozen C2 candidate-pool cap is 4 versus current 10000; frozen C3 corridor-mode cap is 10 versus current 64; frozen selected rerun batch is 8 versus current 1; and the recorded runtime/reduction differs (Torch 2.13/bfloat16 historical versus Torch 2.14/current float32). Golden and current score/selection configuration hashes differ before C5. The selected sets contain 126 common coordinates, 130 missing, and 130 extra. This is an authority/policy mismatch, not a coordinate mapping defect; no coordinates were forced and no tolerance was widened.
+The frozen and current runs use identical corpus, manifest, model, weights, tokenizer, example count, and sequence length. They are not the same experiment: frozen C2 candidate-pool cap is 4 versus current 10000; frozen C3 corridor-mode cap is 10 versus current 64; frozen selected rerun batch is 8 versus current 1; and the recorded runtime/reduction differs (Torch 2.13/bfloat16 historical versus Torch 2.14/current float32). Golden and current score/selection configuration hashes differ before C5. The selected sets contain 126 common coordinates, 130 missing, and 130 extra in the original current run. This is an authority/policy mismatch, not a coordinate mapping defect; no coordinates were forced and no tolerance was widened.
 
-## Policy-aligned decisive T4 run
+## Policy-aligned decisive T4 runs
 
-One additional 1K T4 run used the frozen C2/C3 caps and selected-rerun batch 8 with the feasible current teacher batch size 1. It completed score, selection, and validation with 256 selected coordinates, but selected delivery failed at `corpus_000000118`: score top token 708 versus rerun top token 184 and entropy delta 3.438110828399658 against the existing 0.00390625 tolerance. A first attempt using teacher batch 8 OOMed before completion; its failure is preserved. This confirms current teacher/reducer runtime drift under the frozen policy. It does not justify changing Golden or tolerances.
+A first policy-aligned attempt used teacher batch 8 and OOMed before completion; the raw app/log are preserved. A feasible run with frozen C2/C3 caps, teacher batch 1, and selected rerun batch 8 completed score/selection/validation but failed selected delivery at `corpus_000000118` (score top token 708 versus rerun top token 184; entropy delta 3.438110828399658 versus allowed 0.00390625).
+
+The final discriminator used frozen C2/C3 caps, teacher batch 1, and selected rerun batch 1. It completed the full production build, selected delivery, validation, and publication successfully with 256 coordinates. Comparing its selected coordinates to the frozen Golden still gives 128 common, 128 missing, and 128 extra. This proves the remaining mismatch persists after policy alignment and feasible rerun batching: the unresolved cause is historical/current teacher and score-reduction authority, not coordinate mapping or delivery. No Golden or tolerance change is justified.
+
+The temporary harness returned stale metadata naming `b5ce585`, but its source mount was the checked-out `d659d15` branch; no selected-pass production code changed between them.
 
 ## Package and resume
 
@@ -26,7 +30,7 @@ The tracked inventory now includes the M13 closure report and T4 smoke helper. T
 
 ## Gate status
 
-The accepted 10K measurement was not rerun. The compact reader and portability fixes are complete, package/transfer/resume are complete, and the policy-aligned T4 run confirms the remaining Golden failure is a frozen/current teacher/reducer authority conflict. A parity pass would require an owner decision to change the parity oracle or reproduce the historical runtime; neither is authorized in this checkpoint.
+The accepted 10K measurement was not rerun. Compact comparison, package/transfer/resume, Hydra, and the policy-aligned 1K discriminator are complete. The historical Golden and current accepted production teacher/reducer authorities remain irreconcilable under the current rules. Passing M13 now requires an owner decision about which authority is the parity oracle or authorization to reproduce the historical runtime; neither is authorized in this checkpoint.
 
 ## Disposition
 

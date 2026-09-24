@@ -1,0 +1,9768 @@
+{
+  "differences": [
+    {
+      "collection": "contract",
+      "expected": {
+        "delivery_path": "two_pass_rerun_selected",
+        "dynamic_mass_threshold": 0.99,
+        "dynamic_top_k_max": 262144,
+        "dynamic_top_k_min": 32,
+        "native_execution_mode": "native_c6_path_b_v1",
+        "num_buckets": null,
+        "retain_unselected_exemplar_payloads": null,
+        "run_manifest_hash": "sha256:0e7fb2f6e8dd6a3e33dd0171bf65634f726002c167895b38cade90c33e7197d2",
+        "runtime_mode": "cpu_gpu",
+        "score_pass_config_hash": "sha256:0e7fb2f6e8dd6a3e33dd0171bf65634f726002c167895b38cade90c33e7197d2",
+        "selected_rerun_batch_size": 8,
+        "selection_integration_config_hash": "sha256:322052389ab9257e5e5f0b80e571cf64f5914e18bf9bc621494cedcbddd1c51b",
+        "selection_integration_policy": "corridor_first_global_backfill_v1",
+        "target_policy": "corridor_exemplar_v1",
+        "teacher_backend": "gpu_torch"
+      },
+      "field": "semantic_policy",
+      "observed": {
+        "delivery_path": "two_pass_rerun_selected",
+        "dynamic_mass_threshold": 0.99,
+        "dynamic_top_k_max": 262144,
+        "dynamic_top_k_min": 32,
+        "native_execution_mode": "native_c6_path_b_v1",
+        "num_buckets": null,
+        "retain_unselected_exemplar_payloads": null,
+        "run_manifest_hash": "sha256:dbdc75c3dc22f9c5eb923a5899f11764ac6b6edede20c0ef2f71b70723db4e0a",
+        "runtime_mode": "cpu_gpu",
+        "score_pass_config_hash": "sha256:dbdc75c3dc22f9c5eb923a5899f11764ac6b6edede20c0ef2f71b70723db4e0a",
+        "selected_rerun_batch_size": 1,
+        "selection_integration_config_hash": "sha256:964ec9029e70744991fb7b12e92bf3687a55653091ccdf1a012890fb160cee51",
+        "selection_integration_policy": "corridor_first_global_backfill_v1",
+        "target_policy": "corridor_exemplar_v1",
+        "teacher_backend": "gpu_torch"
+      }
+    },
+    {
+      "collection": "contract",
+      "expected": "sha256:d40c362af02fb11c17aba256426f57d45ab59e7d97c45bc0a3bc038ed5c04986",
+      "field": "board_summary_digest",
+      "observed": "sha256:81f85982e17cf6be536a51283c069df1250c67126277f5f0c37ec08ba110596c"
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000662",
+        6
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000971",
+        35
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000369",
+        116
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000437",
+        125
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000883",
+        119
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000593",
+        122
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000138",
+        100
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000316",
+        25
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000078",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000657",
+        50
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000513",
+        81
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000821",
+        83
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000896",
+        30
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000298",
+        76
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000971",
+        35
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000884",
+        98
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000181",
+        77
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000853",
+        65
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000152",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000637",
+        74
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000489",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000965",
+        92
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000619",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000412",
+        120
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000492",
+        87
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000316",
+        37
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000530",
+        41
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000212",
+        16
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000587",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000794",
+        113
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000610",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000314",
+        115
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000152",
+        61
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000855",
+        42
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000176",
+        39
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000964",
+        14
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000067",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000240",
+        33
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000095",
+        13
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000924",
+        30
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000139",
+        124
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000709",
+        94
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000277",
+        58
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000418",
+        119
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000335",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000472",
+        88
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000418",
+        50
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000139",
+        53
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000237",
+        45
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000210",
+        31
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000282",
+        85
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000661",
+        112
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000498",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000840",
+        99
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000455",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000136",
+        81
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000136",
+        81
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000356",
+        55
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000472",
+        88
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000722",
+        115
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000012",
+        31
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000352",
+        109
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000026",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000060",
+        102
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000090",
+        88
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000185",
+        119
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000318",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000976",
+        102
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000331",
+        65
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000280",
+        72
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000480",
+        17
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000047",
+        27
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000819",
+        90
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000343",
+        104
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000105",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000923",
+        94
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000296",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000259",
+        50
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000026",
+        95
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000927",
+        72
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000030",
+        15
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000374",
+        33
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000035",
+        86
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000299",
+        81
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000108",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000819",
+        95
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000500",
+        94
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000852",
+        41
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000996",
+        48
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000659",
+        56
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000512",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000115",
+        14
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000754",
+        3
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000501",
+        19
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000798",
+        28
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000454",
+        25
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000002",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000656",
+        10
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000015",
+        62
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000164",
+        28
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000024",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000756",
+        46
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000044",
+        30
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000090",
+        27
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000283",
+        51
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000353",
+        28
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000591",
+        126
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000160",
+        32
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000013",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000008",
+        66
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000018",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000260",
+        104
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000048",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000873",
+        65
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000003",
+        40
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000096",
+        15
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000003",
+        68
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000229",
+        2
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000014",
+        120
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000076",
+        4
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000318",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000234",
+        52
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000463",
+        125
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000392",
+        97
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000645",
+        101
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000167",
+        22
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000195",
+        63
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000791",
+        9
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000873",
+        65
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000899",
+        33
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000476",
+        127
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000218",
+        83
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000006",
+        89
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000086",
+        95
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000008",
+        43
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000121",
+        31
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000015",
+        81
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000057",
+        34
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000003",
+        96
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000102",
+        41
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000034",
+        16
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000896",
+        82
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000078",
+        28
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000933",
+        33
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000152",
+        95
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000227",
+        124
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000573",
+        118
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000908",
+        123
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000058",
+        3
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000605",
+        83
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000082",
+        22
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000807",
+        52
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000095",
+        79
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000646",
+        68
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000306",
+        58
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000217",
+        20
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000013",
+        96
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000465",
+        10
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000016",
+        98
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000910",
+        49
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000022",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000249",
+        115
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000004",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000700",
+        74
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000028",
+        124
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000260",
+        61
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000031",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000711",
+        7
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000868",
+        31
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000779",
+        86
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000894",
+        122
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000912",
+        38
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000331",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000690",
+        49
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000173",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000724",
+        88
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000304",
+        11
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000404",
+        30
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000336",
+        91
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000998",
+        75
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000004",
+        47
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000062",
+        72
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000017",
+        16
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000946",
+        110
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000026",
+        48
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000557",
+        66
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000002",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000676",
+        44
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000023",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000574",
+        119
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000028",
+        117
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000404",
+        23
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000551",
+        9
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000209",
+        76
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000135",
+        122
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000855",
+        113
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000361",
+        58
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000359",
+        71
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000413",
+        12
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000897",
+        87
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000001",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000667",
+        49
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000009",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000766",
+        124
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000020",
+        96
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000501",
+        46
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000002",
+        104
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000402",
+        124
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000017",
+        28
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000325",
+        32
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000113",
+        71
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000020",
+        106
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000004",
+        36
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000593",
+        93
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000006",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000883",
+        62
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000008",
+        7
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000618",
+        73
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000001",
+        52
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000773",
+        78
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000002",
+        61
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000521",
+        46
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000006",
+        5
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000949",
+        30
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000001",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000433",
+        57
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000004",
+        70
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000004",
+        121
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000002",
+        26
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000094",
+        63
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000013",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000527",
+        65
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000002",
+        80
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000426",
+        21
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000004",
+        107
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000186",
+        33
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000004",
+        121
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000308",
+        33
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000011",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000773",
+        99
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000572",
+        34
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000514",
+        7
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000149",
+        89
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000949",
+        9
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000001",
+        5
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000922",
+        54
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000012",
+        59
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000104",
+        121
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000028",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000858",
+        119
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000041",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000264",
+        24
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000093",
+        34
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000527",
+        64
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000133",
+        76
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000528",
+        91
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000528",
+        91
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000495",
+        44
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": [
+        {
+          "metadata": {
+            "board_priority": 0
+          },
+          "rank": 2,
+          "role": "global_board",
+          "score": 8.0,
+          "source_id": "global_max_entropy"
+        }
+      ],
+      "field": "selection_obligations",
+      "observed": [
+        {
+          "metadata": {
+            "board_priority": 0
+          },
+          "rank": 3,
+          "role": "global_board",
+          "score": 7.9097795486450195,
+          "source_id": "global_max_entropy"
+        }
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": {
+        "corridor_assignment_status": "linked",
+        "corridor_mode_id": 46,
+        "example_id": "corpus_000000740",
+        "payload_slot": {
+          "source_position": 77,
+          "source_row": 99,
+          "source_shard_id": 5,
+          "storage_kind": "full_sequence"
+        },
+        "position": 77,
+        "score_pass_authority_hash": "sha256:39588f7bbc69285c9a86c2fb13a7ff34f8ad093e8093abfc56776866b355657a",
+        "source_position": 77,
+        "source_row": 99,
+        "source_score": 8.0,
+        "source_score_policy": "entropy_top_n_v1",
+        "source_shard_id": 5,
+        "source_top_token_id": 640
+      },
+      "field": "source_passport",
+      "observed": {
+        "corridor_assignment_status": "linked",
+        "corridor_mode_id": 29,
+        "example_id": "corpus_000000740",
+        "payload_slot": {
+          "source_position": 77,
+          "source_row": 739,
+          "source_shard_id": 0,
+          "storage_kind": "full_sequence"
+        },
+        "position": 77,
+        "score_pass_authority_hash": "sha256:4f06ee9f0bb9ec5349c1b68d1db64cd45c22602fbe9fe7cc7eb368ab76293976",
+        "source_position": 77,
+        "source_row": 739,
+        "source_score": 7.9097795486450195,
+        "source_score_policy": "entropy_top_n_v1",
+        "source_shard_id": 0,
+        "source_top_token_id": 640
+      }
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000563",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000424",
+        59
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000962",
+        46
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000563",
+        25
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000829",
+        94
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000962",
+        46
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000495",
+        44
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000829",
+        94
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000424",
+        59
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000224",
+        25
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000246",
+        35
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000988",
+        45
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000643",
+        83
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000246",
+        35
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000988",
+        45
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000474",
+        76
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000230",
+        78
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000432",
+        51
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000313",
+        102
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000179",
+        123
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000432",
+        51
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000112",
+        98
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000550",
+        110
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000313",
+        102
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000224",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000278",
+        83
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000568",
+        79
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000230",
+        78
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000906",
+        48
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000094",
+        31
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000094",
+        31
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000643",
+        83
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000474",
+        76
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000906",
+        48
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000540",
+        63
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000280",
+        2
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000152",
+        24
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000168",
+        75
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000179",
+        123
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000556",
+        122
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000280",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000540",
+        63
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000556",
+        122
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000007",
+        126
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000112",
+        98
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000568",
+        79
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000228",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000516",
+        61
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000288",
+        43
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000550",
+        110
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000425",
+        67
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000228",
+        108
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000566",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000118",
+        2
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000898",
+        114
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000425",
+        67
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000070",
+        59
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000288",
+        43
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000133",
+        74
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000152",
+        24
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000168",
+        75
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000390",
+        118
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000278",
+        83
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000746",
+        108
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000282",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000329",
+        120
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000746",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000185",
+        29
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000007",
+        126
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000898",
+        114
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000109",
+        79
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000627",
+        109
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000118",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000133",
+        74
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000185",
+        29
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000566",
+        82
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000329",
+        120
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000611",
+        4
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000511",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000282",
+        92
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000516",
+        61
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000639",
+        49
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000627",
+        109
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000109",
+        79
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000922",
+        117
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000511",
+        23
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000611",
+        4
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000226",
+        69
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000773",
+        39
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000187",
+        49
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000931",
+        70
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000238",
+        41
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000227",
+        68
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000922",
+        117
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000322",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000322",
+        66
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000390",
+        118
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000070",
+        59
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000639",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000723",
+        27
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000741",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000975",
+        124
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000975",
+        124
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000931",
+        70
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000093",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000653",
+        73
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000226",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000779",
+        14
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000236",
+        14
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000968",
+        55
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000503",
+        114
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000005",
+        45
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000632",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000236",
+        14
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": [
+        {
+          "metadata": {
+            "board_priority": 0
+          },
+          "rank": 60,
+          "role": "global_board",
+          "score": 7.46875,
+          "source_id": "global_max_entropy"
+        }
+      ],
+      "field": "selection_obligations",
+      "observed": [
+        {
+          "metadata": {
+            "board_priority": 0
+          },
+          "rank": 61,
+          "role": "global_board",
+          "score": 7.444890022277832,
+          "source_id": "global_max_entropy"
+        }
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": {
+        "corridor_assignment_status": "linked",
+        "corridor_mode_id": 36,
+        "example_id": "corpus_000000963",
+        "payload_slot": {
+          "source_position": 14,
+          "source_row": 66,
+          "source_shard_id": 7,
+          "storage_kind": "full_sequence"
+        },
+        "position": 14,
+        "score_pass_authority_hash": "sha256:39588f7bbc69285c9a86c2fb13a7ff34f8ad093e8093abfc56776866b355657a",
+        "source_position": 14,
+        "source_row": 66,
+        "source_score": 7.46875,
+        "source_score_policy": "entropy_top_n_v1",
+        "source_shard_id": 7,
+        "source_top_token_id": 80571
+      },
+      "field": "source_passport",
+      "observed": {
+        "corridor_assignment_status": "linked",
+        "corridor_mode_id": 29,
+        "example_id": "corpus_000000963",
+        "payload_slot": {
+          "source_position": 14,
+          "source_row": 962,
+          "source_shard_id": 0,
+          "storage_kind": "full_sequence"
+        },
+        "position": 14,
+        "score_pass_authority_hash": "sha256:4f06ee9f0bb9ec5349c1b68d1db64cd45c22602fbe9fe7cc7eb368ab76293976",
+        "source_position": 14,
+        "source_row": 962,
+        "source_score": 7.444890022277832,
+        "source_score_policy": "entropy_top_n_v1",
+        "source_shard_id": 0,
+        "source_top_token_id": 80571
+      }
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000187",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000773",
+        39
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000207",
+        63
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000261",
+        84
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000382",
+        20
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000227",
+        68
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000455",
+        90
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000741",
+        72
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000498",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000600",
+        117
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000529",
+        88
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000207",
+        63
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000595",
+        37
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000688",
+        40
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000600",
+        117
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000503",
+        114
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000676",
+        26
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000455",
+        90
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000723",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000793",
+        23
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000793",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000377",
+        109
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000968",
+        55
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000676",
+        26
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000161",
+        13
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000378",
+        34
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000238",
+        41
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000382",
+        20
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000279",
+        13
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000595",
+        37
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000653",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000093",
+        92
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000688",
+        40
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000373",
+        73
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000779",
+        14
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000284",
+        21
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000005",
+        45
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000908",
+        121
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000099",
+        103
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000161",
+        13
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000243",
+        51
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000060",
+        8
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000398",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000107",
+        82
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000908",
+        121
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000529",
+        88
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000006",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000938",
+        95
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000060",
+        8
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000099",
+        103
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000063",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000498",
+        25
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000209",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000210",
+        2
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000223",
+        109
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000218",
+        106
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000284",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000632",
+        21
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000373",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000466",
+        36
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000377",
+        109
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000279",
+        13
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000378",
+        34
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000062",
+        16
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000735",
+        119
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000398",
+        72
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000938",
+        95
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000727",
+        35
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000945",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000063",
+        25
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000038",
+        43
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000243",
+        51
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000040",
+        89
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000208",
+        2
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000218",
+        44
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000197",
+        2
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000261",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000209",
+        54
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000327",
+        6
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000707",
+        11
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000375",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000945",
+        33
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000385",
+        112
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000006",
+        23
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000504",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000512",
+        25
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000727",
+        35
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000375",
+        54
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000734",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000504",
+        2
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000858",
+        22
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000745",
+        10
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000072",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000651",
+        66
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000210",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000327",
+        6
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000466",
+        36
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000174",
+        83
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000651",
+        66
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000223",
+        109
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000738",
+        8
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000038",
+        3
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000062",
+        16
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000738",
+        8
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000107",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000309",
+        13
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000144",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000244",
+        36
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000197",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000792",
+        38
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000445",
+        7
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000734",
+        49
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000475",
+        104
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000147",
+        34
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000521",
+        47
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000858",
+        22
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000580",
+        5
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000475",
+        104
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000895",
+        12
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000521",
+        47
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000996",
+        65
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000040",
+        89
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000174",
+        83
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000996",
+        65
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000208",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000385",
+        112
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000512",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000144",
+        27
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000707",
+        11
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000735",
+        119
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000745",
+        10
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000760",
+        34
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000775",
+        8
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000445",
+        7
+      ]
+    },
+    {
+      "collection": "selected_obligations",
+      "coordinate": [
+        "corpus_000000899",
+        112
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000895",
+        12
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000662",
+        6
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000971",
+        35
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000369",
+        116
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000437",
+        125
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000883",
+        119
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000593",
+        122
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000138",
+        100
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000316",
+        25
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000078",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000657",
+        50
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000513",
+        81
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000821",
+        83
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000896",
+        30
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000298",
+        76
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000971",
+        35
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000884",
+        98
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000181",
+        77
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000853",
+        65
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000152",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000637",
+        74
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000489",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000965",
+        92
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000619",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000412",
+        120
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000492",
+        87
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000316",
+        37
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000530",
+        41
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000212",
+        16
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000587",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000794",
+        113
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000610",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000314",
+        115
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000152",
+        61
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000855",
+        42
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000176",
+        39
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000964",
+        14
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000067",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000240",
+        33
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000095",
+        13
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000924",
+        30
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000139",
+        124
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000709",
+        94
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000277",
+        58
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000418",
+        119
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000335",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000472",
+        88
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000418",
+        50
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000139",
+        53
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000237",
+        45
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000210",
+        31
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000282",
+        85
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000661",
+        112
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000498",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000840",
+        99
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000455",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000136",
+        81
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000136",
+        81
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000356",
+        55
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000472",
+        88
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000722",
+        115
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000012",
+        31
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000352",
+        109
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000026",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000060",
+        102
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000090",
+        88
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000185",
+        119
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000318",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000976",
+        102
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000331",
+        65
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000280",
+        72
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000480",
+        17
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000047",
+        27
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000819",
+        90
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000343",
+        104
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000105",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000923",
+        94
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000296",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000259",
+        50
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000026",
+        95
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000927",
+        72
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000030",
+        15
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000374",
+        33
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000035",
+        86
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000299",
+        81
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000108",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000819",
+        95
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000500",
+        94
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000852",
+        41
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000996",
+        48
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000659",
+        56
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000512",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000115",
+        14
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000754",
+        3
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000501",
+        19
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000798",
+        28
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000454",
+        25
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000002",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000656",
+        10
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000015",
+        62
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000164",
+        28
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000024",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000756",
+        46
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000044",
+        30
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000090",
+        27
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000283",
+        51
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000353",
+        28
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000591",
+        126
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000160",
+        32
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000013",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000008",
+        66
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000018",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000260",
+        104
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000048",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000873",
+        65
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000003",
+        40
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000096",
+        15
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000003",
+        68
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000229",
+        2
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000014",
+        120
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000076",
+        4
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000318",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000234",
+        52
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000463",
+        125
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000392",
+        97
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000645",
+        101
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000167",
+        22
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000195",
+        63
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000791",
+        9
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000873",
+        65
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000899",
+        33
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000476",
+        127
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000218",
+        83
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000006",
+        89
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000086",
+        95
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000008",
+        43
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000121",
+        31
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000015",
+        81
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000057",
+        34
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000003",
+        96
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000102",
+        41
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000034",
+        16
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000896",
+        82
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000078",
+        28
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000933",
+        33
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000152",
+        95
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000227",
+        124
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000573",
+        118
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000908",
+        123
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000058",
+        3
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000605",
+        83
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000082",
+        22
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000807",
+        52
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000095",
+        79
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000646",
+        68
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000306",
+        58
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000217",
+        20
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000013",
+        96
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000465",
+        10
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000016",
+        98
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000910",
+        49
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000022",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000249",
+        115
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000004",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000700",
+        74
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000028",
+        124
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000260",
+        61
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000031",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000711",
+        7
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000868",
+        31
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000779",
+        86
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000894",
+        122
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000912",
+        38
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000331",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000690",
+        49
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000173",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000724",
+        88
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000304",
+        11
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000404",
+        30
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000336",
+        91
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000998",
+        75
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000004",
+        47
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000062",
+        72
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000017",
+        16
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000946",
+        110
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000026",
+        48
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000557",
+        66
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000002",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000676",
+        44
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000023",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000574",
+        119
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000028",
+        117
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000404",
+        23
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000551",
+        9
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000209",
+        76
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000135",
+        122
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000855",
+        113
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000361",
+        58
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000359",
+        71
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000413",
+        12
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000897",
+        87
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000001",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000667",
+        49
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000009",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000766",
+        124
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000020",
+        96
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000501",
+        46
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000002",
+        104
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000402",
+        124
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000017",
+        28
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000325",
+        32
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000113",
+        71
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000020",
+        106
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000004",
+        36
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000593",
+        93
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000006",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000883",
+        62
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000008",
+        7
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000618",
+        73
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000001",
+        52
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000773",
+        78
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000002",
+        61
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000521",
+        46
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000006",
+        5
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000949",
+        30
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000001",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000433",
+        57
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000004",
+        70
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000004",
+        121
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000002",
+        26
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000094",
+        63
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000013",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000527",
+        65
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000002",
+        80
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000426",
+        21
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000004",
+        107
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000186",
+        33
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000004",
+        121
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000308",
+        33
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000011",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000773",
+        99
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000572",
+        34
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000514",
+        7
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000149",
+        89
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000949",
+        9
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000001",
+        5
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000922",
+        54
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000012",
+        59
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000104",
+        121
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000028",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000858",
+        119
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000041",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000264",
+        24
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000093",
+        34
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000527",
+        64
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000133",
+        76
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000528",
+        91
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000528",
+        91
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000495",
+        44
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": 46,
+      "field": "corridor_mode_id",
+      "observed": 29
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": {
+        "source_position": 77,
+        "source_row": 99,
+        "source_shard_id": 5,
+        "storage_kind": "full_sequence"
+      },
+      "field": "payload_slot",
+      "observed": {
+        "source_position": 77,
+        "source_row": 739,
+        "source_shard_id": 0,
+        "storage_kind": "full_sequence"
+      }
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": "sha256:39588f7bbc69285c9a86c2fb13a7ff34f8ad093e8093abfc56776866b355657a",
+      "field": "score_pass_authority_hash",
+      "observed": "sha256:4f06ee9f0bb9ec5349c1b68d1db64cd45c22602fbe9fe7cc7eb368ab76293976"
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": 99,
+      "field": "source_row",
+      "observed": 739
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": 8.0,
+      "field": "source_score",
+      "observed": 7.9097795486450195
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": 5,
+      "field": "source_shard_id",
+      "observed": 0
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000563",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000424",
+        59
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000962",
+        46
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000563",
+        25
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000829",
+        94
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000962",
+        46
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000495",
+        44
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000829",
+        94
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000424",
+        59
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000224",
+        25
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000246",
+        35
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000988",
+        45
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000643",
+        83
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000246",
+        35
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000988",
+        45
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000474",
+        76
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000230",
+        78
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000432",
+        51
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000313",
+        102
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000179",
+        123
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000432",
+        51
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000112",
+        98
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000550",
+        110
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000313",
+        102
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000224",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000278",
+        83
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000568",
+        79
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000230",
+        78
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000906",
+        48
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000094",
+        31
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000094",
+        31
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000643",
+        83
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000474",
+        76
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000906",
+        48
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000540",
+        63
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000280",
+        2
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000152",
+        24
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000168",
+        75
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000179",
+        123
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000556",
+        122
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000280",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000540",
+        63
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000556",
+        122
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000007",
+        126
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000112",
+        98
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000568",
+        79
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000228",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000516",
+        61
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000288",
+        43
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000550",
+        110
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000425",
+        67
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000228",
+        108
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000566",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000118",
+        2
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000898",
+        114
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000425",
+        67
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000070",
+        59
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000288",
+        43
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000133",
+        74
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000152",
+        24
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000168",
+        75
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000390",
+        118
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000278",
+        83
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000746",
+        108
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000282",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000329",
+        120
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000746",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000185",
+        29
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000007",
+        126
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000898",
+        114
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000109",
+        79
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000627",
+        109
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000118",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000133",
+        74
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000185",
+        29
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000566",
+        82
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000329",
+        120
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000611",
+        4
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000511",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000282",
+        92
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000516",
+        61
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000639",
+        49
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000627",
+        109
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000109",
+        79
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000922",
+        117
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000511",
+        23
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000611",
+        4
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000226",
+        69
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000773",
+        39
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000187",
+        49
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000931",
+        70
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000238",
+        41
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000227",
+        68
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000922",
+        117
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000322",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000322",
+        66
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000390",
+        118
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000070",
+        59
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000639",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000723",
+        27
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000741",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000975",
+        124
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000975",
+        124
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000931",
+        70
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000093",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000653",
+        73
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000226",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000779",
+        14
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000236",
+        14
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000968",
+        55
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000503",
+        114
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000005",
+        45
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000632",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000236",
+        14
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": 36,
+      "field": "corridor_mode_id",
+      "observed": 29
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": {
+        "source_position": 14,
+        "source_row": 66,
+        "source_shard_id": 7,
+        "storage_kind": "full_sequence"
+      },
+      "field": "payload_slot",
+      "observed": {
+        "source_position": 14,
+        "source_row": 962,
+        "source_shard_id": 0,
+        "storage_kind": "full_sequence"
+      }
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": "sha256:39588f7bbc69285c9a86c2fb13a7ff34f8ad093e8093abfc56776866b355657a",
+      "field": "score_pass_authority_hash",
+      "observed": "sha256:4f06ee9f0bb9ec5349c1b68d1db64cd45c22602fbe9fe7cc7eb368ab76293976"
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": 66,
+      "field": "source_row",
+      "observed": 962
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": 7.46875,
+      "field": "source_score",
+      "observed": 7.444890022277832
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": 7,
+      "field": "source_shard_id",
+      "observed": 0
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000187",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000773",
+        39
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000207",
+        63
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000261",
+        84
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000382",
+        20
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000227",
+        68
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000455",
+        90
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000741",
+        72
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000498",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000600",
+        117
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000529",
+        88
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000207",
+        63
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000595",
+        37
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000688",
+        40
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000600",
+        117
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000503",
+        114
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000676",
+        26
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000455",
+        90
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000723",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000793",
+        23
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000793",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000377",
+        109
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000968",
+        55
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000676",
+        26
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000161",
+        13
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000378",
+        34
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000238",
+        41
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000382",
+        20
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000279",
+        13
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000595",
+        37
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000653",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000093",
+        92
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000688",
+        40
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000373",
+        73
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000779",
+        14
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000284",
+        21
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000005",
+        45
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000908",
+        121
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000099",
+        103
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000161",
+        13
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000243",
+        51
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000060",
+        8
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000398",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000107",
+        82
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000908",
+        121
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000529",
+        88
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000006",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000938",
+        95
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000060",
+        8
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000099",
+        103
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000063",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000498",
+        25
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000209",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000210",
+        2
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000223",
+        109
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000218",
+        106
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000284",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000632",
+        21
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000373",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000466",
+        36
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000377",
+        109
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000279",
+        13
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000378",
+        34
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000062",
+        16
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000735",
+        119
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000398",
+        72
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000938",
+        95
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000727",
+        35
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000945",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000063",
+        25
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000038",
+        43
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000243",
+        51
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000040",
+        89
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000208",
+        2
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000218",
+        44
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000197",
+        2
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000261",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000209",
+        54
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000327",
+        6
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000707",
+        11
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000375",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000945",
+        33
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000385",
+        112
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000006",
+        23
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000504",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000512",
+        25
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000727",
+        35
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000375",
+        54
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000734",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000504",
+        2
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000858",
+        22
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000745",
+        10
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000072",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000651",
+        66
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000210",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000327",
+        6
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000466",
+        36
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000174",
+        83
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000651",
+        66
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000223",
+        109
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000738",
+        8
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000038",
+        3
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000062",
+        16
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000738",
+        8
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000107",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000309",
+        13
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000144",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000244",
+        36
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000197",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000792",
+        38
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000445",
+        7
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000734",
+        49
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000475",
+        104
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000147",
+        34
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000521",
+        47
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000858",
+        22
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000580",
+        5
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000475",
+        104
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000895",
+        12
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000521",
+        47
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000996",
+        65
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000040",
+        89
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000174",
+        83
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000996",
+        65
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000208",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000385",
+        112
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000512",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000144",
+        27
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000707",
+        11
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000735",
+        119
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000745",
+        10
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000760",
+        34
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000775",
+        8
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000445",
+        7
+      ]
+    },
+    {
+      "collection": "source_passports",
+      "coordinate": [
+        "corpus_000000899",
+        112
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000895",
+        12
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000662",
+        6
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000971",
+        35
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000369",
+        116
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000437",
+        125
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000883",
+        119
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000593",
+        122
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000138",
+        100
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000316",
+        25
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000078",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000657",
+        50
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000513",
+        81
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000821",
+        83
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000896",
+        30
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000298",
+        76
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000971",
+        35
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000884",
+        98
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000181",
+        77
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000853",
+        65
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000152",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000637",
+        74
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000489",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000965",
+        92
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000619",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000412",
+        120
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000492",
+        87
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000316",
+        37
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000530",
+        41
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000212",
+        16
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000587",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000794",
+        113
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000610",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000314",
+        115
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000152",
+        61
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000855",
+        42
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000176",
+        39
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000964",
+        14
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000067",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000240",
+        33
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000095",
+        13
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000924",
+        30
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000139",
+        124
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000709",
+        94
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000277",
+        58
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000418",
+        119
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000335",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000472",
+        88
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000418",
+        50
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000139",
+        53
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000237",
+        45
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000210",
+        31
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000282",
+        85
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000661",
+        112
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000498",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000840",
+        99
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000455",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000136",
+        81
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000136",
+        81
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000356",
+        55
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000472",
+        88
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000722",
+        115
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000012",
+        31
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000352",
+        109
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000026",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000060",
+        102
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000090",
+        88
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000185",
+        119
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000318",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000976",
+        102
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000331",
+        65
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000280",
+        72
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000480",
+        17
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000047",
+        27
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000819",
+        90
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000343",
+        104
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000105",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000923",
+        94
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000296",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000259",
+        50
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000026",
+        95
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000927",
+        72
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000030",
+        15
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000374",
+        33
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000035",
+        86
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000299",
+        81
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000108",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000819",
+        95
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000500",
+        94
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000852",
+        41
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000996",
+        48
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000659",
+        56
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000512",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000115",
+        14
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000754",
+        3
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000501",
+        19
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000798",
+        28
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000454",
+        25
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000002",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000656",
+        10
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000015",
+        62
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000164",
+        28
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000024",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000756",
+        46
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000044",
+        30
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000090",
+        27
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000283",
+        51
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000353",
+        28
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000591",
+        126
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000160",
+        32
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000013",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000008",
+        66
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000018",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000260",
+        104
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000048",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000873",
+        65
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000003",
+        40
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000096",
+        15
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000003",
+        68
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000229",
+        2
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000014",
+        120
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000076",
+        4
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000318",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000234",
+        52
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000463",
+        125
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000392",
+        97
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000645",
+        101
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000167",
+        22
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000195",
+        63
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000791",
+        9
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000873",
+        65
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000899",
+        33
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000476",
+        127
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000218",
+        83
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000006",
+        89
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000086",
+        95
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000008",
+        43
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000121",
+        31
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000015",
+        81
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000057",
+        34
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000003",
+        96
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000102",
+        41
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000034",
+        16
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000896",
+        82
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000078",
+        28
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000933",
+        33
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000152",
+        95
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000227",
+        124
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000573",
+        118
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000908",
+        123
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000058",
+        3
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000605",
+        83
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000082",
+        22
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000807",
+        52
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000095",
+        79
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000646",
+        68
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000306",
+        58
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000217",
+        20
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000013",
+        96
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000465",
+        10
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000016",
+        98
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000910",
+        49
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000022",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000249",
+        115
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000004",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000700",
+        74
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000028",
+        124
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000260",
+        61
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000031",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000711",
+        7
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000868",
+        31
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000779",
+        86
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000894",
+        122
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000912",
+        38
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000331",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000690",
+        49
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000173",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000724",
+        88
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000304",
+        11
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000404",
+        30
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000336",
+        91
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000998",
+        75
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000004",
+        47
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000062",
+        72
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000017",
+        16
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000946",
+        110
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000026",
+        48
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000557",
+        66
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000002",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000676",
+        44
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000023",
+        57
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000574",
+        119
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000028",
+        117
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000404",
+        23
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000551",
+        9
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000209",
+        76
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000135",
+        122
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000855",
+        113
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000361",
+        58
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000359",
+        71
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000413",
+        12
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000897",
+        87
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000001",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000667",
+        49
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000009",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000766",
+        124
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000020",
+        96
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000501",
+        46
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000002",
+        104
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000402",
+        124
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000017",
+        28
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000325",
+        32
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000113",
+        71
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000020",
+        106
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000004",
+        36
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000593",
+        93
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000006",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000883",
+        62
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000008",
+        7
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000618",
+        73
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000001",
+        52
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000773",
+        78
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000002",
+        61
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000521",
+        46
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000006",
+        5
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000949",
+        30
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000001",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000433",
+        57
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000004",
+        70
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000004",
+        121
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000002",
+        26
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000094",
+        63
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000013",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000527",
+        65
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000002",
+        80
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000426",
+        21
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000004",
+        107
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000186",
+        33
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000004",
+        121
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000308",
+        33
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000011",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000773",
+        99
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000572",
+        34
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000514",
+        7
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000149",
+        89
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000949",
+        9
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000001",
+        5
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000922",
+        54
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000012",
+        59
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000104",
+        121
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000028",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000858",
+        119
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000041",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000264",
+        24
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000093",
+        34
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000527",
+        64
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000133",
+        76
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000528",
+        91
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000528",
+        91
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000495",
+        44
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": "sha256:8743b1f05580ec2236140c9f4698f8bd9b827b8d596f61f4d2c24a80f698d6ae",
+      "field": "active_payload_digest",
+      "observed": "sha256:017e09d20d9fc5ec9721af85fd35b9584e00646f84c41a736fce4230abd6c0c8"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": "sha256:441fa333d58a38d042dfb91bc76655d3b341afad9a1f454ef8cfc369e8cf0714",
+      "field": "active_top_log_probs_digest",
+      "observed": "sha256:c439149d50ae5c1bcb84ac225d12760de3e0fb882f09105db2114c3d221ea899"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": "sha256:15a7fed7d2ef6019cb48057dff20d8f0b9499f6d8476afb822a0650f56f5050d",
+      "field": "active_top_probs_digest",
+      "observed": "sha256:780d9a433d87d8ea3dfda75f17a07e9f8f88a267b26fbcfc578782dc54f1d5f8"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": "sha256:a9a6a6bd6f5072a5ed519690b805705349a73faea174ce9068bd5834f6027cae",
+      "field": "active_top_token_ids_digest",
+      "observed": "sha256:85a350181a10b99855f612d84e47c36e52307243676279dd9c261105c5915215"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "field": "bucket_masses",
+      "observed": [
+        0.008042587898671627,
+        0.0011640230659395456,
+        0.0003434410027693957,
+        0.00014726485824212432,
+        8.007691940292716e-05,
+        5.0839844334404916e-05,
+        3.5394070437178016e-05,
+        2.6158635591855273e-05,
+        2.0115607185289264e-05,
+        1.592317858012393e-05,
+        1.2850853636336979e-05,
+        1.053752566804178e-05,
+        8.725306543055922e-06,
+        7.2659659053897485e-06,
+        6.076531917642569e-06,
+        5.101725037093274e-06,
+        4.282101144781336e-06,
+        3.5958657917944947e-06,
+        3.0058213269512635e-06,
+        2.5160279619740322e-06,
+        2.089782356051728e-06,
+        1.7175502762256656e-06,
+        1.3965044445285457e-06,
+        1.1217384781048167e-06,
+        8.833794140628015e-07,
+        6.800350433877611e-07,
+        5.049151354796777e-07,
+        3.566704833701806e-07,
+        2.3379958236091625e-07,
+        1.3268649468045624e-07,
+        4.848852341865495e-08,
+        1.3268284249079443e-09
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": 262144,
+      "field": "effective_top_k",
+      "observed": 10045
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": "full_vocab_or_near_full_vocab",
+      "field": "long_tail_class",
+      "observed": "long_tail"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": 0.0,
+      "field": "tail_mass",
+      "observed": 0.009998738765716553
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "delta": 0.09022140502929688,
+      "expected": 8.0,
+      "field": "teacher_entropy",
+      "observed": 7.909778594970703,
+      "tolerance": 0.00390625
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000740",
+        77
+      ],
+      "expected": 1.0,
+      "field": "top_mass",
+      "observed": 0.9900012612342834
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000563",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000424",
+        59
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000962",
+        46
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000563",
+        25
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000829",
+        94
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000962",
+        46
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000495",
+        44
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000829",
+        94
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000424",
+        59
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000224",
+        25
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000246",
+        35
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000988",
+        45
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000643",
+        83
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000246",
+        35
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000988",
+        45
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000474",
+        76
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000230",
+        78
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000432",
+        51
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000313",
+        102
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000179",
+        123
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000432",
+        51
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000112",
+        98
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000550",
+        110
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000313",
+        102
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000224",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000278",
+        83
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000568",
+        79
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000230",
+        78
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000906",
+        48
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000094",
+        31
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000094",
+        31
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000643",
+        83
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000474",
+        76
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000906",
+        48
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000540",
+        63
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000280",
+        2
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000152",
+        24
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000168",
+        75
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000179",
+        123
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000556",
+        122
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000280",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000540",
+        63
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000556",
+        122
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000007",
+        126
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000112",
+        98
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000568",
+        79
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000228",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000516",
+        61
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000288",
+        43
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000550",
+        110
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000425",
+        67
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000228",
+        108
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000566",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000118",
+        2
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000898",
+        114
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000425",
+        67
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000070",
+        59
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000288",
+        43
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000133",
+        74
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000152",
+        24
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000168",
+        75
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000390",
+        118
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000278",
+        83
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000746",
+        108
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000282",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000329",
+        120
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000746",
+        108
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000185",
+        29
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000007",
+        126
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000898",
+        114
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000109",
+        79
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000627",
+        109
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000118",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000133",
+        74
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000185",
+        29
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000566",
+        82
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000329",
+        120
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000611",
+        4
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000511",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000282",
+        92
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000516",
+        61
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000639",
+        49
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000627",
+        109
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000109",
+        79
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000922",
+        117
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000511",
+        23
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000611",
+        4
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000226",
+        69
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000773",
+        39
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000187",
+        49
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000931",
+        70
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000238",
+        41
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000227",
+        68
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000922",
+        117
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000322",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000322",
+        66
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000390",
+        118
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000070",
+        59
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000639",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000723",
+        27
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000741",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000975",
+        124
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000975",
+        124
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000931",
+        70
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000093",
+        92
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000653",
+        73
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000226",
+        69
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000779",
+        14
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000236",
+        14
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000968",
+        55
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000503",
+        114
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000005",
+        45
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000632",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000236",
+        14
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": "sha256:895fa14e22f1aa29363e773d5e119abf9c2564cabcd995f0e5039b584f6747ee",
+      "field": "active_payload_digest",
+      "observed": "sha256:7f3b49d9acfdf204e0dddf9ebc7690a5ca87ed0a2ea43c24a61621ba5ac01b25"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": "sha256:93992dc5aa34129c19983887f8247ee269ca0eeec5aea20efdecc398a2bbfeff",
+      "field": "active_top_log_probs_digest",
+      "observed": "sha256:f5ae6a0516c9f01af1b6a24634579b69c1bed69773d53b9e317484bf53e62fc6"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": "sha256:0b8035c432ef60662d67de74698150bbd8d30674b68d2c3c066f6a9f3915d09a",
+      "field": "active_top_probs_digest",
+      "observed": "sha256:57bedb1ee3aa2cbf6aa4f6ee2b3749dac9a4a45b1c0e7ea9cec1cd5463f3d742"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": "sha256:1062571f0021df8214272b09f2ba7228a9b9f776424aa9b7f3f80cd4ea5b4aa6",
+      "field": "active_top_token_ids_digest",
+      "observed": "sha256:9ed0f84c03b25ba61401eed53244c1e1c76c0048b071279f67cb335bcea201cc"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "field": "bucket_masses",
+      "observed": [
+        0.008798204362392426,
+        0.0007994858315214515,
+        0.00019532657461240888,
+        7.48980964999646e-05,
+        3.845346509478986e-05,
+        2.3286716896109283e-05,
+        1.5756197171867825e-05,
+        1.1356188224453945e-05,
+        8.519948096363805e-06,
+        6.587982170458417e-06,
+        5.198181497689802e-06,
+        4.163603080087341e-06,
+        3.3716473808453884e-06,
+        2.7514608973433496e-06,
+        2.249566932732705e-06,
+        1.8393750451650703e-06,
+        1.5038478977658087e-06,
+        1.2292130122659728e-06,
+        1.0046446732303593e-06,
+        8.165328040377062e-07,
+        6.606221631955123e-07,
+        5.299738177200197e-07,
+        4.203156152016163e-07,
+        3.275025619586813e-07,
+        2.512418859623722e-07,
+        1.8789430100696336e-07,
+        1.3524004316423088e-07,
+        9.28019403545477e-08,
+        5.840524153200022e-08,
+        3.09456211766701e-08,
+        1.0116533388782045e-08,
+        1.6891101017879606e-10
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": 262144,
+      "field": "effective_top_k",
+      "observed": 8303
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": "full_vocab_or_near_full_vocab",
+      "field": "long_tail_class",
+      "observed": "long_tail"
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": 0.0,
+      "field": "tail_mass",
+      "observed": 0.009998321533203125
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "delta": 0.02385568618774414,
+      "expected": 7.46875,
+      "field": "teacher_entropy",
+      "observed": 7.444894313812256,
+      "tolerance": 0.00390625
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000963",
+        14
+      ],
+      "expected": 1.0,
+      "field": "top_mass",
+      "observed": 0.9900016784667969
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000187",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000773",
+        39
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000207",
+        63
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000261",
+        84
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000382",
+        20
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000227",
+        68
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000455",
+        90
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000741",
+        72
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000498",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000600",
+        117
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000529",
+        88
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000207",
+        63
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000595",
+        37
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000688",
+        40
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000600",
+        117
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000503",
+        114
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000676",
+        26
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000455",
+        90
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000723",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000793",
+        23
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000793",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000377",
+        109
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000968",
+        55
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000676",
+        26
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000161",
+        13
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000378",
+        34
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000238",
+        41
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000382",
+        20
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000279",
+        13
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000595",
+        37
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000653",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000093",
+        92
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000688",
+        40
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000373",
+        73
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000779",
+        14
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000284",
+        21
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000005",
+        45
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000908",
+        121
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000099",
+        103
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000161",
+        13
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000243",
+        51
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000060",
+        8
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000398",
+        72
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000107",
+        82
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000908",
+        121
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000529",
+        88
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000006",
+        23
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000938",
+        95
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000060",
+        8
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000099",
+        103
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000063",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000498",
+        25
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000209",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000210",
+        2
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000223",
+        109
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000218",
+        106
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000284",
+        21
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000632",
+        21
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000373",
+        73
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000466",
+        36
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000377",
+        109
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000279",
+        13
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000378",
+        34
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000062",
+        16
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000735",
+        119
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000398",
+        72
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000938",
+        95
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000727",
+        35
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000945",
+        33
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000063",
+        25
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000038",
+        43
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000243",
+        51
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000040",
+        89
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000208",
+        2
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000218",
+        44
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000197",
+        2
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000261",
+        84
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000209",
+        54
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000327",
+        6
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000707",
+        11
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000375",
+        54
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000945",
+        33
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000385",
+        112
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000006",
+        23
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000504",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000512",
+        25
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000727",
+        35
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000375",
+        54
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000734",
+        49
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000504",
+        2
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000858",
+        22
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000745",
+        10
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000072",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000651",
+        66
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000210",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000327",
+        6
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000466",
+        36
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000174",
+        83
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000651",
+        66
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000223",
+        109
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000738",
+        8
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000038",
+        3
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000062",
+        16
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000738",
+        8
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000107",
+        82
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000309",
+        13
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000144",
+        27
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000244",
+        36
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000197",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000792",
+        38
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000445",
+        7
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000734",
+        49
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000475",
+        104
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000147",
+        34
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000521",
+        47
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000858",
+        22
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000580",
+        5
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000475",
+        104
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000895",
+        12
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000521",
+        47
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000996",
+        65
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000040",
+        89
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000174",
+        83
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000996",
+        65
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000208",
+        2
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000385",
+        112
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000512",
+        25
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000144",
+        27
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000707",
+        11
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000735",
+        119
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000745",
+        10
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000760",
+        34
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000775",
+        8
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000445",
+        7
+      ]
+    },
+    {
+      "collection": "payload_semantics",
+      "coordinate": [
+        "corpus_000000899",
+        112
+      ],
+      "field": "coordinate",
+      "observed": [
+        "corpus_000000895",
+        12
+      ]
+    }
+  ],
+  "expected_semantic_root": "sha256:4dcc4baa6bfc1c065d2f45268289db504a511891b875c40315c5748825e261ba",
+  "observed_semantic_root": "sha256:bbd2e6204579d7d6cdf67010eacc4b4d6178e19a6900dbc2219aafe8d80cb182",
+  "status": "fail",
+  "storage_only_differences": []
+}

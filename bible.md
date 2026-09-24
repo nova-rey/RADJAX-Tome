@@ -3940,3 +3940,5 @@ closed-record and checkpoint authority validation.
 - 2026-09-24: M13 policy-aligned 1K T4 diagnostic: frozen C2/C3 caps completed selection but current selected-delivery parity failed; a teacher-batch-8 attempt OOMed and the feasible batch-1 run preserved the exact mismatch without changing Golden or tolerance policy.
 
 - 2026-09-24: M13 final recheck: policy-aligned T4 evidence was reviewed, including the teacher-batch-8 OOM and feasible batch-1 selected-delivery mismatch; stale harness commit metadata was separated from the mounted branch provenance.
+
+- 2026-09-24: M13 final policy discriminator: frozen C2/C3 caps with feasible batch-1 teacher and selected rerun completed, but the selected set still differed from Golden (128 common, 128 missing, 128 extra); this confirms unresolved teacher/score authority drift and preserves the no-force-parity disposition.
