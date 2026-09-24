@@ -1,12 +1,18 @@
 """Owner-amended M13 reference separation and mutation checks."""
+
 from __future__ import annotations
+
 import json
 from pathlib import Path
+
 import pytest
+
 from radjax_tome.golden.projection import validate_fixture
+
 ROOT = Path(__file__).resolve().parents[1]
 CURRENT = ROOT / "evidence/m13_current_production_1k_v1"
 HISTORICAL = ROOT / "tests/fixtures/golden_t4_1k"
+
 
 def test_current_reference_is_valid_and_distinct_from_historical() -> None:
     current = validate_fixture(CURRENT)
@@ -15,7 +21,10 @@ def test_current_reference_is_valid_and_distinct_from_historical() -> None:
     assert current["status"] == "pass"
     assert captured["schema_version"] == "radjax_tome.golden_contract.v2"
     assert captured["semantic_root"] != historical["semantic_root"]
-    assert captured["semantic_root"] == "sha256:5e65c5388a7079f143421b5a35a72a586083cf47a3e37e82cac13eff4f608fdb"
+    assert captured["semantic_root"] == (
+        "sha256:5e65c5388a7079f143421b5a35a72a586083cf47a3e37e82cac13eff4f608fdb"
+    )
+
 
 def test_current_reference_governed_mutation_is_rejected(tmp_path: Path) -> None:
     mutated = tmp_path / "current"
